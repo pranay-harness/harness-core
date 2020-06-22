@@ -60,6 +60,32 @@ public class DockerArtifactServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
+  public void testGetLastSuccessfulBuildFromRegex() {
+    DockerArtifactAttributes dockerArtifactAttributes = DockerArtifactAttributes.builder()
+                                                            .imagePath("imagePath")
+                                                            .tag("tagRegexNew")
+                                                            .dockerHubConnector("connector")
+                                                            .build();
+    DockerArtifactSourceAttributes sourceAttributes = DockerArtifactSourceAttributes.builder()
+                                                          .dockerhubConnector("connector")
+                                                          .imagePath("imagePath")
+                                                          .tagRegex("tagRegex")
+                                                          .build();
+    doReturn(dockerArtifactAttributes)
+        .when(dockerRegistryService)
+        .getLastSuccessfulBuildFromRegex(connectorConfig, "imagePath", "tagRegex");
+    ArtifactAttributes lastSuccessfulBuild =
+        dockerArtifactService.getLastSuccessfulBuild(WingsTestConstants.APP_ID, sourceAttributes, connectorConfig);
+    assertThat(lastSuccessfulBuild).isInstanceOf(DockerArtifactAttributes.class);
+    DockerArtifactAttributes attributes = (DockerArtifactAttributes) lastSuccessfulBuild;
+    verify(dockerRegistryService).getLastSuccessfulBuildFromRegex(connectorConfig, "imagePath", "tagRegex");
+    assertThat(attributes.getImagePath()).isEqualTo(sourceAttributes.getImagePath());
+    assertThat(attributes.getTag()).isEqualTo(dockerArtifactAttributes.getTag());
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
   public void testIsRegex() {
     DockerArtifactSourceAttributes sourceAttributes = DockerArtifactSourceAttributes.builder()
                                                           .dockerhubConnector("connector")

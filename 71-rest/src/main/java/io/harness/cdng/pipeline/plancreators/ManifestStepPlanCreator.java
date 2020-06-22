@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 import io.harness.cdng.manifest.state.ManifestListConfig;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.state.ManifestStepParameters;
-import io.harness.cdng.service.Service;
+import io.harness.cdng.service.ServiceConfig;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
@@ -24,10 +24,10 @@ import java.util.List;
 
 @Singleton
 @Slf4j
-public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreator<Service> {
+public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreator<ServiceConfig> {
   @Override
-  public CreateExecutionPlanResponse createPlan(Service service, CreateExecutionPlanContext context) {
-    final PlanNode manifestExecutionNode = prepareManifestStepExecutionNode(service);
+  public CreateExecutionPlanResponse createPlan(ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
+    final PlanNode manifestExecutionNode = prepareManifestStepExecutionNode(serviceConfig);
 
     return CreateExecutionPlanResponse.builder()
         .planNode(manifestExecutionNode)
@@ -35,17 +35,17 @@ public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreato
         .build();
   }
 
-  private PlanNode prepareManifestStepExecutionNode(Service service) {
-    ManifestListConfig overrideManifests = service.getOverrides() == null
+  private PlanNode prepareManifestStepExecutionNode(ServiceConfig serviceConfig) {
+    ManifestListConfig overrideManifests = serviceConfig.getOverrides() == null
         ? ManifestListConfig.builder().build()
-        : service.getOverrides().getManifestListConfig();
+        : serviceConfig.getOverrides().getManifestListConfig();
     return PlanNode.builder()
         .uuid(generateUuid())
         .name(MANIFESTS)
         .identifier(MANIFESTS)
         .stepType(ManifestStep.STEP_TYPE)
         .stepParameters(ManifestStepParameters.builder()
-                            .manifestServiceSpec(service.getServiceSpec().getManifests())
+                            .manifestServiceSpec(serviceConfig.getServiceSpec().getManifests())
                             .manifestStageOverride(overrideManifests)
                             .build())
         .facilitatorObtainment(
@@ -55,7 +55,8 @@ public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreato
 
   @Override
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
-    return getSupportedTypes().contains(searchContext.getType()) && searchContext.getObjectToPlan() instanceof Service;
+    return getSupportedTypes().contains(searchContext.getType())
+        && searchContext.getObjectToPlan() instanceof ServiceConfig;
   }
 
   @Override

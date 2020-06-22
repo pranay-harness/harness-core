@@ -3,6 +3,7 @@ package io.harness.cdng.executionplan.utils;
 import io.harness.cdng.pipeline.CDPhase;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.CDStage;
+import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import lombok.experimental.UtilityClass;
 
@@ -48,5 +49,20 @@ public class PlanCreatorConfigUtils {
 
   private <T> Optional<T> getConfig(String key, CreateExecutionPlanContext context) {
     return context.getAttribute(key);
+  }
+
+  public CDStage getGivenDeploymentStageFromPipeline(CreateExecutionPlanContext context, String stageIdentifier) {
+    Optional<CDPipeline> pipelineConfig = getPipelineConfig(context);
+    if (pipelineConfig.isPresent()) {
+      CDPipeline pipeline = pipelineConfig.get();
+      return pipeline.getStages()
+          .stream()
+          .map(stage -> (DeploymentStage) stage)
+          .filter(deploymentStage -> deploymentStage.getIdentifier().equals(stageIdentifier))
+          .findFirst()
+          .orElse(null);
+    } else {
+      throw new IllegalArgumentException("Pipeline config doesn't exist.");
+    }
   }
 }

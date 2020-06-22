@@ -43,6 +43,7 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
 
   @Mock private DockerRegistryRestClient dockerRegistryRestClient;
   @Mock private DockerPublicImageTagResponse.Result result;
+  @Mock private DockerPublicImageTagResponse.Result result2;
   @Mock private DockerPublicImageTagResponse dockerResponse;
   @Mock private DockerPublicImageTagResponse dockerResponse2;
   @Spy @Inject @InjectMocks DockerPublicRegistryProcessor dockerPublicRegistryProcessor;
@@ -109,9 +110,10 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
   public void testGetLastSuccessfulBuildFromRegex() throws IOException {
     Call<DockerPublicImageTagResponse> requestCall = mock(Call.class);
     Response<DockerPublicImageTagResponse> response = Response.success(dockerResponse);
-    List<DockerPublicImageTagResponse.Result> results = Arrays.asList(result);
+    List<DockerPublicImageTagResponse.Result> results = Arrays.asList(result, result2);
     doReturn(results).when(dockerResponse).getResults();
-    doReturn("tagRegexNew").when(result).getName();
+    doReturn("tagRegexNew-1").when(result).getName();
+    doReturn("tagRegexNew").when(result2).getName();
     doReturn(response).when(requestCall).execute();
     doReturn(dockerRegistryRestClient).when(dockerPublicRegistryProcessor).getDockerRegistryRestClient(connectorConfig);
     doReturn(requestCall)
@@ -125,6 +127,11 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
     assertThat(artifactAttributes.getImagePath()).isEqualTo("image");
     assertThat(artifactAttributes.getTag()).isEqualTo(result.getName());
     assertThat(artifactAttributes.getDockerHubConnector()).isEqualTo(connectorConfig.getIdentifier());
+
+    DockerArtifactAttributes anotherArtifactAttributes =
+        dockerPublicRegistryProcessor.processSingleResultResponse(result2, "image", connectorConfig);
+    int compare = artifactAttributes.compareTo(anotherArtifactAttributes);
+    assertThat(compare).isLessThan(0);
   }
 
   @Test
