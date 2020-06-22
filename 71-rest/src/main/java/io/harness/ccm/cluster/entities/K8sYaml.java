@@ -9,7 +9,6 @@ import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -30,15 +29,8 @@ import java.util.Base64;
 @StoreIn("events")
 @Entity(value = "k8sYaml", noClassnameStored = true)
 
-@CdIndex(name = "accountId_uuid_resourceVersion",
-    fields = { @Field(K8sYamlKeys.accountId)
-               , @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC) })
-@CdIndex(name = "accountId_clusterId_uid_resourceVersion",
-    fields =
-    {
-      @Field(K8sYamlKeys.accountId)
-      , @Field(K8sYamlKeys.clusterId), @Field(value = K8sYamlKeys.resourceVersion, type = IndexType.DESC)
-    })
+@CdIndex(name = "accountId_hash", fields = { @Field(K8sYamlKeys.accountId)
+                                             , @Field(value = K8sYamlKeys.hash) })
 @FieldNameConstants(innerTypeName = "K8sYamlKeys")
 public class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id private String uuid;
