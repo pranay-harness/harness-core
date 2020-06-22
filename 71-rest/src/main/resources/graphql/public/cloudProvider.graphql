@@ -38,7 +38,6 @@ interface CloudProvider {
   createdAt: DateTime
   createdBy: User
   type: String
-  # The field is work in progress.
   isContinuousEfficiencyEnabled: Boolean
 }
 
