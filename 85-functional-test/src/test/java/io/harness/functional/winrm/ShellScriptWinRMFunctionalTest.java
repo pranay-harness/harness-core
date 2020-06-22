@@ -26,6 +26,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.EntityType;
@@ -73,7 +74,7 @@ public class ShellScriptWinRMFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU, intermittent = true)
   @Category(FunctionalTests.class)
-  //@Ignore("Enable once feature flag is enabled")
+  @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunTemplatizedWinRmWorkflow() {
     service = serviceGenerator.ensurePredefined(seed, owners, ServiceGenerator.Services.GENERIC_TEST);
     resetCache(service.getAccountId());
@@ -98,6 +99,7 @@ public class ShellScriptWinRMFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRABU, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Enable once feature flag is enabled")
   public void shouldCreateAndRunWinRmWorkflow() {
     service = serviceGenerator.ensurePredefined(seed, owners, ServiceGenerator.Services.GENERIC_TEST);
     resetCache(service.getAccountId());

@@ -24,8 +24,7 @@ public interface ServiceNowService {
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
   List<ServiceNowMetaDTO> getAdditionalFields(
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
-  ServiceNowExecutionData getIssueUrl(
-      String appId, String accountId, ServiceNowApprovalParams approvalParams, boolean snowMultiConditions);
+  ServiceNowExecutionData getIssueUrl(String appId, String accountId, ServiceNowApprovalParams approvalParams);
   Map<String, String> getIssueStatus(ServiceNowApprovalParams approvalParams, String accountId, String appId);
   ServiceNowExecutionData getApprovalStatus(ApprovalPollingJobEntity entity);
 

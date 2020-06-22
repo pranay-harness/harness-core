@@ -26,23 +26,29 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rule.Owner;
+import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.GraphNode;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
@@ -56,6 +62,7 @@ import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -66,12 +73,14 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private SettingGenerator settingGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
+  @Inject private ApplicationGenerator applicationGenerator;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ServiceNowDelegateServiceImpl serviceNowDelegateService;
 
   private Environment environment;
   private OwnerManager.Owners owners;
   private SettingAttribute snowSetting;
+  private Application application;
   private final Randomizer.Seed seed = new Randomizer.Seed(0);
 
   @Before
@@ -81,12 +90,13 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
     assertThat(environment).isNotNull();
     snowSetting = settingGenerator.ensurePredefined(seed, owners, Settings.SERVICENOW_CONNECTOR);
     assertThat(snowSetting).isNotNull();
+    application = applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST);
+    assertThat(application).isNotNull();
   }
 
   @Test
-  @Owner(developers = PRABU, intermittent = true)
+  @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
-  @Ignore("This test is Flaky. Need to debug more by the test owner")
   public void ExecuteServiceNowApprovalForMultipleORConditions() {
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(
@@ -116,10 +126,9 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU, intermittent = true)
+  @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
-  @Ignore("This test is Flaky. Need to debug more by the test owner")
-  public void ExecuteServiceNowApprovalForMultipleANDConditions() {
+  public void ExecuteServiceNowRejectionForMultipleANDConditions() {
     Criteria rejectionCriteria = new Criteria();
     rejectionCriteria.setConditions(
         ImmutableMap.of("state", Arrays.asList("Canceled", "Assess"), "approval", Arrays.asList("Rejected")));
@@ -139,24 +148,192 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
                     .withPostDeploymentSteps(
                         aPhaseStep(POST_DEPLOYMENT)
                             .addStep(getSnowApprovalNode(approvalCriteria, rejectionCriteria))
-                            .addStep(getSnowUpdateNode(ImmutableMap.of("state", "Canceled", "approval", "Approved")))
+                            .addStep(getSnowUpdateNode(ImmutableMap.of("state", "Canceled", "approval", "Rejected")))
                             .withStepsInParallel(true)
                             .build())
                     .build())
             .build();
-    workflowExecuteAndAssert(snowApprovalWorkflow, ExecutionStatus.SUCCESS);
+    workflowExecuteAndAssert(snowApprovalWorkflow, ExecutionStatus.REJECTED);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category({FunctionalTests.class})
+  public void ExecuteServiceNowApprovalPipelineForMultipleANDConditions() {
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Canceled", "Assess"), "approval", Arrays.asList("Rejected")));
+
+    Criteria approvalCriteria = new Criteria();
+    approvalCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Closed", "Canceled"), "approval", Arrays.asList("Approved")));
+
+    Workflow snowCreateWorkflow =
+        aWorkflow()
+            .name("ServiceNow Approval Create Workflow" + System.currentTimeMillis())
+            .uuid("WORKFLOW_ID1" + System.currentTimeMillis())
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode()).build())
+                    .build())
+            .build();
+
+    Workflow snowUpdateWorkflow =
+        aWorkflow()
+            .name("ServiceNow Approval Update workflow" + System.currentTimeMillis())
+            .uuid("WORKFLOW_ID2" + System.currentTimeMillis())
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT)
+                            .addStep(getSnowUpdateNode(ImmutableMap.of("state", "Canceled", "approval", "Approved")))
+                            .build())
+                    .build())
+            .build();
+
+    saveWorkflowAndGetExecutionArgs(snowCreateWorkflow);
+    saveWorkflowAndGetExecutionArgs(snowUpdateWorkflow);
+
+    Pipeline snowApprovalPipeline =
+        Pipeline.builder()
+            .uuid("PIPELINE_ID")
+            .name("ServiceNow Approval Pipeline " + System.currentTimeMillis())
+            .pipelineStages(Arrays.asList(
+                PipelineStage.builder()
+                    .pipelineStageElements(Collections.singletonList(
+                        PipelineStageElement.builder()
+                            .name("STAGE 1")
+                            .type("ENV_STATE")
+                            .properties(Collections.singletonMap("workflowId", snowCreateWorkflow.getUuid()))
+                            .build()))
+                    .build(),
+                PipelineStage.builder()
+                    .pipelineStageElements(
+                        Collections.singletonList(PipelineStageElement.builder()
+                                                      .type("APPROVAL")
+                                                      .name("STAGE 2")
+                                                      .properties(ImmutableMap.of("approvalStateParams",
+                                                          getApprovalParams(approvalCriteria, rejectionCriteria),
+                                                          "approvalStateType", "SERVICENOW"))
+                                                      .build()))
+                    .build(),
+                PipelineStage.builder()
+                    .parallel(true)
+                    .pipelineStageElements(Collections.singletonList(
+                        PipelineStageElement.builder()
+                            .name("STAGE 3")
+                            .type("ENV_STATE")
+                            .properties(Collections.singletonMap("workflowId", snowUpdateWorkflow.getUuid()))
+                            .build()))
+                    .build()))
+            .build();
+
+    Pipeline savedPipeline = PipelineRestUtils.createPipeline(
+        application.getUuid(), snowApprovalPipeline, application.getAccountId(), bearerToken);
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setPipelineId(savedPipeline.getUuid());
+    executionArgs.setWorkflowType(WorkflowType.PIPELINE);
+
+    WorkflowExecution workflowExecution =
+        runPipeline(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category({FunctionalTests.class})
+  public void ExecuteServiceNowRejectionPipelineForMultipleORConditions() {
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Canceled", "Assess"), "approval", Arrays.asList("Rejected")));
+    rejectionCriteria.setOperator(ConditionalOperator.OR);
+
+    Criteria approvalCriteria = new Criteria();
+    approvalCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Closed", "Canceled"), "approval", Arrays.asList("Approved")));
+
+    Workflow snowCreateWorkflow =
+        aWorkflow()
+            .name("ServiceNow Approval Create Workflow" + System.currentTimeMillis())
+            .uuid("WORKFLOW_ID1" + System.currentTimeMillis())
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode()).build())
+                    .build())
+            .build();
+
+    Workflow snowUpdateWorkflow =
+        aWorkflow()
+            .name("ServiceNow Approval Update workflow" + System.currentTimeMillis())
+            .uuid("WORKFLOW_ID2" + System.currentTimeMillis())
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT)
+                                                 .addStep(getSnowUpdateNode(ImmutableMap.of("state", "Canceled")))
+                                                 .build())
+                    .build())
+            .build();
+
+    saveWorkflowAndGetExecutionArgs(snowCreateWorkflow);
+    saveWorkflowAndGetExecutionArgs(snowUpdateWorkflow);
+
+    Pipeline snowApprovalPipeline =
+        Pipeline.builder()
+            .uuid("PIPELINE_ID")
+            .name("ServiceNow Approval Pipeline " + System.currentTimeMillis())
+            .pipelineStages(Arrays.asList(
+                PipelineStage.builder()
+                    .pipelineStageElements(Collections.singletonList(
+                        PipelineStageElement.builder()
+                            .name("STAGE 1")
+                            .type("ENV_STATE")
+                            .properties(Collections.singletonMap("workflowId", snowCreateWorkflow.getUuid()))
+                            .build()))
+                    .build(),
+                PipelineStage.builder()
+                    .pipelineStageElements(
+                        Collections.singletonList(PipelineStageElement.builder()
+                                                      .type("APPROVAL")
+                                                      .name("STAGE 2")
+                                                      .properties(ImmutableMap.of("approvalStateParams",
+                                                          getApprovalParams(approvalCriteria, rejectionCriteria),
+                                                          "approvalStateType", "SERVICENOW"))
+                                                      .build()))
+                    .build(),
+                PipelineStage.builder()
+                    .parallel(true)
+                    .pipelineStageElements(Collections.singletonList(
+                        PipelineStageElement.builder()
+                            .name("STAGE 3")
+                            .type("ENV_STATE")
+                            .properties(Collections.singletonMap("workflowId", snowUpdateWorkflow.getUuid()))
+                            .build()))
+                    .build()))
+            .build();
+
+    Pipeline savedPipeline = PipelineRestUtils.createPipeline(
+        application.getUuid(), snowApprovalPipeline, application.getAccountId(), bearerToken);
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setPipelineId(savedPipeline.getUuid());
+    executionArgs.setWorkflowType(WorkflowType.PIPELINE);
+
+    WorkflowExecution workflowExecution =
+        runPipeline(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.REJECTED);
   }
 
   private GraphNode getSnowApprovalNode(Criteria approval, Criteria rejection) {
-    HashMap<String, Object> serviceNowApprovalParams = new HashMap<>();
-    serviceNowApprovalParams.put("approval", approval);
-    serviceNowApprovalParams.put("issueNumber", "${snowIssue.issueNumber}");
-    serviceNowApprovalParams.put("rejection", rejection);
-    serviceNowApprovalParams.put("ticketType", "CHANGE_REQUEST");
-    serviceNowApprovalParams.put("snowConnectorId", snowSetting.getUuid());
-
-    HashMap<String, Object> approvalStateParams = new HashMap<>();
-    approvalStateParams.put("serviceNowApprovalParams", serviceNowApprovalParams);
+    HashMap<String, Object> approvalStateParams = getApprovalParams(approval, rejection);
 
     return GraphNode.builder()
         .id(generateUuid())
@@ -168,6 +345,20 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
                         .put("timeoutMillis", 1800000)
                         .build())
         .build();
+  }
+
+  @NotNull
+  private HashMap<String, Object> getApprovalParams(Criteria approval, Criteria rejection) {
+    HashMap<String, Object> serviceNowApprovalParams = new HashMap<>();
+    serviceNowApprovalParams.put("approval", approval);
+    serviceNowApprovalParams.put("issueNumber", "${snowIssue.issueNumber}");
+    serviceNowApprovalParams.put("rejection", rejection);
+    serviceNowApprovalParams.put("ticketType", "CHANGE_REQUEST");
+    serviceNowApprovalParams.put("snowConnectorId", snowSetting.getUuid());
+
+    HashMap<String, Object> approvalStateParams = new HashMap<>();
+    approvalStateParams.put("serviceNowApprovalParams", serviceNowApprovalParams);
+    return approvalStateParams;
   }
 
   private GraphNode getSnowUpdateNode(Map<String, String> updateValues) {
@@ -215,23 +406,13 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
                         .put("serviceNowCreateUpdateParams", params)
                         .put("publishAsVar", true)
                         .put("sweepingOutputName", "snowIssue")
-                        .put("sweepingOutputScope", "WORKFLOW")
+                        .put("sweepingOutputScope", "PIPELINE")
                         .build())
         .build();
   }
 
   private void workflowExecuteAndAssert(Workflow workflow, ExecutionStatus status) {
-    Workflow savedWorkflow =
-        WorkflowRestUtils.createWorkflow(bearerToken, environment.getAccountId(), environment.getAppId(), workflow);
-    logger.info("Workflow created successfully");
-    assertThat(savedWorkflow).isNotNull();
-
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
-    executionArgs.setExecutionCredential(SSHExecutionCredential.Builder.aSSHExecutionCredential()
-                                             .withExecutionType(ExecutionCredential.ExecutionType.SSH)
-                                             .build());
-    executionArgs.setOrchestrationId(savedWorkflow.getUuid());
+    ExecutionArgs executionArgs = saveWorkflowAndGetExecutionArgs(workflow);
 
     WorkflowExecution workflowExecution =
         WorkflowRestUtils.startWorkflow(bearerToken, environment.getAppId(), environment.getUuid(), executionArgs);
@@ -251,5 +432,21 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
         workflowExecutionService.getExecutionDetails(environment.getAppId(), workflowExecution.getUuid(), false);
 
     assertThat(completedExecution).isNotNull();
+  }
+
+  @NotNull
+  private ExecutionArgs saveWorkflowAndGetExecutionArgs(Workflow workflow) {
+    Workflow savedWorkflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, environment.getAccountId(), environment.getAppId(), workflow);
+    logger.info("Workflow created successfully");
+    assertThat(savedWorkflow).isNotNull();
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
+    executionArgs.setExecutionCredential(SSHExecutionCredential.Builder.aSSHExecutionCredential()
+                                             .withExecutionType(ExecutionCredential.ExecutionType.SSH)
+                                             .build());
+    executionArgs.setOrchestrationId(savedWorkflow.getUuid());
+    return executionArgs;
   }
 }

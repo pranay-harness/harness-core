@@ -22,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ServiceNowExecutionData;
-import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
@@ -180,8 +179,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   }
 
   @Override
-  public ServiceNowExecutionData getIssueUrl(
-      String appId, String accountId, ServiceNowApprovalParams approvalParams, boolean snowMultiConditions) {
+  public ServiceNowExecutionData getIssueUrl(String appId, String accountId, ServiceNowApprovalParams approvalParams) {
     ServiceNowConfig serviceNowConfig;
     try {
       serviceNowConfig = (ServiceNowConfig) settingService.get(approvalParams.getSnowConnectorId()).getValue();
@@ -202,7 +200,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
 
     return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext)
-        .getIssueUrl(taskParameters, approvalParams, snowMultiConditions);
+        .getIssueUrl(taskParameters, approvalParams);
   }
 
   // Todo: Cleanup this method after about 6 months. Keeping it for older approval jobs only.
@@ -264,40 +262,38 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       ServiceNowDelegateService serviceNowDelegateService =
           delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext);
 
-      if (featureFlagService.isGlobalEnabled(FeatureName.SERVICENOW_MULTIPLE_CONDITIONS)) {
-        Map<String, String> currentStatus =
-            serviceNowDelegateService.getIssueStatus(taskParameters, approvalPollingJobEntity.getAllServiceNowFields());
+      Map<String, String> currentStatus =
+          serviceNowDelegateService.getIssueStatus(taskParameters, approvalPollingJobEntity.getAllServiceNowFields());
 
-        String issueStatus =
-            currentStatus.entrySet()
-                .stream()
-                .map(status -> StringUtils.capitalize(status.getKey()) + " is equal to " + status.getValue())
-                .collect(Collectors.joining(",\n"));
+      String issueStatus =
+          currentStatus.entrySet()
+              .stream()
+              .map(status -> StringUtils.capitalize(status.getKey()) + " is equal to " + status.getValue())
+              .collect(Collectors.joining(",\n"));
 
-        if (approvalPollingJobEntity.getApproval() != null
-            && approvalPollingJobEntity.getApproval().satisfied(currentStatus)) {
-          return ServiceNowExecutionData.builder()
-              .executionStatus(ExecutionStatus.SUCCESS)
-              .currentState(issueStatus)
-              .build();
-        }
-        if (approvalPollingJobEntity.getRejection() != null
-            && approvalPollingJobEntity.getRejection().satisfied(currentStatus)) {
-          return ServiceNowExecutionData.builder()
-              .executionStatus(ExecutionStatus.REJECTED)
-              .currentState(issueStatus)
-              .build();
-        }
-
-        if (EmptyPredicate.isNotEmpty(issueStatus)) {
-          return ServiceNowExecutionData.builder()
-              .executionStatus(ExecutionStatus.PAUSED)
-              .currentState(issueStatus)
-              .build();
-        }
+      if (approvalPollingJobEntity.getApproval() != null
+          && approvalPollingJobEntity.getApproval().satisfied(currentStatus)) {
+        return ServiceNowExecutionData.builder()
+            .executionStatus(ExecutionStatus.SUCCESS)
+            .currentState(issueStatus)
+            .build();
+      }
+      if (approvalPollingJobEntity.getRejection() != null
+          && approvalPollingJobEntity.getRejection().satisfied(currentStatus)) {
+        return ServiceNowExecutionData.builder()
+            .executionStatus(ExecutionStatus.REJECTED)
+            .currentState(issueStatus)
+            .build();
       }
 
-      String issueStatus = serviceNowDelegateService.getIssueFieldStatus(taskParameters, "state");
+      if (EmptyPredicate.isNotEmpty(issueStatus)) {
+        return ServiceNowExecutionData.builder()
+            .executionStatus(ExecutionStatus.PAUSED)
+            .currentState(issueStatus)
+            .build();
+      }
+
+      issueStatus = serviceNowDelegateService.getIssueFieldStatus(taskParameters, "state");
 
       if (approvalPollingJobEntity.getApprovalValue() != null
           && approvalPollingJobEntity.getApprovalValue().equalsIgnoreCase(issueStatus)) {
