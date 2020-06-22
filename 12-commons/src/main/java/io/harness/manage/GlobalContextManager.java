@@ -84,21 +84,19 @@ public class GlobalContextManager {
   public static <T extends GlobalContextData> T get(String key) {
     GlobalContext globalContext = contextThreadLocal.get();
     if (globalContext == null) {
-      logger.error("Global Context was null. Seems thread was not initialized. ALERT....", new Exception(""));
       return null;
     }
-
     return globalContext.get(key);
   }
 
-  public static <T> GlobalContextCallableWrapper<T> generateExecutorTask(Callable<T> task) {
+  static <T> GlobalContextCallableWrapper<T> generateExecutorTask(Callable<T> task) {
     if (task instanceof GlobalContextCallableWrapper) {
       return (GlobalContextCallableWrapper<T>) task;
     }
     return GlobalContextCallableWrapper.<T>builder().task(task).context(obtainGlobalContext()).build();
   }
 
-  public static GlobalContextTaskWrapper generateExecutorTask(Runnable task) {
+  static GlobalContextTaskWrapper generateExecutorTask(Runnable task) {
     if (task instanceof GlobalContextTaskWrapper) {
       return (GlobalContextTaskWrapper) task;
     }
@@ -108,7 +106,6 @@ public class GlobalContextManager {
   public static void upsertGlobalContextRecord(GlobalContextData data) {
     GlobalContext globalContext = contextThreadLocal.get();
     if (globalContext == null) {
-      logger.error("Global Context was null. Seems thread was not initialized. ALERT....", new Exception(""));
       return;
     }
 

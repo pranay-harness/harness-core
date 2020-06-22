@@ -22,8 +22,7 @@ public class GraphQLUtils {
 
   public void validateGraphQLCall(String accountId, boolean isInternalGraphQLCall) {
     if (graphQLRateLimiter.isOverApiRateLimit(accountId, isInternalGraphQLCall)) {
-      throw new WebApplicationException(
-          Response.status(429).entity(getRateLimitReachedErrorMessage(accountId, isInternalGraphQLCall)).build());
+      throw new WebApplicationException(Response.status(429).entity(getRateLimitReachedErrorMessage()).build());
     }
   }
 
@@ -54,7 +53,7 @@ public class GraphQLUtils {
     return exception;
   }
 
-  private String getRateLimitReachedErrorMessage(String accountId, boolean isInternalGraphQLCall) {
+  private String getRateLimitReachedErrorMessage() {
     return getErrorMessage(GraphQLConstants.RATE_LIMIT_REACHED);
   }
 
