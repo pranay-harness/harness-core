@@ -7,9 +7,9 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.mongo.index.Indexed;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
@@ -33,7 +33,7 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @Value
 @Builder
-@UniqueIndex(name = "levelRuntimeIdUniqueIdx2",
+@CdUniqueIndex(name = "levelRuntimeIdUniqueIdx2",
     fields =
     {
       @Field(ExecutionSweepingOutputKeys.planExecutionId)
@@ -53,5 +53,5 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
   @Getter SweepingOutput value;
   @Wither @CreatedDate Long createdAt;
 
-  @Indexed @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  @FdIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 }

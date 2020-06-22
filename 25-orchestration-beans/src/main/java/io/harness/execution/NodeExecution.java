@@ -10,7 +10,7 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.facilitator.modes.ExecutionMode;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.mongo.index.Indexed;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.plan.PlanNode;
@@ -49,7 +49,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   @Singular List<Level> levels;
   @NotNull PlanNode node;
   @NotNull ExecutionMode mode;
-  @Default @Indexed @CreatedDate Long createdAt = System.currentTimeMillis();
+  @Default @FdIndex @CreatedDate Long createdAt = System.currentTimeMillis();
   private Long startTs;
   private Long endTs;
   private Duration initialWaitDuration;
