@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.template.TemplateHelper.convertToEntityVariables;
 import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
@@ -17,8 +18,11 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
@@ -39,6 +43,7 @@ import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlH
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -68,6 +73,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   @Inject SettingsService settingsService;
   @Inject InfrastructureMappingService infraMappingService;
   @Inject ArtifactStreamService artifactStreamService;
+  @Inject FeatureFlagService featureFlagService;
   @Inject private TemplateService templateService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
@@ -108,6 +114,9 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     }
 
     generateKnownProperties(outputProperties, changeContext);
+
+    validateArtifactCollectionStep(stepYaml, accountId, outputProperties);
+
     Boolean isRollback = false;
     if (changeContext.getProperties().get(YamlConstants.IS_ROLLBACK) != null) {
       isRollback = (Boolean) changeContext.getProperties().get(YamlConstants.IS_ROLLBACK);
@@ -146,6 +155,68 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         .importedTemplateDetails(importedTemplateDetail)
         .templateVariables(convertToEntityVariables(stepYaml.getTemplateVariables()))
         .build();
+  }
+
+  private void validateArtifactCollectionStep(
+      StepYaml stepYaml, String accountId, Map<String, Object> outputProperties) {
+    if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, accountId)) {
+      if (StateType.ARTIFACT_COLLECTION.name().equals(stepYaml.getType()) && isNotEmpty(outputProperties)) {
+        String artifactStreamId = (String) outputProperties.get("artifactStreamId");
+        if (artifactStreamId != null) {
+          ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+          notNullCheck("Artifact stream is null for the given id:" + artifactStreamId, artifactStream, USER);
+          validateMandatoryFieldsWithParameterizedArtifactStream(outputProperties, artifactStreamId, artifactStream);
+        }
+      }
+    }
+  }
+
+  private void validateMandatoryFieldsWithParameterizedArtifactStream(
+      Map<String, Object> outputProperties, String artifactStreamId, ArtifactStream artifactStream) {
+    if (artifactStream.isArtifactStreamParameterized()) {
+      validateRegex(outputProperties, artifactStream);
+      validateBuildNo(outputProperties, artifactStream);
+      validateRuntimeValues(outputProperties, artifactStreamId, artifactStream);
+    }
+  }
+
+  private void validateRegex(Map<String, Object> outputProperties, ArtifactStream artifactStream) {
+    boolean regex = false;
+    if (outputProperties.containsKey("regex")) {
+      regex = (boolean) outputProperties.get("regex");
+    }
+    if (regex) {
+      throw new InvalidRequestException(
+          format("Regex cannot be set for parameterized artifact source [%s].", artifactStream.getName()), USER);
+    }
+  }
+
+  private void validateBuildNo(Map<String, Object> outputProperties, ArtifactStream artifactStream) {
+    if (StringUtils.isEmpty((String) outputProperties.get("buildNo"))) {
+      throw new InvalidRequestException(
+          format("Artifact Source [%s] Parameterized. However, buildNo not provided.", artifactStream.getName()), USER);
+    }
+  }
+
+  private void validateRuntimeValues(
+      Map<String, Object> outputProperties, String artifactStreamId, ArtifactStream artifactStream) {
+    Map<String, Object> runtimeValues = (Map<String, Object>) outputProperties.get("runtimeValues");
+    if (isEmpty(runtimeValues)) {
+      throw new InvalidRequestException(
+          format("Artifact Source [%s] Parameterized. However, runtime values not provided.", artifactStream.getName()),
+          USER);
+    }
+    List<String> expectedParameters = artifactStreamService.getArtifactStreamParameters(artifactStreamId);
+    if (isNotEmpty(expectedParameters)) {
+      for (String parameter : expectedParameters) {
+        if (runtimeValues.get(parameter) == null) {
+          throw new InvalidRequestException(
+              format("Artifact Source [%s] Parameterized. However, all runtime values not provided.",
+                  artifactStream.getName()),
+              USER);
+        }
+      }
+    }
   }
 
   private void generateKnownProperties(Map<String, Object> outputProperties, ChangeContext<StepYaml> changeContext) {
