@@ -47,7 +47,7 @@ public class CIPipelinePlanCreatorTest extends CIExecutionTest {
     List<PlanNode> planNodes = plan.getPlanNodes();
     assertThat(
         planNodes.stream().anyMatch(
-            node -> "STAGES".equals(node.getIdentifier()) && "SECTION_CHAIN".equals(node.getStepType().getType())))
+            node -> "stages".equals(node.getIdentifier()) && "SECTION_CHAIN".equals(node.getStepType().getType())))
         .isTrue();
     assertThat(
         planNodes.stream().anyMatch(

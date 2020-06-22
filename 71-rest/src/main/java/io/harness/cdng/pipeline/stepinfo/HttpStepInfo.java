@@ -18,7 +18,7 @@ public class HttpStepInfo implements CDStepInfo {
   HttpSpec http;
 
   @Override
-  public String getName() {
+  public String getDisplayName() {
     return displayName;
   }
 

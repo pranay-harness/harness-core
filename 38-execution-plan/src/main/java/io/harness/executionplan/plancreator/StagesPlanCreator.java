@@ -63,7 +63,7 @@ public class StagesPlanCreator implements SupportDefinedExecutorPlanCreator<List
       CreateExecutionPlanContext context, List<CreateExecutionPlanResponse> planForStages) {
     final String nodeId = generateUuid();
 
-    final String STAGES = "STAGES";
+    final String STAGES = "stages";
 
     return PlanNode.builder()
         .uuid(nodeId)
@@ -71,7 +71,6 @@ public class StagesPlanCreator implements SupportDefinedExecutorPlanCreator<List
         .identifier(STAGES)
         .stepType(StepType.builder().type(SectionChainStep.STEP_TYPE.getType()).build())
         .group(StepGroup.STAGES.name())
-        .skipExpressionChain(true)
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForStages.stream()
                                               .map(CreateExecutionPlanResponse::getStartingNodeId)
