@@ -4,12 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.Log.LogColor.Gray;
-import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogLevel.WARN;
-import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 
@@ -53,6 +50,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private GitFetchFilesTaskHelper gitFetchFilesTaskHelper;
 
   public static final int GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT = 10;
 
@@ -137,7 +135,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     if (EmptyPredicate.isNotEmpty(gitFileConfig.getFilePathList())) {
       filePathsToFetch = gitFileConfig.getFilePathList();
       executionLogCallback.saveExecutionLog("\nFetching following Files :");
-      printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
+      gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
     } else {
       executionLogCallback.saveExecutionLog("\nFetching " + gitFileConfig.getFilePath());
       String filePath = isBlank(gitFileConfig.getFilePath()) ? "" : gitFileConfig.getFilePath();
@@ -146,7 +144,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
 
     GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
         gitFileConfig.getCommitId(), gitFileConfig.getBranch(), filePathsToFetch, gitFileConfig.isUseBranch());
-    printFileNamesInExecutionLogs(gitFetchFilesResult, executionLogCallback);
+    gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(gitFetchFilesResult, executionLogCallback);
 
     return gitFetchFilesResult;
   }
@@ -173,30 +171,5 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
         unhandled(appManifestKind);
         return "";
     }
-  }
-
-  private void printFileNamesInExecutionLogs(
-      GitFetchFilesResult gitFetchFilesResult, ExecutionLogCallback executionLogCallback) {
-    if (gitFetchFilesResult == null || EmptyPredicate.isEmpty(gitFetchFilesResult.getFiles())) {
-      return;
-    }
-
-    StringBuilder sb = new StringBuilder(1024);
-    gitFetchFilesResult.getFiles().forEach(
-        each -> sb.append(color(format("- %s", each.getFilePath()), Gray)).append(System.lineSeparator()));
-
-    executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
-    executionLogCallback.saveExecutionLog(sb.toString());
-  }
-
-  private void printFileNamesInExecutionLogs(List<String> filePathList, ExecutionLogCallback executionLogCallback) {
-    if (EmptyPredicate.isEmpty(filePathList)) {
-      return;
-    }
-
-    StringBuilder sb = new StringBuilder(1024);
-    filePathList.forEach(filePath -> sb.append(color(format("- %s", filePath), Gray)).append(System.lineSeparator()));
-
-    executionLogCallback.saveExecutionLog(sb.toString());
   }
 }

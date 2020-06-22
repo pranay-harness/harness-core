@@ -9,9 +9,10 @@ import static org.mockito.Mockito.mock;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.manifest.ManifestType;
+import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
-import io.harness.cdng.manifest.yaml.K8Manifest;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.service.Service;
 import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.service.beans.ServiceOutcome;
@@ -32,21 +33,28 @@ public class ServiceStepTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCreateServiceOutcome() throws Exception {
-    K8Manifest k8Manifest =
-        K8Manifest.builder()
-            .identifier("m1")
-            .kind(ManifestType.K8Manifest)
-            .storeConfig(
-                GitStore.builder().connectorId("g1").fetchType("branch").fetchValue("master").path("path").build())
-            .build();
+    K8sManifest k8Manifest = K8sManifest.builder()
+                                 .identifier("m1")
+                                 .kind(ManifestType.K8Manifest)
+                                 .storeConfig(GitStore.builder()
+                                                  .path("path")
+                                                  .connectorId("g1")
+                                                  .fetchType(FetchType.BRANCH)
+                                                  .fetchValue("master")
+                                                  .build())
+                                 .build();
 
-    K8Manifest k8Manifest1 =
-        K8Manifest.builder()
-            .identifier("o1")
-            .kind(ManifestType.K8Manifest)
-            .storeConfig(
-                GitStore.builder().connectorId("g1").fetchType("branch").fetchValue("master").path("path1").build())
-            .build();
+    K8sManifest k8Manifest1 = K8sManifest.builder()
+                                  .identifier("o1")
+
+                                  .kind(ManifestType.K8Manifest)
+                                  .storeConfig(GitStore.builder()
+                                                   .path("path1")
+                                                   .connectorId("g1")
+                                                   .fetchType(FetchType.BRANCH)
+                                                   .fetchValue("master")
+                                                   .build())
+                                  .build();
 
     OutcomeService outcomeService = mock(OutcomeService.class);
     doReturn(Arrays.asList(ManifestOutcome.builder()

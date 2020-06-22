@@ -1,14 +1,11 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.service.impl.ContainerServiceParams;
@@ -25,6 +22,7 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
   @Inject private GitClient gitClient;
   @Inject private EncryptionService encryptionService;
   @Inject private ContainerValidationHelper containerValidationHelper;
+  @Inject private GitFetchFilesValidationHelper gitFetchFilesValidationHelper;
 
   public GitFetchFilesValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> consumer) {
@@ -55,7 +53,8 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
     for (Entry<String, GitFetchFilesConfig> entry : gitFetchFileConfigMap.entrySet()) {
       GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
 
-      if (!validateGitConfig(gitFetchFileConfig.getGitConfig(), gitFetchFileConfig.getEncryptedDataDetails())) {
+      if (!gitFetchFilesValidationHelper.validateGitConfig(
+              gitFetchFileConfig.getGitConfig(), gitFetchFileConfig.getEncryptedDataDetails())) {
         return taskValidationResult(false);
       }
     }
@@ -65,20 +64,6 @@ public class GitFetchFilesValidation extends AbstractDelegateValidateTask {
   private List<DelegateConnectionResult> taskValidationResult(boolean validated) {
     return singletonList(
         DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(validated).build());
-  }
-
-  private boolean validateGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
-    try {
-      encryptionService.decrypt(gitConfig, encryptionDetails);
-    } catch (Exception e) {
-      logger.info("Failed to decrypt " + gitConfig, e);
-      return false;
-    }
-
-    if (isNotEmpty(gitClient.validate(gitConfig))) {
-      return false;
-    }
-    return true;
   }
 
   @Override

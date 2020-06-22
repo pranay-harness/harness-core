@@ -1,11 +1,13 @@
 package io.harness.validation;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException.ReportTarget;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -20,6 +22,12 @@ public class Validator {
 
   public static void notEmptyCheck(String message, String value) {
     if (StringUtils.isEmpty(value)) {
+      throw new InvalidRequestException(message);
+    }
+  }
+
+  public static <T> void notEmptyCheck(String message, Collection<T> value) {
+    if (EmptyPredicate.isEmpty(value)) {
       throw new InvalidRequestException(message);
     }
   }

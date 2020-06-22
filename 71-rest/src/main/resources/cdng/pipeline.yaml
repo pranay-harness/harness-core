@@ -1,164 +1,192 @@
 pipeline:
-  name: Production Primary Deployment
-  identifier: prod_primary_deployment
+  displayName: "Manager Service Deployment"
+  identifier: managerServiceDeployment
   stages:
   - stage:
-      identifier: deploymentStage1
-      name: deployment-stage-1
-      type: deployment
-      service:
-        displayName: manager
-        identifier: manager
-        serviceSpec:
-          deploymentType: kubernetes
-          artifacts:
-            primary:
-              dockerhub:
-                dockerhubConnector: "https://registry.hub.docker.com/"
-                imagePath: "library/ubuntu"
-                tag: "latest"
-
-      infrastructure:
-        environment:
-          # Give a name to the environment where deployment is being done (Dev, QA, Production, etc). You can give any name and if an environment with this name doesn't exist, it will be created. REQUIRED
-          displayName:
-          identifier: staging
-
-          # Type of the environment where deployment is being done if the environment doesn't already exist. Options: pre-production | production. pre-production is default. OPTIONAL
-          # If there is an existing environment with the specified name, the type of existing environment will be used.
-          type: PRE_PRODUCTION
-          tags:
-          - key: cloud
-            value: AWS
-          - key: team
-            value: cdp
-
-        # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
-        # Dynamic type ???
-
-
-        infrastructureSpec:
+      identifier: qaStage
+      displayName: "qa stage"
+      deployment:
+        service:
+          identifier: manager
+          serviceSpec:
+            deploymentType: kubernetes
+            artifacts:
+              primary:
+                dockerhub:
+                  dockerhubConnector: "https://registry.hub.docker.com/"
+                  imagePath: "library/nginx"
+                  tag: "1.19"
+            manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
+            - manifest:
+                identifier: baseValues
+                k8s:
+                  git:
+                    connectorId: 6NY8BQ-0T_mqYE3Uoo6WHg
+                    fetchType: BRANCH
+                    fetchValue: master
+                    paths:
+                    - test/spec
+                  valuesFilePaths:
+                  - test/baseValues.yaml
+          # If your base values.yaml is in different repo or branch, use below configuration
+          #            - manifest:
+          #                identifier: 2
+          #                values:
+          #                  git:
+          #                    connectorId: 6NY8BQ-0T_mqYE3Uoo6WHg
+          #                    fetchType: BRANCH
+          #                    fetchValue: master
+          #                    paths:
+          #                    - test/override/values.yaml
+          overrides:
+            manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
+            #            - manifest:/
+            #                identifier:
+            #                values:
+            #                  git:
+            #                    connectorId: 6NY8BQ-0T_mqYE3Uoo6WHg
+            #                    fetchType: BRANCH
+            #                    fetchValue: master
+            #                    paths:
+            #                    - test/dev/values_1.yaml
+            - manifest:
+                identifier: qaOverride
+                values:
+                  git:
+                    connectorId: B4r5Hoe0QWaDQR3rqCdcfw
+                    fetchType: BRANCH
+                    fetchValue: master
+                    paths:
+                    - k8s/cdng/qaValues.yaml
+        #                    - k8s/cdng/values.yaml
+        infrastructure:
+          environment:
+            # Give a name to the environment where deployment is being done (Dev, QA, Production, etc). You can give any name and if an environment with this name doesn't exist, it will be created. REQUIRED
+            displayName:
+            identifier: stagingInfra
+            # Type of the environment where deployment is being done if the environment doesn't already exist. Options: pre-production | production. pre-production is default. OPTIONAL
+            # If there is an existing environment with the specified name, the type of existing environment will be used.
+            type: PRE_PRODUCTION
+            tags:
+            - key: cloud
+              value: AWS
+            - key: team
+              value: cdp
           # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
           # Dynamic type ???
-          kubernetesDirect:
-            # Spec for Infrastructure Type kubernetes-direct
-            k8sConnector: my-connector
-            # namespace
-            namespace: my-namespace
-            # release name
-            releaseName: my-release
-      execution:
-      - phase:
-          # Name of the phase. REQUIRED
-          name:  Deploy
-          identifier: phase1
-          steps:
-          - step:
-              type: http
-              name: "Rollout Deployment"
-              identifier: rollout-deployment
-              spec:
-                socketTimeoutMillis: 1000
-                method: GET
-                url: http://www.mocky.io/v2/5ed11ed8350000b8e1ffa2c5
-          - step:
-              type: shellScript
-              name: "Rollout Deployment"
-              identifier: rollout-deployment
-              shellScript:
-                executeOnDelegate: true
-                connectionType: SSH
-                scriptType: BASH
-                scriptString: |
-                  echo 'Hello, world, from script 11!'
-                  export HELLO='hello1!'
-                  export HI='hi1!'
-                  echo "scriptType = ${scriptType}"
-                  echo "sweepingOutputScope = ${sweepingOutputScope}"
-                  echo "artifactsTag = ${artifacts.tag}"
-                  echo "serviceName = ${service.displayName}"
-                  export INFRA="hey ${infrastructure.namespace} ${environment.type}"
-                outputVars: HELLO,HI,INFRA
-                sweepingOutputName: shell1
-                sweepingOutputScope: STAGE
+          infrastructureSpec:
+            # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
+            # Dynamic type ???
+            kubernetesDirect:
+              # Spec for Infrastructure Type kubernetes-direct
+              connectorId: qH_3tp1bTJq3Wyud1YCWEA
+              # namespace
+              namespace: default
+              # release name
+              releaseName: vaibhav
+        execution:
+        - phase:
+            # Name of the phase. REQUIRED
+            displayName:  Deploy
+            identifier: phase1
+            steps:
+            - step:
+                displayName: "Rollout Deployment"
+                identifier: rolloutDeployment
+                k8sRolling:
+                  timeout: 120000
+                  skipDryRun: false
   - stage:
-      identifier: deploymentStage2
-      name: deployment-stage-2
-      type: deployment
-      deployment-type: kubernetes
-      service:
-        displayName: delegate
-        identifier: delegate
-        serviceSpec:
-          deploymentType: kubernetes
-          artifacts:
-            primary:
-              dockerhub:
-                dockerhubConnector: "https://registry.hub.docker.com/"
-                imagePath: "library/nginx"
-                tag: "latest"
-      infrastructure:
-        environment:
-          # Give a name to the environment where deployment is being done (Dev, QA, Production, etc). You can give any name and if an environment with this name doesn't exist, it will be created. REQUIRED
-          displayName:
-          identifier: qa
-
-          # Type of the environment where deployment is being done if the environment doesn't already exist. Options: pre-production | production. pre-production is default. OPTIONAL
-          # If there is an existing environment with the specified name, the type of existing environment will be used.
-          type: PRE_PRODUCTION
-          tags:
-          - key: cloud
-            value: GCP
-          - key: team
-            value: cdc
-
-        # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
-        # Dynamic type ???
-
-
-        infrastructureSpec:
+      identifier: prodStage
+      displayName: "prod stage"
+      deployment:
+        service:
+          identifier: manager
+          serviceSpec:
+            deploymentType: kubernetes
+            artifacts:
+              primary:
+                dockerhub:
+                  dockerhubConnector: "https://registry.hub.docker.com/"
+                  imagePath: "library/nginx"
+                  tag: "1.18"
+            manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
+            - manifest:
+                identifier: baseValues
+                k8s:
+                  git:
+                    connectorId: 6NY8BQ-0T_mqYE3Uoo6WHg
+                    fetchType: BRANCH
+                    fetchValue: master
+                    paths:
+                    - test/spec
+                  valuesFilePaths:
+                  - test/baseValues.yaml
+          # If your base values.yaml is in different repo or branch, use below configuration
+          #            - manifest:
+          #                identifier: 2
+          #                values:
+          #                  git:
+          #                    connectorId: 6NY8BQ-0T_mqYE3Uoo6WHg
+          #                    fetchType: BRANCH
+          #                    fetchValue: master
+          #                    paths:
+          #                    - test/override/values.yaml
+          overrides:
+            manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
+            #            - manifest:/
+            #                identifier:
+            #                values:
+            #                  git:
+            #                    connectorId: 6NY8BQ-0T_mqYE3Uoo6WHg
+            #                    fetchType: BRANCH
+            #                    fetchValue: master
+            #                    paths:
+            #                    - test/dev/values_1.yaml
+            - manifest:
+                identifier: prodOverride
+                values:
+                  git:
+                    connectorId: B4r5Hoe0QWaDQR3rqCdcfw
+                    fetchType: BRANCH
+                    fetchValue: master
+                    paths:
+                    - k8s/cdng/prodValues.yaml
+        #                    - k8s/cdng/values.yaml
+        infrastructure:
+          environment:
+            # Give a name to the environment where deployment is being done (Dev, QA, Production, etc). You can give any name and if an environment with this name doesn't exist, it will be created. REQUIRED
+            displayName:
+            identifier: stagingInfra
+            # Type of the environment where deployment is being done if the environment doesn't already exist. Options: pre-production | production. pre-production is default. OPTIONAL
+            # If there is an existing environment with the specified name, the type of existing environment will be used.
+            type: PRE_PRODUCTION
+            tags:
+            - key: cloud
+              value: AWS
+            - key: team
+              value: cdp
           # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
           # Dynamic type ???
-          kubernetesDirect:
-            # Spec for Infrastructure Type kubernetes-direct
-            k8sConnector: my-connector2
-            # namespace
-            namespace: my-namespace2
-            # release name
-            releaseName: my-release2
-      execution:
-      - phase:
-          # Name of the phase. REQUIRED
-          name:  Deploy
-          identifier: phase1
-          steps:
-          - step:
-              type: http
-              name: "http"
-              identifier: http
-              spec:
-                socketTimeoutMillis: 1000
-                method: GET
-                url: http://www.mocky.io/v2/5ed11ed8350000b8e1ffa2c5
-          - step:
-              type: shellScript
-              name: "shell script"
-              identifier: shellScript
-              shellScript:
-                executeOnDelegate: true
-                connectionType: SSH
-                scriptType: BASH
-                scriptString: |
-                  echo 'Hello, world, from script 11!'
-                  export HELLO='hello1!'
-                  export HI='hi1!'
-                  echo "scriptType = ${scriptType}"
-                  echo "sweepingOutputScope = ${sweepingOutputScope}"
-                  echo "artifactsTag = ${artifacts.tag}"
-                  echo "serviceName = ${service.displayName}"
-                  echo "Stage 1 artifactsTag = ${deploymentStage1.artifacts.tag}"
-                  echo "Stage 1 serviceName = ${deploymentStage1.service.displayName}"
-                  export INFRA="hey ${infrastructure.namespace} ${deploymentStage1.environment.type} ${STAGES.deploymentStage1.environment.displayName}"
-                outputVars: HELLO,HI,INFRA
-                sweepingOutputName: shell1
-                sweepingOutputScope: STAGE
+          infrastructureSpec:
+            # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
+            # Dynamic type ???
+            kubernetesDirect:
+              # Spec for Infrastructure Type kubernetes-direct
+              connectorId: qH_3tp1bTJq3Wyud1YCWEA
+              # namespace
+              namespace: default
+              # release name
+              releaseName: vaibhav
+        execution:
+        - phase:
+            # Name of the phase. REQUIRED
+            displayName:  Deploy
+            identifier: phase1
+            steps:
+            - step:
+                displayName: "Rollout Deployment"
+                identifier: rolloutDeployment
+                k8sRolling:
+                  timeout: 120000
+                  skipDryRun: false

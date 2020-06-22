@@ -24,6 +24,7 @@ import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -61,6 +62,8 @@ public class ServiceStepPlanCreator implements SupportDefinedExecutorPlanCreator
 
   private PlanNode prepareServiceNode(Service service, List<String> childNodeIds) {
     final String serviceNodeUid = generateUuid();
+
+    service.setDisplayName(StringUtils.defaultIfEmpty(service.getDisplayName(), service.getIdentifier()));
 
     return PlanNode.builder()
         .uuid(serviceNodeUid)

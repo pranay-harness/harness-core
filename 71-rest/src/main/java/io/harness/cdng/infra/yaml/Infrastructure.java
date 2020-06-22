@@ -6,4 +6,7 @@ import io.harness.state.io.StepParameters;
 
 //@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 //@JsonSubTypes({ @JsonSubTypes.Type(value = K8SDirectInfrastructureSpecYaml.class, name = "kubernetesDirect") })
-public interface Infrastructure extends Outcome, StepParameters { InfraMapping getInfraMapping(); }
+public interface Infrastructure extends Outcome, StepParameters {
+  InfraMapping getInfraMapping();
+  InfrastructureKind getKind();
+}
