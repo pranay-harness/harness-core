@@ -18,7 +18,6 @@ import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
-import io.harness.plan.input.InputArgs;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
@@ -38,7 +37,6 @@ public class BuildEnvSetupStepTest extends CIExecutionTest {
   @Mock private ManagerCIResource managerCIResource;
   @Mock private BuildSetupUtils buildSetupUtils;
   @Mock private Ambiance ambiance;
-  @Mock private InputArgs inputArgs;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
 
   @Before

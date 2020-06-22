@@ -19,7 +19,6 @@ import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.managerclient.ManagerCIResource;
-import io.harness.plan.input.InputArgs;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -37,7 +36,6 @@ public class CleanupStepTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Mock private ManagerCIResource managerCIResource;
   @Mock private Ambiance ambiance;
-  @Mock private InputArgs inputArgs;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
 
   @Before
