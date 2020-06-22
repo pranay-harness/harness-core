@@ -36,12 +36,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 
 @Api("/projects")
 @Path("/projects")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Produces({"application/json", "text/yaml", "text/html"})
+@Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class ProjectResource {
   private final ProjectService projectService;
@@ -49,7 +48,6 @@ public class ProjectResource {
 
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
-  @Consumes(MediaType.APPLICATION_JSON)
   public ProjectDTO create(@NotNull @Valid CreateProjectDTO createProjectDTO) {
     Project project = projectService.create(toProject(createProjectDTO));
     return writeDTO(project);
@@ -81,7 +79,6 @@ public class ProjectResource {
   @PUT
   @Path("{projectId}")
   @ApiOperation(value = "Update a project by id", nickname = "putProject")
-  @Consumes(MediaType.APPLICATION_JSON)
   public Optional<ProjectDTO> update(
       @PathParam("projectId") @NotEmpty String projectId, @NotNull @Valid UpdateProjectDTO updateProjectDTO) {
     Optional<Project> project = projectService.get(projectId);
@@ -95,7 +92,6 @@ public class ProjectResource {
   @DELETE
   @Path("{projectId}")
   @ApiOperation(value = "Delete a project by id", nickname = "deleteProject")
-  @Consumes(MediaType.TEXT_HTML)
   public boolean delete(@PathParam("projectId") @NotEmpty String projectId) {
     return projectService.delete(projectId);
   }

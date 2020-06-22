@@ -35,11 +35,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 
 @Api("/organizations")
 @Path("/organizations")
-@Produces(MediaType.APPLICATION_JSON)
+@Produces({"application/json", "text/yaml", "text/html"})
+@Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class OrganizationResource {
   private final OrganizationService organizationService;
@@ -89,7 +89,6 @@ public class OrganizationResource {
   @DELETE
   @Path("{organizationId}")
   @ApiOperation(value = "Delete Organization by id", nickname = "deleteOrganization")
-  @Consumes(MediaType.TEXT_HTML)
   public boolean delete(@PathParam("organizationId") String organizationId) {
     return organizationService.delete(organizationId);
   }
