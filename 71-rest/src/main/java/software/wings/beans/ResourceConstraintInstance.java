@@ -52,6 +52,13 @@ import javax.validation.constraints.NotNull;
       @Field(ResourceConstraintInstanceKeys.appId)
       , @Field(ResourceConstraintInstanceKeys.releaseEntityType), @Field(ResourceConstraintInstanceKeys.releaseEntityId)
     })
+@CdIndex(name = "constraintStateUnitOrderIdx",
+    fields =
+    {
+      @Field(ResourceConstraintInstanceKeys.resourceConstraintId)
+      , @Field(ResourceConstraintInstanceKeys.state), @Field(ResourceConstraintInstanceKeys.resourceUnit),
+          @Field(ResourceConstraintInstanceKeys.order)
+    })
 @FieldNameConstants(innerTypeName = "ResourceConstraintInstanceKeys")
 @Entity(value = "resourceConstraintInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
