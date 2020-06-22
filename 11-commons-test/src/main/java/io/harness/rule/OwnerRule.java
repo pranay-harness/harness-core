@@ -136,6 +136,7 @@ public class OwnerRule implements TestRule {
   public static final String MILAN = "milan.balaban";
   public static final String RAGHVENDRA = "raghvendra.singh";
   public static final String ARCHIT = "archit.singla";
+  public static final String IVAN = "ivan.mijailovic";
   public static final String SAHIL = "sahil.hindwani";
   public static final String BOJANA = "bojana.milovanovic";
   public static final String LAZAR = "lazar.matovic";
@@ -229,6 +230,7 @@ public class OwnerRule implements TestRule {
           .put(VGLIJIN, defaultDevInfo(VGLIJIN).slack("U012W2S777V").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(MILAN, defaultDevInfo(MILAN).slack("U012P4GHM7Y").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(ARCHIT, defaultDevInfo(ARCHIT).slack("U012QGPR9N0").team(CONTINUOUS_DEPLOYMENT_CORE).build())
+          .put(IVAN, defaultDevInfo(IVAN).slack("U014BFQ9PJS").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(SAHIL, defaultDevInfo(SAHIL).slack("U0141LFMEF8").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(BOJANA, defaultDevInfo(BOJANA).slack("U014GS4NFLM").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(LAZAR, defaultDevInfo(LAZAR).slack("U0150TB4LSK").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())

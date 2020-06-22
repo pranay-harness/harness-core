@@ -44,6 +44,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
@@ -198,6 +199,7 @@ public class HelmDeployState extends State {
   private static final String DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_TAG}";
   private static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
   private static final String NO_PREV_DEPLOYMENT = "No previous version available for rollback";
+  private static final String VALID_YAML_FILE_EXTENSIONS_REGEX = "(?i)(yaml|yml)$";
 
   /**
    * Instantiates a new state.
@@ -628,13 +630,27 @@ public class HelmDeployState extends State {
     if (isBlank(getHelmReleaseNamePrefix())) {
       invalidFields.put("Helm release name prefix", "Helm release name prefix must not be blank");
     }
-    if (gitFileConfig != null && isNotBlank(gitFileConfig.getConnectorId())) {
-      if (isBlank(gitFileConfig.getFilePath())) {
-        invalidFields.put("File path", "File path must not be blank if git connector is selected");
-      }
 
+    if (gitFileConfig != null && isNotBlank(gitFileConfig.getConnectorId())) {
       if (isBlank(gitFileConfig.getBranch()) && isBlank(gitFileConfig.getCommitId())) {
         invalidFields.put("Branch or commit id", "Branch or commit id must not be blank if git connector is selected");
+      }
+
+      String filePath = gitFileConfig.getFilePath();
+      boolean isFilePathValid = true;
+      if (isBlank(filePath)) {
+        invalidFields.put("File path", "File path must not be blank if git connector is selected");
+        isFilePathValid = false;
+      }
+
+      if (isFilePathValid && isBlank(FilenameUtils.getName(filePath))) {
+        invalidFields.put("File path", "File path cannot be directory if git connector is selected");
+        isFilePathValid = false;
+      }
+
+      String fileExtension = FilenameUtils.getExtension(filePath).trim();
+      if (isFilePathValid && (isBlank(fileExtension) || !fileExtension.matches(VALID_YAML_FILE_EXTENSIONS_REGEX))) {
+        invalidFields.put("File path", "File path has to be YAML file if git connector is selected");
       }
     }
 
