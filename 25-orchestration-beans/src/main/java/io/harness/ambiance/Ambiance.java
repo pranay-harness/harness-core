@@ -8,9 +8,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.NodeExecution;
 import io.harness.logging.AutoLogContext;
-import io.harness.plan.input.InputArgs;
 import io.harness.serializer.KryoUtils;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -32,21 +30,21 @@ import javax.validation.constraints.NotNull;
 @Getter
 @EqualsAndHashCode
 public class Ambiance {
-  @NotNull InputArgs inputArgs;
-  @NotNull List<Level> levels;
-  @NotNull String planExecutionId;
+  @Getter @NotNull Map<String, String> setupAbstractions;
+  @Getter @NotNull List<Level> levels;
+  @Getter @NotNull String planExecutionId;
 
   @Setter @Transient int expressionFunctorToken;
 
   @Builder
-  public Ambiance(InputArgs inputArgs, List<Level> levels, String planExecutionId) {
-    this.inputArgs = inputArgs;
+  public Ambiance(Map<String, String> setupAbstractions, List<Level> levels, String planExecutionId) {
+    this.setupAbstractions = setupAbstractions;
     this.levels = levels == null ? new ArrayList<>() : levels;
     this.planExecutionId = planExecutionId;
   }
 
   public AutoLogContext autoLogContext() {
-    Map<String, String> logContext = inputArgs == null ? new HashMap<>() : new HashMap<>(inputArgs.strMap());
+    Map<String, String> logContext = setupAbstractions == null ? new HashMap<>() : new HashMap<>(setupAbstractions);
     logContext.put(AmbianceKeys.planExecutionId, planExecutionId);
     levels.forEach(level -> {
       logContext.put("identifier", level.getIdentifier());
@@ -93,13 +91,5 @@ public class Ambiance {
   @VisibleForTesting
   Ambiance deepCopy() {
     return KryoUtils.clone(this);
-  }
-
-  public static Ambiance fromNodeExecution(@NotNull InputArgs inputArgs, @NotNull NodeExecution nodeExecution) {
-    return Ambiance.builder()
-        .inputArgs(inputArgs)
-        .planExecutionId(nodeExecution.getPlanExecutionId())
-        .levels(nodeExecution.getLevels())
-        .build();
   }
 }

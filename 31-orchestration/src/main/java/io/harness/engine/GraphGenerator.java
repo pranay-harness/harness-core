@@ -75,21 +75,21 @@ public class GraphGenerator {
         throw new UnexpectedException("The node with id [" + nodeExId + "] is not found");
       }
 
-      GraphVertex graphVertex =
-          GraphVertex.builder()
-              .uuid(currentNode.getUuid())
-              .name(currentNode.getNode().getName())
-              .startTs(currentNode.getStartTs())
-              .endTs(currentNode.getEndTs())
-              .initialWaitDuration(currentNode.getInitialWaitDuration())
-              .lastUpdatedAt(currentNode.getLastUpdatedAt())
-              .stepType(currentNode.getNode().getStepType().getType())
-              .status(currentNode.getStatus())
-              .failureInfo(currentNode.getFailureInfo())
-              .interruptHistories(currentNode.getInterruptHistories())
-              .outcomes(outcomeService.findAllByRuntimeId(currentNode.getPlanExecutionId(), currentNode.getUuid()))
-              .retryIds(currentNode.getRetryIds())
-              .build();
+      GraphVertex graphVertex = GraphVertex.builder()
+                                    .uuid(currentNode.getUuid())
+                                    .name(currentNode.getNode().getName())
+                                    .startTs(currentNode.getStartTs())
+                                    .endTs(currentNode.getEndTs())
+                                    .initialWaitDuration(currentNode.getInitialWaitDuration())
+                                    .lastUpdatedAt(currentNode.getLastUpdatedAt())
+                                    .stepType(currentNode.getNode().getStepType().getType())
+                                    .status(currentNode.getStatus())
+                                    .failureInfo(currentNode.getFailureInfo())
+                                    .interruptHistories(currentNode.getInterruptHistories())
+                                    .outcomes(outcomeService.findAllByRuntimeId(
+                                        currentNode.getAmbiance().getPlanExecutionId(), currentNode.getUuid()))
+                                    .retryIds(currentNode.getRetryIds())
+                                    .build();
 
       if (parentIdMap.containsKey(currentNode.getUuid())) {
         graphVertex.setSubgraph(new Subgraph(currentNode.getMode()));

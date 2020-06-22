@@ -12,7 +12,6 @@ import io.harness.persistence.CreatedByAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.Plan;
-import io.harness.plan.input.InputArgs;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -27,6 +26,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.Map;
 
 @OwnedBy(CDC)
 @Value
@@ -44,7 +44,7 @@ public class PlanExecution implements PersistentEntity, CreatedByAccess, UuidAcc
   EmbeddedUser createdBy;
   @Wither @CreatedDate Long createdAt;
   Plan plan;
-  InputArgs inputArgs;
+  Map<String, String> setupAbstractions;
   @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   Status status;

@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
+import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.UnexpectedException;
@@ -65,7 +66,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
   public void shouldThrowUnexpectedExceptionWhenNodeIsNotPresent() {
     NodeExecution dummyStart = NodeExecution.builder()
                                    .uuid("node1")
-                                   .planExecutionId(PLAN_EXECUTION_ID)
+                                   .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                                    .mode(ExecutionMode.SYNC)
                                    .node(PlanNode.builder()
                                              .uuid(STARTING_EXECUTION_NODE_ID)
@@ -88,7 +89,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
   public void shouldGenerateGraphVertexWithSection() {
     NodeExecution dummyStart = NodeExecution.builder()
                                    .uuid("node1")
-                                   .planExecutionId(PLAN_EXECUTION_ID)
+                                   .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                                    .mode(ExecutionMode.SYNC)
                                    .node(PlanNode.builder()
                                              .uuid(STARTING_EXECUTION_NODE_ID)
@@ -101,7 +102,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
     StepParameters sectionStepParams = SectionStepParameters.builder().childNodeId("child_section_2").build();
     NodeExecution section = NodeExecution.builder()
                                 .uuid("node2")
-                                .planExecutionId(PLAN_EXECUTION_ID)
+                                .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                                 .mode(ExecutionMode.CHILD)
                                 .node(PlanNode.builder()
                                           .uuid("section_2")
@@ -115,7 +116,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                 .build();
     NodeExecution sectionChild = NodeExecution.builder()
                                      .uuid("node_child_2")
-                                     .planExecutionId(PLAN_EXECUTION_ID)
+                                     .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                                      .mode(ExecutionMode.SYNC)
                                      .node(PlanNode.builder()
                                                .uuid("child_section_2")
@@ -153,7 +154,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
         ForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
     NodeExecution fork = NodeExecution.builder()
                              .uuid("node1")
-                             .planExecutionId(PLAN_EXECUTION_ID)
+                             .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                              .mode(ExecutionMode.CHILDREN)
                              .node(PlanNode.builder()
                                        .uuid(STARTING_EXECUTION_NODE_ID)
@@ -166,7 +167,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
                              .build();
     NodeExecution parallelNode1 = NodeExecution.builder()
                                       .uuid("parallel_node_1")
-                                      .planExecutionId(PLAN_EXECUTION_ID)
+                                      .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                                       .mode(ExecutionMode.SYNC)
                                       .node(PlanNode.builder()
                                                 .uuid("parallel_plan_node_1")
@@ -178,7 +179,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                       .build();
     NodeExecution parallelNode2 = NodeExecution.builder()
                                       .uuid("parallel_node_2")
-                                      .planExecutionId(PLAN_EXECUTION_ID)
+                                      .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                                       .mode(ExecutionMode.SYNC)
                                       .node(PlanNode.builder()
                                                 .uuid("parallel_plan_node_2")
@@ -210,7 +211,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
 
     NodeExecution sectionChainParentNode = NodeExecution.builder()
                                                .uuid("section_chain_start")
-                                               .planExecutionId(PLAN_EXECUTION_ID)
+                                               .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                                                .mode(ExecutionMode.CHILD_CHAIN)
                                                .node(PlanNode.builder()
                                                          .uuid("section_chain_plan_node")
@@ -222,7 +223,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
 
     NodeExecution sectionChain1 = NodeExecution.builder()
                                       .uuid("section_chain_child1")
-                                      .planExecutionId(PLAN_EXECUTION_ID)
+                                      .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                                       .mode(ExecutionMode.TASK)
                                       .node(PlanNode.builder()
                                                 .uuid("section_chain_child1_plan_node")
@@ -236,7 +237,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
 
     NodeExecution sectionChain2 = NodeExecution.builder()
                                       .uuid("section_chain_child2")
-                                      .planExecutionId(PLAN_EXECUTION_ID)
+                                      .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                                       .mode(ExecutionMode.TASK)
                                       .node(PlanNode.builder()
                                                 .uuid("section_chain_child2_plan_node")
@@ -250,7 +251,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
 
     NodeExecution dummyNode1 = NodeExecution.builder()
                                    .uuid(dummyNode1Uuid)
-                                   .planExecutionId(PLAN_EXECUTION_ID)
+                                   .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                                    .mode(ExecutionMode.SYNC)
                                    .node(PlanNode.builder()
                                              .uuid("dummy_plan_node_1")
@@ -264,7 +265,7 @@ public class GraphGeneratorTest extends OrchestrationTest {
 
     NodeExecution dummyNode2 = NodeExecution.builder()
                                    .uuid(dummyNode2Uuid)
-                                   .planExecutionId(PLAN_EXECUTION_ID)
+                                   .ambiance(Ambiance.builder().planExecutionId(PLAN_EXECUTION_ID).build())
                                    .mode(ExecutionMode.SYNC)
                                    .node(PlanNode.builder()
                                              .uuid("dummy_plan_node_2")

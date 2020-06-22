@@ -51,7 +51,7 @@ public class EmailStep implements Step, SyncExecutable {
                                         .cc(getEmailAddressList(stepParameters.getCcAddress()))
                                         .subject(stepParameters.getSubject())
                                         .body(stepParameters.getBody())
-                                        .accountId((String) ambiance.getInputArgs().get(ACCOUNT_ID))
+                                        .accountId(ambiance.getSetupAbstractions().get(ACCOUNT_ID))
                                         .build());
       stepResponseBuilder.status(Status.SUCCEEDED);
     } catch (Exception e) {

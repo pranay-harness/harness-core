@@ -14,16 +14,17 @@ import java.util.List;
 @OwnedBy(CDC)
 @HarnessRepo
 public interface NodeExecutionRepository extends CrudRepository<NodeExecution, String> {
-  List<NodeExecution> findByPlanExecutionId(String planExecutionId);
+  List<NodeExecution> findByAmbiancePlanExecutionId(String planExecutionId);
 
-  List<NodeExecution> findByPlanExecutionIdAndOldRetry(String planExecutionId, Boolean oldRetry);
+  List<NodeExecution> findByAmbiancePlanExecutionIdAndOldRetry(String planExecutionId, Boolean oldRetry);
 
-  List<NodeExecution> findByPlanExecutionIdAndParentIdOrderByCreatedAtDesc(String planExecutionId, String parentId);
+  List<NodeExecution> findByAmbiancePlanExecutionIdAndParentIdOrderByCreatedAtDesc(
+      String planExecutionId, String parentId);
 
-  List<NodeExecution> findByPlanExecutionIdAndStatus(String planExecutionId, Status status);
+  List<NodeExecution> findByAmbiancePlanExecutionIdAndStatus(String planExecutionId, Status status);
 
-  List<NodeExecution> findByPlanExecutionIdAndStatusIn(String planExecutionId, EnumSet<Status> statuses);
+  List<NodeExecution> findByAmbiancePlanExecutionIdAndStatusIn(String planExecutionId, EnumSet<Status> statuses);
 
-  List<NodeExecution> findByPlanExecutionIdAndParentIdInAndStatusIn(
+  List<NodeExecution> findByAmbiancePlanExecutionIdAndParentIdInAndStatusIn(
       String planExecutionId, List<String> parentIds, EnumSet<Status> statuses);
 }

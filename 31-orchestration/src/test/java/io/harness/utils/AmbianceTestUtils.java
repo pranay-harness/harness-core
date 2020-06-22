@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
-import io.harness.plan.input.InputArgs;
 import io.harness.state.StepType;
 
 import java.util.ArrayList;
@@ -39,11 +38,7 @@ public class AmbianceTestUtils {
     levels.add(sectionLevel);
     return Ambiance.builder()
         .planExecutionId(EXECUTION_INSTANCE_ID)
-        .inputArgs(
-            InputArgs.builder()
-                .putAll(
-                    ImmutableMap.<String, Object>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
-                .build())
+        .setupAbstractions(ImmutableMap.of("accountId", ACCOUNT_ID, "appId", APP_ID))
         .levels(levels)
         .build();
   }

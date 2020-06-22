@@ -87,7 +87,6 @@ public class ExecutionEngine {
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private ResolverRegistry resolverRegistry;
-  @Inject private AmbianceHelper ambianceHelper;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableInvokerFactory executableInvokerFactory;
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
@@ -100,8 +99,7 @@ public class ExecutionEngine {
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
-    facilitateAndStartStep(ambiance, nodeExecution);
+    facilitateAndStartStep(nodeExecution.getAmbiance(), nodeExecution);
   }
 
   public void startNodeExecution(Ambiance ambiance) {
@@ -151,8 +149,7 @@ public class ExecutionEngine {
         NodeExecution.builder()
             .uuid(uuid)
             .node(node)
-            .planExecutionId(cloned.getPlanExecutionId())
-            .levels(cloned.getLevels())
+            .ambiance(cloned)
             .startTs(System.currentTimeMillis())
             .status(Status.QUEUED)
             .notifyId(previousNodeExecution == null ? null : previousNodeExecution.getNotifyId())
@@ -227,7 +224,7 @@ public class ExecutionEngine {
           setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
         });
     // TODO => handle before node execution update
-    Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
+    Ambiance ambiance = nodeExecution.getAmbiance();
     List<StepOutcomeRef> outcomeRefs = handleOutcomes(ambiance, stepResponse.stepOutcomeMap());
 
     PlanNode node = nodeExecution.getNode();
@@ -289,7 +286,7 @@ public class ExecutionEngine {
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
       logger.info("Ending Execution");
-      planExecutionService.updateStatus(nodeExecution.getPlanExecutionId(), nodeExecution.getStatus());
+      planExecutionService.updateStatus(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getStatus());
     }
   }
 
@@ -301,7 +298,7 @@ public class ExecutionEngine {
 
   public void resume(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    Ambiance ambiance = ambianceHelper.fetchAmbiance(nodeExecution);
+    Ambiance ambiance = nodeExecution.getAmbiance();
     try (AutoLogContext ignore = ambiance.autoLogContext()) {
       if (!resumableStatuses().contains(nodeExecution.getStatus())) {
         logger.warn("NodeExecution is no longer in RESUMABLE state Uuid: {} Status {} ", nodeExecution.getUuid(),

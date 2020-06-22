@@ -112,7 +112,7 @@ public class NodeExecutionMap extends LateBindingMap {
       return Optional.empty();
     }
 
-    Ambiance newAmbiance = Ambiance.fromNodeExecution(ambiance.getInputArgs(), nodeExecution);
+    Ambiance newAmbiance = nodeExecution.getAmbiance();
     if (newAmbiance == null) {
       return Optional.empty();
     }

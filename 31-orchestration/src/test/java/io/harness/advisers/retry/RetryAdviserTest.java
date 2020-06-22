@@ -72,8 +72,7 @@ public class RetryAdviserTest extends OrchestrationTest {
   public void shouldTestValidStatus() {
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid(NODE_EXECUTION_ID)
-                                      .planExecutionId(ambiance.getPlanExecutionId())
-                                      .levels(ambiance.getLevels())
+                                      .ambiance(ambiance)
                                       .node(PlanNode.builder()
                                                 .uuid(NODE_SETUP_ID)
                                                 .name(NODE_NAME)
@@ -103,8 +102,7 @@ public class RetryAdviserTest extends OrchestrationTest {
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(NODE_EXECUTION_ID)
-            .planExecutionId(ambiance.getPlanExecutionId())
-            .levels(ambiance.getLevels())
+            .ambiance(ambiance)
             .node(PlanNode.builder()
                       .uuid(NODE_SETUP_ID)
                       .name(NODE_NAME)
@@ -135,8 +133,7 @@ public class RetryAdviserTest extends OrchestrationTest {
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(NODE_EXECUTION_ID)
-            .planExecutionId(ambiance.getPlanExecutionId())
-            .levels(ambiance.getLevels())
+            .ambiance(ambiance)
             .node(PlanNode.builder()
                       .uuid(NODE_SETUP_ID)
                       .name(NODE_NAME)

@@ -36,27 +36,28 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
 
   @Override
   public List<NodeExecution> fetchNodeExecutions(String planExecutionId) {
-    return nodeExecutionRepository.findByPlanExecutionId(planExecutionId);
+    return nodeExecutionRepository.findByAmbiancePlanExecutionId(planExecutionId);
   }
 
   @Override
   public List<NodeExecution> fetchNodeExecutionsWithoutOldRetries(String planExecutionId) {
-    return nodeExecutionRepository.findByPlanExecutionIdAndOldRetry(planExecutionId, Boolean.FALSE);
+    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndOldRetry(planExecutionId, Boolean.FALSE);
   }
 
   @Override
   public List<NodeExecution> fetchChildrenNodeExecutions(String planExecutionId, String parentId) {
-    return nodeExecutionRepository.findByPlanExecutionIdAndParentIdOrderByCreatedAtDesc(planExecutionId, parentId);
+    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndParentIdOrderByCreatedAtDesc(
+        planExecutionId, parentId);
   }
 
   @Override
   public List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, Status status) {
-    return nodeExecutionRepository.findByPlanExecutionIdAndStatus(planExecutionId, status);
+    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndStatus(planExecutionId, status);
   }
 
   @Override
   public List<NodeExecution> fetchNodeExecutionsByStatuses(String planExecutionId, EnumSet<Status> statuses) {
-    return nodeExecutionRepository.findByPlanExecutionIdAndStatusIn(planExecutionId, statuses);
+    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndStatusIn(planExecutionId, statuses);
   }
 
   @Override
@@ -75,7 +76,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Override
   public List<NodeExecution> fetchChildrenNodeExecutionsByStatuses(
       String planExecutionId, List<String> parentIds, EnumSet<Status> statuses) {
-    return nodeExecutionRepository.findByPlanExecutionIdAndParentIdInAndStatusIn(planExecutionId, parentIds, statuses);
+    return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndParentIdInAndStatusIn(
+        planExecutionId, parentIds, statuses);
   }
 
   @Override

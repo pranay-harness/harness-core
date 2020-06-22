@@ -9,7 +9,6 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
-import io.harness.plan.input.InputArgs;
 import io.harness.rule.Owner;
 import io.harness.state.StepType;
 import org.junit.Test;
@@ -35,10 +34,8 @@ public class AmbianceTest extends OrchestrationBeansTest {
     Ambiance copy = ambiance.deepCopy();
 
     assertThat(copy).isNotNull();
-    assertThat(System.identityHashCode(copy.getInputArgs()))
-        .isNotEqualTo(System.identityHashCode(ambiance.getInputArgs()));
     assertThat(System.identityHashCode(copy.getLevels())).isNotEqualTo(System.identityHashCode(ambiance.getLevels()));
-    assertThat(copy.getInputArgs()).isEqualTo(ambiance.getInputArgs());
+    assertThat(copy.getSetupAbstractions()).isEqualTo(ambiance.getSetupAbstractions());
     assertThat(copy.getLevels()).isEqualTo(ambiance.getLevels());
   }
 
@@ -133,11 +130,7 @@ public class AmbianceTest extends OrchestrationBeansTest {
     levels.add(sectionLevel);
     return Ambiance.builder()
         .planExecutionId(EXECUTION_INSTANCE_ID)
-        .inputArgs(
-            InputArgs.builder()
-                .putAll(
-                    ImmutableMap.<String, Object>builder().put("accountId", ACCOUNT_ID).put("appId", APP_ID).build())
-                .build())
+        .setupAbstractions(ImmutableMap.of("accountId", ACCOUNT_ID, "appId", APP_ID))
         .levels(levels)
         .build();
   }

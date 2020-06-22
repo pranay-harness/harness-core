@@ -5,12 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.status.Status;
-import io.harness.plan.input.InputArgs;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
@@ -59,8 +59,7 @@ public class EmailStepTest extends WingsBaseTest {
   }
 
   private void testEmailState(boolean ignoreDeliveryFailure, Status expectedStatus) {
-    Ambiance ambiance =
-        Ambiance.builder().inputArgs(InputArgs.builder().put("accountId", "accountIdValue").build()).build();
+    Ambiance ambiance = Ambiance.builder().setupAbstractions(ImmutableMap.of("accountId", "accountIdValue")).build();
     StepParameters emailStepParameters = EmailStepParameters.builder()
                                              .body("body")
                                              .toAddress("toAddress1, toAddress2")

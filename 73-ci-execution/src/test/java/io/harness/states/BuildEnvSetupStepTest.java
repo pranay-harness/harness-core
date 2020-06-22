@@ -58,8 +58,6 @@ public class BuildEnvSetupStepTest extends CIExecutionTest {
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(buildSetupUtils.executeCISetupTask(any(), any())).thenReturn(restResponse);
-    when(ambiance.getInputArgs()).thenReturn(inputArgs);
-    when(inputArgs.get(any())).thenReturn("abc");
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
 
@@ -76,9 +74,6 @@ public class BuildEnvSetupStepTest extends CIExecutionTest {
     when(requestCall.execute())
         .thenReturn(Response.success(new RestResponse<>(K8sTaskExecutionResponse.builder().build())));
     when(buildSetupUtils.executeCISetupTask(any(), any())).thenThrow(new RuntimeException());
-    when(ambiance.getInputArgs()).thenReturn(inputArgs);
-    when(inputArgs.get(any())).thenReturn("abc");
-
     buildEnvSetupStep.executeSync(ambiance, BuildEnvSetupStepInfo.builder().build(), null, null);
 
     verify(buildSetupUtils, times(1)).executeCISetupTask(any(), any());

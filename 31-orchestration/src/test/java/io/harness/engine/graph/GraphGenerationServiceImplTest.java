@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.OrchestrationTest;
+import io.harness.ambiance.Ambiance;
 import io.harness.beans.EmbeddedUser;
 import io.harness.cache.MongoStore;
 import io.harness.category.element.UnitTests;
@@ -92,7 +93,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
         ForkStepParameters.builder().parallelNodeId("parallel_node_1").parallelNodeId("parallel_node_2").build();
     NodeExecution fork = NodeExecution.builder()
                              .uuid("node1")
-                             .planExecutionId(planExecution.getUuid())
+                             .ambiance(Ambiance.builder().planExecutionId(planExecution.getUuid()).build())
                              .mode(ExecutionMode.CHILDREN)
                              .node(PlanNode.builder()
                                        .uuid("node1_plan")
@@ -105,7 +106,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
                              .build();
     NodeExecution parallelNode1 = NodeExecution.builder()
                                       .uuid("parallel_node_1")
-                                      .planExecutionId(planExecution.getUuid())
+                                      .ambiance(Ambiance.builder().planExecutionId(planExecution.getUuid()).build())
                                       .mode(ExecutionMode.SYNC)
                                       .node(PlanNode.builder()
                                                 .uuid("parallel_plan_node_1")
@@ -117,7 +118,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
                                       .build();
     NodeExecution parallelNode2 = NodeExecution.builder()
                                       .uuid("parallel_node_2")
-                                      .planExecutionId(planExecution.getUuid())
+                                      .ambiance(Ambiance.builder().planExecutionId(planExecution.getUuid()).build())
                                       .mode(ExecutionMode.SYNC)
                                       .node(PlanNode.builder()
                                                 .uuid("parallel_plan_node_2")
@@ -158,7 +159,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationTest {
   public void shouldTestWithCache() {
     PlanExecution planExecution = planExecutionService.save(PlanExecution.builder().createdBy(createdBy()).build());
     NodeExecution dummyStart = NodeExecution.builder()
-                                   .planExecutionId(planExecution.getUuid())
+                                   .ambiance(Ambiance.builder().planExecutionId(planExecution.getUuid()).build())
                                    .mode(ExecutionMode.SYNC)
                                    .node(PlanNode.builder()
                                              .uuid("node1_plan")

@@ -49,7 +49,7 @@ public class ArtifactStep implements Step, TaskExecutable {
   public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
     ArtifactStepParameters parameters = (ArtifactStepParameters) stepParameters;
     logger.info("Executing deployment stage with params [{}]", parameters);
-    ArtifactSource artifactSource = getArtifactSource(parameters, (String) ambiance.getInputArgs().get("accountId"));
+    ArtifactSource artifactSource = getArtifactSource(parameters, ambiance.getSetupAbstractions().get("accountId"));
 
     String waitId = generateUuid();
     ArtifactTaskParameters taskParameters = ArtifactUtils.getArtifactTaskParameters(
