@@ -62,8 +62,8 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
 
   private Execution getPreIntegrationExecution(IntegrationStage integrationStage) {
     // TODO Only git is supported currently
-    if (integrationStage.getCi().getConnector().getType().equals("git")) {
-      GitConnectorYaml gitConnectorYaml = (GitConnectorYaml) integrationStage.getCi().getConnector();
+    if (integrationStage.getCi().getGitConnector().getType().equals("git")) {
+      GitConnectorYaml gitConnectorYaml = (GitConnectorYaml) integrationStage.getCi().getGitConnector();
       return Execution.builder()
           .steps(asList(BuildEnvSetupStepInfo.builder()
                             .identifier(ENV_SETUP_NAME)
@@ -129,7 +129,7 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
                                  .containerImageDetails(
                                      ContainerImageDetails.builder()
                                          .imageDetails(getImageDetails(integrationStage))
-                                         .connectorIdentifier(integrationStage.getCi().getArtifact().getIdentifier())
+                                         .connectorIdentifier(integrationStage.getCi().getContainer().getConnector())
                                          .build())
                                  .containerType(ContainerType.STEP_EXECUTOR)
                                  .name(CONTAINER_NAME)

@@ -62,9 +62,8 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
     assertThat(ciPipeline.getStages()).hasSize(1);
     assertThat(ciPipeline.getStages().get(0)).isInstanceOf(IntegrationStage.class);
     IntegrationStage integrationStage = (IntegrationStage) ciPipeline.getStages().get(0);
-    assertThat(integrationStage.getIdentifier()).isEqualTo("master-build-upload");
-    assertThat(integrationStage.getCi().getArtifact()).isNotNull();
-    assertThat(integrationStage.getCi().getConnector()).isNotNull();
+    assertThat(integrationStage.getIdentifier()).isEqualTo("masterBuildUpload");
+    assertThat(integrationStage.getCi().getGitConnector()).isNotNull();
     assertThat(integrationStage.getCi().getInfrastructure()).isNotNull();
     assertThat(integrationStage.getCi().getContainer()).isNotNull();
     assertThat(integrationStage.getCi().getCustomVariables()).isNotNull();

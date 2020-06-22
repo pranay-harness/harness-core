@@ -130,7 +130,10 @@ public class CIExecutionPlanTestHelper {
   public Infrastructure getInfrastructure() {
     return K8sDirectInfraYaml.builder()
         .type("kubernetes-direct")
-        .spec(K8sDirectInfraYaml.Spec.builder().k8sConnector("testGcpConnector").namespace("testNamespace").build())
+        .spec(K8sDirectInfraYaml.Spec.builder()
+                  .kubernetesCluster("testKubernetesCluster")
+                  .namespace("testNamespace")
+                  .build())
         .build();
   }
   public IntegrationStage getIntegrationStage() {
@@ -138,9 +141,8 @@ public class CIExecutionPlanTestHelper {
         .identifier("intStageIdentifier")
         .ci(IntegrationStage.Integration.builder()
                 .execution(getExecution())
-                .connector(getConnector())
+                .gitConnector(getConnector())
                 .container(getContainer())
-                .artifact(getArtifact())
                 .infrastructure(getInfrastructure())
                 .build())
 

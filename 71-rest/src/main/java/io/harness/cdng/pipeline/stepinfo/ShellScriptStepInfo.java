@@ -27,7 +27,7 @@ public class ShellScriptStepInfo implements CDStepInfo, GenericStepInfo {
   }
 
   @Override
-  public String getName() {
+  public String getDisplayName() {
     return displayName;
   }
 

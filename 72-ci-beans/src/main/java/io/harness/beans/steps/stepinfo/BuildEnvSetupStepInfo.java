@@ -35,15 +35,16 @@ public class BuildEnvSetupStepInfo implements CIStepInfo, GenericStepInfo {
           .build();
 
   @NotNull @EntityIdentifier String identifier;
-  String name;
+  String displayName;
   @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "timeout", " setupEnv"})
-  public BuildEnvSetupStepInfo(String identifier, String name, Integer retry, Integer timeout, BuildEnvSetup setupEnv) {
+  @ConstructorProperties({"identifier", "displayName", "retry", "timeout", " setupEnv"})
+  public BuildEnvSetupStepInfo(
+      String identifier, String displayName, Integer retry, Integer timeout, BuildEnvSetup setupEnv) {
     this.identifier = identifier;
-    this.name = name;
+    this.displayName = displayName;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.setupEnv = setupEnv;

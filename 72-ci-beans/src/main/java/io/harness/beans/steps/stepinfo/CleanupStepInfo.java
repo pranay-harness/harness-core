@@ -32,17 +32,17 @@ public class CleanupStepInfo implements CIStepInfo, GenericStepInfo {
                                               .stepType(StepType.builder().type(CIStepInfoType.CLEANUP.name()).build())
                                               .build();
   @NotNull @EntityIdentifier String identifier;
-  String name;
+  String displayName;
   @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
 
   @NotNull Cleanup cleanup;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "timeout", "cleanup"})
-  public CleanupStepInfo(String identifier, String name, Integer retry, Integer timeout, Cleanup cleanup) {
+  @ConstructorProperties({"identifier", "displayName", "retry", "timeout", "cleanup"})
+  public CleanupStepInfo(String identifier, String displayName, Integer retry, Integer timeout, Cleanup cleanup) {
     this.identifier = identifier;
-    this.name = name;
+    this.displayName = displayName;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.cleanup = cleanup;

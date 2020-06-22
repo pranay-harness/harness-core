@@ -22,7 +22,7 @@ public class K8sDirectInfraYaml implements Infrastructure {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Spec {
-    private String k8sConnector;
+    private String kubernetesCluster;
     private String namespace;
   }
 }

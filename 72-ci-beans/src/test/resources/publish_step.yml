@@ -1,31 +1,60 @@
 identifier: publishArtifacts
-name: publish artifacts step test
+displayName: publish artifacts step test
 publishArtifacts:
-  - filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
-    destination:
-      location: gs://snapshot-delegate-jars/artifacts/
-      connector: myGCPConnector
-  - filePattern: ~/.m2/watcher-${BUILD_NUMBER}.jar
-    destination:
-      location: s3://snapshot-watcher-jars/artifacts/
-      connector: myS3Connector
-  - dockerFile: ~/Dockerfile
-    image: ui
-    tag: 1.0.0
-    buildArguments:
-      key1: value1
-      key2: value2
-    destination:
-      location: eu.gcr.io/harness/ui:latest
-      connector: myDockerRepoConnector
-  - dockerImage: build-based-image
-    tag: 1.0.0
-  - dockerImage: build-based-image
-    tag: 1.0.0
-    destination:
-      connector: myDockerHubConnector
-  - dockerImage: build-based-image
-    tag: 1.0.0
-    destination:
-      location: gs://myBucket/ciApp
-      connector: myGcrConnector
+- filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
+  nexus:
+    connector: myNexusConnector
+    path: path/to/myfile/on/server
+
+- filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
+  artifactory:
+    connector: myArtifactoryConnector
+    repository: myRepo
+    artifactPath: path/to/myfile/on/server
+
+- filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
+  s3:
+    connector: myS3Connector
+    location: s3://snapshot-watcher-jars/artifacts/
+
+- dockerFile: ~/Dockerfile
+  image: ui
+  tag: 1.0.0
+  buildArguments:
+    - key: key1
+      value: value1
+    - key: key2
+      value: value2
+  ecr:
+    connector: myDockerRepoConnector
+    location: eu.gcr.io/harness/ui:latest
+    region: US-West
+
+- dockerFile: ~/Dockerfile
+  image: ui
+  tag: 1.0.0
+  buildArguments:
+    - key: key1
+      value: value1
+    - key: key2
+      value: value2
+  dockerhub:
+    connector: myDockerHubConnector # credentials are always needed to push
+
+- dockerFile: ~/Dockerfile
+  image: ui
+  tag: 1.0.0
+  buildArguments:
+    - key: key1
+      value: value1
+    - key: key2
+      value: value2
+  gcr:
+    connector: myDockerRepoConnector
+    location: eu.gcr.io/harness/ui:latest
+
+- dockerImage: build-based-image
+  tag: 1.0.0
+  gcr:
+    connector: myDockerRepoConnector
+    location: eu.gcr.io/harness/ui:latest
