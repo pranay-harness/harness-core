@@ -19,6 +19,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
+import static software.wings.signup.BugsnagConstants.CLUSTER_TYPE;
+import static software.wings.signup.BugsnagConstants.FREEMIUM;
+import static software.wings.signup.BugsnagConstants.ONBOARDING;
 
 import com.google.inject.Inject;
 
@@ -37,6 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.BugsnagTab;
 import software.wings.beans.ErrorData;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
@@ -57,6 +61,8 @@ import software.wings.utils.ResourceTestRule;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import javax.cache.Cache;
 import javax.ws.rs.BadRequestException;
@@ -80,6 +86,8 @@ public class UserResourceTest extends WingsBaseTest {
   public static final TwoFactorAuthenticationManager TWO_FACTOR_AUTHENTICATION_MANAGER =
       mock(TwoFactorAuthenticationManager.class);
   static final AccountPermissionUtils ACCOUNT_PERMISSION_UTILS = mock(AccountPermissionUtils.class);
+  private static final List<BugsnagTab> tab =
+      Collections.singletonList(BugsnagTab.builder().tabName(CLUSTER_TYPE).key(FREEMIUM).value(ONBOARDING).build());
   @Inject @InjectMocks private UserResource userResource;
   @Mock private BugsnagErrorReporter bugsnagErrorReporter;
 
@@ -181,7 +189,8 @@ public class UserResourceTest extends WingsBaseTest {
     try {
       userResource.trialSignup(userInvite);
     } catch (Exception e) {
-      verify(bugsnagErrorReporter, times(1)).report(ErrorData.builder().exception(e).email("invalid").build());
+      verify(bugsnagErrorReporter, times(1))
+          .report(ErrorData.builder().exception(e).email("invalid").tabs(tab).build());
       assertThat(e).isNotNull();
     }
   }
@@ -193,7 +202,7 @@ public class UserResourceTest extends WingsBaseTest {
     try {
       userResource.resendVerificationEmail("");
     } catch (Exception e) {
-      verify(bugsnagErrorReporter, times(1)).report(ErrorData.builder().exception(e).email("").build());
+      verify(bugsnagErrorReporter, times(1)).report(ErrorData.builder().exception(e).email("").tabs(tab).build());
       assertThat(e).isNotNull();
     }
   }

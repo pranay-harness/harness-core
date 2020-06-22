@@ -2,6 +2,9 @@ package software.wings.resources;
 
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.signup.BugsnagConstants.CLUSTER_TYPE;
+import static software.wings.signup.BugsnagConstants.FREEMIUM;
+import static software.wings.signup.BugsnagConstants.ONBOARDING;
 
 import com.google.inject.Inject;
 
@@ -12,6 +15,7 @@ import io.harness.security.annotations.PublicApi;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.BugsnagTab;
 import software.wings.beans.ErrorData;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -25,6 +29,8 @@ import software.wings.service.intfc.signup.SignupException;
 import software.wings.service.intfc.signup.SignupService;
 import software.wings.signup.BugsnagErrorReporter;
 
+import java.util.Collections;
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -50,6 +56,8 @@ public class SignupResource {
 
   private static final String FAILURE_MESSAGE = "Failed to complete signup";
   private static final String FAILURE_MESSAGE_CONTACT_SUPPORT = "Failed to signup. Please contact harness support";
+  private static final List<BugsnagTab> tab =
+      Collections.singletonList(BugsnagTab.builder().tabName(CLUSTER_TYPE).key(FREEMIUM).value(ONBOARDING).build());
 
   /**
    *  Start the trial registration with email and user info. (Doesn't contains password)
@@ -65,15 +73,15 @@ public class SignupResource {
     try {
       return new RestResponse<>(signupService.signup(userInvite, source));
     } catch (SignupException ex) {
-      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).build());
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).tabs(tab).build());
       throw ex;
     } catch (WeakPasswordException ex) {
       logger.error("Password validation failed");
-      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).build());
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).tabs(tab).build());
       throw new SignupException(ex.getMessage(), ex, INVALID_REQUEST, Level.ERROR, WingsException.USER, null);
     } catch (Exception ex) {
       logger.error(FAILURE_MESSAGE, ex);
-      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).build());
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).email(userInvite.getEmail()).tabs(tab).build());
       throw new SignupException(FAILURE_MESSAGE_CONTACT_SUPPORT);
     }
   }
@@ -85,7 +93,7 @@ public class SignupResource {
     try {
       return signupService.checkValidity(azureMarketplaceToken);
     } catch (Exception ex) {
-      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw new SignupException(FAILURE_MESSAGE_CONTACT_SUPPORT);
     }
   }
@@ -98,15 +106,15 @@ public class SignupResource {
     try {
       return new RestResponse<>(signupService.completeSignup(passwordRequest, secretToken));
     } catch (SignupException ex) {
-      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw ex;
     } catch (WeakPasswordException ex) {
       logger.error("Password validation failed");
-      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw new SignupException(ex.getMessage(), ex, INVALID_REQUEST, Level.ERROR, WingsException.USER, null);
     } catch (Exception ex) {
       logger.error(FAILURE_MESSAGE, ex);
-      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw new SignupException(FAILURE_MESSAGE_CONTACT_SUPPORT);
     }
   }
@@ -118,11 +126,11 @@ public class SignupResource {
     try {
       return new RestResponse<>(signupService.completeAzureMarketplaceSignup(token));
     } catch (SignupException ex) {
-      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw ex;
     } catch (Exception ex) {
       logger.error(FAILURE_MESSAGE, ex);
-      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).build());
+      bugsnagErrorReporter.report(ErrorData.builder().exception(ex).tabs(tab).build());
       throw new SignupException(FAILURE_MESSAGE_CONTACT_SUPPORT);
     }
   }

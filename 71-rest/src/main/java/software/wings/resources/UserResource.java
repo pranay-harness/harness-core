@@ -12,6 +12,9 @@ import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
+import static software.wings.signup.BugsnagConstants.CLUSTER_TYPE;
+import static software.wings.signup.BugsnagConstants.FREEMIUM;
+import static software.wings.signup.BugsnagConstants.ONBOARDING;
 import static software.wings.utils.Utils.urlDecode;
 
 import com.google.common.collect.Lists;
@@ -43,6 +46,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
+import software.wings.beans.BugsnagTab;
 import software.wings.beans.ErrorData;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.LoginRequest;
@@ -139,6 +143,8 @@ public class UserResource {
   private AccountPasswordExpirationJob accountPasswordExpirationJob;
   private ReCaptchaVerifier reCaptchaVerifier;
   private static final String BASIC = "Basic";
+  private static final List<BugsnagTab> tab =
+      Collections.singletonList(BugsnagTab.builder().tabName(CLUSTER_TYPE).key(FREEMIUM).value(ONBOARDING).build());
 
   @Inject private BugsnagErrorReporter bugsnagErrorReporter;
   @Inject
@@ -223,7 +229,8 @@ public class UserResource {
     try {
       return new RestResponse<>(userService.trialSignup(userInvite));
     } catch (Exception exception) {
-      bugsnagErrorReporter.report(ErrorData.builder().exception(exception).email(userInvite.getEmail()).build());
+      bugsnagErrorReporter.report(
+          ErrorData.builder().exception(exception).email(userInvite.getEmail()).tabs(tab).build());
       throw exception;
     }
   }
@@ -245,7 +252,7 @@ public class UserResource {
       return new RestResponse<>(userService.accountJoinRequest(accountJoinRequest));
     } catch (Exception exception) {
       bugsnagErrorReporter.report(
-          ErrorData.builder().exception(exception).email(accountJoinRequest.getEmail()).build());
+          ErrorData.builder().exception(exception).email(accountJoinRequest.getEmail()).tabs(tab).build());
       throw exception;
     }
   }
@@ -388,7 +395,8 @@ public class UserResource {
     try {
       return new RestResponse<>(userService.resetPassword(passwordRequest.getEmail()));
     } catch (Exception exception) {
-      bugsnagErrorReporter.report(ErrorData.builder().exception(exception).email(passwordRequest.getEmail()).build());
+      bugsnagErrorReporter.report(
+          ErrorData.builder().exception(exception).email(passwordRequest.getEmail()).tabs(tab).build());
       throw exception;
     }
   }
@@ -427,7 +435,7 @@ public class UserResource {
       return new RestResponse(
           userService.updatePassword(resetPasswordToken, updatePasswordRequest.getPassword().toCharArray()));
     } catch (Exception exception) {
-      bugsnagErrorReporter.report(ErrorData.builder().exception(exception).build());
+      bugsnagErrorReporter.report(ErrorData.builder().exception(exception).tabs(tab).build());
       throw exception;
     }
   }
@@ -885,7 +893,7 @@ public class UserResource {
     try {
       return new RestResponse<>(userService.resendVerificationEmail(email));
     } catch (Exception exception) {
-      bugsnagErrorReporter.report(ErrorData.builder().exception(exception).email(email).build());
+      bugsnagErrorReporter.report(ErrorData.builder().exception(exception).email(email).tabs(tab).build());
       throw exception;
     }
   }

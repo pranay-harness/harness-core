@@ -6,6 +6,7 @@ import com.bugsnag.Bugsnag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.app.BugsnagErrorReporterConfiguration;
+import software.wings.beans.BugsnagTab;
 import software.wings.beans.ErrorData;
 import software.wings.service.intfc.ErrorReporter;
 
@@ -13,17 +14,15 @@ import software.wings.service.intfc.ErrorReporter;
 public class BugsnagErrorReporter implements ErrorReporter {
   @Inject private BugsnagErrorReporterConfiguration bugsnagErrorReporterConfiguration;
 
-  private static final String CLUSTER_TYPE = "clusterType";
-  private static final String FREEMIUM = "freemium";
-  private static final String ONBOARDING = "Onboarding";
-
   public void report(ErrorData errorData) {
     String bugsnagApiKey = bugsnagErrorReporterConfiguration.getBugsnagApiKey();
     if (bugsnagErrorReporterConfiguration.isErrorReportingEnabled() && StringUtils.isNotEmpty(bugsnagApiKey)) {
       try (Bugsnag bugsnag = new Bugsnag(bugsnagApiKey)) {
         logger.info("Sending alert to bugsnag");
         bugsnag.addCallback(report -> {
-          report.addToTab(CLUSTER_TYPE, FREEMIUM, ONBOARDING);
+          for (BugsnagTab tab : errorData.getTabs()) {
+            report.addToTab(tab.getTabName(), tab.getKey(), tab.getValue());
+          }
           report.setUserEmail(errorData.getEmail());
         });
         bugsnag.notify(errorData.getException());
