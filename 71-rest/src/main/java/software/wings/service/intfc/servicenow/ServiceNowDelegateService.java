@@ -26,8 +26,7 @@ public interface ServiceNowDelegateService {
   @DelegateTaskType(TaskType.SERVICENOW_SYNC)
   List<ServiceNowMetaDTO> getAdditionalFields(ServiceNowTaskParameters taskParameters);
   @DelegateTaskType(TaskType.SERVICENOW_SYNC)
-  ServiceNowExecutionData getIssueUrl(
-      ServiceNowTaskParameters taskParameters, ServiceNowApprovalParams approvalParams, boolean snowMultiConditions);
+  ServiceNowExecutionData getIssueUrl(ServiceNowTaskParameters taskParameters, ServiceNowApprovalParams approvalParams);
   @DelegateTaskType(TaskType.SERVICENOW_SYNC)
   String getIssueFieldStatus(ServiceNowTaskParameters taskParameters, String field);
   @DelegateTaskType(TaskType.SERVICENOW_SYNC)

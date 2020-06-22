@@ -71,7 +71,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.NameValuePairKeys;
@@ -100,7 +99,6 @@ import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -158,7 +156,6 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Inject private SecretManager secretManager;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private UserGroupService userGroupService;
-  @Inject private FeatureFlagService featureFlagService;
 
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -494,37 +491,34 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
     try {
       ServiceNowExecutionData serviceNowExecutionData =
-          serviceNowService.getIssueUrl(app.getAppId(), app.getAccountId(), servicenowApprovalParams,
-              featureFlagService.isGlobalEnabled(FeatureName.SERVICENOW_MULTIPLE_CONDITIONS));
+          serviceNowService.getIssueUrl(app.getAppId(), app.getAccountId(), servicenowApprovalParams);
       executionData.setTicketUrl(serviceNowExecutionData.getIssueUrl());
       executionData.setCurrentStatus(serviceNowExecutionData.getCurrentState());
       executionData.setTicketType(servicenowApprovalParams.getTicketType());
 
-      if (featureFlagService.isGlobalEnabled(FeatureName.SERVICENOW_MULTIPLE_CONDITIONS)) {
-        Map<String, String> currentStatus = serviceNowExecutionData.getCurrentStatus();
-        if (isNotEmpty(currentStatus)) {
-          executionData.setCurrentStatus(
-              currentStatus.entrySet()
-                  .stream()
-                  .map(status -> StringUtils.capitalize(status.getKey()) + " is " + status.getValue())
-                  .collect(Collectors.joining(" and\n")));
-        }
+      Map<String, String> currentStatus = serviceNowExecutionData.getCurrentStatus();
+      if (isNotEmpty(currentStatus)) {
+        executionData.setCurrentStatus(
+            currentStatus.entrySet()
+                .stream()
+                .map(status -> StringUtils.capitalize(status.getKey()) + " is " + status.getValue())
+                .collect(Collectors.joining(" and\n")));
+      }
 
-        if (executionData.getSnowApproval() != null && executionData.getSnowApproval().satisfied(currentStatus)) {
-          return respondWithStatus(context, executionData, null,
-              ExecutionResponse.builder()
-                  .executionStatus(SUCCESS)
-                  .errorMessage("Approval provided on ticket: " + servicenowApprovalParams.getIssueNumber())
-                  .stateExecutionData(executionData));
-        }
+      if (executionData.getSnowApproval() != null && executionData.getSnowApproval().satisfied(currentStatus)) {
+        return respondWithStatus(context, executionData, null,
+            ExecutionResponse.builder()
+                .executionStatus(SUCCESS)
+                .errorMessage("Approval provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+                .stateExecutionData(executionData));
+      }
 
-        if (executionData.getSnowRejection() != null && executionData.getSnowRejection().satisfied(currentStatus)) {
-          return respondWithStatus(context, executionData, null,
-              ExecutionResponse.builder()
-                  .executionStatus(REJECTED)
-                  .errorMessage("Rejection provided on ticket: " + servicenowApprovalParams.getIssueNumber())
-                  .stateExecutionData(executionData));
-        }
+      if (executionData.getSnowRejection() != null && executionData.getSnowRejection().satisfied(currentStatus)) {
+        return respondWithStatus(context, executionData, null,
+            ExecutionResponse.builder()
+                .executionStatus(REJECTED)
+                .errorMessage("Rejection provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+                .stateExecutionData(executionData));
       }
 
       if (serviceNowExecutionData.getCurrentState().equalsIgnoreCase(servicenowApprovalParams.getApprovalValue())) {

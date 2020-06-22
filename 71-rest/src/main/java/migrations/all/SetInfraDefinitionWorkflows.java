@@ -1,8 +1,5 @@
 package migrations.all;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
@@ -50,26 +47,9 @@ public class SetInfraDefinitionWorkflows {
     logger.info(StringUtils.join(
         DEBUG_LINE, "Starting Infra Definition migration for Workflows, accountId ", account.getUuid()));
 
-    long workflowsSize =
-        wingsPersistence.createQuery(Workflow.class).filter(WorkflowKeys.accountId, account.getUuid()).count();
-    logger.info("Total workflows for account = " + workflowsSize);
+    List<Workflow> workflows = WorkflowAndPipelineMigrationUtils.fetchAllWorkflowsForAccount(
+        wingsPersistence, workflowService, account.getUuid());
 
-    int numberOfPages = (int) ((workflowsSize + 999) / 1000);
-    List<Workflow> workflows = new ArrayList<>();
-    for (int i = 0; i < numberOfPages; i++) {
-      List<Workflow> newWorkflows = workflowService
-                                        .listWorkflows(aPageRequest()
-                                                           .withLimit(UNLIMITED)
-                                                           .withOffset(String.valueOf(i * 1000))
-                                                           .addFilter(WorkflowKeys.accountId, EQ, account.getUuid())
-                                                           .build())
-                                        .getResponse();
-      if (!isEmpty(newWorkflows)) {
-        workflows.addAll(newWorkflows);
-      }
-    }
-
-    logger.info("Updating {} workflows.", workflows.size());
     for (Workflow workflow : workflows) {
       try {
         logger.info(StringUtils.join(

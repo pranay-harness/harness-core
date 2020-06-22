@@ -329,17 +329,19 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
 
   @Override
   public ServiceNowExecutionData getIssueUrl(
-      ServiceNowTaskParameters taskParameters, ServiceNowApprovalParams approvalParams, boolean snowMultiConditions) {
+      ServiceNowTaskParameters taskParameters, ServiceNowApprovalParams approvalParams) {
     JsonNode issueObj = getIssue(taskParameters);
     String issueId = issueObj.get("sys_id").get("display_value").asText();
     String issueUrl = getBaseUrl(taskParameters.getServiceNowConfig()) + "nav_to.do?uri=/"
         + taskParameters.getTicketType().toString().toLowerCase() + ".do?sys_id=" + issueId;
 
-    if (snowMultiConditions) {
+    Set<String> serviceNowFields = approvalParams.getAllCriteriaFields();
+
+    if (EmptyPredicate.isNotEmpty(serviceNowFields)) {
       return ServiceNowExecutionData.builder()
           .issueUrl(issueUrl)
           .currentState(extractCurrentStatusFromIssue(issueObj, approvalParams))
-          .currentStatus(approvalParams.getAllCriteriaFields().stream().collect(
+          .currentStatus(serviceNowFields.stream().collect(
               Collectors.toMap(field -> field, field -> issueObj.get(field).get("display_value").asText())))
           .build();
     }

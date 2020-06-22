@@ -1,8 +1,5 @@
 package migrations.all;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
@@ -21,7 +18,6 @@ import software.wings.beans.Account;
 import software.wings.beans.EntityType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
-import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Variable;
@@ -56,27 +52,9 @@ public class SetInfraDefinitionPipelines {
     logger.info(StringUtils.join(
         DEBUG_LINE, "Starting Infra Definition migration for Pipelines, accountId ", account.getUuid()));
 
-    long pipelineSize =
-        wingsPersistence.createQuery(Pipeline.class).filter(PipelineKeys.accountId, account.getUuid()).count();
-    logger.info("Total pipelines for account = " + pipelineSize);
+    List<Pipeline> pipelines = WorkflowAndPipelineMigrationUtils.fetchAllPipelinesForAccount(
+        wingsPersistence, pipelineService, account.getUuid());
 
-    int numberOfPages = (int) ((pipelineSize + 999) / 1000);
-    List<Pipeline> pipelines = new ArrayList<>();
-    for (int i = 0; i < numberOfPages; i++) {
-      List<Pipeline> newPipelines = pipelineService
-                                        .listPipelines(aPageRequest()
-                                                           .withLimit(UNLIMITED)
-                                                           .withOffset(String.valueOf(i * 1000))
-                                                           .addFilter(PipelineKeys.accountId, EQ, account.getUuid())
-                                                           .build(),
-                                            true, 0, false, null)
-                                        .getResponse();
-      if (!isEmpty(newPipelines)) {
-        pipelines.addAll(newPipelines);
-      }
-    }
-
-    logger.info("Updating {} pipelines.", pipelines.size());
     for (Pipeline pipeline : pipelines) {
       try {
         migrate(pipeline);

@@ -99,7 +99,6 @@ import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
@@ -149,7 +148,6 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private JiraHelperService jiraHelperService;
   @Mock private ServiceNowService serviceNowService;
   @Mock private ApprovalPolingService approvalPolingService;
-  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
 
@@ -224,8 +222,6 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(notificationMessageResolver.getPlaceholderValues(
              any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
         .thenReturn(placeholders);
-
-    when(featureFlagService.isGlobalEnabled(any())).thenReturn(false);
   }
 
   @Test
@@ -678,8 +674,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     String approvalValue = "DONE";
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(false)))
-        .thenReturn(ServiceNowExecutionData.builder().currentState(approvalValue).build());
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any()))
+        .thenReturn(ServiceNowExecutionData.builder().currentState(approvalValue).currentStatus(null).build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
@@ -702,12 +698,11 @@ public class ApprovalStateTest extends WingsBaseTest {
     String approvalValue = "Approved";
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(true)))
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any()))
         .thenReturn(ServiceNowExecutionData.builder()
                         .currentState("state")
                         .currentStatus(Collections.singletonMap("approval", approvalValue))
                         .build());
-    when(featureFlagService.isGlobalEnabled(any())).thenReturn(true);
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
@@ -735,12 +730,11 @@ public class ApprovalStateTest extends WingsBaseTest {
     String approvalValue = "Approved";
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(true)))
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any()))
         .thenReturn(ServiceNowExecutionData.builder()
                         .currentState("state")
                         .currentStatus(ImmutableMap.of("state", "Closed", "approval", "Approved"))
                         .build());
-    when(featureFlagService.isGlobalEnabled(any())).thenReturn(true);
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
@@ -767,12 +761,11 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testExecuteSnowApprovalIfAlreadyRejectedWithMultipleORConditions() {
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(true)))
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any()))
         .thenReturn(ServiceNowExecutionData.builder()
                         .currentState("state")
                         .currentStatus(ImmutableMap.of("state", "Scheduled", "approval", "Approved"))
                         .build());
-    when(featureFlagService.isGlobalEnabled(any())).thenReturn(true);
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
@@ -800,12 +793,11 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testExecuteSnowApprovalPausedIfConditionsNotMet() {
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(true)))
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any()))
         .thenReturn(ServiceNowExecutionData.builder()
                         .currentState("state")
                         .currentStatus(ImmutableMap.of("state", "Scheduled", "approval", "Approved"))
                         .build());
-    when(featureFlagService.isGlobalEnabled(any())).thenReturn(true);
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
@@ -832,12 +824,11 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void shouldApproveSnowApprovalIfBothCriteriaMet() {
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(true)))
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any()))
         .thenReturn(ServiceNowExecutionData.builder()
                         .currentState("state")
                         .currentStatus(ImmutableMap.of("state", "Scheduled", "approval", "Approved"))
                         .build());
-    when(featureFlagService.isGlobalEnabled(any())).thenReturn(true);
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
@@ -869,8 +860,8 @@ public class ApprovalStateTest extends WingsBaseTest {
     String rejectionValue = "REJECTED";
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(false)))
-        .thenReturn(ServiceNowExecutionData.builder().currentState(rejectionValue).build());
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any()))
+        .thenReturn(ServiceNowExecutionData.builder().currentState(rejectionValue).currentStatus(null).build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
@@ -892,8 +883,8 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testExecuteSnowApprovalWithPollingService() {
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(false)))
-        .thenReturn(ServiceNowExecutionData.builder().currentState("TODO").build());
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any()))
+        .thenReturn(ServiceNowExecutionData.builder().currentState("TODO").currentStatus(null).build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
@@ -920,8 +911,8 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testExecuteSnowApprovalWithPollingServiceWithApprovalField() {
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(serviceNowService.getIssueUrl(anyString(), anyString(), any(), eq(false)))
-        .thenReturn(ServiceNowExecutionData.builder().currentState("REQUESTED").build());
+    when(serviceNowService.getIssueUrl(anyString(), anyString(), any()))
+        .thenReturn(ServiceNowExecutionData.builder().currentState("REQUESTED").currentStatus(null).build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
     ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
