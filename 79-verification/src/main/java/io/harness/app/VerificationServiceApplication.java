@@ -308,8 +308,11 @@ public class VerificationServiceApplication extends Application<VerificationServ
         AnalysisContextKeys.logClusterIteration, MLAnalysisType.LOG_ML, ofSeconds(30), 4);
     registerWorkflowIterator(injector, workflowVerificationExecutor, new WorkflowFeedbackAnalysisJob(),
         AnalysisContextKeys.feedbackIteration, MLAnalysisType.LOG_ML, ofSeconds(30), 4);
-    registerCreateCVTaskIterator(injector, workflowVerificationExecutor, ofSeconds(30), 4);
-    registerIterator(injector, workflowVerificationExecutor, new CVDataCollectionJob(),
+
+    ScheduledThreadPoolExecutor cvTaskWorkflowExecutor = new ScheduledThreadPoolExecutor(
+        5, new ThreadFactoryBuilder().setNameFormat("Iterator-cvTask-Workflow-verification").build());
+    registerCreateCVTaskIterator(injector, cvTaskWorkflowExecutor, ofSeconds(30), 4);
+    registerIterator(injector, cvTaskWorkflowExecutor, new CVDataCollectionJob(),
         AccountKeys.workflowDataCollectionIteration, ofSeconds(CV_TASK_CRON_POLL_INTERVAL_SEC), 4);
   }
 
