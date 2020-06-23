@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import io.harness.Task;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
@@ -29,7 +30,6 @@ import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepTransput;
-import io.harness.tasks.Task;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.TaskType;
 

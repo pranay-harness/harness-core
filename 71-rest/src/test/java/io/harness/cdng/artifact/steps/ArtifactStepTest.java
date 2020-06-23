@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.CategoryTest;
+import io.harness.Task;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -27,7 +28,6 @@ import io.harness.execution.status.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
-import io.harness.tasks.Task;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

@@ -24,7 +24,6 @@ import io.harness.references.OutcomeRefObject;
 import io.harness.references.RefObject;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
-import io.harness.tasks.Task;
 
 import java.util.Set;
 
@@ -42,7 +41,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(StepParameters.class);
     set.add(Outcome.class);
     set.add(RefObject.class);
-    set.add(Task.class);
     set.add(ExecutableResponse.class);
     set.add(PassThroughData.class);
   }
