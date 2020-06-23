@@ -6,6 +6,8 @@ import static software.wings.delegatetasks.citasks.cik8handler.container.Contain
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.basicCreateSpecResponse;
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.basicCreateSpecWithEnvInput;
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.basicCreateSpecWithEnvResponse;
+import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.basicCreateSpecWithSecretEnvPortWorkingDir;
+import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.basicCreateSpecWithSecretEnvPortWorkingDirResponse;
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.createSpecWithImageCredInput;
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.createSpecWithImageCredResponse;
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.createSpecWithResourcesCredInput;
@@ -82,6 +84,19 @@ public class ContainerSpecBuilderTest extends WingsBaseTest {
   public void createSpecWithResource() {
     CIK8ContainerParams containerParams = createSpecWithResourcesCredInput();
     ContainerSpecBuilderResponse expectedResponse = createSpecWithResourcesResponse();
+
+    ContainerSpecBuilderResponse response = containerSpecBuilder.createSpec(containerParams);
+    assertEquals(expectedResponse.getContainerBuilder().build(), response.getContainerBuilder().build());
+    assertEquals(expectedResponse.getVolumes(), response.getVolumes());
+    assertEquals(expectedResponse.getImageSecret(), response.getImageSecret());
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void createSpecWithPortWorkingDirSecretEnv() {
+    CIK8ContainerParams containerParams = basicCreateSpecWithSecretEnvPortWorkingDir();
+    ContainerSpecBuilderResponse expectedResponse = basicCreateSpecWithSecretEnvPortWorkingDirResponse();
 
     ContainerSpecBuilderResponse response = containerSpecBuilder.createSpec(containerParams);
     assertEquals(expectedResponse.getContainerBuilder().build(), response.getContainerBuilder().build());
