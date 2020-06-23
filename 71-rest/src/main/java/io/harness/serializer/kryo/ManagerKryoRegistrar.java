@@ -146,6 +146,8 @@ import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
+import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountEventType;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
@@ -234,6 +236,7 @@ import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.Tag;
 import software.wings.beans.TaskType;
+import software.wings.beans.TechStack;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -1727,5 +1730,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GcbOptions.GcbSpecSource.class, 7442);
     kryo.register(GcbTriggerBuildSpec.GcbTriggerSource.class, 7443);
     kryo.register(GcbRemoteBuildSpec.RemoteFileSource.class, 7444);
+    kryo.register(AccountEvent.class, 7445);
+    kryo.register(AccountEventType.class, 7446);
+    kryo.register(TechStack.class, 7447);
   }
 }
