@@ -80,6 +80,16 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(FunctionalTests.class)
+  public void shouldExecuteSectionChainPlan() {
+    PlanExecution httpForkResponse =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "section-chain");
+
+    assertThat(httpForkResponse.getStatus()).isEqualTo(SUCCEEDED);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(FunctionalTests.class)
   public void shouldExecuteHttpRetryIgnorePlan() {
     PlanExecution httpRetryResponse =
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-retry-ignore");

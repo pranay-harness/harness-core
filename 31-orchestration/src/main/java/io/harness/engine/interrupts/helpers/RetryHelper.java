@@ -2,6 +2,7 @@ package io.harness.engine.interrupts.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
@@ -40,16 +41,17 @@ public class RetryHelper {
   public void retryNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
     PlanNode node = nodeExecution.getNode();
+    String newUuid = generateUuid();
     NodeExecution newNodeExecution = cloneForRetry(nodeExecution);
-
-    Ambiance ambiance = newNodeExecution.getAmbiance();
+    Ambiance ambiance = nodeExecution.getAmbiance().cloneForFinish();
     ambiance.addLevel(Level.builder()
                           .setupId(node.getUuid())
-                          .runtimeId(newNodeExecution.getUuid())
+                          .runtimeId(newUuid)
                           .stepType(node.getStepType())
                           .identifier(node.getIdentifier())
                           .group(node.getGroup())
                           .build());
+    newNodeExecution.setUuid(newUuid);
     newNodeExecution.setAmbiance(ambiance);
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
     updateRelationShips(nodeExecution, savedNodeExecution.getUuid());
@@ -59,14 +61,14 @@ public class RetryHelper {
 
   private NodeExecution cloneForRetry(NodeExecution nodeExecution) {
     NodeExecution newNodeExecution = nodeExecution.deepCopy();
-    newNodeExecution.setUuid(null);
     newNodeExecution.setStartTs(null);
     newNodeExecution.setStatus(Status.QUEUED);
     List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new ArrayList<>() : nodeExecution.getRetryIds();
     retryIds.add(0, nodeExecution.getUuid());
     newNodeExecution.setRetryIds(retryIds);
     newNodeExecution.setExecutableResponses(new ArrayList<>());
-    return nodeExecutionService.save(newNodeExecution);
+    newNodeExecution.setVersion(null);
+    return newNodeExecution;
   }
 
   private void updateRelationShips(NodeExecution nodeExecution, String newNodeExecutionId) {

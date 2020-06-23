@@ -164,6 +164,8 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                        .stepParameters(forkStepParams)
                                        .build())
                              .resolvedStepParameters(forkStepParams)
+                             .createdAt(System.currentTimeMillis())
+                             .lastUpdatedAt(System.currentTimeMillis())
                              .build();
     NodeExecution parallelNode1 = NodeExecution.builder()
                                       .uuid("parallel_node_1")
@@ -176,6 +178,8 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                                 .identifier("name_children_1")
                                                 .build())
                                       .parentId(fork.getUuid())
+                                      .createdAt(System.currentTimeMillis())
+                                      .lastUpdatedAt(System.currentTimeMillis())
                                       .build();
     NodeExecution parallelNode2 = NodeExecution.builder()
                                       .uuid("parallel_node_2")
@@ -188,6 +192,8 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                                 .identifier("name_children_2")
                                                 .build())
                                       .parentId(fork.getUuid())
+                                      .createdAt(System.currentTimeMillis())
+                                      .lastUpdatedAt(System.currentTimeMillis())
                                       .build();
     List<NodeExecution> nodeExecutions = Lists.newArrayList(fork, parallelNode1, parallelNode2);
 
@@ -219,6 +225,8 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                                          .identifier("name_section_chain")
                                                          .stepType(SectionChainStep.STEP_TYPE)
                                                          .build())
+                                               .createdAt(System.currentTimeMillis())
+                                               .lastUpdatedAt(System.currentTimeMillis())
                                                .build();
 
     NodeExecution sectionChain1 = NodeExecution.builder()
@@ -231,6 +239,8 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                                 .identifier("name_section_chain_child1_plan_node")
                                                 .stepType(DummyStep.STEP_TYPE)
                                                 .build())
+                                      .createdAt(System.currentTimeMillis())
+                                      .lastUpdatedAt(System.currentTimeMillis())
                                       .parentId(sectionChainParentNode.getUuid())
                                       .nextId(dummyNode1Uuid)
                                       .build();
@@ -245,6 +255,8 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                                 .identifier("name_section_chain_child2_plan_node")
                                                 .stepType(DummyStep.STEP_TYPE)
                                                 .build())
+                                      .createdAt(System.currentTimeMillis())
+                                      .lastUpdatedAt(System.currentTimeMillis())
                                       .parentId(sectionChainParentNode.getUuid())
                                       .nextId(dummyNode2Uuid)
                                       .build();
@@ -259,6 +271,8 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                              .stepType(DummyStep.STEP_TYPE)
                                              .identifier("name_dummy_node_1")
                                              .build())
+                                   .createdAt(System.currentTimeMillis())
+                                   .lastUpdatedAt(System.currentTimeMillis())
                                    .parentId(sectionChainParentNode.getUuid())
                                    .previousId(sectionChain1.getUuid())
                                    .build();
@@ -273,6 +287,8 @@ public class GraphGeneratorTest extends OrchestrationTest {
                                              .stepType(DummyStep.STEP_TYPE)
                                              .identifier("name_dummy_node_2")
                                              .build())
+                                   .createdAt(System.currentTimeMillis())
+                                   .lastUpdatedAt(System.currentTimeMillis())
                                    .parentId(sectionChainParentNode.getUuid())
                                    .previousId(sectionChain2.getUuid())
                                    .build();

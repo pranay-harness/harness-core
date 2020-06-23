@@ -47,7 +47,9 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
     EnumSet<Status> allowedStartStatuses = Status.obtainAllowedStartSet(status);
     Query query = query(where(PlanExecutionKeys.uuid).is(planExecutionId))
                       .addCriteria(where(PlanExecutionKeys.status).in(allowedStartStatuses));
-    Update updateOps = new Update().set(PlanExecutionKeys.status, status);
+    Update updateOps = new Update()
+                           .set(PlanExecutionKeys.status, status)
+                           .set(PlanExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
     if (ops != null) {
       ops.accept(updateOps);
     }
@@ -67,7 +69,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   @Override
   public PlanExecution update(@NonNull String planExecutionId, @NonNull Consumer<Update> ops) {
     Query query = query(where(PlanExecutionKeys.uuid).is(planExecutionId));
-    Update updateOps = new Update();
+    Update updateOps = new Update().set(PlanExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
     ops.accept(updateOps);
     PlanExecution updated = mongoTemplate.findAndModify(query, updateOps, PlanExecution.class);
     if (updated == null) {

@@ -22,6 +22,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.OffsetDateTime;
@@ -54,4 +55,6 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
   @Wither @CreatedDate Long createdAt;
 
   @FdIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+
+  @Wither @Version Long version;
 }

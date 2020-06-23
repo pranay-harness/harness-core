@@ -21,6 +21,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotNull;
@@ -45,4 +46,5 @@ public class Interrupt implements PersistentEntity, UuidAccess, CreatedByAccess 
   @Wither @LastModifiedDate Long lastUpdatedAt;
   @Wither @CreatedDate Long createdAt;
   @NonFinal @Setter @Builder.Default State state = State.REGISTERED;
+  @Wither @Version Long version;
 }

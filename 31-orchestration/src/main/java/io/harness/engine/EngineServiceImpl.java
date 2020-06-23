@@ -1,5 +1,7 @@
 package io.harness.engine;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
@@ -31,6 +33,7 @@ public class EngineServiceImpl implements EngineService {
 
   public PlanExecution startExecution(@Valid Plan plan, Map<String, String> setupAbstractions, EmbeddedUser createdBy) {
     PlanExecution planExecution = PlanExecution.builder()
+                                      .uuid(generateUuid())
                                       .plan(plan)
                                       .setupAbstractions(setupAbstractions)
                                       .status(Status.RUNNING)
