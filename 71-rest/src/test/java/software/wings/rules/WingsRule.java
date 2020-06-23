@@ -12,6 +12,7 @@ import static org.mockito.Mockito.mock;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -48,6 +49,22 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.serializer.KryoModule;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.kryo.ApiServiceKryoRegister;
+import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
+import io.harness.serializer.kryo.CVNextGenRestBeansKryoRegistrar;
+import io.harness.serializer.kryo.CommonsKryoRegistrar;
+import io.harness.serializer.kryo.DelegateAgentKryoRegister;
+import io.harness.serializer.kryo.DelegateKryoRegister;
+import io.harness.serializer.kryo.DelegateTasksKryoRegister;
+import io.harness.serializer.kryo.ManagerKryoRegistrar;
+import io.harness.serializer.kryo.NGKryoRegistrar;
+import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
+import io.harness.serializer.kryo.OrchestrationKryoRegister;
+import io.harness.serializer.kryo.PersistenceRegistrar;
+import io.harness.serializer.kryo.TestManagerRegistrar;
+import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.testlib.PersistenceTestModule;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -91,6 +108,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
@@ -154,6 +172,30 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     configuration = getConfiguration(annotations, dbName);
 
     List<Module> modules = modules(annotations);
+    modules.add(new KryoModule());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .add(ApiServiceKryoRegister.class)
+            .add(CVNextGenCommonsBeansKryoRegistrar.class)
+            .add(CVNextGenRestBeansKryoRegistrar.class)
+            .add(CommonsKryoRegistrar.class)
+            .add(DelegateAgentKryoRegister.class)
+            .add(DelegateKryoRegister.class)
+            .add(DelegateTasksKryoRegister.class)
+            .add(ManagerKryoRegistrar.class)
+            .add(NGKryoRegistrar.class)
+            .add(OrchestrationBeansKryoRegistrar.class)
+            .add(OrchestrationKryoRegister.class)
+            .add(PersistenceRegistrar.class)
+
+            .add(TestManagerRegistrar.class)
+            .add(TestPersistenceKryoRegistrar.class)
+            .build();
+      }
+    });
     addQueueModules(modules);
 
     CacheConfigBuilder cacheConfigBuilder =

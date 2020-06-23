@@ -1,5 +1,7 @@
 package io.harness.grpc;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.util.Durations;
@@ -9,7 +11,6 @@ import io.grpc.stub.StreamObserver;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.Status;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.CancelTaskRequest;
 import io.harness.delegate.CancelTaskResponse;
 import io.harness.delegate.CreatePerpetualTaskRequest;
@@ -38,7 +39,7 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.List;
@@ -51,29 +52,33 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
   private PerpetualTaskServiceClientRegistry perpetualTaskServiceClientRegistry;
   private PerpetualTaskService perpetualTaskService;
   private DelegateService delegateService;
+  private KryoSerializer kryoSerializer;
 
   @Inject
   public DelegateServiceGrpc(PerpetualTaskServiceClientRegistry perpetualTaskServiceClientRegistry,
-      PerpetualTaskService perpetualTaskService, DelegateService delegateService) {
+      PerpetualTaskService perpetualTaskService, DelegateService delegateService, KryoSerializer kryoSerializer) {
     this.perpetualTaskServiceClientRegistry = perpetualTaskServiceClientRegistry;
     this.perpetualTaskService = perpetualTaskService;
     this.delegateService = delegateService;
+    this.kryoSerializer = kryoSerializer;
   }
 
   @Override
   public void submitTask(SubmitTaskRequest request, StreamObserver<SubmitTaskResponse> responseObserver) {
-    String taskId = UUIDGenerator.generateUuid();
+    String taskId = generateUuid();
     TaskDetails taskDetails = request.getDetails();
     Map<String, String> setupAbstractions = request.getSetupAbstractions().getValuesMap();
     List<ExecutionCapability> capabilities =
         request.getCapabilitiesList()
             .stream()
-            .map(capability -> (ExecutionCapability) KryoUtils.asObject(capability.getKryoCapability().toByteArray()))
+            .map(capability
+                -> (ExecutionCapability) kryoSerializer.asInflatedObject(capability.getKryoCapability().toByteArray()))
             .collect(Collectors.toList());
 
     DelegateTask task =
         DelegateTask.builder()
             .uuid(taskId)
+            .waitId(taskId)
             .accountId(request.getAccountId().getId())
             .appId(setupAbstractions.get(DelegateTaskKeys.appId))
             .envId(setupAbstractions.get(DelegateTaskKeys.envId))
@@ -84,7 +89,8 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
             .executionCapabilities(capabilities)
             .data(TaskData.builder()
                       .taskType(taskDetails.getType().getType())
-                      .parameters(new Object[] {KryoUtils.asObject(taskDetails.getKryoParameters().toByteArray())})
+                      .parameters(
+                          new Object[] {kryoSerializer.asInflatedObject(taskDetails.getKryoParameters().toByteArray())})
                       .timeout(Durations.toMillis(taskDetails.getExecutionTimeout()))
                       .expressionFunctorToken((int) taskDetails.getExpressionFunctorToken())
                       .expressions(taskDetails.getExpressionsMap())
