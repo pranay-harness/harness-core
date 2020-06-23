@@ -1,5 +1,7 @@
 package software.wings.service.impl.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.test.FeatureName.NAS_SUPPORT;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -50,6 +52,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.annotations.test.TestInfo;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -662,6 +665,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
+  @TestInfo(testCaseIds = {"CDC-7376"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
   public void shouldAddNexusArtifactStream() {
     ArtifactStream savedArtifactSteam = createNexusArtifactStream("nexus1");
     validateNexusArtifactStream(savedArtifactSteam, APP_ID);
@@ -1108,7 +1112,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .autoPopulate(true)
                                                               .serviceId(SERVICE_ID)
                                                               .build();
-    createAndValidateArtifactoryArtifactStream(artifactoryArtifactStream, APP_ID, "any");
+    ArtifactStream artifactStream =
+        createAndValidateArtifactoryArtifactStream(artifactoryArtifactStream, APP_ID, "any");
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
   @Test
@@ -1124,10 +1130,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .artifactPattern("io/harness/todolist/todolist*")
                                                               .autoPopulate(true)
                                                               .build();
-    createAndValidateArtifactoryArtifactStream(artifactoryArtifactStream, GLOBAL_APP_ID, RepositoryType.any.name());
+    ArtifactStream artifactStream =
+        createAndValidateArtifactoryArtifactStream(artifactoryArtifactStream, GLOBAL_APP_ID, RepositoryType.any.name());
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
-  private void createAndValidateArtifactoryArtifactStream(
+  private ArtifactStream createAndValidateArtifactoryArtifactStream(
       ArtifactoryArtifactStream artifactoryArtifactStream, String appId, String repositoryType) {
     ArtifactStream savedArtifactSteam = createArtifactStream(artifactoryArtifactStream);
     assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -1154,6 +1162,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactoryArtifactStream.getCollectionStatus()).isEqualTo(UNSTABLE.name());
 
     verify(buildSourceService).validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
+    return savedArtifactSteam;
   }
 
   @Test
@@ -1169,7 +1178,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .autoPopulate(true)
                                                               .serviceId(SERVICE_ID)
                                                               .build();
-    updateArtifactoryArtifactStreamAndValidate(artifactoryArtifactStream, APP_ID, "any");
+    ArtifactStream artifactStream =
+        updateArtifactoryArtifactStreamAndValidate(artifactoryArtifactStream, APP_ID, "any");
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
   @Test
@@ -1185,7 +1196,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .artifactPattern("io/harness/todolist/todolist*")
                                                               .autoPopulate(true)
                                                               .build();
-    updateArtifactoryArtifactStreamAndValidate(artifactoryArtifactStream, GLOBAL_APP_ID, RepositoryType.any.name());
+    ArtifactStream artifactStream =
+        updateArtifactoryArtifactStreamAndValidate(artifactoryArtifactStream, GLOBAL_APP_ID, RepositoryType.any.name());
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -1209,7 +1222,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     artifactStreamService.update(savedArtifactSteam);
   }
 
-  private void updateArtifactoryArtifactStreamAndValidate(
+  private ArtifactStream updateArtifactoryArtifactStreamAndValidate(
       ArtifactoryArtifactStream artifactoryArtifactStream, String appId, String repositoryType) {
     ArtifactStream savedArtifactSteam = createArtifactStream(artifactoryArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -1258,6 +1271,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
+    return updatedArtifactStream;
   }
 
   @Test
@@ -1275,7 +1289,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
             .autoPopulate(true)
             .serviceId(SERVICE_ID)
             .build();
-    addArtifactoryMavenArtifactStreamAndValidate(artifactoryArtifactStream, APP_ID);
+    ArtifactStream artifactStream = addArtifactoryMavenArtifactStreamAndValidate(artifactoryArtifactStream, APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
   @Test
@@ -1292,10 +1307,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
             .artifactPattern("io/harness/todolist/todolist/*/todolist*")
             .autoPopulate(true)
             .build();
-    addArtifactoryMavenArtifactStreamAndValidate(artifactoryArtifactStream, GLOBAL_APP_ID);
+    ArtifactStream artifactStream =
+        addArtifactoryMavenArtifactStreamAndValidate(artifactoryArtifactStream, GLOBAL_APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
-  private void addArtifactoryMavenArtifactStreamAndValidate(
+  private ArtifactStream addArtifactoryMavenArtifactStreamAndValidate(
       ArtifactoryArtifactStream artifactoryArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(artifactoryArtifactStream);
     assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -1320,6 +1337,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactoryArtifactStream.getArtifactPattern())
         .isEqualTo("io/harness/todolist/todolist/*/todolist*");
     assertThat(savedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("maven");
+    return savedArtifactSteam;
   }
 
   @Test
@@ -1409,10 +1427,11 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .autoPopulate(true)
                                                               .serviceId(SERVICE_ID)
                                                               .build();
-    addArtifactoryDockerArtifactStreamAndValidate(artifactoryArtifactStream, APP_ID);
+    ArtifactStream artifactStream = addArtifactoryDockerArtifactStreamAndValidate(artifactoryArtifactStream, APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
-  private void addArtifactoryDockerArtifactStreamAndValidate(
+  private ArtifactStream addArtifactoryDockerArtifactStreamAndValidate(
       ArtifactoryArtifactStream artifactoryArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(artifactoryArtifactStream);
     assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -1436,6 +1455,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactoryArtifactStream.getRepositoryType()).isEqualTo("docker");
 
     verify(buildSourceService).validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
+    return savedArtifactSteam;
   }
 
   @Test
@@ -1451,10 +1471,11 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                               .autoPopulate(true)
                                                               .serviceId(SERVICE_ID)
                                                               .build();
-    updateArtifactoryDockerArtifactStreamAndValidate(artifactoryArtifactStream, APP_ID);
+    ArtifactStream artifactStream = updateArtifactoryDockerArtifactStreamAndValidate(artifactoryArtifactStream, APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
-  private void updateArtifactoryDockerArtifactStreamAndValidate(
+  private ArtifactStream updateArtifactoryDockerArtifactStreamAndValidate(
       ArtifactoryArtifactStream artifactoryArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(artifactoryArtifactStream);
     assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -1510,6 +1531,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
+    return updatedArtifactStream;
   }
 
   @Test
@@ -1721,7 +1743,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                         .serviceId(SERVICE_ID)
                                                         .artifactPaths(asList("dev/todolist.war"))
                                                         .build();
-    updateS3ArtifactStreamAndValidate(amazonS3ArtifactStream, APP_ID);
+    ArtifactStream artifactStream = updateS3ArtifactStreamAndValidate(amazonS3ArtifactStream, APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
   @Test
@@ -1736,10 +1759,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                         .autoPopulate(true)
                                                         .artifactPaths(asList("dev/todolist.war"))
                                                         .build();
-    updateS3ArtifactStreamAndValidate(amazonS3ArtifactStream, GLOBAL_APP_ID);
+    ArtifactStream artifactStream = updateS3ArtifactStreamAndValidate(amazonS3ArtifactStream, GLOBAL_APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
-  private void updateS3ArtifactStreamAndValidate(AmazonS3ArtifactStream amazonS3ArtifactStream, String appId) {
+  private ArtifactStream updateS3ArtifactStreamAndValidate(
+      AmazonS3ArtifactStream amazonS3ArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(amazonS3ArtifactStream);
     assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -1774,6 +1799,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     AmazonS3ArtifactStream updatedAmazonS3ArtifactStream = (AmazonS3ArtifactStream) savedArtifactSteam;
     assertThat(updatedAmazonS3ArtifactStream.getJobname()).isEqualTo("harnessapps-changed");
     assertThat(updatedAmazonS3ArtifactStream.getArtifactPaths()).contains("qa/todolist.war");
+    return updatedArtifactStream;
   }
 
   @Test
@@ -1839,7 +1865,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .autoPopulate(true)
                                                     .serviceId(SERVICE_ID)
                                                     .build();
-    updateAndValidateDockerArtifactStream(dockerArtifactStream, APP_ID);
+    ArtifactStream artifactStream = updateAndValidateDockerArtifactStream(dockerArtifactStream, APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
   @Test
@@ -1853,10 +1880,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .imageName("wingsplugins/todolist")
                                                     .autoPopulate(true)
                                                     .build();
-    updateAndValidateDockerArtifactStream(dockerArtifactStream, GLOBAL_APP_ID);
+    ArtifactStream artifactStream = updateAndValidateDockerArtifactStream(dockerArtifactStream, GLOBAL_APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
-  private void updateAndValidateDockerArtifactStream(DockerArtifactStream dockerArtifactStream, String appId) {
+  private ArtifactStream updateAndValidateDockerArtifactStream(
+      DockerArtifactStream dockerArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(dockerArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
@@ -1888,6 +1917,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
+    return updatedArtifactStream;
   }
 
   @Test
@@ -1954,7 +1984,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                  .autoPopulate(true)
                                                  .serviceId(SERVICE_ID)
                                                  .build();
-    updateAndValidateECRArtifactStream(dockerArtifactStream, APP_ID);
+    ArtifactStream artifactStream = updateAndValidateECRArtifactStream(dockerArtifactStream, APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
   @Test
@@ -1969,10 +2000,11 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                  .region("us-east-1")
                                                  .autoPopulate(true)
                                                  .build();
-    updateAndValidateECRArtifactStream(dockerArtifactStream, GLOBAL_APP_ID);
+    ArtifactStream artifactStream = updateAndValidateECRArtifactStream(dockerArtifactStream, GLOBAL_APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
-  private void updateAndValidateECRArtifactStream(EcrArtifactStream dockerArtifactStream, String appId) {
+  private ArtifactStream updateAndValidateECRArtifactStream(EcrArtifactStream dockerArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(dockerArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
@@ -2006,6 +2038,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
+    return updatedArtifactStream;
   }
 
   @Test
@@ -2074,7 +2107,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .autoPopulate(true)
                                               .serviceId(SERVICE_ID)
                                               .build();
-    updateAndValidateGCRArtifactStream(gcrArtifactStream, APP_ID);
+    ArtifactStream artifactStream = updateAndValidateGCRArtifactStream(gcrArtifactStream, APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
   @Test
@@ -2089,10 +2123,11 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .registryHostName("gcr.io")
                                               .autoPopulate(true)
                                               .build();
-    updateAndValidateGCRArtifactStream(gcrArtifactStream, GLOBAL_APP_ID);
+    ArtifactStream artifactStream = updateAndValidateGCRArtifactStream(gcrArtifactStream, GLOBAL_APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
-  private void updateAndValidateGCRArtifactStream(GcrArtifactStream gcrArtifactStream, String appId) {
+  private ArtifactStream updateAndValidateGCRArtifactStream(GcrArtifactStream gcrArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(gcrArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
@@ -2130,6 +2165,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
+    return updatedArtifactSteam;
   }
 
   @Test
@@ -2205,7 +2241,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .autoPopulate(true)
                                               .serviceId(SERVICE_ID)
                                               .build();
-    updateAndValidateACRArtifactStream(acrArtifactStream, APP_ID);
+    ArtifactStream artifactStream = updateAndValidateACRArtifactStream(acrArtifactStream, APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
   @Test
@@ -2222,10 +2259,11 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                               .registryHostName("harnessqa.azurecr.io")
                                               .autoPopulate(true)
                                               .build();
-    updateAndValidateACRArtifactStream(acrArtifactStream, GLOBAL_APP_ID);
+    ArtifactStream artifactStream = updateAndValidateACRArtifactStream(acrArtifactStream, GLOBAL_APP_ID);
+    assertThat(artifactStream.getUuid()).isNotEmpty();
   }
 
-  private void updateAndValidateACRArtifactStream(AcrArtifactStream acrArtifactStream, String appId) {
+  private ArtifactStream updateAndValidateACRArtifactStream(AcrArtifactStream acrArtifactStream, String appId) {
     ArtifactStream savedArtifactSteam = createArtifactStream(acrArtifactStream);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
@@ -2273,6 +2311,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedAcrArtifactStream.getRegistryHostName()).isEqualTo("harnessprod.azurecr.io");
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
+    return updatedArtifactStream;
   }
 
   @Test
@@ -3573,6 +3612,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @TestInfo(testCaseIds = {"CDC-7378"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
   public void shouldAddNexusArtifactStreamWithParameters() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(NexusConfig.builder()
@@ -3746,6 +3786,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @TestInfo(testCaseIds = {"CDC-7396"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
   public void shouldNotAddNexus3xArtifactStreamWithParameters() {
     when(settingsService.getSettingValueById(ACCOUNT_ID, SETTING_ID))
         .thenReturn(NexusConfig.builder()
@@ -3866,6 +3907,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @TestInfo(testCaseIds = {"CDC-7380"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
   public void testListArtifactStreamsWithParametersWithFFOnAndOff() {
     NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
                                                   .accountId(ACCOUNT_ID)
@@ -3879,7 +3921,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                   .name("testNexus")
                                                   .build();
     when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
-    createArtifactStream(nexusArtifactStream);
+    NexusArtifactStream artifactStream = (NexusArtifactStream) createArtifactStream(nexusArtifactStream);
+    assertThat(artifactStream.getJobname()).isEqualTo("${repo}");
+    assertThat(artifactStream.getGroupId()).isEqualTo("${groupId}");
+    assertThat(artifactStream.getArtifactPaths().get(0)).isEqualTo("${path}");
+    assertThat(artifactStream.getName()).isEqualTo("testNexus");
+    assertThat(artifactStream.isArtifactStreamParameterized()).isEqualTo(true);
     constructAmazonS3Artifacts(APP_ID, "test-2");
     List<ArtifactStream> artifactStreams =
         artifactStreamService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, APP_ID).build(), ACCOUNT_ID,
@@ -3894,5 +3941,34 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .extracting(ArtifactStream::getName)
         .containsSequence("test-2")
         .doesNotContain("testNexus");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  @TestInfo(testCaseIds = {"CDC-7381"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
+  public void testCreateNexusArtifactStreamsWithExtensionClassifier() {
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("${repo}")
+                                                  .groupId("${groupId}")
+                                                  .artifactPaths(asList("${path}"))
+                                                  .extension("${extension}")
+                                                  .classifier("${classifier}")
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .build();
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    NexusArtifactStream artifactStream = (NexusArtifactStream) createArtifactStream(nexusArtifactStream);
+    assertThat(artifactStream.getJobname()).isEqualTo("${repo}");
+    assertThat(artifactStream.getGroupId()).isEqualTo("${groupId}");
+    assertThat(artifactStream.getArtifactPaths().get(0)).isEqualTo("${path}");
+    assertThat(artifactStream.getExtension()).isEqualTo("${extension}");
+    assertThat(artifactStream.getClassifier()).isEqualTo("${classifier}");
+    assertThat(artifactStream.getName()).isEqualTo("testNexus");
+    assertThat(artifactStream.isArtifactStreamParameterized()).isEqualTo(true);
   }
 }
