@@ -20,16 +20,17 @@ import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Data;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
+import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Duration;
@@ -50,7 +51,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   @NotNull Ambiance ambiance;
   @NotNull PlanNode node;
   @NotNull ExecutionMode mode;
-  @Default @FdIndex @CreatedDate Long createdAt = System.currentTimeMillis();
+  @Wither @FdIndex @CreatedDate Long createdAt;
   private Long startTs;
   private Long endTs;
   private Duration initialWaitDuration;
@@ -67,7 +68,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   String previousId;
 
   // Mutable
-  @Default @LastModifiedDate Long lastUpdatedAt = System.currentTimeMillis();
+  @Wither @LastModifiedDate Long lastUpdatedAt;
   Status status;
   private Long expiryTs;
 
@@ -78,6 +79,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   @Singular List<String> retryIds;
   boolean oldRetry;
+  @Version Long version;
 
   public boolean isRetry() {
     return !isEmpty(retryIds);

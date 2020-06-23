@@ -13,6 +13,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.Plan;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
@@ -21,6 +22,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Duration;
@@ -45,11 +47,12 @@ public class PlanExecution implements PersistentEntity, CreatedByAccess, UuidAcc
   @Wither @CreatedDate Long createdAt;
   Plan plan;
   Map<String, String> setupAbstractions;
-  @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
+  @Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   Status status;
   Long startTs;
   Long endTs;
 
   @Wither @LastModifiedDate Long lastUpdatedAt;
+  @Wither @Version Long version;
 }

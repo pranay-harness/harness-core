@@ -10,7 +10,6 @@ import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
-import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import lombok.Builder;
@@ -23,6 +22,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
@@ -48,7 +48,7 @@ import java.util.List;
 @Entity(value = "outcomeInstances")
 @Document("outcomeInstances")
 @TypeAlias("outcomeInstances")
-public class OutcomeInstance implements PersistentEntity, UuidAccess, CreatedAtAccess {
+public class OutcomeInstance implements PersistentEntity, UuidAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotEmpty String planExecutionId;
   @Singular List<Level> levels;
@@ -57,5 +57,6 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess, CreatedAtA
   String levelRuntimeIdIdx;
 
   Outcome outcome;
-  @Wither @CreatedDate long createdAt;
+  @Wither @CreatedDate Long createdAt;
+  @Wither @Version Long version;
 }

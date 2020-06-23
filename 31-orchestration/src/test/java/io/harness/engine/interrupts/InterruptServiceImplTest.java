@@ -45,6 +45,7 @@ public class InterruptServiceImplTest extends OrchestrationTest {
     assertThat(savedInterrupt.getPlanExecutionId()).isEqualTo(planExecutionId);
     assertThat(savedInterrupt.getType()).isEqualTo(ABORT_ALL);
     assertThat(savedInterrupt.getState()).isEqualTo(REGISTERED);
+    assertThat(savedInterrupt.getCreatedAt()).isNotNull();
   }
 
   @Test

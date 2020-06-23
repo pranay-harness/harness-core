@@ -87,7 +87,9 @@ public class InterruptServiceImpl implements InterruptService {
   }
 
   private Interrupt updateInterruptState(String interruptId, State interruptState) {
-    Update updateOps = new Update().set(InterruptKeys.state, interruptState);
+    Update updateOps = new Update()
+                           .set(InterruptKeys.state, interruptState)
+                           .set(InterruptKeys.lastUpdatedAt, System.currentTimeMillis());
     Query query = query(where(InterruptKeys.uuid).is(interruptId));
     Interrupt seizedInterrupt = mongoTemplate.findAndModify(
         query, updateOps, new FindAndModifyOptions().upsert(false).returnNew(true), Interrupt.class);

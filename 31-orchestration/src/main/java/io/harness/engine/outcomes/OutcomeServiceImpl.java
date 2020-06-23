@@ -2,6 +2,7 @@ package io.harness.engine.outcomes;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -49,6 +50,7 @@ public class OutcomeServiceImpl implements OutcomeService {
     try {
       OutcomeInstance instance =
           outcomeRepository.save(OutcomeInstance.builder()
+                                     .uuid(generateUuid())
                                      .planExecutionId(ambiance.getPlanExecutionId())
                                      .levels(ambiance.getLevels())
                                      .producedBy(producedBy)

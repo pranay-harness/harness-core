@@ -1,6 +1,7 @@
 package io.harness.engine.outputs;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -40,6 +41,7 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
     try {
       ExecutionSweepingOutputInstance instance =
           repository.save(ExecutionSweepingOutputInstance.builder()
+                              .uuid(generateUuid())
                               .planExecutionId(ambiance.getPlanExecutionId())
                               .levels(ambiance.getLevels())
                               .name(name)

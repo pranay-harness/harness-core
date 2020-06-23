@@ -63,7 +63,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Override
   public NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops) {
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
-    Update updateOps = new Update();
+    Update updateOps = new Update().set(NodeExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
     ops.accept(updateOps);
     NodeExecution updated = mongoTemplate.findAndModify(query, updateOps, returnNewOptions, NodeExecution.class);
     if (updated == null) {
@@ -100,8 +100,9 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     EnumSet<Status> allowedStartStatuses = Status.obtainAllowedStartSet(status);
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId))
                       .addCriteria(where(NodeExecutionKeys.status).in(allowedStartStatuses));
-    Update updateOps = new Update().set(NodeExecutionKeys.status, status);
-
+    Update updateOps = new Update()
+                           .set(NodeExecutionKeys.status, status)
+                           .set(NodeExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
     if (ops != null) {
       ops.accept(updateOps);
     }

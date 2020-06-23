@@ -64,7 +64,7 @@ public class ChildChainStrategy implements InvokeStrategy {
     NodeExecution childNodeExecution = NodeExecution.builder()
                                            .uuid(childInstanceId)
                                            .node(node)
-                                           .ambiance(ambiance)
+                                           .ambiance(clonedAmbiance)
                                            .status(QUEUED)
                                            .notifyId(childInstanceId)
                                            .parentId(nodeExecution.getUuid())
