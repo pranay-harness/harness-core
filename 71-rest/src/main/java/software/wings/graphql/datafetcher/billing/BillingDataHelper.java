@@ -339,6 +339,15 @@ public class BillingDataHelper {
         case CloudProvider:
           listOfFields.add(BillingDataMetaDataFields.CLOUDPROVIDERID);
           break;
+        case CloudServiceName:
+          listOfFields.add(BillingDataMetaDataFields.CLOUDSERVICENAME);
+          break;
+        case TaskId:
+          listOfFields.add(BillingDataMetaDataFields.TASKID);
+          break;
+        case LaunchType:
+          listOfFields.add(BillingDataMetaDataFields.LAUNCHTYPE);
+          break;
         default:
           break;
       }
