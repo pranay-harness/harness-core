@@ -63,6 +63,7 @@ public class OwnerRule implements TestRule {
   public static final String CONTINUOUS_INTEGRATION = "CI";
   public static final String DEVELOPER_EXPERIENCE = "DX";
   public static final String SWAT = "SWAT";
+  public static final String DELEGATE = "DEL";
 
   public static final String AADITI = "aaditi.joag";
   public static final String ABHINAV = "abhinav.singh";
@@ -107,6 +108,7 @@ public class OwnerRule implements TestRule {
   public static final String ROHIT_KUMAR = "rohit.kumar";
   public static final String ROHITKARELIA = "rohit.karelia";
   public static final String RUSHABH = "rushabh.shah";
+  public static final String SANJA = "sanja.jokic";
   public static final String SANYASI_NAIDU = "sanyasi.naidu";
   public static final String SHASWAT = "shaswat.deep";
   public static final String SHIVAKUMAR = "shivakumar.ningappa";
@@ -163,14 +165,14 @@ public class OwnerRule implements TestRule {
           .put(DHRUV, defaultDevInfo(DHRUV).slack("U012WHYL7G8").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(DINESH, DevInfo.builder().email("dinesh.garg@harness.io").slack("UQ0DMQG11").build())
           .put(GARVIT, defaultDevInfo(GARVIT).slack("UHH98EXDK").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(GEORGE, defaultDevInfo(GEORGE).slack("U88CA877V").team(PLATFORM).build())
+          .put(GEORGE, defaultDevInfo(GEORGE).slack("U88CA877V").team(DELEGATE).build())
           .put(HANTANG, defaultDevInfo(HANTANG).slack("UK8AQJSCS").team(CONTINUOUS_EFFICIENCY).build())
           .put(HARSH, defaultDevInfo(HARSH).slack("UJ1CDM3FY").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(HITESH, defaultDevInfo(HITESH).slack("UK41C9QJH").team(CONTINUOUS_EFFICIENCY).build())
           .put(IGOR, defaultDevInfo(IGOR).slack("U0104P0SC03").team(DEVELOPER_EXPERIENCE).build())
           .put(JUHI, defaultDevInfo(JUHI).slack("UL1KX4K1S").build())
           .put(KAMAL, defaultDevInfo(KAMAL).slack("UKFQ1PQBH").team(CONTINUOUS_VERIFICATION).build())
-          .put(MARKO, defaultDevInfo(MARKO).slack("UVDT91N9W").team(PLATFORM).build())
+          .put(MARKO, defaultDevInfo(MARKO).slack("UVDT91N9W").team(DELEGATE).build())
           .put(MEENAKSHI, DevInfo.builder().email("meenakshi.raikwar@harness.io").slack("UKP2AEUNA").build())
           .put(MEHUL, defaultDevInfo(MEHUL).slack("URYP18AHX").team(PLATFORM).build())
           .put(MILOS, defaultDevInfo(MILOS).slack("U014WS8CXEV").team(CONTINUOUS_DEPLOYMENT_CORE).build())
@@ -194,6 +196,7 @@ public class OwnerRule implements TestRule {
           .put(SATYAM, defaultDevInfo(SATYAM).slack("U9Z3R0GL8").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(ANIL, defaultDevInfo(ANIL).slack("U0132ESPZ08").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(RAGHVENDRA, defaultDevInfo(RAGHVENDRA).slack("U012F7A157Y").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
+          .put(SANJA, defaultDevInfo(SANJA).slack("U015Q24465T").team(DELEGATE).build())
           .put(SANYASI_NAIDU, defaultDevInfo(SANYASI_NAIDU).slack("U012P5KH3RU").team(DEVELOPER_EXPERIENCE).build())
           .put(SHASWAT, DevInfo.builder().email("shaswat.deep@harness.io").slack("UL9J5EH7A").build())
           .put(SHIVAKUMAR,
@@ -212,7 +215,7 @@ public class OwnerRule implements TestRule {
           .put(VENKATESH, DevInfo.builder().email("venkatesh.kotrike@harness.io").slack("UGF55UEHF").build())
           .put(VIKAS, defaultDevInfo(VIKAS).slack("UE7M4CNMA").team(PLATFORM).build())
           .put(VISTAAR, defaultDevInfo(VISTAAR).slack("U0138Q1JEHM").team(CONTINUOUS_INTEGRATION).build())
-          .put(VUK, defaultDevInfo(VUK).slack("U0115RT3EQL").team(PLATFORM).build())
+          .put(VUK, defaultDevInfo(VUK).slack("U0115RT3EQL").team(DELEGATE).build())
           .put(YOGESH, defaultDevInfo(YOGESH).slack("UJVLUUXAT").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(VARDAN_BANSAL, defaultDevInfo(VARDAN_BANSAL).slack("UH8NYAAUU").team(DEVELOPER_EXPERIENCE).build())
           .put(NANDAN, defaultDevInfo(NANDAN).slack("UKMS5KCBS").team(CONTINUOUS_VERIFICATION).build())
@@ -233,7 +236,7 @@ public class OwnerRule implements TestRule {
           .put(IVAN, defaultDevInfo(IVAN).slack("U014BFQ9PJS").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(SAHIL, defaultDevInfo(SAHIL).slack("U0141LFMEF8").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(BOJANA, defaultDevInfo(BOJANA).slack("U014GS4NFLM").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(LAZAR, defaultDevInfo(LAZAR).slack("U0150TB4LSK").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
+          .put(LAZAR, defaultDevInfo(LAZAR).slack("U0150TB4LSK").team(DELEGATE).build())
           .put(UNKNOWN, DevInfo.builder().email("n/a").slack("channel").build())
           .build();
 
