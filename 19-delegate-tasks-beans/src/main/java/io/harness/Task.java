@@ -1,4 +1,4 @@
-package io.harness.tasks;
+package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -8,11 +8,7 @@ import javax.annotation.Nonnull;
 
 @OwnedBy(CDC)
 public interface Task {
-  String getUuid();
-
   String getWaitId();
 
   @Nonnull String getTaskIdentifier();
-
-  @Nonnull String getTaskType();
 }

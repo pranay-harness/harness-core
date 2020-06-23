@@ -6,6 +6,7 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.Task;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executables.InvokeStrategy;
@@ -18,7 +19,6 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
-import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -60,7 +60,6 @@ public class TaskChainStrategy implements InvokeStrategy {
             TaskChainExecutableResponse.builder()
                 .taskId(taskId)
                 .taskIdentifier(task.getTaskIdentifier())
-                .taskType(task.getTaskType())
                 .chainEnd(taskChainResponse.isChainEnd())
                 .passThroughData(taskChainResponse.getPassThroughData())
                 .build()));

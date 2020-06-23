@@ -1,6 +1,6 @@
 package io.harness.utils;
 
-import io.harness.tasks.Task;
+import io.harness.Task;
 import lombok.Value;
 
 import javax.annotation.Nonnull;
@@ -19,12 +19,6 @@ public class DummyTask implements Task {
   @Override
   @Nonnull
   public String getTaskIdentifier() {
-    return TASK_IDENTIFIER;
-  }
-
-  @Nonnull
-  @Override
-  public String getTaskType() {
     return TASK_IDENTIFIER;
   }
 }

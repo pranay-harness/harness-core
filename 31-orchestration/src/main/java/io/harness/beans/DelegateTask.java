@@ -1,6 +1,7 @@
 package io.harness.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.Task;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.ParametersConverter;
@@ -18,7 +19,6 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-import io.harness.tasks.Task;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -111,13 +111,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   @Nonnull
   public String getTaskIdentifier() {
     return TASK_IDENTIFIER;
-  }
-
-  @Override
-  @JsonIgnore
-  @Nonnull
-  public String getTaskType() {
-    return data.getTaskType();
   }
 
   public static class ParametersConverter extends KryoConverter {

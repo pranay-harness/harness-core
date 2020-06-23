@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
+import io.harness.Task;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
@@ -24,7 +25,6 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepTransput;
-import io.harness.tasks.Task;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.TaskType;
 

@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.Task;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapability;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
@@ -22,6 +23,7 @@ import java.util.Set;
 public class DelegateMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
+    set.add(Task.class);
     set.add(ExecutionCapabilityDemander.class);
     set.add(ExecutionCapability.class);
   }

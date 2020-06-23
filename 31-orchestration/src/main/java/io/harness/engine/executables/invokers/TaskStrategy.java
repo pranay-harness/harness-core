@@ -6,6 +6,7 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.Task;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executables.InvokeStrategy;
@@ -17,7 +18,6 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.facilitator.modes.task.TaskExecutableResponse;
-import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;

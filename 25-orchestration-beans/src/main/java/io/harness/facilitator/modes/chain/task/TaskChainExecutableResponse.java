@@ -17,7 +17,6 @@ import lombok.Value;
 public class TaskChainExecutableResponse implements TaskSpawningExecutableResponse {
   @NonNull String taskId;
   @NonNull String taskIdentifier;
-  @NonNull String taskType;
   boolean chainEnd;
   PassThroughData passThroughData;
 }
