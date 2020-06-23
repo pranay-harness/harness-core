@@ -65,6 +65,7 @@ public class ServiceGenerator {
     K8S_V2_TEST,
     MULTI_ARTIFACT_FUNCTIONAL_TEST,
     MULTI_ARTIFACT_K8S_V2_TEST,
+    NAS_FUNCTIONAL_TEST,
     PCF_V2_TEST,
     PCF_V2_REMOTE_TEST,
     HELM_S3,
@@ -87,6 +88,8 @@ public class ServiceGenerator {
         return ensureMultiArtifactFunctionalTest(seed, owners, "MA-FunctionalTest Service");
       case MULTI_ARTIFACT_K8S_V2_TEST:
         return ensureMultiArtifactK8sTest(seed, owners, "MA-Test K8sV2 Service");
+      case NAS_FUNCTIONAL_TEST:
+        return ensureNasFunctionalTest(seed, owners, "Test NAS Service");
       case PCF_V2_TEST:
         return ensurePcfTest(seed, owners, "PCF Service");
       case PCF_V2_REMOTE_TEST:
@@ -261,6 +264,10 @@ public class ServiceGenerator {
             .isK8sV2(true)
             .build()));
     return owners.obtainService();
+  }
+
+  public Service ensureNasFunctionalTest(Randomizer.Seed seed, Owners owners, String name) {
+    return ensureMultiArtifactFunctionalTest(seed, owners, name);
   }
 
   public Service ensureEcsTest(Randomizer.Seed seed, Owners owners, String name) {

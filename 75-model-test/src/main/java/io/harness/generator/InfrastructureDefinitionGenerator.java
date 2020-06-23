@@ -138,7 +138,8 @@ public class InfrastructureDefinitionGenerator {
     AZURE_HELM,
     PIPELINE_RBAC_QA_AWS_SSH_TEST,
     PIPELINE_RBAC_PROD_AWS_SSH_TEST,
-    AWS_WINRM_DOWNLOAD
+    AWS_WINRM_DOWNLOAD,
+    AWS_SSH_FUNCTIONAL_TEST_NAS
   }
 
   public InfrastructureDefinition ensurePredefined(
@@ -150,6 +151,8 @@ public class InfrastructureDefinitionGenerator {
         return ensureAwsWinrmFunctionalTest(seed, owners);
       case AWS_SSH_FUNCTIONAL_TEST:
         return ensureAwsSshFunctionalTest(seed, owners);
+      case AWS_SSH_FUNCTIONAL_TEST_NAS:
+        return ensureAwsSshFunctionalTestNAS(seed, owners);
       case TERRAFORM_AWS_SSH_TEST:
         return ensureTerraformAwsSshTest(seed, owners);
       case PHYSICAL_WINRM_TEST:
@@ -406,6 +409,11 @@ public class InfrastructureDefinitionGenerator {
         seed, owners, Environments.FUNCTIONAL_TEST, Services.FUNCTIONAL_TEST, "Aws non prod - ssh workflow test");
   }
 
+  private InfrastructureDefinition ensureAwsSshFunctionalTestNAS(Randomizer.Seed seed, Owners owners) {
+    return ensureAwsSshInfraDefinition(
+        seed, owners, Environments.FUNCTIONAL_TEST, Services.NAS_FUNCTIONAL_TEST, "Aws non prod - ssh workflow test");
+  }
+
   private InfrastructureDefinition ensureAwsWinrmFunctionalTest(Seed seed, Owners owners) {
     final List<Tag> tags = Collections.singletonList(Tag.builder().key("role").value("rollback-ft").build());
     return ensureAwsWinrmInfraDefinition(
@@ -478,12 +486,12 @@ public class InfrastructureDefinitionGenerator {
     final SettingAttribute devKeySettingAttribute = settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
 
     return ensureInfrastructureDefinition(
-        createInfraDefinition(tags, awsTestSettingAttribute.getUuid(), devKeySettingAttribute.getUuid(), name));
+        createInfraDefinition(owners, tags, awsTestSettingAttribute.getUuid(), devKeySettingAttribute.getUuid(), name));
   }
 
   @NotNull
   private InfrastructureDefinition createInfraDefinition(
-      List<Tag> tags, String awsTestSettingAttributeId, String devKeySettingAttributeId, String name) {
+      Owners owners, List<Tag> tags, String awsTestSettingAttributeId, String devKeySettingAttributeId, String name) {
     AwsInstanceInfrastructure awsInstanceInfrastructure =
         AwsInstanceInfrastructure.builder()
             .cloudProviderId(awsTestSettingAttributeId)
@@ -498,6 +506,8 @@ public class InfrastructureDefinitionGenerator {
         .name(name)
         .deploymentType(DeploymentType.SSH)
         .cloudProviderType(CloudProviderType.AWS)
+        .appId(owners.obtainApplication().getUuid())
+        .envId(owners.obtainEnvironment().getUuid())
         .infrastructure(awsInstanceInfrastructure)
         .build();
   }

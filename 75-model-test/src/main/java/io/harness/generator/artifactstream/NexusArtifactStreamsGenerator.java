@@ -49,14 +49,22 @@ public abstract class NexusArtifactStreamsGenerator implements ArtifactStreamsGe
       return existing;
     }
 
-    if (nexusArtifactStream.getRepositoryFormat().equals(RepositoryFormat.maven.name())) {
+    String repositoryFormat = nexusArtifactStream.getRepositoryFormat();
+    if (repositoryFormat.equals(RepositoryFormat.maven.name())) {
       Preconditions.checkNotNull(nexusArtifactStream.getJobname());
       Preconditions.checkNotNull(nexusArtifactStream.getGroupId());
       Preconditions.checkNotNull(nexusArtifactStream.getArtifactPaths());
       builder.jobname(nexusArtifactStream.getJobname());
       builder.groupId(nexusArtifactStream.getGroupId());
       builder.artifactPaths(nexusArtifactStream.getArtifactPaths());
-      builder.repositoryFormat(nexusArtifactStream.getRepositoryFormat());
+      builder.repositoryFormat(repositoryFormat);
+    } else if (repositoryFormat.equals(RepositoryFormat.npm.name())
+        || repositoryFormat.equals(RepositoryFormat.nuget.name())) {
+      Preconditions.checkNotNull(nexusArtifactStream.getJobname());
+      Preconditions.checkNotNull(nexusArtifactStream.getPackageName());
+      builder.jobname(nexusArtifactStream.getJobname());
+      builder.packageName(nexusArtifactStream.getPackageName());
+      builder.repositoryFormat(repositoryFormat);
     }
 
     Preconditions.checkNotNull(nexusArtifactStream.getSourceName());

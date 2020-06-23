@@ -34,7 +34,7 @@ public class Nexus2MavenArtifactStreamsGenerator extends NexusArtifactStreamsGen
             .sourceName(settingAttribute.getName())
             .repositoryFormat(RepositoryFormat.maven.name())
             .jobname("releases")
-            .groupId("releases")
+            .groupId("mygroup")
             .artifactPaths(asList("todolist"))
             .settingId(settingAttribute.getUuid())
             .build(),

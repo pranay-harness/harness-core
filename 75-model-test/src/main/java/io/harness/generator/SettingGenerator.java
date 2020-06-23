@@ -91,6 +91,7 @@ public class SettingGenerator {
   private static final String HELM_S3_BUCKET = "anshul-test-123";
   private static final String HELM_S3 = "HELM S3";
   private static final String REGION_AP_SOUTH_1 = "ap-south-1";
+  private static final String HARNESS_ADMIN = "harnessadmin";
 
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;
@@ -566,9 +567,9 @@ public class SettingGenerator {
             .withAccountId(account.getUuid())
             .withValue(NexusConfig.builder()
                            .accountId(account.getUuid())
-                           .nexusUrl("https://nexus2-cdteam.harness.io")
-                           .username(ADMIN)
-                           .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
+                           .nexusUrl("https://nexus2.dev.harness.io")
+                           .username(HARNESS_ADMIN)
+                           .password(scmSecret.decryptToCharArray(new SecretName("harness_admin_nexus")))
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
