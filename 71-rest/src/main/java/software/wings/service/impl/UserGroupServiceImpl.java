@@ -36,6 +36,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UserGroupAlreadyExistException;
 import io.harness.exception.WingsException;
@@ -126,6 +127,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup save(UserGroup userGroup) {
     notNullCheck(UserGroupKeys.accountId, userGroup.getAccountId());
     checkUserGroupsCountWithinLimit(userGroup.getAccountId());
+    checkForUserGroupWithEmptyName(userGroup);
     checkForUserGroupWithSameName(userGroup);
 
     if (null == userGroup.getNotificationSettings()) {
@@ -149,6 +151,12 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup existingUserGroup = fetchUserGroupByName(userGroup.getAccountId(), userGroup.getName());
     if (existingUserGroup != null && !existingUserGroup.getUuid().equals(userGroup.getUuid())) {
       throw new UserGroupAlreadyExistException("User Group with same name already exists.");
+    }
+  }
+
+  private void checkForUserGroupWithEmptyName(UserGroup userGroup) {
+    if (userGroup.getName().trim().isEmpty()) {
+      throw new GeneralException("User group can't be created without group name.", USER);
     }
   }
 
@@ -298,6 +306,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     notNullCheck("name", userGroup.getName());
     UserGroup userGroupFromDB = get(userGroup.getAccountId(), userGroup.getUuid());
     checkForUserGroupWithSameName(userGroup);
+    checkForUserGroupWithEmptyName(userGroup);
     if (UserGroupUtils.isAdminUserGroup(userGroupFromDB)) {
       throw new WingsException(
           ErrorCode.UPDATE_NOT_ALLOWED, "Can not update name/description of Account Administrator user group");
