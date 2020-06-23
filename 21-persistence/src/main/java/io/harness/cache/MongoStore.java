@@ -1,7 +1,6 @@
 package io.harness.cache;
 
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
-import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -76,6 +75,15 @@ public class MongoStore implements DistributedStore {
 
   @Override
   public <T extends Distributable> void upsert(T entity, Duration ttl) {
+    upsertInternal(entity, ttl, false);
+  }
+
+  @Override
+  public <T extends Distributable> void upsert(T entity, Duration ttl, boolean downgrade) {
+    upsertInternal(entity, ttl, downgrade);
+  }
+
+  private <T extends Distributable> void upsertInternal(T entity, Duration ttl, boolean downgrade) {
     final String canonicalKey =
         canonicalKey(entity.algorithmId(), entity.structureHash(), entity.key(), entity.parameters());
     Long contextValue =
@@ -90,12 +98,12 @@ public class MongoStore implements DistributedStore {
 
       final Query<CacheEntity> query =
           hPersistence.createQuery(CacheEntity.class).filter(CacheEntityKeys.canonicalKey, canonicalKey);
-      if (entity instanceof Ordinal) {
+      if (!downgrade && entity instanceof Ordinal) {
         // For ordinal data lets make sure we are not downgrading the cache
         query.field(CacheEntityKeys.contextValue).lessThan(contextValue);
       }
 
-      hPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
+      hPersistence.upsert(query, updateOperations);
     } catch (MongoCommandException exception) {
       if (ErrorCategory.fromErrorCode(exception.getErrorCode()) != DUPLICATE_KEY) {
         logger.error("Failed to update cache for key {}, hash {}", canonicalKey, contextValue, exception);

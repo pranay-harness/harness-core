@@ -23,6 +23,8 @@ public class WorkflowTree implements Distributable, Ordinal {
   private GraphNode graph;
   private long lastUpdatedAt = System.currentTimeMillis();
 
+  private boolean wasInvalidated;
+
   @Override
   public long structureHash() {
     return STRUCTURE_HASH;

@@ -46,6 +46,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
@@ -924,7 +925,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     WorkflowTreeBuilder workflowTreeBuilder =
-        WorkflowTree.builder().key(workflowExecutionId).params(params).contextOrder(lastUpdate);
+        WorkflowTree.builder().key(workflowExecutionId).params(params).contextOrder(lastUpdate).wasInvalidated(false);
     if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
       workflowTreeBuilder.overrideStatus(ExecutionStatus.WAITING);
     }
@@ -964,7 +965,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           GraphRenderer.algorithmId, WorkflowTree.STRUCTURE_HASH, workflowExecution.getUuid(), params);
     }
 
-    if (upToDate || tree == null || tree.getLastUpdatedAt() < (System.currentTimeMillis() - 5000)) {
+    if (upToDate || tree == null || tree.isWasInvalidated()
+        || tree.getLastUpdatedAt() < (System.currentTimeMillis() - 5000)) {
       tree = calculateTree(workflowExecution.getAppId(), workflowExecution.getUuid());
     }
 
@@ -2409,6 +2411,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         throw new InvalidRequestException("Cannot pause Workflow in Preparing state");
       }
       executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
+      invalidateCache(workflowExecution, executionInterrupt);
       return executionInterrupt;
     }
 
@@ -2463,6 +2466,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
 
+    invalidateCache(workflowExecution, executionInterrupt);
     return executionInterrupt;
   }
 
@@ -4390,5 +4394,27 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     List<WorkflowExecution> workflowExecutions = query.project("_id", true).asList();
     return workflowExecutions.stream().map(WorkflowExecution::getUuid).collect(Collectors.toSet());
+  }
+
+  /**
+   * Invalidate cache for the graph by downgrading it context order
+   */
+  private void invalidateCache(WorkflowExecution workflowExecution, ExecutionInterrupt executionInterrupt) {
+    long downgradeValueInMillis = 60_000; // 1 hour
+    WorkflowTree tree = mongoStore.get(
+        GraphRenderer.algorithmId, WorkflowTree.STRUCTURE_HASH, workflowExecution.getUuid(), getParamsForTree());
+    if (tree != null) {
+      logger.info("Invalidating cache after interrupt {} for workflow {}", executionInterrupt.getUuid(),
+          workflowExecution.getUuid());
+      WorkflowTree downgradedTree = WorkflowTree.builder()
+                                        .contextOrder(System.currentTimeMillis() - downgradeValueInMillis)
+                                        .overrideStatus(tree.getOverrideStatus())
+                                        .key(tree.getKey())
+                                        .wasInvalidated(true)
+                                        .params(tree.getParams())
+                                        .graph(tree.getGraph())
+                                        .build();
+      executorService.submit(() -> mongoStore.upsert(downgradedTree, ofMinutes(1), true));
+    }
   }
 }

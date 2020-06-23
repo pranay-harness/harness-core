@@ -11,6 +11,9 @@ public interface DistributedStore {
   <T extends Distributable> T get(
       long contextHash, long algorithmId, long structureHash, String key, List<String> params);
 
-  // Inserts or updates the cache for entity
+  //  Inserts or updates the cache for entity
   <T extends Distributable> void upsert(T entity, Duration ttl);
+
+  //  Inserts or updates the cache for entity with downgrade option
+  <T extends Distributable> void upsert(T entity, Duration ttl, boolean downgrade);
 }
