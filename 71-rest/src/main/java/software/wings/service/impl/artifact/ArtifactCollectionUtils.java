@@ -861,6 +861,15 @@ public class ArtifactCollectionUtils {
       return true;
     }
 
+    if (EmptyPredicate.isEmpty(artifactStream.getAccountId())) {
+      // Ideally, we should clean up these artifact streams.
+      logger.warn(
+          "{}: Artifact {} disabled for artifactStream due to empty accountId, type: {}, id: {}, failed count: {}",
+          prefix, action, artifactStream.getArtifactStreamType(), artifactStream.getUuid(),
+          artifactStream.getFailedCronAttempts());
+      return true;
+    }
+
     if (!CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       SettingAttribute settingAttribute = settingsService.getOnlyConnectivityError(artifactStream.getSettingId());
       if (settingAttribute == null) {

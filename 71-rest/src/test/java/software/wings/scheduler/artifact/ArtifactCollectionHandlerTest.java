@@ -59,33 +59,6 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testHandleForNPEInAccountId() {
-    PowerMockito.mockStatic(ExceptionLogger.class);
-    ArtifactStream ARTIFACT_STREAM = DockerArtifactStream.builder()
-                                         .uuid(ARTIFACT_STREAM_ID)
-                                         .appId(APP_ID)
-                                         .sourceName(ARTIFACT_STREAM_NAME)
-                                         .settingId(SETTING_ID)
-                                         .serviceId(SERVICE_ID)
-                                         .imageName("image_name")
-                                         .build();
-
-    when(permitService.acquirePermit(any())).thenThrow(new WingsException("Exception"));
-    artifactCollectionHandler.handle(ARTIFACT_STREAM);
-
-    ArgumentCaptor<WingsException> argumentCaptor = ArgumentCaptor.forClass(WingsException.class);
-    PowerMockito.verifyStatic();
-    ExceptionLogger.logProcessedMessages(argumentCaptor.capture(), any(), any());
-    WingsException wingsException = argumentCaptor.getValue();
-
-    assertThat(wingsException).isNotNull();
-    assertThat(wingsException.calcRecursiveContextObjects().values().size()).isEqualTo(1);
-    assertThat(wingsException.calcRecursiveContextObjects().values()).contains(ARTIFACT_STREAM_ID);
-  }
-
-  @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
   public void testHandleWithValidAccountId() {
     PowerMockito.mockStatic(ExceptionLogger.class);
 
