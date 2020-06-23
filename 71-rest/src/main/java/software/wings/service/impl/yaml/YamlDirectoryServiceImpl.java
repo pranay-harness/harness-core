@@ -626,7 +626,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private void doSourceRepoProviderType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
     List<SettingAttribute> settingAttributes;
-    settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+
+    if (!featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
+      settingAttributes = settingsService.getGlobalSettingAttributesByType(accountId, type.name());
+    } else {
+      settingAttributes = settingsService.listAllSettingAttributesByType(accountId, type.name());
+    }
+
     if (settingAttributes != null) {
       // iterate over providers
       for (SettingAttribute settingAttribute : settingAttributes) {
