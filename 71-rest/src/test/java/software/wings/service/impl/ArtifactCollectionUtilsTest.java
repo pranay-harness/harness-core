@@ -95,7 +95,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldSkipArtifactStreamIterationExcessiveFailedAttempts() {
-    ArtifactStream artifactStream = DockerArtifactStream.builder().build();
+    ArtifactStream artifactStream = DockerArtifactStream.builder().accountId(ACCOUNT_ID).build();
     artifactStream.setFailedCronAttempts(ArtifactCollectionResponseHandler.MAX_FAILED_ATTEMPTS + 1);
 
     assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true)).isTrue();
@@ -106,7 +106,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSkipArtifactStreamIterationForInvalidSetting() {
     when(settingsService.getOnlyConnectivityError(SETTING_ID)).thenReturn(null);
-    ArtifactStream artifactStream = DockerArtifactStream.builder().settingId(SETTING_ID).build();
+    ArtifactStream artifactStream = DockerArtifactStream.builder().accountId(ACCOUNT_ID).settingId(SETTING_ID).build();
 
     artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true);
   }
@@ -117,7 +117,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   public void shouldSkipArtifactStreamIterationForConnectivityError() {
     when(settingsService.getOnlyConnectivityError(SETTING_ID))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withConnectivityError("err").build());
-    ArtifactStream artifactStream = DockerArtifactStream.builder().settingId(SETTING_ID).build();
+    ArtifactStream artifactStream = DockerArtifactStream.builder().accountId(ACCOUNT_ID).settingId(SETTING_ID).build();
 
     assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true)).isTrue();
     assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, false)).isTrue();
@@ -129,7 +129,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   public void shouldNotSkipArtifactStreamIterationForConnectivityError() {
     when(settingsService.getOnlyConnectivityError(SETTING_ID))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().build());
-    ArtifactStream artifactStream = DockerArtifactStream.builder().settingId(SETTING_ID).build();
+    ArtifactStream artifactStream = DockerArtifactStream.builder().accountId(ACCOUNT_ID).settingId(SETTING_ID).build();
 
     assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true)).isFalse();
     assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, false)).isFalse();
@@ -139,7 +139,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldNotSkipArtifactStreamIterationForConnectivityErrorForCustomArtifactSource() {
-    ArtifactStream artifactStream = CustomArtifactStream.builder().build();
+    ArtifactStream artifactStream = CustomArtifactStream.builder().accountId(ACCOUNT_ID).build();
     assertThat(artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, true)).isFalse();
   }
 
