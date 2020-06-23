@@ -38,6 +38,22 @@ public class GenericExceptionMapperTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void toResponse_withExposeExceptionAnnotationAndWhenResourceInfoNull()
+      throws NoSuchMethodException, IllegalAccessException {
+    FieldUtils.writeField(genericExceptionMapper, "resourceInfo", null, true);
+    RestResponse<?> restResponse = new RestResponse<>();
+    restResponse.getResponseMessages().add(
+        ResponseMessage.builder()
+            .code(ErrorCode.DEFAULT_ERROR_CODE)
+            .level(Level.ERROR)
+            .message("An error has occurred. Please contact the Harness support team.")
+            .build());
+    testExposeException(ResourceWithAnnotation.class, new RuntimeException("exception"), restResponse);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void toResponse_withoutExposeExceptionAnnotation() throws NoSuchMethodException {
     RestResponse<?> restResponse = new RestResponse<>();
     restResponse.getResponseMessages().add(

@@ -18,4 +18,6 @@ public interface CVConfigService {
   List<CVConfig> list(String accountId, String connectorId, String productName);
   List<CVConfig> list(String accountId, String connectorId, String productName, String groupId);
   List<String> getProductNames(String accountId, String connectorId);
+
+  void setCollectionTaskId(String uuid, String dataCollectionTaskId);
 }

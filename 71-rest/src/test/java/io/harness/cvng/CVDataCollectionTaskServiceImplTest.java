@@ -57,6 +57,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
     PerpetualTaskClientContext perpetualTaskClientContext = perpetualTaskRecord.getClientContext();
     Map<String, String> clientParamMap = new HashMap<>();
+    clientParamMap.put("accountId", accountId);
     clientParamMap.put("cvConfigId", cvConfigId);
     clientParamMap.put("connectorId", connectorId);
     assertThat(perpetualTaskClientContext.getClientParams()).isEqualTo(clientParamMap);

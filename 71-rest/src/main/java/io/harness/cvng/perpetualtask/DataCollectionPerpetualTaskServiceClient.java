@@ -31,6 +31,7 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
+    String accountId = clientParams.get("accountId");
     String cvConfigId = clientParams.get("cvConfigId");
     String connectorId = clientParams.get("connectorId");
 
@@ -45,6 +46,7 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
                                                     .build();
     ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(cvDataCollectionInfo));
     return DataCollectionPerpetualTaskParams.newBuilder()
+        .setAccountId(accountId)
         .setCvConfigId(cvConfigId)
         .setDataCollectionInfo(bytes)
         .build();

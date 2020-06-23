@@ -23,11 +23,11 @@ public final class DataCollectionTask {
   static {
     java.lang.String[] descriptorData = {"\nBio/harness/perpetualtask/datacollectio"
         + "n/data_collection_task.proto\022\'io.harness"
-        + ".perpetualtask.datacollection\"w\n!DataCol"
-        + "lectionPerpetualTaskParams\022 \n\014cv_config_"
-        + "id\030\001 \001(\tR\ncvConfigId\0220\n\024data_collection_"
-        + "info\030\002 \001(\014R\022dataCollectionInfoB\002P\001b\006prot"
-        + "o3"};
+        + ".perpetualtask.datacollection\"\226\001\n!DataCo"
+        + "llectionPerpetualTaskParams\022\035\n\naccount_i"
+        + "d\030\001 \001(\tR\taccountId\022 \n\014cv_config_id\030\002 \001(\t"
+        + "R\ncvConfigId\0220\n\024data_collection_info\030\003 \001"
+        + "(\014R\022dataCollectionInfoB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
         descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_io_harness_perpetualtask_datacollection_DataCollectionPerpetualTaskParams_descriptor =
@@ -36,6 +36,7 @@ public final class DataCollectionTask {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_perpetualtask_datacollection_DataCollectionPerpetualTaskParams_descriptor,
             new java.lang.String[] {
+                "AccountId",
                 "CvConfigId",
                 "DataCollectionInfo",
             });

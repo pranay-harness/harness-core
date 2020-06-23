@@ -5,16 +5,13 @@ import com.google.inject.Module;
 
 import io.harness.app.CVServiceModule;
 import io.harness.app.cvng.client.VerificationManagerClientModule;
-import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
-import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
-import io.harness.time.TimeModule;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -35,30 +32,10 @@ public class CVNextGenTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(HPersistence.class).to(MongoPersistence.class);
       }
     });
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
-    modules.add(new VerificationManagerClientModule("test-host"));
-    modules.add(new ProviderModule() {
-
-    });
-    modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.addAll(new TestMongoModule().cumulativeDependencies());
     modules.add(new CVNextGenCommonsServiceModule());
+    modules.addAll(new TestMongoModule().cumulativeDependencies());
     modules.add(new CVServiceModule());
+    modules.add(new VerificationManagerClientModule("http://test-host"));
     return modules;
   }
 

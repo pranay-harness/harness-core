@@ -9,8 +9,8 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.CVNextGenCommonBaseTest;
 import io.harness.cvng.beans.TimeRange;
-import io.harness.cvng.core.CVNextGenRestBaseTest;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.entities.CVConfig;
 import io.harness.cvng.core.services.entities.SplunkCVConfig;
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class CVConfigServiceImplTest extends CVNextGenRestBaseTest {
+public class CVConfigServiceImplTest extends CVNextGenCommonBaseTest {
   @Inject private CVConfigService cvConfigService;
   private String accountId;
   private String connectorId;
@@ -230,6 +230,19 @@ public class CVConfigServiceImplTest extends CVNextGenRestBaseTest {
     save(cvConfigs);
     cvConfigService.deleteByGroupId(accountId, connectorId, productName, groupName);
     cvConfigs.forEach(cvConfig -> assertThat(cvConfigService.get(cvConfig.getUuid())).isNull());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void setCollectionTaskId() {
+    CVConfig cvConfig = createCVConfig();
+    save(cvConfig);
+    assertThat(cvConfig.getDataCollectionTaskId()).isNull();
+    String taskId = generateUuid();
+    cvConfigService.setCollectionTaskId(cvConfig.getUuid(), taskId);
+    CVConfig updated = cvConfigService.get(cvConfig.getUuid());
+    assertThat(updated.getDataCollectionTaskId()).isEqualTo(taskId);
   }
 
   private void assertCommons(CVConfig actual, CVConfig expected) {

@@ -1,7 +1,6 @@
 package software.wings.resources.cvng;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX;
-import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
+import static io.harness.cvng.core.services.CVNextGenConstants.CV_DATA_COLLECTION_PATH;
 
 import com.google.inject.Inject;
 
@@ -10,22 +9,21 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import retrofit2.http.POST;
-import software.wings.security.annotations.Scope;
 
 import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api(CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX + "/"
-    + "cv-data-collection-task")
-@Path(CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX)
+@Api(CV_DATA_COLLECTION_PATH)
+@Path(CV_DATA_COLLECTION_PATH)
 @Produces("application/json")
 @Slf4j
-@Scope(SERVICE)
+@LearningEngineAuth
 @ExposeInternalException(withStackTrace = true)
 public class CVDataCollectionTaskResource {
   @Inject private CVDataCollectionTaskService dataCollectionTaskService;

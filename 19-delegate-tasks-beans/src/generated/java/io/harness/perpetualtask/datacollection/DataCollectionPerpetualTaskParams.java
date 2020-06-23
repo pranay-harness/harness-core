@@ -16,6 +16,7 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     super(builder);
   }
   private DataCollectionPerpetualTaskParams() {
+    accountId_ = "";
     cvConfigId_ = "";
     dataCollectionInfo_ = com.google.protobuf.ByteString.EMPTY;
   }
@@ -51,10 +52,16 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
           case 10: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            cvConfigId_ = s;
+            accountId_ = s;
             break;
           }
           case 18: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            cvConfigId_ = s;
+            break;
+          }
+          case 26: {
             dataCollectionInfo_ = input.readBytes();
             break;
           }
@@ -90,10 +97,42 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
             io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams.Builder.class);
   }
 
-  public static final int CV_CONFIG_ID_FIELD_NUMBER = 1;
+  public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
+  private volatile java.lang.Object accountId_;
+  /**
+   * <code>string account_id = 1[json_name = "accountId"];</code>
+   * @return The accountId.
+   */
+  public java.lang.String getAccountId() {
+    java.lang.Object ref = accountId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      accountId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string account_id = 1[json_name = "accountId"];</code>
+   * @return The bytes for accountId.
+   */
+  public com.google.protobuf.ByteString getAccountIdBytes() {
+    java.lang.Object ref = accountId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      accountId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int CV_CONFIG_ID_FIELD_NUMBER = 2;
   private volatile java.lang.Object cvConfigId_;
   /**
-   * <code>string cv_config_id = 1[json_name = "cvConfigId"];</code>
+   * <code>string cv_config_id = 2[json_name = "cvConfigId"];</code>
    * @return The cvConfigId.
    */
   public java.lang.String getCvConfigId() {
@@ -108,7 +147,7 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     }
   }
   /**
-   * <code>string cv_config_id = 1[json_name = "cvConfigId"];</code>
+   * <code>string cv_config_id = 2[json_name = "cvConfigId"];</code>
    * @return The bytes for cvConfigId.
    */
   public com.google.protobuf.ByteString getCvConfigIdBytes() {
@@ -122,10 +161,10 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     }
   }
 
-  public static final int DATA_COLLECTION_INFO_FIELD_NUMBER = 2;
+  public static final int DATA_COLLECTION_INFO_FIELD_NUMBER = 3;
   private com.google.protobuf.ByteString dataCollectionInfo_;
   /**
-   * <code>bytes data_collection_info = 2[json_name = "dataCollectionInfo"];</code>
+   * <code>bytes data_collection_info = 3[json_name = "dataCollectionInfo"];</code>
    * @return The dataCollectionInfo.
    */
   public com.google.protobuf.ByteString getDataCollectionInfo() {
@@ -147,11 +186,14 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+    if (!getAccountIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, accountId_);
+    }
     if (!getCvConfigIdBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, cvConfigId_);
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, cvConfigId_);
     }
     if (!dataCollectionInfo_.isEmpty()) {
-      output.writeBytes(2, dataCollectionInfo_);
+      output.writeBytes(3, dataCollectionInfo_);
     }
     unknownFields.writeTo(output);
   }
@@ -163,11 +205,14 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       return size;
 
     size = 0;
+    if (!getAccountIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, accountId_);
+    }
     if (!getCvConfigIdBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, cvConfigId_);
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, cvConfigId_);
     }
     if (!dataCollectionInfo_.isEmpty()) {
-      size += com.google.protobuf.CodedOutputStream.computeBytesSize(2, dataCollectionInfo_);
+      size += com.google.protobuf.CodedOutputStream.computeBytesSize(3, dataCollectionInfo_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -185,6 +230,8 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams other =
         (io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams) obj;
 
+    if (!getAccountId().equals(other.getAccountId()))
+      return false;
     if (!getCvConfigId().equals(other.getCvConfigId()))
       return false;
     if (!getDataCollectionInfo().equals(other.getDataCollectionInfo()))
@@ -201,6 +248,8 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
+    hash = (37 * hash) + ACCOUNT_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getAccountId().hashCode();
     hash = (37 * hash) + CV_CONFIG_ID_FIELD_NUMBER;
     hash = (53 * hash) + getCvConfigId().hashCode();
     hash = (37 * hash) + DATA_COLLECTION_INFO_FIELD_NUMBER;
@@ -323,6 +372,8 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     @java.lang.Override
     public Builder clear() {
       super.clear();
+      accountId_ = "";
+
       cvConfigId_ = "";
 
       dataCollectionInfo_ = com.google.protobuf.ByteString.EMPTY;
@@ -358,6 +409,7 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     public io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams buildPartial() {
       io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams result =
           new io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams(this);
+      result.accountId_ = accountId_;
       result.cvConfigId_ = cvConfigId_;
       result.dataCollectionInfo_ = dataCollectionInfo_;
       onBuilt();
@@ -402,6 +454,10 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     public Builder mergeFrom(io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams other) {
       if (other == io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams.getDefaultInstance())
         return this;
+      if (!other.getAccountId().isEmpty()) {
+        accountId_ = other.accountId_;
+        onChanged();
+      }
       if (!other.getCvConfigId().isEmpty()) {
         cvConfigId_ = other.cvConfigId_;
         onChanged();
@@ -437,9 +493,78 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       return this;
     }
 
+    private java.lang.Object accountId_ = "";
+    /**
+     * <code>string account_id = 1[json_name = "accountId"];</code>
+     * @return The accountId.
+     */
+    public java.lang.String getAccountId() {
+      java.lang.Object ref = accountId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        accountId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string account_id = 1[json_name = "accountId"];</code>
+     * @return The bytes for accountId.
+     */
+    public com.google.protobuf.ByteString getAccountIdBytes() {
+      java.lang.Object ref = accountId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        accountId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string account_id = 1[json_name = "accountId"];</code>
+     * @param value The accountId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setAccountId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      accountId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string account_id = 1[json_name = "accountId"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearAccountId() {
+      accountId_ = getDefaultInstance().getAccountId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string account_id = 1[json_name = "accountId"];</code>
+     * @param value The bytes for accountId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setAccountIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      accountId_ = value;
+      onChanged();
+      return this;
+    }
+
     private java.lang.Object cvConfigId_ = "";
     /**
-     * <code>string cv_config_id = 1[json_name = "cvConfigId"];</code>
+     * <code>string cv_config_id = 2[json_name = "cvConfigId"];</code>
      * @return The cvConfigId.
      */
     public java.lang.String getCvConfigId() {
@@ -454,7 +579,7 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       }
     }
     /**
-     * <code>string cv_config_id = 1[json_name = "cvConfigId"];</code>
+     * <code>string cv_config_id = 2[json_name = "cvConfigId"];</code>
      * @return The bytes for cvConfigId.
      */
     public com.google.protobuf.ByteString getCvConfigIdBytes() {
@@ -468,7 +593,7 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       }
     }
     /**
-     * <code>string cv_config_id = 1[json_name = "cvConfigId"];</code>
+     * <code>string cv_config_id = 2[json_name = "cvConfigId"];</code>
      * @param value The cvConfigId to set.
      * @return This builder for chaining.
      */
@@ -482,7 +607,7 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       return this;
     }
     /**
-     * <code>string cv_config_id = 1[json_name = "cvConfigId"];</code>
+     * <code>string cv_config_id = 2[json_name = "cvConfigId"];</code>
      * @return This builder for chaining.
      */
     public Builder clearCvConfigId() {
@@ -491,7 +616,7 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       return this;
     }
     /**
-     * <code>string cv_config_id = 1[json_name = "cvConfigId"];</code>
+     * <code>string cv_config_id = 2[json_name = "cvConfigId"];</code>
      * @param value The bytes for cvConfigId to set.
      * @return This builder for chaining.
      */
@@ -508,14 +633,14 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
 
     private com.google.protobuf.ByteString dataCollectionInfo_ = com.google.protobuf.ByteString.EMPTY;
     /**
-     * <code>bytes data_collection_info = 2[json_name = "dataCollectionInfo"];</code>
+     * <code>bytes data_collection_info = 3[json_name = "dataCollectionInfo"];</code>
      * @return The dataCollectionInfo.
      */
     public com.google.protobuf.ByteString getDataCollectionInfo() {
       return dataCollectionInfo_;
     }
     /**
-     * <code>bytes data_collection_info = 2[json_name = "dataCollectionInfo"];</code>
+     * <code>bytes data_collection_info = 3[json_name = "dataCollectionInfo"];</code>
      * @param value The dataCollectionInfo to set.
      * @return This builder for chaining.
      */
@@ -529,7 +654,7 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       return this;
     }
     /**
-     * <code>bytes data_collection_info = 2[json_name = "dataCollectionInfo"];</code>
+     * <code>bytes data_collection_info = 3[json_name = "dataCollectionInfo"];</code>
      * @return This builder for chaining.
      */
     public Builder clearDataCollectionInfo() {

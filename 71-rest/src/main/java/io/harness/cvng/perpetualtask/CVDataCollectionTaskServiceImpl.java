@@ -18,6 +18,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
   @Override
   public String create(String accountId, String cvConfigId) {
     Map<String, String> clientParamMap = new HashMap<>();
+    clientParamMap.put("accountId", accountId);
     clientParamMap.put("cvConfigId", cvConfigId);
     clientParamMap.put("connectorId", cvConfigService.get(cvConfigId).getConnectorId());
     PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);

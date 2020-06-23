@@ -10,6 +10,7 @@ import io.harness.cvng.core.services.entities.CVConfig;
 import io.harness.cvng.core.services.entities.CVConfig.CVConfigKeys;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -107,5 +108,13 @@ public class CVConfigServiceImpl implements CVConfigService {
         .distinct()
         .sorted()
         .collect(toList());
+  }
+
+  @Override
+  public void setCollectionTaskId(String uuid, String dataCollectionTaskId) {
+    UpdateOperations<CVConfig> updateOperations = hPersistence.createUpdateOperations(CVConfig.class)
+                                                      .set(CVConfigKeys.dataCollectionTaskId, dataCollectionTaskId);
+    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class).filter(CVConfigKeys.uuid, uuid);
+    hPersistence.update(query, updateOperations);
   }
 }
