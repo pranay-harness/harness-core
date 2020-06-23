@@ -9,6 +9,7 @@ import com.google.inject.name.Named;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ExecutionStatus;
 import io.harness.delay.SimpleNotifier;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.Status;
@@ -56,6 +57,7 @@ public class WaitStep implements Step, AsyncExecutable {
     WaitStateExecutionData waitStateExecutionData = new WaitStateExecutionData();
     waitStateExecutionData.setDuration(parameters.getWaitDurationSeconds());
     waitStateExecutionData.setWakeupTs(System.currentTimeMillis());
+    waitStateExecutionData.setStatus(ExecutionStatus.SUCCESS);
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
         .stepOutcome(StepOutcome.builder().name("waitData").outcome(waitStateExecutionData).build())

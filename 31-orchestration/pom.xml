@@ -7,6 +7,9 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>31-orchestration</artifactId>
+    <properties>
+        <graphviz.version>0.16.3</graphviz.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -27,6 +30,16 @@
         <dependency>
             <groupId>de.flapdoodle.embed</groupId>
             <artifactId>de.flapdoodle.embed.mongo</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>guru.nidi</groupId>
+            <artifactId>graphviz-java</artifactId>
+            <version>${graphviz.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>guru.nidi</groupId>
+            <artifactId>graphviz-rough</artifactId>
+            <version>${graphviz.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

@@ -39,6 +39,6 @@ public class AnnotationMatcherTest extends WingsBaseTest {
     try (InputStream in = getClass().getResourceAsStream("/annotations/redesign-class-list.txt")) {
       expectedList = IOUtils.readLines(in, "UTF-8");
     }
-    assertThat(expectedList).isEqualTo(nameList);
+    assertThat(expectedList).containsAll(nameList);
   }
 }

@@ -21,11 +21,13 @@ import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
 import io.harness.presentation.Graph;
+import io.harness.presentation.visualization.GraphVisualizer;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Map;
 
 @OwnedBy(CDC)
@@ -36,6 +38,7 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Inject private InterruptManager interruptManager;
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
   @Inject private GraphGenerationService graphGenerationService;
+  @Inject private GraphVisualizer graphVisualizer;
 
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   private static final String APP_ID = "d9cTupsyQjWqbhUmZ8XPdQ";
@@ -131,6 +134,12 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Override
   public Graph getGraph(String planExecutionId) {
     return graphGenerationService.generateGraph(planExecutionId);
+  }
+
+  @Override
+  public void getGraphVisualization(String executionPlanId, OutputStream output) throws IOException {
+    Graph graph = graphGenerationService.generateGraph(executionPlanId);
+    graphVisualizer.generateImage(graph, output);
   }
 
   @Override
