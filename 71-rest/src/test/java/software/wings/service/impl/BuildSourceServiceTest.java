@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.test.FeatureName.NAS_SUPPORT;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.GARVIT;
@@ -27,6 +29,7 @@ import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.annotations.test.TestInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -1040,6 +1043,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @TestInfo(testCaseIds = {"CDC-7390"}, featureName = NAS_SUPPORT, category = {UnitTests.class}, ownedBy = CDC)
   public void shouldNotManuallyPullArtifactsForParameterizedArtifactStream() {
     NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
                                                   .accountId(ACCOUNT_ID)
