@@ -35,4 +35,6 @@ public interface AwsConstants {
   String OLD_AUTOSCALING_GROUP = "Old AutoScaling Group";
   String NEW_AUTOSCALING_GROUP = "New AutoScaling Group";
   String NEW_AUTOSCALING_GROUP_WEIGHT = "New AutoScaling Group Weight";
+
+  int LAMBDA_SLEEP_SECS = 5;
 }
