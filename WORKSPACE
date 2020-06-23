@@ -700,3 +700,10 @@ go_repository(
     sum = "h1:B9UzwGQJehnUY1yNrnwREHc3fGbC2xefo8g4TbElacI=",
     version = "v1.1.0",
 )
+
+go_repository(
+    name = "com_github_cenkalti_backoff_v4",
+    importpath = "github.com/cenkalti/backoff/v4",
+    sum = "h1:JIufpQLbh4DkbQoii76ItQIUFzevQSqOLZca4eamEDs=",
+    version = "v4.0.2",
+)
