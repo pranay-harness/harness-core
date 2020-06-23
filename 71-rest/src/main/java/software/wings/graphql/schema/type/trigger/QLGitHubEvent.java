@@ -17,6 +17,6 @@ import software.wings.security.annotations.Scope;
 @FieldNameConstants(innerTypeName = "QLOnNewArtifactKeys")
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 public class QLGitHubEvent {
-  private QLGitHubEventType event;
-  private QLGitHubAction action;
+  QLGitHubEventType event;
+  QLGitHubAction action;
 }

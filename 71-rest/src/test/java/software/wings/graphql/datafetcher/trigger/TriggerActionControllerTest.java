@@ -11,6 +11,7 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -22,15 +23,13 @@ import software.wings.beans.Service;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactSelection.Type;
 import software.wings.beans.trigger.Trigger;
-import software.wings.graphql.datafetcher.execution.PipelineExecutionController;
-import software.wings.graphql.datafetcher.execution.WorkflowExecutionController;
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
 import software.wings.graphql.schema.type.trigger.QLArtifactSelectionInput;
 import software.wings.graphql.schema.type.trigger.QLArtifactSelectionType;
-import software.wings.graphql.schema.type.trigger.QLCreateTriggerInput;
+import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLFromTriggeringPipeline;
 import software.wings.graphql.schema.type.trigger.QLFromWebhookPayload;
 import software.wings.graphql.schema.type.trigger.QLLastCollected;
@@ -40,12 +39,8 @@ import software.wings.graphql.schema.type.trigger.QLPipelineAction;
 import software.wings.graphql.schema.type.trigger.QLTriggerActionInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerConditionInput;
 import software.wings.graphql.schema.type.trigger.QLWorkflowAction;
-import software.wings.security.PermissionAttribute;
-import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.WorkflowService;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,9 +52,9 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 public class TriggerActionControllerTest extends CategoryTest {
   @Mock PipelineService pipelineService;
-  @Mock WorkflowService workflowService;
   @Mock ServiceResourceService serviceResourceService;
-  @Mock ArtifactStreamService artifactStreamService;
+
+  @InjectMocks TriggerActionController triggerActionController = PowerMockito.spy(new TriggerActionController());
 
   @Test
   @Owner(developers = MILAN)
@@ -80,7 +75,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                           .workflowVariables(variables)
                           .build();
 
-    QLPipelineAction qlPipelineAction = (QLPipelineAction) TriggerActionController.populateTriggerAction(trigger);
+    QLPipelineAction qlPipelineAction = (QLPipelineAction) triggerActionController.populateTriggerAction(trigger);
 
     assertThat(qlPipelineAction).isNotNull();
     assertThat(qlPipelineAction.getPipelineId()).isEqualTo(trigger.getWorkflowId());
@@ -121,7 +116,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                           .workflowVariables(variables)
                           .build();
 
-    QLPipelineAction qlPipelineAction = (QLPipelineAction) TriggerActionController.populateTriggerAction(trigger);
+    QLPipelineAction qlPipelineAction = (QLPipelineAction) triggerActionController.populateTriggerAction(trigger);
 
     assertThat(qlPipelineAction).isNotNull();
     assertThat(qlPipelineAction.getPipelineId()).isEqualTo(trigger.getWorkflowId());
@@ -168,7 +163,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                           .workflowType(WorkflowType.PIPELINE)
                           .build();
 
-    QLPipelineAction qlPipelineAction = (QLPipelineAction) TriggerActionController.populateTriggerAction(trigger);
+    QLPipelineAction qlPipelineAction = (QLPipelineAction) triggerActionController.populateTriggerAction(trigger);
 
     assertThat(qlPipelineAction).isNotNull();
     assertThat(qlPipelineAction.getPipelineId()).isEqualTo(trigger.getWorkflowId());
@@ -213,7 +208,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                           .workflowType(WorkflowType.PIPELINE)
                           .build();
 
-    QLPipelineAction qlPipelineAction = (QLPipelineAction) TriggerActionController.populateTriggerAction(trigger);
+    QLPipelineAction qlPipelineAction = (QLPipelineAction) triggerActionController.populateTriggerAction(trigger);
 
     assertThat(qlPipelineAction).isNotNull();
     assertThat(qlPipelineAction.getPipelineId()).isEqualTo(trigger.getWorkflowId());
@@ -256,7 +251,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                           .workflowType(WorkflowType.PIPELINE)
                           .build();
 
-    QLPipelineAction qlPipelineAction = (QLPipelineAction) TriggerActionController.populateTriggerAction(trigger);
+    QLPipelineAction qlPipelineAction = (QLPipelineAction) triggerActionController.populateTriggerAction(trigger);
 
     assertThat(qlPipelineAction).isNotNull();
     assertThat(qlPipelineAction.getPipelineId()).isEqualTo(trigger.getWorkflowId());
@@ -297,7 +292,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                           .workflowVariables(variables)
                           .build();
 
-    QLWorkflowAction qlWorkflowAction = (QLWorkflowAction) TriggerActionController.populateTriggerAction(trigger);
+    QLWorkflowAction qlWorkflowAction = (QLWorkflowAction) triggerActionController.populateTriggerAction(trigger);
 
     assertThat(qlWorkflowAction).isNotNull();
     assertThat(qlWorkflowAction.getWorkflowId()).isEqualTo(trigger.getWorkflowId());
@@ -339,7 +334,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                           .workflowType(WorkflowType.ORCHESTRATION)
                           .build();
 
-    QLWorkflowAction qlWorkflowAction = (QLWorkflowAction) TriggerActionController.populateTriggerAction(trigger);
+    QLWorkflowAction qlWorkflowAction = (QLWorkflowAction) triggerActionController.populateTriggerAction(trigger);
 
     assertThat(qlWorkflowAction).isNotNull();
     assertThat(qlWorkflowAction.getWorkflowId()).isEqualTo(trigger.getWorkflowId());
@@ -386,7 +381,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                           .workflowType(WorkflowType.ORCHESTRATION)
                           .build();
 
-    QLWorkflowAction qlWorkflowAction = (QLWorkflowAction) TriggerActionController.populateTriggerAction(trigger);
+    QLWorkflowAction qlWorkflowAction = (QLWorkflowAction) triggerActionController.populateTriggerAction(trigger);
 
     assertThat(qlWorkflowAction).isNotNull();
     assertThat(qlWorkflowAction.getWorkflowId()).isEqualTo(trigger.getWorkflowId());
@@ -431,7 +426,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                           .workflowType(WorkflowType.ORCHESTRATION)
                           .build();
 
-    QLWorkflowAction qlWorkflowAction = (QLWorkflowAction) TriggerActionController.populateTriggerAction(trigger);
+    QLWorkflowAction qlWorkflowAction = (QLWorkflowAction) triggerActionController.populateTriggerAction(trigger);
 
     assertThat(qlWorkflowAction).isNotNull();
     assertThat(qlWorkflowAction.getWorkflowId()).isEqualTo(trigger.getWorkflowId());
@@ -474,7 +469,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                           .workflowType(WorkflowType.ORCHESTRATION)
                           .build();
 
-    QLWorkflowAction qlWorkflowAction = (QLWorkflowAction) TriggerActionController.populateTriggerAction(trigger);
+    QLWorkflowAction qlWorkflowAction = (QLWorkflowAction) triggerActionController.populateTriggerAction(trigger);
 
     assertThat(qlWorkflowAction).isNotNull();
     assertThat(qlWorkflowAction.getWorkflowId()).isEqualTo(trigger.getWorkflowId());
@@ -504,12 +499,11 @@ public class TriggerActionControllerTest extends CategoryTest {
             .artifactSelectionType(QLArtifactSelectionType.FROM_TRIGGERING_ARTIFACT)
             .build();
 
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder()
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
-    TriggerActionController.resolveArtifactSelections(
-        qlCreateTriggerInput, pipelineService, workflowService, serviceResourceService, artifactStreamService);
+    triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -522,26 +516,27 @@ public class TriggerActionControllerTest extends CategoryTest {
             .serviceId("serviceId")
             .build();
 
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder()
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(null);
 
-    TriggerActionController.resolveArtifactSelections(
-        qlCreateTriggerInput, pipelineService, workflowService, serviceResourceService, artifactStreamService);
+    triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput);
   }
 
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
   public void resolveArtifactSelectionsShouldReturnEmptyList() {
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder().action(QLTriggerActionInput.builder().artifactSelections(null).build()).build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().artifactSelections(null).build())
+            .build();
 
-    List<ArtifactSelection> artifactSelections = TriggerActionController.resolveArtifactSelections(
-        qlCreateTriggerInput, pipelineService, workflowService, serviceResourceService, artifactStreamService);
+    List<ArtifactSelection> artifactSelections =
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput);
 
     assertThat(artifactSelections).isEmpty();
   }
@@ -561,23 +556,19 @@ public class TriggerActionControllerTest extends CategoryTest {
             .workflowId("workflowId")
             .build();
 
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder()
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.spy(TriggerActionController.class);
     PowerMockito.doReturn(ArtifactSelection.Type.ARTIFACT_SOURCE)
-        .when(TriggerActionController.class, "validateAndResolveFromTriggeringArtifactArtifactSelectionType",
-            qlCreateTriggerInput);
+        .when(triggerActionController, "validateAndResolveFromTriggeringArtifactArtifactSelectionType",
+            qlCreateOrUpdateTriggerInput);
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        TriggerActionController
-            .resolveArtifactSelections(
-                qlCreateTriggerInput, pipelineService, workflowService, serviceResourceService, artifactStreamService)
-            .get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.ARTIFACT_SOURCE);
@@ -605,23 +596,19 @@ public class TriggerActionControllerTest extends CategoryTest {
             .workflowId("workflowId")
             .build();
 
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder()
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.spy(TriggerActionController.class);
     PowerMockito.doReturn(ArtifactSelection.Type.PIPELINE_SOURCE)
-        .when(TriggerActionController.class, "validateAndResolveFromTriggeringPipelineArtifactSelectionType",
-            qlCreateTriggerInput);
+        .when(triggerActionController, "validateAndResolveFromTriggeringPipelineArtifactSelectionType",
+            qlCreateOrUpdateTriggerInput);
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        TriggerActionController
-            .resolveArtifactSelections(
-                qlCreateTriggerInput, pipelineService, workflowService, serviceResourceService, artifactStreamService)
-            .get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.PIPELINE_SOURCE);
@@ -649,23 +636,19 @@ public class TriggerActionControllerTest extends CategoryTest {
             .workflowId("workflowId")
             .build();
 
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder()
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.spy(TriggerActionController.class);
-    PowerMockito.doReturn(ArtifactSelection.Type.LAST_COLLECTED)
-        .when(TriggerActionController.class, "validateAndResolveLastCollectedArtifactSelectionType",
-            qlArtifactSelectionInput, artifactStreamService);
+    PowerMockito.doReturn(Type.LAST_COLLECTED)
+        .when(
+            triggerActionController, "validateAndResolveLastCollectedArtifactSelectionType", qlArtifactSelectionInput);
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        TriggerActionController
-            .resolveArtifactSelections(
-                qlCreateTriggerInput, pipelineService, workflowService, serviceResourceService, artifactStreamService)
-            .get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.LAST_COLLECTED);
@@ -693,23 +676,19 @@ public class TriggerActionControllerTest extends CategoryTest {
             .workflowId("workflowId")
             .build();
 
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder()
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.spy(TriggerActionController.class);
-    PowerMockito.doReturn(ArtifactSelection.Type.WEBHOOK_VARIABLE)
-        .when(TriggerActionController.class, "validateAndResolveFromPayloadSourceArtifactSelectionType",
-            qlCreateTriggerInput, qlArtifactSelectionInput, artifactStreamService);
+    PowerMockito.doReturn(Type.WEBHOOK_VARIABLE)
+        .when(triggerActionController, "validateAndResolveFromPayloadSourceArtifactSelectionType",
+            qlCreateOrUpdateTriggerInput, qlArtifactSelectionInput);
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        TriggerActionController
-            .resolveArtifactSelections(
-                qlCreateTriggerInput, pipelineService, workflowService, serviceResourceService, artifactStreamService)
-            .get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.WEBHOOK_VARIABLE);
@@ -737,23 +716,19 @@ public class TriggerActionControllerTest extends CategoryTest {
             .workflowId("workflowId")
             .build();
 
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder()
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.spy(TriggerActionController.class);
-    PowerMockito.doReturn(ArtifactSelection.Type.LAST_DEPLOYED)
-        .when(TriggerActionController.class, "validateAndResolveLastDeployedPipelineArtifactSelectionType",
-            qlCreateTriggerInput, pipelineService);
+    PowerMockito.doReturn(Type.LAST_DEPLOYED)
+        .when(triggerActionController, "validateAndResolveLastDeployedPipelineArtifactSelectionType",
+            qlCreateOrUpdateTriggerInput);
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        TriggerActionController
-            .resolveArtifactSelections(
-                qlCreateTriggerInput, pipelineService, workflowService, serviceResourceService, artifactStreamService)
-            .get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.LAST_DEPLOYED);
@@ -781,23 +756,19 @@ public class TriggerActionControllerTest extends CategoryTest {
             .workflowId("workflowId")
             .build();
 
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder()
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.spy(TriggerActionController.class);
-    PowerMockito.doReturn(ArtifactSelection.Type.LAST_DEPLOYED)
-        .when(TriggerActionController.class, "validateAndResolveLastDeployedWorkflowArtifactSelectionType",
-            qlCreateTriggerInput, workflowService);
+    PowerMockito.doReturn(Type.LAST_DEPLOYED)
+        .when(triggerActionController, "validateAndResolveLastDeployedWorkflowArtifactSelectionType",
+            qlCreateOrUpdateTriggerInput);
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
     ArtifactSelection returnedArtifactSelection =
-        TriggerActionController
-            .resolveArtifactSelections(
-                qlCreateTriggerInput, pipelineService, workflowService, serviceResourceService, artifactStreamService)
-            .get(0);
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput).get(0);
 
     assertThat(returnedArtifactSelection).isNotNull();
     assertThat(returnedArtifactSelection.getType()).isEqualByComparingTo(ArtifactSelection.Type.LAST_DEPLOYED);
@@ -814,12 +785,12 @@ public class TriggerActionControllerTest extends CategoryTest {
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
   public void resolveWorkflowTypeShouldReturnOrchestrationWorkflowType() {
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder()
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
             .action(QLTriggerActionInput.builder().executionType(QLExecutionType.WORKFLOW).build())
             .build();
 
-    assertThat(TriggerActionController.resolveWorkflowType(qlCreateTriggerInput))
+    assertThat(triggerActionController.resolveWorkflowType(qlCreateOrUpdateTriggerInput))
         .isEqualByComparingTo(WorkflowType.ORCHESTRATION);
   }
 
@@ -827,12 +798,12 @@ public class TriggerActionControllerTest extends CategoryTest {
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
   public void resolveWorkflowTypeShouldReturnPipelineWorkflowType() {
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder()
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
             .action(QLTriggerActionInput.builder().executionType(QLExecutionType.PIPELINE).build())
             .build();
 
-    assertThat(TriggerActionController.resolveWorkflowType(qlCreateTriggerInput))
+    assertThat(triggerActionController.resolveWorkflowType(qlCreateOrUpdateTriggerInput))
         .isEqualByComparingTo(WorkflowType.PIPELINE);
   }
 
@@ -840,14 +811,6 @@ public class TriggerActionControllerTest extends CategoryTest {
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
   public void resolveWorkflowVariablesShouldResolvePipelineWorkflowVariables() throws Exception {
-    PipelineExecutionController pipelineExecutionController = Mockito.mock(PipelineExecutionController.class);
-    WorkflowExecutionController workflowExecutionController = Mockito.mock(WorkflowExecutionController.class);
-    AuthHandler authHandler = Mockito.mock(AuthHandler.class);
-
-    PermissionAttribute permissionAttribute =
-        new PermissionAttribute(PermissionAttribute.PermissionType.DEPLOYMENT, PermissionAttribute.Action.EXECUTE);
-    List<PermissionAttribute> permissionAttributes = Collections.singletonList(permissionAttribute);
-
     List<QLVariableInput> qlVariables = Collections.singletonList(
         QLVariableInput.builder()
             .name("var")
@@ -857,17 +820,15 @@ public class TriggerActionControllerTest extends CategoryTest {
     QLTriggerActionInput qlTriggerActionInput =
         QLTriggerActionInput.builder().executionType(QLExecutionType.PIPELINE).variables(qlVariables).build();
 
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder().applicationId("appId").action(qlTriggerActionInput).build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().applicationId("appId").action(qlTriggerActionInput).build();
 
-    PowerMockito.spy(TriggerActionController.class);
     PowerMockito.doReturn(new HashMap<>())
-        .when(TriggerActionController.class, "validateAndResolvePipelineVariables", qlTriggerActionInput,
-            permissionAttributes, qlVariables, qlCreateTriggerInput.getApplicationId(), pipelineService,
-            pipelineExecutionController, authHandler);
+        .when(triggerActionController, "validateAndResolvePipelineVariables", qlTriggerActionInput, qlVariables,
+            qlCreateOrUpdateTriggerInput.getApplicationId());
 
-    Map<String, String> retrievedVariables = TriggerActionController.resolveWorkflowVariables(qlCreateTriggerInput,
-        pipelineService, pipelineExecutionController, workflowExecutionController, workflowService, authHandler);
+    Map<String, String> retrievedVariables =
+        triggerActionController.resolveWorkflowVariables(qlCreateOrUpdateTriggerInput);
 
     assertThat(retrievedVariables).isNotNull();
     assertThat(retrievedVariables.get("ID")).isEqualTo("value");
@@ -877,14 +838,6 @@ public class TriggerActionControllerTest extends CategoryTest {
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
   public void resolveWorkflowVariablesShouldResolveOrchestrationWorkflowVariables() throws Exception {
-    PipelineExecutionController pipelineExecutionController = Mockito.mock(PipelineExecutionController.class);
-    WorkflowExecutionController workflowExecutionController = Mockito.mock(WorkflowExecutionController.class);
-    AuthHandler authHandler = Mockito.mock(AuthHandler.class);
-
-    PermissionAttribute permissionAttribute =
-        new PermissionAttribute(PermissionAttribute.PermissionType.DEPLOYMENT, PermissionAttribute.Action.EXECUTE);
-    List<PermissionAttribute> permissionAttributes = Collections.singletonList(permissionAttribute);
-
     List<QLVariableInput> qlVariables = Collections.singletonList(
         QLVariableInput.builder()
             .name("var")
@@ -894,17 +847,15 @@ public class TriggerActionControllerTest extends CategoryTest {
     QLTriggerActionInput qlTriggerActionInput =
         QLTriggerActionInput.builder().executionType(QLExecutionType.WORKFLOW).variables(qlVariables).build();
 
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder().applicationId("appId").action(qlTriggerActionInput).build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().applicationId("appId").action(qlTriggerActionInput).build();
 
-    PowerMockito.spy(TriggerActionController.class);
     PowerMockito.doReturn(new HashMap<>())
-        .when(TriggerActionController.class, "validateAndResolveWorkflowVariables", qlTriggerActionInput,
-            permissionAttributes, qlVariables, qlCreateTriggerInput.getApplicationId(), workflowExecutionController,
-            workflowService, authHandler);
+        .when(triggerActionController, "validateAndResolveWorkflowVariables", qlTriggerActionInput, qlVariables,
+            qlCreateOrUpdateTriggerInput.getApplicationId());
 
-    Map<String, String> retrievedVariables = TriggerActionController.resolveWorkflowVariables(qlCreateTriggerInput,
-        pipelineService, pipelineExecutionController, workflowExecutionController, workflowService, authHandler);
+    Map<String, String> retrievedVariables =
+        triggerActionController.resolveWorkflowVariables(qlCreateOrUpdateTriggerInput);
 
     assertThat(retrievedVariables).isNotNull();
     assertThat(retrievedVariables.get("ID")).isEqualTo("value");
@@ -916,13 +867,13 @@ public class TriggerActionControllerTest extends CategoryTest {
   public void validatePipelineShouldThrowAppIdMustNotBeEmptyException() {
     QLTriggerConditionInput qlTriggerConditionInput = QLTriggerConditionInput.builder().build();
     QLTriggerActionInput qlTriggerActionInput = QLTriggerActionInput.builder().entityId("entityId").build();
-    QLCreateTriggerInput qlCreateTriggerInput = QLCreateTriggerInput.builder()
-                                                    .condition(qlTriggerConditionInput)
-                                                    .action(qlTriggerActionInput)
-                                                    .applicationId(null)
-                                                    .build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput = QLCreateOrUpdateTriggerInput.builder()
+                                                                    .condition(qlTriggerConditionInput)
+                                                                    .action(qlTriggerActionInput)
+                                                                    .applicationId(null)
+                                                                    .build();
 
-    TriggerActionController.validatePipeline(qlCreateTriggerInput, pipelineService);
+    triggerActionController.validatePipeline(qlCreateOrUpdateTriggerInput, "pipelineId");
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -930,10 +881,10 @@ public class TriggerActionControllerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void validatePipelineShouldThrowPipelineIdMustNotBeEmptyException() {
     QLTriggerActionInput qlTriggerActionInput = QLTriggerActionInput.builder().entityId(null).build();
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder().action(qlTriggerActionInput).applicationId("appId").build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().action(qlTriggerActionInput).applicationId("appId").build();
 
-    TriggerActionController.validatePipeline(qlCreateTriggerInput, pipelineService);
+    triggerActionController.validatePipeline(qlCreateOrUpdateTriggerInput, "pipelineId");
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -941,13 +892,13 @@ public class TriggerActionControllerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void validatePipelineShouldThrowPipelineDoesntExistException() {
     QLTriggerActionInput qlTriggerActionInput = QLTriggerActionInput.builder().entityId("entityId").build();
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder().action(qlTriggerActionInput).applicationId("appId").build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().action(qlTriggerActionInput).applicationId("appId").build();
 
     Mockito.when(pipelineService.readPipeline(Matchers.anyString(), Matchers.anyString(), Matchers.anyBoolean()))
         .thenReturn(null);
 
-    TriggerActionController.validatePipeline(qlCreateTriggerInput, pipelineService);
+    triggerActionController.validatePipeline(qlCreateOrUpdateTriggerInput, "pipelineId");
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -955,12 +906,12 @@ public class TriggerActionControllerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void validatePipelineShouldThrowPipelineDoesntBelongToThisAppException() {
     QLTriggerActionInput qlTriggerActionInput = QLTriggerActionInput.builder().entityId("entityId").build();
-    QLCreateTriggerInput qlCreateTriggerInput =
-        QLCreateTriggerInput.builder().action(qlTriggerActionInput).applicationId("appId").build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().action(qlTriggerActionInput).applicationId("appId").build();
 
     Mockito.when(pipelineService.readPipeline(Matchers.anyString(), Matchers.anyString(), Matchers.anyBoolean()))
         .thenReturn(Pipeline.builder().appId("appId2").build());
 
-    TriggerActionController.validatePipeline(qlCreateTriggerInput, pipelineService);
+    triggerActionController.validatePipeline(qlCreateOrUpdateTriggerInput, "pipelineId");
   }
 }

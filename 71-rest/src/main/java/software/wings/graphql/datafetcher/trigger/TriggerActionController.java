@@ -1,12 +1,17 @@
 package software.wings.graphql.datafetcher.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
@@ -20,7 +25,7 @@ import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.type.trigger.QLArtifactSelection;
 import software.wings.graphql.schema.type.trigger.QLArtifactSelectionInput;
 import software.wings.graphql.schema.type.trigger.QLConditionType;
-import software.wings.graphql.schema.type.trigger.QLCreateTriggerInput;
+import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLFromTriggeringArtifactSource;
 import software.wings.graphql.schema.type.trigger.QLFromTriggeringPipeline;
 import software.wings.graphql.schema.type.trigger.QLFromWebhookPayload;
@@ -33,22 +38,32 @@ import software.wings.graphql.schema.type.trigger.QLTriggerActionInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerVariableValue;
 import software.wings.graphql.schema.type.trigger.QLWebhookSource;
 import software.wings.graphql.schema.type.trigger.QLWorkflowAction;
-import software.wings.security.PermissionAttribute;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@UtilityClass
+@OwnedBy(CDC)
+@Singleton
+@Slf4j
 public class TriggerActionController {
+  @Inject AuthHandler authHandler;
+  @Inject DeploymentAuthHandler deploymentAuthHandler;
+  @Inject WorkflowService workflowService;
+  @Inject PipelineService pipelineService;
+  @Inject ServiceResourceService serviceResourceService;
+  @Inject PipelineExecutionController pipelineExecutionController;
+  @Inject WorkflowExecutionController workflowExecutionController;
+  @Inject ArtifactStreamService artifactStreamService;
+
   public QLTriggerAction populateTriggerAction(Trigger trigger) {
     QLTriggerAction triggerAction = null;
 
@@ -135,14 +150,12 @@ public class TriggerActionController {
     return triggerAction;
   }
 
-  public List<ArtifactSelection> resolveArtifactSelections(QLCreateTriggerInput qlCreateTriggerInput,
-      PipelineService pipelineService, WorkflowService workflowService, ServiceResourceService serviceResourceService,
-      ArtifactStreamService artifactStreamService) {
-    if (qlCreateTriggerInput.getAction().getArtifactSelections() == null) {
+  public List<ArtifactSelection> resolveArtifactSelections(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    if (qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections() == null) {
       return new ArrayList<>();
     }
 
-    return qlCreateTriggerInput.getAction()
+    return qlCreateOrUpdateTriggerInput.getAction()
         .getArtifactSelections()
         .stream()
         .map(e -> {
@@ -158,23 +171,22 @@ public class TriggerActionController {
           Type type = null;
           switch (e.getArtifactSelectionType()) {
             case FROM_TRIGGERING_ARTIFACT:
-              type = validateAndResolveFromTriggeringArtifactArtifactSelectionType(qlCreateTriggerInput);
+              type = validateAndResolveFromTriggeringArtifactArtifactSelectionType(qlCreateOrUpdateTriggerInput);
               break;
             case FROM_TRIGGERING_PIPELINE:
-              type = validateAndResolveFromTriggeringPipelineArtifactSelectionType(qlCreateTriggerInput);
+              type = validateAndResolveFromTriggeringPipelineArtifactSelectionType(qlCreateOrUpdateTriggerInput);
               break;
             case LAST_COLLECTED:
-              type = validateAndResolveLastCollectedArtifactSelectionType(e, artifactStreamService);
+              type = validateAndResolveLastCollectedArtifactSelectionType(e);
               break;
             case FROM_PAYLOAD_SOURCE:
-              type = validateAndResolveFromPayloadSourceArtifactSelectionType(
-                  qlCreateTriggerInput, e, artifactStreamService);
+              type = validateAndResolveFromPayloadSourceArtifactSelectionType(qlCreateOrUpdateTriggerInput, e);
               break;
             case LAST_DEPLOYED_PIPELINE:
-              type = validateAndResolveLastDeployedPipelineArtifactSelectionType(qlCreateTriggerInput, pipelineService);
+              type = validateAndResolveLastDeployedPipelineArtifactSelectionType(qlCreateOrUpdateTriggerInput);
               break;
             case LAST_DEPLOYED_WORKFLOW:
-              type = validateAndResolveLastDeployedWorkflowArtifactSelectionType(qlCreateTriggerInput, workflowService);
+              type = validateAndResolveLastDeployedWorkflowArtifactSelectionType(qlCreateOrUpdateTriggerInput);
               break;
             default:
               throw new InvalidRequestException("Invalid Artifact Selection Type", USER);
@@ -194,8 +206,8 @@ public class TriggerActionController {
   }
 
   private Type validateAndResolveFromTriggeringArtifactArtifactSelectionType(
-      QLCreateTriggerInput qlCreateTriggerInput) {
-    if (QLConditionType.ON_NEW_ARTIFACT != qlCreateTriggerInput.getCondition().getConditionType()) {
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    if (QLConditionType.ON_NEW_ARTIFACT != qlCreateOrUpdateTriggerInput.getCondition().getConditionType()) {
       throw new InvalidRequestException(
           "FROM_TRIGGERING_ARTIFACT can be used only with ON_NEW_ARTIFACT Condition Type", USER);
     }
@@ -203,56 +215,55 @@ public class TriggerActionController {
   }
 
   private Type validateAndResolveFromTriggeringPipelineArtifactSelectionType(
-      QLCreateTriggerInput qlCreateTriggerInput) {
-    if (QLConditionType.ON_PIPELINE_COMPLETION != qlCreateTriggerInput.getCondition().getConditionType()) {
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    if (QLConditionType.ON_PIPELINE_COMPLETION != qlCreateOrUpdateTriggerInput.getCondition().getConditionType()) {
       throw new InvalidRequestException(
           "FROM_TRIGGERING_PIPELINE can be used only with ON_PIPELINE_COMPLETION Condition Type", USER);
     }
     return Type.PIPELINE_SOURCE;
   }
 
-  private Type validateAndResolveLastCollectedArtifactSelectionType(
-      QLArtifactSelectionInput qlArtifactSelectionInput, ArtifactStreamService artifactStreamService) {
-    validateArtifactSource(qlArtifactSelectionInput, artifactStreamService);
+  private Type validateAndResolveLastCollectedArtifactSelectionType(QLArtifactSelectionInput qlArtifactSelectionInput) {
+    validateArtifactSource(qlArtifactSelectionInput);
     return Type.LAST_COLLECTED;
   }
 
-  private Type validateAndResolveFromPayloadSourceArtifactSelectionType(QLCreateTriggerInput qlCreateTriggerInput,
-      QLArtifactSelectionInput qlArtifactSelectionInput, ArtifactStreamService artifactStreamService) {
-    if (QLConditionType.ON_WEBHOOK != qlCreateTriggerInput.getCondition().getConditionType()) {
+  private Type validateAndResolveFromPayloadSourceArtifactSelectionType(
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, QLArtifactSelectionInput qlArtifactSelectionInput) {
+    if (QLConditionType.ON_WEBHOOK != qlCreateOrUpdateTriggerInput.getCondition().getConditionType()) {
       throw new InvalidRequestException("FROM_PAYLOAD_SOURCE can be used only with ON_WEBHOOK Condition Type", USER);
     }
     if (QLWebhookSource.CUSTOM
-        != qlCreateTriggerInput.getCondition().getWebhookConditionInput().getWebhookSourceType()) {
+        != qlCreateOrUpdateTriggerInput.getCondition().getWebhookConditionInput().getWebhookSourceType()) {
       throw new InvalidRequestException("FROM_PAYLOAD_SOURCE can be used only with CUSTOM Webhook Event", USER);
     }
-    validateArtifactSource(qlArtifactSelectionInput, artifactStreamService);
+    validateArtifactSource(qlArtifactSelectionInput);
     return ArtifactSelection.Type.WEBHOOK_VARIABLE;
   }
 
   private Type validateAndResolveLastDeployedPipelineArtifactSelectionType(
-      QLCreateTriggerInput qlCreateTriggerInput, PipelineService pipelineService) {
-    WorkflowType workflowType = resolveWorkflowType(qlCreateTriggerInput);
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    WorkflowType workflowType = resolveWorkflowType(qlCreateOrUpdateTriggerInput);
     if (workflowType != WorkflowType.PIPELINE) {
       throw new InvalidRequestException("Artifact Selection is not allowed for current Workflow Type", USER);
     }
-    validatePipeline(qlCreateTriggerInput, pipelineService);
+    validatePipeline(qlCreateOrUpdateTriggerInput, qlCreateOrUpdateTriggerInput.getAction().getEntityId());
     return ArtifactSelection.Type.LAST_DEPLOYED;
   }
 
   private Type validateAndResolveLastDeployedWorkflowArtifactSelectionType(
-      QLCreateTriggerInput qlCreateTriggerInput, WorkflowService workflowService) {
-    WorkflowType workflowType = resolveWorkflowType(qlCreateTriggerInput);
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    WorkflowType workflowType = resolveWorkflowType(qlCreateOrUpdateTriggerInput);
     if (workflowType != WorkflowType.ORCHESTRATION) {
       throw new InvalidRequestException("Artifact Selection is not allowed for current Workflow Type", USER);
     }
-    validateWorkflow(qlCreateTriggerInput, workflowService);
+    validateWorkflow(qlCreateOrUpdateTriggerInput);
     return ArtifactSelection.Type.LAST_DEPLOYED;
   }
 
-  public WorkflowType resolveWorkflowType(QLCreateTriggerInput qlCreateTriggerInput) {
+  public WorkflowType resolveWorkflowType(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     WorkflowType workflowType = null;
-    if (QLExecutionType.WORKFLOW == qlCreateTriggerInput.getAction().getExecutionType()) {
+    if (QLExecutionType.WORKFLOW == qlCreateOrUpdateTriggerInput.getAction().getExecutionType()) {
       workflowType = WorkflowType.ORCHESTRATION;
     } else {
       workflowType = WorkflowType.PIPELINE;
@@ -260,29 +271,20 @@ public class TriggerActionController {
     return workflowType;
   }
 
-  public Map<String, String> resolveWorkflowVariables(QLCreateTriggerInput triggerInput,
-      PipelineService pipelineService, PipelineExecutionController pipelineExecutionController,
-      WorkflowExecutionController workflowExecutionController, WorkflowService workflowService,
-      AuthHandler authHandler) {
-    QLTriggerActionInput triggerActionInput = triggerInput.getAction();
+  public Map<String, String> resolveWorkflowVariables(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    QLTriggerActionInput triggerActionInput = qlCreateOrUpdateTriggerInput.getAction();
 
     List<QLVariableInput> qlVariables = triggerActionInput.getVariables();
 
-    String appId = triggerInput.getApplicationId();
-
-    PermissionAttribute permissionAttribute =
-        new PermissionAttribute(PermissionAttribute.PermissionType.DEPLOYMENT, PermissionAttribute.Action.EXECUTE);
-    List<PermissionAttribute> permissionAttributes = Collections.singletonList(permissionAttribute);
+    String appId = qlCreateOrUpdateTriggerInput.getApplicationId();
 
     Map<String, String> workflowVariables = new HashMap<>();
     switch (triggerActionInput.getExecutionType()) {
       case PIPELINE:
-        workflowVariables = validateAndResolvePipelineVariables(triggerActionInput, permissionAttributes, qlVariables,
-            appId, pipelineService, pipelineExecutionController, authHandler);
+        workflowVariables = validateAndResolvePipelineVariables(triggerActionInput, qlVariables, appId);
         break;
       case WORKFLOW:
-        workflowVariables = validateAndResolveWorkflowVariables(triggerActionInput, permissionAttributes, qlVariables,
-            appId, workflowExecutionController, workflowService, authHandler);
+        workflowVariables = validateAndResolveWorkflowVariables(triggerActionInput, qlVariables, appId);
         break;
       default:
     }
@@ -295,14 +297,12 @@ public class TriggerActionController {
     return workflowVariables;
   }
 
-  private Map<String, String> validateAndResolvePipelineVariables(QLTriggerActionInput qlTriggerActionInput,
-      List<PermissionAttribute> permissionAttributes, List<QLVariableInput> qlVariables, String appId,
-      PipelineService pipelineService, PipelineExecutionController pipelineExecutionController,
-      AuthHandler authHandler) {
+  private Map<String, String> validateAndResolvePipelineVariables(
+      QLTriggerActionInput qlTriggerActionInput, List<QLVariableInput> qlVariables, String appId) {
     String pipelineId = qlTriggerActionInput.getEntityId();
     Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, false);
     notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
-    authHandler.authorize(permissionAttributes, Collections.singletonList(appId), pipelineId);
+    deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
 
     String envId = pipelineExecutionController.resolveEnvId(pipeline, qlVariables);
 
@@ -310,17 +310,15 @@ public class TriggerActionController {
         pipeline, qlVariables, envId, new ArrayList<>(), true);
   }
 
-  private Map<String, String> validateAndResolveWorkflowVariables(QLTriggerActionInput qlTriggerActionInput,
-      List<PermissionAttribute> permissionAttributes, List<QLVariableInput> qlVariables, String appId,
-      WorkflowExecutionController workflowExecutionController, WorkflowService workflowService,
-      AuthHandler authHandler) {
+  private Map<String, String> validateAndResolveWorkflowVariables(
+      QLTriggerActionInput qlTriggerActionInput, List<QLVariableInput> qlVariables, String appId) {
     String workflowId = qlTriggerActionInput.getEntityId();
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
     notNullCheck("Workflow " + workflowId + " doesn't exist in the specified application " + appId, workflow, USER);
     notNullCheck(
         "Error reading workflow " + workflowId + " Might be deleted", workflow.getOrchestrationWorkflow(), USER);
 
-    authHandler.authorize(permissionAttributes, Collections.singletonList(appId), workflowId);
+    deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
     String envId = workflowExecutionController.resolveEnvId(workflow, qlVariables);
     authHandler.checkIfUserAllowedToDeployToEnv(appId, envId);
 
@@ -328,10 +326,9 @@ public class TriggerActionController {
         workflow, qlVariables, envId, new ArrayList<>(), true);
   }
 
-  public void validatePipeline(QLCreateTriggerInput qlCreateTriggerInput, PipelineService pipelineService) {
+  public void validatePipeline(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, String pipelineId) {
     Pipeline pipeline = null;
-    String appId = qlCreateTriggerInput.getApplicationId();
-    String pipelineId = qlCreateTriggerInput.getAction().getEntityId();
+    String appId = qlCreateOrUpdateTriggerInput.getApplicationId();
 
     if (appId == null) {
       throw new InvalidRequestException("Application Id must not be empty", USER);
@@ -351,10 +348,10 @@ public class TriggerActionController {
     }
   }
 
-  private void validateWorkflow(QLCreateTriggerInput qlCreateTriggerInput, WorkflowService workflowService) {
+  private void validateWorkflow(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     Workflow workflow = null;
-    String appId = qlCreateTriggerInput.getApplicationId();
-    QLTriggerActionInput qlTriggerActionInput = qlCreateTriggerInput.getAction();
+    String appId = qlCreateOrUpdateTriggerInput.getApplicationId();
+    QLTriggerActionInput qlTriggerActionInput = qlCreateOrUpdateTriggerInput.getAction();
 
     if (qlTriggerActionInput != null) {
       workflow =
@@ -370,8 +367,7 @@ public class TriggerActionController {
     }
   }
 
-  private void validateArtifactSource(
-      QLArtifactSelectionInput qlArtifactSelectionInput, ArtifactStreamService artifactStreamService) {
+  private void validateArtifactSource(QLArtifactSelectionInput qlArtifactSelectionInput) {
     String artifactSourceid = qlArtifactSelectionInput.getArtifactSourceId();
 
     if (EmptyPredicate.isEmpty(artifactSourceid)) {

@@ -1,24 +1,24 @@
-package software.wings.graphql.datafetcher.trigger;
+package software.wings.beans.trigger;
 
 import com.google.inject.Inject;
 
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
-import software.wings.beans.trigger.Trigger;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.datafetcher.trigger.TriggerController;
 import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerPayload;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.TriggerService;
 
-public class CreateTriggerDataFetcher extends BaseMutatorDataFetcher<QLCreateOrUpdateTriggerInput, QLTriggerPayload> {
+public class UpdateTriggerDataFetcher extends BaseMutatorDataFetcher<QLCreateOrUpdateTriggerInput, QLTriggerPayload> {
   @Inject TriggerController triggerController;
   private TriggerService triggerService;
 
   @Inject
-  public CreateTriggerDataFetcher(TriggerService triggerService) {
+  public UpdateTriggerDataFetcher(TriggerService triggerService) {
     super(QLCreateOrUpdateTriggerInput.class, QLTriggerPayload.class);
     this.triggerService = triggerService;
   }
@@ -29,7 +29,7 @@ public class CreateTriggerDataFetcher extends BaseMutatorDataFetcher<QLCreateOrU
     try (AutoLogContext ignore0 =
              new AccountLogContext(mutationContext.getAccountId(), AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       final Trigger savedTrigger =
-          triggerService.save(triggerController.prepareTrigger(parameter, mutationContext.getAccountId()));
+          triggerService.update(triggerController.prepareTrigger(parameter, mutationContext.getAccountId()), false);
       return triggerController.prepareQLTrigger(
           savedTrigger, parameter.getClientMutationId(), mutationContext.getAccountId());
     }

@@ -262,10 +262,11 @@ public class PipelineExecutionController {
             break;
           case EXPRESSION:
             if (isTriggerFlow) {
-              continue;
+              pipelineVariableValues.put(variableInput.getName(), variableValue.getValue());
             } else {
               throw new UnsupportedOperationException("Expression Type not supported");
             }
+            break;
           default:
             throw new UnsupportedOperationException("Value Type " + type + " Not supported");
         }

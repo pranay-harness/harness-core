@@ -15,9 +15,9 @@ import software.wings.security.annotations.Scope;
 @FieldNameConstants(innerTypeName = "QLOnWebhookKeys")
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 public class QLOnWebhook implements QLTriggerCondition {
-  private QLTriggerConditionType triggerConditionType;
-  private QLWebhookSource webhookSource;
-  private QLWebhookEvent webhookEvent;
-  private QLWebhookDetails webhookDetails;
+  QLTriggerConditionType triggerConditionType;
+  QLWebhookSource webhookSource;
+  QLWebhookEvent webhookEvent;
+  QLWebhookDetails webhookDetails;
   String branchRegex;
 }

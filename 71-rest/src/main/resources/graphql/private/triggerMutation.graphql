@@ -1,10 +1,21 @@
 extend type Mutation {
   createTrigger(input: CreateTriggerInput!): TriggerPayload @dataFetcher(name: createTrigger)
+  updateTrigger(input: UpdateTriggerInput!): TriggerPayload @dataFetcher(name: updateTrigger)
 }
 
 input CreateTriggerInput {
   clientMutationId: String
   name: String!
+  applicationId: String!
+  description: String
+  condition: TriggerConditionInput!
+  action: TriggerActionInput!
+}
+
+input UpdateTriggerInput {
+  triggerId: String!
+  clientMutationId: String
+  name: String
   applicationId: String!
   description: String
   condition: TriggerConditionInput!
