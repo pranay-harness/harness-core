@@ -2,6 +2,7 @@ package io.harness.grpc;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -26,7 +27,6 @@ import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.Status;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
-import io.harness.delegate.Capability;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
@@ -57,7 +57,6 @@ import org.slf4j.Logger;
 import software.wings.WingsBaseTest;
 import software.wings.service.intfc.DelegateService;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -91,7 +90,7 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
 
     DelegateServiceGrpc.DelegateServiceBlockingStub delegateServiceBlockingStub =
         DelegateServiceGrpc.newBlockingStub(channel);
-    delegateServiceGrpcClient = new DelegateServiceGrpcClient(delegateServiceBlockingStub);
+    delegateServiceGrpcClient = new DelegateServiceGrpcClient(delegateServiceBlockingStub, kryoSerializer);
 
     perpetualTaskServiceClientRegistry = mock(PerpetualTaskServiceClientRegistry.class);
     perpetualTaskService = mock(PerpetualTaskService.class);
@@ -122,11 +121,6 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
     expressions.put("expression1", "exp1");
     expressions.put("expression1", "exp1");
 
-    Capability capability = Capability.newBuilder()
-                                .setKryoCapability(ByteString.copyFrom(
-                                    kryoSerializer.asDeflatedBytes(SystemEnvCheckerCapability.builder().build())))
-                                .build();
-
     TaskId taskId = delegateServiceGrpcClient.submitTask(AccountId.newBuilder().setId(generateUuid()).build(),
         TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
         TaskDetails.newBuilder()
@@ -136,7 +130,7 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
             .setExpressionFunctorToken(200)
             .putAllExpressions(expressions)
             .build(),
-        Arrays.asList(new Capability[] {capability}));
+        asList(SystemEnvCheckerCapability.builder().build()));
     assertThat(taskId).isNotNull();
     assertThat(taskId.getId()).isNotBlank();
     verify(delegateService).executeTask(any(DelegateTask.class));
