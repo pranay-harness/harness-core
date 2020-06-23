@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 import com.google.protobuf.util.Timestamps;
@@ -19,7 +20,6 @@ import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
-import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -46,7 +46,7 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,6 +54,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
+import software.wings.WingsBaseTest;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.Arrays;
@@ -63,7 +64,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DelegateServiceGrpcTest extends CategoryTest implements MockableTestMixin {
+public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTestMixin {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   private DelegateServiceGrpcClient delegateServiceGrpcClient;
@@ -72,6 +73,8 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
   private PerpetualTaskServiceClientRegistry perpetualTaskServiceClientRegistry;
   private PerpetualTaskService perpetualTaskService;
   private DelegateService delegateService;
+  @Inject private KryoSerializer kryoSerializer;
+
   private Server server;
   private Logger mockClientLogger;
   private Logger mockServerLogger;
@@ -94,7 +97,7 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
     perpetualTaskService = mock(PerpetualTaskService.class);
     delegateService = mock(DelegateService.class);
     delegateServiceGrpc = new io.harness.grpc.DelegateServiceGrpc(
-        perpetualTaskServiceClientRegistry, perpetualTaskService, delegateService);
+        perpetualTaskServiceClientRegistry, perpetualTaskService, delegateService, kryoSerializer);
 
     server =
         InProcessServerBuilder.forName(serverName).directExecutor().addService(delegateServiceGrpc).build().start();
@@ -105,7 +108,7 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testSubmitTask() throws InterruptedException {
-    ByteString kryoParams = ByteString.copyFrom(KryoUtils.asBytes(ScriptType.BASH));
+    ByteString kryoParams = ByteString.copyFrom(kryoSerializer.asDeflatedBytes(ScriptType.BASH));
 
     Map<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put(DelegateTaskKeys.appId, "appId");
@@ -119,10 +122,10 @@ public class DelegateServiceGrpcTest extends CategoryTest implements MockableTes
     expressions.put("expression1", "exp1");
     expressions.put("expression1", "exp1");
 
-    Capability capability =
-        Capability.newBuilder()
-            .setKryoCapability(ByteString.copyFrom(KryoUtils.asBytes(SystemEnvCheckerCapability.builder().build())))
-            .build();
+    Capability capability = Capability.newBuilder()
+                                .setKryoCapability(ByteString.copyFrom(
+                                    kryoSerializer.asDeflatedBytes(SystemEnvCheckerCapability.builder().build())))
+                                .build();
 
     TaskId taskId = delegateServiceGrpcClient.submitTask(AccountId.newBuilder().setId(generateUuid()).build(),
         TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
