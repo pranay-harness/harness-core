@@ -19,7 +19,6 @@ import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -34,7 +33,7 @@ import java.util.Date;
 public class DataCollectionTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
 
-  @NonNull @Indexed private String accountId;
+  @NonNull @FdIndex private String accountId;
   @FdIndex private String cvConfigId;
 
   private String nextTaskId;

@@ -123,6 +123,7 @@ cvActivityLogs {"name": "validUntil_1", "background": true, "expireAfterSeconds"
 cvConfigs {"name": "accountId_1", "background": true} {"accountId": 1}
 cvConfigs {"name": "connectorId_1", "background": true} {"connectorId": 1}
 cvConfigs {"name": "dataCollectionTaskIteration_1", "background": true} {"dataCollectionTaskIteration": 1}
+cvDataCollectionTasks {"name": "accountId_1", "background": true} {"accountId": 1}
 cvDataCollectionTasks {"name": "cvConfigId_1", "background": true} {"cvConfigId": 1}
 cvDataCollectionTasks {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt": 1}
 cvDataCollectionTasks {"name": "status_1", "background": true} {"status": 1}
