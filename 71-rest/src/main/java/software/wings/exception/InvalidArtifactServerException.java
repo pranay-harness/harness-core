@@ -24,4 +24,9 @@ public class InvalidArtifactServerException extends WingsException {
     super(null, null, INVALID_ARTIFACT_SERVER, Level.ERROR, reportTargets, null);
     param(MESSAGE_KEY, message);
   }
+
+  public InvalidArtifactServerException(String message, Level level, EnumSet<ReportTarget> reportTargets) {
+    super(null, null, INVALID_ARTIFACT_SERVER, level, reportTargets, null);
+    param(MESSAGE_KEY, message);
+  }
 }

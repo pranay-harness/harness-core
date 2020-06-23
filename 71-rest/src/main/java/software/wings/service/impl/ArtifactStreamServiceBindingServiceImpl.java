@@ -16,6 +16,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.artifact.ArtifactStreamSummary;
+import software.wings.exception.InvalidArtifactServerException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -501,8 +503,8 @@ public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamSe
   private Service getService(List<Service> services, String artifactStreamId, boolean throwException) {
     if (isEmpty(services)) {
       if (throwException) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR, USER)
-            .addParam("message", format("Artifact stream %s is a zombie.", artifactStreamId));
+        throw new InvalidArtifactServerException(
+            format("Artifact stream %s is a zombie.", artifactStreamId), Level.INFO, USER);
       }
       return null;
     }
