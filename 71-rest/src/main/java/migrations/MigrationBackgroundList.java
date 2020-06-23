@@ -60,6 +60,8 @@ import migrations.all.LogAnalysisBaselineMigration;
 import migrations.all.MarkSendMailFlagAsTrueInUserGroup;
 import migrations.all.MigrateLogDataRecordsToGoogle;
 import migrations.all.MigratePipelineStagesToUseDisableAssertion;
+import migrations.all.MigrateServiceNowCriteriaInPipelines;
+import migrations.all.MigrateServiceNowCriteriaInWorkflows;
 import migrations.all.MigrateTimeSeriesRawDataToGoogle;
 import migrations.all.NoOpMigration;
 import migrations.all.RemoveDuplicateUserGroupNameMigration;
@@ -223,6 +225,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(130, InfraMappingToDefinitionMigration.class))
         .add(Pair.of(131, K8sStatesTimeoutMigration.class))
         .add(Pair.of(132, RemoveDuplicateUserGroupNameMigration.class))
+        .add(Pair.of(133, MigrateServiceNowCriteriaInPipelines.class))
+        .add(Pair.of(134, MigrateServiceNowCriteriaInWorkflows.class))
         .build();
   }
 }
