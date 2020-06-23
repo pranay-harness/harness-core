@@ -28,6 +28,7 @@ import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
+import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.equalCheck;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
@@ -2207,7 +2208,7 @@ public class SecretManagerImpl implements SecretManager {
     if (encryptedData == null) {
       return null;
     }
-    return wingsPersistence.save(encryptedData);
+    return duplicateCheck(() -> wingsPersistence.save(encryptedData), EncryptedDataKeys.name, encryptedData.getName());
   }
 
   private void generateAuditForEncryptedRecord(String accountId, EncryptedData oldEntityData, String newRecordId) {
