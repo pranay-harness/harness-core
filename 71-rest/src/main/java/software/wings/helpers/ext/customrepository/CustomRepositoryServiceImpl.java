@@ -12,6 +12,7 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.jayway.jsonpath.DocumentContext;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
 import io.harness.serializer.JsonUtils;
 import io.harness.shell.ShellExecutionRequest;
@@ -113,7 +114,7 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
             "Failed to transform results to the Custom Repository Response. Please verify if the script output is in the required format. Reason ["
             + ExceptionUtils.getMessage(ex) + "]";
         logger.error(msg);
-        throw new InvalidArtifactServerException(msg, USER);
+        throw new InvalidArtifactServerException(msg, Level.INFO, USER);
       } finally {
         // Finally delete the file
         try {
