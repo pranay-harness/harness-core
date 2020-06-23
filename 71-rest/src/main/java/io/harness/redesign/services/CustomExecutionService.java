@@ -9,6 +9,7 @@ import io.harness.interrupts.Interrupt;
 import io.harness.presentation.Graph;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 @OwnedBy(CDC)
 @Redesign
@@ -36,6 +37,8 @@ public interface CustomExecutionService {
   PlanExecution testGraphPlan();
 
   Graph getGraph(String executionPlanId);
+
+  void getGraphVisualization(String executionPlanId, OutputStream output) throws IOException;
 
   PlanExecution testArtifactState();
 

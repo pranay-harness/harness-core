@@ -15,6 +15,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.StreamingOutput;
 
 @Redesign
 @Path("/execute2")
@@ -100,6 +101,13 @@ public class CustomExecutionResource {
   @Path("/get-graph")
   public RestResponse<Graph> getGraph(@QueryParam("planExecutionId") String planExecutionId) {
     return new RestResponse<>(customExecutionService.getGraph(planExecutionId));
+  }
+
+  @GET
+  @Path("/get-graph-visualization")
+  @Produces("image/png")
+  public StreamingOutput getGraphVisualization(@QueryParam("planExecutionId") String planExecutionId) {
+    return output -> customExecutionService.getGraphVisualization(planExecutionId, output);
   }
 
   @POST
