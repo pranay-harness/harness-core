@@ -1639,7 +1639,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()), USER);
           }
           infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
-          notNullCheck("InfraDefinition", infrastructureDefinition, USER);
+          // error updation for infradefinition null
+          notNullCheck("InfraDefinition cannot be empty", infrastructureDefinition, USER);
           if (service != null && service.getDeploymentType() != null) {
             if (service.getDeploymentType() != infrastructureDefinition.getDeploymentType()) {
               throw new InvalidRequestException("Infrastructure Definition[" + infrastructureDefinition.getName()
