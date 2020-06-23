@@ -44,8 +44,8 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Before
   public void setUp() {
     on(buildSetupUtils).set("k8BuildSetupUtils", k8BuildSetupUtils);
-    on(buildSetupUtils).set("managerCIResource", managerCIResource);
-    on(buildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
+    on(k8BuildSetupUtils).set("managerCIResource", managerCIResource);
+    on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
   }
 
   @Test

@@ -26,7 +26,7 @@ public class CIExecutionServiceModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of(
-        RegistryModule.getInstance(), ExecutionPlanModule.getInstance(), OrchestrationModule.getInstance());
+    return ImmutableSet.of(RegistryModule.getInstance(), ExecutionPlanModule.getInstance(),
+        OrchestrationModule.getInstance(), CIBeansModule.getInstance());
   }
 }

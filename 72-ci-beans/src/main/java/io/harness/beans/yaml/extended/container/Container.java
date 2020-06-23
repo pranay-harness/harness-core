@@ -14,10 +14,10 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Container implements WithIdentifier {
-  public static final int MEM_RESERVE_DEFAULT = 900;
-  public static final int MEM_LIMIT_DEFAULT = 900;
-  public static final int CPU_MILLI_RESERVE_DEFAULT = 1200;
-  public static final int CPU_MILLI_LIMIT_DEFAULT = 1200;
+  public static final int MEM_RESERVE_DEFAULT = 9000;
+  public static final int MEM_LIMIT_DEFAULT = 9000;
+  public static final int CPU_MILLI_RESERVE_DEFAULT = 2000;
+  public static final int CPU_MILLI_LIMIT_DEFAULT = 2000;
 
   @NotNull private String identifier;
   @NotNull private String connector;

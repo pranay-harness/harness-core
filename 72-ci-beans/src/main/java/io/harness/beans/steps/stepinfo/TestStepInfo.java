@@ -33,12 +33,12 @@ public class TestStepInfo implements CIStepInfo {
                                               .stepType(StepType.builder().type(CIStepInfoType.TEST.name()).build())
                                               .build();
 
-  @NotNull @EntityIdentifier String identifier;
-  String displayName;
-  @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
+  @NotNull @EntityIdentifier private String identifier;
+  private String displayName;
+  @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
+  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
-  @NotNull Test test;
+  @NotNull private Test test;
 
   @Builder
   @ConstructorProperties({"identifier", "displayName", "retry", "timeout", "test"})
@@ -53,8 +53,8 @@ public class TestStepInfo implements CIStepInfo {
   @Value
   @Builder
   public static class Test {
-    @NotEmpty String numParallel;
-    List<ScriptInfo> scriptInfos;
+    @NotEmpty private String numParallel;
+    private List<ScriptInfo> scriptInfos;
   }
 
   @Override

@@ -10,6 +10,7 @@ import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
+import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
@@ -26,6 +27,7 @@ import io.harness.yaml.core.auxiliary.intfc.StageWrapper;
 import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.intfc.Infrastructure;
 import org.jetbrains.annotations.NotNull;
+import software.wings.beans.container.ImageDetails;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,18 +41,30 @@ public class CIExecutionPlanTestHelper {
   private static final String BUILD_SCRIPT = "mvn clean install";
   private static final String POD_NAME = "Pod1";
 
+  private ImageDetails imageDetails = ImageDetails.builder()
+                                          .name("maven")
+                                          .tag("3.6.3-jdk-8")
+                                          .registryUrl("https://index.docker.io/v1/")
+                                          .username("harshjain12")
+                                          .build();
+
   public List<ScriptInfo> getBuildCommandSteps() {
     return asList(ScriptInfo.builder().scriptString(BUILD_SCRIPT).build());
   }
 
   public K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfo() {
     List<PodSetupInfo> pods = new ArrayList<>();
-    pods.add(PodSetupInfo.builder()
-                 .name(POD_NAME)
-                 .podSetupParams(PodSetupInfo.PodSetupParams.builder()
-                                     .containerDefinitionInfos(Arrays.asList(ContainerDefinitionInfo.builder().build()))
-                                     .build())
-                 .build());
+    pods.add(
+        PodSetupInfo.builder()
+            .name(POD_NAME)
+            .podSetupParams(
+                PodSetupInfo.PodSetupParams.builder()
+                    .containerDefinitionInfos(asList(
+                        ContainerDefinitionInfo.builder()
+                            .containerImageDetails(ContainerImageDetails.builder().imageDetails(imageDetails).build())
+                            .build()))
+                    .build())
+            .build());
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
 

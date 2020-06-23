@@ -33,12 +33,12 @@ public class RunStepInfo implements CIStepInfo, GenericStepInfo {
                                               .stepType(StepType.builder().type(CIStepInfoType.RUN.name()).build())
                                               .build();
 
-  @NotNull @EntityIdentifier String identifier;
-  String displayName;
+  @NotNull @EntityIdentifier private String identifier;
+  private String displayName;
   @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
 
-  @NotNull Run run;
+  @NotNull private Run run;
 
   @Builder
   @ConstructorProperties({"identifier", "displayName", "retry", "timeout", "run"})
@@ -53,12 +53,9 @@ public class RunStepInfo implements CIStepInfo, GenericStepInfo {
   @Value
   @Builder
   public static class Run {
-    String workingDirectory;
-    boolean runInBackground;
-    List<String> envVariables;
-    String image;
-    List<String> command;
-    String envVarsOutput;
+    private List<String> envVariables;
+    @NotNull private List<String> command;
+    private String envVarsOutput;
   }
 
   @Override

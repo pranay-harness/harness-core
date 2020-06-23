@@ -80,6 +80,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
             .stepExecWorkingDir(podParams.getStepExecWorkingDir())
             .gitFetchFilesConfig(gitFetchFilesConfig)
             .containerParamsList(podParams.getContainerParamsList())
+            .initContainerParamsList(podParams.getInitContainerParamsList())
             .build();
 
     try {
