@@ -39,6 +39,10 @@ public class BudgetDao {
     if (null != budget.getAlertThresholds()) {
       updateOperations.set(BudgetKeys.alertThresholds, budget.getAlertThresholds());
     }
+    if (null != budget.getEmailAddresses()) {
+      updateOperations.set(BudgetKeys.emailAddresses, budget.getEmailAddresses());
+    }
+
     if (null != budget.getUserGroupIds()) {
       updateOperations.set(BudgetKeys.userGroupIds, budget.getUserGroupIds());
     }

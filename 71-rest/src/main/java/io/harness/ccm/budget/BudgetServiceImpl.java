@@ -15,6 +15,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
@@ -51,6 +52,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -84,6 +86,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public String create(Budget budget) {
     validateBudget(budget);
+    removeEmailDuplicates(budget);
     return budgetDao.save(budget);
   }
 
@@ -105,6 +108,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Override
   public void update(String budgetId, Budget budget) {
     validateBudget(budget);
+    removeEmailDuplicates(budget);
     budgetDao.update(budgetId, budget);
   }
 
@@ -149,9 +153,8 @@ public class BudgetServiceImpl implements BudgetService {
   public double getActualCost(Budget budget) {
     if (budget != null) {
       return budgetToCostCache.get(budget);
-    } else {
-      return 0;
     }
+    return 0;
   }
 
   @Override
@@ -404,6 +407,12 @@ public class BudgetServiceImpl implements BudgetService {
     if (budget.getBudgetAmount() < 0 || budget.getBudgetAmount() > BUDGET_AMOUNT_UPPER_LIMIT) {
       throw new InvalidRequestException(BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION);
     }
+  }
+
+  private void removeEmailDuplicates(Budget budget) {
+    String[] emailAddresses = ArrayUtils.nullToEmpty(budget.getEmailAddresses());
+    String[] uniqueEmailAddresses = new HashSet<>(Arrays.asList(emailAddresses)).toArray(new String[0]);
+    budget.setEmailAddresses(uniqueEmailAddresses);
   }
 
   private boolean isApplicationScopePresent(Budget budget) {

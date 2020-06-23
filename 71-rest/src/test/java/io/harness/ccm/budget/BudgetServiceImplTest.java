@@ -112,6 +112,7 @@ public class BudgetServiceImplTest extends CategoryTest {
                  .type(SPECIFIED_AMOUNT)
                  .budgetAmount(100.0)
                  .alertThresholds(new AlertThreshold[] {alertThreshold})
+
                  .build();
     when(billingDataQueryBuilder.formBudgetInsightQuery(anyString(), anyList(), any(QLCCMAggregationFunction.class),
              any(QLCCMTimeSeriesAggregation.class), anyList()))
@@ -172,6 +173,14 @@ public class BudgetServiceImplTest extends CategoryTest {
       }
       return false;
     });
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldCreate() {
+    budgetService.create(budget);
+    verify(budgetDao).save(budget);
   }
 
   @Test

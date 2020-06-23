@@ -21,6 +21,7 @@ import io.harness.ccm.budget.entities.AlertThresholdBase;
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.EnvironmentType;
+import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -36,6 +37,7 @@ import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.notifications.UserGroupBasedDispatcher;
 import software.wings.service.intfc.EmailNotificationService;
+import software.wings.service.intfc.SlackNotificationService;
 import software.wings.service.intfc.UserGroupService;
 
 import java.util.Arrays;
@@ -49,7 +51,7 @@ public class BudgetHandlerTest extends CategoryTest {
   private String[] userGroupIds = {"USER_GROUP_ID"};
   private String memberId = "MEMBER_ID";
   private UserGroup userGroup;
-  @Mock private User user;
+  private User user;
   private Budget budget;
 
   @Mock private BudgetService budgetService;
@@ -58,6 +60,8 @@ public class BudgetHandlerTest extends CategoryTest {
   @Mock private UserServiceImpl userService;
   @Mock private EmailNotificationService emailNotificationService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private CESlackWebhookService ceSlackWebhookService;
+  @Mock private SlackNotificationService slackNotificationService;
   @InjectMocks private BudgetHandler budgetHandler;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -79,6 +83,7 @@ public class BudgetHandlerTest extends CategoryTest {
                  .userGroupIds(userGroupIds)
                  .build();
     userGroup = UserGroup.builder().accountId(accountId).memberIds(Arrays.asList(memberId)).build();
+    user = User.Builder.anUser().email("user@harness.io").build();
     when(userGroupService.get(eq(accountId), anyString(), anyBoolean())).thenReturn(userGroup);
     when(userService.get(anyString())).thenReturn(user);
     when(subdomainUrlHelper.getPortalBaseUrl(anyString())).thenReturn("BASE_URL");

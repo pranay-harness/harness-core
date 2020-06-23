@@ -16,11 +16,11 @@ public interface SlackNotificationService {
    * Send message.
    *
    * @param slackConfig the slack config
-   * @param slackChanel the slack chanel
+   * @param slackChannel the slack channel
    * @param senderName  the sender name
    * @param message     the message
    */
-  void sendMessage(SlackNotificationConfiguration slackConfig, String slackChanel, String senderName, String message,
+  void sendMessage(SlackNotificationConfiguration slackConfig, String slackChannel, String senderName, String message,
       String accountId);
 
   /**
