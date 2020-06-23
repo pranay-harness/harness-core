@@ -532,8 +532,14 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
                                         .build();
 
     // mock stuff
-    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.GIT.name()))
-        .thenReturn(Arrays.asList(gitConnector));
+
+    if (featureFlagService.isEnabled(FeatureName.YAML_RBAC, ACCOUNT_ID)) {
+      when(settingsService.listAllSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.GIT.name()))
+          .thenReturn(Arrays.asList(gitConnector));
+    } else {
+      when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.GIT.name()))
+          .thenReturn(Arrays.asList(gitConnector));
+    }
 
     final FolderNode sourceRepoFolderNode = yamlDirectoryService.doSourceRepoProviders(ACCOUNT_ID, directoryPath);
     List<DirectoryNode> sourceRepoDirNode = getNodesOfClass(sourceRepoFolderNode, SettingAttribute.class);
