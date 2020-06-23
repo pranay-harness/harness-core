@@ -42,6 +42,7 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     Service service = serviceResourceService.getWithDetails(application.getUuid(), bean.getServiceId());
     yaml.setServiceName(service.getName());
     yaml.setAlertThreshold(bean.getAlertThreshold());
+    yaml.setNumOfOccurrencesForAlert(bean.getNumOfOccurrencesForAlert());
     if (bean.getSnoozeStartTime() > 0) {
       yaml.setSnoozeStartTime(new Date(bean.getSnoozeStartTime()));
     }
@@ -83,7 +84,12 @@ public abstract class CVConfigurationYamlHandler<Y extends CVConfigurationYaml, 
     bean.setEnabled24x7(yaml.isEnabled24x7());
     bean.setAnalysisTolerance(yaml.getAnalysisTolerance());
     bean.setServiceId(service.getUuid());
+    if (yaml.getNumOfOccurrencesForAlert() > 4) {
+      throw new VerificationOperationException(
+          ErrorCode.APM_CONFIGURATION_ERROR, "Maximum allowed value for NumOfOccurrencesForAlert is 4");
+    }
     bean.setAlertThreshold(yaml.getAlertThreshold());
+    bean.setNumOfOccurrencesForAlert(yaml.getNumOfOccurrencesForAlert());
     bean.setSyncFromGit(changeContext.getChange().isSyncFromGit());
     bean.setAlertEnabled(yaml.isAlertEnabled());
     if (yaml.getSnoozeStartTime() != null) {

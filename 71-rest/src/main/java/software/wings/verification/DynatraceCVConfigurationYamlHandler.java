@@ -1,12 +1,14 @@
 package software.wings.verification;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.dynatrace.DynaTraceApplication;
@@ -17,6 +19,7 @@ import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration.Dyn
 
 import java.util.List;
 
+@Slf4j
 public class DynatraceCVConfigurationYamlHandler
     extends CVConfigurationYamlHandler<DynaTraceCVConfigurationYaml, DynaTraceCVServiceConfiguration> {
   @Inject DynaTraceService dynaTraceService;
@@ -25,18 +28,23 @@ public class DynatraceCVConfigurationYamlHandler
     DynaTraceCVConfigurationYaml yaml = DynaTraceCVConfigurationYaml.builder().build();
     super.toYaml(yaml, bean);
     List<DynaTraceApplication> serviceList = dynaTraceService.getServices(bean.getConnectorId());
+    yaml.setDynatraceServiceName("");
     if (isEmpty(serviceList)) {
-      throw new DataCollectionException("No dynatrace services found for the connector " + bean.getConnectorId());
-    }
-    for (DynaTraceApplication service : serviceList) {
-      if (service.getEntityId().equals(bean.getServiceEntityId())) {
-        yaml.setDynatraceServiceName(service.getDisplayName());
-        break;
+      logger.info("No dynatrace services found for the connector " + bean.getConnectorId());
+    } else {
+      if (isNotEmpty(bean.getServiceEntityId())) {
+        for (DynaTraceApplication service : serviceList) {
+          if (service.getEntityId().equals(bean.getServiceEntityId())) {
+            yaml.setDynatraceServiceName(service.getDisplayName());
+            break;
+          }
+        }
+        if (isEmpty(yaml.getDynatraceServiceName())) {
+          logger.info("No dynatrace service found for the serviceID " + bean.getServiceEntityId());
+        }
       }
     }
-    if (isEmpty(yaml.getDynatraceServiceName())) {
-      throw new DataCollectionException("No dynatrace service found for the serviceID " + bean.getServiceEntityId());
-    }
+
     yaml.setType(StateType.DYNA_TRACE.name());
     return yaml;
   }

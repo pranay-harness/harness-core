@@ -132,7 +132,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
   }
 
-  @Test(expected = DataCollectionException.class)
+  @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testToYaml_badDynatraceServiceId() {
@@ -140,6 +140,7 @@ public class DynatraceCVConfigurationYamlHandlerTest extends WingsBaseTest {
     setBasicInfo(cvServiceConfiguration);
     cvServiceConfiguration.setServiceEntityId("entityID4");
     DynaTraceCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
+    assertThat(yaml.getDynatraceServiceName()).isEmpty();
   }
 
   @Test

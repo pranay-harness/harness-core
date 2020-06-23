@@ -92,6 +92,7 @@ public class CVConfiguration extends Base implements NameAccess {
     private AnalysisTolerance analysisTolerance;
     private boolean enabled24x7;
     private double alertThreshold;
+    private int numOfOccurrencesForAlert = 1;
     private Date snoozeStartTime;
     private Date snoozeEndTime;
     private boolean alertEnabled;
