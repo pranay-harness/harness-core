@@ -83,7 +83,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private List<String> tags;
 
   private String waitId;
-  private String correlationId;
 
   private long createdAt;
   private long lastUpdatedAt;

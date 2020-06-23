@@ -2502,7 +2502,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     .timeout(TimeUnit.MINUTES.toMillis(5))
                     .build())
           .envId(envId)
-          .correlationId(waitId)
           .build();
     }
   }
