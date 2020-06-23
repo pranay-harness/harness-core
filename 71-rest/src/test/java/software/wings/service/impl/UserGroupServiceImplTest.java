@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.MOHIT;
+import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -59,6 +60,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.GeneralException;
 import io.harness.exception.UserGroupAlreadyExistException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
@@ -714,6 +716,23 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertThat(userGroups).isNotNull();
     assertThat(userGroups.stream().map(UserGroup::getName).collect(Collectors.toList()))
         .containsExactlyInAnyOrder("USER_GROUP1", "USER_GROUP2", "USER_GROUP3");
+  }
+
+  @Test(expected = GeneralException.class)
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void shouldNotAllowCreatingUserGroupWithoutName() {
+    UserGroup userGroup = builder()
+                              .accountId(accountId)
+                              .uuid(userGroupId)
+                              .description(description)
+                              .name("")
+                              .appPermissions(Sets.newHashSet(envPermission))
+                              .memberIds(asList(user1Id, user2Id))
+                              .build();
+
+    UserGroup savedUserGroup = userGroupService.save(userGroup);
+    assertThat(savedUserGroup).isNull();
   }
 
   @Test(expected = UserGroupAlreadyExistException.class)
