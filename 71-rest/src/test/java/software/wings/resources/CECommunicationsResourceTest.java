@@ -9,7 +9,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.communication.CECommunicationsServiceImpl;
+import io.harness.ccm.communication.CECommunicationsService;
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CommunicationType;
 import io.harness.rest.RestResponse;
@@ -33,7 +33,7 @@ public class CECommunicationsResourceTest extends CategoryTest {
   private CECommunications communications;
   private CommunicationType type = CommunicationType.WEEKLY_REPORT;
 
-  private static CECommunicationsServiceImpl communicationsService = mock(CECommunicationsServiceImpl.class);
+  private static CECommunicationsService communicationsService = mock(CECommunicationsService.class);
   @ClassRule
   public static ResourceTestRule RESOURCES =
       ResourceTestRule.builder().addResource(new CECommunicationsResource(communicationsService)).build();

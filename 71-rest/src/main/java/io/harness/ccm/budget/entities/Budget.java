@@ -33,6 +33,7 @@ public class Budget
   @NotBlank BudgetType type;
   @NotBlank Double budgetAmount;
   AlertThreshold[] alertThresholds;
+  String[] emailAddresses;
   String[] userGroupIds; // reference
   @SchemaIgnore long createdAt;
   @SchemaIgnore long lastUpdatedAt;
