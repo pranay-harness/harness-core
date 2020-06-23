@@ -3,16 +3,21 @@ package software.wings.delegatetasks.citasks.cik8handler.container;
 import static java.lang.String.format;
 
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPort;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
+import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
+import software.wings.beans.ci.pod.SecretKeyParams;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 
@@ -26,11 +31,17 @@ public class ContainerSpecBuilderTestHelper {
   private static String containerName = "container";
   private static List<String> commands = Arrays.asList("/bin/sh", "-c");
   private static List<String> args = Arrays.asList("echo hello_world");
+  private static String workingDir = "/step/workspace";
+  private static Integer port = 8001;
 
   private static String var1 = "hello";
   private static String value1 = "world";
   private static String var2 = "foo";
   private static String value2 = "bar";
+
+  private static String secretVar = "connector_username";
+  private static String secretName = "connector";
+  private static String secretKey = "username";
 
   private static String volume1 = "volume1";
   private static String mountPath1 = "/mnt1";
@@ -96,6 +107,53 @@ public class ContainerSpecBuilderTestHelper {
                                    .withCommand(commands)
                                    .withImage(imageCtrName)
                                    .withEnv(ctrEnvVars);
+    return ContainerSpecBuilderResponse.builder().containerBuilder(builder).build();
+  }
+
+  public static CIK8ContainerParams basicCreateSpecWithSecretEnvPortWorkingDir() {
+    ImageDetails imageWithoutCred = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
+    Map<String, String> envVars = new HashMap<>();
+    envVars.put(var1, value1);
+    envVars.put(var2, value2);
+
+    Map<String, SecretKeyParams> secretEnvVars = new HashMap<>();
+    secretEnvVars.put(secretVar, SecretKeyParams.builder().key(secretKey).secretName(secretName).build());
+    return CIK8ContainerParams.builder()
+        .name(containerName)
+        .imageDetails(imageWithoutCred)
+        .commands(commands)
+        .args(args)
+        .envVars(envVars)
+        .workingDir(workingDir)
+        .ports(Arrays.asList(port))
+        .secretEnvVars(secretEnvVars)
+        .build();
+  }
+
+  public static ContainerSpecBuilderResponse basicCreateSpecWithSecretEnvPortWorkingDirResponse() {
+    Map<String, String> envVars = new HashMap<>();
+    List<EnvVar> ctrEnvVars = new ArrayList<>();
+    envVars.put(var1, value1);
+    envVars.put(var2, value2);
+    envVars.forEach((name, val) -> ctrEnvVars.add(new EnvVarBuilder().withName(name).withValue(val).build()));
+
+    ctrEnvVars.add(
+        new EnvVarBuilder()
+            .withName(secretVar)
+            .withValueFrom(
+                new EnvVarSourceBuilder()
+                    .withSecretKeyRef(new SecretKeySelectorBuilder().withKey(secretKey).withName(secretName).build())
+                    .build())
+            .build());
+    ContainerPort containerPort = new ContainerPortBuilder().withContainerPort(port).build();
+    ContainerBuilder builder = new ContainerBuilder()
+                                   .withName(containerName)
+                                   .withArgs(args)
+                                   .withCommand(commands)
+                                   .withImage(imageCtrName)
+                                   .withEnv(ctrEnvVars)
+                                   .withWorkingDir(workingDir)
+                                   .withPorts(Arrays.asList(containerPort));
     return ContainerSpecBuilderResponse.builder().containerBuilder(builder).build();
   }
 
