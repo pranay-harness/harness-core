@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -16,10 +15,6 @@ public class ContainerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void TestBuilderDefaults() {
     final Container container = Container.builder().resources(Container.Resources.builder().build()).build();
-
     assertThat(container.getResources().getReserve().getMemory()).isEqualTo(Container.MEM_RESERVE_DEFAULT);
-
-    final RunStepInfo runStepInfo = RunStepInfo.builder().run(RunStepInfo.Run.builder().build()).build();
-    assertThat(runStepInfo.getRun().isRunInBackground()).isFalse();
   }
 }

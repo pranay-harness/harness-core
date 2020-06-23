@@ -34,10 +34,12 @@ public class BuildEnvSetupStepInfo implements CIStepInfo, GenericStepInfo {
           .stepType(StepType.builder().type(CIStepInfoType.SETUP_ENV.name()).build())
           .build();
 
-  @NotNull @EntityIdentifier String identifier;
-  String displayName;
-  @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
+  @NotNull @EntityIdentifier private String identifier;
+  private String displayName;
+  @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
+  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
+
+  @NotNull private BuildEnvSetup setupEnv;
 
   @Builder
   @ConstructorProperties({"identifier", "displayName", "retry", "timeout", " setupEnv"})
@@ -50,14 +52,12 @@ public class BuildEnvSetupStepInfo implements CIStepInfo, GenericStepInfo {
     this.setupEnv = setupEnv;
   }
 
-  @NotNull BuildEnvSetup setupEnv;
-
   @Value
   @Builder
   public static class BuildEnvSetup {
-    @NotNull BuildJobEnvInfo buildJobEnvInfo;
-    @NotNull String gitConnectorIdentifier;
-    @NotNull String branchName;
+    @NotNull private BuildJobEnvInfo buildJobEnvInfo;
+    @NotNull private String gitConnectorIdentifier;
+    @NotNull private String branchName;
   }
 
   @Override

@@ -8,36 +8,42 @@ then
 fi
 
 bazel ${OUTPUT_BASE} build \
-  //19-delegate-tasks-beans/src/... \
   //13-grpc-api/src/main/proto/... \
+  //19-delegate-tasks-beans/src/... \
   //20-delegate-beans/src/main/proto/... \
   //21-delegate-agent-beans/src/main/proto/... \
-  //22-delegate-service-beans/src/main/proto/...
+  //22-delegate-service-beans/src/main/proto/... \
+  //product/ci/engine/proto/...
 
 compile_proto_module() {
   module=$1
+  modulePath=$2
+  generatedModulePath=$3
   bazel_library=`echo ${module} | tr '-' '_'`_proto
 
-  rm -rf ${module}/src/generated/java
-  mkdir -p ${module}/src/generated/java
-  if [ -e bazel-bin/${module}/src/main/proto/${bazel_library}/java_grpc_compile_aspect_verb0 ]
+  rm -rf ${generatedModulePath}
+  mkdir -p ${generatedModulePath}
+  if [ -e bazel-bin/${modulePath}/proto/${bazel_library}/java_grpc_compile_aspect_verb0 ]
   then
-    unzip bazel-bin/${module}/src/main/proto/${bazel_library}/java_grpc_compile_aspect_verb0/${bazel_library}.jar -d ${module}/src/generated/java
-    rm -rf ${module}/src/generated/java/META-INF
-    unzip bazel-bin/${module}/src/main/proto/${bazel_library}/java_grpc_compile_aspect_verb0/${bazel_library}_grpc.jar -d ${module}/src/generated/java
-    rm -rf ${module}/src/generated/java/META-INF
+    unzip bazel-bin/${modulePath}/proto/${bazel_library}/java_grpc_compile_aspect_verb0/${bazel_library}.jar -d ${generatedModulePath}
+    rm -rf ${generatedModulePath}/META-INF
+    unzip bazel-bin/${modulePath}/proto/${bazel_library}/java_grpc_compile_aspect_verb0/${bazel_library}_grpc.jar -d ${generatedModulePath}
+    rm -rf ${generatedModulePath}/META-INF
   else
-    unzip bazel-bin/${module}/src/main/proto/${bazel_library}/java_proto_compile_aspect_verb0/${bazel_library}.jar -d ${module}/src/generated/java
-    rm -rf ${module}/src/generated/java/META-INF
+    unzip bazel-bin/${modulePath}/proto/${bazel_library}/java_proto_compile_aspect_verb0/${bazel_library}.jar -d ${generatedModulePath}
+    rm -rf ${generatedModulePath}/META-INF
   fi
-  find ${module}/src/generated -name '*.pb.meta' -delete
+  find ${generatedModulePath} -name '*.pb.meta' -delete
 }
 
-compile_proto_module 19-delegate-tasks-beans
-compile_proto_module 13-grpc-api
 
-compile_proto_module 20-delegate-beans
-compile_proto_module 21-delegate-agent-beans
-compile_proto_module 22-delegate-service-beans
+compile_proto_module 13-grpc-api 13-grpc-api/src/main 13-grpc-api/src/generated/java
+
+compile_proto_module 19-delegate-tasks-beans 19-delegate-tasks-beans/src/main 19-delegate-tasks-beans/src/generated/java
+compile_proto_module 20-delegate-beans 20-delegate-beans/src/main 20-delegate-beans/src/generated/java
+compile_proto_module 21-delegate-agent-beans 21-delegate-agent-beans/src/main 21-delegate-agent-beans/src/generated/java
+compile_proto_module 22-delegate-service-beans 22-delegate-service-beans/src/main 22-delegate-service-beans/src/generated/java
+
+compile_proto_module cienginepb product/ci/engine 72-ci-beans/src/generated/java
 
 rm -f bazel-bin bazel-out bazel-portal bazel-testlogs

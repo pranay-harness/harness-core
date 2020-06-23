@@ -10,9 +10,8 @@ import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.stages.IntegrationStage;
-import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
-import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
+import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.core.Execution;
@@ -39,34 +38,31 @@ import java.util.Optional;
 @Builder
 @AllArgsConstructor
 @Slf4j
-public class IntegrationStageExecutionModifier implements StageExecutionModifier {
-  private static final String ENV_SETUP_NAME = "envSetupName";
+public class CILiteEngineStepExecutionModifier implements StageExecutionModifier {
+  private static final String LITE_ENGINE_TASK = "liteEngineTask";
   private static final String CONTAINER_NAME = "build-setup";
-  private static final String CLEANUP_STEP_NAME = "cleanupStep";
   private static final String IMAGE_PATH_SPLIT_REGEX = ":";
+
   private String podName;
 
   @Override
   public Execution modifyExecutionPlan(Execution execution, Stage stage) {
-    Execution modifiedExecutionPlan = Execution.builder().steps(execution.getSteps()).build();
     IntegrationStage integrationStage = (IntegrationStage) stage;
-    modifiedExecutionPlan.getSteps().addAll(0, getPreIntegrationExecution(integrationStage).getSteps());
-    modifiedExecutionPlan.getSteps().addAll(
-        execution.getSteps().size(), getPostIntegrationSteps(integrationStage).getSteps());
-    return modifiedExecutionPlan;
+    return getCILiteEngineTaskExecution(integrationStage);
   }
 
-  private Execution getPreIntegrationExecution(IntegrationStage integrationStage) {
+  private Execution getCILiteEngineTaskExecution(IntegrationStage integrationStage) {
     // TODO Only git is supported currently
     if (integrationStage.getCi().getGitConnector().getType().equals("git")) {
       GitConnectorYaml gitConnectorYaml = (GitConnectorYaml) integrationStage.getCi().getGitConnector();
       return Execution.builder()
-          .steps(asList(BuildEnvSetupStepInfo.builder()
-                            .identifier(ENV_SETUP_NAME)
-                            .setupEnv(BuildEnvSetupStepInfo.BuildEnvSetup.builder()
+          .steps(asList(LiteEngineTaskStepInfo.builder()
+                            .identifier(LITE_ENGINE_TASK)
+                            .envSetup(LiteEngineTaskStepInfo.EnvSetupInfo.builder()
                                           .gitConnectorIdentifier(gitConnectorYaml.getIdentifier())
                                           .branchName(getBranchName(integrationStage))
                                           .buildJobEnvInfo(getCIBuildJobEnvInfo(integrationStage))
+                                          .steps(integrationStage.getCi().getExecution())
                                           .build())
                             .build()))
           .build();
@@ -88,10 +84,6 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
     } else {
       throw new InvalidRequestException("Failed to execute pipeline, Git clone section is missing");
     }
-  }
-
-  private Execution getPostIntegrationSteps(IntegrationStage integrationStage) {
-    return Execution.builder().steps(asList(CleanupStepInfo.builder().identifier(CLEANUP_STEP_NAME).build())).build();
   }
 
   private BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage) {
@@ -125,7 +117,7 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
                                  .containerImageDetails(
                                      ContainerImageDetails.builder()
                                          .imageDetails(getImageDetails(integrationStage))
-                                         .connectorIdentifier(integrationStage.getCi().getContainer().getConnector())
+                                         .connectorIdentifier(integrationStage.getCi().getContainer().getIdentifier())
                                          .build())
                                  .containerType(CIContainerType.STEP_EXECUTOR)
                                  .name(CONTAINER_NAME)

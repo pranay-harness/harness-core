@@ -22,7 +22,6 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @Value
-
 @JsonTypeName("build")
 public class BuildStepInfo implements CIStepInfo, GenericStepInfo {
   public static final int DEFAULT_RETRY = 0;
@@ -34,12 +33,12 @@ public class BuildStepInfo implements CIStepInfo, GenericStepInfo {
                                               .stepInfoType(CIStepInfoType.BUILD)
                                               .stepType(StepType.builder().type(CIStepInfoType.BUILD.name()).build())
                                               .build();
-  @NotNull @EntityIdentifier String identifier;
-  String displayName;
-  @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
+  @NotNull @EntityIdentifier private String identifier;
+  private String displayName;
+  @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
+  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
-  @NotNull Build build;
+  @NotNull private Build build;
 
   @Builder
   @ConstructorProperties({"identifier", "displayName", "retry", "timeout", "build"})
@@ -54,7 +53,7 @@ public class BuildStepInfo implements CIStepInfo, GenericStepInfo {
   @Value
   @Builder
   public static class Build {
-    List<ScriptInfo> scriptInfos;
+    private List<ScriptInfo> scriptInfos;
   }
 
   @Override

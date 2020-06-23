@@ -34,12 +34,12 @@ public class PublishStepInfo implements CIStepInfo, GenericStepInfo {
                                               .stepType(StepType.builder().type(CIStepInfoType.PUBLISH.name()).build())
                                               .build();
 
-  @NotNull @EntityIdentifier String identifier;
-  String displayName;
-  @Min(MIN_RETRY) @Max(MAX_RETRY) int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) int timeout;
+  @NotNull @EntityIdentifier private String identifier;
+  private String displayName;
+  @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
+  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
-  @NotNull List<Artifact> publishArtifacts;
+  @NotNull private List<Artifact> publishArtifacts;
 
   @Builder
   @ConstructorProperties({"identifier", "displayName", "retry", "timeout", "publishArtifacts"})

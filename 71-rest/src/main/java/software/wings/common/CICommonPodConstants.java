@@ -8,10 +8,6 @@ public class CICommonPodConstants {
   public static final String MOUNT_PATH = "/step-exec";
   public static final String REL_STDOUT_FILE_PATH = "/stdout";
   public static final String REL_STDERR_FILE_PATH = "/stderr";
-  public static final String CLUSTER_EXPRESSION = "${input.cluster}";
-  public static final String NAMESPACE_EXPRESSION = "${input.namespace}";
-  public static final String POD_NAME_EXPRESSION = "${input.podName}";
-  public static final String CLUSTER_NAME = "cluster";
-  public static final String NAMESPACE = "namespace";
-  public static final String PODNAME = "podName";
+
+  private CICommonPodConstants() {}
 }
