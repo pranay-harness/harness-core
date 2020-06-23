@@ -4,10 +4,13 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.service.impl.aws.model.AwsConstants.LAMBDA_SLEEP_SECS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -371,7 +374,7 @@ public class AwsLambdaHelperServiceDelegateImpl
       UpdateFunctionCodeResult updateFunctionCodeResultDryRun =
           lambdaClient.updateFunctionCode(new UpdateFunctionCodeRequest()
                                               .withFunctionName(functionName)
-                                              .withPublish(true)
+                                              .withDryRun(true)
                                               .withS3Bucket(functionParams.getBucket())
                                               .withS3Key(functionParams.getKey()));
       logCallback.saveExecutionLog(
@@ -390,6 +393,16 @@ public class AwsLambdaHelperServiceDelegateImpl
             format("Updated Function Code Sha256: [%s]", updateFunctionCodeResult.getCodeSha256()));
         logCallback.saveExecutionLog(format("Updated Function ARN: [%s]", updateFunctionCodeResult.getFunctionArn()));
       }
+
+      /*
+       * CDP-13038:
+       * We saw a case where even though UpdateFunctionCode returned, the update was still in progress.
+       * As a result, the Update function configuration was failing.
+       * So we decided to introduce a small sleep.
+       */
+      logCallback.saveExecutionLog(
+          format("Waiting [%d] seconds before updating function configuration", LAMBDA_SLEEP_SECS));
+      sleep(ofSeconds(LAMBDA_SLEEP_SECS));
 
       logCallback.saveExecutionLog("Updating function configuration", INFO);
       UpdateFunctionConfigurationRequest updateFunctionConfigurationRequest =
