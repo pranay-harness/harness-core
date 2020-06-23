@@ -10,13 +10,18 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.AggregatedUsage;
+import io.harness.event.payloads.ContainerStateProto;
+import io.harness.event.payloads.HistogramProto;
 import io.harness.event.payloads.NodeMetric;
 import io.harness.event.payloads.PodMetric;
 import io.harness.grpc.utils.HDurations;
+import io.harness.grpc.utils.HTimestamps;
+import io.harness.histogram.HistogramCheckpoint;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetrics;
+import io.harness.perpetualtask.k8s.metrics.recommender.ContainerState;
 import io.harness.perpetualtask.k8s.watch.K8sResourceStandardizer;
 import lombok.Builder;
 import lombok.Value;
@@ -37,6 +42,7 @@ public class K8sMetricCollector {
   private static class CacheKey {
     String name;
     @Nullable String namespace;
+    @Nullable String containerName;
   }
 
   private final EventPublisher eventPublisher;
@@ -45,6 +51,8 @@ public class K8sMetricCollector {
 
   private final Cache<CacheKey, Aggregates> podMetricsCache = Caffeine.newBuilder().build();
   private final Cache<CacheKey, Aggregates> nodeMetricsCache = Caffeine.newBuilder().build();
+
+  private final Cache<CacheKey, ContainerState> containerStatesCache = Caffeine.newBuilder().build();
 
   private Instant lastMetricPublished;
 
@@ -58,7 +66,7 @@ public class K8sMetricCollector {
 
   public void collectAndPublishMetrics(Instant now) {
     collectNodeMetrics();
-    collectPodMetrics();
+    collectPodMetricsAndContainerStates();
     if (now.isAfter(this.lastMetricPublished.plus(AGGREGATION_WINDOW))) {
       publishPending(now);
     }
@@ -67,6 +75,7 @@ public class K8sMetricCollector {
   public void publishPending(Instant now) {
     publishNodeMetrics();
     publishPodMetrics();
+    publishContainerStates();
     this.lastMetricPublished = now;
   }
 
@@ -81,15 +90,27 @@ public class K8sMetricCollector {
     }
   }
 
-  private void collectPodMetrics() {
+  private void collectPodMetricsAndContainerStates() {
     List<PodMetrics> podMetricsList = k8sMetricsClient.podMetrics().inAnyNamespace().list().getItems();
     for (PodMetrics podMetrics : podMetricsList) {
       if (!isEmpty(podMetrics.getContainers())) {
         long podCpuNano = 0;
         long podMemoryBytes = 0;
         for (PodMetrics.Container container : podMetrics.getContainers()) {
-          podCpuNano += K8sResourceStandardizer.getCpuNano(container.getUsage().getCpu());
-          podMemoryBytes += K8sResourceStandardizer.getMemoryByte(container.getUsage().getMemory());
+          long cpuNano = K8sResourceStandardizer.getCpuNano(container.getUsage().getCpu());
+          podCpuNano += cpuNano;
+          long memoryByte = K8sResourceStandardizer.getMemoryByte(container.getUsage().getMemory());
+          podMemoryBytes += memoryByte;
+
+          ContainerState containerState =
+              requireNonNull(containerStatesCache.get(CacheKey.builder()
+                                                          .name(podMetrics.getMetadata().getName())
+                                                          .namespace(podMetrics.getMetadata().getNamespace())
+                                                          .containerName(container.getName())
+                                                          .build(),
+                  key -> new ContainerState(key.namespace, key.name, key.containerName)));
+          containerState.addCpuSample(cpuNano, podMetrics.getTimestamp());
+          containerState.addMemorySample(memoryByte);
         }
         requireNonNull(podMetricsCache.get(CacheKey.builder()
                                                .name(podMetrics.getMetadata().getName())
@@ -154,5 +175,37 @@ public class K8sMetricCollector {
             -> eventPublisher.publishMessage(podMetric, podMetric.getTimestamp(),
                 ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
     podMetricsCache.invalidateAll();
+  }
+
+  private void publishContainerStates() {
+    containerStatesCache.asMap()
+        .entrySet()
+        .stream()
+        .map(e -> {
+          ContainerState containerState = e.getValue();
+          HistogramCheckpoint histogramCheckpoint = containerState.getCpuHistogram().saveToCheckpoint();
+          return ContainerStateProto.newBuilder()
+              .setCloudProviderId(clusterDetails.getCloudProviderId())
+              .setClusterId(clusterDetails.getClusterId())
+              .setKubeSystemUid(clusterDetails.getKubeSystemUid())
+              .setNamespace(e.getKey().getNamespace())
+              .setPodName(e.getKey().getName())
+              .setContainerName(e.getKey().getContainerName())
+              .setMemoryPeak(containerState.getMemoryPeak())
+              .setCpuHistogram(
+                  HistogramProto.newBuilder()
+                      .setReferenceTimestamp(HTimestamps.fromInstant(histogramCheckpoint.getReferenceTimestamp()))
+                      .putAllBucketWeights(histogramCheckpoint.getBucketWeights())
+                      .setTotalWeight(histogramCheckpoint.getTotalWeight())
+                      .build())
+              .setFirstSampleStart(HTimestamps.fromInstant(containerState.getFirstSampleStart()))
+              .setLastSampleStart(HTimestamps.fromInstant(containerState.getLastSampleStart()))
+              .setTotalSamplesCount(containerState.getTotalSamplesCount())
+              .build();
+        })
+        .forEach(containerStateProto
+            -> eventPublisher.publishMessage(containerStateProto, containerStateProto.getFirstSampleStart(),
+                ImmutableMap.of(HealthStatusService.CLUSTER_ID_IDENTIFIER, clusterDetails.getClusterId())));
+    containerStatesCache.invalidateAll();
   }
 }
