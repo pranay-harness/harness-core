@@ -3,6 +3,7 @@ package io.harness.functional;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
@@ -772,6 +773,60 @@ public class WorkflowUtils {
                             .workflowType(WorkflowType.ORCHESTRATION)
                             .orchestrationWorkflow(aBasicOrchestrationWorkflow().build())
                             .build();
+    return workflow;
+  }
+
+  public Workflow createBasicWorkflowWithShellScript(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    List<PhaseStep> phaseSteps = Lists.newArrayList();
+    phaseSteps.add(aPhaseStep(PhaseStepType.SELECT_NODE, PhaseStepType.SELECT_NODE.name())
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(AWS_NODE_SELECT.name())
+                                    .name(SELECT_NODES_CONSTANT)
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("instanceUnitType", "PERCENTAGE")
+                                                    .put("instanceCount", 100)
+                                                    .put("specificHosts", false)
+                                                    .build())
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DISABLE_SERVICE, PhaseStepType.DISABLE_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, PhaseStepType.DEPLOY_SERVICE.name())
+                       .addStep(GraphNode.builder()
+                                    .name("shell_script_" + System.currentTimeMillis())
+                                    .type(StateType.SHELL_SCRIPT.toString())
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("scriptType", "BASH")
+                                                    .put("scriptString", "echo ${artifact.buildNo}")
+                                                    .put("executeOnDelegate", "true")
+                                                    .build())
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.ENABLE_SERVICE, PhaseStepType.ENABLE_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, PhaseStepType.VERIFY_SERVICE.name()).build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
+    Workflow workflow =
+        aWorkflow()
+            .name(name + System.currentTimeMillis())
+            .appId(service.getAppId())
+            .envId(infrastructureDefinition.getEnvId())
+            .infraDefinitionId(infrastructureDefinition.getUuid())
+            .serviceId(service.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
+                    .withWorkflowPhases(asList(aWorkflowPhase()
+                                                   .name("Phase1")
+                                                   .serviceId(service.getUuid())
+                                                   .deploymentType(SSH)
+                                                   .phaseSteps(phaseSteps)
+                                                   .infraDefinitionId(infrastructureDefinition.getUuid())
+                                                   .build()))
+                    .build())
+            .build();
     return workflow;
   }
 

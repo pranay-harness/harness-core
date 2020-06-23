@@ -59,7 +59,10 @@ public class ArtifactStreamGeneratorFactory {
     if (ArtifactStreams.BAMBOO_METADATA_ONLY == artifactStreams) {
       return bambooArtifactStreamGenerator;
     }
-    if (ArtifactStreams.NEXUS2_MAVEN_METADATA_ONLY == artifactStreams) {
+    if (ArtifactStreams.NEXUS2_MAVEN_METADATA_ONLY == artifactStreams
+        || ArtifactStreams.NEXUS2_MAVEN_METADATA_ONLY_PARAMETERIZED == artifactStreams
+        || ArtifactStreams.NEXUS2_NPM_METADATA_ONLY_PARAMETERIZED == artifactStreams
+        || ArtifactStreams.NEXUS2_NUGET_METADATA_ONLY_PARAMETERIZED == artifactStreams) {
       return nexus2MavenArtifactStreamsGenerator;
     }
     if (ArtifactStreams.NEXUS3_MAVEN_METADATA_ONLY == artifactStreams) {

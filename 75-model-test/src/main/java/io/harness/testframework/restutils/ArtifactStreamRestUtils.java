@@ -1,5 +1,6 @@
 package io.harness.testframework.restutils;
 
+import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
@@ -10,6 +11,7 @@ import software.wings.beans.artifact.DockerArtifactStream;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import javax.ws.rs.core.GenericType;
 
 @Slf4j
 public class ArtifactStreamRestUtils {
@@ -87,5 +89,18 @@ public class ArtifactStreamRestUtils {
         .contentType(ContentType.JSON)
         .post("/artifactstreams")
         .jsonPath();
+  }
+
+  public static Object deleteArtifactStream(String bearerToken, String artifactStreamId, String appId) {
+    GenericType<RestResponse> workflowType = new GenericType<RestResponse>() {};
+    RestResponse savedResponse = Setup.portal()
+                                     .auth()
+                                     .oauth2(bearerToken)
+                                     .contentType(ContentType.JSON)
+                                     .queryParam("appId", appId)
+                                     .delete("/artifactstreams/" + artifactStreamId)
+                                     .as(workflowType.getType());
+
+    return savedResponse.getResource();
   }
 }
