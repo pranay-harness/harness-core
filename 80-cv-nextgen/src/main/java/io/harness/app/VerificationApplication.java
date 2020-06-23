@@ -2,8 +2,11 @@ package io.harness.app;
 
 import static com.google.inject.matcher.Matchers.not;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
+import static java.time.Duration.ofMinutes;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -22,13 +25,22 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.app.cvng.client.VerificationManagerClientModule;
+import io.harness.app.cvng.jobs.CVConfigDataCollectionHandler;
+import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.core.resources.DataCollectionResource;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
+import io.harness.cvng.core.services.entities.CVConfig;
+import io.harness.cvng.core.services.entities.CVConfig.CVConfigKeys;
 import io.harness.govern.ProviderModule;
+import io.harness.health.HealthService;
+import io.harness.iterator.PersistenceIterator;
+import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.persistence.HPersistence;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.model.Resource;
@@ -39,6 +51,9 @@ import ru.vyarus.guice.validator.ValidationModule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
@@ -79,6 +94,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
   @Override
   public void run(VerificationConfiguration configuration, Environment environment) {
     logger.info("Starting app ...");
+    MaintenanceController.forceMaintenance(true);
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
@@ -106,11 +122,47 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new CVServiceModule());
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));
+    modules.add(new CVNextGenCommonsServiceModule());
     Injector injector = Guice.createInjector(modules);
     initializeServiceSecretKeys(injector);
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     registerAuthFilters(environment, injector);
+    registerManagedBeans(environment, injector);
     registerResources(environment, injector);
+    registerCVConfigIterator(injector);
+    registerHealthChecks(environment, injector);
+    logger.info("Leaving startup maintenance mode");
+    MaintenanceController.resetForceMaintenance();
+  }
+
+  private void registerCVConfigIterator(Injector injector) {
+    ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
+        5, new ThreadFactoryBuilder().setNameFormat("cv-config-data-collection-iterator").build());
+    CVConfigDataCollectionHandler cvConfigDataCollectionHandler =
+        injector.getInstance(CVConfigDataCollectionHandler.class);
+    // TODO: setup alert if this goes above acceptable threshold.
+    PersistenceIterator dataCollectionIterator =
+        MongoPersistenceIterator.<CVConfig>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(CVConfig.class)
+            .fieldName(CVConfigKeys.dataCollectionTaskIteration)
+            .targetInterval(ofMinutes(1))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(dataCollectionExecutor)
+            .semaphore(new Semaphore(5))
+            .handler(cvConfigDataCollectionHandler)
+            .schedulingType(REGULAR)
+            .filterExpander(query -> query.filter(CVConfigKeys.dataCollectionTaskId, null))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(dataCollectionIterator);
+    dataCollectionExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+  }
+
+  private void registerHealthChecks(Environment environment, Injector injector) {
+    HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("CV nextgen", healthService);
+    healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
   private void registerAuthFilters(Environment environment, Injector injector) {
@@ -121,6 +173,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
     injector.getInstance(VerificationServiceSecretManager.class).initializeServiceSecretKeys();
     VERIFICATION_SERVICE_SECRET.set(
         injector.getInstance(VerificationServiceSecretManager.class).getVerificationServiceSecretKey());
+  }
+
+  private void registerManagedBeans(Environment environment, Injector injector) {
+    environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
   }
 
   private void registerResources(Environment environment, Injector injector) {

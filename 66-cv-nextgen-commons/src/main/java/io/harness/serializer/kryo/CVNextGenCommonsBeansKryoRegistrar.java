@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.services.entities.MetricPack;
@@ -18,5 +19,6 @@ public class CVNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(MetricDefinition.class, 9001);
     kryo.register(DataSourceType.class, 9002);
     kryo.register(TimeSeriesMetricType.class, 9003);
+    kryo.register(AppDynamicsDataCollectionInfo.class, 9004);
   }
 }

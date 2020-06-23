@@ -1,8 +1,11 @@
 package io.harness.app.cvng.client;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.CV_DATA_COLLECTION_PATH;
+
 import io.harness.rest.RestResponse;
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 import java.util.List;
@@ -18,4 +21,8 @@ public interface VerificationManagerClient {
 
   @GET("delegates/available-versions-for-verification")
   Call<RestResponse<List<String>>> getListOfPublishedVersions(@Query("accountId") String accountId);
+
+  @POST(CV_DATA_COLLECTION_PATH + "/create-task")
+  Call<RestResponse<String>> createDataCollectionTask(
+      @Query("accountId") String accountId, @Query("cvConfigId") String cvConfigId);
 }

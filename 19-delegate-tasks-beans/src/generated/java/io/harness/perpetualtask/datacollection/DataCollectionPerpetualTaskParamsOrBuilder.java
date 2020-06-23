@@ -9,18 +9,29 @@ public interface DataCollectionPerpetualTaskParamsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string cv_config_id = 1[json_name = "cvConfigId"];</code>
+   * <code>string account_id = 1[json_name = "accountId"];</code>
+   * @return The accountId.
+   */
+  java.lang.String getAccountId();
+  /**
+   * <code>string account_id = 1[json_name = "accountId"];</code>
+   * @return The bytes for accountId.
+   */
+  com.google.protobuf.ByteString getAccountIdBytes();
+
+  /**
+   * <code>string cv_config_id = 2[json_name = "cvConfigId"];</code>
    * @return The cvConfigId.
    */
   java.lang.String getCvConfigId();
   /**
-   * <code>string cv_config_id = 1[json_name = "cvConfigId"];</code>
+   * <code>string cv_config_id = 2[json_name = "cvConfigId"];</code>
    * @return The bytes for cvConfigId.
    */
   com.google.protobuf.ByteString getCvConfigIdBytes();
 
   /**
-   * <code>bytes data_collection_info = 2[json_name = "dataCollectionInfo"];</code>
+   * <code>bytes data_collection_info = 3[json_name = "dataCollectionInfo"];</code>
    * @return The dataCollectionInfo.
    */
   com.google.protobuf.ByteString getDataCollectionInfo();

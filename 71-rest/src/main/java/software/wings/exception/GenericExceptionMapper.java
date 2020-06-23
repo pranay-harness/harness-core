@@ -51,6 +51,9 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
   }
 
   private boolean hasExposeExceptionAnnotation() {
+    if (resourceInfo == null || resourceInfo.getResourceClass() == null) { // can be null in case of 404
+      return false;
+    }
     return resourceInfo.getResourceClass().isAnnotationPresent(ExposeInternalException.class)
         || resourceInfo.getResourceMethod().isAnnotationPresent(ExposeInternalException.class);
   }

@@ -51,17 +51,20 @@ public class DataCollectionPerpetualTaskServiceClientTest extends WingsBaseTest 
   @Category(UnitTests.class)
   public void getTaskParams() {
     String cvConfigId = generateUuid();
+    String accountId = generateUuid();
     SplunkConfig splunkConfig = SplunkConfig.builder().username("user").encryptedPassword("pass").build();
     when(settingsService.get(eq(connectorId)))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(splunkConfig).build());
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     when(secretManager.getEncryptionDetails(eq(splunkConfig))).thenReturn(Lists.newArrayList(encryptedDataDetail));
     Map<String, String> clientParamMap = new HashMap<>();
+    clientParamMap.put("accountId", accountId);
     clientParamMap.put("cvConfigId", cvConfigId);
     clientParamMap.put("connectorId", connectorId);
     PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
     DataCollectionPerpetualTaskParams dataCollectionInfo =
         (DataCollectionPerpetualTaskParams) dataCollectionPerpetualTaskServiceClient.getTaskParams(clientContext);
+    assertThat(dataCollectionInfo.getAccountId()).isEqualTo(accountId);
     assertThat(dataCollectionInfo.getCvConfigId()).isEqualTo(cvConfigId);
     CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
                                                     .settingValue(splunkConfig)
