@@ -1,7 +1,10 @@
 package io.harness.grpc;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 
 import io.harness.delegate.AccountId;
 import io.harness.delegate.CancelTaskRequest;
@@ -23,10 +26,12 @@ import io.harness.delegate.TaskProgressResponse;
 import io.harness.delegate.TaskProgressUpdatesRequest;
 import io.harness.delegate.TaskProgressUpdatesResponse;
 import io.harness.delegate.TaskSetupAbstractions;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.PerpetualTaskClientEntrypoint;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Iterator;
@@ -38,21 +43,31 @@ import java.util.function.Consumer;
 @Slf4j
 public class DelegateServiceGrpcClient {
   private final DelegateServiceBlockingStub delegateServiceBlockingStub;
+  private final KryoSerializer kryoSerializer;
 
   @Inject
-  public DelegateServiceGrpcClient(DelegateServiceBlockingStub delegateServiceBlockingStub) {
+  public DelegateServiceGrpcClient(
+      DelegateServiceBlockingStub delegateServiceBlockingStub, KryoSerializer kryoSerializer) {
     this.delegateServiceBlockingStub = delegateServiceBlockingStub;
+    this.kryoSerializer = kryoSerializer;
   }
 
   public TaskId submitTask(AccountId accountId, TaskSetupAbstractions taskSetupAbstractions, TaskDetails taskDetails,
-      List<Capability> capabilities) {
-    SubmitTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
-                                      .submitTask(SubmitTaskRequest.newBuilder()
-                                                      .setAccountId(accountId)
-                                                      .setSetupAbstractions(taskSetupAbstractions)
-                                                      .setDetails(taskDetails)
-                                                      .addAllCapabilities(capabilities)
-                                                      .build());
+      List<ExecutionCapability> capabilities) {
+    SubmitTaskResponse response =
+        delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+            .submitTask(SubmitTaskRequest.newBuilder()
+                            .setAccountId(accountId)
+                            .setSetupAbstractions(taskSetupAbstractions)
+                            .setDetails(taskDetails)
+                            .addAllCapabilities(capabilities.stream()
+                                                    .map(capability
+                                                        -> Capability.newBuilder()
+                                                               .setKryoCapability(ByteString.copyFrom(
+                                                                   kryoSerializer.asDeflatedBytes(capability)))
+                                                               .build())
+                                                    .collect(toList()))
+                            .build());
 
     return response.getTaskId();
   }
