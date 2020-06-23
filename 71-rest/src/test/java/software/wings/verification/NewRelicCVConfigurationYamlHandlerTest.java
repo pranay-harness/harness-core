@@ -108,6 +108,7 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     yaml.setAlertThreshold(0.5);
+    yaml.setNumOfOccurrencesForAlert(3);
     return yaml;
   }
 
@@ -159,6 +160,7 @@ public class NewRelicCVConfigurationYamlHandlerTest extends CategoryTest {
     assertThat(bean.getEnvId()).isEqualTo(envId);
     assertThat(bean.getServiceId()).isEqualTo(serviceId);
     assertThat(bean.getUuid()).isNotNull();
+    assertThat(bean.getNumOfOccurrencesForAlert()).isEqualTo(3);
   }
 
   @Test
