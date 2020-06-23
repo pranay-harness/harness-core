@@ -44,7 +44,7 @@ type ArtifactoryArtifactSource implements ArtifactSource {
   artifacts(limit: Int!, offset: Int): ArtifactConnection
     @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
 }
-type AzureAtifactsArtifactSource implements ArtifactSource {
+type AzureArtifactsArtifactSource implements ArtifactSource {
   #Artifact Source Id
   id: String
   # Artifact source display name
