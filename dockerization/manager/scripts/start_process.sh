@@ -28,7 +28,7 @@ else
     export GC_PARAMS=" -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8"
 fi
 
-export JAVA_OPTS="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc $ADDITIONAL_GC_OPTIONS $GC_PARAMS"
+export JAVA_OPTS="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc $GC_PARAMS $JAVA_ADVANCED_FLAGS"
 
 if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] && [[ -e /opt/harness/datadog/dd-java-agent.jar ]]; then
     JAVA_OPTS=$JAVA_OPTS" -javaagent:/opt/harness/datadog/dd-java-agent.jar"
