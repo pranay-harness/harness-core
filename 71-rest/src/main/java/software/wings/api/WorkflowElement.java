@@ -21,6 +21,7 @@ public class WorkflowElement {
   private String lastGoodDeploymentDisplayName;
   private String lastGoodReleaseNo;
   private String pipelineDeploymentUuid;
+  private String pipelineResumeUuid;
   private Long startTs;
   private List<ArtifactVariable> artifactVariables;
 }

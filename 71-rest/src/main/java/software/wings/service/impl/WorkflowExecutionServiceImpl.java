@@ -1044,11 +1044,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
     Pipeline pipeline =
         pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
-    return triggerPipelineExecution(appId, pipeline, executionArgs, workflowExecutionUpdate, trigger);
+    return triggerPipelineExecution(appId, pipeline, executionArgs, workflowExecutionUpdate, trigger, null);
   }
 
   private WorkflowExecution triggerPipelineExecution(String appId, Pipeline pipeline, ExecutionArgs executionArgs,
-      WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
+      WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger, String pipelineResumeId) {
     if (pipeline == null) {
       throw new WingsException(ErrorCode.NON_EXISTING_PIPELINE);
     }
@@ -1118,6 +1118,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // Setting  exclude hosts with same artifact
     stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
     stdParams.setNotifyTriggeredUserOnly(executionArgs.isNotifyTriggeredUserOnly());
+
+    if (pipelineResumeId != null) {
+      stdParams.setWorkflowElement(WorkflowElement.builder().pipelineResumeUuid(pipelineResumeId).build());
+    }
 
     User user = UserThreadLocal.get();
     if (user != null) {
@@ -1611,6 +1615,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stdParams.getWorkflowElement().setPipelineDeploymentUuid(workflowExecution.getWorkflowType() == PIPELINE
             ? workflowExecution.getUuid()
             : workflowExecution.getPipelineExecutionId());
+
+    if (stdParams.getWorkflowElement().getPipelineResumeUuid() == null
+        && workflowExecution.getPipelineExecutionId() != null) {
+      WorkflowExecution pipelineExecution =
+          getWorkflowExecution(workflowExecution.getAppId(), workflowExecution.getPipelineExecutionId());
+      stdParams.getWorkflowElement().setPipelineResumeUuid(pipelineExecution.getPipelineResumeId() != null
+              ? pipelineExecution.getPipelineResumeId()
+              : stdParams.getWorkflowElement().getPipelineDeploymentUuid());
+    }
+
     lastGoodReleaseInfo(stdParams.getWorkflowElement(), workflowExecution);
     stdParams.getWorkflowElement().setDescription(workflow != null ? workflow.getDescription() : null);
   }
@@ -2037,7 +2051,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Pipeline pipeline = pipelineResumeUtils.getPipelineForResume(
           appId, parallelIndexToResume, prevWorkflowExecution, stateExecutionInstanceMap);
       WorkflowExecution currWorkflowExecution =
-          triggerPipelineExecution(appId, pipeline, prevWorkflowExecution.getExecutionArgs(), null, null);
+          triggerPipelineExecution(appId, pipeline, prevWorkflowExecution.getExecutionArgs(), null, null,
+              prevWorkflowExecution.getPipelineResumeId() != null ? prevWorkflowExecution.getPipelineResumeId()
+                                                                  : prevWorkflowExecution.getUuid());
       pipelineResumeUtils.updatePipelineExecutionsAfterResume(currWorkflowExecution, prevWorkflowExecution);
       return currWorkflowExecution;
     }
