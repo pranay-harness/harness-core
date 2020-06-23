@@ -67,6 +67,7 @@ input VariableValue {
 enum VariableValueType {
   ID
   NAME
+  EXPRESSION
 }
 
 input ServiceInput {

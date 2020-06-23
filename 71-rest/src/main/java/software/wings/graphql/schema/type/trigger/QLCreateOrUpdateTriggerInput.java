@@ -10,7 +10,8 @@ import software.wings.security.annotations.Scope;
 @Builder
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class QLCreateTriggerInput {
+public class QLCreateOrUpdateTriggerInput {
+  private String triggerId;
   private String clientMutationId;
   private String name;
   private String applicationId;

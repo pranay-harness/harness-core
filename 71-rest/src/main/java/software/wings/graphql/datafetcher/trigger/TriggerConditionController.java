@@ -1,10 +1,15 @@
 package software.wings.graphql.datafetcher.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
@@ -22,7 +27,7 @@ import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
-import software.wings.graphql.schema.type.trigger.QLCreateTriggerInput;
+import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLOnNewArtifact;
 import software.wings.graphql.schema.type.trigger.QLOnPipelineCompletion;
 import software.wings.graphql.schema.type.trigger.QLOnSchedule;
@@ -34,15 +39,19 @@ import software.wings.graphql.schema.type.trigger.QLWebhookDetails;
 import software.wings.graphql.schema.type.trigger.QLWebhookEvent;
 import software.wings.graphql.schema.type.trigger.QLWebhookSource;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.PipelineService;
 
 import java.util.Arrays;
 import java.util.List;
 
-@UtilityClass
+@OwnedBy(CDC)
+@Singleton
+@Slf4j
 public class TriggerConditionController {
-  public QLTriggerCondition populateTriggerCondition(
-      Trigger trigger, MainConfiguration mainConfiguration, String accountId) {
+  @Inject TriggerActionController triggerActionController;
+  @Inject MainConfiguration mainConfiguration;
+  @Inject ArtifactStreamService artifactStreamService;
+
+  public QLTriggerCondition populateTriggerCondition(Trigger trigger, String accountId) {
     QLTriggerCondition condition = null;
 
     switch (trigger.getCondition().getConditionType()) {
@@ -139,21 +148,20 @@ public class TriggerConditionController {
     return condition;
   }
 
-  public TriggerCondition resolveTriggerCondition(QLCreateTriggerInput qlCreateTriggerInput,
-      PipelineService pipelineService, ArtifactStreamService artifactStreamService) {
+  public TriggerCondition resolveTriggerCondition(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     TriggerCondition triggerCondition = null;
-    switch (qlCreateTriggerInput.getCondition().getConditionType()) {
+    switch (qlCreateOrUpdateTriggerInput.getCondition().getConditionType()) {
       case ON_NEW_ARTIFACT:
-        triggerCondition = validateAndResolveOnNewArtifactConditionType(qlCreateTriggerInput, artifactStreamService);
+        triggerCondition = validateAndResolveOnNewArtifactConditionType(qlCreateOrUpdateTriggerInput);
         break;
       case ON_PIPELINE_COMPLETION:
-        triggerCondition = validateAndResolveOnPipelineCompletionConditionType(qlCreateTriggerInput, pipelineService);
+        triggerCondition = validateAndResolveOnPipelineCompletionConditionType(qlCreateOrUpdateTriggerInput);
         break;
       case ON_SCHEDULE:
-        triggerCondition = validateAndResolveOnScheduleConditionType(qlCreateTriggerInput);
+        triggerCondition = validateAndResolveOnScheduleConditionType(qlCreateOrUpdateTriggerInput);
         break;
       case ON_WEBHOOK:
-        triggerCondition = validateAndResolveOnWebhookConditionType(qlCreateTriggerInput);
+        triggerCondition = validateAndResolveOnWebhookConditionType(qlCreateOrUpdateTriggerInput);
         break;
       default:
     }
@@ -162,10 +170,10 @@ public class TriggerConditionController {
   }
 
   private TriggerCondition validateAndResolveOnNewArtifactConditionType(
-      QLCreateTriggerInput qlCreateTriggerInput, ArtifactStreamService artifactStreamService) {
-    QLTriggerConditionInput triggerConditionInput = qlCreateTriggerInput.getCondition();
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    QLTriggerConditionInput triggerConditionInput = qlCreateOrUpdateTriggerInput.getCondition();
 
-    validateArtifactConditionArtifactStream(qlCreateTriggerInput, artifactStreamService);
+    validateArtifactConditionArtifactStream(qlCreateOrUpdateTriggerInput);
 
     ArtifactTriggerConditionBuilder artifactTriggerConditionBuilder = ArtifactTriggerCondition.builder();
     artifactTriggerConditionBuilder.artifactStreamId(
@@ -180,21 +188,23 @@ public class TriggerConditionController {
   }
 
   private TriggerCondition validateAndResolveOnPipelineCompletionConditionType(
-      QLCreateTriggerInput qlCreateTriggerInput, PipelineService pipelineService) {
-    QLTriggerConditionInput triggerConditionInput = qlCreateTriggerInput.getCondition();
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    QLTriggerConditionInput triggerConditionInput = qlCreateOrUpdateTriggerInput.getCondition();
 
     if (null == triggerConditionInput.getPipelineConditionInput()) {
       throw new InvalidRequestException("PipelineConditionInput must not be null", USER);
     }
-    TriggerActionController.validatePipeline(qlCreateTriggerInput, pipelineService);
+    triggerActionController.validatePipeline(
+        qlCreateOrUpdateTriggerInput, triggerConditionInput.getPipelineConditionInput().getPipelineId());
 
     return PipelineTriggerCondition.builder()
         .pipelineId(triggerConditionInput.getPipelineConditionInput().getPipelineId())
         .build();
   }
 
-  private TriggerCondition validateAndResolveOnScheduleConditionType(QLCreateTriggerInput qlCreateTriggerInput) {
-    QLTriggerConditionInput triggerConditionInput = qlCreateTriggerInput.getCondition();
+  private TriggerCondition validateAndResolveOnScheduleConditionType(
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    QLTriggerConditionInput triggerConditionInput = qlCreateOrUpdateTriggerInput.getCondition();
 
     if (null == triggerConditionInput.getScheduleConditionInput()) {
       throw new InvalidRequestException("ScheduleConditionInput must not be null", USER);
@@ -211,8 +221,9 @@ public class TriggerConditionController {
     return scheduledTriggerConditionBuilder.build();
   }
 
-  private TriggerCondition validateAndResolveOnWebhookConditionType(QLCreateTriggerInput qlCreateTriggerInput) {
-    QLTriggerConditionInput triggerConditionInput = qlCreateTriggerInput.getCondition();
+  private TriggerCondition validateAndResolveOnWebhookConditionType(
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    QLTriggerConditionInput triggerConditionInput = qlCreateOrUpdateTriggerInput.getCondition();
 
     if (null == triggerConditionInput.getWebhookConditionInput()) {
       throw new InvalidRequestException("WebhookConditionInput must not be null", USER);
@@ -220,9 +231,8 @@ public class TriggerConditionController {
     return resolveWebhookTriggerCondition(triggerConditionInput);
   }
 
-  private void validateArtifactConditionArtifactStream(
-      QLCreateTriggerInput triggerInput, ArtifactStreamService artifactStreamService) {
-    QLTriggerConditionInput triggerConditionInput = triggerInput.getCondition();
+  private void validateArtifactConditionArtifactStream(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    QLTriggerConditionInput triggerConditionInput = qlCreateOrUpdateTriggerInput.getCondition();
 
     if (null == triggerConditionInput.getArtifactConditionInput()) {
       throw new InvalidRequestException("ArtifactConditionInput must not be null", USER);
@@ -235,7 +245,7 @@ public class TriggerConditionController {
 
     ArtifactStream artifactStream = artifactStreamService.get(artifactSourceId);
     if (artifactStream != null) {
-      if (!triggerInput.getApplicationId().equals(artifactStream.getAppId())) {
+      if (!qlCreateOrUpdateTriggerInput.getApplicationId().equals(artifactStream.getAppId())) {
         throw new InvalidRequestException("Artifact Stream doesn't belong to this application", USER);
       }
     } else {
@@ -245,9 +255,6 @@ public class TriggerConditionController {
 
   private TriggerCondition resolveWebhookTriggerCondition(QLTriggerConditionInput qlTriggerConditionInput) {
     WebHookTriggerConditionBuilder builder = WebHookTriggerCondition.builder();
-
-    List<WebhookEventType> eventTypes = null;
-    List<WebhookSource.BitBucketEventType> bitBucketEvents = null;
 
     switch (qlTriggerConditionInput.getWebhookConditionInput().getWebhookSourceType()) {
       case GITHUB:

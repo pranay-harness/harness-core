@@ -25,6 +25,7 @@ import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
+import software.wings.beans.trigger.UpdateTriggerDataFetcher;
 import software.wings.graphql.datafetcher.DataLoaderRegistryHelper;
 import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
@@ -300,6 +301,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(TriggerStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(TriggerDataFetcher.class);
     bindDataFetcherWithAnnotation(CreateTriggerDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateTriggerDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowBatchDataFetcher.class);

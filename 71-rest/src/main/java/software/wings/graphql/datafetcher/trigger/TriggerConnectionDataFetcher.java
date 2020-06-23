@@ -12,7 +12,6 @@ import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
@@ -37,8 +36,8 @@ import java.util.List;
 public class TriggerConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLTriggerFilter, QLNoOpSortCriteria, QLTriggerConnection> {
   @Inject TriggerQueryHelper triggerQueryHelper;
-  @Inject MainConfiguration mainConfiguration;
   @Inject AppService appService;
+  @Inject TriggerController triggerController;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN, action = Action.READ)
@@ -50,8 +49,7 @@ public class TriggerConnectionDataFetcher
     QLTriggerConnectionBuilder qlTriggerConnectionBuilder = QLTriggerConnection.builder();
     qlTriggerConnectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, trigger -> {
       QLTriggerBuilder builder = QLTrigger.builder();
-      TriggerController.populateTrigger(
-          trigger, builder, mainConfiguration, appService.getAccountIdByAppId(trigger.getAppId()));
+      triggerController.populateTrigger(trigger, builder, appService.getAccountIdByAppId(trigger.getAppId()));
       qlTriggerConnectionBuilder.node(builder.build());
     }));
 

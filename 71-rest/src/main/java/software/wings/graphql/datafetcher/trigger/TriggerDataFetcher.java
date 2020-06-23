@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.trigger.Trigger;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLTriggerQueryParameters;
@@ -21,8 +20,8 @@ import software.wings.service.intfc.AppService;
 @OwnedBy(CDC)
 public class TriggerDataFetcher extends AbstractObjectDataFetcher<QLTrigger, QLTriggerQueryParameters> {
   @Inject HPersistence persistence;
-  @Inject MainConfiguration mainConfiguration;
   @Inject AppService appService;
+  @Inject TriggerController triggerController;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -37,7 +36,7 @@ public class TriggerDataFetcher extends AbstractObjectDataFetcher<QLTrigger, QLT
     }
 
     QLTriggerBuilder qlTriggerBuilder = QLTrigger.builder();
-    TriggerController.populateTrigger(trigger, qlTriggerBuilder, mainConfiguration, accountId);
+    triggerController.populateTrigger(trigger, qlTriggerBuilder, accountId);
     return qlTriggerBuilder.build();
   }
 }

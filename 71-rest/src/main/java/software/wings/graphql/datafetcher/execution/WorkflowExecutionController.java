@@ -271,10 +271,11 @@ public class WorkflowExecutionController {
             break;
           case EXPRESSION:
             if (isTriggerFlow) {
-              continue;
+              workflowVariableValues.put(variableInput.getName(), variableValue.getValue());
             } else {
               throw new UnsupportedOperationException("Expression Type not supported");
             }
+            break;
           default:
             throw new UnsupportedOperationException("Value Type " + type + " Not supported");
         }
