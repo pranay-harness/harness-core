@@ -267,4 +267,13 @@ public class BuildSourceResource {
       @QueryParam("protocolType") String protocolType) {
     return new RestResponse<>(buildSourceService.getPackages(settingId, project, feed, protocolType));
   }
+
+  @GET
+  @Path("gcb-triggers")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getTriggers(@QueryParam("accountId") String accountId,
+      @QueryParam("projectId") String projectId, @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getGcbTriggers(settingId, projectId));
+  }
 }

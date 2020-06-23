@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,6 +22,8 @@ import static software.wings.utils.WingsTestConstants.REPOSITORY_FORMAT;
 import static software.wings.utils.WingsTestConstants.REPO_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
+import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 
 import com.google.inject.Inject;
 
@@ -60,6 +63,8 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
 import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
+import software.wings.helpers.ext.gcb.GcbService;
+import software.wings.helpers.ext.gcb.models.GcbTrigger;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -101,6 +106,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Mock JenkinsBuildService jenkinsBuildService;
   @Mock CustomBuildSourceService customBuildSourceService;
   @Mock GcsService gcsService;
+  @Mock GcbService gcbService;
   @Mock NexusService nexusService;
   @Mock AmazonS3BuildService amazonS3BuildService;
   @Mock AzureArtifactsBuildService azureArtifactsBuildService;
@@ -1141,5 +1147,40 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     buildSourceService.collectArtifact(
         APP_ID, ARTIFACT_STREAM_ID, BuildDetails.Builder.aBuildDetails().withNumber("1.0").build());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnListOfTriggerNames() {
+    GcbTrigger gcbTrigger = new GcbTrigger();
+    gcbTrigger.setId(TRIGGER_ID);
+    gcbTrigger.setName(TRIGGER_NAME);
+    List<GcbTrigger> triggers = Collections.singletonList(gcbTrigger);
+    GcpConfig gcpConfig = GcpConfig.builder().build();
+    SettingAttribute settingAttribute =
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(gcbService.getAllTriggers(any(), any(), any())).thenReturn(triggers);
+
+    List<String> actualTriggerNames = buildSourceService.getGcbTriggers(SETTING_ID, PROJECT_ID);
+    assertThat(actualTriggerNames).hasSize(1);
+    assertThat(actualTriggerNames.get(0)).isEqualTo(TRIGGER_NAME);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnNullSettingAttribute() {
+    when(settingsService.get(SETTING_ID)).thenReturn(null);
+    buildSourceService.getGcbTriggers(SETTING_ID, PROJECT_ID);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnNullSettingValue() {
+    when(settingsService.get(SETTING_ID)).thenReturn(new SettingAttribute());
+    buildSourceService.getGcbTriggers(SETTING_ID, PROJECT_ID);
   }
 }

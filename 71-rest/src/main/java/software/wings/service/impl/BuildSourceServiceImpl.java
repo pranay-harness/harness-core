@@ -38,6 +38,8 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
 import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
+import software.wings.helpers.ext.gcb.GcbService;
+import software.wings.helpers.ext.gcb.models.GcbTrigger;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -66,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -91,6 +94,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
+  @Inject private GcbService gcbService;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -657,5 +661,23 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return getBuildService(settingAttribute)
         .getPackages((AzureArtifactsConfig) settingValue, encryptedDataDetails, project, feed, protocolType);
+  }
+
+  @Override
+  public List<String> getGcbTriggers(String settingId, String projectId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null) {
+      throw new InvalidRequestException("GCP Cloud provider Settings Attribute is null", USER);
+    }
+    SettingValue settingValue = settingAttribute.getValue();
+    if (settingValue == null) {
+      throw new InvalidRequestException("GCP Cloud provider Settings Value is null", USER);
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    GcpConfig gcpConfig = (GcpConfig) settingValue;
+    return gcbService.getAllTriggers(gcpConfig, encryptedDataDetails, projectId)
+        .stream()
+        .map(GcbTrigger::getName)
+        .collect(Collectors.toList());
   }
 }

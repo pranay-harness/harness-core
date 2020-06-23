@@ -180,6 +180,8 @@ import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrClassicServiceImpl;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.ecr.EcrServiceImpl;
+import software.wings.helpers.ext.gcb.GcbService;
+import software.wings.helpers.ext.gcb.GcbServiceImpl;
 import software.wings.helpers.ext.gcr.GcrService;
 import software.wings.helpers.ext.gcr.GcrServiceImpl;
 import software.wings.helpers.ext.gcs.GcsService;
@@ -882,6 +884,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(CustomSecretsManagerService.class).to(CustomSecretsManagerServiceImpl.class);
     bind(CustomSecretsManagerEncryptionService.class).to(CustomSecretsManagerEncryptionServiceImpl.class);
     bind(CustomSecretsManagerDelegateService.class).to(NoOpCustomSecretsManagerDelegateService.class);
+    bind(GcbService.class).to(GcbServiceImpl.class);
 
     bind(KmsEncryptDecryptClient.class);
     bind(GraphQLRateLimiter.class);

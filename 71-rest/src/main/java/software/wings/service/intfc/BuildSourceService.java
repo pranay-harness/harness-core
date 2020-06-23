@@ -461,4 +461,8 @@ public interface BuildSourceService {
   default List<AzureArtifactsPackage> getPackages(String settingId, String project, String feed, String protocolType) {
     throw new UnsupportedOperationException();
   }
+
+  default List<String> getGcbTriggers(String settingId, String projectId) {
+    throw new UnsupportedOperationException();
+  }
 }
