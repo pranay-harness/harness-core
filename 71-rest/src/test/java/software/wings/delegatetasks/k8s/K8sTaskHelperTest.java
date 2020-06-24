@@ -234,6 +234,20 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFetchAllResourcesForReleaseWhenMissingConfigMap() throws Exception {
+    K8sDeleteTaskParameters k8sDeleteTaskParameters =
+        K8sDeleteTaskParameters.builder().releaseName("releaseName").build();
+    KubernetesConfig config = KubernetesConfig.builder().build();
+
+    doReturn(null).when(mockKubernetesContainerService).getConfigMap(config, emptyList(), "releaseName");
+    List<KubernetesResourceId> kubernetesResourceIds =
+        helper.fetchAllResourcesForRelease(k8sDeleteTaskParameters, config, logCallback);
+    assertThat(kubernetesResourceIds).isEmpty();
+  }
+
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetResourceIdsForDeletion() throws Exception {
