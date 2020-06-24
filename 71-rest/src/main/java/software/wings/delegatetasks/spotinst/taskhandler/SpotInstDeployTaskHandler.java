@@ -62,7 +62,7 @@ public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
     ElastiGroup newElastiGroup = deployTaskParameters.getNewElastiGroupWithUpdatedCapacity();
     ElastiGroup oldElastiGroup = deployTaskParameters.getOldElastiGroupWithUpdatedCapacity();
     boolean resizeNewFirst = deployTaskParameters.isResizeNewFirst();
-    int steadyStateTimeOut = getTimeOut(deployTaskParameters.getSteadyStateTimeOut());
+    int steadyStateTimeOut = getTimeOut(deployTaskParameters.getTimeoutIntervalInMin());
 
     if (deployTaskParameters.isBlueGreen()) {
       // B/G
