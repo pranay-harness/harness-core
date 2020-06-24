@@ -2,6 +2,7 @@ package io.harness;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.DependencyModule;
 import io.harness.impl.CIPipelineExecutionService;
@@ -27,6 +28,9 @@ public class CIExecutionServiceModule extends DependencyModule {
   @Override
   public Set<DependencyModule> dependencies() {
     return ImmutableSet.of(RegistryModule.getInstance(), ExecutionPlanModule.getInstance(),
-        OrchestrationModule.getInstance(), CIBeansModule.getInstance());
+        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                            .build()),
+        CIBeansModule.getInstance());
   }
 }

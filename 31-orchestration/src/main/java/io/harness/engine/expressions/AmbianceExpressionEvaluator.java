@@ -32,7 +32,7 @@ import javax.validation.constraints.NotNull;
 @OwnedBy(CDC)
 @Redesign
 @EqualsAndHashCode(callSuper = true)
-public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator {
+public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private OutcomeService outcomeService;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -43,7 +43,7 @@ public class EngineAmbianceExpressionEvaluator extends EngineExpressionEvaluator
   private final boolean refObjectSpecific;
 
   @Builder
-  public EngineAmbianceExpressionEvaluator(VariableResolverTracker variableResolverTracker, Ambiance ambiance,
+  public AmbianceExpressionEvaluator(VariableResolverTracker variableResolverTracker, Ambiance ambiance,
       Set<NodeExecutionEntityType> entityTypes, boolean refObjectSpecific) {
     super(variableResolverTracker);
     this.ambiance = ambiance;

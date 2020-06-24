@@ -17,7 +17,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.Outcome;
 import io.harness.data.OutcomeInstance;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.engine.expressions.EngineAmbianceExpressionEvaluator;
+import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.references.RefObject;
@@ -37,6 +37,7 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @Singleton
 public class OutcomeServiceImpl implements OutcomeService {
+  @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
   @Inject private OutcomeRepository outcomeRepository;
 
@@ -74,11 +75,8 @@ public class OutcomeServiceImpl implements OutcomeService {
       return resolveUsingRuntimeId(ambiance, refObject);
     }
 
-    EngineAmbianceExpressionEvaluator evaluator = EngineAmbianceExpressionEvaluator.builder()
-                                                      .ambiance(ambiance)
-                                                      .entityTypes(EnumSet.of(NodeExecutionEntityType.OUTCOME))
-                                                      .refObjectSpecific(true)
-                                                      .build();
+    EngineExpressionEvaluator evaluator =
+        expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.OUTCOME), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
     return (value instanceof Outcome) ? (Outcome) value : null;

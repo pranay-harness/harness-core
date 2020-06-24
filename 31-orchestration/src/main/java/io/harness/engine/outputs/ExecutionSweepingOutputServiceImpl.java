@@ -15,7 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionSweepingOutputInstance;
 import io.harness.beans.SweepingOutput;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.engine.expressions.EngineAmbianceExpressionEvaluator;
+import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.references.RefObject;
@@ -29,6 +29,7 @@ import java.util.List;
 @Redesign
 @Singleton
 public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutputService {
+  @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
   @Inject private ExecutionSweepingOutputInstanceRepository repository;
 
@@ -61,11 +62,8 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
       return resolveUsingRuntimeId(ambiance, refObject);
     }
 
-    EngineAmbianceExpressionEvaluator evaluator = EngineAmbianceExpressionEvaluator.builder()
-                                                      .ambiance(ambiance)
-                                                      .entityTypes(EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT))
-                                                      .refObjectSpecific(true)
-                                                      .build();
+    EngineExpressionEvaluator evaluator =
+        expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
     return (value instanceof SweepingOutput) ? (SweepingOutput) value : null;

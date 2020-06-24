@@ -16,6 +16,7 @@ import com.google.inject.name.Names;
 
 import io.dropwizard.lifecycle.Managed;
 import io.harness.OrchestrationModule;
+import io.harness.OrchestrationModuleConfig;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
@@ -51,6 +52,7 @@ import io.harness.datahandler.services.AdminUserService;
 import io.harness.datahandler.services.AdminUserServiceImpl;
 import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
+import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
@@ -1254,8 +1256,10 @@ public class WingsModule extends DependencyModule implements ServersModule {
   @Override
   public Set<DependencyModule> dependencies() {
     return ImmutableSet.<DependencyModule>of(TimeModule.getInstance(), VersionModule.getInstance(),
-        OrchestrationModule.getInstance(), PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance(),
-        NGModule.getInstance());
+        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                            .build()),
+        PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance(), NGModule.getInstance());
   }
 
   @Provides
