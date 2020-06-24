@@ -108,7 +108,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
       String startInstantFormat = billingDataHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
       String endInstantFormat = billingDataHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
       forecastCostDescription = String.format(FORECAST_COST_DESCRIPTION, startInstantFormat, endInstantFormat);
-      forecastCostValue = String.format(FORECAST_COST_VALUE, getRoundedDoubleValue(forecastCost));
+      forecastCostValue =
+          String.format(FORECAST_COST_VALUE, billingDataHelper.formatNumber(getRoundedDoubleValue(forecastCost)));
     }
     return QLBillingStatsInfo.builder()
         .statsLabel(FORECAST_COST_LABEL)

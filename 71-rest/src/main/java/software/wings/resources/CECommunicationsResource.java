@@ -73,6 +73,28 @@ public class CECommunicationsResource {
     return new RestResponse();
   }
 
+  @POST
+  @Path("{accountId}/internal")
+  @Timed
+  @ExceptionMetered
+  public RestResponse enableViaEmailInternal(@PathParam("accountId") String accountId,
+      @QueryParam("targetAccount") String targetAccount, @QueryParam("type") CommunicationType type,
+      @QueryParam("email") String email) {
+    communicationsService.update(targetAccount, email, type, true);
+    return new RestResponse();
+  }
+
+  @DELETE
+  @Path("{accountId}/internal")
+  @Timed
+  @ExceptionMetered
+  public RestResponse removeEmailInternal(@PathParam("accountId") String accountId,
+      @QueryParam("targetAccount") String targetAccount, @QueryParam("type") CommunicationType type,
+      @QueryParam("email") String email) {
+    communicationsService.delete(targetAccount, email, type);
+    return new RestResponse();
+  }
+
   private String getUserEmail() {
     User existingUser = UserThreadLocal.get();
     if (existingUser == null) {

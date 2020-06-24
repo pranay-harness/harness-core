@@ -1,5 +1,6 @@
 package io.harness.ccm.communication.entities;
 
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
@@ -18,8 +19,8 @@ import org.mongodb.morphia.annotations.Id;
 
 @CdUniqueIndex(name = "account_email_type", fields = { @Field("accountId")
                                                        , @Field("emailId"), @Field("type") })
-@CdUniqueIndex(name = "account_enabled_type", fields = { @Field("accountId")
-                                                         , @Field("enabled"), @Field("type") })
+@CdIndex(name = "account_enabled_type", fields = { @Field("accountId")
+                                                   , @Field("enabled"), @Field("type") })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "CECommunicationsKeys")
