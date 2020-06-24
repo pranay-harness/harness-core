@@ -128,21 +128,14 @@ then
 fi
 cd ../..
 
-echo "System-Properties: version=1.0.${VERSION}" >> app.mf
-echo "Application-Version: version=1.0.${VERSION}" >> app.mf
-
 mkdir -p dist/delegate
 cp 81-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
 cp 81-delegate/config-delegate.yml dist/delegate/config-delegate.yml
-jar ufm dist/delegate/delegate-capsule.jar app.mf
 cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
 
 mkdir -p dist/watcher
 cp 82-watcher/target/watcher-capsule.jar dist/watcher/watcher-capsule.jar
-jar ufm dist/watcher/watcher-capsule.jar app.mf
 cp dist/watcher/watcher-capsule.jar watcher-${VERSION}.jar
-
-rm -rf app.mf
 
 mkdir -p dist/disconnected_on_prem_pov
 cd dist/disconnected_on_prem_pov

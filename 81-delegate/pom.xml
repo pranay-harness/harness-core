@@ -175,11 +175,11 @@
                         </entry>
                         <entry>
                             <key>Application-Version</key>
-                            <value>version=1.0.10</value>
+                            <value>version=${build.fullVersion}</value>
                         </entry>
                         <entry>
                             <key>System-Properties</key>
-                            <value>version=1.0.10</value>
+                            <value>version=${build.fullVersion}</value>
                         </entry>
                         <entry>
                             <key>Args</key>
