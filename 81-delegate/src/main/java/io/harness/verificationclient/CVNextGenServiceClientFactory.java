@@ -1,5 +1,7 @@
 package io.harness.verificationclient;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Provider;
 
@@ -35,6 +37,9 @@ public class CVNextGenServiceClientFactory implements Provider<CVNextGenServiceC
 
   @Override
   public CVNextGenServiceClient get() {
+    if (isEmpty(baseUrl)) {
+      return null;
+    }
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.registerModule(new Jdk8Module());
     objectMapper.registerModule(new GuavaModule());
