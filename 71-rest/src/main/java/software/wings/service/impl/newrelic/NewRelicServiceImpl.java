@@ -444,9 +444,15 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Override
   public NewRelicApplication resolveApplicationName(String settingId, String newRelicApplicationName) {
+    return resolveApplicationName(settingId, newRelicApplicationName, null, null);
+  }
+
+  @Override
+  public NewRelicApplication resolveApplicationName(
+      String settingId, String newRelicApplicationName, String appId, String workflowExecutionId) {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
-    List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
+        (EncryptableSetting) settingAttribute.getValue(), appId, workflowExecutionId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
                                           .appId(GLOBAL_APP_ID)
@@ -459,9 +465,15 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Override
   public NewRelicApplication resolveApplicationId(String settingId, String newRelicApplicationId) {
+    return resolveApplicationId(settingId, newRelicApplicationId, null, null);
+  }
+
+  @Override
+  public NewRelicApplication resolveApplicationId(
+      String settingId, String newRelicApplicationId, String appId, String workflowExecutionId) {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
-    List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
+        (EncryptableSetting) settingAttribute.getValue(), appId, workflowExecutionId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
                                           .appId(GLOBAL_APP_ID)

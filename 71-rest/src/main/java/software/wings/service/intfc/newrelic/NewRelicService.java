@@ -37,5 +37,9 @@ public interface NewRelicService {
   Map<String, Metric> getMetricsCorrespondingToMetricNames(List<String> metricNames);
   List<Metric> getListOfMetrics();
   NewRelicApplication resolveApplicationName(String settingId, String newRelicApplicationName);
+  NewRelicApplication resolveApplicationName(
+      String settingId, String newRelicApplicationName, String appId, String workflowExecutionId);
   NewRelicApplication resolveApplicationId(String settingId, String newRelicApplicationId);
+  NewRelicApplication resolveApplicationId(
+      String settingId, String newRelicApplicationId, String appId, String workflowExecutionId);
 }
