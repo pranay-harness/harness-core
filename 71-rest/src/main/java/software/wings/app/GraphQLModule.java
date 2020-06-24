@@ -132,6 +132,7 @@ import software.wings.graphql.datafetcher.ssoProvider.SsoProviderDataFetcher;
 import software.wings.graphql.datafetcher.tag.TagsDataFetcher;
 import software.wings.graphql.datafetcher.tag.TagsInUseConnectionDataFetcher;
 import software.wings.graphql.datafetcher.trigger.CreateTriggerDataFetcher;
+import software.wings.graphql.datafetcher.trigger.DeleteTriggerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerConnectionDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerStatsDataFetcher;
@@ -302,6 +303,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(TriggerDataFetcher.class);
     bindDataFetcherWithAnnotation(CreateTriggerDataFetcher.class);
     bindDataFetcherWithAnnotation(UpdateTriggerDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeleteTriggerDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowBatchDataFetcher.class);

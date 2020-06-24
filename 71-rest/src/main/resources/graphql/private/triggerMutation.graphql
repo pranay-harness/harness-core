@@ -1,6 +1,7 @@
 extend type Mutation {
   createTrigger(input: CreateTriggerInput!): TriggerPayload @dataFetcher(name: createTrigger)
   updateTrigger(input: UpdateTriggerInput!): TriggerPayload @dataFetcher(name: updateTrigger)
+  deleteTrigger(input: DeleteTriggerInput!): TriggerPayload @dataFetcher(name: deleteTrigger)
 }
 
 input CreateTriggerInput {
@@ -20,6 +21,12 @@ input UpdateTriggerInput {
   description: String
   condition: TriggerConditionInput!
   action: TriggerActionInput!
+}
+
+input DeleteTriggerInput {
+  clientMutationId: String
+  applicationId: String!
+  triggerId: String!
 }
 
 input TriggerConditionInput {
