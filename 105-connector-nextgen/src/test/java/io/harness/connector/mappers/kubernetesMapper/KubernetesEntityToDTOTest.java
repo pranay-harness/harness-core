@@ -72,7 +72,7 @@ public class KubernetesEntityToDTOTest extends ConnectorsBaseTest {
     KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
-    UserNamePasswordDTO userNamePasswordDTO = (UserNamePasswordDTO) credentialDTO.getAuth();
+    UserNamePasswordDTO userNamePasswordDTO = (UserNamePasswordDTO) credentialDTO.getAuth().getCredentials();
     assertThat(userNamePasswordDTO.getUsername()).isEqualTo(userName);
     assertThat(userNamePasswordDTO.getPassword()).isEqualTo(password);
     assertThat(userNamePasswordDTO.getCacert()).isEqualTo(cacert);
@@ -109,7 +109,7 @@ public class KubernetesEntityToDTOTest extends ConnectorsBaseTest {
     KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
-    ClientKeyCertDTO clientKeyCertDTO = (ClientKeyCertDTO) credentialDTO.getAuth();
+    ClientKeyCertDTO clientKeyCertDTO = (ClientKeyCertDTO) credentialDTO.getAuth().getCredentials();
     assertThat(clientKeyCertDTO.getClientKey()).isEqualTo(clientKey);
     assertThat(clientKeyCertDTO.getClientCert()).isEqualTo(clientCert);
     assertThat(clientKeyCertDTO.getClientKeyPassphrase()).isEqualTo(clientKeyPhrase);
@@ -151,7 +151,7 @@ public class KubernetesEntityToDTOTest extends ConnectorsBaseTest {
     KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
-    OpenIdConnectDTO openIdConnectDTO = (OpenIdConnectDTO) credentialDTO.getAuth();
+    OpenIdConnectDTO openIdConnectDTO = (OpenIdConnectDTO) credentialDTO.getAuth().getCredentials();
     assertThat(openIdConnectDTO.getOidcClientId()).isEqualTo(oidClientId);
     assertThat(openIdConnectDTO.getOidcIssuerUrl()).isEqualTo(oidcIssuerUrl);
     assertThat(openIdConnectDTO.getOidcPassword()).isEqualTo(oidcPassword);

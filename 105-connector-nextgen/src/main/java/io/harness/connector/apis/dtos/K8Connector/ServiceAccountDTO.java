@@ -6,6 +6,6 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 @Data
 @Builder
-public class ServiceAccountDTO extends KubernetesAuthDTO {
+public class ServiceAccountDTO extends KubernetesAuthCredentialDTO {
   @JsonProperty("service-acccount-token") String serviceAccountToken;
 }

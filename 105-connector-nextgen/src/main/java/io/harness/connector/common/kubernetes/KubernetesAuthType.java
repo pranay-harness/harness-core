@@ -1,5 +1,7 @@
 package io.harness.connector.common.kubernetes;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum KubernetesAuthType {
   USER_PASSWORD("UsernamePassword"),
   CLIENT_KEY_CERT("ClientKeyCert"),
@@ -19,5 +21,10 @@ public enum KubernetesAuthType {
   @Override
   public String toString() {
     return displayName;
+  }
+
+  @JsonValue
+  final String displayName() {
+    return this.displayName;
   }
 }

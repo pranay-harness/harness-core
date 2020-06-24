@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class UserNamePasswordDTO extends KubernetesAuthDTO {
+public class UserNamePasswordDTO extends KubernetesAuthCredentialDTO {
   String username;
   String password;
   String cacert;

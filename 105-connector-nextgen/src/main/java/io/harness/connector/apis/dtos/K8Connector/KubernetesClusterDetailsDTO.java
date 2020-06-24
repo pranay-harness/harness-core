@@ -1,9 +1,7 @@
 package io.harness.connector.apis.dtos.K8Connector;
 
-import com.google.gson.annotations.SerializedName;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.connector.common.kubernetes.KubernetesAuthType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,6 +10,5 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesClusterDetailsDTO implements KubernetesCredentialDTO {
   String masterUrl;
-  @SerializedName("kind") KubernetesAuthType authType;
-  @SerializedName("spec") KubernetesAuthDTO auth;
+  @JsonProperty("auth") KubernetesAuthDTO auth;
 }
