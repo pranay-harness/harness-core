@@ -15,8 +15,10 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 
 import io.harness.OrchestrationModule;
+import io.harness.OrchestrationModuleConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.delay.DelayEventListener;
+import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -118,7 +120,10 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
 
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
     modules.add(new PersistenceTestModule());
-    modules.addAll(new OrchestrationModule().cumulativeDependencies());
+    modules.addAll(new OrchestrationModule(OrchestrationModuleConfig.builder()
+                                               .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                               .build())
+                       .cumulativeDependencies());
     return modules;
   }
 

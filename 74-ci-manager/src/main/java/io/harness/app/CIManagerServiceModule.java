@@ -7,11 +7,13 @@ import com.google.inject.multibindings.MapBinder;
 
 import io.harness.CIExecutionServiceModule;
 import io.harness.OrchestrationModule;
+import io.harness.OrchestrationModuleConfig;
 import io.harness.app.impl.CIPipelineServiceImpl;
 import io.harness.app.impl.YAMLToObjectImpl;
 import io.harness.app.intfc.CIPipelineService;
 import io.harness.app.intfc.YAMLToObject;
 import io.harness.beans.DelegateTask;
+import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.govern.DependencyModule;
 import io.harness.managerclient.KryoConverterFactory;
 import io.harness.managerclient.ManagerCIResource;
@@ -60,6 +62,10 @@ public class CIManagerServiceModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(OrchestrationModule.getInstance(), CIExecutionServiceModule.getInstance());
+    return ImmutableSet.<DependencyModule>of(
+        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                            .build()),
+        CIExecutionServiceModule.getInstance());
   }
 }
