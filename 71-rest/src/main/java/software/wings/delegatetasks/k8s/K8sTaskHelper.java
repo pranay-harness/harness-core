@@ -845,16 +845,16 @@ public class K8sTaskHelper {
       String manifestFilesDirectory, List<String> valuesFiles, String releaseName, String namespace,
       ExecutionLogCallback executionLogCallback, HelmVersion helmVersion) throws Exception {
     String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+    String helmPath = k8sDelegateTaskParams.getHelmPath();
     logger.info("Values file options: " + valuesFileOptions);
 
-    executionLogCallback.saveExecutionLog(color("Rendering chart using Helm", White, Bold));
-    executionLogCallback.saveExecutionLog(
-        color(format("Using helm binary %s", k8sDelegateTaskParams.getHelmPath()), White, Normal));
+    printHelmPath(executionLogCallback, helmPath);
 
     List<ManifestFile> result = new ArrayList<>();
     try (LogOutputStream logErrorStream = getExecutionLogOutputStream(executionLogCallback, ERROR)) {
-      String helmTemplateCommand = getHelmCommandForRender(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory,
-          releaseName, namespace, valuesFileOptions, helmVersion);
+      String helmTemplateCommand = getHelmCommandForRender(
+          helmPath, manifestFilesDirectory, releaseName, namespace, valuesFileOptions, helmVersion);
+      printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
 
       ProcessResult processResult = executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream);
       if (processResult.getExitValue() != 0) {
@@ -1687,19 +1687,20 @@ public class K8sTaskHelper {
       String manifestFilesDirectory, List<String> chartFiles, List<String> valuesFiles, String releaseName,
       String namespace, ExecutionLogCallback executionLogCallback, HelmVersion helmVersion) throws Exception {
     String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+    String helmPath = k8sDelegateTaskParams.getHelmPath();
     logger.info("Values file options: " + valuesFileOptions);
 
-    executionLogCallback.saveExecutionLog(color("Rendering chart files using Helm", White, Bold));
-    executionLogCallback.saveExecutionLog(
-        color(format("Using helm binary %s", k8sDelegateTaskParams.getHelmPath()), White, Normal));
+    printHelmPath(executionLogCallback, helmPath);
 
     List<ManifestFile> result = new ArrayList<>();
 
     for (String chartFile : chartFiles) {
       if (isValidManifestFile(chartFile)) {
         try (LogOutputStream logErrorStream = getExecutionLogOutputStream(executionLogCallback, ERROR)) {
-          String helmTemplateCommand = getHelmCommandForRender(k8sDelegateTaskParams.getHelmPath(),
-              manifestFilesDirectory, releaseName, namespace, valuesFileOptions, chartFile, helmVersion);
+          String helmTemplateCommand = getHelmCommandForRender(
+              helmPath, manifestFilesDirectory, releaseName, namespace, valuesFileOptions, chartFile, helmVersion);
+          printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
+
           ProcessResult processResult =
               executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream);
           if (processResult.getExitValue() != 0) {
@@ -1715,6 +1716,16 @@ public class K8sTaskHelper {
     }
 
     return result;
+  }
+
+  private void printHelmPath(ExecutionLogCallback executionLogCallback, final String helmPath) {
+    executionLogCallback.saveExecutionLog(color("Rendering chart files using Helm", White, Bold));
+    executionLogCallback.saveExecutionLog(color(format("Using helm binary %s", helmPath), White, Normal));
+  }
+
+  private void printHelmTemplateCommand(ExecutionLogCallback executionLogCallback, final String helmTemplateCommand) {
+    executionLogCallback.saveExecutionLog(color("Running Helm command", White, Bold));
+    executionLogCallback.saveExecutionLog(color(helmTemplateCommand, White, Normal));
   }
 
   private ProcessResult executeShellCommand(String commandDirectory, String command, LogOutputStream logErrorStream)
