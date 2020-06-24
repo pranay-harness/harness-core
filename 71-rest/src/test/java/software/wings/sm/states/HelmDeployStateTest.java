@@ -14,6 +14,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -49,6 +50,7 @@ import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import io.harness.beans.DelegateTask;
@@ -157,6 +159,7 @@ import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -753,7 +756,9 @@ public class HelmDeployStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = helmDeployState.handleAsyncInternal(context, response);
 
     verify(activityService).updateStatus("activityId", APP_ID, ExecutionStatus.FAILED);
-    verify(applicationManifestUtils, times(0)).getValuesFilesFromGitFetchFilesResponse(any());
+    verify(applicationManifestUtils, times(0))
+        .getValuesFilesFromGitFetchFilesResponse(
+            anyMapOf(K8sValuesLocation.class, ApplicationManifest.class), any(GitCommandExecutionResponse.class));
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
@@ -777,7 +782,9 @@ public class HelmDeployStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = helmDeployState.handleAsyncInternal(context, response);
 
     verify(activityService).updateStatus("activityId", APP_ID, ExecutionStatus.FAILED);
-    verify(applicationManifestUtils, times(0)).getValuesFilesFromGitFetchFilesResponse(any());
+    verify(applicationManifestUtils, times(0))
+        .getValuesFilesFromGitFetchFilesResponse(
+            anyMapOf(K8sValuesLocation.class, ApplicationManifest.class), any(GitCommandExecutionResponse.class));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
@@ -801,8 +808,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
         (HelmDeployStateExecutionData) context.getStateExecutionData();
     String valuesFile = "# imageName: ${DOCKER_IMAGE_NAME}\n"
         + "# tag: ${DOCKER_IMAGE_TAG}";
-    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
-    valuesFiles.put(K8sValuesLocation.Service, valuesFile);
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = new HashMap<>();
+    valuesFiles.put(K8sValuesLocation.Service, singletonList(valuesFile));
     helmStateExecutionData.setValuesFiles(valuesFiles);
 
     helmDeployState.execute(context);
@@ -831,17 +838,34 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testPriorityOrderOfValuesYamlFile() {
-    Map<K8sValuesLocation, String> k8sValuesLocationContentMap = new HashMap<>();
-    k8sValuesLocationContentMap.put(K8sValuesLocation.ServiceOverride, "ServiceOverride");
-    k8sValuesLocationContentMap.put(K8sValuesLocation.Service, "Service");
-    k8sValuesLocationContentMap.put(K8sValuesLocation.Environment, "Environment");
-    k8sValuesLocationContentMap.put(K8sValuesLocation.EnvironmentGlobal, "EnvironmentGlobal");
+    Map<K8sValuesLocation, Collection<String>> k8sValuesLocationContentMap = new HashMap<>();
+    k8sValuesLocationContentMap.put(K8sValuesLocation.ServiceOverride, singletonList("ServiceOverride"));
+    k8sValuesLocationContentMap.put(K8sValuesLocation.Service, singletonList("Service"));
+    k8sValuesLocationContentMap.put(K8sValuesLocation.Environment, singletonList("Environment"));
+    k8sValuesLocationContentMap.put(K8sValuesLocation.EnvironmentGlobal, singletonList("EnvironmentGlobal"));
     List<String> expectedValuesYamlList =
         Arrays.asList("Service", "ServiceOverride", "EnvironmentGlobal", "Environment");
 
     List<String> actualValuesYamlList = helmDeployState.getOrderedValuesYamlList(k8sValuesLocationContentMap);
 
     assertThat(actualValuesYamlList).isEqualTo(expectedValuesYamlList);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testPriorityOrderOfMultipleValuesYamlFile() {
+    Map<K8sValuesLocation, Collection<String>> k8sValuesMap = new HashMap<>();
+    k8sValuesMap.put(K8sValuesLocation.Service, Arrays.asList("Service1", "Service2", "Service3"));
+    k8sValuesMap.put(K8sValuesLocation.ServiceOverride, Arrays.asList("ServiceOverride1", "ServiceOverride2"));
+    k8sValuesMap.put(K8sValuesLocation.EnvironmentGlobal, Arrays.asList("EnvironmentGlobal1", "EnvironmentGlobal2"));
+    k8sValuesMap.put(K8sValuesLocation.Environment, Arrays.asList("Environment1", "Environment2"));
+
+    List<String> orderedValuesYamlList = helmDeployState.getOrderedValuesYamlList(k8sValuesMap);
+
+    assertThat(orderedValuesYamlList)
+        .containsExactly("Service1", "Service2", "Service3", "ServiceOverride1", "ServiceOverride2",
+            "EnvironmentGlobal1", "EnvironmentGlobal2", "Environment1", "Environment2");
   }
 
   @Test
@@ -926,6 +950,27 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(helmDeployStateExecutionData.getCurrentTaskType()).isEqualTo(TaskType.GIT_COMMAND);
 
     verifyDelegateNameInTags();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteGitSyncWithPopulateGitFilePathList() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(K8sValuesLocation.ServiceOverride,
+        ApplicationManifest.builder()
+            .storeType(StoreType.Remote)
+            .gitFileConfig(GitFileConfig.builder().build())
+            .build());
+    when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(appManifestMap);
+    when(applicationManifestUtils.isValuesInGit(appManifestMap)).thenReturn(true);
+    when(applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap))
+        .thenReturn(GitFetchFilesTaskParams.builder().isBindTaskFeatureSet(true).build());
+
+    ExecutionResponse executionResponse = helmDeployState.execute(context);
+    verify(applicationManifestUtils, times(1)).populateRemoteGitConfigFilePathList(appManifestMap);
+    HelmDeployStateExecutionData helmDeployStateExecutionData =
+        (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(helmDeployStateExecutionData.getCurrentTaskType()).isEqualTo(TaskType.GIT_COMMAND);
   }
 
   @Test

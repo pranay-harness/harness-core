@@ -990,15 +990,14 @@ public class K8sStateHelperTest extends WingsBaseTest {
 
     Map<K8sValuesLocation, Collection<String>> valuesMap = new HashMap<>();
     valuesMap.put(K8sValuesLocation.Environment, singletonList("EnvValues"));
-    when(applicationManifestUtils.getMultiValuesFilesFromGitFetchFilesResponse(
-             appManifestMap, gitCommandExecutionResponse))
+    when(applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(appManifestMap, gitCommandExecutionResponse))
         .thenReturn(valuesMap);
     gitCommandExecutionResponse.setGitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS);
     k8sStateHelper.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
     k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     assertThat(k8sStateExecutionData.getValuesFiles().get(K8sValuesLocation.Environment)).containsExactly("EnvValues");
     verify(applicationManifestUtils, times(1))
-        .getMultiValuesFilesFromGitFetchFilesResponse(appManifestMap, gitCommandExecutionResponse);
+        .getValuesFilesFromGitFetchFilesResponse(appManifestMap, gitCommandExecutionResponse);
   }
 
   @Test

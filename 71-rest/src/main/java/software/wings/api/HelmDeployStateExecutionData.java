@@ -15,6 +15,7 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
   private boolean rollback;
   private String commandFlags;
   private TaskType currentTaskType;
-  @Builder.Default private Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+  @Builder.Default private Map<K8sValuesLocation, Collection<String>> valuesFiles = new HashMap<>();
   @Builder.Default private Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
 
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
