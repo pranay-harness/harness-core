@@ -3,7 +3,9 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.delegate.beans.TaskData.asyncTaskData;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.VGLIJIN;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -62,6 +64,7 @@ import software.wings.sm.states.GcbState.GcbDelegateResponse;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class GcbStateTest extends CategoryTest {
@@ -233,5 +236,27 @@ public class GcbStateTest extends CategoryTest {
     assertThat(delegateTask.getAppId()).isEqualTo("appId");
     assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo("infrastructureId");
     assertThat(delegateTask.getData()).isEqualTo(asyncTaskData(GCB.name(), gcbTaskParams));
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnPatternsForRequiredContextElementType() {
+    ParameterEntry firstParam = new ParameterEntry();
+    ParameterEntry secondParam = new ParameterEntry();
+    ParameterEntry thirdParam = new ParameterEntry();
+    firstParam.setKey("firstKey");
+    firstParam.setValue("firstValue");
+    secondParam.setKey("secondKey");
+    secondParam.setValue("secondValue");
+    thirdParam.setKey("thirdKey");
+    thirdParam.setValue("thirdValue");
+    List<String> expectedPatterns = asList(firstParam.value, secondParam.value, thirdParam.value);
+    List<ParameterEntry> jobParameters = asList(firstParam, secondParam, thirdParam);
+    state.setJobParameters(jobParameters);
+
+    List<String> actualPatterns = state.getPatternsForRequiredContextElementType();
+
+    assertThat(actualPatterns).isEqualTo(expectedPatterns);
   }
 }

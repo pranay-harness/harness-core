@@ -20,6 +20,14 @@ import static software.wings.beans.TaskType.GCB;
 import static software.wings.beans.command.GcbTaskParams.GcbTaskType.POLL;
 import static software.wings.beans.command.GcbTaskParams.GcbTaskType.START;
 import static software.wings.sm.states.GcbState.GcbDelegateResponse.gcbDelegateResponseOf;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.BRANCH_NAME;
+import static software.wings.utils.WingsTestConstants.BUILD_ID;
+import static software.wings.utils.WingsTestConstants.COMMIT_SHA;
+import static software.wings.utils.WingsTestConstants.INLINE_SPEC;
+import static software.wings.utils.WingsTestConstants.PROJECT_ID;
+import static software.wings.utils.WingsTestConstants.TAG_NAME;
+import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 
 import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
@@ -28,6 +36,7 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.delegate.task.TaskParameters;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.JsonUtils;
 import io.harness.utils.Functions;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Rule;
@@ -41,14 +50,18 @@ import org.mockito.junit.MockitoRule;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.command.GcbTaskParams;
+import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.GitFile;
 import software.wings.helpers.ext.gcb.GcbService;
 import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildStatus;
 import software.wings.helpers.ext.gcb.models.OperationMeta;
 import software.wings.helpers.ext.gcb.models.RepoSource;
+import software.wings.service.intfc.yaml.GitClient;
 import software.wings.sm.states.GcbState.GcbDelegateResponse;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
+import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
 import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
 
 import java.util.ArrayList;
@@ -60,12 +73,8 @@ public class GcbTaskTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private GcbService gcbService;
   @Mock private DelegateLogService logService;
+  @Mock private GitClient gitClient;
 
-  private static final String ACTIVITY_ID = "activityId";
-  private static final String BRANCH_NAME = "branchName";
-  private static final String PROJECT_ID = "projectId";
-  private static final String TRIGGER_ID = "triggerId";
-  private static final String BUILD_ID = "buildId";
   private final GcpConfig gcpConfig = GcpConfig.builder().build();
 
   @InjectMocks
@@ -125,34 +134,22 @@ public class GcbTaskTest extends CategoryTest {
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
-  public void shouldExecuteSuccessfullyWhenBuildPasses() {
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    RepoSource repoSource = new RepoSource();
-    GcbOptions gcbOptions = new GcbOptions();
-    GcbTriggerBuildSpec triggerConfig = new GcbTriggerBuildSpec();
-    triggerConfig.setName(TRIGGER_ID);
-    triggerConfig.setSource(GcbTriggerBuildSpec.GcbTriggerSource.BRANCH);
-    triggerConfig.setSourceId(BRANCH_NAME);
-    gcbOptions.setTriggerSpec(triggerConfig);
-    gcbOptions.setProjectId(PROJECT_ID);
-    gcbOptions.setSpecSource(GcbOptions.GcbSpecSource.TRIGGER);
-    repoSource.setBranchName(BRANCH_NAME);
-    GcbTaskParams taskParams = GcbTaskParams.builder()
-                                   .type(START)
-                                   .activityId(ACTIVITY_ID)
-                                   .gcpConfig(gcpConfig)
-                                   .encryptedDataDetails(encryptedDataDetails)
-                                   .gcbOptions(gcbOptions)
-                                   .build();
-    BuildOperationDetails buildOperationDetails = new BuildOperationDetails();
-    OperationMeta operationMeta = new OperationMeta();
-    operationMeta.setBuild(GcbBuildDetails.builder().status(GcbBuildStatus.SUCCESS).build());
-    buildOperationDetails.setOperationMeta(operationMeta);
-    when(gcbService.runTrigger(gcpConfig, encryptedDataDetails, PROJECT_ID, TRIGGER_ID, repoSource))
-        .thenReturn(buildOperationDetails);
-    GcbDelegateResponse response = task.run(taskParams);
-    verify(gcbService).runTrigger(gcpConfig, encryptedDataDetails, PROJECT_ID, TRIGGER_ID, repoSource);
-    assertThat(response).isNotNull();
+  public void shouldExecuteTriggerSpecForBSpecifiedBranch() {
+    testTriggerSpecExecution(GcbTriggerBuildSpec.GcbTriggerSource.BRANCH, BRANCH_NAME);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldExecuteTriggerSpecForBSpecifiedTag() {
+    testTriggerSpecExecution(GcbTriggerBuildSpec.GcbTriggerSource.TAG, TAG_NAME);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldExecuteTriggerSpecForBSpecifiedCommit() {
+    testTriggerSpecExecution(GcbTriggerBuildSpec.GcbTriggerSource.COMMIT, COMMIT_SHA);
   }
 
   @Test
@@ -221,5 +218,118 @@ public class GcbTaskTest extends CategoryTest {
     verify(task, times(3)).saveConsoleLogs(any(), anyString(), anyString(), any(), anyString(), anyString());
     assertThat(response).isNotNull();
     assertThat(response.getBuild()).isEqualTo(success);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldExecuteInlineSpec() {
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    GcbBuildDetails gcbBuildDetails = JsonUtils.asObject(INLINE_SPEC, GcbBuildDetails.class);
+    GcbOptions gcbOptions = new GcbOptions();
+    BuildOperationDetails buildOperationDetails = new BuildOperationDetails();
+    OperationMeta operationMeta = new OperationMeta();
+
+    gcbOptions.setInlineSpec(INLINE_SPEC);
+    gcbOptions.setProjectId(PROJECT_ID);
+    gcbOptions.setSpecSource(GcbOptions.GcbSpecSource.INLINE);
+    GcbTaskParams taskParams = GcbTaskParams.builder()
+                                   .type(START)
+                                   .activityId(ACTIVITY_ID)
+                                   .gcpConfig(gcpConfig)
+                                   .encryptedDataDetails(encryptedDataDetails)
+                                   .gcbOptions(gcbOptions)
+                                   .build();
+
+    operationMeta.setBuild(GcbBuildDetails.builder().status(GcbBuildStatus.SUCCESS).build());
+    buildOperationDetails.setOperationMeta(operationMeta);
+
+    when(gcbService.createBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, gcbBuildDetails))
+        .thenReturn(buildOperationDetails);
+
+    GcbDelegateResponse response = task.run(taskParams);
+
+    verify(gcbService).createBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, gcbBuildDetails);
+    verify(task).fromJsonSpec(INLINE_SPEC);
+    assertThat(response).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldExecuteRemoteSpec() {
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    GcbOptions gcbOptions = new GcbOptions();
+    GcbRemoteBuildSpec remoteBuildSpec = new GcbRemoteBuildSpec();
+    GitFetchFilesResult gitResult = new GitFetchFilesResult();
+    BuildOperationDetails buildOperationDetails = new BuildOperationDetails();
+    OperationMeta operationMeta = new OperationMeta();
+    GcbBuildDetails gcbBuildDetails = JsonUtils.asObject(INLINE_SPEC, GcbBuildDetails.class);
+
+    gitResult.setFiles(Collections.singletonList(GitFile.builder().fileContent(INLINE_SPEC).build()));
+    gcbOptions.setRepositorySpec(remoteBuildSpec);
+    gcbOptions.setProjectId(PROJECT_ID);
+    gcbOptions.setSpecSource(GcbOptions.GcbSpecSource.REMOTE);
+    GcbTaskParams taskParams = GcbTaskParams.builder()
+                                   .type(START)
+                                   .activityId(ACTIVITY_ID)
+                                   .gcpConfig(gcpConfig)
+                                   .encryptedDataDetails(encryptedDataDetails)
+                                   .gcbOptions(gcbOptions)
+                                   .build();
+
+    operationMeta.setBuild(GcbBuildDetails.builder().status(GcbBuildStatus.SUCCESS).build());
+    buildOperationDetails.setOperationMeta(operationMeta);
+
+    doReturn(gitResult).when(gitClient).fetchFilesByPath(any(), any());
+    when(gcbService.createBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, gcbBuildDetails))
+        .thenReturn(buildOperationDetails);
+
+    GcbDelegateResponse response = task.run(taskParams);
+
+    verify(gcbService).createBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, gcbBuildDetails);
+    verify(task).fetchSpecFromGit(taskParams);
+    assertThat(response).isNotNull();
+  }
+
+  private void testTriggerSpecExecution(GcbTriggerBuildSpec.GcbTriggerSource source, String sourceId) {
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    RepoSource repoSource = new RepoSource();
+    GcbOptions gcbOptions = new GcbOptions();
+    GcbTriggerBuildSpec triggerConfig = new GcbTriggerBuildSpec();
+    BuildOperationDetails buildOperationDetails = new BuildOperationDetails();
+    OperationMeta operationMeta = new OperationMeta();
+
+    triggerConfig.setName(TRIGGER_ID);
+    triggerConfig.setSource(source);
+    triggerConfig.setSourceId(sourceId);
+    gcbOptions.setTriggerSpec(triggerConfig);
+    gcbOptions.setProjectId(PROJECT_ID);
+    gcbOptions.setSpecSource(GcbOptions.GcbSpecSource.TRIGGER);
+    if (source.equals(GcbTriggerBuildSpec.GcbTriggerSource.BRANCH)) {
+      repoSource.setBranchName(sourceId);
+    } else if (source.equals(GcbTriggerBuildSpec.GcbTriggerSource.TAG)) {
+      repoSource.setTagName(sourceId);
+    } else {
+      repoSource.setCommitSha(sourceId);
+    }
+    GcbTaskParams taskParams = GcbTaskParams.builder()
+                                   .type(START)
+                                   .activityId(ACTIVITY_ID)
+                                   .gcpConfig(gcpConfig)
+                                   .encryptedDataDetails(encryptedDataDetails)
+                                   .gcbOptions(gcbOptions)
+                                   .build();
+
+    operationMeta.setBuild(GcbBuildDetails.builder().status(GcbBuildStatus.SUCCESS).build());
+    buildOperationDetails.setOperationMeta(operationMeta);
+
+    when(gcbService.runTrigger(gcpConfig, encryptedDataDetails, PROJECT_ID, TRIGGER_ID, repoSource))
+        .thenReturn(buildOperationDetails);
+
+    GcbDelegateResponse response = task.run(taskParams);
+
+    verify(gcbService).runTrigger(gcpConfig, encryptedDataDetails, PROJECT_ID, TRIGGER_ID, repoSource);
+    assertThat(response).isNotNull();
   }
 }
