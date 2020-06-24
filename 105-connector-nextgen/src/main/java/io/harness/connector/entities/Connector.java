@@ -3,13 +3,10 @@ package io.harness.connector.entities;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.connector.common.ConnectorCategory;
 import io.harness.connector.common.ConnectorType;
-import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.connectivityStatus.ConnectivityStatus;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.UniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import lombok.Data;
 import lombok.Singular;
@@ -30,7 +27,6 @@ import javax.validation.constraints.Size;
 @Data
 @FieldNameConstants(innerTypeName = "ConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
-@UniqueIndex(name = "unique_fullyQualifiedIdentifier", fields = { @Field(ConnectorKeys.fullyQualifiedIdentifier) })
 @Document("connectors")
 @TypeAlias("connectors")
 // todo deepak: Add index after adding the queries
