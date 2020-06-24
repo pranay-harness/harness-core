@@ -29,7 +29,7 @@ public class CeExceptionRecordDaoTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSaveAndGet() {
     ceExceptionRecordDao.save(exception);
-    CeExceptionRecord savedException = ceExceptionRecordDao.getLatestException(accountId, clusterId);
+    CeExceptionRecord savedException = ceExceptionRecordDao.getRecentException(accountId, clusterId, 0);
     assertThat(savedException).isEqualToIgnoringGivenFields(exception, "uuid");
   }
 }

@@ -14,6 +14,7 @@ import static io.harness.ccm.health.CEConnectorHealthMessages.SETTING_ATTRIBUTE_
 import static io.harness.ccm.health.CEConnectorHealthMessages.WAITING_FOR_SUCCESSFUL_AWS_S3_SYNC_MESSAGE;
 import static io.harness.ccm.health.CEError.AWS_ECS_CLUSTER_NOT_FOUND;
 import static io.harness.ccm.health.CEError.DELEGATE_NOT_AVAILABLE;
+import static io.harness.ccm.health.CEError.K8S_PERMISSIONS_MISSING;
 import static io.harness.ccm.health.CEError.METRICS_SERVER_NOT_FOUND;
 import static io.harness.ccm.health.CEError.NO_CLUSTERS_TRACKED_BY_HARNESS_CE;
 import static io.harness.ccm.health.CEError.NO_ELIGIBLE_DELEGATE;
@@ -48,7 +49,6 @@ import software.wings.settings.SettingValue;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -225,7 +225,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       errors.add(PERPETUAL_TASK_CREATION_FAILURE);
       return errors;
     }
-    List<String> perpetualTaskIds = Arrays.asList(clusterRecord.getPerpetualTaskIds());
+    String[] perpetualTaskIds = clusterRecord.getPerpetualTaskIds();
     for (String taskId : perpetualTaskIds) {
       PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
       String delegateId = perpetualTaskRecord.getDelegateId();
@@ -239,23 +239,33 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         }
         continue;
       }
+
+      long recentTimestamp = Instant.now().minus(3, ChronoUnit.MINUTES).toEpochMilli();
+      CeExceptionRecord ceExceptionRecord = ceExceptionRecordDao.getRecentException(
+          clusterRecord.getAccountId(), clusterRecord.getUuid(), recentTimestamp);
+      if (ceExceptionRecord != null) {
+        String exceptionMessage = ceExceptionRecord.getMessage();
+        if (exceptionMessage.contains("/apis/metrics.k8s.io/v1beta1/nodes. Message: 404")) {
+          errors.add(METRICS_SERVER_NOT_FOUND);
+        }
+        if (exceptionMessage.contains("Service: AmazonECS; Status Code: 400; Error Code: ClusterNotFoundException;")) {
+          errors.add(AWS_ECS_CLUSTER_NOT_FOUND);
+        }
+        if (exceptionMessage.contains("Message: Unauthorized.") && exceptionMessage.contains("code=401")
+            && exceptionMessage.contains("/api/v1beta1/nodes")) {
+          errors.add(K8S_PERMISSIONS_MISSING);
+        }
+        if ((exceptionMessage.contains("pods is forbidden") || exceptionMessage.contains("nodes is forbidden"))
+            && (exceptionMessage.contains("cannot watch resource")
+                   || exceptionMessage.contains("cannot list resource"))) {
+          errors.add(K8S_PERMISSIONS_MISSING);
+        }
+      }
+
       long lastEventTimestamp = getLastEventTimestamp(clusterRecord.getAccountId(), clusterRecord.getUuid());
       String clusterType = clusterRecord.getCluster().getClusterType();
       if (lastEventTimestamp != 0 && !hasRecentEvents(lastEventTimestamp, clusterType)) {
-        CeExceptionRecord ceExceptionRecord =
-            ceExceptionRecordDao.getLatestException(clusterRecord.getAccountId(), clusterRecord.getUuid());
-        if (ceExceptionRecord != null) {
-          String exceptionMessage = ceExceptionRecord.getMessage();
-          if (exceptionMessage.contains("/apis/metrics.k8s.io/v1beta1/nodes. Message: 404")) {
-            errors.add(METRICS_SERVER_NOT_FOUND);
-          }
-          if (exceptionMessage.contains(
-                  "Service: AmazonECS; Status Code: 400; Error Code: ClusterNotFoundException;")) {
-            errors.add(AWS_ECS_CLUSTER_NOT_FOUND);
-          }
-        } else {
-          errors.add(NO_RECENT_EVENTS_PUBLISHED);
-        }
+        errors.add(NO_RECENT_EVENTS_PUBLISHED);
       }
     }
     return errors;
@@ -291,6 +301,9 @@ public class HealthStatusServiceImpl implements HealthStatusService {
           break;
         case AWS_ECS_CLUSTER_NOT_FOUND:
           messages.add(String.format(AWS_ECS_CLUSTER_NOT_FOUND.getMessage(), clusterName));
+          break;
+        case K8S_PERMISSIONS_MISSING:
+          messages.add(K8S_PERMISSIONS_MISSING.getMessage());
           break;
         default:
           messages.add("Unexpected error. Please contact Harness support.");

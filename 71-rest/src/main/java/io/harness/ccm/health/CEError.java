@@ -17,6 +17,8 @@ public enum CEError {
 
   CREDENTIALS_INCORRECT("Credentials are not correct."),
 
+  K8S_PERMISSIONS_MISSING("This service account does not have all the permissions to collect data."),
+
   METRICS_SERVER_NOT_FOUND("Metrics server is not installed in this Kubernetes Cluster %s."),
 
   AWS_ECS_CLUSTER_NOT_FOUND("The ECS cluster %s received error code ClusterNotFoundException from Amazon ECS service."),
