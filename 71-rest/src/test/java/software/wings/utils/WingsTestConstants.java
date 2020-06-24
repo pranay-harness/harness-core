@@ -345,6 +345,16 @@ public interface WingsTestConstants {
 
   String REFERENCED_WORKFLOW = "Referenced Workflow";
 
+  String BRANCH_NAME = "branchName";
+
+  String BUILD_ID = "buildId";
+
+  String INLINE_SPEC = "{ \"steps\": [ { \"name\": \"test\", \"args\": [ \"test\", \"test\" ] } ] }";
+
+  String TAG_NAME = "tag";
+
+  String COMMIT_SHA = "commitSha";
+
   /**
    * The constant URL.
    */
