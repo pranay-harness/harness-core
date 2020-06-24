@@ -148,6 +148,7 @@ import software.wings.utils.Misc;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -488,7 +489,7 @@ public class HelmDeployState extends State {
       HelmDeployStateExecutionData helmDeployStateExecutionData =
           (HelmDeployStateExecutionData) context.getStateExecutionData();
       helmDeployStateExecutionData.getValuesFiles().put(
-          K8sValuesLocation.Service, executionResponse.getValuesFileContent());
+          K8sValuesLocation.Service, singletonList(executionResponse.getValuesFileContent()));
     }
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
@@ -935,6 +936,7 @@ public class HelmDeployState extends State {
   private ExecutionResponse executeGitTask(
       ExecutionContext context, String activityId, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     Application app = appService.get(context.getAppId());
+    applicationManifestUtils.populateRemoteGitConfigFilePathList(appManifestMap);
 
     GitFetchFilesTaskParams fetchFilesTaskParams =
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
@@ -980,7 +982,7 @@ public class HelmDeployState extends State {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    Map<K8sValuesLocation, String> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
     HelmDeployStateExecutionData stateExecutionData = (HelmDeployStateExecutionData) context.getStateExecutionData();
     if (stateExecutionData != null) {
       valuesFiles.putAll(stateExecutionData.getValuesFiles());
@@ -1078,10 +1080,12 @@ public class HelmDeployState extends State {
       return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }
 
-    Map<K8sValuesLocation, String> valuesFiles =
-        applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(executionResponse);
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) context.getStateExecutionData();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = helmDeployStateExecutionData.getAppManifestMap();
+    Map<K8sValuesLocation, Collection<String>> valuesFiles =
+        applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
+
     helmDeployStateExecutionData.getValuesFiles().putAll(valuesFiles);
     Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap =
         applicationManifestUtils.getOverrideApplicationManifests(context, HELM_CHART_OVERRIDE);
@@ -1092,7 +1096,7 @@ public class HelmDeployState extends State {
 
   private List<String> getValuesYamlOverrides(ExecutionContext context, ContainerServiceParams containerServiceParams,
       ImageDetails imageDetails, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
-    Map<K8sValuesLocation, String> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
 
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) context.getStateExecutionData();
@@ -1132,23 +1136,23 @@ public class HelmDeployState extends State {
     return helmValueOverridesYamlFilesEvaluated;
   }
 
-  List<String> getOrderedValuesYamlList(Map<K8sValuesLocation, String> valuesFiles) {
+  List<String> getOrderedValuesYamlList(Map<K8sValuesLocation, Collection<String>> valuesFiles) {
     List<String> valuesList = new ArrayList<>();
 
     if (valuesFiles.containsKey(K8sValuesLocation.Service)) {
-      valuesList.add(valuesFiles.get(K8sValuesLocation.Service));
+      valuesList.addAll(valuesFiles.get(K8sValuesLocation.Service));
     }
 
     if (valuesFiles.containsKey(K8sValuesLocation.ServiceOverride)) {
-      valuesList.add(valuesFiles.get(K8sValuesLocation.ServiceOverride));
+      valuesList.addAll(valuesFiles.get(K8sValuesLocation.ServiceOverride));
     }
 
     if (valuesFiles.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
-      valuesList.add(valuesFiles.get(K8sValuesLocation.EnvironmentGlobal));
+      valuesList.addAll(valuesFiles.get(K8sValuesLocation.EnvironmentGlobal));
     }
 
     if (valuesFiles.containsKey(K8sValuesLocation.Environment)) {
-      valuesList.add(valuesFiles.get(K8sValuesLocation.Environment));
+      valuesList.addAll(valuesFiles.get(K8sValuesLocation.Environment));
     }
 
     return valuesList;

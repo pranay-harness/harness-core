@@ -49,6 +49,8 @@ import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.GitFetchFilesConfig;
+import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.Service;
@@ -179,7 +181,7 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     when(applicationManifestService.getManifestFileByFileName("appManifest1", values_filename))
         .thenReturn(ManifestFile.builder().build());
 
-    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = new HashMap<>();
     applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
     assertThat(valuesFiles.size()).isEqualTo(0);
 
@@ -191,7 +193,7 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
 
     applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
     assertThat(valuesFiles.size()).isEqualTo(1);
-    assertThat(valuesFiles.get(K8sValuesLocation.Environment)).isEqualTo("fileContent");
+    assertThat(valuesFiles.get(K8sValuesLocation.Environment)).containsExactly("fileContent");
   }
 
   @Test
@@ -207,14 +209,14 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     doReturn(ManifestFile.builder().build())
         .when(applicationManifestService)
         .getManifestFileByFileName("appManifest1", values_filename);
-    applicationManifestUtils.populateMultipleValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+    applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
     assertThat(valuesFiles).isEmpty();
 
     valuesFiles = new HashMap<>();
     doReturn(ManifestFile.builder().fileContent("content").build())
         .when(applicationManifestService)
         .getManifestFileByFileName("appManifest1", values_filename);
-    applicationManifestUtils.populateMultipleValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+    applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
     assertThat(valuesFiles.keySet()).containsExactlyInAnyOrder(K8sValuesLocation.ServiceOverride);
     assertThat(valuesFiles.values()).containsExactlyInAnyOrder(singletonList("content"));
 
@@ -228,7 +230,7 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     doReturn(ManifestFile.builder().fileContent("content2").build())
         .when(applicationManifestService)
         .getManifestFileByFileName("appManifest2", values_filename);
-    applicationManifestUtils.populateMultipleValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+    applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
     assertThat(valuesFiles.keySet()).containsExactlyInAnyOrder(ServiceOverride, Environment);
     assertThat(valuesFiles.values()).containsExactlyInAnyOrder(singletonList("content1"), singletonList("content2"));
 
@@ -237,7 +239,7 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     doReturn(ManifestFile.builder().fileContent("content").build())
         .when(applicationManifestService)
         .getManifestFileByFileName("appManifest2", values_filename);
-    applicationManifestUtils.populateMultipleValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+    applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
     assertThat(valuesFiles.keySet()).containsExactlyInAnyOrder(Environment);
     assertThat(valuesFiles.values()).containsExactlyInAnyOrder(singletonList("content"));
   }
@@ -587,7 +589,7 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
             "EnvironmentGlobal", ImmutableMap.of(), "ServiceOverride", ImmutableMap.of("file4", "content4")));
 
     Map<K8sValuesLocation, Collection<String>> valuesFiles =
-        applicationManifestUtils.getMultiValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
+        applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
 
     assertThat(valuesFiles.get(Environment)).containsExactly("content1");
     assertThat(valuesFiles.get(K8sValuesLocation.Service)).containsExactly("content2", "content3");
@@ -611,12 +613,49 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
             ImmutableMap.of("file6", "content6")));
 
     Map<K8sValuesLocation, Collection<String>> valuesFiles =
-        applicationManifestUtils.getMultiValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
+        applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
 
     assertThat(valuesFiles.get(Environment)).containsExactly("content1", "content2", "content3");
     assertThat(valuesFiles.get(K8sValuesLocation.Service)).isNullOrEmpty();
     assertThat(valuesFiles.get(EnvironmentGlobal)).containsExactly("content4", "content5");
     assertThat(valuesFiles.get(ServiceOverride)).containsExactly("content6");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetMultiValueFilesFromGitFetchFilesReponseWithFolder() {
+    testGetMultiValuesFromGitFetchFilesResponseWith(
+        createApplicationManifestWithGitFilePathList("file1", "folder1", "folder2"),
+        ImmutableMap.of("file1", "content1", "folder1/file1", "folder1/content1", "folder1/file2", "folder1/content2",
+            "folder2/file1", "folder2/content1"),
+        asList("content1", "folder1/content1", "folder2/content1"));
+
+    testGetMultiValuesFromGitFetchFilesResponseWith(
+        createApplicationManifestWithGitFilePathList("folder1", "folder1/subfolder"),
+        ImmutableMap.of("folder1/file1", "folder1/content", "folder1/subfolder/file1", "folder1/subcontent"),
+        asList("folder1/content", "folder1/subcontent"));
+
+    testGetMultiValuesFromGitFetchFilesResponseWith(
+        createApplicationManifestWithGitFilePathList("folder1", "file1", "folder1/subfolder"),
+        ImmutableMap.of("file1", "content", "folder1/subfolder/file1", "folder1/subfolder/content"),
+        asList("folder1/subfolder/content", "content", "folder1/subfolder/content"));
+
+    testGetMultiValuesFromGitFetchFilesResponseWith(createApplicationManifestWithGitFilePathList("subfolder", "file1"),
+        ImmutableMap.of("folder/subfolder/file1", "folder/subfolder/content", "file1", "file1-content"),
+        singletonList("file1-content"));
+  }
+
+  private void testGetMultiValuesFromGitFetchFilesResponseWith(
+      ApplicationManifest manifest, Map<String, String> response, List<String> expected) {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(ServiceOverride, manifest);
+    GitCommandExecutionResponse executionResponse =
+        gitExecutionResponseWithFilesFromMultipleRepo(ImmutableMap.of("ServiceOverride", response));
+
+    Map<K8sValuesLocation, Collection<String>> valuesFiles =
+        applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
+
+    assertThat(valuesFiles.get(ServiceOverride)).isEqualTo(expected);
   }
 
   private ApplicationManifest createApplicationManifestWithGitFilePathList(String... files) {
@@ -671,6 +710,51 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     return ApplicationManifest.builder()
         .storeType(Remote)
         .gitFileConfig(GitFileConfig.builder().filePath(filePath).build())
+        .build();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testSetValuesPathInGitFetchFilesTaskParams() {
+    GitFetchFilesTaskParams gitFetchFilesTaskParams =
+        GitFetchFilesTaskParams.builder()
+            .gitFetchFilesConfigMap(ImmutableMap.of("Service", gitFetchFileConfigWithFilePath("file-folder")))
+            .build();
+    applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(gitFetchFilesTaskParams);
+    GitFetchFilesConfig serviceTaskParams = gitFetchFilesTaskParams.getGitFetchFilesConfigMap().get("Service");
+    assertThat(serviceTaskParams.getGitFileConfig().getFilePathList())
+        .containsExactly("file-folder/" + values_filename);
+
+    gitFetchFilesTaskParams = GitFetchFilesTaskParams.builder()
+                                  .gitFetchFilesConfigMap(ImmutableMap.of("Service",
+                                      gitFetchFileConfigWithFilePathList("file-folder/", "file"), "Environment",
+                                      gitFetchFileConfigWithFilePathList("file-folder/", "file")))
+                                  .build();
+    applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(gitFetchFilesTaskParams);
+    serviceTaskParams = gitFetchFilesTaskParams.getGitFetchFilesConfigMap().get("Service");
+    GitFetchFilesConfig environmentTaskParams = gitFetchFilesTaskParams.getGitFetchFilesConfigMap().get("Environment");
+    assertThat(serviceTaskParams.getGitFileConfig().getFilePathList())
+        .containsExactly("file-folder/" + values_filename);
+    assertThat(environmentTaskParams.getGitFileConfig().getFilePathList()).containsExactly("file-folder/", "file");
+
+    gitFetchFilesTaskParams =
+        GitFetchFilesTaskParams.builder()
+            .gitFetchFilesConfigMap(ImmutableMap.of("Service", gitFetchFileConfigWithFilePath(null)))
+            .build();
+
+    applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(gitFetchFilesTaskParams);
+    serviceTaskParams = gitFetchFilesTaskParams.getGitFetchFilesConfigMap().get("Service");
+    assertThat(serviceTaskParams.getGitFileConfig().getFilePathList()).containsExactly(values_filename);
+  }
+
+  private GitFetchFilesConfig gitFetchFileConfigWithFilePath(String filePath) {
+    return GitFetchFilesConfig.builder().gitFileConfig(GitFileConfig.builder().filePath(filePath).build()).build();
+  }
+
+  private GitFetchFilesConfig gitFetchFileConfigWithFilePathList(String... filePaths) {
+    return GitFetchFilesConfig.builder()
+        .gitFileConfig(GitFileConfig.builder().filePathList(asList(filePaths)).build())
         .build();
   }
 }

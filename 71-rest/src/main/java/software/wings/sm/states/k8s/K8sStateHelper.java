@@ -468,7 +468,7 @@ public class K8sStateHelper {
       valuesFiles.putAll(stateExecutionData.getValuesFiles());
     }
 
-    applicationManifestUtils.populateMultipleValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+    applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
 
     List<String> result = new ArrayList<>();
 
@@ -837,7 +837,7 @@ public class K8sStateHelper {
     K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateExecutionData.getApplicationManifestMap();
     Map<K8sValuesLocation, Collection<String>> valuesFiles =
-        applicationManifestUtils.getMultiValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
+        applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
     k8sStateExecutionData.getValuesFiles().putAll(valuesFiles);
 
     return k8sStateExecutor.executeK8sTask(context, activityId);

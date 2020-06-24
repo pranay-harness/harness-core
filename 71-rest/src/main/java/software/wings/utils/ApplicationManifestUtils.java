@@ -8,7 +8,6 @@ import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
@@ -67,6 +66,7 @@ import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -274,15 +274,7 @@ public class ApplicationManifestUtils {
     return stringBuilder.toString();
   }
 
-  public Map<K8sValuesLocation, String> getValuesFilesFromGitFetchFilesResponse(
-      GitCommandExecutionResponse executionResponse) {
-    return getMultiValuesFilesFromGitFetchFilesResponse(emptyMap(), executionResponse)
-        .entrySet()
-        .stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().iterator().next()));
-  }
-
-  public Map<K8sValuesLocation, Collection<String>> getMultiValuesFilesFromGitFetchFilesResponse(
+  public Map<K8sValuesLocation, Collection<String>> getValuesFilesFromGitFetchFilesResponse(
       Map<K8sValuesLocation, ApplicationManifest> appManifest, GitCommandExecutionResponse response) {
     GitFetchFilesFromMultipleRepoResult gitCommandResult =
         (GitFetchFilesFromMultipleRepoResult) response.getGitCommandResult();
@@ -294,7 +286,7 @@ public class ApplicationManifestUtils {
 
     for (Entry<String, GitFetchFilesResult> entry : gitCommandResult.getFilesFromMultipleRepo().entrySet()) {
       GitFetchFilesResult gitFetchFilesResult = entry.getValue();
-      Map<String, GitFile> namedGitFiles = new HashMap<>();
+      Map<String, GitFile> namedGitFiles = new LinkedHashMap<>();
       K8sValuesLocation k8sValuesLocation = K8sValuesLocation.valueOf(entry.getKey());
       for (GitFile file : gitFetchFilesResult.getFiles()) {
         if (isNotBlank(file.getFileContent())) {
@@ -317,22 +309,22 @@ public class ApplicationManifestUtils {
     return appManifest.getGitFileConfig()
         .getFilePathList()
         .stream()
-        .map(gitFiles::get)
+        .map(filePath -> getFileOrFirstFileFromDirectory(filePath, gitFiles))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
         .map(GitFile::getFileContent)
         .collect(Collectors.toList());
   }
 
-  public void populateValuesFilesFromAppManifest(
-      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, Map<K8sValuesLocation, String> valuesFiles) {
-    for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
-      K8sValuesLocation k8sValuesLocation = entry.getKey();
-      ApplicationManifest applicationManifest = entry.getValue();
-      getManifestFileContentIfExists(applicationManifest)
-          .ifPresent(fileContent -> valuesFiles.put(k8sValuesLocation, fileContent));
+  private Optional<GitFile> getFileOrFirstFileFromDirectory(String filePath, Map<String, GitFile> gitFiles) {
+    if (gitFiles.containsKey(filePath)) {
+      return Optional.of(gitFiles.get(filePath));
     }
+
+    return gitFiles.keySet().stream().filter(file -> file.startsWith(filePath)).map(gitFiles::get).findFirst();
   }
 
-  public void populateMultipleValuesFilesFromAppManifest(Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
+  public void populateValuesFilesFromAppManifest(Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
       Map<K8sValuesLocation, Collection<String>> multipleValuesFiles) {
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
       K8sValuesLocation k8sValuesLocation = entry.getKey();
@@ -359,9 +351,13 @@ public class ApplicationManifestUtils {
 
     for (Entry<String, GitFetchFilesConfig> entry : gitFetchFileConfigMap.entrySet()) {
       if (K8sValuesLocation.Service.name().equals(entry.getKey())) {
-        GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
-        gitFetchFileConfig.getGitFileConfig().setFilePath(
-            getValuesYamlGitFilePath(gitFetchFileConfig.getGitFileConfig().getFilePath()));
+        GitFileConfig gitFileConfig = entry.getValue().getGitFileConfig();
+        if (isEmpty(gitFileConfig.getFilePathList())) {
+          gitFileConfig.setFilePathList(singletonList(getValuesYamlGitFilePath(gitFileConfig.getFilePath())));
+        } else {
+          gitFileConfig.setFilePathList(
+              singletonList(getValuesYamlGitFilePath(gitFileConfig.getFilePathList().iterator().next())));
+        }
       }
     }
   }
@@ -372,7 +368,7 @@ public class ApplicationManifestUtils {
       return new ArrayList<>();
     }
 
-    Map<K8sValuesLocation, String> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new EnumMap<>(K8sValuesLocation.class);
 
     ApplicationManifest serviceAppManifest =
@@ -395,7 +391,7 @@ public class ApplicationManifestUtils {
 
     populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
 
-    return valuesFiles.values().stream().collect(Collectors.toList());
+    return valuesFiles.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
   }
 
   public Set<String> listExpressionsFromValuesForService(String appId, String serviceId) {
