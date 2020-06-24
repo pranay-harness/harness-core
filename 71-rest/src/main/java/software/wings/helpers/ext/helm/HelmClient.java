@@ -97,4 +97,20 @@ public interface HelmClient {
 
   HelmCliResponse searchChart(HelmInstallCommandRequest commandRequest, String chartInfo)
       throws InterruptedException, TimeoutException, IOException;
+
+  /**
+   * Render chart templates and return the output.
+   *
+   * @param commandRequest the command request
+   * @param chartLocation
+   * @param namespace
+   * @param valuesOverrides
+   * @return HelmCliResponse the helm cli response
+   * @throws InterruptedException the interrupted exception
+   * @throws TimeoutException     the timeout exception
+   * @throws IOException          the io exception
+   * @throws ExecutionException   the execution exception
+   */
+  HelmCliResponse renderChart(HelmCommandRequest commandRequest, String chartLocation, String namespace,
+      List<String> valuesOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException;
 }

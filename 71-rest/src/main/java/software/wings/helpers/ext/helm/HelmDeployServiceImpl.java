@@ -22,6 +22,8 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.model.KubernetesResource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -32,6 +34,8 @@ import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.beans.command.LogCallback;
@@ -44,6 +48,7 @@ import software.wings.delegatetasks.helm.HarnessHelmDeployConfig;
 import software.wings.delegatetasks.helm.HelmCommandHelper;
 import software.wings.delegatetasks.helm.HelmDeployChartSpec;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
+import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
@@ -72,7 +77,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -83,6 +90,7 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class HelmDeployServiceImpl implements HelmDeployService {
+  public static final String MANIFEST_FILE_NAME = "manifest.yaml";
   @Inject private HelmClient helmClient;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private TimeLimiter timeLimiter;
@@ -94,6 +102,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private HelmTaskHelper helmTaskHelper;
   @Inject private HelmHelper helmHelper;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
+  @Inject private K8sTaskHelper k8sTaskHelper;
 
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
   private static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
@@ -117,9 +126,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
       prepareRepoAndCharts(commandRequest);
 
+      printHelmChartKubernetesResources(commandRequest);
+
       executionLogCallback =
           markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.InstallUpgrade);
-
       helmChartInfo = getHelmChartDetails(commandRequest);
 
       if (checkNewHelmInstall(commandRequest)) {
@@ -257,6 +267,59 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     commandRequest.getExecutionLogCallback().saveExecutionLog("Repo checked-out locally");
   }
 
+  private void printHelmChartKubernetesResources(HelmInstallCommandRequest commandRequest) {
+    K8sDelegateManifestConfig repoConfig = commandRequest.getRepoConfig();
+    Optional<StoreType> storeTypeOpt =
+        Optional.ofNullable(repoConfig)
+            .map(K8sDelegateManifestConfig::getManifestStoreTypes)
+            .filter(Objects::nonNull)
+            .filter(storeType -> storeType == StoreType.HelmSourceRepo || storeType == StoreType.HelmChartRepo);
+
+    if (!storeTypeOpt.isPresent()) {
+      logger.warn(
+          "Unsupported store type, storeType: {}", repoConfig != null ? repoConfig.getManifestStoreTypes() : null);
+      return;
+    }
+
+    String namespace = commandRequest.getNamespace();
+    List<String> valueOverrides = commandRequest.getVariableOverridesYamlFiles();
+    String workingDir = commandRequest.getWorkingDir();
+    LogCallback executionLogCallback = commandRequest.getExecutionLogCallback();
+
+    logger.debug("Printing Helm chart K8S resources, storeType: {}, namespace: {}, workingDir: {}", storeTypeOpt.get(),
+        namespace, workingDir);
+
+    try {
+      List<KubernetesResource> helmKubernetesResources =
+          getKubernetesResourcesFromHelmChart(commandRequest, namespace, workingDir, valueOverrides);
+      executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(helmKubernetesResources));
+    } catch (InterruptedException e) {
+      logger.error("Failed to get k8s resources from Helm chart", e);
+      Thread.currentThread().interrupt();
+    } catch (Exception e) {
+      String msg = format("Failed to print Helm chart manifest, location: %s", workingDir);
+      logger.error(msg, e);
+      executionLogCallback.saveExecutionLog(msg);
+    }
+  }
+
+  private List<KubernetesResource> getKubernetesResourcesFromHelmChart(
+      HelmCommandRequest commandRequest, String namespace, String chartLocation, List<String> valueOverrides)
+      throws InterruptedException, ExecutionException, TimeoutException, IOException {
+    logger.debug("Getting K8S resources from Helm chart, namespace: {}, chartLocation: {}", namespace, chartLocation);
+
+    HelmCommandResponse commandResponse = renderHelmChart(commandRequest, namespace, chartLocation, valueOverrides);
+
+    ManifestFile manifestFile =
+        ManifestFile.builder().fileName(MANIFEST_FILE_NAME).fileContent(commandResponse.getOutput()).build();
+    helmHelper.replaceManifestPlaceholdersWithLocalConfig(manifestFile);
+
+    List<KubernetesResource> resources = ManifestHelper.processYaml(manifestFile.getFileContent());
+    k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(resources, namespace);
+
+    return resources;
+  }
+
   private LogCallback markDoneAndStartNew(
       HelmCommandRequest commandRequest, LogCallback executionLogCallback, String newName) {
     executionLogCallback.saveExecutionLog("\nDone", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
@@ -372,6 +435,25 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
 
     return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), responseMsg);
+  }
+
+  @Override
+  public HelmCommandResponse renderHelmChart(HelmCommandRequest commandRequest, String namespace, String chartLocation,
+      List<String> valueOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException {
+    LogCallback executionLogCallback = commandRequest.getExecutionLogCallback();
+
+    logger.debug("Rendering Helm chart, namespace: {}, chartLocation: {}", namespace, chartLocation);
+
+    executionLogCallback.saveExecutionLog("Rendering Helm chart", LogLevel.INFO, CommandExecutionStatus.RUNNING);
+
+    HelmCliResponse cliResponse = helmClient.renderChart(commandRequest, chartLocation, namespace, valueOverrides);
+    if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
+      String msg = format("Failed to render chart location: %s. Reason %s ", chartLocation, cliResponse.getOutput());
+      executionLogCallback.saveExecutionLog(msg);
+      throw new InvalidRequestException(msg);
+    }
+
+    return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());
   }
 
   @Override

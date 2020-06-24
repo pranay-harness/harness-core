@@ -9,6 +9,8 @@ import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 public class HelmDeployServiceUnsupported implements HelmDeployService {
@@ -40,6 +42,12 @@ public class HelmDeployServiceUnsupported implements HelmDeployService {
   @Override
   public HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest)
       throws InterruptedException, IOException, TimeoutException {
+    throw new UnsupportedOperationException("Helm deploy service not supported on manager");
+  }
+
+  @Override
+  public HelmCommandResponse renderHelmChart(HelmCommandRequest commandRequest, String namespace, String chartLocation,
+      List<String> valueOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException {
     throw new UnsupportedOperationException("Helm deploy service not supported on manager");
   }
 

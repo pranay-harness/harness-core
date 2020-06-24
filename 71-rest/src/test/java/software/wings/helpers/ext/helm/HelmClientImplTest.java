@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +34,8 @@ import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -305,6 +308,31 @@ public class HelmClientImplTest extends WingsBaseTest {
         .isEqualTo("/client-tools/v3.1/helm search repo harness-helm");
     assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmInstallCommandRequest))
         .isEqualTo("/client-tools/v3.1/helm search repo harness-helm");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void renderChart() throws Exception {
+    String chartLocation = "chartLocation";
+    String namespace = "namespace";
+    List<String> valuesOverrides = Collections.emptyList();
+    ConsumerWrapper<HelmCommandRequest> command = r -> {
+      helmClient.renderChart((HelmInstallCommandRequest) r, chartLocation, namespace, valuesOverrides);
+    };
+    String val1 = getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandRequest);
+    assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandRequest))
+        .isEqualTo("helm template chartLocation  --name crazy-helm --namespace namespace");
+    assertThat(getCommandWithNoValueOverride(HelmVersion.V2, command, helmInstallCommandRequest))
+        .isEqualTo("helm template chartLocation  --name crazy-helm --namespace namespace");
+    assertThat(getCommandWithCommandFlags(HelmVersion.V2, command, helmInstallCommandRequest))
+        .isEqualTo("helm template chartLocation  --name crazy-helm --namespace namespace ");
+    assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmInstallCommandRequest))
+        .isEqualTo("/client-tools/v3.1/helm template crazy-helm chartLocation  --namespace namespace");
+    assertThat(getCommandWithNoValueOverride(HelmVersion.V3, command, helmInstallCommandRequest))
+        .isEqualTo("/client-tools/v3.1/helm template crazy-helm chartLocation  --namespace namespace");
+    assertThat(getCommandWithCommandFlags(HelmVersion.V3, command, helmInstallCommandRequest))
+        .isEqualTo("/client-tools/v3.1/helm template crazy-helm chartLocation  --namespace namespace ");
   }
 
   private String getCommandWithCommandFlags(HelmVersion helmVersion, ConsumerWrapper<HelmCommandRequest> consumer,
