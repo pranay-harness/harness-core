@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "command.go",
+        "process_state.go",
+    ],
+    importpath = "github.com/wings-software/portal/commons/go/lib/exec",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//commons/go/lib/logs:go_default_library",
+        "@com_github_pkg_errors//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "command_test.go",
+        "proces_state_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = ["@com_github_stretchr_testify//assert:go_default_library"],
+)

@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "builder.go",
+        "fields.go",
         "iface.go",
         "iface_mock.go",
         "logs.go",
@@ -22,6 +23,7 @@ go_test(
     name = "go_default_test",
     srcs = [
         "builder_test.go",
+        "fields_test.go",
         "logs_test.go",
     ],
     embed = [":go_default_library"],
