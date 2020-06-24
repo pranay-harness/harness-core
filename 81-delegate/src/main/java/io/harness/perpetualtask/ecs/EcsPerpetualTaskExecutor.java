@@ -3,6 +3,7 @@ package io.harness.perpetualtask.ecs;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Function.identity;
@@ -43,9 +44,11 @@ import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.event.payloads.ReservedResource;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
+import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.ecs.support.EcsMetricClient;
@@ -102,58 +105,61 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
-    EcsPerpetualTaskParams ecsPerpetualTaskParams = getTaskParams(params);
-    try {
-      String clusterName = ecsPerpetualTaskParams.getClusterName();
-      String region = ecsPerpetualTaskParams.getRegion();
-      String clusterId = ecsPerpetualTaskParams.getClusterId();
-      String settingId = ecsPerpetualTaskParams.getSettingId();
-      logger.info("Task params cluster name {} region {} ", clusterName, region);
-      AwsConfig awsConfig = (AwsConfig) KryoUtils.asObject(ecsPerpetualTaskParams.getAwsConfig().toByteArray());
-      List<EncryptedDataDetail> encryptionDetails =
-          (List<EncryptedDataDetail>) KryoUtils.asObject(ecsPerpetualTaskParams.getEncryptionDetail().toByteArray());
-      Instant now = Instant.now(clock);
-
-      Instant lastProcessedTime = fetchLastProcessedTimestamp(clusterId);
-      List<ContainerInstance> containerInstances =
-          listContainerInstances(clusterName, region, awsConfig, encryptionDetails);
-      Set<String> instanceIds = fetchEc2InstanceIds(clusterId, containerInstances);
-      List<Instance> instances = listEc2Instances(region, awsConfig, encryptionDetails, instanceIds);
-      Map<String, String> taskArnServiceNameMap = new HashMap<>();
-      loadTaskArnServiceNameMap(clusterName, region, awsConfig, encryptionDetails, taskArnServiceNameMap);
-      List<Task> tasks = listTask(clusterName, region, awsConfig, encryptionDetails);
-
-      Set<String> currentActiveEc2InstanceIds = new HashSet<>();
-      publishEc2InstanceEvent(clusterId, settingId, clusterName, region, currentActiveEc2InstanceIds, instances);
-      Set<String> currentActiveContainerInstanceArns = getCurrentActiveContainerInstanceArns(containerInstances);
-      publishContainerInstanceEvent(clusterId, settingId, clusterName, region, currentActiveContainerInstanceArns,
-          lastProcessedTime, containerInstances);
-      Set<String> currentActiveTaskArns = new HashSet<>();
-      publishTaskEvent(clusterId, settingId, ecsPerpetualTaskParams, currentActiveTaskArns, lastProcessedTime, tasks,
-          taskArnServiceNameMap);
-      updateActiveInstanceCache(
-          clusterId, currentActiveEc2InstanceIds, currentActiveContainerInstanceArns, currentActiveTaskArns, now);
-      publishEcsClusterSyncEvent(clusterId, settingId, clusterName, currentActiveEc2InstanceIds,
-          currentActiveContainerInstanceArns, currentActiveTaskArns, now);
-      publishUtilizationMetrics(ecsPerpetualTaskParams, awsConfig, encryptionDetails, clusterName, now, heartbeatTime);
-    } catch (Exception e) {
-      logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
+    try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
+      EcsPerpetualTaskParams ecsPerpetualTaskParams = getTaskParams(params);
       try {
-        String message = e.getMessage().substring(0, Math.min(e.getMessage().length(), 280));
-        eventPublisher.publishMessage(CeExceptionMessage.newBuilder()
-                                          .setClusterId(ecsPerpetualTaskParams.getClusterId())
-                                          .setMessage(message)
-                                          .build(),
-            HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
-      } catch (Exception ex) {
-        logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
+        String clusterName = ecsPerpetualTaskParams.getClusterName();
+        String region = ecsPerpetualTaskParams.getRegion();
+        String clusterId = ecsPerpetualTaskParams.getClusterId();
+        String settingId = ecsPerpetualTaskParams.getSettingId();
+        logger.info("Task params cluster name {} region {} ", clusterName, region);
+        AwsConfig awsConfig = (AwsConfig) KryoUtils.asObject(ecsPerpetualTaskParams.getAwsConfig().toByteArray());
+        List<EncryptedDataDetail> encryptionDetails =
+            (List<EncryptedDataDetail>) KryoUtils.asObject(ecsPerpetualTaskParams.getEncryptionDetail().toByteArray());
+        Instant now = Instant.now(clock);
+
+        Instant lastProcessedTime = fetchLastProcessedTimestamp(clusterId);
+        List<ContainerInstance> containerInstances =
+            listContainerInstances(clusterName, region, awsConfig, encryptionDetails);
+        Set<String> instanceIds = fetchEc2InstanceIds(clusterId, containerInstances);
+        List<Instance> instances = listEc2Instances(region, awsConfig, encryptionDetails, instanceIds);
+        Map<String, String> taskArnServiceNameMap = new HashMap<>();
+        loadTaskArnServiceNameMap(clusterName, region, awsConfig, encryptionDetails, taskArnServiceNameMap);
+        List<Task> tasks = listTask(clusterName, region, awsConfig, encryptionDetails);
+
+        Set<String> currentActiveEc2InstanceIds = new HashSet<>();
+        publishEc2InstanceEvent(clusterId, settingId, clusterName, region, currentActiveEc2InstanceIds, instances);
+        Set<String> currentActiveContainerInstanceArns = getCurrentActiveContainerInstanceArns(containerInstances);
+        publishContainerInstanceEvent(clusterId, settingId, clusterName, region, currentActiveContainerInstanceArns,
+            lastProcessedTime, containerInstances);
+        Set<String> currentActiveTaskArns = new HashSet<>();
+        publishTaskEvent(clusterId, settingId, ecsPerpetualTaskParams, currentActiveTaskArns, lastProcessedTime, tasks,
+            taskArnServiceNameMap);
+        updateActiveInstanceCache(
+            clusterId, currentActiveEc2InstanceIds, currentActiveContainerInstanceArns, currentActiveTaskArns, now);
+        publishEcsClusterSyncEvent(clusterId, settingId, clusterName, currentActiveEc2InstanceIds,
+            currentActiveContainerInstanceArns, currentActiveTaskArns, now);
+        publishUtilizationMetrics(
+            ecsPerpetualTaskParams, awsConfig, encryptionDetails, clusterName, now, heartbeatTime);
+      } catch (Exception e) {
+        logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
+        try {
+          String message = e.getMessage().substring(0, Math.min(e.getMessage().length(), 280));
+          eventPublisher.publishMessage(CeExceptionMessage.newBuilder()
+                                            .setClusterId(ecsPerpetualTaskParams.getClusterId())
+                                            .setMessage(message)
+                                            .build(),
+              HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
+        } catch (Exception ex) {
+          logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
+        }
       }
+      return PerpetualTaskResponse.builder()
+          .responseCode(200)
+          .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
+          .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
+          .build();
     }
-    return PerpetualTaskResponse.builder()
-        .responseCode(200)
-        .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
-        .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
-        .build();
   }
 
   private EcsPerpetualTaskParams getTaskParams(PerpetualTaskExecutionParams params) {
@@ -586,8 +592,10 @@ public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
 
   @Override
   public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
-    EcsPerpetualTaskParams taskParams = getTaskParams(params);
-    cache.invalidate(taskParams.getClusterId());
-    return true;
+    try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
+      EcsPerpetualTaskParams taskParams = getTaskParams(params);
+      cache.invalidate(taskParams.getClusterId());
+      return true;
+    }
   }
 }

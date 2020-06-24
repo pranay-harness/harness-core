@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static org.apache.commons.lang3.StringUtils.contains;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -18,9 +19,11 @@ import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
+import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -64,63 +67,65 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     K8sWatchTaskParams watchTaskParams = AnyUtils.unpack(params.getCustomizedParams(), K8sWatchTaskParams.class);
-    try {
-      Instant now = Instant.now();
-      String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
-      logger.info("Ensured watch exists with id {}.", watchId);
-      K8sClusterConfig k8sClusterConfig =
-          (K8sClusterConfig) KryoUtils.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
-      K8sMetricsClient k8sMetricsClient =
-          kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class);
-      taskWatchIdMap.putIfAbsent(taskId.getId(), watchId);
-      clusterSyncLastPublished.putIfAbsent(taskId.getId(), heartbeatTime);
-      if (clusterSyncLastPublished.get(taskId.getId()).plus(Duration.ofHours(1)).isBefore(now)) {
-        publishClusterSyncEvent(k8sMetricsClient, eventPublisher, watchTaskParams, now);
-        clusterSyncLastPublished.put(taskId.getId(), now);
-      }
-      metricCollectors
-          .computeIfAbsent(taskId.getId(),
-              key -> {
-                ClusterDetails clusterDetails =
-                    ClusterDetails.builder()
-                        .clusterId(watchTaskParams.getClusterId())
-                        .cloudProviderId(watchTaskParams.getCloudProviderId())
-                        .clusterName(watchTaskParams.getClusterName())
-                        .kubeSystemUid(K8sWatchServiceDelegate.getKubeSystemUid(k8sMetricsClient))
-                        .build();
-                return new K8sMetricCollector(eventPublisher, k8sMetricsClient, clusterDetails, heartbeatTime);
-              })
-          .collectAndPublishMetrics(now);
+    try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
+      try {
+        Instant now = Instant.now();
+        String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
+        logger.info("Ensured watch exists with id {}.", watchId);
+        K8sClusterConfig k8sClusterConfig =
+            (K8sClusterConfig) KryoUtils.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
+        K8sMetricsClient k8sMetricsClient =
+            kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class);
+        taskWatchIdMap.putIfAbsent(taskId.getId(), watchId);
+        clusterSyncLastPublished.putIfAbsent(taskId.getId(), heartbeatTime);
+        if (clusterSyncLastPublished.get(taskId.getId()).plus(Duration.ofHours(1)).isBefore(now)) {
+          publishClusterSyncEvent(k8sMetricsClient, eventPublisher, watchTaskParams, now);
+          clusterSyncLastPublished.put(taskId.getId(), now);
+        }
+        metricCollectors
+            .computeIfAbsent(taskId.getId(),
+                key -> {
+                  ClusterDetails clusterDetails =
+                      ClusterDetails.builder()
+                          .clusterId(watchTaskParams.getClusterId())
+                          .cloudProviderId(watchTaskParams.getCloudProviderId())
+                          .clusterName(watchTaskParams.getClusterName())
+                          .kubeSystemUid(K8sWatchServiceDelegate.getKubeSystemUid(k8sMetricsClient))
+                          .build();
+                  return new K8sMetricCollector(eventPublisher, k8sMetricsClient, clusterDetails, heartbeatTime);
+                })
+            .collectAndPublishMetrics(now);
 
-    } catch (K8sClusterException ke) {
-      try {
-        eventPublisher.publishMessage(CeExceptionMessage.newBuilder()
-                                          .setClusterId(watchTaskParams.getClusterId())
-                                          .setMessage((String) ke.getParams().get("reason"))
-                                          .build(),
-            HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
-      } catch (Exception ex) {
-        logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
+      } catch (K8sClusterException ke) {
+        try {
+          eventPublisher.publishMessage(CeExceptionMessage.newBuilder()
+                                            .setClusterId(watchTaskParams.getClusterId())
+                                            .setMessage((String) ke.getParams().get("reason"))
+                                            .build(),
+              HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
+        } catch (Exception ex) {
+          logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
+        }
+      } catch (Exception e) {
+        // suppress metrics server not present error.
+        if (!(e instanceof KubernetesClientException && contains(e.getMessage(), "Message: 404 page not found"))) {
+          logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
+        }
+        try {
+          String message = e.getMessage().substring(0, Math.min(e.getMessage().length(), 280));
+          eventPublisher.publishMessage(
+              CeExceptionMessage.newBuilder().setClusterId(watchTaskParams.getClusterId()).setMessage(message).build(),
+              HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
+        } catch (Exception ex) {
+          logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
+        }
       }
-    } catch (Exception e) {
-      // suppress metrics server not present error.
-      if (!(e instanceof KubernetesClientException && contains(e.getMessage(), "Message: 404 page not found"))) {
-        logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
-      }
-      try {
-        String message = e.getMessage().substring(0, Math.min(e.getMessage().length(), 280));
-        eventPublisher.publishMessage(
-            CeExceptionMessage.newBuilder().setClusterId(watchTaskParams.getClusterId()).setMessage(message).build(),
-            HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(), MESSAGE_PROCESSOR_TYPE);
-      } catch (Exception ex) {
-        logger.error("Failed to publish failure from {} to the Event Server.", taskId, ex);
-      }
+      return PerpetualTaskResponse.builder()
+          .responseCode(200)
+          .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
+          .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
+          .build();
     }
-    return PerpetualTaskResponse.builder()
-        .responseCode(200)
-        .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
-        .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
-        .build();
   }
 
   @VisibleForTesting
@@ -158,18 +163,20 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
 
   @Override
   public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
-    if (taskWatchIdMap.get(taskId.getId()) == null) {
-      return false;
-    }
-    String watchId = taskWatchIdMap.get(taskId.getId());
-    logger.info("Stopping the watch with id {}", watchId);
-    k8sWatchServiceDelegate.delete(watchId);
-    taskWatchIdMap.remove(taskId.getId());
+    try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
+      if (taskWatchIdMap.get(taskId.getId()) == null) {
+        return false;
+      }
+      String watchId = taskWatchIdMap.get(taskId.getId());
+      logger.info("Stopping the watch with id {}", watchId);
+      k8sWatchServiceDelegate.delete(watchId);
+      taskWatchIdMap.remove(taskId.getId());
 
-    metricCollectors.computeIfPresent(taskId.getId(), (id, metricCollector) -> {
-      metricCollector.publishPending(Instant.now());
-      return null;
-    });
-    return true;
+      metricCollectors.computeIfPresent(taskId.getId(), (id, metricCollector) -> {
+        metricCollector.publishPending(Instant.now());
+        return null;
+      });
+      return true;
+    }
   }
 }
