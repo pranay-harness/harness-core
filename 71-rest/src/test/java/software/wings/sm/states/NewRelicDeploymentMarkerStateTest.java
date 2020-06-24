@@ -92,8 +92,10 @@ public class NewRelicDeploymentMarkerStateTest extends APMStateVerificationTestB
 
     doReturn(NewRelicApplication.builder().id(1234).build())
         .when(newRelicService)
-        .resolveApplicationName(settingId, "valid_app");
-    doThrow(new RuntimeException("Invalid app")).when(newRelicService).resolveApplicationName(settingId, "invalid_app");
+        .resolveApplicationName(settingId, "valid_app", appId, workflowExecutionId);
+    doThrow(new RuntimeException("Invalid app"))
+        .when(newRelicService)
+        .resolveApplicationName(settingId, "invalid_app", appId, workflowExecutionId);
     setupCvActivityLogService(newRelicDeploymentMarkerState);
   }
 
@@ -103,11 +105,11 @@ public class NewRelicDeploymentMarkerStateTest extends APMStateVerificationTestB
   public void shouldTestTriggered() {
     doThrow(new WingsException("Can not find application by id"))
         .when(newRelicService)
-        .resolveApplicationId(anyString(), anyString());
+        .resolveApplicationId(anyString(), anyString(), anyString(), anyString());
 
     doThrow(new WingsException("Can not find application by name"))
         .when(newRelicService)
-        .resolveApplicationName(anyString(), anyString());
+        .resolveApplicationName(anyString(), anyString(), anyString(), anyString());
 
     when(executionContext.renderExpression("${workflow.variables.NewRelic_Server}")).thenReturn(settingId);
 
@@ -135,7 +137,7 @@ public class NewRelicDeploymentMarkerStateTest extends APMStateVerificationTestB
 
     doReturn(NewRelicApplication.builder().id(30444).build())
         .when(newRelicService)
-        .resolveApplicationName(anyString(), anyString());
+        .resolveApplicationName(anyString(), anyString(), anyString(), anyString());
     ExecutionResponse executionResponse = spyRelicDeploymentMarkerState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
   }

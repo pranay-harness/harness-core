@@ -251,11 +251,11 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(newRelicState, "newRelicService", mockNewRelicService, true);
     doThrow(new WingsException("Can not find application by id"))
         .when(mockNewRelicService)
-        .resolveApplicationId(anyString(), anyString());
+        .resolveApplicationId(anyString(), anyString(), anyString(), anyString());
 
     doThrow(new WingsException("Can not find application by name"))
         .when(mockNewRelicService)
-        .resolveApplicationName(anyString(), anyString());
+        .resolveApplicationName(anyString(), anyString(), anyString(), anyString());
 
     NewRelicState spyNewRelicState = spy(newRelicState);
     doReturn(false).when(spyNewRelicState).isEligibleForPerMinuteTask(accountId);
@@ -304,13 +304,13 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
 
     doReturn(NewRelicApplication.builder().build())
         .when(mockNewRelicService)
-        .resolveApplicationId(anyString(), anyString());
+        .resolveApplicationId(anyString(), anyString(), anyString(), anyString());
     executionResponse = spyNewRelicState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(RUNNING);
 
     doThrow(new RuntimeException("Can not find application by id"))
         .when(mockNewRelicService)
-        .resolveApplicationId(anyString(), anyString());
+        .resolveApplicationId(anyString(), anyString(), anyString(), anyString());
 
     executionResponse = spyNewRelicState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
@@ -458,8 +458,10 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     String applicationId = "" + 74878374747L;
     NewRelicApplication newRelicApplication = NewRelicApplication.builder().id(Long.valueOf(applicationId)).build();
 
-    when(newRelicService.resolveApplicationId(any(), any())).thenThrow(new UnexpectedException("exception occurred"));
-    when(newRelicService.resolveApplicationName(any(), any())).thenReturn(newRelicApplication);
+    when(newRelicService.resolveApplicationId(anyString(), anyString(), anyString(), anyString()))
+        .thenThrow(new UnexpectedException("exception occurred"));
+    when(newRelicService.resolveApplicationName(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(newRelicApplication);
     doReturn(applicationId).when(spyState).getResolvedFieldValue(any(), any(), any());
     NewRelicDataCollectionInfoV2 dataCollectionInfo =
         (NewRelicDataCollectionInfoV2) spyState.createDataCollectionInfo(executionContext, hosts);
@@ -484,8 +486,10 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     String applicationId = "" + 74878374747L;
 
     String message = "exception occurred";
-    when(newRelicService.resolveApplicationId(any(), any())).thenThrow(new UnexpectedException(message));
-    when(newRelicService.resolveApplicationName(any(), any())).thenThrow(new UnexpectedException(message));
+    when(newRelicService.resolveApplicationId(anyString(), anyString(), anyString(), anyString()))
+        .thenThrow(new UnexpectedException(message));
+    when(newRelicService.resolveApplicationName(anyString(), anyString(), anyString(), anyString()))
+        .thenThrow(new UnexpectedException(message));
     doReturn(applicationId).when(spyState).getResolvedFieldValue(any(), any(), any());
     assertThatThrownBy(() -> spyState.createDataCollectionInfo(executionContext, hosts))
         .isInstanceOf(UnexpectedException.class)

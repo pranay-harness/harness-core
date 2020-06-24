@@ -70,7 +70,8 @@ public class NewRelicDeploymentMarkerState extends AbstractAnalysisState {
         getResolvedFieldValue(context, NewRelicDeploymentMarkerStateKeys.applicationId, applicationId);
 
     if (!isLong(finalNewRelicApplicationId)) {
-      finalNewRelicApplicationId = renderApplicationExpression(finalNewRelicApplicationId, finalServerConfigId);
+      finalNewRelicApplicationId = renderApplicationExpression(
+          finalNewRelicApplicationId, finalServerConfigId, context.getAppId(), context.getWorkflowExecutionId());
     }
     SettingAttribute settingAttribute = getSettingAttribute(finalServerConfigId);
 
@@ -186,9 +187,10 @@ public class NewRelicDeploymentMarkerState extends AbstractAnalysisState {
     return parentTemplateFields;
   }
 
-  private String renderApplicationExpression(String applicationName, String finalServerConfigId) {
+  private String renderApplicationExpression(
+      String applicationName, String finalServerConfigId, String appId, String workflowExecutionId) {
     final NewRelicApplication newRelicApplication =
-        newRelicService.resolveApplicationName(finalServerConfigId, applicationName);
+        newRelicService.resolveApplicationName(finalServerConfigId, applicationName, appId, workflowExecutionId);
     return String.valueOf(newRelicApplication.getId());
   }
 

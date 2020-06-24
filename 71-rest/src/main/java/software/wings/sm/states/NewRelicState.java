@@ -120,11 +120,12 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     SettingAttribute settingAttribute = getSettingAttribute(finalServerConfigId);
 
     try {
-      newRelicService.resolveApplicationId(finalServerConfigId, finalNewRelicApplicationId);
+      newRelicService.resolveApplicationId(
+          finalServerConfigId, finalNewRelicApplicationId, context.getAppId(), context.getWorkflowExecutionId());
     } catch (WingsException e) {
       // see if we can resolve the application by name
-      final NewRelicApplication newRelicApplication =
-          newRelicService.resolveApplicationName(finalServerConfigId, finalNewRelicApplicationId);
+      final NewRelicApplication newRelicApplication = newRelicService.resolveApplicationName(
+          finalServerConfigId, finalNewRelicApplicationId, context.getAppId(), context.getWorkflowExecutionId());
       finalNewRelicApplicationId = String.valueOf(newRelicApplication.getId());
     }
 
@@ -197,11 +198,12 @@ public class NewRelicState extends AbstractMetricAnalysisState {
 
     String finalNewRelicApplicationId = getResolvedFieldValue(context, NewRelicStateKeys.applicationId, applicationId);
     try {
-      newRelicService.resolveApplicationId(finalServerConfigId, finalNewRelicApplicationId);
+      newRelicService.resolveApplicationId(
+          finalServerConfigId, finalNewRelicApplicationId, context.getAppId(), context.getWorkflowExecutionId());
     } catch (Exception e) {
       // see if we can resolve the application by name
-      final NewRelicApplication newRelicApplication =
-          newRelicService.resolveApplicationName(finalServerConfigId, finalNewRelicApplicationId);
+      final NewRelicApplication newRelicApplication = newRelicService.resolveApplicationName(
+          finalServerConfigId, finalNewRelicApplicationId, context.getAppId(), context.getWorkflowExecutionId());
       finalNewRelicApplicationId = String.valueOf(newRelicApplication.getId());
     }
 
