@@ -444,7 +444,7 @@ pipelineConfig:
   envStateTimeout: -1
   approvalStateTimeout: -1
 
-currentJre: oracle8u191
+currentJre: openjdk8u242
 migrateToJre: openjdk8u242
 
 jreConfigs:
