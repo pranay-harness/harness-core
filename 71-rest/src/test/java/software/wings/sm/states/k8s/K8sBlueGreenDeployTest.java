@@ -3,6 +3,7 @@ package software.wings.sm.states.k8s;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType.BLUE_GREEN_DEPLOY;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 import static software.wings.sm.states.k8s.K8sBlueGreenDeploy.K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
@@ -34,6 +36,8 @@ import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
@@ -50,6 +54,7 @@ import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 public class K8sBlueGreenDeployTest extends WingsBaseTest {
   private static final String RELEASE_NAME = "releaseName";
@@ -135,5 +140,33 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
     K8sStateExecutionData executionData = (K8sStateExecutionData) executionResponse.getStateExecutionData();
 
     assertThat(executionData.getHelmChartInfo()).isEqualTo(helmChartInfo);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testCommandUnitList() {
+    List<CommandUnit> blueGreenCommandUnits = k8sBlueGreenDeploy.commandUnitList(true);
+    assertThat(blueGreenCommandUnits).isNotEmpty();
+    assertThat(blueGreenCommandUnits.get(0).getName()).isEqualTo(K8sDummyCommandUnit.FetchFiles);
+    assertThat(blueGreenCommandUnits.get(1).getName()).isEqualTo(K8sDummyCommandUnit.Init);
+    assertThat(blueGreenCommandUnits.get(blueGreenCommandUnits.size() - 1).getName())
+        .isEqualTo(K8sDummyCommandUnit.WrapUp);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testCommandName() {
+    String commandName = k8sBlueGreenDeploy.commandName();
+    assertThat(commandName).isEqualTo(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testStateType() {
+    String stateType = k8sBlueGreenDeploy.stateType();
+    assertThat(stateType).isEqualTo(K8S_BLUE_GREEN_DEPLOY.name());
   }
 }
