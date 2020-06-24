@@ -31,13 +31,13 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class K8sBatchConfiguration {
-  private static final int BATCH_SIZE = 500;
-  private static final int SKIP_LIMIT = 500;
+  private static final int SKIP_LIMIT = 2000;
   private static final int RETRY_LIMIT = 1;
 
   @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
   @Autowired @Qualifier("instanceInfoWriter") private ItemWriter instanceInfoWriter;
   @Autowired @Qualifier("instanceEventWriter") private ItemWriter instanceEventWriter;
+  @Autowired private BatchMainConfig batchMainConfig;
   @Autowired private StepBuilderFactory stepBuilderFactory;
   @Autowired private SkipListener ecsStepSkipListener;
 
@@ -45,14 +45,16 @@ public class K8sBatchConfiguration {
   @StepScope
   public ItemReader<PublishedMessage> k8sPodInfoMessageReader(@Value("#{jobParameters[accountId]}") String accountId,
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_POD_INFO, startDate, endDate);
+    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_POD_INFO, startDate, endDate,
+        batchMainConfig.getBatchQueryConfig().getQueryBatchSize());
   }
 
   @Bean
   @StepScope
   public ItemReader<PublishedMessage> k8sPodEventMessageReader(@Value("#{jobParameters[accountId]}") String accountId,
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_POD_EVENT, startDate, endDate);
+    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_POD_EVENT, startDate, endDate,
+        batchMainConfig.getBatchQueryConfig().getQueryBatchSize());
   }
 
   @Bean
@@ -60,21 +62,24 @@ public class K8sBatchConfiguration {
   public ItemReader<PublishedMessage> k8sClusterSyncEventMessageReader(
       @Value("#{jobParameters[accountId]}") String accountId, @Value("#{jobParameters[startDate]}") Long startDate,
       @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_SYNC_EVENT, startDate, endDate);
+    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_SYNC_EVENT, startDate, endDate,
+        batchMainConfig.getBatchQueryConfig().getQueryBatchSize());
   }
 
   @Bean
   @StepScope
   public ItemReader<PublishedMessage> k8sNodeInfoMessageReader(@Value("#{jobParameters[accountId]}") String accountId,
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_NODE_INFO, startDate, endDate);
+    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_NODE_INFO, startDate, endDate,
+        batchMainConfig.getBatchQueryConfig().getQueryBatchSize());
   }
 
   @Bean
   @StepScope
   public ItemReader<PublishedMessage> k8sNodeEventMessageReader(@Value("#{jobParameters[accountId]}") String accountId,
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_NODE_EVENT, startDate, endDate);
+    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_NODE_EVENT, startDate, endDate,
+        batchMainConfig.getBatchQueryConfig().getQueryBatchSize());
   }
 
   @Bean
@@ -120,7 +125,7 @@ public class K8sBatchConfiguration {
   @Bean
   public Step k8sNodeInfoStep() {
     return stepBuilderFactory.get("k8sNodeInfoStep")
-        .<PublishedMessage, InstanceInfo>chunk(BATCH_SIZE)
+        .<PublishedMessage, InstanceInfo>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
         .reader(k8sNodeInfoMessageReader(null, null, null))
         .processor(k8sNodeInfoProcessor())
         .writer(instanceInfoWriter)
@@ -136,7 +141,7 @@ public class K8sBatchConfiguration {
   @Bean
   public Step k8sNodeEventStep() {
     return stepBuilderFactory.get("k8sNodeEventStep")
-        .<PublishedMessage, InstanceEvent>chunk(BATCH_SIZE)
+        .<PublishedMessage, InstanceEvent>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
         .reader(k8sNodeEventMessageReader(null, null, null))
         .processor(k8sNodeEventProcessor())
         .writer(instanceEventWriter)
@@ -152,7 +157,7 @@ public class K8sBatchConfiguration {
   @Bean
   public Step k8sPodInfoStep() {
     return stepBuilderFactory.get("k8sPodInfoStep")
-        .<PublishedMessage, InstanceInfo>chunk(BATCH_SIZE)
+        .<PublishedMessage, InstanceInfo>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
         .reader(k8sPodInfoMessageReader(null, null, null))
         .processor(k8sPodInfoProcessor())
         .writer(instanceInfoWriter)
@@ -168,7 +173,7 @@ public class K8sBatchConfiguration {
   @Bean
   public Step k8sPodEventStep() {
     return stepBuilderFactory.get("k8sPodEventStep")
-        .<PublishedMessage, InstanceEvent>chunk(BATCH_SIZE)
+        .<PublishedMessage, InstanceEvent>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
         .reader(k8sPodEventMessageReader(null, null, null))
         .processor(k8sPodEventProcessor())
         .writer(instanceEventWriter)
@@ -184,7 +189,7 @@ public class K8sBatchConfiguration {
   @Bean
   public Step k8sClusterSyncEventStep() {
     return stepBuilderFactory.get("k8sClusterSyncEventStep")
-        .<PublishedMessage, PublishedMessage>chunk(BATCH_SIZE)
+        .<PublishedMessage, PublishedMessage>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
         .reader(k8sClusterSyncEventMessageReader(null, null, null))
         .writer(k8sSyncEventWriter())
         .faultTolerant()

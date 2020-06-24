@@ -21,6 +21,7 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.wings.beans.instance.HarnessServiceInfo;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +38,14 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
   public InstanceInfo process(PublishedMessage publishedMessage) {
     String accountId = publishedMessage.getAccountId();
     PodInfo podInfo = (PodInfo) publishedMessage.getMessage();
+    String podUid = podInfo.getPodUid();
+    String clusterId = podInfo.getClusterId();
+
+    InstanceData existingInstanceData = instanceDataService.fetchInstanceData(accountId, clusterId, podUid);
+    if (null != existingInstanceData) {
+      return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
+    }
+
     String workloadName = podInfo.getTopLevelOwner().getName();
     String workloadType = podInfo.getTopLevelOwner().getKind();
 
@@ -56,7 +65,7 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     metaData.put(InstanceMetaDataConstants.WORKLOAD_TYPE, workloadType.equals("") ? POD : workloadType);
 
     InstanceData instanceData = instanceDataService.fetchInstanceDataWithName(
-        accountId, podInfo.getClusterId(), podInfo.getNodeName(), publishedMessage.getOccurredAt());
+        accountId, clusterId, podInfo.getNodeName(), publishedMessage.getOccurredAt());
     if (null != instanceData) {
       Map<String, String> nodeMetaData = instanceData.getMetaData();
       metaData.put(InstanceMetaDataConstants.REGION, nodeMetaData.get(InstanceMetaDataConstants.REGION));
@@ -92,7 +101,7 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     try {
       workloadRepository.savePodWorkload(accountId, podInfo);
     } catch (Exception ex) {
-      logger.error("Error while saving pod workload {} {}", podInfo.getCloudProviderId(), podInfo.getPodUid());
+      logger.error("Error while saving pod workload {} {}", podInfo.getCloudProviderId(), podUid);
     }
 
     Resource resource = K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap());
@@ -104,8 +113,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     return InstanceInfo.builder()
         .accountId(accountId)
         .settingId(podInfo.getCloudProviderId())
-        .instanceId(podInfo.getPodUid())
-        .clusterId(podInfo.getClusterId())
+        .instanceId(podUid)
+        .clusterId(clusterId)
         .clusterName(podInfo.getClusterName())
         .instanceName(podInfo.getPodName())
         .instanceType(InstanceType.K8S_POD)

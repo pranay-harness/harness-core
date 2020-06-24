@@ -22,8 +22,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Slf4j
 public class BillingBatchConfiguration {
-  private static final int BATCH_SIZE = 500;
-
   @Bean
   public ItemWriter<InstanceData> instanceBillingDataWriter() {
     return new InstanceBillingDataWriter();
@@ -66,9 +64,10 @@ public class BillingBatchConfiguration {
 
   @Bean
   public Step instanceBillingStep(StepBuilderFactory stepBuilderFactory,
-      ItemReader<InstanceData> instanceInfoMessageReader, ItemWriter<InstanceData> instanceBillingDataWriter) {
+      ItemReader<InstanceData> instanceInfoMessageReader, ItemWriter<InstanceData> instanceBillingDataWriter,
+      BatchMainConfig batchMainConfig) {
     return stepBuilderFactory.get("instanceBillingStep")
-        .<InstanceData, InstanceData>chunk(BATCH_SIZE)
+        .<InstanceData, InstanceData>chunk(batchMainConfig.getBatchQueryConfig().getQueryBatchSize())
         .reader(instanceInfoMessageReader)
         .writer(instanceBillingDataWriter)
         .build();

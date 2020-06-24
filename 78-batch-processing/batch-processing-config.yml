@@ -21,6 +21,9 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
 
+batchQueryConfig:
+  queryBatchSize: 2000
+
 awsS3SyncConfig:
   awsS3BucketName: awsS3BucketNamePlaceHolder
   awsAccessKey: awsS3SyncAccessKeyPlaceHolder

@@ -2,6 +2,7 @@ package io.harness.batch.processing.billing.reader;
 
 import com.google.inject.Singleton;
 
+import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +19,8 @@ import java.util.Date;
 @Slf4j
 @Singleton
 public class InstanceDataMongoEventReader implements InstanceDataEventReader {
-  private static final int READER_BATCH_SIZE = 500;
   @Autowired private MongoTemplate mongoTemplate;
+  @Autowired private BatchMainConfig batchMainConfig;
 
   @Override
   public ItemReader<InstanceData> getEventReader(String accountId, Long startDate, Long endDate) {
@@ -46,7 +47,7 @@ public class InstanceDataMongoEventReader implements InstanceDataEventReader {
 
     query.with(Sort.by(InstanceDataKeys.usageStartTime));
     reader.setQuery(query);
-    reader.setPageSize(READER_BATCH_SIZE);
+    reader.setPageSize(batchMainConfig.getBatchQueryConfig().getQueryBatchSize());
     return reader;
   }
 }

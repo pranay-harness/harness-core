@@ -23,6 +23,8 @@ public interface InstanceDataDao {
 
   InstanceData fetchInstanceData(String accountId, String instanceId);
 
+  InstanceData fetchInstanceData(String accountId, String clusterId, String instanceId);
+
   InstanceData fetchInstanceDataWithName(String accountId, String settingId, String instanceName, Long occurredAt);
 
   List<InstanceData> fetchClusterActiveInstanceData(

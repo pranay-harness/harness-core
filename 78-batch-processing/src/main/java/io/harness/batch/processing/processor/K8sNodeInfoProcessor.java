@@ -8,10 +8,12 @@ import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
+import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.processor.util.K8sResourceUtils;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
+import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +31,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, InstanceInfo> {
+  @Autowired private InstanceDataService instanceDataService;
   @Autowired private CloudProviderService cloudProviderService;
   @Autowired private InstanceResourceService instanceResourceService;
 
@@ -37,6 +41,14 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
   @Override
   public InstanceInfo process(PublishedMessage publishedMessage) {
     NodeInfo nodeInfo = (NodeInfo) publishedMessage.getMessage();
+    String accountId = publishedMessage.getAccountId();
+    String clusterId = nodeInfo.getClusterId();
+    String nodeUid = nodeInfo.getNodeUid();
+
+    InstanceData existingInstanceData = instanceDataService.fetchInstanceData(accountId, clusterId, nodeUid);
+    if (null != existingInstanceData) {
+      return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
+    }
 
     Map<String, String> labelsMap = nodeInfo.getLabelsMap();
     Map<String, String> metaData = new HashMap<>();
@@ -52,7 +64,7 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     metaData.put(InstanceMetaDataConstants.NODE_NAME, nodeInfo.getNodeName());
     metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, labelsMap.get(K8sCCMConstants.INSTANCE_FAMILY));
     metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, labelsMap.get(K8sCCMConstants.OPERATING_SYSTEM));
-    metaData.put(InstanceMetaDataConstants.NODE_UID, nodeInfo.getNodeUid());
+    metaData.put(InstanceMetaDataConstants.NODE_UID, nodeUid);
     metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, getInstanceCategory(k8SCloudProvider, labelsMap).name());
     if (null != labelsMap.get(K8sCCMConstants.COMPUTE_TYPE)) {
       metaData.put(InstanceMetaDataConstants.COMPUTE_TYPE, labelsMap.get(K8sCCMConstants.COMPUTE_TYPE));
@@ -71,10 +83,10 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     }
 
     return InstanceInfo.builder()
-        .accountId(publishedMessage.getAccountId())
+        .accountId(accountId)
         .settingId(nodeInfo.getCloudProviderId())
-        .instanceId(nodeInfo.getNodeUid())
-        .clusterId(nodeInfo.getClusterId())
+        .instanceId(nodeUid)
+        .clusterId(clusterId)
         .clusterName(nodeInfo.getClusterName())
         .instanceName(nodeInfo.getNodeName())
         .instanceType(InstanceType.K8S_NODE)

@@ -19,8 +19,10 @@ import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
+import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
+import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
@@ -41,6 +43,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,6 +53,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @InjectMocks private K8sNodeInfoProcessor k8sNodeInfoProcessor;
   @Mock private CloudProviderService cloudProviderService;
   @Mock private InstanceResourceService instanceResourceService;
+  @Mock private InstanceDataService instanceDataService;
 
   private static final String NODE_UID = "node_uid";
   private static final long CPU_AMOUNT = 1_000_000_000L; // 1 vcpu in nanocores
@@ -94,6 +98,17 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     assertThat(instanceEvent).isNotNull();
   }
 
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldCreateEmptyInstanceNodeInfo() throws Exception {
+    when(instanceDataService.fetchInstanceData(ACCOUNT_ID, CLUSTER_ID, NODE_UID))
+        .thenReturn(InstanceData.builder().build());
+    PublishedMessage k8sNodeEventMessage = getK8sNodeInfoMessage(NODE_UID, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID,
+        CLUSTER_NAME, CLUSTER_ID, Collections.emptyMap(), Collections.emptyMap(), START_TIMESTAMP);
+    InstanceInfo instanceInfo = k8sNodeInfoProcessor.process(k8sNodeEventMessage);
+    assertThat(instanceInfo.getInstanceId()).isNull();
+  }
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)

@@ -71,6 +71,15 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
+  public void shouldReturnInstanceData() {
+    instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
+    InstanceData instanceData = instanceDataDao.fetchInstanceData(ACCOUNT_ID, CLUSTER_ID, RUNNING_INSTANCE_ID);
+    assertThat(instanceData).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
   public void shouldReturnActiveInstance() {
     instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
     InstanceData instanceData =
