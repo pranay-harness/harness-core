@@ -1,22 +1,27 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static software.wings.utils.HelmTestConstants.INVALID_VALUES_YAML;
 import static software.wings.utils.HelmTestConstants.VALID_VALUES_YAML;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HelmExecutionSummary;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
@@ -26,7 +31,10 @@ import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 
 public class HelmHelperTest extends WingsBaseTest {
+  @Mock private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+
   @Inject private HelmHelper helmHelper;
+
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
@@ -181,5 +189,19 @@ public class HelmHelperTest extends WingsBaseTest {
     helmHelper.validateHelmValueYamlFile(VALID_VALUES_YAML);
     Assertions.assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> helmHelper.validateHelmValueYamlFile(INVALID_VALUES_YAML));
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testReplaceManifestPlaceholdersWithLocalConfig() {
+    String manifestContent = "testKey nonSecretValue";
+    String manifestMaskSecret = "testValue nonSecretValue";
+    ManifestFile manifestFile = ManifestFile.builder().fileContent(manifestContent).build();
+    when(delegateLocalConfigService.replacePlaceholdersWithLocalConfig(manifestContent)).thenReturn(manifestMaskSecret);
+
+    helmHelper.replaceManifestPlaceholdersWithLocalConfig(manifestFile);
+
+    assertThat(manifestFile.getFileContent()).isEqualTo(manifestMaskSecret);
   }
 }

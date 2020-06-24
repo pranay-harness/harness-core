@@ -10,13 +10,16 @@ import static software.wings.helpers.ext.helm.HelmConstants.HELM_DOCKER_IMAGE_NA
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_DOCKER_IMAGE_TAG_PLACEHOLDER;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import org.apache.commons.io.LineIterator;
 import software.wings.beans.HelmExecutionSummary;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
@@ -34,6 +37,8 @@ import java.util.Set;
 
 @Singleton
 public class HelmHelper {
+  @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+
   public void validateHelmValueYamlFile(String helmValueYamlFile) {
     if (isEmpty(helmValueYamlFile)) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER).addParam("args", "Helm value yaml file is empty");
@@ -170,5 +175,10 @@ public class HelmHelper {
     } else {
       return null;
     }
+  }
+
+  public void replaceManifestPlaceholdersWithLocalConfig(ManifestFile manifestFile) {
+    manifestFile.setFileContent(
+        delegateLocalConfigService.replacePlaceholdersWithLocalConfig(manifestFile.getFileContent()));
   }
 }

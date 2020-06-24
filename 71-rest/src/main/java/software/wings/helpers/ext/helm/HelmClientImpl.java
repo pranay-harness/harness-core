@@ -249,6 +249,26 @@ public class HelmClientImpl implements HelmClient {
     return executeHelmCLICommand(templateCommand);
   }
 
+  @Override
+  public HelmCliResponse renderChart(HelmCommandRequest commandRequest, String chartLocation, String namespace,
+      List<String> valuesOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException {
+    String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
+    String keyValueOverrides = constructValueOverrideFile(valuesOverrides);
+
+    String command =
+        getHelmCommandTemplateWithHelmPath(HelmCliCommandType.RENDER_CHART, commandRequest.getHelmVersion())
+            .replace("${CHART_LOCATION}", chartLocation)
+            .replace("${RELEASE_NAME}", commandRequest.getReleaseName())
+            .replace("${NAMESPACE}", namespace)
+            .replace("${OVERRIDE_VALUES}", keyValueOverrides);
+
+    command = applyCommandFlags(command, commandRequest);
+    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyKubeConfigToCommand(command, kubeConfigLocation);
+
+    return executeHelmCLICommand(command);
+  }
+
   /**
    * The type Helm cli response.
    */

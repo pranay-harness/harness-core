@@ -9,6 +9,8 @@ import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -57,6 +59,18 @@ public interface HelmDeployService {
 
   HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest)
       throws InterruptedException, IOException, TimeoutException;
+
+  /**
+   * Render chart templates and return the output.
+   *
+   * @param helmCommandRequest the helm command request
+   * @param namespace the namespace
+   * @param chartLocation the chart location
+   * @param valueOverrides the value overrides
+   * @return the helm release history command response
+   */
+  HelmCommandResponse renderHelmChart(HelmCommandRequest helmCommandRequest, String namespace, String chartLocation,
+      List<String> valueOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException;
 
   HelmCommandResponse ensureHelm3Installed(HelmCommandRequest commandRequest);
 
