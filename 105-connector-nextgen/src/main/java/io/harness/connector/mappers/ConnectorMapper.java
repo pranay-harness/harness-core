@@ -2,9 +2,11 @@ package io.harness.connector.mappers;
 
 import com.google.inject.Inject;
 
+import io.harness.connector.FullyQualitifedIdentifierHelper;
 import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterConfigDTO;
 import io.harness.connector.apis.dtos.connector.ConnectorConfigDTO;
 import io.harness.connector.apis.dtos.connector.ConnectorDTO;
+import io.harness.connector.apis.dtos.connector.ConnectorRequestDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
@@ -13,19 +15,27 @@ import io.harness.exception.UnsupportedOperationException;
 public class ConnectorMapper {
   @Inject KubernetesDTOToEntity kubernetesDTOToEntity;
   @Inject KubernetesEntityToDTO kubernetesEntityToDTO;
-  public Connector toConnector(ConnectorDTO connectorDTO) {
+  public Connector toConnector(ConnectorRequestDTO connectorRequestDTO) {
     Connector connector = null;
-    switch (connectorDTO.getConnectorType()) {
+    switch (connectorRequestDTO.getConnectorType()) {
       case KUBERNETES_CLUSTER:
         connector = kubernetesDTOToEntity.toKubernetesClusterConfig(
-            (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig());
+            (KubernetesClusterConfigDTO) connectorRequestDTO.getConnectorConfig());
         break;
       default:
         throw new UnsupportedOperationException(
-            String.format("The connectorType [%s] is invalid", connectorDTO.getConnectorType()));
+            String.format("The connectorType [%s] is invalid", connectorRequestDTO.getConnectorType()));
     }
-    connector.setIdentifier(connectorDTO.getIdentifier());
-    connector.setName(connectorDTO.getName());
+    connector.setIdentifier(connectorRequestDTO.getIdentifier());
+    connector.setName(connectorRequestDTO.getName());
+    connector.setAccountId(connectorRequestDTO.getAccountIdentifier());
+    connector.setOrgId(connectorRequestDTO.getOrgIdentifier());
+    connector.setProjectId(connectorRequestDTO.getProjectIdentifer());
+    connector.setFullyQualifiedIdentifier(FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(
+        connectorRequestDTO.getAccountIdentifier(), connectorRequestDTO.getOrgIdentifier(),
+        connectorRequestDTO.getProjectIdentifer(), connectorRequestDTO.getIdentifier()));
+    connector.setTags(connectorRequestDTO.getTags());
+    connector.setDescription(connectorRequestDTO.getDescription());
     return connector;
   }
 
@@ -34,8 +44,15 @@ public class ConnectorMapper {
     return ConnectorDTO.builder()
         .name(connector.getName())
         .identifier(connector.getIdentifier())
+        .description(connector.getDescription())
+        .accountIdentifier(connector.getAccountId())
+        .orgIdentifier(connector.getOrgId())
+        .projectIdentifer(connector.getProjectId())
         .connectorConfig(connectorConfigDTO)
         .connectorType(connector.getType())
+        .tags(connector.getTags())
+        .createdAt(connector.getCreatedAt())
+        .lastModifiedAt(connector.getLastModifiedAt())
         .build();
   }
 

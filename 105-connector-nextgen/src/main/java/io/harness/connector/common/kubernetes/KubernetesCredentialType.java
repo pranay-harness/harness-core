@@ -1,5 +1,7 @@
 package io.harness.connector.common.kubernetes;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum KubernetesCredentialType {
   INHERIT_FROM_DELEGATE("InheritFromDelegate"),
   MANUAL_CREDENTIALS("ManualConfig");
@@ -17,5 +19,10 @@ public enum KubernetesCredentialType {
   @Override
   public String toString() {
     return displayName;
+  }
+
+  @JsonValue
+  final String displayName() {
+    return this.displayName;
   }
 }

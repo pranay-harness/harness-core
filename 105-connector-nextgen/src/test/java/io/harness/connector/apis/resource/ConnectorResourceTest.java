@@ -12,6 +12,7 @@ import io.harness.connector.ConnectorsBaseTest;
 import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterConfigDTO;
 import io.harness.connector.apis.dtos.K8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.connector.apis.dtos.connector.ConnectorDTO;
+import io.harness.connector.apis.dtos.connector.ConnectorRequestDTO;
 import io.harness.connector.common.ConnectorType;
 import io.harness.connector.services.ConnectorService;
 import io.harness.rule.Owner;
@@ -29,7 +30,7 @@ public class ConnectorResourceTest extends ConnectorsBaseTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void create() {
-    ConnectorDTO randomConnectorDTO =
+    ConnectorDTO connectorDTO =
         ConnectorDTO.builder()
             .name("connector")
             .identifier("identifier")
@@ -39,8 +40,18 @@ public class ConnectorResourceTest extends ConnectorsBaseTest {
                                  .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegateName").build())
                                  .build())
             .build();
-    ConnectorDTO connectorDTO = connectorResource.create(randomConnectorDTO);
-    when(connectorService.create(any())).thenReturn(randomConnectorDTO);
-    assertThat(connectorDTO).isNotNull();
+    ConnectorRequestDTO randomConnectorRequestDTO =
+        ConnectorRequestDTO.builder()
+            .name("connector")
+            .identifier("identifier")
+            .connectorType(ConnectorType.KUBERNETES_CLUSTER)
+            .connectorConfig(KubernetesClusterConfigDTO.builder()
+                                 .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
+                                 .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegateName").build())
+                                 .build())
+            .build();
+    ConnectorDTO connectorRequestDTO = connectorResource.create(randomConnectorRequestDTO);
+    when(connectorService.create(any())).thenReturn(connectorDTO);
+    assertThat(connectorRequestDTO).isNotNull();
   }
 }

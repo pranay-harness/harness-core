@@ -13,12 +13,14 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorsBaseTest;
 import io.harness.connector.apis.dtos.K8Connector.ClientKeyCertDTO;
+import io.harness.connector.apis.dtos.K8Connector.KubernetesAuthDTO;
 import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterConfigDTO;
 import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterDetailsDTO;
 import io.harness.connector.apis.dtos.K8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.connector.apis.dtos.K8Connector.OpenIdConnectDTO;
 import io.harness.connector.apis.dtos.K8Connector.ServiceAccountDTO;
 import io.harness.connector.apis.dtos.K8Connector.UserNamePasswordDTO;
+import io.harness.connector.common.kubernetes.KubernetesAuthType;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.connectorTypes.kubernetesCluster.ClientKeyCertK8;
 import io.harness.connector.entities.connectorTypes.kubernetesCluster.KubernetesClusterConfig;
@@ -62,15 +64,15 @@ public class KubernetesDTOToEntityTest extends ConnectorsBaseTest {
     String password = "password";
     String cacert = "cacert";
     String masterUrl = "https://abc.com";
+    KubernetesAuthDTO kubernetesAuthDTO =
+        KubernetesAuthDTO.builder()
+            .authType(KubernetesAuthType.USER_PASSWORD)
+            .credentials(UserNamePasswordDTO.builder().username(userName).password(password).cacert(cacert).build())
+            .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
-            .config(
-                KubernetesClusterDetailsDTO.builder()
-                    .masterUrl(masterUrl)
-                    .authType(USER_PASSWORD)
-                    .auth(UserNamePasswordDTO.builder().username(userName).password(password).cacert(cacert).build())
-                    .build())
+            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
     Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithDelegateCreds);
     assertThat(connector).isNotNull();
@@ -94,19 +96,19 @@ public class KubernetesDTOToEntityTest extends ConnectorsBaseTest {
     String clientKeyPhrase = "clientKeyPhrase";
     String clientKeyAlgo = "clientKeyAlgo";
     String masterUrl = "https://abc.com";
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(CLIENT_KEY_CERT)
+                                              .credentials(ClientKeyCertDTO.builder()
+                                                               .clientKey(clientKey)
+                                                               .clientCert(clientCert)
+                                                               .clientKeyPassphrase(clientKeyPhrase)
+                                                               .clientKeyAlgo(clientKeyAlgo)
+                                                               .build())
+                                              .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
-            .config(KubernetesClusterDetailsDTO.builder()
-                        .masterUrl(masterUrl)
-                        .authType(CLIENT_KEY_CERT)
-                        .auth(ClientKeyCertDTO.builder()
-                                  .clientKey(clientKey)
-                                  .clientCert(clientCert)
-                                  .clientKeyPassphrase(clientKeyPhrase)
-                                  .clientKeyAlgo(clientKeyAlgo)
-                                  .build())
-                        .build())
+            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
     Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithDelegateCreds);
     assertThat(connector).isNotNull();
@@ -133,21 +135,22 @@ public class KubernetesDTOToEntityTest extends ConnectorsBaseTest {
     String oidcSecret = "oidcSecret";
     String oidcUsername = "oidcUsername";
     String masterUrl = "https://abc.com";
-    KubernetesClusterConfigDTO connectorDTOWithDelegateCreds = KubernetesClusterConfigDTO.builder()
-                                                                   .kubernetesCredentialType(MANUAL_CREDENTIALS)
-                                                                   .config(KubernetesClusterDetailsDTO.builder()
-                                                                               .masterUrl(masterUrl)
-                                                                               .authType(OPEN_ID_CONNECT)
-                                                                               .auth(OpenIdConnectDTO.builder()
-                                                                                         .oidcClientId(oidClientId)
-                                                                                         .oidcIssuerUrl(oidcIssuerUrl)
-                                                                                         .oidcPassword(oidcPassword)
-                                                                                         .oidcScopes(oidcScopes)
-                                                                                         .oidcSecret(oidcSecret)
-                                                                                         .oidcUsername(oidcUsername)
-                                                                                         .build())
-                                                                               .build())
-                                                                   .build();
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(OPEN_ID_CONNECT)
+                                              .credentials(OpenIdConnectDTO.builder()
+                                                               .oidcClientId(oidClientId)
+                                                               .oidcIssuerUrl(oidcIssuerUrl)
+                                                               .oidcPassword(oidcPassword)
+                                                               .oidcScopes(oidcScopes)
+                                                               .oidcSecret(oidcSecret)
+                                                               .oidcUsername(oidcUsername)
+                                                               .build())
+                                              .build();
+    KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
+        KubernetesClusterConfigDTO.builder()
+            .kubernetesCredentialType(MANUAL_CREDENTIALS)
+            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+            .build();
     Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithDelegateCreds);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
@@ -170,14 +173,15 @@ public class KubernetesDTOToEntityTest extends ConnectorsBaseTest {
   public void testToKubernetesClusterConfigForServiceAccount() {
     String serviceAccountKey = "serviceAccountKey";
     String masterUrl = "https://abc.com";
+    KubernetesAuthDTO kubernetesAuthDTO =
+        KubernetesAuthDTO.builder()
+            .authType(SERVICE_ACCOUNT)
+            .credentials(ServiceAccountDTO.builder().serviceAccountToken(serviceAccountKey).build())
+            .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
-            .config(KubernetesClusterDetailsDTO.builder()
-                        .masterUrl(masterUrl)
-                        .authType(SERVICE_ACCOUNT)
-                        .auth(ServiceAccountDTO.builder().serviceAccountToken(serviceAccountKey).build())
-                        .build())
+            .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
     Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithDelegateCreds);
     assertThat(connector).isNotNull();

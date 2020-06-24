@@ -6,7 +6,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 @Value
 @Builder
-public class OpenIdConnectDTO extends KubernetesAuthDTO {
+public class OpenIdConnectDTO extends KubernetesAuthCredentialDTO {
   @JsonProperty("oidc-issuer-url") String oidcIssuerUrl;
   @JsonProperty("oidc-client-id") String oidcClientId;
   @JsonProperty("oidc-username") String oidcUsername;

@@ -17,7 +17,7 @@ import java.util.List;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ConnectorDTO {
+public class ConnectorRequestDTO {
   String name;
   String identifier;
   String description;
@@ -26,14 +26,12 @@ public class ConnectorDTO {
   String projectIdentifer;
   List<String> tags;
 
-  @JsonProperty("type1") ConnectorType connectorType1;
   @JsonProperty("type") ConnectorType connectorType;
+  @JsonProperty("type1") ConnectorType connectorType1;
 
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type1", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @JsonSubTypes({ @JsonSubTypes.Type(value = KubernetesClusterConfigDTO.class, name = "K8sCluster") })
   ConnectorConfigDTO connectorConfig;
-  Long createdAt;
-  Long lastModifiedAt;
 }
