@@ -40,10 +40,6 @@ public class ExceptionLogger {
     return calculateResponseMessage(responseMessages);
   }
 
-  protected static String calculateDebugMessage(WingsException exception) {
-    return "Exception occurred: " + exception.getMessage();
-  }
-
   public static List<ResponseMessage> getResponseMessageList(WingsException wingsException, ReportTarget reportTarget) {
     List<ResponseMessage> list = new ArrayList<>();
     for (Throwable ex = wingsException; ex != null; ex = ex.getCause()) {
@@ -91,10 +87,9 @@ public class ExceptionLogger {
           logger.error(calculateErrorMessage(exception, responseMessages), exception);
         }
       } else {
-        responseMessages = getResponseMessageList(exception, UNIVERSAL);
         if (logger.isInfoEnabled()) {
+          responseMessages = getResponseMessageList(exception, UNIVERSAL);
           logger.info(calculateInfoMessage(responseMessages));
-          logger.info(calculateDebugMessage(exception), exception);
         }
       }
     } catch (Exception e) {

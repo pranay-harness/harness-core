@@ -7,6 +7,7 @@ import static io.harness.filesystem.FileIo.deleteFileIfExists;
 import com.google.inject.Singleton;
 
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.ShellExecutionException;
 import io.harness.exception.WingsException;
 import io.harness.shell.ShellExecutionResponse.ShellExecutionResponseBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +105,7 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
         shellExecutionResponseBuilder.shellExecutionData(scriptData);
         logger.info("The script execution succeeded");
       } else {
-        throw new WingsException("Error occurred during script execution, Reason: " + message[0]);
+        throw new ShellExecutionException("Error occurred during script execution, Reason: " + message[0]);
       }
     } catch (IOException | InterruptedException | TimeoutException e) {
       logger.error("Exception in Script execution ", e);
