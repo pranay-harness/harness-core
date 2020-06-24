@@ -27,6 +27,7 @@ import javax.ws.rs.core.MediaType;
 
 public class CECommunicationsResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
+  private String accountId2 = "ACCOUNT_ID2";
   private String uuid = "UUID";
   private boolean enable = true;
   private String email = "user@harness.io";
@@ -88,5 +89,29 @@ public class CECommunicationsResourceTest extends CategoryTest {
         .request()
         .delete(new GenericType<RestResponse<CECommunications>>() {});
     verify(communicationsService).delete(accountId, email, type);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testAddEmailInternal() {
+    RESOURCES.client()
+        .target(format(
+            "/ceCommunications/%s/internal?type=%s&email=%s&targetAccount=%s", accountId, type, email, accountId2))
+        .request()
+        .post(entity(communications, MediaType.APPLICATION_JSON), new GenericType<RestResponse<CECommunications>>() {});
+    verify(communicationsService).update(accountId2, email, type, true);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testRemoveEmailInternal() {
+    RESOURCES.client()
+        .target(format(
+            "/ceCommunications/%s/internal?type=%s&email=%s&targetAccount=%s", accountId, type, email, accountId2))
+        .request()
+        .delete(new GenericType<RestResponse<CECommunications>>() {});
+    verify(communicationsService).delete(accountId2, email, type);
   }
 }

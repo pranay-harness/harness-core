@@ -39,7 +39,7 @@ smtp:
   type: SMTP
   host: host_placeholder
   port: 465
-  fromAddress: noreply@harness.io
+  fromAddress: ce-noreply@harness.io
   useSSL: true
   username: smtp_username_placeholder
   password: "smtp_password_placeholder"
