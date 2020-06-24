@@ -6,15 +6,21 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotations.dev.OwnedBy;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-@OwnedBy(CDC)
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(NON_NULL)
 @Data
+@Builder
+@OwnedBy(CDC)
+@JsonInclude(NON_NULL)
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RepoSource {
   @Nullable private String projectId;
   @Nullable private String repoName;

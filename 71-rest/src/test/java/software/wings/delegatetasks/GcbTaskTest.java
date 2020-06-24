@@ -135,6 +135,7 @@ public class GcbTaskTest extends CategoryTest {
     triggerConfig.setSourceId(BRANCH_NAME);
     gcbOptions.setTriggerSpec(triggerConfig);
     gcbOptions.setProjectId(PROJECT_ID);
+    gcbOptions.setSpecSource(GcbOptions.GcbSpecSource.TRIGGER);
     repoSource.setBranchName(BRANCH_NAME);
     GcbTaskParams taskParams = GcbTaskParams.builder()
                                    .type(START)
