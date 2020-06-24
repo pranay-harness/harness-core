@@ -807,6 +807,7 @@ import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesSteadyStateCheckResponse;
 import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
+import software.wings.sm.states.ParameterEntry;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.ShellScriptState;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
@@ -1733,5 +1734,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AccountEvent.class, 7445);
     kryo.register(AccountEventType.class, 7446);
     kryo.register(TechStack.class, 7447);
+    kryo.register(ParameterEntry.class, 7448);
   }
 }

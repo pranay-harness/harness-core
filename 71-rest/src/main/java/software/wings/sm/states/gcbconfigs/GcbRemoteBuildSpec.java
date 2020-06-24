@@ -1,12 +1,13 @@
 package software.wings.sm.states.gcbconfigs;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
+@Data
 public class GcbRemoteBuildSpec {
-  @Getter @Setter private String sourceId;
-  @Getter @Setter private String filePath;
-  @Getter @Setter private RemoteFileSource fileSource;
-
   public enum RemoteFileSource { BRANCH, COMMIT }
+
+  private String gitConfigId;
+  private String sourceId;
+  private String filePath;
+  private RemoteFileSource fileSource;
 }

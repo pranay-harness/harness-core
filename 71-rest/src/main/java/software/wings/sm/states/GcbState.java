@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskData.asyncTaskData;
 import static java.util.Collections.singletonList;
@@ -11,6 +12,8 @@ import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.TaskType.GCB;
 import static software.wings.beans.command.GcbTaskParams.GcbTaskType.POLL;
 import static software.wings.beans.command.GcbTaskParams.GcbTaskType.START;
+import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.REMOTE;
+import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.TRIGGER;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -42,6 +45,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.GitConfig;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.GcbTaskParams;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
@@ -66,8 +70,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-@OwnedBy(CDC)
 @Slf4j
+@OwnedBy(CDC)
 public class GcbState extends State implements SweepingOutputStateMixin {
   public static final String GCB_LOGS = "GCB Output";
 
@@ -119,6 +123,15 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     return executeInternal(context, activityId);
   }
 
+  Map<String, String> evaluate(
+      @NotNull final ExecutionContext context, @Nullable final List<ParameterEntry> parameters) {
+    return Stream.of(parameters)
+        .filter(Objects::nonNull)
+        .flatMap(List::stream)
+        .collect(toMap(ParameterEntry::getKey,
+            entry -> context.renderExpression(entry.getValue()), CollectionUtils::overrideOperator, HashMap::new));
+  }
+
   /**
    * Execute internal execution response.
    *
@@ -127,26 +140,31 @@ public class GcbState extends State implements SweepingOutputStateMixin {
    */
   protected ExecutionResponse executeInternal(
       final @NotNull ExecutionContext context, final @NotNull String activityId) {
-    Map<String, String> evaluatedParameters =
-        Stream.of(jobParameters)
-            .filter(Objects::nonNull)
-            .flatMap(List::stream)
-            .collect(toMap(ParameterEntry::getKey,
-                entry -> context.renderExpression(entry.getValue()), CollectionUtils::overrideOperator, HashMap::new));
+    Map<String, String> evaluatedParameters = evaluate(context, jobParameters);
 
     final Application application = context.fetchRequiredApp();
     final String appId = application.getAppId();
     final GcpConfig config = context.getGlobalSettingValue(context.getAccountId(), gcbOptions.getGcpConfigId());
+
+    GitConfig gitConfig = null;
+    if (gcbOptions.getSpecSource() == REMOTE && gcbOptions.getRepositorySpec() != null) {
+      gitConfig =
+          context.getGlobalSettingValue(context.getAccountId(), gcbOptions.getRepositorySpec().getGitConfigId());
+    }
+    Map<String, String> substitutions = null;
+    if (gcbOptions.getSpecSource() == TRIGGER && !isEmpty(gcbOptions.getTriggerSpec().getSubstitutions())) {
+      substitutions = evaluate(context, gcbOptions.getTriggerSpec().getSubstitutions());
+    }
     GcbTaskParams gcbTaskParams = GcbTaskParams.builder()
                                       .gcpConfig(config)
                                       .type(START)
                                       .gcbOptions(gcbOptions)
+                                      .substitutions(substitutions)
                                       .encryptedDataDetails(secretManager.getEncryptionDetails(
                                           config, context.getAppId(), context.getWorkflowExecutionId()))
-                                      .parameters(evaluatedParameters)
                                       .activityId(activityId)
-                                      .unitName("COMMAND_UNIT_NAME")
                                       .unitName(GCB_LOGS)
+                                      .gitConfig(gitConfig)
                                       .appId(appId)
                                       .build();
 
