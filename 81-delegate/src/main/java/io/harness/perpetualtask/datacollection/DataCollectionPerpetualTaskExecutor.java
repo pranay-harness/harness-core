@@ -18,12 +18,21 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.time.Instant;
+import javax.annotation.Nullable;
+
 @Slf4j
 public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecutor {
-  @Inject private CVNextGenServiceClient cvNextGenServiceClient;
+  @Nullable @Inject private CVNextGenServiceClient cvNextGenServiceClient;
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
+    if (cvNextGenServiceClient == null) {
+      return PerpetualTaskResponse.builder()
+          .perpetualTaskState(PerpetualTaskState.TASK_RUN_FAILED)
+          .responseMessage("The CVNextGenServiceClient is not initialize")
+          .build();
+    }
+
     DataCollectionPerpetualTaskParams sampleParams =
         AnyUtils.unpack(params.getCustomizedParams(), DataCollectionPerpetualTaskParams.class);
     logger.info("Hello there !! {} ", sampleParams.getCvConfigId());
