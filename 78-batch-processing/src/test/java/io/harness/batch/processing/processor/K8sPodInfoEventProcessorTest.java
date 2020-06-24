@@ -39,6 +39,7 @@ import software.wings.beans.instance.HarnessServiceInfo;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -103,6 +104,19 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
         POD_UID, CLOUD_PROVIDER_ID, CLUSTER_ID, ACCOUNT_ID, EventType.EVENT_TYPE_TERMINATED, START_TIMESTAMP);
     InstanceEvent instanceEvent = k8sPodEventProcessor.process(k8sNodeEventMessage);
     assertThat(instanceEvent).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldCreateEmptyInstancePodInfo() throws Exception {
+    InstanceData instanceData = getNodeInstantData();
+    when(instanceDataService.fetchInstanceData(ACCOUNT_ID, CLUSTER_ID, POD_UID)).thenReturn(instanceData);
+    PublishedMessage k8sPodInfoMessage = getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID,
+        ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME, NAMESPACE, Collections.emptyMap(), Resource.newBuilder().build(),
+        START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
+    InstanceInfo instanceInfo = k8sPodInfoProcessor.process(k8sPodInfoMessage);
+    assertThat(instanceInfo.getInstanceId()).isNull();
   }
 
   @Test
