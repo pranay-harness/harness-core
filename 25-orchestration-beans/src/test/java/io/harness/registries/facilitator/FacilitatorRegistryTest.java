@@ -17,14 +17,12 @@ import io.harness.registries.RegistryType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
-import io.harness.state.io.StepTransput;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.util.List;
 
 public class FacilitatorRegistryTest extends OrchestrationBeansTest {
   @Inject private FacilitatorRegistry facilitatorRegistry;
@@ -56,8 +54,8 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
   @Builder
   private static class Type1Facilitator implements Facilitator {
     @Override
-    public FacilitatorResponse facilitate(
-        Ambiance ambiance, StepParameters stepParameters, FacilitatorParameters parameters, List<StepTransput> inputs) {
+    public FacilitatorResponse facilitate(Ambiance ambiance, StepParameters stepParameters,
+        FacilitatorParameters parameters, StepInputPackage inputPackage) {
       return null;
     }
   }

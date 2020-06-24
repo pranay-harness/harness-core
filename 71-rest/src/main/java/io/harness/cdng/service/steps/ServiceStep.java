@@ -29,12 +29,12 @@ import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Children
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;
-import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public class ServiceStep implements Step, ChildrenExecutable {
 
   @Override
   public ChildrenExecutableResponse obtainChildren(
-      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     ServiceStepParameters parameters = (ServiceStepParameters) stepParameters;
     logger.info("Executing deployment stage with params [{}]", parameters);
     // TODO(archit): save service entity.

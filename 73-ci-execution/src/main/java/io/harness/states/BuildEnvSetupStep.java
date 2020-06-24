@@ -10,13 +10,11 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepTransput;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 /**
  * This state will setup the build environment, clone the git repository for running CI job.
@@ -32,8 +30,8 @@ public class BuildEnvSetupStep implements Step, SyncExecutable {
   //     Async will be supported once we will have delegate microservice ready.
 
   @Override
-  public StepResponse executeSync(
-      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
+  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
+      PassThroughData passThroughData) {
     try {
       BuildEnvSetupStepInfo envSetupStepInfo = (BuildEnvSetupStepInfo) stepParameters;
       // TODO Handle response and fetch cluster from input element

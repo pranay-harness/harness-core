@@ -10,13 +10,11 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepTransput;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 /**
  * This step does not do anything as checkout is happening in init container.
@@ -29,8 +27,8 @@ public class GitCloneStep implements Step, SyncExecutable {
   public static final StepType STEP_TYPE = GitCloneStepInfo.typeInfo.getStepType();
 
   @Override
-  public StepResponse executeSync(
-      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
+  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
+      PassThroughData passThroughData) {
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

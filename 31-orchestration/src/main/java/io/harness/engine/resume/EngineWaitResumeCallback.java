@@ -10,12 +10,11 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.ExecutionEngine;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.persistence.converters.DurationConverter;
-import io.harness.state.io.StepTransput;
+import io.harness.state.io.StepInputPackage;
 import io.harness.waiter.NotifyCallback;
 import lombok.Builder;
 import org.mongodb.morphia.annotations.Converters;
 
-import java.util.List;
 import java.util.Map;
 
 @OwnedBy(CDC)
@@ -25,18 +24,18 @@ public class EngineWaitResumeCallback implements NotifyCallback {
 
   Ambiance ambiance;
   FacilitatorResponse facilitatorResponse;
-  List<StepTransput> inputs;
+  StepInputPackage inputPackage;
 
   @Builder
-  EngineWaitResumeCallback(Ambiance ambiance, FacilitatorResponse facilitatorResponse, List<StepTransput> inputs) {
+  EngineWaitResumeCallback(Ambiance ambiance, FacilitatorResponse facilitatorResponse, StepInputPackage inputPackage) {
     this.ambiance = ambiance;
     this.facilitatorResponse = facilitatorResponse;
-    this.inputs = inputs;
+    this.inputPackage = inputPackage;
   }
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    executionEngine.invokeState(ambiance, facilitatorResponse, inputs);
+    executionEngine.invokeState(ambiance, facilitatorResponse, inputPackage);
   }
 
   @Override

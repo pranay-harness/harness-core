@@ -37,7 +37,7 @@ public class AsyncStrategy implements InvokeStrategy {
     AsyncExecutable asyncExecutable = (AsyncExecutable) invokerPackage.getStep();
     Ambiance ambiance = invokerPackage.getAmbiance();
     AsyncExecutableResponse asyncExecutableResponse =
-        asyncExecutable.executeAsync(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());
+        asyncExecutable.executeAsync(ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());
     handleResponse(ambiance, asyncExecutableResponse);
   }
 

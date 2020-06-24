@@ -24,8 +24,8 @@ public class SyncStrategy implements InvokeStrategy {
   public void invoke(InvokerPackage invokerPackage) {
     SyncExecutable syncExecutable = (SyncExecutable) invokerPackage.getStep();
     Ambiance ambiance = invokerPackage.getAmbiance();
-    StepResponse stepResponse = syncExecutable.executeSync(
-        ambiance, invokerPackage.getParameters(), invokerPackage.getInputs(), invokerPackage.getPassThroughData());
+    StepResponse stepResponse = syncExecutable.executeSync(ambiance, invokerPackage.getParameters(),
+        invokerPackage.getInputPackage(), invokerPackage.getPassThroughData());
     engine.handleStepResponse(ambiance.obtainCurrentRuntimeId(), stepResponse);
   }
 }

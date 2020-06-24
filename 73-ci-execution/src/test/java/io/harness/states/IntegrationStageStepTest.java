@@ -21,17 +21,15 @@ import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.rule.Owner;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponseNotifyData;
-import io.harness.state.io.StepTransput;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class IntegrationStageStepTest extends CIExecutionTest {
@@ -54,7 +52,6 @@ public class IntegrationStageStepTest extends CIExecutionTest {
   public void shouldObtainChild() {
     when(executionSweepingOutputResolver.consume(any(), any(), any(), any())).thenReturn("namespace");
     Ambiance ambiance = Ambiance.builder().build();
-    List<StepTransput> stepTransputList = new ArrayList<>();
     Map<String, String> fieldToExecutionNodeIdMap = new HashMap<>();
     fieldToExecutionNodeIdMap.put("execution", CHILD_ID);
     IntegrationStageStepParameters stateParameters = IntegrationStageStepParameters.builder()
@@ -63,7 +60,7 @@ public class IntegrationStageStepTest extends CIExecutionTest {
                                                          .fieldToExecutionNodeIdMap(fieldToExecutionNodeIdMap)
                                                          .build();
     ChildExecutableResponse childExecutableResponse =
-        integrationStageStep.obtainChild(ambiance, stateParameters, stepTransputList);
+        integrationStageStep.obtainChild(ambiance, stateParameters, StepInputPackage.builder().build());
     assertThat(childExecutableResponse).isNotNull();
     assertThat(childExecutableResponse.getChildNodeId()).isEqualTo(CHILD_ID);
   }

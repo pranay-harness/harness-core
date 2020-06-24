@@ -14,14 +14,12 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.rule.Owner;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponseNotifyData;
-import io.harness.state.io.StepTransput;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public class SectionStepTest extends OrchestrationTest {
@@ -34,10 +32,9 @@ public class SectionStepTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestObtainChildren() {
     Ambiance ambiance = Ambiance.builder().build();
-    List<StepTransput> stepTransputList = new ArrayList<>();
+    StepInputPackage inputPackage = StepInputPackage.builder().build();
     SectionStepParameters stateParameters = SectionStepParameters.builder().childNodeId(CHILD_ID).build();
-    ChildExecutableResponse childExecutableResponse =
-        sectionState.obtainChild(ambiance, stateParameters, stepTransputList);
+    ChildExecutableResponse childExecutableResponse = sectionState.obtainChild(ambiance, stateParameters, inputPackage);
     assertThat(childExecutableResponse).isNotNull();
     assertThat(childExecutableResponse.getChildNodeId()).isEqualTo(CHILD_ID);
   }

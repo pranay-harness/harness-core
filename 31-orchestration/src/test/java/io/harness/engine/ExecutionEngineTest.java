@@ -36,9 +36,9 @@ import io.harness.registries.state.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepTransput;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.steps.TestAsyncStep;
 import io.harness.utils.steps.TestStepParameters;
@@ -47,7 +47,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 
 public class ExecutionEngineTest extends OrchestrationTest {
@@ -228,8 +227,8 @@ public class ExecutionEngineTest extends OrchestrationTest {
 
   private static class TestSyncStep implements Step, SyncExecutable {
     @Override
-    public StepResponse executeSync(
-        Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
+    public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
+        PassThroughData passThroughData) {
       return StepResponse.builder().status(SUCCEEDED).build();
     }
   }

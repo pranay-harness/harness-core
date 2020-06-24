@@ -40,9 +40,9 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.K8sRollingStepParameters;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepTransput;
 import io.harness.validation.Validator;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
@@ -83,7 +83,8 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
   @Inject private EngineExpressionService engineExpressionService;
 
   @Override
-  public TaskChainResponse startChainLink(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+  public TaskChainResponse startChainLink(
+      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     K8sRollingStepParameters k8sRollingStepParameters = ((K8sRollingStepInfo) stepParameters).getK8sRolling();
 
     ServiceOutcome serviceOutcome =
@@ -371,8 +372,8 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
   }
 
   @Override
-  public TaskChainResponse executeNextLink(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+  public TaskChainResponse executeNextLink(Ambiance ambiance, StepParameters stepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     GitCommandExecutionResponse gitTaskResponse =
         (GitCommandExecutionResponse) responseDataMap.values().iterator().next();
 

@@ -18,15 +18,14 @@ import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StatusNotifyResponseData;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
-import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +40,7 @@ public class WaitStep implements Step, AsyncExecutable {
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     WaitStepParameters parameters = (WaitStepParameters) stepParameters;
     String resumeId = generateUuid();
     executorService.schedule(new SimpleNotifier(waitNotifyEngine, resumeId,

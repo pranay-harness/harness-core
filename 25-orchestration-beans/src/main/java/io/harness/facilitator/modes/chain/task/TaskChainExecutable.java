@@ -7,11 +7,10 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitator.PassThroughData;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepTransput;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,9 +38,9 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 public interface TaskChainExecutable {
-  TaskChainResponse startChainLink(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs);
+  TaskChainResponse startChainLink(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage);
 
-  TaskChainResponse executeNextLink(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs,
+  TaskChainResponse executeNextLink(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
 
   StepResponse finalizeExecution(Ambiance ambiance, StepParameters stepParameters, PassThroughData passThroughData,

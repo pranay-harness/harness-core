@@ -15,13 +15,12 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.rule.Owner;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponseNotifyData;
-import io.harness.state.io.StepTransput;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,11 +36,11 @@ public class ForkStepTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestObtainChildren() {
     Ambiance ambiance = Ambiance.builder().build();
-    List<StepTransput> stepTransputList = new ArrayList<>();
+    StepInputPackage inputPackage = StepInputPackage.builder().build();
     ForkStepParameters stateParameters =
         ForkStepParameters.builder().parallelNodeId(FIRST_CHILD_ID).parallelNodeId(SECOND_CHILD_ID).build();
     ChildrenExecutableResponse childrenExecutableResponse =
-        forkState.obtainChildren(ambiance, stateParameters, stepTransputList);
+        forkState.obtainChildren(ambiance, stateParameters, inputPackage);
     assertThat(childrenExecutableResponse).isNotNull();
     assertThat(childrenExecutableResponse.getChildren()).hasSize(2);
     List<String> childIds =
