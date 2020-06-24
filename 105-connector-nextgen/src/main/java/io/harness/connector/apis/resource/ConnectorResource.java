@@ -34,7 +34,7 @@ import javax.ws.rs.QueryParam;
 @Consumes(APPLICATION_JSON)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class ConnectorResource {
-  private final ConnectorService connectorService;
+  private ConnectorService connectorService;
 
   @GET
   @Path("{connectorIdentifier}")

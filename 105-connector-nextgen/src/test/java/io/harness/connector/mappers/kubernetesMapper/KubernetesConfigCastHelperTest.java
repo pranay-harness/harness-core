@@ -1,5 +1,7 @@
 package io.harness.connector.mappers.kubernetesMapper;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
@@ -24,8 +26,12 @@ public class KubernetesConfigCastHelperTest extends ConnectorsBaseTest {
     String delegateName = "testDeleagete";
     KubernetesDelegateDetails delegateCredential =
         KubernetesDelegateDetails.builder().delegateName(delegateName).build();
-    KubernetesDelegateDetails delegateDetails =
-        kubernetesConfigCastHelper.castToKubernetesDelegateCredential(delegateCredential);
+    try {
+      KubernetesDelegateDetails delegateDetails =
+          kubernetesConfigCastHelper.castToKubernetesDelegateCredential(delegateCredential);
+    } catch (ClassCastException ex) {
+      assertThat(false).isTrue();
+    }
   }
 
   @Test
@@ -43,7 +49,11 @@ public class KubernetesConfigCastHelperTest extends ConnectorsBaseTest {
                                                             .authType(KubernetesAuthType.USER_PASSWORD)
                                                             .auth(userNamePasswordK8)
                                                             .build();
-    KubernetesClusterDetails kubernetesClusterConfig =
-        kubernetesConfigCastHelper.castToManualKubernetesCredentials(kubernetesClusterDetails);
+    try {
+      KubernetesClusterDetails kubernetesClusterConfig =
+          kubernetesConfigCastHelper.castToManualKubernetesCredentials(kubernetesClusterDetails);
+    } catch (ClassCastException ex) {
+      assertThat(false).isTrue();
+    }
   }
 }
