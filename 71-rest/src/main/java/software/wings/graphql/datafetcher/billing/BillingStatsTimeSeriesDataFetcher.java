@@ -55,6 +55,8 @@ public class BillingStatsTimeSeriesDataFetcher
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
 
   private static final long ONE_DAY_MILLIS = 86400000;
+  private static final long ONE_HOUR_SEC = 3600;
+  private static final long ONE_DAY_SEC = 86400;
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
@@ -80,10 +82,12 @@ public class BillingStatsTimeSeriesDataFetcher
     ResultSet resultSet = null;
     boolean successful = false;
     int retryCount = 0;
+    long timePeriod;
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
     List<QLBillingDataTagAggregation> groupByTagList = getGroupByTag(groupByList);
     List<QLBillingDataLabelAggregation> groupByLabelList = getGroupByLabel(groupByList);
     QLCCMTimeSeriesAggregation groupByTime = billingDataQueryBuilder.getGroupByTime(groupByList);
+    timePeriod = getTimePeriod(groupByTime);
 
     if (!groupByTagList.isEmpty()) {
       groupByEntityList = getGroupByEntityListFromTags(groupByList, groupByEntityList, groupByTagList);
@@ -106,7 +110,7 @@ public class BillingStatsTimeSeriesDataFetcher
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
-        return generateStackedTimeSeriesData(queryData, resultSet, getMinStartTimeFromFilters(filters));
+        return generateStackedTimeSeriesData(queryData, resultSet, getMinStartTimeFromFilters(filters), timePeriod);
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -125,13 +129,19 @@ public class BillingStatsTimeSeriesDataFetcher
     return null;
   }
 
-  protected QLBillingStackedTimeSeriesData generateStackedTimeSeriesData(
-      BillingDataQueryMetadata queryData, ResultSet resultSet, long startTimeFromFilters) throws SQLException {
+  protected QLBillingStackedTimeSeriesData generateStackedTimeSeriesData(BillingDataQueryMetadata queryData,
+      ResultSet resultSet, long startTimeFromFilters, long timePeriod) throws SQLException {
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeMemoryPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeMemoryUtilsPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuUtilsPointMap = new LinkedHashMap<>();
+    Map<Long, List<QLBillingTimeDataPoint>> qlTimeMemoryUtilValuesMap = new LinkedHashMap<>();
+    Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuUtilValuesPointMap = new LinkedHashMap<>();
+    Map<Long, List<QLBillingTimeDataPoint>> qlTimeMemoryLimitPointMap = new LinkedHashMap<>();
+    Map<Long, List<QLBillingTimeDataPoint>> qlTimeMemoryRequestPointMap = new LinkedHashMap<>();
+    Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuLimitPointMap = new LinkedHashMap<>();
+    Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuRequestPointMap = new LinkedHashMap<>();
 
     checkAndAddPrecedingZeroValuedData(queryData, resultSet, startTimeFromFilters, qlTimeDataPointMap);
     // Checking if namespace should be appended to entity Id in order to distinguish between same workloadNames across
@@ -147,9 +157,15 @@ public class BillingStatsTimeSeriesDataFetcher
       // For Leaf level Idle cost Drill Down
       QLBillingTimeDataPointBuilder memoryAvgUtilsPointBuilder = QLBillingTimeDataPoint.builder();
       QLBillingTimeDataPointBuilder memoryMaxUtilsPointBuilder = QLBillingTimeDataPoint.builder();
+      QLBillingTimeDataPointBuilder memoryAvgUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
+      QLBillingTimeDataPointBuilder memoryAvgRequestPointBuilder = QLBillingTimeDataPoint.builder();
+      QLBillingTimeDataPointBuilder memoryAvgLimitPointBuilder = QLBillingTimeDataPoint.builder();
 
       QLBillingTimeDataPointBuilder cpuAvgUtilsPointBuilder = QLBillingTimeDataPoint.builder();
       QLBillingTimeDataPointBuilder cpuMaxUtilsPointBuilder = QLBillingTimeDataPoint.builder();
+      QLBillingTimeDataPointBuilder cpuAvgUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
+      QLBillingTimeDataPointBuilder cpuAvgRequestPointBuilder = QLBillingTimeDataPoint.builder();
+      QLBillingTimeDataPointBuilder cpuAvgLimitPointBuilder = QLBillingTimeDataPoint.builder();
 
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field.getDataType()) {
@@ -167,11 +183,35 @@ public class BillingStatsTimeSeriesDataFetcher
               case AVGCPUUTILIZATION:
                 cpuAvgUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
                 break;
+              case AGGREGATEDCPUUTILIZATIONVALUE:
+                cpuAvgUtilValuePointBuilder.value(
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
+                break;
+              case AGGREGATEDCPUREQUEST:
+                cpuAvgRequestPointBuilder.value(
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
+                break;
+              case AGGREGATEDCPULIMIT:
+                cpuAvgLimitPointBuilder.value(
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
+                break;
               case MAXMEMORYUTILIZATION:
                 memoryMaxUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
                 break;
               case AVGMEMORYUTILIZATION:
                 memoryAvgUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
+                break;
+              case AGGREGATEDMEMORYUTILIZATIONVALUE:
+                memoryAvgUtilValuePointBuilder.value(
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
+                break;
+              case AGGREGATEDMEMORYREQUEST:
+                memoryAvgRequestPointBuilder.value(
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
+                break;
+              case AGGREGATEDMEMORYLIMIT:
+                memoryAvgLimitPointBuilder.value(
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
                 break;
               default:
                 dataPointBuilder.value(roundingDoubleFieldValue(field, resultSet));
@@ -189,10 +229,18 @@ public class BillingStatsTimeSeriesDataFetcher
             cpuPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
             memoryPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
             dataPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
+
             cpuMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
             cpuAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
+            cpuAvgUtilValuePointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
+            cpuAvgRequestPointBuilder.key(buildQLReferenceForUtilization("REQUEST", idWithInfo));
+            cpuAvgLimitPointBuilder.key(buildQLReferenceForUtilization("LIMIT", idWithInfo));
+
             memoryMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
             memoryAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
+            memoryAvgUtilValuePointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
+            memoryAvgRequestPointBuilder.key(buildQLReferenceForUtilization("REQUEST", idWithInfo));
+            memoryAvgLimitPointBuilder.key(buildQLReferenceForUtilization("LIMIT", idWithInfo));
             break;
           case TIMESTAMP:
             long time = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
@@ -201,8 +249,14 @@ public class BillingStatsTimeSeriesDataFetcher
             dataPointBuilder.time(time);
             cpuMaxUtilsPointBuilder.time(time);
             cpuAvgUtilsPointBuilder.time(time);
+            cpuAvgUtilValuePointBuilder.time(time);
+            cpuAvgRequestPointBuilder.time(time);
+            cpuAvgLimitPointBuilder.time(time);
             memoryMaxUtilsPointBuilder.time(time);
             memoryAvgUtilsPointBuilder.time(time);
+            memoryAvgUtilValuePointBuilder.time(time);
+            memoryAvgRequestPointBuilder.time(time);
+            memoryAvgLimitPointBuilder.time(time);
             break;
           default:
             throw new InvalidRequestException("UnsupportedType " + field.getDataType());
@@ -216,6 +270,12 @@ public class BillingStatsTimeSeriesDataFetcher
       checkDataPointIsValidAndInsert(memoryMaxUtilsPointBuilder.build(), qlTimeMemoryUtilsPointMap);
       checkDataPointIsValidAndInsert(cpuAvgUtilsPointBuilder.build(), qlTimeCpuUtilsPointMap);
       checkDataPointIsValidAndInsert(memoryAvgUtilsPointBuilder.build(), qlTimeMemoryUtilsPointMap);
+      checkDataPointIsValidAndInsert(cpuAvgRequestPointBuilder.build(), qlTimeCpuRequestPointMap);
+      checkDataPointIsValidAndInsert(cpuAvgLimitPointBuilder.build(), qlTimeCpuLimitPointMap);
+      checkDataPointIsValidAndInsert(memoryAvgRequestPointBuilder.build(), qlTimeMemoryRequestPointMap);
+      checkDataPointIsValidAndInsert(memoryAvgLimitPointBuilder.build(), qlTimeMemoryLimitPointMap);
+      checkDataPointIsValidAndInsert(cpuAvgUtilValuePointBuilder.build(), qlTimeCpuUtilValuesPointMap);
+      checkDataPointIsValidAndInsert(memoryAvgUtilValuePointBuilder.build(), qlTimeMemoryUtilValuesMap);
     } while (resultSet != null && resultSet.next());
 
     QLBillingStackedTimeSeriesDataBuilder timeSeriesDataBuilder = QLBillingStackedTimeSeriesData.builder();
@@ -225,6 +285,12 @@ public class BillingStatsTimeSeriesDataFetcher
         .memoryIdleCost(prepareStackedTimeSeriesData(queryData, qlTimeMemoryPointMap))
         .cpuUtilMetrics(prepareStackedTimeSeriesData(queryData, qlTimeCpuUtilsPointMap))
         .memoryUtilMetrics(prepareStackedTimeSeriesData(queryData, qlTimeMemoryUtilsPointMap))
+        .cpuUtilValues(prepareStackedTimeSeriesData(queryData, qlTimeCpuUtilValuesPointMap))
+        .memoryUtilValues(prepareStackedTimeSeriesData(queryData, qlTimeMemoryUtilValuesMap))
+        .cpuRequest(prepareStackedTimeSeriesData(queryData, qlTimeCpuRequestPointMap))
+        .cpuLimit(prepareStackedTimeSeriesData(queryData, qlTimeCpuLimitPointMap))
+        .memoryRequest(prepareStackedTimeSeriesData(queryData, qlTimeMemoryRequestPointMap))
+        .memoryLimit(prepareStackedTimeSeriesData(queryData, qlTimeMemoryLimitPointMap))
         .build();
   }
 
@@ -252,6 +318,10 @@ public class BillingStatsTimeSeriesDataFetcher
 
   private double roundingDoubleFieldValue(BillingDataMetaDataFields field, ResultSet resultSet) throws SQLException {
     return Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
+  }
+
+  private double roundingDoubleValue(double value) throws SQLException {
+    return Math.round(value * 100D) / 100D;
   }
 
   private double roundingDoubleFieldPercentageValue(BillingDataMetaDataFields field, ResultSet resultSet)
@@ -453,6 +523,21 @@ public class BillingStatsTimeSeriesDataFetcher
       }
     }
     return false;
+  }
+
+  private long getTimePeriod(QLCCMTimeSeriesAggregation groupByTime) {
+    if (groupByTime == null) {
+      return ONE_DAY_SEC;
+    }
+    switch (groupByTime.getTimeGroupType()) {
+      case HOUR:
+        return ONE_HOUR_SEC;
+      case MONTH:
+        return ONE_DAY_SEC * 30;
+      case DAY:
+      default:
+        return ONE_DAY_SEC;
+    }
   }
 
   @Override
