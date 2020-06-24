@@ -13,5 +13,11 @@ public class QLBillingStackedTimeSeriesData implements QLData {
   List<QLBillingStackedTimeSeriesDataPoint> memoryIdleCost;
   List<QLBillingStackedTimeSeriesDataPoint> cpuUtilMetrics;
   List<QLBillingStackedTimeSeriesDataPoint> memoryUtilMetrics;
+  List<QLBillingStackedTimeSeriesDataPoint> cpuUtilValues;
+  List<QLBillingStackedTimeSeriesDataPoint> memoryUtilValues;
+  List<QLBillingStackedTimeSeriesDataPoint> cpuRequest;
+  List<QLBillingStackedTimeSeriesDataPoint> cpuLimit;
+  List<QLBillingStackedTimeSeriesDataPoint> memoryRequest;
+  List<QLBillingStackedTimeSeriesDataPoint> memoryLimit;
   String label;
 }

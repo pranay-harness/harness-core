@@ -286,6 +286,12 @@ type BillingStackedTimeSeriesData {
   memoryIdleCost: [BillingStackedTimeSeriesDataPoint]
   cpuUtilMetrics: [BillingStackedTimeSeriesDataPoint]
   memoryUtilMetrics: [BillingStackedTimeSeriesDataPoint]
+  cpuUtilValues: [BillingStackedTimeSeriesDataPoint]
+  memoryUtilValues: [BillingStackedTimeSeriesDataPoint]
+  cpuRequest: [BillingStackedTimeSeriesDataPoint]
+  memoryRequest: [BillingStackedTimeSeriesDataPoint]
+  cpuLimit: [BillingStackedTimeSeriesDataPoint]
+  memoryLimit: [BillingStackedTimeSeriesDataPoint]
   label: String
 }
 

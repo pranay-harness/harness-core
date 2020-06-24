@@ -77,6 +77,21 @@ public class BillingDataTableSchema {
   DbColumn memoryActualIdleCost;
   DbColumn unallocatedCost;
   DbColumn systemCost;
+  DbColumn maxCpuUtilizationValue;
+  DbColumn maxMemoryUtilizationValue;
+  DbColumn avgCpuUtilizationValue;
+  DbColumn avgMemoryUtilizationValue;
+  DbColumn cpuRequest;
+  DbColumn memoryRequest;
+  DbColumn cpuLimit;
+  DbColumn memoryLimit;
+  // These 6 columns are not actually present in billing_data table
+  DbColumn effectiveCpuRequest;
+  DbColumn effectiveMemoryRequest;
+  DbColumn effectiveCpuLimit;
+  DbColumn effectiveMemoryLimit;
+  DbColumn effectiveCpuUtilizationValue;
+  DbColumn effectiveMemoryUtilizationValue;
 
   private static String varcharType = "varchar(40)";
   private static String doubleType = "double";
@@ -125,5 +140,21 @@ public class BillingDataTableSchema {
     memoryActualIdleCost = billingDataTable.addColumn("memoryactualidlecost", doubleType, null);
     unallocatedCost = billingDataTable.addColumn("unallocatedcost", doubleType, null);
     systemCost = billingDataTable.addColumn("systemcost", doubleType, null);
+    maxCpuUtilizationValue = billingDataTable.addColumn("maxcpuutilizationValue", doubleType, null);
+    maxMemoryUtilizationValue = billingDataTable.addColumn("maxmemoryutilizationvalue", doubleType, null);
+    avgCpuUtilizationValue = billingDataTable.addColumn("avgcpuutilizationvalue", doubleType, null);
+    avgMemoryUtilizationValue = billingDataTable.addColumn("avgmemoryutilizationValue", doubleType, null);
+    cpuRequest = billingDataTable.addColumn("cpurequest", doubleType, null);
+    memoryRequest = billingDataTable.addColumn("memoryrequest", doubleType, null);
+    cpuLimit = billingDataTable.addColumn("cpulimit", doubleType, null);
+    memoryLimit = billingDataTable.addColumn("memorylimit", doubleType, null);
+    effectiveCpuRequest = billingDataTable.addColumn("cpurequest*usagedurationseconds", doubleType, null);
+    effectiveMemoryRequest = billingDataTable.addColumn("memoryrequest*usagedurationseconds", doubleType, null);
+    effectiveCpuLimit = billingDataTable.addColumn("cpulimit*usagedurationseconds", doubleType, null);
+    effectiveMemoryLimit = billingDataTable.addColumn("memorylimit*usagedurationseconds", doubleType, null);
+    effectiveCpuUtilizationValue =
+        billingDataTable.addColumn("avgcpuutilizationvalue*usagedurationseconds", doubleType, null);
+    effectiveMemoryUtilizationValue =
+        billingDataTable.addColumn("avgmemoryutilizationvalue*usagedurationseconds", doubleType, null);
   }
 }

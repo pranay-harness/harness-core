@@ -356,6 +356,38 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getSystemCost()),
                 BillingDataMetaDataFields.SYSTEMCOST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.SYSTEMCOST);
+      } else if (aggregationFunction.getColumnName().equals(schema.getEffectiveCpuLimit().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveCpuLimit()),
+                BillingDataMetaDataFields.AGGREGATEDCPULIMIT.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.AGGREGATEDCPULIMIT);
+      } else if (aggregationFunction.getColumnName().equals(schema.getEffectiveMemoryLimit().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveMemoryLimit()),
+                BillingDataMetaDataFields.AGGREGATEDMEMORYLIMIT.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.AGGREGATEDMEMORYLIMIT);
+      } else if (aggregationFunction.getColumnName().equals(schema.getEffectiveCpuRequest().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveCpuRequest()),
+                BillingDataMetaDataFields.AGGREGATEDCPUREQUEST.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.AGGREGATEDCPUREQUEST);
+      } else if (aggregationFunction.getColumnName().equals(schema.getEffectiveMemoryRequest().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveMemoryRequest()),
+                BillingDataMetaDataFields.AGGREGATEDMEMORYREQUEST.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.AGGREGATEDMEMORYREQUEST);
+      } else if (aggregationFunction.getColumnName().equals(
+                     schema.getEffectiveCpuUtilizationValue().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveCpuUtilizationValue()),
+                BillingDataMetaDataFields.AGGREGATEDCPUUTILIZATIONVALUE.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.AGGREGATEDCPUUTILIZATIONVALUE);
+      } else if (aggregationFunction.getColumnName().equals(
+                     schema.getEffectiveMemoryUtilizationValue().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveMemoryUtilizationValue()),
+                BillingDataMetaDataFields.AGGREGATEDMEMORYUTILIZATIONVALUE.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.AGGREGATEDMEMORYUTILIZATIONVALUE);
       }
     } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.MAX) {
       if (aggregationFunction.getColumnName().equals(schema.getMaxCpuUtilization().getColumnNameSQL())) {
