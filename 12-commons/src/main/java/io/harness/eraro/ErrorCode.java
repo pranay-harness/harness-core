@@ -434,7 +434,9 @@ public enum ErrorCode {
 
   CACHE_NOT_FOUND_EXCEPTION,
 
-  ENGINE_ENTITY_UPDATE_EXCEPTION;
+  ENGINE_ENTITY_UPDATE_EXCEPTION,
+
+  SHELL_EXECUTION_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 
 import com.google.inject.Inject;
@@ -12,6 +13,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -93,6 +96,12 @@ public class BuildSourceTask extends AbstractDelegateRunnableTask {
       return BuildSourceExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
           .buildSourceResponse(BuildSourceResponse.builder().buildDetails(buildDetails).stable(true).build())
+          .build();
+    } catch (WingsException ex) {
+      ExceptionLogger.logProcessedMessages(ex, DELEGATE, logger);
+      return BuildSourceExecutionResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+          .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     } catch (Exception ex) {
       logger.error("Exception in processing BuildSource task [{}]", ex);

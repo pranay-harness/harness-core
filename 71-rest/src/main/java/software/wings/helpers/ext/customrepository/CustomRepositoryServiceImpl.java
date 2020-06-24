@@ -2,6 +2,7 @@ package software.wings.helpers.ext.customrepository;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.ReportTarget.DELEGATE_LOG_SYSTEM;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -12,8 +13,10 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.jayway.jsonpath.DocumentContext;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.shell.ShellExecutionRequest;
 import io.harness.shell.ShellExecutionResponse;
@@ -29,6 +32,7 @@ import software.wings.helpers.ext.jenkins.CustomRepositoryResponse.Result;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -58,7 +62,13 @@ public class CustomRepositoryServiceImpl implements CustomRepositoryService {
                     : Long.parseLong(artifactStreamAttributes.getCustomScriptTimeout()))
             .build();
     logger.info("Retrieving build details of Custom Repository");
-    ShellExecutionResponse shellExecutionResponse = shellExecutionService.execute(shellExecutionRequest);
+    ShellExecutionResponse shellExecutionResponse;
+    try {
+      shellExecutionResponse = shellExecutionService.execute(shellExecutionRequest);
+    } catch (WingsException ex) {
+      ex.excludeReportTarget(ErrorCode.SHELL_EXECUTION_EXCEPTION, EnumSet.of(DELEGATE_LOG_SYSTEM));
+      throw ex;
+    }
     List<BuildDetails> buildDetails = new ArrayList<>();
     // Get the output variables
     if (shellExecutionResponse.getExitValue() == 0) {
