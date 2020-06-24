@@ -1785,7 +1785,7 @@ public class K8sTaskHelper {
 
     ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, emptyList(), releaseName);
 
-    if (isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
+    if (configMap == null || isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
       executionLogCallback.saveExecutionLog("No resource history was available");
       return emptyList();
     }
