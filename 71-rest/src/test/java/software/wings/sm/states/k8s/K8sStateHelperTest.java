@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -11,6 +12,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -172,6 +174,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -950,7 +953,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
     verify(applicationManifestUtils, times(1))
         .getApplicationManifests(any(ExecutionContextImpl.class), argumentCaptor.capture());
     assertThat(argumentCaptor.getValue()).isEqualTo(AppManifestKind.VALUES);
-    assertThat(k8sStateExecutionData.getValuesFiles().get(K8sValuesLocation.Service)).isEqualTo("VALUES_FILE_CONTENT");
+    assertThat(k8sStateExecutionData.getValuesFiles().get(K8sValuesLocation.Service))
+        .containsExactly("VALUES_FILE_CONTENT");
 
     k8sStateExecutionData.setValuesFiles(new HashMap<>());
     valuesFetchTaskResponse.setValuesFileContent("");
@@ -969,6 +973,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
             .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.FAILURE)
             .build();
     Map<String, ResponseData> response = new HashMap<>();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
     response.put(ACTIVITY_ID, gitCommandExecutionResponse);
 
     K8sStateExecutor k8sStateExecutor = mock(K8sStateExecutor.class);
@@ -976,21 +981,24 @@ public class K8sStateHelperTest extends WingsBaseTest {
     k8sStateExecutionData.setCurrentTaskType(TaskType.GIT_COMMAND);
     k8sStateExecutionData.setActivityId(ACTIVITY_ID);
     k8sStateExecutionData.setValuesFiles(new HashMap<>());
+    k8sStateExecutionData.setApplicationManifestMap(appManifestMap);
 
     ExecutionResponse executionResponse =
         k8sStateHelper.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
 
-    Map<K8sValuesLocation, String> valuesMap = new HashMap<>();
-    valuesMap.put(K8sValuesLocation.Environment, "EnvValues");
-    when(applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(gitCommandExecutionResponse))
+    Map<K8sValuesLocation, Collection<String>> valuesMap = new HashMap<>();
+    valuesMap.put(K8sValuesLocation.Environment, singletonList("EnvValues"));
+    when(applicationManifestUtils.getMultiValuesFilesFromGitFetchFilesResponse(
+             appManifestMap, gitCommandExecutionResponse))
         .thenReturn(valuesMap);
     gitCommandExecutionResponse.setGitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS);
     k8sStateHelper.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
     k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
-    assertThat(k8sStateExecutionData.getValuesFiles().get(K8sValuesLocation.Environment)).isEqualTo("EnvValues");
-    verify(applicationManifestUtils, times(1)).getValuesFilesFromGitFetchFilesResponse(gitCommandExecutionResponse);
+    assertThat(k8sStateExecutionData.getValuesFiles().get(K8sValuesLocation.Environment)).containsExactly("EnvValues");
+    verify(applicationManifestUtils, times(1))
+        .getMultiValuesFilesFromGitFetchFilesResponse(appManifestMap, gitCommandExecutionResponse);
   }
 
   @Test
@@ -1051,10 +1059,11 @@ public class K8sStateHelperTest extends WingsBaseTest {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
     K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     k8sStateExecutionData.setValuesFiles(new HashMap<>());
-    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Environment, "envValues");
-    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.ServiceOverride, "serviceOverrideValues");
-    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Service, "serviceValues");
-    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.EnvironmentGlobal, "envGlobalValues");
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Environment, singletonList("envValues"));
+    k8sStateExecutionData.getValuesFiles().put(
+        K8sValuesLocation.ServiceOverride, singletonList("serviceOverrideValues"));
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Service, singletonList("serviceValues"));
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.EnvironmentGlobal, singletonList("envGlobalValues"));
 
     List<String> valuesFiles = k8sStateHelper.getRenderedValuesFiles(appManifestMap, context);
     assertThat(valuesFiles).hasSize(4);
@@ -1063,8 +1072,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(valuesFiles.get(2)).isEqualTo("envGlobalValues");
     assertThat(valuesFiles.get(3)).isEqualTo("envValues");
 
-    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.ServiceOverride, " ");
-    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Environment, "");
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.ServiceOverride, singletonList(" "));
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Environment, singletonList(""));
     valuesFiles = k8sStateHelper.getRenderedValuesFiles(appManifestMap, context);
     assertThat(valuesFiles).hasSize(2);
     assertThat(valuesFiles.get(0)).isEqualTo("serviceValues");
@@ -1072,8 +1081,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
 
     k8sStateExecutionData.getValuesFiles().remove(K8sValuesLocation.ServiceOverride);
     k8sStateExecutionData.getValuesFiles().remove(K8sValuesLocation.Service);
-    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Environment, "envValues");
-    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.EnvironmentGlobal, "envGlobalValues");
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Environment, singletonList("envValues"));
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.EnvironmentGlobal, singletonList("envGlobalValues"));
 
     valuesFiles = k8sStateHelper.getRenderedValuesFiles(appManifestMap, context);
     assertThat(valuesFiles).hasSize(2);
@@ -1081,14 +1090,37 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(valuesFiles.get(1)).isEqualTo("envValues");
 
     when(openShiftManagerService.isOpenShiftManifestConfig(context)).thenReturn(true);
-    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.ServiceOverride, "serviceOverrideValues");
-    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Service, "serviceValues");
+    k8sStateExecutionData.getValuesFiles().put(
+        K8sValuesLocation.ServiceOverride, singletonList("serviceOverrideValues"));
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Service, singletonList("serviceValues"));
     valuesFiles = k8sStateHelper.getRenderedValuesFiles(appManifestMap, context);
     assertThat(valuesFiles).hasSize(4);
     assertThat(valuesFiles.get(0)).isEqualTo("envValues");
     assertThat(valuesFiles.get(1)).isEqualTo("envGlobalValues");
     assertThat(valuesFiles.get(2)).isEqualTo("serviceOverrideValues");
     assertThat(valuesFiles.get(3)).isEqualTo("serviceValues");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetRenderedValuesFilesWithMultipleFiles() {
+    when(openShiftManagerService.isOpenShiftManifestConfig(context)).thenReturn(false);
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    k8sStateExecutionData.setValuesFiles(new HashMap<>());
+
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Environment, asList("envValues1", "envValues2"));
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.ServiceOverride,
+        asList("serviceOverrideValues1", "serviceOverrideValues2", "serviceOverrideValues3"));
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Service, asList("serviceValues1", "serviceValues2"));
+    k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.EnvironmentGlobal, singletonList("envGlobalValues"));
+    List<String> valuesFiles = k8sStateHelper.getRenderedValuesFiles(appManifestMap, context);
+    assertThat(valuesFiles).hasSize(8);
+    assertThat(valuesFiles)
+        .containsExactly("serviceValues1", "serviceValues2", "serviceOverrideValues1", "serviceOverrideValues2",
+            "serviceOverrideValues3", "envGlobalValues", "envValues1", "envValues2");
   }
 
   @Test
@@ -1118,6 +1150,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(responseStateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
     assertThat(responseStateExecutionData.getCommandName()).isEqualTo("commandName");
     verify(applicationManifestUtils, times(1)).setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
+    verify(applicationManifestUtils, times(1)).populateRemoteGitConfigFilePathList(appManifestMap);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());

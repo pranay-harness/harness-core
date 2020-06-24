@@ -15,6 +15,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -138,6 +139,7 @@ import java.io.StringReader;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -282,6 +284,7 @@ public class K8sStateHelper {
   public ExecutionResponse executeGitTask(ExecutionContext context,
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId, String commandName) {
     Application app = appService.get(context.getAppId());
+    applicationManifestUtils.populateRemoteGitConfigFilePathList(appManifestMap);
 
     GitFetchFilesTaskParams fetchFilesTaskParams =
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
@@ -313,7 +316,7 @@ public class K8sStateHelper {
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
-    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = new HashMap<>();
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     if (stateExecutionData != null) {
       valuesFiles.putAll(stateExecutionData.getValuesFiles());
@@ -327,6 +330,7 @@ public class K8sStateHelper {
                                 .commandName(commandName)
                                 .currentTaskType(TaskType.GIT_COMMAND)
                                 .valuesFiles(valuesFiles)
+                                .applicationManifestMap(appManifestMap)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();
@@ -458,34 +462,34 @@ public class K8sStateHelper {
 
   public List<String> getRenderedValuesFiles(
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap, ExecutionContext context) {
-    Map<K8sValuesLocation, String> valuesFiles = new HashMap<>();
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = new HashMap<>();
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     if (stateExecutionData != null) {
       valuesFiles.putAll(stateExecutionData.getValuesFiles());
     }
 
-    applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+    applicationManifestUtils.populateMultipleValuesFilesFromAppManifest(appManifestMap, valuesFiles);
 
     List<String> result = new ArrayList<>();
 
     logger.info("Found Values at following sources: " + valuesFiles.keySet());
 
     if (valuesFiles.containsKey(K8sValuesLocation.Service)) {
-      addNonEmptyValueToList(K8sValuesLocation.Service, valuesFiles.get(K8sValuesLocation.Service), result);
+      addNonEmptyValuesToList(K8sValuesLocation.Service, valuesFiles.get(K8sValuesLocation.Service), result);
     }
 
     if (valuesFiles.containsKey(K8sValuesLocation.ServiceOverride)) {
-      addNonEmptyValueToList(
+      addNonEmptyValuesToList(
           K8sValuesLocation.ServiceOverride, valuesFiles.get(K8sValuesLocation.ServiceOverride), result);
     }
 
     if (valuesFiles.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
-      addNonEmptyValueToList(
+      addNonEmptyValuesToList(
           K8sValuesLocation.EnvironmentGlobal, valuesFiles.get(K8sValuesLocation.EnvironmentGlobal), result);
     }
 
     if (valuesFiles.containsKey(K8sValuesLocation.Environment)) {
-      addNonEmptyValueToList(K8sValuesLocation.Environment, valuesFiles.get(K8sValuesLocation.Environment), result);
+      addNonEmptyValuesToList(K8sValuesLocation.Environment, valuesFiles.get(K8sValuesLocation.Environment), result);
     }
 
     // OpenShift takes in reverse order
@@ -494,6 +498,12 @@ public class K8sStateHelper {
     }
 
     return result;
+  }
+
+  private void addNonEmptyValuesToList(K8sValuesLocation location, Collection<String> values, List<String> result) {
+    for (String value : values) {
+      addNonEmptyValueToList(location, value, result);
+    }
   }
 
   private void addNonEmptyValueToList(K8sValuesLocation location, String value, List<String> result) {
@@ -824,9 +834,10 @@ public class K8sStateHelper {
       return ExecutionResponse.builder().executionStatus(executionStatus).build();
     }
 
-    Map<K8sValuesLocation, String> valuesFiles =
-        applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(executionResponse);
     K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateExecutionData.getApplicationManifestMap();
+    Map<K8sValuesLocation, Collection<String>> valuesFiles =
+        applicationManifestUtils.getMultiValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
     k8sStateExecutionData.getValuesFiles().putAll(valuesFiles);
 
     return k8sStateExecutor.executeK8sTask(context, activityId);
@@ -894,7 +905,8 @@ public class K8sStateHelper {
 
     if (isNotBlank(executionResponse.getValuesFileContent())) {
       K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
-      k8sStateExecutionData.getValuesFiles().put(K8sValuesLocation.Service, executionResponse.getValuesFileContent());
+      k8sStateExecutionData.getValuesFiles().put(
+          K8sValuesLocation.Service, singletonList(executionResponse.getValuesFileContent()));
     }
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =

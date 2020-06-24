@@ -1,10 +1,14 @@
 package software.wings.utils;
 
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.doReturn;
@@ -28,6 +32,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
@@ -49,6 +54,10 @@ import software.wings.beans.HelmChartConfig;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
+import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.GitFile;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -57,8 +66,10 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class ApplicationManifestUtilsTest extends WingsBaseTest {
@@ -181,6 +192,54 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     applicationManifestUtils.populateValuesFilesFromAppManifest(appManifestMap, valuesFiles);
     assertThat(valuesFiles.size()).isEqualTo(1);
     assertThat(valuesFiles.get(K8sValuesLocation.Environment)).isEqualTo("fileContent");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testPopulateMultipleValuesFileFromAppManifest() {
+    ApplicationManifest appManifest1 = ApplicationManifest.builder().storeType(Local).kind(VALUES).build();
+    appManifest1.setUuid("appManifest1");
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    appManifestMap.put(ServiceOverride, appManifest1);
+
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = new HashMap<>();
+    doReturn(ManifestFile.builder().build())
+        .when(applicationManifestService)
+        .getManifestFileByFileName("appManifest1", values_filename);
+    applicationManifestUtils.populateMultipleValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+    assertThat(valuesFiles).isEmpty();
+
+    valuesFiles = new HashMap<>();
+    doReturn(ManifestFile.builder().fileContent("content").build())
+        .when(applicationManifestService)
+        .getManifestFileByFileName("appManifest1", values_filename);
+    applicationManifestUtils.populateMultipleValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+    assertThat(valuesFiles.keySet()).containsExactlyInAnyOrder(K8sValuesLocation.ServiceOverride);
+    assertThat(valuesFiles.values()).containsExactlyInAnyOrder(singletonList("content"));
+
+    valuesFiles = new HashMap<>();
+    ApplicationManifest appManifest2 = ApplicationManifest.builder().storeType(Local).kind(VALUES).build();
+    appManifest2.setUuid("appManifest2");
+    appManifestMap.put(Environment, appManifest2);
+    doReturn(ManifestFile.builder().fileContent("content1").build())
+        .when(applicationManifestService)
+        .getManifestFileByFileName("appManifest1", values_filename);
+    doReturn(ManifestFile.builder().fileContent("content2").build())
+        .when(applicationManifestService)
+        .getManifestFileByFileName("appManifest2", values_filename);
+    applicationManifestUtils.populateMultipleValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+    assertThat(valuesFiles.keySet()).containsExactlyInAnyOrder(ServiceOverride, Environment);
+    assertThat(valuesFiles.values()).containsExactlyInAnyOrder(singletonList("content1"), singletonList("content2"));
+
+    valuesFiles = new HashMap<>();
+    doReturn(null).when(applicationManifestService).getManifestFileByFileName("appManifest1", values_filename);
+    doReturn(ManifestFile.builder().fileContent("content").build())
+        .when(applicationManifestService)
+        .getManifestFileByFileName("appManifest2", values_filename);
+    applicationManifestUtils.populateMultipleValuesFilesFromAppManifest(appManifestMap, valuesFiles);
+    assertThat(valuesFiles.keySet()).containsExactlyInAnyOrder(Environment);
+    assertThat(valuesFiles.values()).containsExactlyInAnyOrder(singletonList("content"));
   }
 
   @Test
@@ -510,5 +569,108 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
         .getApplicationManifestForService(context);
 
     assertThat(manifestUtils.isValuesInHelmChartRepo(context)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetMultiValuesFilesFromGitFetchFilesResponse() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
+        ImmutableMap.of(Environment, createApplicationManifestWithGitFilePathList("file1"), K8sValuesLocation.Service,
+            createApplicationManifestWithGitFilePathList("file2", "file3"), EnvironmentGlobal,
+            createApplicationManifestWithGitFilePathList(), ServiceOverride,
+            createApplicationManifestWithGitFilePathList("file4"));
+
+    GitCommandExecutionResponse executionResponse =
+        gitExecutionResponseWithFilesFromMultipleRepo(ImmutableMap.of("Environment",
+            ImmutableMap.of("file1", "content1"), "Service", ImmutableMap.of("file2", "content2", "file3", "content3"),
+            "EnvironmentGlobal", ImmutableMap.of(), "ServiceOverride", ImmutableMap.of("file4", "content4")));
+
+    Map<K8sValuesLocation, Collection<String>> valuesFiles =
+        applicationManifestUtils.getMultiValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
+
+    assertThat(valuesFiles.get(Environment)).containsExactly("content1");
+    assertThat(valuesFiles.get(K8sValuesLocation.Service)).containsExactly("content2", "content3");
+    assertThat(valuesFiles.get(EnvironmentGlobal)).isNullOrEmpty();
+    assertThat(valuesFiles.get(ServiceOverride)).containsExactly("content4");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetMultiValuesFilesFromGitFetchFilesResponseUnordered() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
+        ImmutableMap.of(Environment, createApplicationManifestWithGitFilePathList("file1", "file2", "file3"),
+            K8sValuesLocation.Service, createApplicationManifestWithGitFilePathList(), EnvironmentGlobal,
+            createApplicationManifestWithGitFilePathList("file4", "file5"), ServiceOverride,
+            createApplicationManifestWithGitFilePathList("file6"));
+
+    GitCommandExecutionResponse executionResponse = gitExecutionResponseWithFilesFromMultipleRepo(
+        ImmutableMap.of("Environment", ImmutableMap.of("file3", "content3", "file1", "content1", "file2", "content2"),
+            "EnvironmentGlobal", ImmutableMap.of("file5", "content5", "file4", "content4"), "ServiceOverride",
+            ImmutableMap.of("file6", "content6")));
+
+    Map<K8sValuesLocation, Collection<String>> valuesFiles =
+        applicationManifestUtils.getMultiValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
+
+    assertThat(valuesFiles.get(Environment)).containsExactly("content1", "content2", "content3");
+    assertThat(valuesFiles.get(K8sValuesLocation.Service)).isNullOrEmpty();
+    assertThat(valuesFiles.get(EnvironmentGlobal)).containsExactly("content4", "content5");
+    assertThat(valuesFiles.get(ServiceOverride)).containsExactly("content6");
+  }
+
+  private ApplicationManifest createApplicationManifestWithGitFilePathList(String... files) {
+    return ApplicationManifest.builder()
+        .storeType(Remote)
+        .gitFileConfig(GitFileConfig.builder().filePathList(asList(files)).build())
+        .build();
+  }
+
+  private GitCommandExecutionResponse gitExecutionResponseWithFilesFromMultipleRepo(
+      Map<String, Map<String, String>> multiRepoFiles) {
+    Map<String, GitFetchFilesResult> filesFromMultipleRepo = new HashMap<>();
+    multiRepoFiles.forEach((key, value) -> filesFromMultipleRepo.put(key, getGitFetchFilesResult(value)));
+    return GitCommandExecutionResponse.builder()
+        .gitCommandResult(
+            GitFetchFilesFromMultipleRepoResult.builder().filesFromMultipleRepo(filesFromMultipleRepo).build())
+        .build();
+  }
+
+  private GitFetchFilesResult getGitFetchFilesResult(Map<String, String> filesMap) {
+    List<GitFile> fileList = filesMap.entrySet()
+                                 .stream()
+                                 .map(e -> GitFile.builder().filePath(e.getKey()).fileContent(e.getValue()).build())
+                                 .collect(toList());
+    return GitFetchFilesResult.builder().files(fileList).build();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testPopulateRemoteGitConfigFilePathList() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
+        ImmutableMap.of(Environment, createApplicationManifestWithGitFile("file1, file2, file3"),
+            K8sValuesLocation.Service, createApplicationManifestWithGitFile("file1,file2,"), EnvironmentGlobal,
+            createApplicationManifestWithGitFile("file1"), ServiceOverride, createApplicationManifestWithGitFile(null));
+
+    applicationManifestUtils.populateRemoteGitConfigFilePathList(appManifestMap);
+
+    assertThat(appManifestMap.get(Environment).getGitFileConfig().getFilePath()).isNull();
+    assertThat(appManifestMap.get(Environment).getGitFileConfig().getFilePathList())
+        .containsExactly("file1", "file2", "file3");
+    assertThat(appManifestMap.get(K8sValuesLocation.Service).getGitFileConfig().getFilePath()).isNull();
+    assertThat(appManifestMap.get(K8sValuesLocation.Service).getGitFileConfig().getFilePathList())
+        .containsExactly("file1", "file2");
+    assertThat(appManifestMap.get(EnvironmentGlobal).getGitFileConfig().getFilePath()).isNull();
+    assertThat(appManifestMap.get(EnvironmentGlobal).getGitFileConfig().getFilePathList()).containsExactly("file1");
+    assertThat(appManifestMap.get(ServiceOverride).getGitFileConfig().getFilePath()).isNull();
+    assertThat(appManifestMap.get(ServiceOverride).getGitFileConfig().getFilePathList()).isEmpty();
+  }
+
+  private ApplicationManifest createApplicationManifestWithGitFile(String filePath) {
+    return ApplicationManifest.builder()
+        .storeType(Remote)
+        .gitFileConfig(GitFileConfig.builder().filePath(filePath).build())
+        .build();
   }
 }

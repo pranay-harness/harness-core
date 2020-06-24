@@ -1,13 +1,15 @@
 package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesExpressionKeysFromMap;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
@@ -16,12 +18,15 @@ import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
@@ -41,6 +46,7 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.GitFile;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.ContainerServiceParams;
@@ -56,17 +62,22 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
 public class ApplicationManifestUtils {
+  private static final String MULTIPLE_FILES_DELIMITER = ",";
+
   @Inject private AppService appService;
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -265,25 +276,50 @@ public class ApplicationManifestUtils {
 
   public Map<K8sValuesLocation, String> getValuesFilesFromGitFetchFilesResponse(
       GitCommandExecutionResponse executionResponse) {
-    GitFetchFilesFromMultipleRepoResult gitCommandResult =
-        (GitFetchFilesFromMultipleRepoResult) executionResponse.getGitCommandResult();
+    return getMultiValuesFilesFromGitFetchFilesResponse(emptyMap(), executionResponse)
+        .entrySet()
+        .stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().iterator().next()));
+  }
 
-    Map<K8sValuesLocation, String> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
+  public Map<K8sValuesLocation, Collection<String>> getMultiValuesFilesFromGitFetchFilesResponse(
+      Map<K8sValuesLocation, ApplicationManifest> appManifest, GitCommandExecutionResponse response) {
+    GitFetchFilesFromMultipleRepoResult gitCommandResult =
+        (GitFetchFilesFromMultipleRepoResult) response.getGitCommandResult();
+
+    Multimap<K8sValuesLocation, String> valuesFiles = ArrayListMultimap.create();
     if (gitCommandResult == null || isEmpty(gitCommandResult.getFilesFromMultipleRepo())) {
-      return valuesFiles;
+      return valuesFiles.asMap();
     }
 
     for (Entry<String, GitFetchFilesResult> entry : gitCommandResult.getFilesFromMultipleRepo().entrySet()) {
       GitFetchFilesResult gitFetchFilesResult = entry.getValue();
-
-      if (isNotEmpty(gitFetchFilesResult.getFiles())
-          && isNotBlank(gitFetchFilesResult.getFiles().get(0).getFileContent())) {
-        valuesFiles.put(
-            K8sValuesLocation.valueOf(entry.getKey()), gitFetchFilesResult.getFiles().get(0).getFileContent());
+      Map<String, GitFile> namedGitFiles = new HashMap<>();
+      K8sValuesLocation k8sValuesLocation = K8sValuesLocation.valueOf(entry.getKey());
+      for (GitFile file : gitFetchFilesResult.getFiles()) {
+        if (isNotBlank(file.getFileContent())) {
+          namedGitFiles.put(file.getFilePath(), file);
+        }
       }
+      valuesFiles.putAll(k8sValuesLocation, getGitOrderedFiles(appManifest.get(k8sValuesLocation), namedGitFiles));
     }
 
-    return valuesFiles;
+    return valuesFiles.asMap();
+  }
+
+  private Collection<String> getGitOrderedFiles(ApplicationManifest appManifest, Map<String, GitFile> gitFiles) {
+    if (isEmpty(appManifest.getGitFileConfig().getFilePathList())) {
+      return gitFiles.entrySet().iterator().hasNext()
+          ? singletonList(gitFiles.entrySet().iterator().next().getValue().getFileContent())
+          : emptyList();
+    }
+
+    return appManifest.getGitFileConfig()
+        .getFilePathList()
+        .stream()
+        .map(gitFiles::get)
+        .map(GitFile::getFileContent)
+        .collect(Collectors.toList());
   }
 
   public void populateValuesFilesFromAppManifest(
@@ -291,14 +327,31 @@ public class ApplicationManifestUtils {
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
       K8sValuesLocation k8sValuesLocation = entry.getKey();
       ApplicationManifest applicationManifest = entry.getValue();
-      if (Local == applicationManifest.getStoreType()) {
-        ManifestFile manifestFile = applicationManifestService.getManifestFileByFileName(
-            applicationManifest.getUuid(), applicationManifest.getKind().getDefaultFileName());
-        if (manifestFile != null && isNotBlank(manifestFile.getFileContent())) {
-          valuesFiles.put(k8sValuesLocation, manifestFile.getFileContent());
-        }
+      getManifestFileContentIfExists(applicationManifest)
+          .ifPresent(fileContent -> valuesFiles.put(k8sValuesLocation, fileContent));
+    }
+  }
+
+  public void populateMultipleValuesFilesFromAppManifest(Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
+      Map<K8sValuesLocation, Collection<String>> multipleValuesFiles) {
+    for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
+      K8sValuesLocation k8sValuesLocation = entry.getKey();
+      ApplicationManifest applicationManifest = entry.getValue();
+      getManifestFileContentIfExists(applicationManifest)
+          .ifPresent(fileContent -> multipleValuesFiles.put(k8sValuesLocation, singletonList(fileContent)));
+    }
+  }
+
+  private Optional<String> getManifestFileContentIfExists(ApplicationManifest manifest) {
+    if (Local == manifest.getStoreType()) {
+      ManifestFile manifestFile = applicationManifestService.getManifestFileByFileName(
+          manifest.getUuid(), manifest.getKind().getDefaultFileName());
+      if (manifestFile != null && isNotBlank(manifestFile.getFileContent())) {
+        return Optional.of(manifestFile.getFileContent());
       }
     }
+
+    return Optional.empty();
   }
 
   public void setValuesPathInGitFetchFilesTaskParams(GitFetchFilesTaskParams gitFetchFilesTaskParams) {
@@ -409,5 +462,23 @@ public class ApplicationManifestUtils {
   public boolean isKustomizeSource(ExecutionContext context) {
     ApplicationManifest appManifest = getApplicationManifestForService(context);
     return appManifest != null && appManifest.getStoreType() == KustomizeSourceRepo;
+  }
+
+  public void populateRemoteGitConfigFilePathList(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    appManifestMap.values().forEach(manifest -> {
+      if (manifest.getGitFileConfig() != null) {
+        if (manifest.getGitFileConfig().getFilePath() != null) {
+          List<String> multipleFiles =
+              Arrays.stream(manifest.getGitFileConfig().getFilePath().split(MULTIPLE_FILES_DELIMITER))
+                  .map(String::trim)
+                  .filter(StringUtils::isNotBlank)
+                  .collect(Collectors.toList());
+          manifest.getGitFileConfig().setFilePath(null);
+          manifest.getGitFileConfig().setFilePathList(multipleFiles);
+        } else {
+          manifest.getGitFileConfig().setFilePathList(emptyList());
+        }
+      }
+    });
   }
 }
