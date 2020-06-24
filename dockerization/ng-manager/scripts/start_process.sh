@@ -9,17 +9,17 @@ if [[ -z "$JVM_MIN_MEMORY" ]]; then
 fi
 
 if [[ -z "$JVM_MAX_MEMORY" ]]; then
-   export MAX_MEMORY=4096m
+   export MAX_MEMORY=2096m
 fi
 
 if [[ -z "$COMMAND" ]]; then
    export COMMAND=server
 fi
 
-echo "Using memory " $MEMORY
+echo "Using memory " "$MEMORY"
 
 if [[ -z "$CAPSULE_JAR" ]]; then
-   export CAPSULE_JAR=/opt/harness/120-ng-manager-capsule.jar
+   export CAPSULE_JAR=/opt/harness/ng-manager-capsule.jar
 fi
 
 export GC_PARAMS=" -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=40 -XX:MaxGCPauseMillis=1000 -Dfile.encoding=UTF-8"
