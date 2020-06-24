@@ -208,7 +208,13 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   public Map<String, String> getIssueStatus(ServiceNowApprovalParams approvalParams, String accountId, String appId) {
     ServiceNowConfig serviceNowConfig;
     try {
-      serviceNowConfig = (ServiceNowConfig) settingService.get(approvalParams.getSnowConnectorId()).getValue();
+      SettingAttribute snowConnector = settingService.get(approvalParams.getSnowConnectorId());
+      if (snowConnector == null) {
+        throw new ServiceNowException(
+            "Error getting ServiceNow connector for connector id: " + approvalParams.getSnowConnectorId(),
+            SERVICENOW_ERROR, USER);
+      }
+      serviceNowConfig = (ServiceNowConfig) snowConnector.getValue();
     } catch (Exception e) {
       logger.error("Error getting ServiceNow connector for ID: {}", approvalParams.getSnowConnectorId());
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
