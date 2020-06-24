@@ -47,6 +47,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -539,10 +540,16 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       }
 
     } catch (WingsException we) {
+      String errorMessage = ExceptionUtils.getMessage(we);
+      if (we.getParams() != null && we.getParams().get("message") != null) {
+        errorMessage = we.getParams().get("message").toString();
+      }
+      logger.error(
+          "Exception while executing service now approval in workflow: {}", context.getWorkflowExecutionId(), we);
       return respondWithStatus(context, executionData, null,
           ExecutionResponse.builder()
               .executionStatus(FAILED)
-              .errorMessage(we.getParams().get("message").toString())
+              .errorMessage(errorMessage)
               .stateExecutionData(executionData));
     }
 
