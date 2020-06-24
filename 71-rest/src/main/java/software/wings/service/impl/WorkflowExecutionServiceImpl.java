@@ -433,11 +433,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
         // Done to ignore inconsistent pipeline executions with mismatch from setup
         if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null
-            || pipelineExecution.getPipeline() == null || pipelineExecution.getPipeline().getPipelineStages() == null
-            || pipelineExecution.getPipelineStageExecutions().size()
-                != pipelineExecution.getPipeline().getPipelineStages().size()) {
+            || pipelineExecution.getPipeline() == null || pipelineExecution.getPipeline().getPipelineStages() == null) {
           res.remove(i);
           i--;
+        } else if (pipelineExecution.getPipelineStageExecutions().size()
+            != pipelineExecution.getPipeline().getPipelineStages().size()) {
+          boolean isAnyStageLooped =
+              pipelineExecution.getPipelineStageExecutions().stream().anyMatch(t -> t.isLooped());
+          if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())
+              && isAnyStageLooped) {
+            continue;
+          } else {
+            res.remove(i);
+            i--;
+          }
         }
         continue;
       }
@@ -643,6 +652,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               estimatedTime = pipeline.getStateEtaMap().get(pipelineStageElement.getName());
             }
             stageExecutionDataList.add(PipelineStageExecution.builder()
+                                           .pipelineStageElementId(pipelineStageElement.getUuid())
                                            .stateUuid(pipelineStageElement.getUuid())
                                            .stateType(pipelineStageElement.getType())
                                            .stateName(pipelineStageElement.getName())
@@ -653,6 +663,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())
               || APPROVAL_RESUME.name().equals(stateExecutionInstance.getStateType())) {
             PipelineStageExecution stageExecution = PipelineStageExecution.builder()
+                                                        .pipelineStageElementId(pipelineStageElement.getUuid())
                                                         .stateUuid(pipelineStageElement.getUuid())
                                                         .stateType(stateExecutionInstance.getStateType())
                                                         .status(stateExecutionInstance.getStatus())
@@ -678,6 +689,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())
               || ENV_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
             PipelineStageExecution stageExecution = PipelineStageExecution.builder()
+                                                        .pipelineStageElementId(pipelineStageElement.getUuid())
                                                         .stateUuid(pipelineStageElement.getUuid())
                                                         .stateType(pipelineStageElement.getType())
                                                         .stateName(pipelineStageElement.getName())
@@ -706,7 +718,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               && featureFlagService.isEnabled(
                      FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())) {
             handleEnvLoopStateExecutionData(workflowExecution.getAppId(), stateExecutionInstanceMap,
-                stageExecutionDataList, stateExecutionInstance);
+                stageExecutionDataList, stateExecutionInstance, pipelineStageElement.getUuid());
           } else {
             throw new InvalidRequestException("Unknown stateType " + stateExecutionInstance.getStateType());
           }
@@ -745,7 +757,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void handleEnvLoopStateExecutionData(String appId,
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap,
-      List<PipelineStageExecution> stageExecutionDataList, StateExecutionInstance stateExecutionInstance) {
+      List<PipelineStageExecution> stageExecutionDataList, StateExecutionInstance stateExecutionInstance,
+      String pipelineStageElementId) {
     StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
 
     if (stateExecutionData instanceof ForkStateExecutionData) {
@@ -754,12 +767,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         for (String element : envStateExecutionData.getForkStateNames()) {
           StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
           PipelineStageExecution stageExecution = PipelineStageExecution.builder()
+                                                      .pipelineStageElementId(pipelineStageElementId)
                                                       .stateUuid(executionInstanceLooped.getUuid())
                                                       .stateType(executionInstanceLooped.getStateType())
                                                       .stateName(executionInstanceLooped.getStateName())
                                                       .status(executionInstanceLooped.getStatus())
                                                       .startTs(executionInstanceLooped.getStartTs())
                                                       .endTs(executionInstanceLooped.getEndTs())
+                                                      .looped(true)
                                                       .build();
 
           StateExecutionData stateExecutionDataLooped = executionInstanceLooped.fetchStateExecutionData();

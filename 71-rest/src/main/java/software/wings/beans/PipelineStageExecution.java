@@ -22,6 +22,7 @@ import java.util.Objects;
 @Setter
 @Builder
 public class PipelineStageExecution {
+  private String pipelineStageElementId;
   private String stateUuid;
   private String stateName;
   private String stateType;
