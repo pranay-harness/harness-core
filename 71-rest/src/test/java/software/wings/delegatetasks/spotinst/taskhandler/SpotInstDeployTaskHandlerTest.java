@@ -96,6 +96,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
                                                   .newElastiGroupWithUpdatedCapacity(newElastigroup)
                                                   .oldElastiGroupWithUpdatedCapacity(oldElastigroup)
                                                   .blueGreen(false)
+                                                  .timeoutIntervalInMin(10)
                                                   .rollback(false)
                                                   .resizeNewFirst(true)
                                                   .build();
@@ -135,6 +136,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
     SpotInstDeployTaskParameters parameters = SpotInstDeployTaskParameters.builder()
                                                   .newElastiGroupWithUpdatedCapacity(newElastigroup)
                                                   .oldElastiGroupWithUpdatedCapacity(oldElastigroup)
+                                                  .timeoutIntervalInMin(10)
                                                   .blueGreen(false)
                                                   .rollback(false)
                                                   .resizeNewFirst(false)
@@ -175,6 +177,7 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
                                                   .newElastiGroupWithUpdatedCapacity(newElastigroup)
                                                   .oldElastiGroupWithUpdatedCapacity(oldElastigroup)
                                                   .blueGreen(false)
+                                                  .timeoutIntervalInMin(10)
                                                   .rollback(true)
                                                   .build();
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
