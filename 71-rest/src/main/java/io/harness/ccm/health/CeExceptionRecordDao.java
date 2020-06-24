@@ -17,12 +17,14 @@ public class CeExceptionRecordDao {
     return persistence.save(exception);
   }
 
-  public CeExceptionRecord getLatestException(String accountId, String clusterId) {
+  public CeExceptionRecord getRecentException(String accountId, String clusterId, long recentTimestamp) {
     return persistence.createQuery(CeExceptionRecord.class)
         .field(CeExceptionRecordKeys.accountId)
         .equal(accountId)
         .field(CeExceptionRecordKeys.clusterId)
         .equal(clusterId)
+        .field(CeExceptionRecordKeys.createdAt)
+        .greaterThanOrEq(recentTimestamp)
         .order(Sort.descending(CeExceptionRecordKeys.createdAt))
         .get();
   }

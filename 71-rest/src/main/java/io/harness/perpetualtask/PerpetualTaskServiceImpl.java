@@ -60,7 +60,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   public void broadcastToDelegate() {
     Set<Pair<String, String>> sendingHashSet;
     synchronized (broadcastAggregateSet) {
-      sendingHashSet = new HashSet(broadcastAggregateSet);
+      sendingHashSet = new HashSet<>(broadcastAggregateSet);
       broadcastAggregateSet.clear();
     }
 
@@ -105,6 +105,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   @Override
   public boolean resetTask(String accountId, String taskId) {
     // TODO(Hitesh) -> make a callback
+    logger.info("Resetting the perpetual task with id={}.", taskId);
     perpetualTaskRecordDao.setTaskState(taskId, PerpetualTaskState.TASK_UNASSIGNED.name());
     return perpetualTaskRecordDao.resetDelegateIdForTask(accountId, taskId);
   }

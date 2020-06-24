@@ -140,27 +140,20 @@ public class CEPerpetualTaskManager {
     return true;
   }
 
-  public boolean resetPerpetualTasks(ClusterRecord clusterRecord) {
+  public void resetPerpetualTasks(ClusterRecord clusterRecord) {
     // find all the existing perpetual Tasks for these clusters
     List<String> taskIds = Arrays.asList(clusterRecord.getPerpetualTaskIds());
     // reset all the existing perpetual tasks
-    if (!isNull(taskIds)) {
-      for (String taskId : taskIds) {
-        perpetualTaskService.resetTask(clusterRecord.getAccountId(), taskId);
-      }
-    }
-    return true;
+    taskIds.forEach(taskId -> perpetualTaskService.resetTask(clusterRecord.getAccountId(), taskId));
   }
 
   // delete all of the perpetual tasks associated with the Cluster
   public boolean deletePerpetualTasks(ClusterRecord clusterRecord) {
     List<String> taskIds =
         Arrays.asList(Optional.ofNullable(clusterRecord.getPerpetualTaskIds()).orElse(new String[0]));
-    if (!isNull(taskIds)) {
-      for (String taskId : taskIds) {
-        perpetualTaskService.deleteTask(clusterRecord.getAccountId(), taskId);
-        clusterRecordService.removePerpetualTaskId(clusterRecord, taskId);
-      }
+    for (String taskId : taskIds) {
+      perpetualTaskService.deleteTask(clusterRecord.getAccountId(), taskId);
+      clusterRecordService.removePerpetualTaskId(clusterRecord, taskId);
     }
     return true;
   }
