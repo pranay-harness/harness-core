@@ -37,10 +37,11 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
+import io.harness.state.io.ResolvedRefInput;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
-import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
@@ -85,16 +86,18 @@ public class ShellScriptStep implements Step, TaskExecutable {
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
-  public DelegateTask obtainTask(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+  public DelegateTask obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     ShellScriptStepParameters shellScriptStepParameters = (ShellScriptStepParameters) stepParameters;
     String activityId = createActivity(ambiance);
+    List<ResolvedRefInput> inputs = inputPackage.getInputs();
+    ResolvedRefInput envRefInput =
+        inputs.stream().filter(input -> input.getTransput() instanceof Environment).findFirst().orElse(null);
+    Environment environment = envRefInput == null ? null : (Environment) envRefInput.getTransput();
 
-    Environment environment =
-        (Environment) inputs.stream().filter(input -> input instanceof Environment).findFirst().orElse(null);
-    InfrastructureMapping infrastructureMapping = (InfrastructureMapping) inputs.stream()
-                                                      .filter(input -> input instanceof InfrastructureMapping)
-                                                      .findFirst()
-                                                      .orElse(null);
+    ResolvedRefInput infraRefInput =
+        inputs.stream().filter(input -> input.getTransput() instanceof InfrastructureMapping).findFirst().orElse(null);
+    InfrastructureMapping infrastructureMapping =
+        infraRefInput == null ? null : (InfrastructureMapping) infraRefInput.getTransput();
     String serviceTemplateId =
         infrastructureMapping == null ? null : serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
 

@@ -6,11 +6,10 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitator.PassThroughData;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepTransput;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,9 +39,9 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 public interface ChildChainExecutable {
-  ChildChainResponse executeFirstChild(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs);
+  ChildChainResponse executeFirstChild(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage);
 
-  ChildChainResponse executeNextChild(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs,
+  ChildChainResponse executeNextChild(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
 
   StepResponse finalizeExecution(Ambiance ambiance, StepParameters stepParameters, PassThroughData passThroughData,

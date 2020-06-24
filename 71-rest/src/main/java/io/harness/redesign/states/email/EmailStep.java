@@ -16,10 +16,10 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
-import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.helpers.ext.mail.EmailData;
@@ -41,7 +41,7 @@ public class EmailStep implements Step, SyncExecutable {
 
   @Override
   public StepResponse executeSync(
-      Ambiance ambiance, StepParameters parameters, List<StepTransput> inputs, PassThroughData passThroughData) {
+      Ambiance ambiance, StepParameters parameters, StepInputPackage inputPackage, PassThroughData passThroughData) {
     EmailStepParameters stepParameters = (EmailStepParameters) parameters;
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     try {

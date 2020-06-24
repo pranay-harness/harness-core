@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
@@ -17,32 +16,33 @@ import io.harness.plan.PlanNode;
 import io.harness.references.RefObject;
 import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.resolvers.Resolver;
+import io.harness.state.io.ResolvedRefInput;
+import io.harness.state.io.StepInputPackage;
+import io.harness.state.io.StepInputPackage.StepInputPackageBuilder;
 import io.harness.state.io.StepTransput;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @OwnedBy(CDC)
 @Redesign
 public class EngineObtainmentHelper {
   @Inject private ResolverRegistry resolverRegistry;
-  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
 
-  public List<StepTransput> obtainInputs(
+  public StepInputPackage obtainInputPackage(
       Ambiance ambiance, List<RefObject> refObjects, List<? extends StepTransput> additionalInputs) {
-    List<StepTransput> inputs = new ArrayList<>();
-
+    StepInputPackageBuilder inputPackageBuilder = StepInputPackage.builder();
     if (additionalInputs != null) {
-      inputs.addAll(additionalInputs);
+      inputPackageBuilder.additionalInputs(additionalInputs);
     }
     if (!isEmpty(refObjects)) {
       for (RefObject refObject : refObjects) {
         Resolver resolver = resolverRegistry.obtain(refObject.getRefType());
-        inputs.add(resolver.resolve(ambiance, refObject));
+        inputPackageBuilder.input(
+            ResolvedRefInput.builder().transput(resolver.resolve(ambiance, refObject)).refObject(refObject).build());
       }
     }
-    return inputs;
+    return inputPackageBuilder.build();
   }
 
   public PlanNode fetchExecutionNode(String nodeId, String planExecutionId) {

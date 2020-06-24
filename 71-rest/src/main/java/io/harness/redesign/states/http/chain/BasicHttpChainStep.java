@@ -22,13 +22,12 @@ import io.harness.facilitator.modes.chain.task.TaskChainResponse;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepTransput;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.TaskType;
 
-import java.util.List;
 import java.util.Map;
 
 @Redesign
@@ -39,7 +38,8 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable {
   private static final int socketTimeoutMillis = 10000;
 
   @Override
-  public TaskChainResponse startChainLink(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+  public TaskChainResponse startChainLink(
+      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     BasicHttpChainStepParameters parameters =
         obtainBasicHttpChainStepParameters((BasicHttpChainStepParameters) stepParameters);
     BasicHttpStepParameters linkParam = parameters.getLinkParameters().get(0);
@@ -48,8 +48,8 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable {
   }
 
   @Override
-  public TaskChainResponse executeNextLink(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+  public TaskChainResponse executeNextLink(Ambiance ambiance, StepParameters stepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     BasicHttpChainStepParameters parameters =
         obtainBasicHttpChainStepParameters((BasicHttpChainStepParameters) stepParameters);
     BasicHttpStepParameters linkParam = parameters.getLinkParameters().get(1);

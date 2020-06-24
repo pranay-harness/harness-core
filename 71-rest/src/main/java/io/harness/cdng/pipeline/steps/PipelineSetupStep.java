@@ -13,13 +13,12 @@ import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
-import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -27,8 +26,8 @@ public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable 
   public static final StepType STEP_TYPE = StepType.builder().type("PIPELINE_SETUP").build();
 
   @Override
-  public StepResponse executeSync(
-      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
+  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
+      PassThroughData passThroughData) {
     CDPipelineSetupParameters parameters = (CDPipelineSetupParameters) stepParameters;
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
@@ -50,7 +49,7 @@ public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable 
 
   @Override
   public ChildExecutableResponse obtainChild(
-      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     CDPipelineSetupParameters parameters = (CDPipelineSetupParameters) stepParameters;
     logger.info("starting execution for pipeline [{}]", parameters);
 

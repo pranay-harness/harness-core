@@ -7,11 +7,10 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitator.modes.Abortable;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepTransput;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,7 +30,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 public interface AsyncExecutable extends Abortable<AsyncExecutableResponse> {
-  AsyncExecutableResponse executeAsync(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs);
+  AsyncExecutableResponse executeAsync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage);
 
   StepResponse handleAsyncResponse(
       Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap);

@@ -12,6 +12,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.status.Status;
 import io.harness.rule.Owner;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import org.junit.Test;
@@ -20,8 +21,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.service.intfc.EmailNotificationService;
-
-import java.util.Collections;
 
 public class EmailStepTest extends WingsBaseTest {
   @Mock private EmailNotificationService emailNotificationService;
@@ -68,7 +67,8 @@ public class EmailStepTest extends WingsBaseTest {
                                              .ignoreDeliveryFailure(ignoreDeliveryFailure)
                                              .build();
 
-    StepResponse stepResponse = emailStep.executeSync(ambiance, emailStepParameters, Collections.emptyList(), null);
+    StepResponse stepResponse =
+        emailStep.executeSync(ambiance, emailStepParameters, StepInputPackage.builder().build(), null);
 
     assertThat(stepResponse.getStatus()).isEqualTo(expectedStatus);
   }

@@ -17,6 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.references.OutcomeRefObject;
 import io.harness.rule.Owner;
 import io.harness.state.io.K8sRollingStepParameters;
+import io.harness.state.io.StepInputPackage;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -45,7 +46,8 @@ public class K8sRollingStepTest extends WingsBaseTest {
 
     doReturn(null).when(outcomeService).resolve(ambiance, service);
 
-    assertThatThrownBy(() -> k8sRollingStep.startChainLink(ambiance, k8sRollingStepInfo, Collections.emptyList()))
+    assertThatThrownBy(
+        () -> k8sRollingStep.startChainLink(ambiance, k8sRollingStepInfo, StepInputPackage.builder().build()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Services step need to run before k8s rolling step");
 
@@ -55,7 +57,8 @@ public class K8sRollingStepTest extends WingsBaseTest {
     OutcomeRefObject infrastructureRefObject = OutcomeRefObject.builder().name("infrastructure").build();
 
     doReturn(null).when(outcomeService).resolve(ambiance, infrastructureRefObject);
-    assertThatThrownBy(() -> k8sRollingStep.startChainLink(ambiance, k8sRollingStepInfo, Collections.emptyList()))
+    assertThatThrownBy(
+        () -> k8sRollingStep.startChainLink(ambiance, k8sRollingStepInfo, StepInputPackage.builder().build()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Infrastructure step need to run before k8s rolling step");
   }

@@ -44,11 +44,11 @@ public class ChildChainStrategy implements InvokeStrategy {
     Ambiance ambiance = invokerPackage.getAmbiance();
     ChildChainResponse childChainResponse;
     if (invokerPackage.isStart()) {
-      childChainResponse =
-          childChainExecutable.executeFirstChild(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());
+      childChainResponse = childChainExecutable.executeFirstChild(
+          ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());
     } else {
       childChainResponse = childChainExecutable.executeNextChild(ambiance, invokerPackage.getParameters(),
-          invokerPackage.getInputs(), invokerPackage.getPassThroughData(), invokerPackage.getResponseDataMap());
+          invokerPackage.getInputPackage(), invokerPackage.getPassThroughData(), invokerPackage.getResponseDataMap());
     }
     handleResponse(ambiance, childChainResponse);
   }

@@ -38,11 +38,11 @@ public class TaskChainStrategy implements InvokeStrategy {
     Ambiance ambiance = invokerPackage.getAmbiance();
     TaskChainResponse taskChainResponse;
     if (invokerPackage.isStart()) {
-      taskChainResponse =
-          taskChainExecutable.startChainLink(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());
+      taskChainResponse = taskChainExecutable.startChainLink(
+          ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());
     } else {
       taskChainResponse = taskChainExecutable.executeNextLink(ambiance, invokerPackage.getParameters(),
-          invokerPackage.getInputs(), invokerPackage.getPassThroughData(), invokerPackage.getResponseDataMap());
+          invokerPackage.getInputPackage(), invokerPackage.getPassThroughData(), invokerPackage.getResponseDataMap());
     }
     handleResponse(ambiance, taskChainResponse);
   }

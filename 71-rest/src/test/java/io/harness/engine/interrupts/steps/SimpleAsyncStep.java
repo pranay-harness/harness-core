@@ -14,16 +14,15 @@ import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse.AsyncExecutableResponseBuilder;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
-import io.harness.state.io.StepTransput;
 import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +35,7 @@ public class SimpleAsyncStep implements Step, AsyncExecutable {
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     SimpleStepAsyncParams params = (SimpleStepAsyncParams) stepParameters;
     String uuid = generateUuid();
     logger.info(

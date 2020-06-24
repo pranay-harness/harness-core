@@ -35,7 +35,7 @@ public class TaskStrategy implements InvokeStrategy {
   public void invoke(InvokerPackage invokerPackage) {
     TaskExecutable taskExecutable = (TaskExecutable) invokerPackage.getStep();
     Ambiance ambiance = invokerPackage.getAmbiance();
-    Task task = taskExecutable.obtainTask(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());
+    Task task = taskExecutable.obtainTask(ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());
     handleResponse(ambiance, task);
   }
 

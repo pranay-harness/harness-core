@@ -23,9 +23,9 @@ import io.harness.network.SafeHttpCall;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ci.K8ExecCommandParams;
 import software.wings.beans.ci.ShellScriptType;
@@ -48,8 +48,8 @@ public class BuildStep implements Step, SyncExecutable {
   //     Async will be supported once we will have delegate microservice ready.
 
   @Override
-  public StepResponse executeSync(
-      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs, PassThroughData passThroughData) {
+  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
+      PassThroughData passThroughData) {
     try {
       K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
           ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());

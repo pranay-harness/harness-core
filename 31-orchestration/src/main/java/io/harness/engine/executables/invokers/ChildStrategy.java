@@ -45,7 +45,7 @@ public class ChildStrategy implements InvokeStrategy {
     Ambiance ambiance = invokerPackage.getAmbiance();
     ChildExecutable childExecutable = (ChildExecutable) invokerPackage.getStep();
     ChildExecutableResponse response =
-        childExecutable.obtainChild(ambiance, invokerPackage.getParameters(), invokerPackage.getInputs());
+        childExecutable.obtainChild(ambiance, invokerPackage.getParameters(), invokerPackage.getInputPackage());
     handleResponse(ambiance, response);
   }
 

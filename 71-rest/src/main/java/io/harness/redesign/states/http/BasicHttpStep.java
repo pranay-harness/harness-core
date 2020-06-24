@@ -17,17 +17,16 @@ import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
-import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.TaskType;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
-import java.util.List;
 import java.util.Map;
 
 @OwnedBy(CDC)
@@ -38,7 +37,7 @@ public class BasicHttpStep implements Step, TaskExecutable {
   private static final int socketTimeoutMillis = 10000;
 
   @Override
-  public DelegateTask obtainTask(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+  public DelegateTask obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     BasicHttpStepParameters parameters = (BasicHttpStepParameters) stepParameters;
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
                                                 .url(parameters.getUrl())

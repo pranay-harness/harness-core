@@ -13,13 +13,12 @@ import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Child;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.ChildrenExecutableResponseBuilder;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;
-import io.harness.state.io.StepTransput;
 
-import java.util.List;
 import java.util.Map;
 
 @OwnedBy(CDC)
@@ -29,7 +28,7 @@ public class ForkStep implements Step, ChildrenExecutable {
 
   @Override
   public ChildrenExecutableResponse obtainChildren(
-      Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     ForkStepParameters parameters = (ForkStepParameters) stepParameters;
     ChildrenExecutableResponseBuilder responseBuilder = ChildrenExecutableResponse.builder();
     for (String nodeId : parameters.getParallelNodeIds()) {

@@ -54,12 +54,12 @@ import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
-import io.harness.state.io.StepTransput;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -118,8 +118,8 @@ public class ExecutionEngine {
 
       PlanNode node = nodeExecution.getNode();
       // Facilitate and execute
-      List<StepTransput> inputs =
-          engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
+      StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(
+          ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
       StepParameters resolvedStepParameters =
           (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
       if (resolvedStepParameters != null) {
@@ -127,7 +127,7 @@ public class ExecutionEngine {
             ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
       }
 
-      facilitateExecution(ambiance, nodeExecution, inputs);
+      facilitateExecution(ambiance, nodeExecution, inputPackage);
     } catch (Exception exception) {
       handleError(ambiance, exception);
     }
@@ -164,14 +164,14 @@ public class ExecutionEngine {
     return cloned;
   }
 
-  private void facilitateExecution(Ambiance ambiance, NodeExecution nodeExecution, List<StepTransput> inputs) {
+  private void facilitateExecution(Ambiance ambiance, NodeExecution nodeExecution, StepInputPackage inputPackage) {
     PlanNode node = nodeExecution.getNode();
     FacilitatorResponse facilitatorResponse = null;
     for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
       injector.injectMembers(facilitator);
       facilitatorResponse = facilitator.facilitate(
-          ambiance, nodeExecution.getResolvedStepParameters(), obtainment.getParameters(), inputs);
+          ambiance, nodeExecution.getResolvedStepParameters(), obtainment.getParameters(), inputPackage);
       if (facilitatorResponse != null) {
         break;
       }
@@ -190,15 +190,15 @@ public class ExecutionEngine {
           EngineWaitResumeCallback.builder()
               .ambiance(ambiance)
               .facilitatorResponse(finalFacilitatorResponse)
-              .inputs(inputs)
+              .inputPackage(inputPackage)
               .build(),
           resumeId);
       return;
     }
-    invokeState(ambiance, facilitatorResponse, inputs);
+    invokeState(ambiance, facilitatorResponse, inputPackage);
   }
 
-  public void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse, List<StepTransput> inputs) {
+  public void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse, StepInputPackage inputPackage) {
     NodeExecution nodeExecution =
         Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(ambiance.obtainCurrentRuntimeId(),
             Status.RUNNING, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode())));
@@ -208,7 +208,7 @@ public class ExecutionEngine {
     invoker.invokeExecutable(InvokerPackage.builder()
                                  .step(currentStep)
                                  .ambiance(ambiance)
-                                 .inputs(inputs)
+                                 .inputPackage(inputPackage)
                                  .parameters(nodeExecution.getResolvedStepParameters())
                                  .passThroughData(facilitatorResponse.getPassThroughData())
                                  .start(true)
@@ -323,13 +323,13 @@ public class ExecutionEngine {
   public void triggerLink(Step step, Ambiance ambiance, NodeExecution nodeExecution, PassThroughData passThroughData,
       Map<String, ResponseData> response) {
     PlanNode node = nodeExecution.getNode();
-    List<StepTransput> inputs =
-        engineObtainmentHelper.obtainInputs(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
+    StepInputPackage inputPackage =
+        engineObtainmentHelper.obtainInputPackage(ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(nodeExecution.getMode());
     invoker.invokeExecutable(InvokerPackage.builder()
                                  .step(step)
                                  .ambiance(ambiance)
-                                 .inputs(inputs)
+                                 .inputPackage(inputPackage)
                                  .parameters(nodeExecution.getResolvedStepParameters())
                                  .responseDataMap(response)
                                  .passThroughData(passThroughData)

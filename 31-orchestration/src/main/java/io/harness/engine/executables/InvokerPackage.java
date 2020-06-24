@@ -8,12 +8,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.facilitator.PassThroughData;
 import io.harness.state.Step;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
-import io.harness.state.io.StepTransput;
 import lombok.Builder;
 import lombok.Value;
 
-import java.util.List;
 import java.util.Map;
 
 @OwnedBy(CDC)
@@ -24,7 +23,7 @@ public class InvokerPackage {
   Step step;
   Ambiance ambiance;
   StepParameters parameters;
-  List<StepTransput> inputs;
+  StepInputPackage inputPackage;
   PassThroughData passThroughData;
 
   // TODO (prashant) -> Indicates that the ASYNC_TASK_CHAIN is starting. Do Not like this figure out a better way. In

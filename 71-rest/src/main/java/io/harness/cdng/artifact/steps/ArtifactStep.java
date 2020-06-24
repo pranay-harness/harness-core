@@ -25,15 +25,14 @@ import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
+import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
-import io.harness.state.io.StepTransput;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.TaskType;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -46,7 +45,7 @@ public class ArtifactStep implements Step, TaskExecutable {
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
 
   @Override
-  public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, List<StepTransput> inputs) {
+  public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     ArtifactStepParameters parameters = (ArtifactStepParameters) stepParameters;
     logger.info("Executing deployment stage with params [{}]", parameters);
     ArtifactSource artifactSource = getArtifactSource(parameters, ambiance.getSetupAbstractions().get("accountId"));
