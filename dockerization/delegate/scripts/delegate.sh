@@ -1,18 +1,18 @@
 #!/bin/bash -e
 
-JRE_VERSION="${JRE_VERSION:-"1.8.0_242"}"
 USE_CDN="${USE_CDN:-false}"
 JVM_URL_BASE_PATH=$DELEGATE_STORAGE_URL
 if [ "$USE_CDN" = true ]; then
   JVM_URL_BASE_PATH=$JVM_URL_BASE_PATH/public/shared
 fi
-if [ "$JRE_VERSION" != "1.8.0_242" ]; then
-  echo unsupported JRE version $JRE_VERSION
-  exit 1
-else
-  JRE_DIR=jdk8u242-b08-jre
-  JVM_URL=$JVM_URL_BASE_PATH/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz
+
+if [ "$JRE_VERSION" != "" ] && [ "$JRE_VERSION" != "1.8.0_242" ]; then
+  echo Unsupported JRE version $JRE_VERSION - using 1.8.0_242 instead
 fi
+
+JRE_DIR=jdk8u242-b08-jre
+JVM_URL=$JVM_URL_BASE_PATH/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz
+
 JRE_BINARY=$JRE_DIR/bin/java
 
 SOURCE="${BASH_SOURCE[0]}"
