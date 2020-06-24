@@ -52,7 +52,9 @@ public class OutcomeConnectionDataFetcher
 
       final Environment environment = persistence.get(Environment.class, execution.getEnvId());
       QLEnvironmentBuilder environmentBuilder = QLEnvironment.builder();
-      EnvironmentController.populateEnvironment(environment, environmentBuilder);
+      if (environment != null) {
+        EnvironmentController.populateEnvironment(environment, environmentBuilder);
+      }
 
       for (ElementExecutionSummary summary : execution.getServiceExecutionSummaries()) {
         QLDeploymentOutcomeBuilder deployment = QLDeploymentOutcome.builder().context(
