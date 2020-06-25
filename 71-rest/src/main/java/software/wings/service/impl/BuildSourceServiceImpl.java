@@ -664,7 +664,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
-  public List<String> getGcbTriggers(String settingId, String projectId) {
+  public List<String> getGcbTriggers(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
       throw new InvalidRequestException("GCP Cloud provider Settings Attribute is null", USER);
@@ -675,7 +675,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    return gcbService.getAllTriggers(gcpConfig, encryptedDataDetails, projectId)
+    return gcbService.getAllTriggers(gcpConfig, encryptedDataDetails)
         .stream()
         .map(GcbTrigger::getName)
         .collect(Collectors.toList());

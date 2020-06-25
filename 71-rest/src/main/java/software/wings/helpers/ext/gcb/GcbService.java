@@ -15,16 +15,15 @@ import java.util.List;
 @OwnedBy(CDC)
 public interface GcbService {
   BuildOperationDetails createBuild(
-      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String projectId, GcbBuildDetails buildParams);
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, GcbBuildDetails buildParams);
 
-  GcbBuildDetails getBuild(
-      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String projectId, String buildId);
+  GcbBuildDetails getBuild(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String buildId);
 
-  BuildOperationDetails runTrigger(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String projectId,
-      String triggerId, RepoSource repoSource);
+  BuildOperationDetails runTrigger(
+      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String triggerId, RepoSource repoSource);
 
   String fetchBuildLogs(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String fileName);
 
-  List<GcbTrigger> getAllTriggers(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String projectId);
+  List<GcbTrigger> getAllTriggers(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails);
 }

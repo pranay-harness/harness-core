@@ -462,7 +462,7 @@ public interface BuildSourceService {
     throw new UnsupportedOperationException();
   }
 
-  default List<String> getGcbTriggers(String settingId, String projectId) {
+  default List<String> getGcbTriggers(String settingId) {
     throw new UnsupportedOperationException();
   }
 }

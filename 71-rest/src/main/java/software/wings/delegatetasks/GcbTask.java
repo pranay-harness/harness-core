@@ -89,8 +89,7 @@ public class GcbTask extends AbstractDelegateRunnableTask {
     GcbBuildDetails build;
     do {
       sleep(Duration.ofSeconds(params.getPollFrequency()));
-      build = gcbService.getBuild(params.getGcpConfig(), params.getEncryptedDataDetails(),
-          params.getGcbOptions().getProjectId(), params.getBuildId());
+      build = gcbService.getBuild(params.getGcpConfig(), params.getEncryptedDataDetails(), params.getBuildId());
       String gcbOutput = gcbService.fetchBuildLogs(
           params.getGcpConfig(), params.getEncryptedDataDetails(), build.getLogsBucket(), params.getBuildId());
 
@@ -125,8 +124,8 @@ public class GcbTask extends AbstractDelegateRunnableTask {
   protected BuildOperationDetails triggerGcb(final @NotNull GcbTaskParams params) {
     final GcbOptions options = requireNonNull(params.getGcbOptions());
     RepoSource source = repoSourceOf(options.getTriggerSpec(), params.getSubstitutions());
-    return gcbService.runTrigger(params.getGcpConfig(), params.getEncryptedDataDetails(), options.getProjectId(),
-        options.getTriggerSpec().getName(), source);
+    return gcbService.runTrigger(
+        params.getGcpConfig(), params.getEncryptedDataDetails(), options.getTriggerSpec().getName(), source);
   }
 
   GcbBuildDetails fromJsonSpec(final String jsonBuildSpec) {
@@ -151,8 +150,7 @@ public class GcbTask extends AbstractDelegateRunnableTask {
   }
 
   BuildOperationDetails buildWith(final @NotNull GcbTaskParams params, GcbBuildDetails buildDetails) {
-    return gcbService.createBuild(
-        params.getGcpConfig(), params.getEncryptedDataDetails(), params.getGcbOptions().getProjectId(), buildDetails);
+    return gcbService.createBuild(params.getGcpConfig(), params.getEncryptedDataDetails(), buildDetails);
   }
 
   RepoSource repoSourceOf(

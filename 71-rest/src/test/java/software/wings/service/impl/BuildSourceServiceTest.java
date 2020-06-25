@@ -1165,9 +1165,9 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(gcbService.getAllTriggers(any(), any(), any())).thenReturn(triggers);
+    when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
 
-    List<String> actualTriggerNames = buildSourceService.getGcbTriggers(SETTING_ID, PROJECT_ID);
+    List<String> actualTriggerNames = buildSourceService.getGcbTriggers(SETTING_ID);
     assertThat(actualTriggerNames).hasSize(1);
     assertThat(actualTriggerNames.get(0)).isEqualTo(TRIGGER_NAME);
   }
@@ -1177,7 +1177,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnNullSettingAttribute() {
     when(settingsService.get(SETTING_ID)).thenReturn(null);
-    buildSourceService.getGcbTriggers(SETTING_ID, PROJECT_ID);
+    buildSourceService.getGcbTriggers(SETTING_ID);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -1185,6 +1185,6 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionOnNullSettingValue() {
     when(settingsService.get(SETTING_ID)).thenReturn(new SettingAttribute());
-    buildSourceService.getGcbTriggers(SETTING_ID, PROJECT_ID);
+    buildSourceService.getGcbTriggers(SETTING_ID);
   }
 }

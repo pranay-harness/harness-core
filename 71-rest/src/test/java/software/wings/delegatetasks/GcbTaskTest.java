@@ -25,7 +25,6 @@ import static software.wings.utils.WingsTestConstants.BRANCH_NAME;
 import static software.wings.utils.WingsTestConstants.BUILD_ID;
 import static software.wings.utils.WingsTestConstants.COMMIT_SHA;
 import static software.wings.utils.WingsTestConstants.INLINE_SPEC;
-import static software.wings.utils.WingsTestConstants.PROJECT_ID;
 import static software.wings.utils.WingsTestConstants.TAG_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 
@@ -183,7 +182,6 @@ public class GcbTaskTest extends CategoryTest {
     triggerBuildSpec.setSourceId(BRANCH_NAME);
     triggerBuildSpec.setName(TRIGGER_ID);
     gcbOptions.setTriggerSpec(triggerBuildSpec);
-    gcbOptions.setProjectId(PROJECT_ID);
 
     GcbTaskParams taskParams = GcbTaskParams.builder()
                                    .type(POLL)
@@ -200,7 +198,7 @@ public class GcbTaskTest extends CategoryTest {
     GcbBuildDetails success =
         GcbBuildDetails.builder().status(GcbBuildStatus.SUCCESS).id(BUILD_ID).logsBucket("logsBucket").build();
 
-    when(gcbService.getBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, BUILD_ID))
+    when(gcbService.getBuild(gcpConfig, encryptedDataDetails, BUILD_ID))
         .thenReturn(working)
         .thenReturn(working)
         .thenReturn(success);
@@ -212,7 +210,7 @@ public class GcbTaskTest extends CategoryTest {
     doNothing().when(task).saveConsoleLogs(any(), anyString(), anyString(), any(), anyString(), anyString());
 
     GcbDelegateResponse response = task.pollGcbBuild(taskParams);
-    verify(gcbService, times(3)).getBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, BUILD_ID);
+    verify(gcbService, times(3)).getBuild(gcpConfig, encryptedDataDetails, BUILD_ID);
     verify(gcbService, times(3))
         .fetchBuildLogs(gcpConfig, encryptedDataDetails, success.getLogsBucket(), success.getId());
     verify(task, times(3)).saveConsoleLogs(any(), anyString(), anyString(), any(), anyString(), anyString());
@@ -231,7 +229,6 @@ public class GcbTaskTest extends CategoryTest {
     OperationMeta operationMeta = new OperationMeta();
 
     gcbOptions.setInlineSpec(INLINE_SPEC);
-    gcbOptions.setProjectId(PROJECT_ID);
     gcbOptions.setSpecSource(GcbOptions.GcbSpecSource.INLINE);
     GcbTaskParams taskParams = GcbTaskParams.builder()
                                    .type(START)
@@ -244,12 +241,11 @@ public class GcbTaskTest extends CategoryTest {
     operationMeta.setBuild(GcbBuildDetails.builder().status(GcbBuildStatus.SUCCESS).build());
     buildOperationDetails.setOperationMeta(operationMeta);
 
-    when(gcbService.createBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, gcbBuildDetails))
-        .thenReturn(buildOperationDetails);
+    when(gcbService.createBuild(gcpConfig, encryptedDataDetails, gcbBuildDetails)).thenReturn(buildOperationDetails);
 
     GcbDelegateResponse response = task.run(taskParams);
 
-    verify(gcbService).createBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, gcbBuildDetails);
+    verify(gcbService).createBuild(gcpConfig, encryptedDataDetails, gcbBuildDetails);
     verify(task).fromJsonSpec(INLINE_SPEC);
     assertThat(response).isNotNull();
   }
@@ -268,7 +264,6 @@ public class GcbTaskTest extends CategoryTest {
 
     gitResult.setFiles(Collections.singletonList(GitFile.builder().fileContent(INLINE_SPEC).build()));
     gcbOptions.setRepositorySpec(remoteBuildSpec);
-    gcbOptions.setProjectId(PROJECT_ID);
     gcbOptions.setSpecSource(GcbOptions.GcbSpecSource.REMOTE);
     GcbTaskParams taskParams = GcbTaskParams.builder()
                                    .type(START)
@@ -282,12 +277,11 @@ public class GcbTaskTest extends CategoryTest {
     buildOperationDetails.setOperationMeta(operationMeta);
 
     doReturn(gitResult).when(gitClient).fetchFilesByPath(any(), any());
-    when(gcbService.createBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, gcbBuildDetails))
-        .thenReturn(buildOperationDetails);
+    when(gcbService.createBuild(gcpConfig, encryptedDataDetails, gcbBuildDetails)).thenReturn(buildOperationDetails);
 
     GcbDelegateResponse response = task.run(taskParams);
 
-    verify(gcbService).createBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, gcbBuildDetails);
+    verify(gcbService).createBuild(gcpConfig, encryptedDataDetails, gcbBuildDetails);
     verify(task).fetchSpecFromGit(taskParams);
     assertThat(response).isNotNull();
   }
@@ -304,7 +298,6 @@ public class GcbTaskTest extends CategoryTest {
     triggerConfig.setSource(source);
     triggerConfig.setSourceId(sourceId);
     gcbOptions.setTriggerSpec(triggerConfig);
-    gcbOptions.setProjectId(PROJECT_ID);
     gcbOptions.setSpecSource(GcbOptions.GcbSpecSource.TRIGGER);
     if (source.equals(GcbTriggerBuildSpec.GcbTriggerSource.BRANCH)) {
       repoSource.setBranchName(sourceId);
@@ -324,12 +317,12 @@ public class GcbTaskTest extends CategoryTest {
     operationMeta.setBuild(GcbBuildDetails.builder().status(GcbBuildStatus.SUCCESS).build());
     buildOperationDetails.setOperationMeta(operationMeta);
 
-    when(gcbService.runTrigger(gcpConfig, encryptedDataDetails, PROJECT_ID, TRIGGER_ID, repoSource))
+    when(gcbService.runTrigger(gcpConfig, encryptedDataDetails, TRIGGER_ID, repoSource))
         .thenReturn(buildOperationDetails);
 
     GcbDelegateResponse response = task.run(taskParams);
 
-    verify(gcbService).runTrigger(gcpConfig, encryptedDataDetails, PROJECT_ID, TRIGGER_ID, repoSource);
+    verify(gcbService).runTrigger(gcpConfig, encryptedDataDetails, TRIGGER_ID, repoSource);
     assertThat(response).isNotNull();
   }
 }

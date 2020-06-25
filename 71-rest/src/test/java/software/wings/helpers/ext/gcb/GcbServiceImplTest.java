@@ -70,6 +70,7 @@ public class GcbServiceImplTest {
     doReturn(gcbRestClient).when(gcbService).getRestClient(GcbRestClient.class, GcbRestClient.baseUrl);
     doReturn(gcsRestClient).when(gcbService).getRestClient(GcsRestClient.class, GcsRestClient.baseUrl);
     doReturn(VALID_AUTH_TOKEN).when(gcbService).getBasicAuthHeader(anyObject(), anyObject());
+    when(gcpConfig.getServiceAccountKeyFileContent()).thenReturn("{\"project_id\":\"projectId\"}".toCharArray());
   }
 
   @Test
@@ -81,7 +82,7 @@ public class GcbServiceImplTest {
 
     when(gcbRestClient.getBuild(VALID_AUTH_TOKEN, PROJECT_ID, BUILD_ID)).thenReturn(callForBuildDetails);
     when(callForBuildDetails.execute()).thenReturn(response);
-    GcbBuildDetails actualBuildDetails = gcbService.getBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, BUILD_ID);
+    GcbBuildDetails actualBuildDetails = gcbService.getBuild(gcpConfig, encryptedDataDetails, BUILD_ID);
     assertThat(expectedBuildDetails).isEqualTo(actualBuildDetails);
   }
   @Test
@@ -92,7 +93,7 @@ public class GcbServiceImplTest {
     exceptionRule.expectMessage("Invalid Google Cloud Platform credentials.");
     when(gcbRestClient.getBuild(VALID_AUTH_TOKEN, PROJECT_ID, BUILD_ID)).thenReturn(callForBuildDetails);
     when(callForBuildDetails.execute()).thenThrow(new IOException());
-    gcbService.getBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, BUILD_ID);
+    gcbService.getBuild(gcpConfig, encryptedDataDetails, BUILD_ID);
   }
 
   @Test
@@ -112,7 +113,7 @@ public class GcbServiceImplTest {
     when(gcbRestClient.createBuild(VALID_AUTH_TOKEN, PROJECT_ID, buildDetails)).thenReturn(callForOperation);
     when(callForOperation.execute()).thenReturn(response);
     BuildOperationDetails actualOperationDetails =
-        gcbService.createBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, buildDetails);
+        gcbService.createBuild(gcpConfig, encryptedDataDetails, buildDetails);
     assertThat(buildOperationDetails).isEqualTo(actualOperationDetails);
   }
 
@@ -126,7 +127,7 @@ public class GcbServiceImplTest {
     exceptionRule.expectMessage("Invalid Google Cloud Platform credentials.");
     when(gcbRestClient.createBuild(VALID_AUTH_TOKEN, PROJECT_ID, buildDetails)).thenReturn(callForOperation);
     when(callForOperation.execute()).thenThrow(new IOException());
-    gcbService.createBuild(gcpConfig, encryptedDataDetails, PROJECT_ID, buildDetails);
+    gcbService.createBuild(gcpConfig, encryptedDataDetails, buildDetails);
   }
 
   @Test
@@ -149,7 +150,7 @@ public class GcbServiceImplTest {
     when(gcbRestClient.runTrigger(VALID_AUTH_TOKEN, PROJECT_ID, TRIGGER_ID, repoSource)).thenReturn(callForOperation);
     when(callForOperation.execute()).thenReturn(response);
     BuildOperationDetails actualOperationDetails =
-        gcbService.runTrigger(gcpConfig, encryptedDataDetails, PROJECT_ID, TRIGGER_ID, repoSource);
+        gcbService.runTrigger(gcpConfig, encryptedDataDetails, TRIGGER_ID, repoSource);
     assertThat(buildOperationDetails).isEqualTo(actualOperationDetails);
   }
 
@@ -163,7 +164,7 @@ public class GcbServiceImplTest {
     exceptionRule.expectMessage("Invalid Google Cloud Platform credentials.");
     when(gcbRestClient.runTrigger(VALID_AUTH_TOKEN, PROJECT_ID, TRIGGER_ID, repoSource)).thenReturn(callForOperation);
     when(callForOperation.execute()).thenThrow(new IOException());
-    gcbService.runTrigger(gcpConfig, encryptedDataDetails, PROJECT_ID, TRIGGER_ID, repoSource);
+    gcbService.runTrigger(gcpConfig, encryptedDataDetails, TRIGGER_ID, repoSource);
   }
 
   @Test
@@ -180,7 +181,7 @@ public class GcbServiceImplTest {
 
     when(gcbRestClient.getAllTriggers(VALID_AUTH_TOKEN, PROJECT_ID)).thenReturn(callForTriggers);
     when(callForTriggers.execute()).thenReturn(response);
-    List<GcbTrigger> gcbTriggers = gcbService.getAllTriggers(gcpConfig, encryptedDataDetails, PROJECT_ID);
+    List<GcbTrigger> gcbTriggers = gcbService.getAllTriggers(gcpConfig, encryptedDataDetails);
     assertThat(triggers).isEqualTo(gcbTriggers);
   }
 
@@ -194,7 +195,7 @@ public class GcbServiceImplTest {
     exceptionRule.expectMessage("Invalid Google Cloud Platform credentials.");
     when(gcbRestClient.getAllTriggers(VALID_AUTH_TOKEN, PROJECT_ID)).thenReturn(callForTriggers);
     when(callForTriggers.execute()).thenThrow(new IOException());
-    gcbService.getAllTriggers(gcpConfig, encryptedDataDetails, PROJECT_ID);
+    gcbService.getAllTriggers(gcpConfig, encryptedDataDetails);
   }
 
   @Test
