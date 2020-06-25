@@ -61,6 +61,9 @@ import java.util.concurrent.TimeUnit;
       @Field("executionStatus")
       , @Field("ml_analysis_type"), @Field(value = "is24x7Task"), @Field(value = "createdAt", type = IndexType.DESC)
     })
+@CdIndex(
+    name = "nextLETaskIndex", fields = { @Field("priority")
+                                         , @Field("createdAt"), @Field(value = "executionStatus") })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "LearningEngineAnalysisTaskKeys")
