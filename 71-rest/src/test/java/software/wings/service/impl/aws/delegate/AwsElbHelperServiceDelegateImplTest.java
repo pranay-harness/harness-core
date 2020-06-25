@@ -51,6 +51,7 @@ import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+import io.harness.spotinst.model.SpotInstConstants;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -537,8 +538,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
             .prodTargetGroupArn("progTg2")
             .stageTargetGroupArn("stageTg2")
             .build());
-    service.updateRulesForAlbTrafficShift(
-        AwsConfig.builder().build(), "us-east-1", emptyList(), details, mockCallback, 10);
+    service.updateRulesForAlbTrafficShift(AwsConfig.builder().build(), "us-east-1", emptyList(), details, mockCallback,
+        10, SpotInstConstants.ELASTI_GROUP);
     verify(mockClient).modifyRule(any());
     verify(mockClient).modifyListener(any());
   }

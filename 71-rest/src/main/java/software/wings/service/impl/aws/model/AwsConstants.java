@@ -24,9 +24,9 @@ public interface AwsConstants {
   String ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME = "setupSweepingOutputEcs";
   String ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME = "deploySweepingOutputEcs";
 
-  String MIN_INSTANCES = "minInstances";
-  String MAX_INSTANCES = "maxInstances";
-  String DESIRED_INSTANCES = "desiredInstances";
+  String MIN_INSTANCES = "minInstancesExpr";
+  String MAX_INSTANCES = "maxInstancesExpr";
+  String DESIRED_INSTANCES = "targetInstancesExpr";
   String AUTO_SCALING_TIMEOUT = "autoScalingSteadyStateTimeout";
 
   String VARIABLE_ACTIVITY_ID = "activityId";
@@ -35,6 +35,9 @@ public interface AwsConstants {
   String OLD_AUTOSCALING_GROUP = "Old AutoScaling Group";
   String NEW_AUTOSCALING_GROUP = "New AutoScaling Group";
   String NEW_AUTOSCALING_GROUP_WEIGHT = "New AutoScaling Group Weight";
+
+  String UP_SCALE_ASG_COMMAND_UNIT = "Upscale AutoScaling Group";
+  String DOWN_SCALE_ASG_COMMAND_UNIT = "Downscale AutoScaling Group";
 
   int LAMBDA_SLEEP_SECS = 5;
 }

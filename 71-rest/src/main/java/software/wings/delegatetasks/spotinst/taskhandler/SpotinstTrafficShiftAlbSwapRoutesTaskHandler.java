@@ -24,6 +24,7 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.spotinst.model.ElastiGroupRenameRequest;
+import io.harness.spotinst.model.SpotInstConstants;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
@@ -78,7 +79,7 @@ public class SpotinstTrafficShiftAlbSwapRoutesTaskHandler extends SpotInstTaskHa
     }
 
     awsElbHelperServiceDelegate.updateRulesForAlbTrafficShift(awsConfig, parameters.getAwsRegion(), emptyList(),
-        parameters.getDetails(), logCallback, parameters.getNewElastigroupWeight());
+        parameters.getDetails(), logCallback, parameters.getNewElastigroupWeight(), SpotInstConstants.ELASTI_GROUP);
     logCallback.saveExecutionLog("Completed route updated successfully", INFO, SUCCESS);
 
     if (oldElastigroup != null && parameters.getNewElastigroupWeight() >= MAX_TRAFFIC_SHIFT_WEIGHT
@@ -129,7 +130,7 @@ public class SpotinstTrafficShiftAlbSwapRoutesTaskHandler extends SpotInstTaskHa
 
     logCallback = getLogCallBack(parameters, SWAP_ROUTES_COMMAND_UNIT);
     awsElbHelperServiceDelegate.updateRulesForAlbTrafficShift(awsConfig, parameters.getAwsRegion(), emptyList(),
-        parameters.getDetails(), logCallback, MIN_TRAFFIC_SHIFT_WEIGHT);
+        parameters.getDetails(), logCallback, MIN_TRAFFIC_SHIFT_WEIGHT, SpotInstConstants.ELASTI_GROUP);
     logCallback.saveExecutionLog("Completed route updated successfully", INFO, SUCCESS);
 
     if (newElastigroup != null) {

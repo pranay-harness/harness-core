@@ -5,6 +5,8 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
+import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -20,6 +22,10 @@ import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MIN_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
+import static software.wings.service.impl.aws.model.AwsConstants.DOWN_SCALE_ASG_COMMAND_UNIT;
+import static software.wings.service.impl.aws.model.AwsConstants.MAX_TRAFFIC_SHIFT_WEIGHT;
+import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHIFT_WEIGHT;
+import static software.wings.service.impl.aws.model.AwsConstants.UP_SCALE_ASG_COMMAND_UNIT;
 import static software.wings.utils.AsgConvention.getRevisionFromTag;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -50,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
@@ -62,7 +69,9 @@ import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRe
 import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
+import software.wings.service.impl.aws.model.AwsAmiTrafficShiftAlbSwitchRouteRequest;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.impl.aws.model.AwsConstants;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
@@ -88,6 +97,7 @@ public class AwsAmiHelperServiceDelegateImpl
   @VisibleForTesting static final String NAME_TAG = "Name";
   private static final int MAX_OLD_ASG_VERSION_TO_KEEP = 3;
   @Inject private ExecutorService executorService;
+  @Inject private DelegateLogService delegateLogService;
   @Inject private AwsAsgHelperServiceDelegate awsAsgHelperServiceDelegate;
   @Inject private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
   @Inject private AwsEc2HelperServiceDelegate awsEc2HelperServiceDelegate;
@@ -205,11 +215,11 @@ public class AwsAmiHelperServiceDelegateImpl
         }
       }
 
-      logCallback.saveExecutionLog("Completed switch routes");
+      logCallback.saveExecutionLog("Completed switch routes", INFO, CommandExecutionStatus.SUCCESS);
       return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
     } catch (Exception ex) {
       String errorMessage = ExceptionUtils.getMessage(ex);
-      logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
+      logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR, CommandExecutionStatus.FAILURE);
       logger.error(errorMessage, ex);
       return AwsAmiSwitchRoutesResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
     }
@@ -318,11 +328,11 @@ public class AwsAmiHelperServiceDelegateImpl
             logCallback);
       }
 
-      logCallback.saveExecutionLog("Completed rollback switch routes");
+      logCallback.saveExecutionLog("Completed rollback switch routes", INFO, CommandExecutionStatus.SUCCESS);
       return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
     } catch (Exception ex) {
       String errorMessage = ExceptionUtils.getMessage(ex);
-      logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
+      logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR, CommandExecutionStatus.FAILURE);
       logger.error(errorMessage, ex);
       return AwsAmiSwitchRoutesResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
     }
@@ -376,7 +386,9 @@ public class AwsAmiHelperServiceDelegateImpl
 
   @Override
   public AwsAmiServiceTrafficShiftAlbSetupResponse setUpAmiServiceTrafficShift(
-      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback) {
+      AwsAmiServiceTrafficShiftAlbSetupRequest request) {
+    ExecutionLogCallback logCallback =
+        getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), request.getCommandName());
     try {
       List<LbDetailsForAlbTrafficShift> lbDetailsForAlbTrafficShifts = loadTargetGroupDetails(request, logCallback);
       AwsAmiServiceSetupRequest awsAmiRequest = createAwsAmiSetupRequest(request, lbDetailsForAlbTrafficShifts);
@@ -391,22 +403,216 @@ public class AwsAmiHelperServiceDelegateImpl
   }
 
   @Override
-  public AwsAmiServiceDeployResponse deployAmiServiceTrafficShift(
-      AwsAmiServiceTrafficShiftAlbDeployRequest request, ExecutionLogCallback logCallback) {
+  public AwsAmiServiceDeployResponse deployAmiServiceTrafficShift(AwsAmiServiceTrafficShiftAlbDeployRequest request) {
+    ExecutionLogCallback logCallback =
+        getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), request.getCommandName());
     AwsAmiServiceDeployRequest awsAmiDeployRequest = createAwsAmiDeployRequest(request);
     return deployAmiService(awsAmiDeployRequest, logCallback);
   }
 
   @Override
-  public AwsAmiServiceTrafficShiftAlbSetupResponse switchAmiRoutesTrafficShift(
-      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback) {
-    throw new InvalidRequestException("Not implemented yet.");
+  public AwsAmiSwitchRoutesResponse rollbackSwitchAmiRoutesTrafficShift(
+      AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
+    ExecutionLogCallback logCallback =
+        getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), request.getCommandName());
+    logCallback.saveExecutionLog("Starting rollback of ASG AMI Traffic Shift");
+    try {
+      upScaleOldAsg(request);
+      assignMinTrafficWeightToNewAsg(request, logCallback);
+      downScaleNewAsg(request);
+    } catch (Exception exception) {
+      return trafficShiftFailureResponse(exception, logCallback);
+    }
+    logCallback.saveExecutionLog(
+        "Rollback of ASG AMI traffic shift completed successfully", INFO, CommandExecutionStatus.SUCCESS);
+    return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
   }
 
   @Override
-  public AwsAmiServiceTrafficShiftAlbSetupResponse rollbackSwitchAmiRoutesTrafficShift(
-      AwsAmiServiceTrafficShiftAlbSetupRequest request, ExecutionLogCallback logCallback) {
-    throw new InvalidRequestException("Not implemented yet");
+  public AwsAmiSwitchRoutesResponse switchAmiRoutesTrafficShift(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
+    ExecutionLogCallback logCallback =
+        getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), request.getCommandName());
+    logCallback.saveExecutionLog("Starting to switch routes in AMI ASG traffic shift deploy", INFO);
+
+    try {
+      if (isEmpty(request.getNewAsgName())) {
+        return skipAwsAmiTrafficShifting(request, logCallback);
+      }
+      performTrafficShiftingBetweenTargetGroups(request, logCallback);
+
+      if (!downSizeOldAsg(request)) {
+        return skipDownScalingOfAsg(request);
+      }
+      downScaleAsg(request, request.getOldAsgName(), false);
+    } catch (Exception exception) {
+      return trafficShiftFailureResponse(exception, logCallback);
+    }
+    return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
+  }
+
+  private AwsAmiSwitchRoutesResponse skipDownScalingOfAsg(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
+    String message = getSkipMessage(request);
+    createAndFinishEmptyExecutionLog(request, DOWN_SCALE_ASG_COMMAND_UNIT, message);
+    createAndFinishEmptyExecutionLog(request, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, message);
+    return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
+  }
+
+  private String getSkipMessage(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
+    String oldAsgName = request.getOldAsgName();
+    if (isEmpty(oldAsgName)) {
+      return "Skipping downscaling as did not find any old AutoScaling Group";
+    } else if (!request.isDownscaleOldAsg()) {
+      return format(
+          "Skipping downscaling of old AutoScaling Group: [%s] as the flag 'Downsize Old AutoScaling Group' is disabled",
+          oldAsgName);
+    }
+    return format(
+        "Skipping downscaling of old AutoScaling Group: [%s] as 'New AutoScaling Group Weight' is not set to 100 percent",
+        oldAsgName);
+  }
+
+  private void upScaleOldAsg(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
+    String oldAsgName = request.getOldAsgName();
+    if (isEmpty(oldAsgName)) {
+      String message = "No old AutoScaling Group found for upscaling";
+      createAndFinishEmptyExecutionLog(request, UP_SCALE_ASG_COMMAND_UNIT, message);
+      createAndFinishEmptyExecutionLog(request, UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, message);
+      return;
+    }
+    ExecutionLogCallback logCallBack =
+        getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), UP_SCALE_ASG_COMMAND_UNIT);
+    AwsConfig awsConfig = request.getAwsConfig();
+    List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+    String region = request.getRegion();
+    int timeout = request.getTimeoutIntervalInMin();
+
+    AwsAmiPreDeploymentData preDeploymentData = request.getPreDeploymentData();
+    int desiredCount = preDeploymentData.getPreDeploymentDesiredCapacity();
+    int minCount = preDeploymentData.getPreDeploymentMinCapacity();
+    List<String> oldScalingPolicyJSONs = preDeploymentData.getPreDeploymenyScalingPolicyJSON();
+
+    logCallBack.saveExecutionLog(format("Upgrading AutoScaling Group: [%s] back to initial state", oldAsgName));
+    awsAsgHelperServiceDelegate.clearAllScalingPoliciesForAsg(
+        awsConfig, encryptionDetails, region, oldAsgName, logCallBack);
+    awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
+        awsConfig, encryptionDetails, region, oldAsgName, desiredCount, logCallBack);
+    awsAsgHelperServiceDelegate.setMinInstancesForAsg(
+        awsConfig, encryptionDetails, region, oldAsgName, minCount, logCallBack);
+    awsAsgHelperServiceDelegate.attachScalingPoliciesToAsg(
+        awsConfig, encryptionDetails, region, oldAsgName, oldScalingPolicyJSONs, logCallBack);
+    logCallBack.saveExecutionLog(format("Upgrading AutoScaling Group: [%s] completed successfully", oldAsgName), INFO,
+        CommandExecutionStatus.SUCCESS);
+
+    ExecutionLogCallback steadyWaitLogCallBack = getLogCallBack(
+        request.getAccountId(), request.getAppId(), request.getActivityId(), UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+    awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+        awsConfig, encryptionDetails, region, oldAsgName, desiredCount, steadyWaitLogCallBack, timeout);
+    steadyWaitLogCallBack.saveExecutionLog(
+        format("All instances of AutoScaling Group: [%s] are up & running.", oldAsgName), INFO,
+        CommandExecutionStatus.SUCCESS);
+  }
+
+  private void downScaleNewAsg(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
+    String newAsgName = request.getNewAsgName();
+    if (isEmpty(newAsgName)) {
+      String message = "No new AutoScaling Group found for downscaling.";
+      createAndFinishEmptyExecutionLog(request, DOWN_SCALE_ASG_COMMAND_UNIT, message);
+      createAndFinishEmptyExecutionLog(request, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, message);
+      return;
+    }
+    downScaleAsg(request, newAsgName, true);
+  }
+
+  private void assignMinTrafficWeightToNewAsg(
+      AwsAmiTrafficShiftAlbSwitchRouteRequest request, ExecutionLogCallback logCallback) {
+    awsElbHelperServiceDelegate.updateRulesForAlbTrafficShift(request.getAwsConfig(), request.getRegion(),
+        request.getEncryptionDetails(), request.getLbDetails(), logCallback, MIN_TRAFFIC_SHIFT_WEIGHT,
+        AwsConstants.AUTOSCALING_GROUP);
+    logCallback.saveExecutionLog(
+        format("New Auto Scaling Group has been assigned [%d] traffic weight.", MIN_TRAFFIC_SHIFT_WEIGHT));
+  }
+
+  private AwsAmiSwitchRoutesResponse skipAwsAmiTrafficShifting(
+      AwsAmiTrafficShiftAlbSwitchRouteRequest request, ExecutionLogCallback logCallback) {
+    String message =
+        "Skipping traffic shifting as either new Auto Scaling Group name or traffic weight is not specified";
+    logCallback.saveExecutionLog(message, INFO, CommandExecutionStatus.SUCCESS);
+    createAndFinishEmptyExecutionLog(request, DOWN_SCALE_ASG_COMMAND_UNIT, message);
+    createAndFinishEmptyExecutionLog(request, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, message);
+    return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
+  }
+
+  private void performTrafficShiftingBetweenTargetGroups(
+      AwsAmiTrafficShiftAlbSwitchRouteRequest request, ExecutionLogCallback logCallback) {
+    logCallback.saveExecutionLog("Starting traffic shift between routes", INFO);
+    awsElbHelperServiceDelegate.updateRulesForAlbTrafficShift(request.getAwsConfig(), request.getRegion(),
+        request.getEncryptionDetails(), request.getLbDetails(), logCallback, request.getNewAutoscalingGroupWeight(),
+        AwsConstants.AUTOSCALING_GROUP);
+    logCallback.saveExecutionLog("Traffic shift route updated successfully", INFO, CommandExecutionStatus.SUCCESS);
+  }
+
+  private void downScaleAsg(AwsAmiTrafficShiftAlbSwitchRouteRequest request, String asgName, boolean deleteASG) {
+    AwsConfig awsConfig = request.getAwsConfig();
+    List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+    String region = request.getRegion();
+    int timeout = request.getTimeoutIntervalInMin();
+
+    ExecutionLogCallback logCallback = getLogCallBack(
+        request.getAccountId(), request.getAppId(), request.getActivityId(), DOWN_SCALE_ASG_COMMAND_UNIT);
+    awsAsgHelperServiceDelegate.clearAllScalingPoliciesForAsg(
+        awsConfig, encryptionDetails, region, asgName, logCallback);
+    awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
+        awsConfig, encryptionDetails, region, asgName, 0, logCallback);
+    logCallback.saveExecutionLog(
+        format("Clearing of scaling policies of Auto Scaling Group [%s] completed successfully", asgName), INFO,
+        CommandExecutionStatus.SUCCESS);
+
+    ExecutionLogCallback steadyWaitLogCallBack = getLogCallBack(
+        request.getAccountId(), request.getAppId(), request.getActivityId(), DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
+    awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+        awsConfig, encryptionDetails, region, asgName, 0, steadyWaitLogCallBack, timeout);
+    steadyWaitLogCallBack.saveExecutionLog(
+        format("All instances of AutoScaling Group: [%s] are terminated successfully.", asgName), INFO);
+
+    if (deleteASG) {
+      steadyWaitLogCallBack.saveExecutionLog(
+          format("Auto Scaling Group: [%s] is being deleted after terminating all its instances", asgName));
+      AutoScalingGroup autoScalingGroup =
+          awsAsgHelperServiceDelegate.getAutoScalingGroup(awsConfig, encryptionDetails, region, asgName);
+      awsAsgHelperServiceDelegate.deleteAutoScalingGroups(
+          awsConfig, encryptionDetails, region, singletonList(autoScalingGroup), steadyWaitLogCallBack);
+      steadyWaitLogCallBack.saveExecutionLog(format("Auto Scaling Group: [%s] deleted successfully", asgName), INFO);
+    }
+    steadyWaitLogCallBack.saveExecutionLog(
+        format("Downscaling of Auto Scaling Group [%s] completed successfully", asgName), INFO,
+        CommandExecutionStatus.SUCCESS);
+  }
+
+  private boolean downSizeOldAsg(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
+    return isNotEmpty(request.getOldAsgName()) && request.getNewAutoscalingGroupWeight() >= MAX_TRAFFIC_SHIFT_WEIGHT
+        && request.isDownscaleOldAsg();
+  }
+
+  private ExecutionLogCallback getLogCallBack(String accountId, String appId, String activityId, String commandUnit) {
+    return new ExecutionLogCallback(delegateLogService, accountId, appId, activityId, commandUnit);
+  }
+
+  private void createAndFinishEmptyExecutionLog(
+      AwsAmiTrafficShiftAlbSwitchRouteRequest request, String commandUnit, String message) {
+    ExecutionLogCallback logCallback =
+        getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), commandUnit);
+    logCallback.saveExecutionLog(message, INFO, CommandExecutionStatus.SUCCESS);
+  }
+
+  private AwsAmiSwitchRoutesResponse trafficShiftFailureResponse(
+      Exception exception, ExecutionLogCallback logCallback) {
+    logCallback.saveExecutionLog(
+        format("Exception: [%s].", exception.getMessage()), ERROR, CommandExecutionStatus.FAILURE);
+    logger.error(exception.getMessage());
+    return AwsAmiSwitchRoutesResponse.builder()
+        .errorMessage(ExceptionUtils.getMessage(exception))
+        .executionStatus(FAILED)
+        .build();
   }
 
   private AwsAmiServiceSetupRequest createAwsAmiSetupRequest(
@@ -433,7 +639,7 @@ public class AwsAmiHelperServiceDelegateImpl
         .autoScalingSteadyStateTimeout(trafficShiftAlbSetupRequest.getAutoScalingSteadyStateTimeout())
         .useCurrentRunningCount(trafficShiftAlbSetupRequest.isUseCurrentRunningCount())
         .infraMappingTargetGroupArns(targetGroups)
-        .blueGreen(false)
+        .blueGreen(true)
         .build();
   }
 

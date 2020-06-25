@@ -7,6 +7,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -32,6 +33,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.intfc.ActivityService;
@@ -46,7 +48,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -183,20 +184,21 @@ public class AwsAmiSwitchRoutesState extends State {
     Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
     Environment env = ((ExecutionContextImpl) executionContext).fetchRequiredEnvironment();
 
-    ActivityBuilder activityBuilder = Activity.builder()
-                                          .applicationName(app.getName())
-                                          .commandName(getName())
-                                          .type(Type.Command)
-                                          .commandUnitType(CommandUnitType.AWS_AMI_SWITCH_ROUTES)
-                                          .workflowType(executionContext.getWorkflowType())
-                                          .workflowExecutionName(executionContext.getWorkflowExecutionName())
-                                          .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-                                          .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-                                          .commandType(getStateType())
-                                          .workflowExecutionId(executionContext.getWorkflowExecutionId())
-                                          .workflowId(executionContext.getWorkflowId())
-                                          .commandUnits(Arrays.asList())
-                                          .status(ExecutionStatus.RUNNING);
+    ActivityBuilder activityBuilder =
+        Activity.builder()
+            .applicationName(app.getName())
+            .commandName(SWAP_AUTO_SCALING_ROUTES)
+            .type(Type.Command)
+            .commandUnitType(CommandUnitType.AWS_AMI_SWITCH_ROUTES)
+            .workflowType(executionContext.getWorkflowType())
+            .workflowExecutionName(executionContext.getWorkflowExecutionName())
+            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+            .commandType(getStateType())
+            .workflowExecutionId(executionContext.getWorkflowExecutionId())
+            .workflowId(executionContext.getWorkflowId())
+            .commandUnits(ImmutableList.of(new SpotinstDummyCommandUnit(SWAP_AUTO_SCALING_ROUTES)))
+            .status(ExecutionStatus.RUNNING);
 
     if (executionContext.getOrchestrationWorkflowType() != null
         && executionContext.getOrchestrationWorkflowType() == BUILD) {
