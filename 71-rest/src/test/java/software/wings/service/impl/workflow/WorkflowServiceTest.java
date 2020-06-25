@@ -239,6 +239,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -329,6 +330,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
@@ -4889,6 +4891,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).runtimeValues(map1).build())
             .build()));
     WorkflowExecution workflowExecution = WorkflowExecution.builder().executionArgs(executionArgs).build();
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("${repo}")
+                                                  .groupId("mygroup")
+                                                  .artifactPaths(asList("todolist"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("art_parameterized")
+                                                  .uuid(ARTIFACT_STREAM_ID)
+                                                  .build();
+    nexusArtifactStream.setArtifactStreamParameterized(true);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(artifactStreamService.getArtifactStreamParameters(ARTIFACT_STREAM_ID)).thenReturn(asList("repo"));
     workflowService.resolveArtifactStreamMetadata(APP_ID, artifactVariables, workflowExecution);
     assertThat(artifactVariables.get(0).getArtifactStreamMetadata()).isNull();
     assertThat(artifactVariables.get(1).getArtifactStreamMetadata()).isNotNull();
@@ -4896,5 +4913,97 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(artifactVariables.get(1).getArtifactStreamMetadata().getRuntimeValues())
         .isNotEmpty()
         .contains(entry("repo", "myrepo"), entry("buildNo", "1.0"));
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void fetchDeploymentMetadataWhenArtifactStreamParametersUpdated() {
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    List<ArtifactVariable> artifactVariables = new ArrayList<>();
+    artifactVariables.add(ArtifactVariable.builder()
+                              .entityType(SERVICE)
+                              .entityId("SERVICE_ID_1")
+                              .name("art_parameterized")
+                              .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+                              .build());
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("repo", "myrepo");
+    map1.put("buildNo", "1.0");
+    executionArgs.setArtifactVariables(asList(
+        ArtifactVariable.builder()
+            .entityType(SERVICE)
+            .entityId("SERVICE_ID_1")
+            .name("art_parameterized")
+            .uiDisplayName("art_parameterized (requires values)")
+            .artifactStreamMetadata(
+                ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).runtimeValues(map1).build())
+            .build()));
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().executionArgs(executionArgs).build();
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("${repo}")
+                                                  .groupId("${group}")
+                                                  .artifactPaths(asList("todolist"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("art_parameterized")
+                                                  .uuid(ARTIFACT_STREAM_ID)
+                                                  .build();
+    nexusArtifactStream.setArtifactStreamParameterized(true);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(artifactStreamService.getArtifactStreamParameters(ARTIFACT_STREAM_ID)).thenReturn(asList("repo", "group"));
+    workflowService.resolveArtifactStreamMetadata(APP_ID, artifactVariables, workflowExecution);
+    assertThat(artifactVariables.get(0).getArtifactStreamMetadata()).isNotNull();
+    assertThat(artifactVariables.get(0).getUiDisplayName()).isEqualTo("art_parameterized (requires values)");
+    assertThat(artifactVariables.get(0).getArtifactStreamMetadata().getRuntimeValues())
+        .isNotEmpty()
+        .contains(entry("repo", "myrepo"), entry("group", ""), entry("buildNo", "1.0"));
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void fetchDeploymentMetadataWhenArtifactStreamUpdatedToNonParameterized() {
+    when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
+    List<ArtifactVariable> artifactVariables = new ArrayList<>();
+    artifactVariables.add(ArtifactVariable.builder()
+                              .entityType(SERVICE)
+                              .entityId("SERVICE_ID_1")
+                              .name("art_parameterized")
+                              .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+                              .build());
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("repo", "myrepo");
+    map1.put("buildNo", "1.0");
+    executionArgs.setArtifactVariables(asList(
+        ArtifactVariable.builder()
+            .entityType(SERVICE)
+            .entityId("SERVICE_ID_1")
+            .name("art_parameterized")
+            .uiDisplayName("art_parameterized (requires values)")
+            .artifactStreamMetadata(
+                ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).runtimeValues(map1).build())
+            .build()));
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().executionArgs(executionArgs).build();
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .settingId(SETTING_ID)
+                                                  .jobname("releases")
+                                                  .groupId("mygroup")
+                                                  .artifactPaths(asList("todolist"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("art_parameterized")
+                                                  .uuid(ARTIFACT_STREAM_ID)
+                                                  .build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    workflowService.resolveArtifactStreamMetadata(APP_ID, artifactVariables, workflowExecution);
+    assertThat(artifactVariables.get(0).getArtifactStreamMetadata()).isNull();
   }
 }
