@@ -1,0 +1,188 @@
+package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
+
+import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ARVIND;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+import io.harness.category.element.UnitTests;
+import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.rule.Owner;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import software.wings.WingsBaseTest;
+import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.aws.EcsContainerService;
+import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.delegatetasks.DelegateLogService;
+import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
+import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
+import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
+import software.wings.service.intfc.aws.delegate.AwsRoute53HelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsServiceDiscoveryHelperServiceDelegate;
+import software.wings.service.intfc.security.EncryptionService;
+
+public class EcsBlueGreenRoute53DNSWeightHandlerTest extends WingsBaseTest {
+  private final EcsBlueGreenRoute53DNSWeightHandler task = new EcsBlueGreenRoute53DNSWeightHandler();
+
+  private final String newSvcArn = "newSvcArn";
+  private final String oldSvcArn = "oldSvcArn";
+  private final String newValue = "newValue";
+  private final String oldValue = "oldValue";
+  @Mock private EcsContainerService mockEcsContainerService;
+  @Mock private EcsSwapRoutesCommandTaskHelper mockEcsSwapRoutesCommandTaskHelper;
+  @Mock private AwsRoute53HelperServiceDelegate mockAwsRoute53HelperServiceDelegate;
+  @Mock private AwsServiceDiscoveryHelperServiceDelegate mockAwsServiceDiscoveryHelperServiceDelegate;
+  @Mock private DelegateFileManager mockDelegateFileManager;
+  @Mock private EncryptionService mockEncryptionService;
+  @Mock private DelegateLogService mockDelegateLogService;
+
+  @Before
+  public void setUp() throws Exception {
+    on(task).set("ecsContainerService", mockEcsContainerService);
+    on(task).set("ecsSwapRoutesCommandTaskHelper", mockEcsSwapRoutesCommandTaskHelper);
+    on(task).set("awsRoute53HelperServiceDelegate", mockAwsRoute53HelperServiceDelegate);
+    on(task).set("awsServiceDiscoveryHelperServiceDelegate", mockAwsServiceDiscoveryHelperServiceDelegate);
+    on(task).set("delegateFileManager", mockDelegateFileManager);
+    on(task).set("encryptionService", mockEncryptionService);
+    on(task).set("delegateLogService", mockDelegateLogService);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternalFailure() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    EcsServiceSetupRequest request = EcsServiceSetupRequest.builder().build();
+    EcsCommandExecutionResponse response = task.executeTaskInternal(request, null, mockCallback);
+    assertThat(response).isNotNull();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getOutput())
+        .isEqualTo("Invalid Request Type: Expected was : [EcsBGRoute53DNSWeightUpdateRequest]");
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
+        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternal_NoRollback_NoDownsizeOldService() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+
+    doReturn(newValue)
+        .when(mockAwsServiceDiscoveryHelperServiceDelegate)
+        .getRecordValueForService(any(), any(), anyString(), eq(newSvcArn));
+
+    doReturn(oldValue)
+        .when(mockAwsServiceDiscoveryHelperServiceDelegate)
+        .getRecordValueForService(any(), any(), anyString(), eq(oldSvcArn));
+
+    EcsBGRoute53DNSWeightUpdateRequest request = EcsBGRoute53DNSWeightUpdateRequest.builder()
+                                                     .rollback(false)
+                                                     .downsizeOldService(false)
+                                                     .newServiceDiscoveryArn(newSvcArn)
+                                                     .newServiceWeight(60)
+                                                     .oldServiceDiscoveryArn(oldSvcArn)
+                                                     .oldServiceWeight(40)
+                                                     .build();
+    EcsCommandExecutionResponse response = task.executeTaskInternal(request, null, mockCallback);
+
+    verify(mockCallback, times(2)).saveExecutionLog(anyString());
+    verify(mockAwsRoute53HelperServiceDelegate)
+        .upsertRoute53ParentRecord(
+            any(), any(), anyString(), anyString(), anyString(), eq(60), eq(newValue), eq(40), eq(oldValue), anyInt());
+    verify(mockEcsSwapRoutesCommandTaskHelper)
+        .updateServiceTags(any(), any(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
+    verify(mockEcsSwapRoutesCommandTaskHelper, times(0))
+        .downsizeOlderService(any(), any(), anyString(), anyString(), anyString(), any());
+
+    assertThat(response).isNotNull();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternal_NoRollback_DownsizeOldService() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+
+    doReturn(newValue)
+        .when(mockAwsServiceDiscoveryHelperServiceDelegate)
+        .getRecordValueForService(any(), any(), anyString(), eq(newSvcArn));
+
+    doReturn(oldValue)
+        .when(mockAwsServiceDiscoveryHelperServiceDelegate)
+        .getRecordValueForService(any(), any(), anyString(), eq(oldSvcArn));
+
+    EcsBGRoute53DNSWeightUpdateRequest request = EcsBGRoute53DNSWeightUpdateRequest.builder()
+                                                     .rollback(false)
+                                                     .downsizeOldService(true)
+                                                     .newServiceDiscoveryArn(newSvcArn)
+                                                     .newServiceWeight(100)
+                                                     .oldServiceDiscoveryArn(oldSvcArn)
+                                                     .oldServiceWeight(0)
+                                                     .build();
+    EcsCommandExecutionResponse response = task.executeTaskInternal(request, null, mockCallback);
+
+    verify(mockCallback, times(3)).saveExecutionLog(anyString());
+    verify(mockAwsRoute53HelperServiceDelegate)
+        .upsertRoute53ParentRecord(
+            any(), any(), anyString(), anyString(), anyString(), eq(100), eq(newValue), eq(0), eq(oldValue), anyInt());
+    verify(mockEcsSwapRoutesCommandTaskHelper)
+        .updateServiceTags(any(), any(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
+    verify(mockEcsSwapRoutesCommandTaskHelper)
+        .downsizeOlderService(any(), any(), anyString(), anyString(), anyString(), any());
+
+    assertThat(response).isNotNull();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternal_Rollback() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+
+    doReturn(newValue)
+        .when(mockAwsServiceDiscoveryHelperServiceDelegate)
+        .getRecordValueForService(any(), any(), anyString(), eq(newSvcArn));
+
+    doReturn(oldValue)
+        .when(mockAwsServiceDiscoveryHelperServiceDelegate)
+        .getRecordValueForService(any(), any(), anyString(), eq(oldSvcArn));
+
+    EcsBGRoute53DNSWeightUpdateRequest request = EcsBGRoute53DNSWeightUpdateRequest.builder()
+                                                     .rollback(true)
+                                                     .newServiceDiscoveryArn(newSvcArn)
+                                                     .oldServiceDiscoveryArn(oldSvcArn)
+                                                     .build();
+    EcsCommandExecutionResponse response = task.executeTaskInternal(request, null, mockCallback);
+
+    verify(mockCallback, times(3)).saveExecutionLog(anyString());
+
+    verify(mockEcsSwapRoutesCommandTaskHelper)
+        .upsizeOlderService(any(), any(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt());
+    verify(mockAwsRoute53HelperServiceDelegate)
+        .upsertRoute53ParentRecord(
+            any(), any(), anyString(), anyString(), anyString(), eq(100), eq(oldValue), eq(0), eq(newValue), anyInt());
+    verify(mockEcsSwapRoutesCommandTaskHelper)
+        .updateServiceTags(any(), any(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
+
+    assertThat(response).isNotNull();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(SUCCESS);
+  }
+}

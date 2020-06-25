@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -158,5 +160,24 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
     doReturn(data).when(mockContext).getStateExecutionData();
     state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     assertThat(data.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetEcsListenerUpdateRequestConfigData() {
+    ContainerServiceElement element =
+        ContainerServiceElement.builder()
+            .clusterName(CLUSTER_NAME)
+            .ecsBGSetupData(
+                EcsBGSetupData.builder().downsizedServiceName(SERVICE_NAME).downsizedServiceCount(100).build())
+            .targetGroupForNewService("TARGET_GROUP")
+            .build();
+
+    EcsListenerUpdateRequestConfigData configData = rollbackState.getEcsListenerUpdateRequestConfigData(element);
+    assertThat(configData.isRollback()).isTrue();
+    assertThat(configData.getServiceNameDownsized()).isEqualTo(SERVICE_NAME);
+    assertThat(configData.getServiceCountDownsized()).isEqualTo(100);
+    assertThat(configData.getTargetGroupForNewService()).isEqualTo("TARGET_GROUP");
   }
 }
