@@ -2,6 +2,7 @@ package io.harness.batch.processing.tasklet;
 
 import static io.harness.batch.processing.ccm.CCMJobConstants.ACCOUNT_ID;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -50,7 +51,12 @@ public class GcpBillingDataPipelineTaskletTest {
   private static final String dataSetId = "datasetId";
   private static final String bqProjectId = "BQ_PROJECT_ID";
   private static final String bqDatasetId = "BQ_DATASET_ID";
+  private static final String bqRegion = "BQ_REGION";
   private ChunkContext chunkContext;
+
+  Instant instant = Instant.now();
+  private long startTime = instant.toEpochMilli();
+  private long endTime = instant.plus(1, ChronoUnit.DAYS).toEpochMilli();
 
   @Mock private BatchMainConfig mainConfig;
   @Mock CloudToHarnessMappingService cloudToHarnessMappingService;
@@ -61,9 +67,6 @@ public class GcpBillingDataPipelineTaskletTest {
 
   @Before
   public void setup() throws IOException {
-    Instant instant = Instant.now();
-    long startTime = instant.toEpochMilli();
-    long endTime = instant.plus(1, ChronoUnit.DAYS).toEpochMilli();
     Map<String, JobParameter> parameters = new HashMap<>();
     parameters.put(CCMJobConstants.JOB_START_DATE, new JobParameter(String.valueOf(startTime), true));
     parameters.put(CCMJobConstants.JOB_END_DATE, new JobParameter(String.valueOf(endTime), true));
@@ -79,8 +82,12 @@ public class GcpBillingDataPipelineTaskletTest {
     Account account = Account.Builder.anAccount().withUuid(accountId).withAccountName(accountName).build();
     when(cloudToHarnessMappingService.getAccountInfoFromId(accountId)).thenReturn(account);
 
-    List<GcpBillingAccount> gcpBillingAccounts = Arrays.asList(
-        GcpBillingAccount.builder().accountId(accountId).bqProjectId(bqProjectId).bqDatasetId(bqDatasetId).build());
+    List<GcpBillingAccount> gcpBillingAccounts = Arrays.asList(GcpBillingAccount.builder()
+                                                                   .accountId(accountId)
+                                                                   .bqProjectId(bqProjectId)
+                                                                   .bqDatasetId(bqDatasetId)
+                                                                   .bqDataSetRegion(bqRegion)
+                                                                   .build());
     when(cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(eq(accountId), eq(startTime), eq(endTime)))
         .thenReturn(gcpBillingAccounts);
     when(billingDataPipelineService.createDataSet(eq(account))).thenReturn(dataSetId);
@@ -101,6 +108,32 @@ public class GcpBillingDataPipelineTaskletTest {
                        .cloudProvider("GCP")
                        .dataSetId(dataSetId)
                        .dataTransferJobName("BigQueryCopyTransferJob_BQ_PROJECT_ID_BQ_DATASET_ID")
+                       .preAggregatedScheduledQueryName("gcpPreAggQuery_BQ_PROJECT_ID_BQ_DATASET_ID")
+                       .gcpBqProjectId(bqProjectId)
+                       .gcpBqDatasetId(bqDatasetId)
+                       .build()));
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldExecuteForUSRegion() throws Exception {
+    List<GcpBillingAccount> gcpBillingAccounts = Arrays.asList(GcpBillingAccount.builder()
+                                                                   .accountId(accountId)
+                                                                   .bqProjectId(bqProjectId)
+                                                                   .bqDatasetId(bqDatasetId)
+                                                                   .bqDataSetRegion("US")
+                                                                   .build());
+    when(cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(eq(accountId), eq(startTime), eq(endTime)))
+        .thenReturn(gcpBillingAccounts);
+    gcpBillingDataPipelineTasklet.execute(null, chunkContext);
+    verify(billingDataPipelineRecordDao)
+        .create(eq(BillingDataPipelineRecord.builder()
+                       .accountId(accountId)
+                       .accountName(accountName)
+                       .cloudProvider("GCP")
+                       .dataSetId(dataSetId)
+                       .dataTransferJobName("gcpCopyScheduledQuery_BQ_PROJECT_ID_BQ_DATASET_ID")
                        .preAggregatedScheduledQueryName("gcpPreAggQuery_BQ_PROJECT_ID_BQ_DATASET_ID")
                        .gcpBqProjectId(bqProjectId)
                        .gcpBqDatasetId(bqDatasetId)

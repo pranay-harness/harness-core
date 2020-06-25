@@ -19,6 +19,7 @@ import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpOrganizationDao;
 import io.harness.ccm.config.GcpOrganizationService;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.Strings;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -44,6 +45,9 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
   private JobParameters parameters;
   private static final String COPY_TRANSFER_JOB_NAME_TEMPLATE = "BigQueryCopyTransferJob_%s_%s";
   private static final String GCP_PRE_AGG_QUERY_TEMPLATE = "gcpPreAggQuery_%s_%s";
+  private static final String GCP_COPY_SCHEDULED_QUERY_TEMPLATE = "gcpCopyScheduledQuery_%s_%s";
+  private static final String RUN_ONCE_GCP_COPY_SCHEDULED_QUERY_TEMPLATE = "runOnceGcpCopyScheduledQuery_%s_%s";
+  private static final String US = "us";
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
@@ -69,19 +73,46 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
           String dstDataSetId = billingDataPipelineService.createDataSet(account);
           String gcpBqProjectId = gcpBillingAccount.getBqProjectId();
           String gcpBqDatasetId = gcpBillingAccount.getBqDatasetId();
+          String gcpBqDataSetRegion = gcpBillingAccount.getBqDataSetRegion();
 
-          String transferJobDisplayName =
-              String.format(COPY_TRANSFER_JOB_NAME_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
           GcpOrganization gcpOrganization = gcpOrganizationDao.get(gcpBillingAccount.getOrganizationSettingId());
           String dstProjectId = gcpProjectId;
 
           String transferJobResourceName = null;
-          try {
-            transferJobResourceName = billingDataPipelineService.createDataTransferJobFromBQ(transferJobDisplayName,
-                gcpBqProjectId, gcpBqDatasetId, dstProjectId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
-          } catch (IOException e) {
-            logger.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
+          String transferJobDisplayName = null;
+          String runOnceScheduledQueryName;
+
+          switch (Strings.toLowerCase(gcpBqDataSetRegion)) {
+            case US:
+              transferJobDisplayName = String.format(GCP_COPY_SCHEDULED_QUERY_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
+              try {
+                billingDataPipelineService.createTransferScheduledQueriesForGCP(transferJobDisplayName, dstDataSetId,
+                    gcpOrganization.getServiceAccountEmail(), gcpBqProjectId + "." + gcpBqDatasetId);
+              } catch (IOException e) {
+                logger.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
+              }
+              try {
+                runOnceScheduledQueryName =
+                    String.format(RUN_ONCE_GCP_COPY_SCHEDULED_QUERY_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
+                transferJobResourceName =
+                    billingDataPipelineService.createRunOnceScheduledQueryGCP(runOnceScheduledQueryName, gcpBqProjectId,
+                        gcpBqDatasetId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
+              } catch (IOException e) {
+                logger.error(
+                    "Error while creating BQ -> BQ Run Once Scheduled Query Job {}", transferJobDisplayName, e);
+              }
+              break;
+            default:
+              try {
+                transferJobDisplayName = String.format(COPY_TRANSFER_JOB_NAME_TEMPLATE, gcpBqProjectId, gcpBqDatasetId);
+                transferJobResourceName =
+                    billingDataPipelineService.createDataTransferJobFromBQ(transferJobDisplayName, gcpBqProjectId,
+                        gcpBqDatasetId, dstProjectId, dstDataSetId, gcpOrganization.getServiceAccountEmail());
+              } catch (IOException e) {
+                logger.error("Error while creating BQ -> BQ Transfer Job {}", transferJobDisplayName, e);
+              }
           }
+
           try {
             billingDataPipelineService.triggerTransferJobRun(
                 transferJobResourceName, gcpOrganization.getServiceAccountEmail());

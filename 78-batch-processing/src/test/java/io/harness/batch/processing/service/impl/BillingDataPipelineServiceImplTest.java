@@ -52,6 +52,7 @@ public class BillingDataPipelineServiceImplTest {
   private static final String transferJobName = "gcsToBigQueryTransferJob_accountname_accountid";
   private static final String scheduledQueryName = "scheduledQuery_accountname_accountid";
   private static final String preAggQueryName = "awsPreAggQuery_accountname_accountid";
+  private static final String transferConfigName = "TRANSFER_CONFIG_NAME";
 
   private static final String gcpProjectId = "projectId";
   private static final String gcsBasePath = "gs://bucketName";
@@ -79,7 +80,7 @@ public class BillingDataPipelineServiceImplTest {
     dataTransferServiceClient = mock(DataTransferServiceClient.class);
     doReturn(dataTransferServiceClient).when(billingDataPipelineService).getDataTransferClient();
     doReturn(dataTransferServiceClient).when(billingDataPipelineService).getDataTransferClient(isA(Credentials.class));
-    doReturn(TransferConfig.newBuilder().setName("TRANSFER_CONFIG_NAME").build())
+    doReturn(TransferConfig.newBuilder().setName(transferConfigName).build())
         .when(billingDataPipelineService)
         .executeDataTransferJobCreate(any(), any());
   }
@@ -106,6 +107,35 @@ public class BillingDataPipelineServiceImplTest {
     billingDataPipelineService.createDataTransferJobFromBQ(
         jobName, srcProjectId, srcDatasetId, dstProjectId, dstDatasetId, null);
     verify(billingDataPipelineService, times(1)).executeDataTransferJobCreate(any(), any());
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldTestRunOnceScheduledQuery() throws IOException {
+    String jobName = "run-once-copy-java-api-display-name";
+    String srcProjectId = "ccm-play";
+    String srcDatasetId = "billing";
+    String dstProjectId = "ccm-play";
+    String dstDatasetId = "copy_dataset_cli";
+    String runOnceScheduledQueryGCP = billingDataPipelineService.createRunOnceScheduledQueryGCP(
+        jobName, srcProjectId, srcDatasetId, dstProjectId, dstDatasetId);
+    verify(billingDataPipelineService, times(1)).executeDataTransferJobCreate(any(), any());
+    assertThat(runOnceScheduledQueryGCP).isEqualTo(transferConfigName);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldTestTransferScheduledQueriesForGCP() throws IOException {
+    String jobName = "scheduled-Query-copy-java-api-display-name";
+    String srcProjectId = "ccm-play";
+    String srcDatasetId = "billing";
+    String dstDatasetId = "copy_dataset_cli";
+    String runOnceScheduledQueryGCP = billingDataPipelineService.createTransferScheduledQueriesForGCP(
+        jobName, dstDatasetId, null, srcProjectId + "." + srcDatasetId);
+    verify(billingDataPipelineService, times(1)).executeDataTransferJobCreate(any(), any());
+    assertThat(runOnceScheduledQueryGCP).isEqualTo(transferConfigName);
   }
 
   @Test

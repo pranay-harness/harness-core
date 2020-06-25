@@ -70,6 +70,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   private static final String WRITE_DISPOSITION_CONST = "write_disposition";
   private static final String TEMP_DEST_TABLE_NAME_VALUE = "awsCurTable_{run_time|\"%Y_%m\"}";
   private static final String DEST_TABLE_NAME_VALUE = "awscur_{run_time|\"%Y_%m\"}";
+  private static final String GCP_DEST_TABLE_NAME_VALUE = "gcp_billing_export";
   private static final String PRE_AGG_TABLE_NAME_VALUE = "preAggregated";
   private static final String LOCATION = "us";
   private static final String GCS_DATA_SOURCE_ID = "google_cloud_storage";
@@ -118,6 +119,12 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
       + "DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 3 DAY) GROUP BY service.description, sku.id, sku.description, startTime,"
       + " project.id, location.region, location.zone, billing_account_id;";
 
+  private static final String RUN_ONCE_GCP_SCHEDULED_QUERY_TEMPLATE = "SELECT * FROM `%s.gcp_billing_export_*`;";
+
+  private static final String TRANSFER_GCP_SCHEDULED_QUERY_TEMPLATE =
+      "DELETE FROM `%s.gcp_billing_export` WHERE DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY);%n"
+      + "INSERT INTO `%s.gcp_billing_export` SELECT * FROM `%s.gcp_billing_export_*` WHERE DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY);";
+
   private BatchMainConfig mainConfig;
   private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
 
@@ -161,6 +168,67 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
       logger.error("BQ Data Set was not created {} " + bigQueryEx);
     }
     return null;
+  }
+
+  @Override
+  public String createTransferScheduledQueriesForGCP(String scheduledQueryName, String dstDataSetId,
+      String impersonatedServiceAccount, String srcTablePrefix) throws IOException {
+    String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
+    String tablePrefix = gcpProjectId + "." + dstDataSetId;
+
+    ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
+    Credentials credentials = getImpersonatedCredentials(sourceCredentials, impersonatedServiceAccount);
+    DataTransferServiceClient dataTransferServiceClient = getDataTransferClient(credentials);
+
+    String query = String.format(TRANSFER_GCP_SCHEDULED_QUERY_TEMPLATE, tablePrefix, tablePrefix, srcTablePrefix);
+    String parent = String.format(PARENT_TEMPLATE_WITH_LOCATION, gcpProjectId, LOCATION);
+
+    TransferConfig transferConfig =
+        TransferConfig.newBuilder()
+            .setDisplayName(scheduledQueryName)
+            .setParams(
+                Struct.newBuilder().putFields(QUERY_CONST, Value.newBuilder().setStringValue(query).build()).build())
+            .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(1, 6, 0)).build())
+            .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID)
+            .build();
+
+    CreateTransferConfigRequest scheduledTransferConfigRequest =
+        CreateTransferConfigRequest.newBuilder().setTransferConfig(transferConfig).setParent(parent).build();
+    TransferConfig createdTransferConfig =
+        executeDataTransferJobCreate(scheduledTransferConfigRequest, dataTransferServiceClient);
+    return createdTransferConfig.getName();
+  }
+
+  @Override
+  public String createRunOnceScheduledQueryGCP(String runOnceScheduledQueryName, String gcpBqProjectId,
+      String gcpBqDatasetId, String dstDataSetId, String serviceAccountEmail) throws IOException {
+    String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
+    ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
+    Credentials credentials = getImpersonatedCredentials(sourceCredentials, serviceAccountEmail);
+    DataTransferServiceClient client = getDataTransferClient(credentials);
+
+    String query = String.format(RUN_ONCE_GCP_SCHEDULED_QUERY_TEMPLATE, gcpBqProjectId + "." + gcpBqDatasetId);
+
+    String parent = String.format(PARENT_TEMPLATE, gcpProjectId);
+    TransferConfig transferConfig =
+        TransferConfig.newBuilder()
+            .setDisplayName(runOnceScheduledQueryName)
+            .setParams(
+                Struct.newBuilder()
+                    .putFields(QUERY_CONST, Value.newBuilder().setStringValue(query).build())
+                    .putFields(WRITE_DISPOSITION_CONST, Value.newBuilder().setStringValue(WRITE_TRUNCATE_VALUE).build())
+                    .putFields(
+                        DEST_TABLE_NAME_CONST, Value.newBuilder().setStringValue(GCP_DEST_TABLE_NAME_VALUE).build())
+                    .build())
+            .setDestinationDatasetId(dstDataSetId)
+            .setScheduleOptions(ScheduleOptions.newBuilder().setDisableAutoScheduling(true).build())
+            .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID)
+            .build();
+    CreateTransferConfigRequest transferConfigRequest =
+        CreateTransferConfigRequest.newBuilder().setTransferConfig(transferConfig).setParent(parent).build();
+
+    TransferConfig createdTransferConfig = executeDataTransferJobCreate(transferConfigRequest, client);
+    return createdTransferConfig.getName();
   }
 
   @Override

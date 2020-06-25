@@ -72,6 +72,10 @@ public class GcpBillingAccountDao {
       updateOperations.set(GcpBillingAccountKeys.bqDatasetId, billingAccount.getBqDatasetId());
     }
 
+    if (null != billingAccount.getBqDataSetRegion()) {
+      updateOperations.set(GcpBillingAccountKeys.bqDataSetRegion, billingAccount.getBqDataSetRegion());
+    }
+
     return persistence.upsert(query, updateOperations, upsertReturnNewOptions);
   }
 
@@ -96,6 +100,10 @@ public class GcpBillingAccountDao {
 
     if (null != billingAccount.getBqDatasetId()) {
       updateOperations.set(GcpBillingAccountKeys.bqDatasetId, billingAccount.getBqDatasetId());
+    }
+
+    if (null != billingAccount.getBqDataSetRegion()) {
+      updateOperations.set(GcpBillingAccountKeys.bqDataSetRegion, billingAccount.getBqDataSetRegion());
     }
 
     persistence.update(query, updateOperations);
