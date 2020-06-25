@@ -3,6 +3,7 @@ package io.harness.statemachine.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -15,7 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
 
 import java.time.Instant;
 
@@ -35,7 +35,7 @@ public class AnalysisStateMachine implements PersistentEntity, UuidAware, Create
   private long lastUpdatedAt;
   private Instant analysisStartTime;
   private Instant analysisEndTime;
-  @Indexed private String cvConfigId;
+  @FdIndex private String cvConfigId;
   private AnalysisState currentState;
   private AnalysisStatus status;
 
