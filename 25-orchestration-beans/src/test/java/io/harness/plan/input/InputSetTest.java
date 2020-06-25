@@ -40,7 +40,7 @@ public class InputSetTest extends OrchestrationBeansTest {
     InputSet inputSet = new InputSet();
     inputSet.put("a.b", "vb");
     inputSet.put("a.d", ImmutableMap.of("e", "f", "g", "h"));
-    inputSet.put("a.dummy", new DummyOutcome());
+    inputSet.put("a.dummy", new DummyOutcome("test"));
     assertThat(inputSet.get("a.b")).isEqualTo("vb");
     assertThat(inputSet.get("a.d.e")).isEqualTo("f");
     assertThat(inputSet.get("a.d.g")).isEqualTo("h");
