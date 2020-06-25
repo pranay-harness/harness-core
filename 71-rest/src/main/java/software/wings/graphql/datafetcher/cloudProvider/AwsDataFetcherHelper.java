@@ -66,16 +66,14 @@ public class AwsDataFetcherHelper {
 
     if (input.getCrossAccountAttributes().isPresent()) {
       input.getCrossAccountAttributes().getValue().ifPresent(crossAccountAttributes -> {
-        configBuilder.assumeCrossAccountRole(crossAccountAttributes.getAssumeCrossAccountRole().getValue().orElseThrow(
-            () -> new InvalidRequestException("No assumeCrossAccountRole provided with the request.")));
+        crossAccountAttributes.getAssumeCrossAccountRole().getValue().ifPresent(configBuilder::assumeCrossAccountRole);
 
         AwsCrossAccountAttributesBuilder builder = AwsCrossAccountAttributes.builder();
 
         builder.crossAccountRoleArn(crossAccountAttributes.getCrossAccountRoleArn().getValue().orElseThrow(
             () -> new InvalidRequestException("No crossAccountRoleArn provided with the request.")));
 
-        builder.externalId(crossAccountAttributes.getExternalId().getValue().orElseThrow(
-            () -> new InvalidRequestException("No externalId provided with the request.")));
+        crossAccountAttributes.getExternalId().getValue().ifPresent(builder::externalId);
 
         configBuilder.crossAccountAttributes(builder.build());
       });

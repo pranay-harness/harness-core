@@ -24,8 +24,8 @@ input AwsManualCredentials {
 }
 
 input AwsCrossAccountAttributes {
-  assumeCrossAccountRole: Boolean!
-  crossAccountRoleArn: String
+  assumeCrossAccountRole: Boolean
+  crossAccountRoleArn: String!
   externalId: String
 }
 
