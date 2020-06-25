@@ -1,5 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
@@ -16,6 +18,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -26,6 +29,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.HARNESS_AUTOSCALING_GROUP_TAG;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.NAME_TAG;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_TRAFFIC_SHIFT_WEIGHT;
+import static software.wings.service.impl.aws.model.AwsConstants.MAX_TRAFFIC_SHIFT_WEIGHT;
+import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHIFT_WEIGHT;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -59,6 +65,7 @@ import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
@@ -71,18 +78,21 @@ import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRe
 import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
+import software.wings.service.impl.aws.model.AwsAmiTrafficShiftAlbSwitchRouteRequest;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private ExecutorService mockExecutorService;
+  @Mock private DelegateLogService delegateLogService;
   @Mock private AwsAsgHelperServiceDelegate mockAwsAsgHelperServiceDelegate;
   @Mock private AwsElbHelperServiceDelegate mockAwsElbHelperServiceDelegate;
   @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;
@@ -658,25 +668,23 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(lbDetails)
         .when(mockAwsElbHelperServiceDelegate)
         .loadTrafficShiftTargetGroupData(
-            eq(awsConfig), eq(REGION), eq(emptyList()), any(LbDetailsForAlbTrafficShift.class), eq(mockCallback));
+            eq(awsConfig), eq(REGION), eq(emptyList()), any(LbDetailsForAlbTrafficShift.class), anyObject());
 
     doReturn(setupSuccessResponse)
         .when(awsAmiHelperServiceDelegate)
-        .setUpAmiService(any(AwsAmiServiceSetupRequest.class), eq(mockCallback));
+        .setUpAmiService(any(AwsAmiServiceSetupRequest.class), anyObject());
     AwsAmiServiceTrafficShiftAlbSetupResponse trafficShiftSetupResponse =
-        awsAmiHelperServiceDelegate.setUpAmiServiceTrafficShift(trafficShiftAlbSetupRequest, mockCallback);
+        awsAmiHelperServiceDelegate.setUpAmiServiceTrafficShift(trafficShiftAlbSetupRequest);
     assertThat(trafficShiftSetupResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     doReturn(setupFailureResponse)
         .when(awsAmiHelperServiceDelegate)
-        .setUpAmiService(any(AwsAmiServiceSetupRequest.class), eq(mockCallback));
-    trafficShiftSetupResponse =
-        awsAmiHelperServiceDelegate.setUpAmiServiceTrafficShift(trafficShiftAlbSetupRequest, mockCallback);
+        .setUpAmiService(any(AwsAmiServiceSetupRequest.class), anyObject());
+    trafficShiftSetupResponse = awsAmiHelperServiceDelegate.setUpAmiServiceTrafficShift(trafficShiftAlbSetupRequest);
     assertThat(trafficShiftSetupResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
 
     trafficShiftAlbSetupRequest.setLbDetails(emptyList());
-    trafficShiftSetupResponse =
-        awsAmiHelperServiceDelegate.setUpAmiServiceTrafficShift(trafficShiftAlbSetupRequest, mockCallback);
+    trafficShiftSetupResponse = awsAmiHelperServiceDelegate.setUpAmiServiceTrafficShift(trafficShiftAlbSetupRequest);
     assertThat(trafficShiftSetupResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
@@ -701,7 +709,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         .when(awsAmiHelperServiceDelegate)
         .deployAmiService(any(), any());
     AwsAmiServiceDeployResponse awsAmiServiceDeployResponse =
-        awsAmiHelperServiceDelegate.deployAmiServiceTrafficShift(trafficShiftAlbDeployRequest, mockCallback);
+        awsAmiHelperServiceDelegate.deployAmiServiceTrafficShift(trafficShiftAlbDeployRequest);
     assertThat(awsAmiServiceDeployResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
@@ -726,8 +734,118 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         .resizeAsgs(anyString(), any(), anyList(), anyString(), anyInt(), anyList(), any(), anyBoolean(), anyInt(),
             anyInt(), anyInt(), any(), anyList(), anyList(), anyBoolean(), anyList(), anyInt());
     AwsAmiServiceDeployResponse awsAmiServiceDeployResponse =
-        awsAmiHelperServiceDelegate.deployAmiServiceTrafficShift(trafficShiftAlbDeployRequest, mockCallback);
+        awsAmiHelperServiceDelegate.deployAmiServiceTrafficShift(trafficShiftAlbDeployRequest);
     assertThat(awsAmiServiceDeployResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testAmiRollbackSwitchRoutesTrafficShift() {
+    LbDetailsForAlbTrafficShift lbDetails = LbDetailsForAlbTrafficShift.builder()
+                                                .loadBalancerName("lbName")
+                                                .loadBalancerArn("lbArn")
+                                                .listenerPort("port")
+                                                .listenerArn("listArn")
+                                                .useSpecificRule(true)
+                                                .ruleArn("ruleArn")
+                                                .prodTargetGroupName("prodTarget")
+                                                .prodTargetGroupArn("prodTargetArn")
+                                                .stageTargetGroupName("stageTarget")
+                                                .stageTargetGroupArn("stageTargetArn")
+                                                .build();
+
+    AwsConfig awsConfig = AwsConfig.builder().build();
+    AwsAmiTrafficShiftAlbSwitchRouteRequest trafficShiftAlbSetupRequest =
+        AwsAmiTrafficShiftAlbSwitchRouteRequest.builder()
+            .awsConfig(awsConfig)
+            .region(REGION)
+            .encryptionDetails(emptyList())
+            .lbDetails(singletonList(lbDetails))
+            .newAsgName("newAsg")
+            .newAutoscalingGroupWeight(DEFAULT_TRAFFIC_SHIFT_WEIGHT)
+            .timeoutIntervalInMin(10)
+            .encryptionDetails(Collections.emptyList())
+            .build();
+
+    doReturn(AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build())
+        .when(awsAmiHelperServiceDelegate)
+        .rollbackSwitchAmiRoutes(any(), eq(mockCallback));
+
+    AwsAmiSwitchRoutesResponse awsAmiSwitchRoutesResponse =
+        awsAmiHelperServiceDelegate.rollbackSwitchAmiRoutesTrafficShift(trafficShiftAlbSetupRequest);
+    assertThat(awsAmiSwitchRoutesResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+
+    doThrow(Exception.class)
+        .when(mockAwsAsgHelperServiceDelegate)
+        .clearAllScalingPoliciesForAsg(eq(awsConfig), eq(emptyList()), eq(REGION), anyString(), anyObject());
+    awsAmiSwitchRoutesResponse =
+        awsAmiHelperServiceDelegate.rollbackSwitchAmiRoutesTrafficShift(trafficShiftAlbSetupRequest);
+    assertThat(awsAmiSwitchRoutesResponse.getExecutionStatus()).isEqualTo(FAILED);
+
+    doThrow(Exception.class).when(awsAmiHelperServiceDelegate).rollbackSwitchAmiRoutes(any(), any());
+    awsAmiSwitchRoutesResponse =
+        awsAmiHelperServiceDelegate.rollbackSwitchAmiRoutesTrafficShift(trafficShiftAlbSetupRequest);
+    assertThat(awsAmiSwitchRoutesResponse.getExecutionStatus()).isEqualTo(FAILED);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testAmiSwitchRoutesTrafficShift() {
+    LbDetailsForAlbTrafficShift lbDetails = LbDetailsForAlbTrafficShift.builder()
+                                                .loadBalancerName("lbName")
+                                                .loadBalancerArn("lbArn")
+                                                .listenerPort("port")
+                                                .listenerArn("listArn")
+                                                .useSpecificRule(true)
+                                                .ruleArn("ruleArn")
+                                                .prodTargetGroupName("prodTarget")
+                                                .prodTargetGroupArn("prodTargetArn")
+                                                .stageTargetGroupName("stageTarget")
+                                                .stageTargetGroupArn("stageTargetArn")
+                                                .build();
+
+    AwsConfig awsConfig = AwsConfig.builder().build();
+    AwsAmiTrafficShiftAlbSwitchRouteRequest trafficShiftAlbSetupRequest =
+        AwsAmiTrafficShiftAlbSwitchRouteRequest.builder()
+            .awsConfig(awsConfig)
+            .region(REGION)
+            .encryptionDetails(emptyList())
+            .lbDetails(singletonList(lbDetails))
+            .newAsgName("newAsg")
+            .oldAsgName("oldAsg")
+            .newAutoscalingGroupWeight(DEFAULT_TRAFFIC_SHIFT_WEIGHT)
+            .timeoutIntervalInMin(10)
+            .encryptionDetails(Collections.emptyList())
+            .downscaleOldAsg(true)
+            .build();
+
+    AwsAmiSwitchRoutesResponse awsAmiSwitchRoutesResponse =
+        awsAmiHelperServiceDelegate.switchAmiRoutesTrafficShift(trafficShiftAlbSetupRequest);
+    assertThat(awsAmiSwitchRoutesResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+
+    trafficShiftAlbSetupRequest.setNewAutoscalingGroupWeight(MAX_TRAFFIC_SHIFT_WEIGHT);
+    awsAmiSwitchRoutesResponse = awsAmiHelperServiceDelegate.switchAmiRoutesTrafficShift(trafficShiftAlbSetupRequest);
+    assertThat(awsAmiSwitchRoutesResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(awsAmiSwitchRoutesResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+
+    trafficShiftAlbSetupRequest.setNewAsgName("");
+    awsAmiSwitchRoutesResponse = awsAmiHelperServiceDelegate.switchAmiRoutesTrafficShift(trafficShiftAlbSetupRequest);
+    assertThat(awsAmiSwitchRoutesResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+
+    trafficShiftAlbSetupRequest.setNewAutoscalingGroupWeight(MIN_TRAFFIC_SHIFT_WEIGHT);
+    awsAmiSwitchRoutesResponse = awsAmiHelperServiceDelegate.switchAmiRoutesTrafficShift(trafficShiftAlbSetupRequest);
+    assertThat(awsAmiSwitchRoutesResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+
+    trafficShiftAlbSetupRequest.setNewAsgName("newAsg");
+    trafficShiftAlbSetupRequest.setNewAutoscalingGroupWeight(DEFAULT_TRAFFIC_SHIFT_WEIGHT);
+    doThrow(Exception.class)
+        .when(mockAwsElbHelperServiceDelegate)
+        .updateRulesForAlbTrafficShift(
+            eq(awsConfig), eq(REGION), eq(emptyList()), anyList(), anyObject(), anyInt(), anyString());
+    awsAmiSwitchRoutesResponse = awsAmiHelperServiceDelegate.switchAmiRoutesTrafficShift(trafficShiftAlbSetupRequest);
+    assertThat(awsAmiSwitchRoutesResponse.getExecutionStatus()).isEqualTo(FAILED);
   }
 
   @Test

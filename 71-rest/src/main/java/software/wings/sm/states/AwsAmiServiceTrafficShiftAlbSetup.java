@@ -99,7 +99,6 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
     Activity activity = createActivity(context, awsAmiTrafficShiftAlbData);
     ManagerExecutionLogCallback executionLogCallback =
         new ManagerExecutionLogCallback(logService, getLogBuilder(activity), activity.getUuid());
-
     try {
       executionLogCallback.saveExecutionLog("Starting AWS AMI Setup");
       createAndEnqueueDelegateTask(context, activity, awsAmiTrafficShiftAlbData);
@@ -181,7 +180,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
   private AwsAmiServiceTrafficShiftAlbSetupRequest buildAmiTrafficShiftSetupRequest(
       ExecutionContext context, AwsAmiTrafficShiftAlbData awsAmiTrafficShiftAlbData, Activity activity) {
     return AwsAmiServiceTrafficShiftAlbSetupRequest.builder()
-        .accountId(awsAmiTrafficShiftAlbData.getAwsConfig().getAccountId())
+        .accountId(awsAmiTrafficShiftAlbData.getApp().getAccountId())
         .appId(awsAmiTrafficShiftAlbData.getApp().getAppId())
         .activityId(activity.getUuid())
         .commandName(COMMAND_NAME)
@@ -209,11 +208,13 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
         (AwsAmiServiceTrafficShiftAlbSetupResponse) response.values().iterator().next();
     activityService.updateStatus(activityId, context.getAppId(), amiServiceSetupResponse.getExecutionStatus());
 
-    AwsAmiSetupExecutionData awsAmiExecutionData = (AwsAmiSetupExecutionData) context.getStateExecutionData();
+    AwsAmiSetupExecutionData awsAmiExecutionData = context.getStateExecutionData();
     awsAmiExecutionData.setNewAutoScalingGroupName(amiServiceSetupResponse.getNewAsgName());
     awsAmiExecutionData.setOldAutoScalingGroupName(amiServiceSetupResponse.getLastDeployedAsgName());
     awsAmiExecutionData.setNewVersion(amiServiceSetupResponse.getHarnessRevision());
     awsAmiExecutionData.setDelegateMetaInfo(amiServiceSetupResponse.getDelegateMetaInfo());
+    awsAmiExecutionData.setMaxInstances(amiServiceSetupResponse.getMaxInstances());
+    awsAmiExecutionData.setDesiredInstances(amiServiceSetupResponse.getDesiredInstances());
 
     AmiServiceTrafficShiftAlbSetupElement amiServiceElement = buildContextElement(context, amiServiceSetupResponse);
     return createAsyncResponse(activityId, amiServiceSetupResponse, awsAmiExecutionData, amiServiceElement);
@@ -279,8 +280,12 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
     AwsAmiSetupExecutionData awsAmiExecutionData =
         AwsAmiSetupExecutionData.builder()
             .activityId(activityId)
-            .maxInstances(renderExpression(context, maxInstancesExpr, DEFAULT_AMI_ASG_MAX_INSTANCES))
-            .desiredInstances(renderExpression(context, targetInstancesExpr, DEFAULT_AMI_ASG_DESIRED_INSTANCES))
+            .maxInstances(useCurrentRunningCount
+                    ? null
+                    : renderExpression(context, maxInstancesExpr, DEFAULT_AMI_ASG_MAX_INSTANCES))
+            .desiredInstances(useCurrentRunningCount
+                    ? null
+                    : renderExpression(context, targetInstancesExpr, DEFAULT_AMI_ASG_DESIRED_INSTANCES))
             .build();
     return createResponse(activityId, ExecutionStatus.SUCCESS, null, awsAmiExecutionData, null, true);
   }

@@ -3315,7 +3315,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           CommandStateExecutionData commandStateExecutionData =
               (CommandStateExecutionData) next.fetchStateExecutionData();
           instanceStatusSummaries.addAll(commandStateExecutionData.getNewInstanceStatusSummaries());
-        } else if (nextStateType == StateType.AWS_AMI_SERVICE_DEPLOY
+        } else if (isAsgAmiDeployment(nextStateType)
             && next.fetchStateExecutionData() instanceof AwsAmiDeployStateExecutionData) {
           AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
               (AwsAmiDeployStateExecutionData) next.fetchStateExecutionData();
@@ -3377,6 +3377,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return elementExecutionSummaries;
+  }
+
+  private boolean isAsgAmiDeployment(StateType nextStateType) {
+    return nextStateType == StateType.AWS_AMI_SERVICE_DEPLOY
+        || nextStateType == StateType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
   }
 
   @Override

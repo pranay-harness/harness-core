@@ -14,6 +14,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -43,7 +44,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
@@ -74,17 +74,16 @@ import java.util.Collections;
 
 public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
-  @Mock ArtifactStreamService artifactStreamService;
-  @Mock ActivityService activityService;
-  @Mock DelegateService delegateService;
-  @Mock LogService logService;
-  @Mock SweepingOutputService sweepingOutputService;
-  @Mock AwsStateHelper awsStateHelper;
-  @Mock AwsAmiServiceStateHelper awsAmiServiceHelper;
+  @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private ActivityService activityService;
+  @Mock private DelegateService delegateService;
+  @Mock private LogService logService;
+  @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private AwsStateHelper awsStateHelper;
+  @Mock private AwsAmiServiceStateHelper awsAmiServiceHelper;
 
-  @InjectMocks
   private final AwsAmiServiceTrafficShiftAlbDeployState state =
-      new AwsAmiServiceTrafficShiftAlbDeployState("stateName");
+      spy(new AwsAmiServiceTrafficShiftAlbDeployState("deploy-state"));
 
   @Test
   @Owner(developers = ANIL)
@@ -148,15 +147,6 @@ public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
       return (String) args[0];
     });
     doReturn(CANARY).doReturn(BLUE_GREEN).when(mockContext).getOrchestrationWorkflowType();
-
-    //    ServiceResourceService serviceResourceService = mock((ServiceResourceService.class));
-    //    ArtifactStreamService artifactStreamService = mock(ArtifactStreamService.class);
-    //    ActivityService activityService = mock(ActivityService.class);
-    //    DelegateService delegateService = mock(DelegateService.class);
-    //    LogService logService = mock(LogService.class);
-    //    SweepingOutputService sweepingOutputService = mock(SweepingOutputService.class);
-    //    AwsStateHelper awsStateHelper = mock(AwsStateHelper.class);
-    //    AwsAmiServiceStateHelper awsAmiServiceHelper = mock(AwsAmiServiceStateHelper.class);
 
     on(state).set("serviceResourceService", serviceResourceService);
     on(state).set("artifactStreamService", artifactStreamService);

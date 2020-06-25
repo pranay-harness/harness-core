@@ -153,6 +153,7 @@ public class ActivityServiceImpl implements ActivityService {
         case PCF_PLUGIN:
         case COMMAND:
         case HELM:
+        case AWS_AMI_SWITCH_ROUTES:
         case SPOTINST_SETUP:
         case SPOTINST_DEPLOY:
         case SPOTINST_UPDATE_LISTENER:
@@ -170,7 +171,6 @@ public class ActivityServiceImpl implements ActivityService {
         case JENKINS:
         case KUBERNETES_STEADY_STATE_CHECK:
         case ECS_STEADY_STATE_CHECK:
-        case AWS_AMI_SWITCH_ROUTES:
         case KUBERNETES_SWAP_SERVICE_SELECTORS:
         case AWS_ECS_UPDATE_LISTENER_BG:
         case AWS_ECS_UPDATE_ROUTE_53_DNS_WEIGHT:

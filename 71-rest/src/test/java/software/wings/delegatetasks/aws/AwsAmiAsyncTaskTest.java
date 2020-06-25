@@ -22,7 +22,10 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.aws.model.AwsAmiRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
+import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbDeployRequest;
+import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
+import software.wings.service.impl.aws.model.AwsAmiTrafficShiftAlbSwitchRouteRequest;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 
 public class AwsAmiAsyncTaskTest extends WingsBaseTest {
@@ -61,5 +64,18 @@ public class AwsAmiAsyncTaskTest extends WingsBaseTest {
     request = AwsAmiSwitchRoutesRequest.builder().rollback(true).build();
     task.run(new Object[] {request});
     verify(mockAwsAmiHelperServiceDelegate).rollbackSwitchAmiRoutes(any(), any());
+
+    request = AwsAmiServiceTrafficShiftAlbSetupRequest.builder().build();
+    task.run(new Object[] {request});
+    verify(mockAwsAmiHelperServiceDelegate).setUpAmiServiceTrafficShift(any());
+    request = AwsAmiServiceTrafficShiftAlbDeployRequest.builder().build();
+    task.run(new Object[] {request});
+    verify(mockAwsAmiHelperServiceDelegate).deployAmiServiceTrafficShift(any());
+    request = AwsAmiTrafficShiftAlbSwitchRouteRequest.builder().rollback(false).build();
+    task.run(new Object[] {request});
+    verify(mockAwsAmiHelperServiceDelegate).switchAmiRoutesTrafficShift(any());
+    request = AwsAmiTrafficShiftAlbSwitchRouteRequest.builder().rollback(true).build();
+    task.run(new Object[] {request});
+    verify(mockAwsAmiHelperServiceDelegate).rollbackSwitchAmiRoutesTrafficShift(any());
   }
 }

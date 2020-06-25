@@ -458,7 +458,7 @@ public class SpotInstStateHelper {
     }
   }
 
-  void saveInstanceInfoToSweepingOutput(ExecutionContext context, int trafficShift) {
+  public void saveInstanceInfoToSweepingOutput(ExecutionContext context, int trafficShift) {
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
             .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
@@ -472,7 +472,7 @@ public class SpotInstStateHelper {
     for (LbDetailsForAlbTrafficShift originalLbDetails : lbDetails) {
       rendered.add(LbDetailsForAlbTrafficShift.builder()
                        .loadBalancerName(context.renderExpression(originalLbDetails.getLoadBalancerName()))
-                       .loadBalancerArn(context.renderExpression(originalLbDetails.getListenerPort()))
+                       .loadBalancerArn(context.renderExpression(originalLbDetails.getLoadBalancerArn()))
                        .listenerPort(context.renderExpression(originalLbDetails.getListenerPort()))
                        .listenerArn(context.renderExpression(originalLbDetails.getListenerArn()))
                        .useSpecificRule(originalLbDetails.isUseSpecificRule())

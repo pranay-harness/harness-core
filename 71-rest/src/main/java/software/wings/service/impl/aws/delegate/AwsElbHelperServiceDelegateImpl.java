@@ -922,10 +922,8 @@ public class AwsElbHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
-      logCallback.saveExecutionLog(
-          format("Loading Target group data for Listener: [%s] at port: [%s] of Load Balancer: [%s]",
-              originalLbDetails.getListenerArn(), originalLbDetails.getListenerPort(),
-              originalLbDetails.getLoadBalancerArn()));
+      logCallback.saveExecutionLog(format("Loading Target group data for Listener: [%s] of Load Balancer: [%s]",
+          originalLbDetails.getListenerArn(), originalLbDetails.getLoadBalancerArn()));
       if (originalLbDetails.isUseSpecificRule()) {
         logCallback.saveExecutionLog(format("Rule Arn: [%s]", originalLbDetails.getRuleArn()));
       } else {
@@ -981,7 +979,7 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public void updateRulesForAlbTrafficShift(AwsConfig awsConfig, String region,
       List<EncryptedDataDetail> encryptionDetails, List<LbDetailsForAlbTrafficShift> details,
-      ExecutionLogCallback logCallback, int newServiceTrafficWeight) {
+      ExecutionLogCallback logCallback, int newServiceTrafficWeight, String groupType) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
@@ -991,8 +989,7 @@ public class AwsElbHelperServiceDelegateImpl
         newServiceTrafficWeight = MAX_TRAFFIC_SHIFT_WEIGHT;
       }
       int oldServiceTrafficWeight = MAX_TRAFFIC_SHIFT_WEIGHT - newServiceTrafficWeight;
-      logCallback.saveExecutionLog(format("New Elastigroup service will get: [%d] weight.", newServiceTrafficWeight));
-      logCallback.saveExecutionLog(format("Old Elastigroup service will get: [%d] weight.", oldServiceTrafficWeight));
+
       TargetGroupTuple newTuple = new TargetGroupTuple().withWeight(newServiceTrafficWeight);
       TargetGroupTuple oldTuple = new TargetGroupTuple().withWeight(oldServiceTrafficWeight);
       Action forwardAction = new Action().withType(Forward).withForwardConfig(
@@ -1000,6 +997,10 @@ public class AwsElbHelperServiceDelegateImpl
       ModifyRuleRequest modifyRuleRequest = new ModifyRuleRequest().withActions(forwardAction);
       ModifyListenerRequest modifyListenerRequest = new ModifyListenerRequest().withDefaultActions(forwardAction);
       for (LbDetailsForAlbTrafficShift detail : details) {
+        logCallback.saveExecutionLog(format("New %s service will get: [%d] weight. TargetGroup: [%s]", groupType,
+            newServiceTrafficWeight, detail.getStageTargetGroupName()));
+        logCallback.saveExecutionLog(format("Old %s service will get: [%d] weight. TargetGroup: [%s]", groupType,
+            oldServiceTrafficWeight, detail.getProdTargetGroupName()));
         oldTuple.setTargetGroupArn(detail.getProdTargetGroupArn());
         newTuple.setTargetGroupArn(detail.getStageTargetGroupArn());
         if (detail.isUseSpecificRule()) {

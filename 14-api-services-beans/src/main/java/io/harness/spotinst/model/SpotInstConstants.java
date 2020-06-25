@@ -32,6 +32,7 @@ public interface SpotInstConstants {
   String ELASTI_GROUP_USER_DATA_CONFIG = "userData";
   String GROUP_CONFIG_ELEMENT = "group";
   String ELASTI_GROUP_ALL_PHASE_ROLLBACK = "Elastigroup all phase rollback";
+  String ELASTI_GROUP = "Elastigroup";
 
   // Command unit Names
   String SETUP_COMMAND_UNIT = "Setup Elastigroup";
