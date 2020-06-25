@@ -5,6 +5,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
 import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
@@ -34,12 +35,14 @@ import io.harness.cvng.core.services.entities.CVConfig.CVConfigKeys;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
+import io.harness.jobs.AnalysisOrchestrationJob;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +51,8 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -129,10 +134,40 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerAuthFilters(environment, injector);
     registerManagedBeans(environment, injector);
     registerResources(environment, injector);
+    ScheduledThreadPoolExecutor serviceGuardExecutor =
+        new ScheduledThreadPoolExecutor(15, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
+    registerOrchestrationIterator(injector, serviceGuardExecutor, ofMinutes(1), 7, new AnalysisOrchestrationJob(),
+        CVConfigKeys.analysisOrchestrationIteration);
+
     registerCVConfigIterator(injector);
     registerHealthChecks(environment, injector);
     logger.info("Leaving startup maintenance mode");
-    MaintenanceController.resetForceMaintenance();
+    MaintenanceController.forceMaintenance(false);
+
+    logger.info("Starting app done");
+  }
+
+  private void registerOrchestrationIterator(Injector injector,
+      ScheduledThreadPoolExecutor workflowVerificationExecutor, Duration interval, int maxAllowedThreads,
+      Handler<CVConfig> handler, String fieldName) {
+    injector.injectMembers(handler);
+    PersistenceIterator analysisOrchestrationIterator =
+        MongoPersistenceIterator.<CVConfig>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(CVConfig.class)
+            .fieldName(fieldName)
+            .targetInterval(interval)
+            .acceptableNoAlertDelay(ofSeconds(30))
+            .executorService(workflowVerificationExecutor)
+            .semaphore(new Semaphore(maxAllowedThreads))
+            .handler(handler)
+            .schedulingType(REGULAR)
+            .filterExpander(query -> query.field(CVConfigKeys.createdAt).lessThanOrEq(Instant.now().toEpochMilli()))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(analysisOrchestrationIterator);
+    workflowVerificationExecutor.scheduleAtFixedRate(
+        () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
   }
 
   private void registerCVConfigIterator(Injector injector) {

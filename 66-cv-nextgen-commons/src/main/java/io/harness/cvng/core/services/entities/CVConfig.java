@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.models.VerificationType;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
@@ -35,8 +36,11 @@ public abstract class CVConfig
   @NotNull private String name;
   private long createdAt;
   private long lastUpdatedAt;
+  @NotNull private VerificationType verificationType;
+
   @NotNull @FdIndex private String accountId;
   @NotNull @FdIndex private String connectorId;
+
   @NotNull private String serviceIdentifier;
   @NotNull private String envIdentifier;
   @NotNull private String projectIdentifier;
@@ -45,10 +49,16 @@ public abstract class CVConfig
   private String productName;
   private String groupId;
 
+  @FdIndex private Long analysisOrchestrationIteration;
+
   @Override
   public void updateNextIteration(String fieldName, Long nextIteration) {
     if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
       this.dataCollectionTaskIteration = nextIteration;
+      return;
+    }
+    if (fieldName.equals(CVConfigKeys.analysisOrchestrationIteration)) {
+      this.analysisOrchestrationIteration = nextIteration;
       return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
@@ -58,6 +68,9 @@ public abstract class CVConfig
   public Long obtainNextIteration(String fieldName) {
     if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
+    }
+    if (fieldName.equals(CVConfigKeys.analysisOrchestrationIteration)) {
+      return analysisOrchestrationIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }

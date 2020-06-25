@@ -1,3 +1,8 @@
 package io.harness.app;
 
-public interface CVConstants { String SERVICE_BASE_URL = "/cv-nextgen"; }
+public class CVConstants {
+  private CVConstants() {}
+
+  public static final String SERVICE_BASE_URL = "/cv-nextgen";
+  public static final int MAX_RETRIES = 2;
+}

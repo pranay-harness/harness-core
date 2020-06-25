@@ -99,7 +99,7 @@ public class LogResponseParser {
       DateTimeFormatter df = DateTimeFormatter.ofPattern(timestampFormat);
       timestamp = Instant.from(df.parse(timestampStr)).toEpochMilli();
     } catch (Exception ex) {
-      logger.info("Exception while parsing using DateTimeFormatter, we will attempt with SimpleDateFormatter", ex);
+      logger.debug("Exception while parsing using DateTimeFormatter, we will attempt with SimpleDateFormatter", ex);
       SimpleDateFormat simpleDateFormat = new SimpleDateFormat(timestampFormat);
       Date date = simpleDateFormat.parse(timestampStr);
       timestamp = date.toInstant().toEpochMilli();
