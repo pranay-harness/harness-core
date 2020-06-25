@@ -40,6 +40,7 @@ import java.util.Set;
 @Slf4j
 public class PreferenceServiceImpl implements PreferenceService {
   public static final String USER_ID_KEY = "userId";
+  public static final String PREFERENCE_WITH_SAME_NAME_EXISTS = "Preference with same name exists for user";
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
@@ -47,8 +48,7 @@ public class PreferenceServiceImpl implements PreferenceService {
     Preference savedPreference = null;
     Preference existingPreference = getPreferenceByName(accountId, userId, preference.getName());
     if (existingPreference != null) {
-      throw new InvalidRequestException("Preference with same name exists for user", USER)
-          .addParam("message", "Preference with same name exists for user");
+      throw new InvalidRequestException(PREFERENCE_WITH_SAME_NAME_EXISTS, USER);
     }
 
     savedPreference = wingsPersistence.saveAndGet(Preference.class, preference);
@@ -159,7 +159,10 @@ public class PreferenceServiceImpl implements PreferenceService {
   @Override
   public Preference update(String accountId, String userId, String preferenceId, Preference preference) {
     // Update preference for given account, user and preference Id
-
+    Preference existingPreference = getPreferenceByName(accountId, userId, preference.getName());
+    if (existingPreference != null && !existingPreference.getUuid().equals(preferenceId)) {
+      throw new InvalidRequestException(PREFERENCE_WITH_SAME_NAME_EXISTS, USER);
+    }
     if (preference instanceof DeploymentPreference) {
       DeploymentPreference deployPref = null;
       deployPref = (DeploymentPreference) preference;
