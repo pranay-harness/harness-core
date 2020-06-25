@@ -404,14 +404,14 @@ public class AuthServiceImpl implements AuthService {
     try {
       encodedKey = Hex.decodeHex(account.getAccountKey().toCharArray());
     } catch (DecoderException e) {
-      throw new WingsException(DEFAULT_ERROR_CODE, USER_ADMIN);
+      throw new WingsException(DEFAULT_ERROR_CODE, USER_ADMIN, e);
     }
 
     JWEDecrypter decrypter;
     try {
       decrypter = new DirectDecrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
     } catch (KeyLengthException e) {
-      throw new WingsException(DEFAULT_ERROR_CODE, USER_ADMIN);
+      throw new WingsException(DEFAULT_ERROR_CODE, USER_ADMIN, e);
     }
 
     try {
