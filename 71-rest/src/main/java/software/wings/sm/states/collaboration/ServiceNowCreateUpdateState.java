@@ -18,6 +18,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -144,17 +145,18 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
               .build();
     }
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(accountId)
-                                    .waitId(activityId)
-                                    .appId(executionContext.fetchRequiredApp().getAppId())
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(SERVICENOW_ASYNC.name())
-                                              .parameters(new Object[] {serviceNowTaskParameters})
-                                              .timeout(ASYNC_TASK_TIMEOUT_MILLIS)
-                                              .build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(accountId)
+            .waitId(activityId)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.fetchRequiredApp().getAppId())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(SERVICENOW_ASYNC.name())
+                      .parameters(new Object[] {serviceNowTaskParameters})
+                      .timeout(ASYNC_TASK_TIMEOUT_MILLIS)
+                      .build())
+            .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()

@@ -42,6 +42,7 @@ import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
@@ -220,7 +221,7 @@ public class ShellScriptStep implements Step, TaskExecutable {
         .accountId(getAccountId(ambiance))
         .waitId(activityId)
         .tags(renderedTags)
-        .appId(getAppId(ambiance))
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, getAppId(ambiance))
         .data(TaskData.builder()
                   .async(true)
                   .taskType(TaskType.SCRIPT.name())
@@ -228,9 +229,10 @@ public class ShellScriptStep implements Step, TaskExecutable {
                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                   .expressionFunctorToken(ambiance.getExpressionFunctorToken())
                   .build())
-        .envId(environment == null ? null : environment.getUuid())
-        .infrastructureMappingId(infrastructureMapping == null ? null : infrastructureMapping.getUuid())
-        .serviceTemplateId(serviceTemplateId)
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, environment == null ? null : environment.getUuid())
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
+            infrastructureMapping == null ? null : infrastructureMapping.getUuid())
+        .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
         .build();
   }
 

@@ -13,6 +13,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
@@ -54,7 +55,8 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
     String waitId = generateUuid();
     final TaskDataBuilder dataBuilder =
         TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
-    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().appId(GLOBAL_APP_ID).waitId(waitId);
+    DelegateTaskBuilder delegateTaskBuilder =
+        DelegateTask.builder().setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID).waitId(waitId);
 
     if (CUSTOM.name().equals(artifactStreamType)) {
       ArtifactStreamAttributes artifactStreamAttributes =

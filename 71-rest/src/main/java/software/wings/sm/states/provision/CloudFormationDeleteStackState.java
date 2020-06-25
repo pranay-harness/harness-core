@@ -10,6 +10,7 @@ import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
+import io.harness.tasks.Cd1SetupFields;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.beans.AwsConfig;
@@ -58,7 +59,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
         .accountId(executionContext.getApp().getAccountId())
         .waitId(activityId)
         .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-        .appId(executionContext.getApp().getUuid())
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
         .data(TaskData.builder()
                   .async(true)
                   .taskType(CLOUD_FORMATION_TASK.name())

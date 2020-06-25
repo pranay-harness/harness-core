@@ -14,6 +14,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -98,7 +99,7 @@ public class NewRelicDeploymentMarkerState extends AbstractAnalysisState {
         delegateService.queueTask(DelegateTask.builder()
                                       .accountId(context.getApp().getAccountId())
                                       .waitId(correlationId)
-                                      .appId(context.getApp().getAppId())
+                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getApp().getAppId())
                                       .data(TaskData.builder()
                                                 .async(true)
                                                 .taskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER.name())

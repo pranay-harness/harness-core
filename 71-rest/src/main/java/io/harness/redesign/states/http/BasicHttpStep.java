@@ -22,6 +22,7 @@ import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.TaskType;
@@ -51,13 +52,13 @@ public class BasicHttpStep implements Step, TaskExecutable {
     return DelegateTask.builder()
         .accountId(ambiance.getSetupAbstractions().get("accountId"))
         .waitId(waitId)
-        .appId(ambiance.getSetupAbstractions().get("appId"))
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, (String) ambiance.getSetupAbstractions().get("appId"))
         .data(TaskData.builder()
                   .taskType(TaskType.HTTP.name())
                   .parameters(new Object[] {httpTaskParameters})
                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                   .build())
-        .infrastructureMappingId(waitId)
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, waitId)
         .build();
   }
 

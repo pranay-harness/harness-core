@@ -22,6 +22,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.Test;
@@ -103,7 +104,7 @@ public class AwsAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
     assertThat(client.getValidationTask(getClientContext(), ACCOUNT_ID))
         .isEqualTo(DelegateTask.builder()
                        .accountId(ACCOUNT_ID)
-                       .appId(GLOBAL_APP_ID)
+                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
                        .tags(singletonList("tag"))
                        .data(TaskData.builder()
                                  .async(false)

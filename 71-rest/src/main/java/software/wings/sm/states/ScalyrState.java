@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -105,7 +106,7 @@ public class ScalyrState extends AbstractLogAnalysisState {
     return delegateService.queueTask(
         DelegateTask.builder()
             .accountId(accountId)
-            .appId(context.getAppId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .waitId(waitId)
             .data(TaskData.builder()
                       .async(true)
@@ -113,8 +114,8 @@ public class ScalyrState extends AbstractLogAnalysisState {
                       .parameters(new Object[] {dataCollectionInfo})
                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                       .build())
-            .envId(envId)
-            .infrastructureMappingId(infrastructureMappingId)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .build());
   }
 }

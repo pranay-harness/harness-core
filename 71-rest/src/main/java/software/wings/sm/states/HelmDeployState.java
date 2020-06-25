@@ -40,6 +40,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -387,7 +388,7 @@ public class HelmDeployState extends State {
                                               .timeout(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS * 2)
                                               .build())
                                     .accountId(app.getAccountId())
-                                    .appId(app.getUuid())
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
                                     .tags(tags)
                                     .build();
 
@@ -859,21 +860,22 @@ public class HelmDeployState extends State {
     StateExecutionContext stateExecutionContext =
         buildStateExecutionContext(stateExecutionDataBuilder, expressionFunctorToken);
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(app.getAccountId())
-                                    .appId(app.getUuid())
-                                    .waitId(activityId)
-                                    .tags(tags)
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(HELM_COMMAND_TASK.name())
-                                              .parameters(new Object[] {commandRequest})
-                                              .timeout(getSafeTimeout())
-                                              .expressionFunctorToken(expressionFunctorToken)
-                                              .build())
-                                    .envId(env.getUuid())
-                                    .infrastructureMappingId(containerInfraMapping.getUuid())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(app.getAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+            .waitId(activityId)
+            .tags(tags)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(HELM_COMMAND_TASK.name())
+                      .parameters(new Object[] {commandRequest})
+                      .timeout(getSafeTimeout())
+                      .expressionFunctorToken(expressionFunctorToken)
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
+            .build();
 
     renderDelegateTask(context, delegateTask, stateExecutionContext);
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
@@ -964,9 +966,10 @@ public class HelmDeployState extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
-            .appId(app.getUuid())
-            .envId(k8sStateHelper.getEnvIdFromExecutionContext(context))
-            .infrastructureMappingId(k8sStateHelper.getContainerInfrastructureMappingId(context))
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, k8sStateHelper.getEnvIdFromExecutionContext(context))
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
+                k8sStateHelper.getContainerInfrastructureMappingId(context))
             .waitId(waitId)
             .tags(tags)
             .data(TaskData.builder()
@@ -1185,9 +1188,10 @@ public class HelmDeployState extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
-            .appId(app.getUuid())
-            .envId(k8sStateHelper.getEnvIdFromExecutionContext(context))
-            .infrastructureMappingId(k8sStateHelper.getContainerInfrastructureMappingId(context))
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, k8sStateHelper.getEnvIdFromExecutionContext(context))
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
+                k8sStateHelper.getContainerInfrastructureMappingId(context))
             .waitId(waitId)
             .tags(tags)
             .data(TaskData.builder()

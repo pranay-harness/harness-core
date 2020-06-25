@@ -6,6 +6,7 @@ import static java.util.Collections.singletonList;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.delegate.beans.TaskData;
+import io.harness.tasks.Cd1SetupFields;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
@@ -45,9 +46,10 @@ public class DelegateInvocationHandler implements InvocationHandler {
                                                 .timeout(syncTaskContext.getTimeout())
                                                 .build())
                                       .accountId(syncTaskContext.getAccountId())
-                                      .appId(syncTaskContext.getAppId())
-                                      .envId(syncTaskContext.getEnvId())
-                                      .infrastructureMappingId(syncTaskContext.getInfrastructureMappingId())
+                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, syncTaskContext.getAppId())
+                                      .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, syncTaskContext.getEnvId())
+                                      .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
+                                          syncTaskContext.getInfrastructureMappingId())
                                       .tags(syncTaskContext.getTags());
 
     String awsConfigTag = getAwsConfigTags(args);

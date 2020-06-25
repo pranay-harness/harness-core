@@ -22,6 +22,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -386,7 +387,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .appId(context.getAppId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .waitId(waitId)
             .data(TaskData.builder()
                       .async(true)
@@ -394,8 +395,8 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
                       .parameters(new Object[] {dataCollectionInfo})
                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                       .build())
-            .envId(envId)
-            .infrastructureMappingId(infrastructureMappingId)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION,
         DataCollectionCallback.builder()

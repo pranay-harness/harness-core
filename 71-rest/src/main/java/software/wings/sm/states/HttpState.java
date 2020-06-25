@@ -34,6 +34,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -379,21 +380,23 @@ public class HttpState extends State implements SweepingOutputStateMixin {
         .header(expressionEvaluator.substitute(httpTaskParameters.getHeader(), Collections.emptyMap()))
         .warningMessage(warningMessage);
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
-                                    .waitId(activityId)
-                                    .tags(renderedTags)
-                                    .appId(((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(getTaskType().name())
-                                              .parameters(new Object[] {httpTaskParameters})
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                              .expressionFunctorToken(expressionFunctorToken)
-                                              .build())
-                                    .envId(envId)
-                                    .infrastructureMappingId(infrastructureMappingId)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
+            .waitId(activityId)
+            .tags(renderedTags)
+            .setupAbstraction(
+                Cd1SetupFields.APP_ID_FIELD, ((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(getTaskType().name())
+                      .parameters(new Object[] {httpTaskParameters})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                      .expressionFunctorToken(expressionFunctorToken)
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+            .build();
 
     String delegateTaskId = scheduleDelegateTask(delegateTask);
 

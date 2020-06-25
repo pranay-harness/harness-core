@@ -24,6 +24,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.InstanceElement;
@@ -112,7 +113,7 @@ public class EcsSteadyStateCheck extends State {
       DelegateTask delegateTask =
           DelegateTask.builder()
               .accountId(app.getAccountId())
-              .appId(app.getUuid())
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
               .waitId(activity.getUuid())
               .tags(isNotEmpty(params.getAwsConfig().getTag()) ? singletonList(params.getAwsConfig().getTag()) : null)
               .data(TaskData.builder()
@@ -121,7 +122,7 @@ public class EcsSteadyStateCheck extends State {
                         .parameters(new Object[] {params})
                         .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                         .build())
-              .envId(env.getUuid())
+              .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return ExecutionResponse.builder()

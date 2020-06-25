@@ -30,6 +30,7 @@ import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.TaskType;
 
@@ -55,7 +56,9 @@ public class ArtifactStep implements Step, TaskExecutable {
         artifactSource.getAccountId(), parameters.getArtifact().getSourceAttributes());
     final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.ARTIFACT_COLLECT_TASK.name());
     DelegateTaskBuilder delegateTaskBuilder =
-        DelegateTask.builder().appId(artifactSource.getAccountId()).waitId(waitId);
+        DelegateTask.builder()
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, artifactSource.getAccountId())
+            .waitId(waitId);
 
     // Set timeout.
     dataBuilder.parameters(new Object[] {taskParameters}).timeout(DEFAULT_TIMEOUT);

@@ -42,6 +42,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -346,9 +347,9 @@ public class EcsStateHelper {
   public DelegateTask getDelegateTask(String accountId, String appId, TaskType taskType, String waitId, String envId,
       String infrastructureMappingId, Object[] parameters, long timeout) {
     return DelegateTask.builder()
-        .appId(appId)
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
         .accountId(accountId)
-        .envId(envId)
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)
@@ -356,7 +357,7 @@ public class EcsStateHelper {
                   .parameters(parameters)
                   .timeout(TimeUnit.MINUTES.toMillis(timeout))
                   .build())
-        .infrastructureMappingId(infrastructureMappingId)
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
         .build();
   }
 
@@ -549,9 +550,9 @@ public class EcsStateHelper {
       EcsCommandRequest request, EcsSetUpDataBag dataBag, Activity activity, DelegateService delegateService) {
     DelegateTask task =
         DelegateTask.builder()
-            .appId(dataBag.getApplication().getUuid())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, dataBag.getApplication().getUuid())
             .accountId(dataBag.getApplication().getAccountId())
-            .envId(dataBag.getEnvironment().getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, dataBag.getEnvironment().getUuid())
             .waitId(activity.getUuid())
             .data(TaskData.builder()
                       .async(true)
@@ -560,7 +561,8 @@ public class EcsStateHelper {
                       .timeout(MINUTES.toMillis(dataBag.getServiceSteadyStateTimeout()))
                       .build())
             .tags(isNotEmpty(dataBag.getAwsConfig().getTag()) ? singletonList(dataBag.getAwsConfig().getTag()) : null)
-            .infrastructureMappingId(dataBag.getEcsInfrastructureMapping().getUuid())
+            .setupAbstraction(
+                Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, dataBag.getEcsInfrastructureMapping().getUuid())
             .build();
     return delegateService.queueTask(task);
   }
@@ -718,7 +720,7 @@ public class EcsStateHelper {
       EcsServiceDeployRequest request, Activity activity, DelegateService delegateService) {
     DelegateTask task = DelegateTask.builder()
                             .accountId(deployDataBag.getApp().getAccountId())
-                            .appId(deployDataBag.getApp().getUuid())
+                            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, deployDataBag.getApp().getUuid())
                             .waitId(activity.getUuid())
                             .tags(isNotEmpty(deployDataBag.getAwsConfig().getTag())
                                     ? singletonList(deployDataBag.getAwsConfig().getTag())
@@ -729,8 +731,9 @@ public class EcsStateHelper {
                                       .parameters(new Object[] {request, deployDataBag.getEncryptedDataDetails()})
                                       .timeout(MINUTES.toMillis(getTimeout(deployDataBag)))
                                       .build())
-                            .envId(deployDataBag.getEnv().getUuid())
-                            .infrastructureMappingId(deployDataBag.getEcsInfrastructureMapping().getUuid())
+                            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, deployDataBag.getEnv().getUuid())
+                            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
+                                deployDataBag.getEcsInfrastructureMapping().getUuid())
                             .build();
     return delegateService.queueTask(task);
   }

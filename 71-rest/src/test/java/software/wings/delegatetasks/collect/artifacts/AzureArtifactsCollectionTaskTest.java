@@ -17,6 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -110,7 +111,7 @@ public class AzureArtifactsCollectionTaskTest extends CategoryTest {
   private DelegateTask prepareDelegateTask(ProtocolType protocolType) {
     return DelegateTask.builder()
         .accountId(ACCOUNT_ID)
-        .appId(APP_ID)
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
         .waitId("123456789")
         .data(TaskData.builder()
                   .async(true)

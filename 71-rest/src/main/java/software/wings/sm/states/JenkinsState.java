@@ -32,6 +32,7 @@ import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -301,15 +302,15 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     return DelegateTask.builder()
         .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
         .waitId(activityId)
-        .appId(((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ((ExecutionContextImpl) context).fetchRequiredApp().getAppId())
         .data(TaskData.builder()
                   .async(true)
                   .taskType(getTaskType().name())
                   .parameters(new Object[] {jenkinsTaskParams})
                   .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                   .build())
-        .envId(envId)
-        .infrastructureMappingId(infrastructureMappingId)
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
         .build();
   }
 

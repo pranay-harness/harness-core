@@ -16,6 +16,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.aws.model.AwsResponse;
@@ -50,7 +51,7 @@ public class AwsRoute53HelperServiceManagerImpl implements AwsRoute53HelperServi
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .data(TaskData.builder()
                       .async(false)

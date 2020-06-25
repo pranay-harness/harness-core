@@ -27,6 +27,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.ContainerServiceElement;
@@ -175,7 +176,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(infrastructureMapping.getAccountId())
-            .appId(infrastructureMapping.getAppId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, infrastructureMapping.getAppId())
             .waitId(activity.getUuid())
             .data(TaskData.builder()
                       .async(true)
@@ -184,7 +185,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
                       .timeout(MINUTES.toMillis(containerServiceElement.getServiceSteadyStateTimeout()))
                       .build())
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-            .envId(infrastructureMapping.getEnvId())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, infrastructureMapping.getEnvId())
             .build();
 
     delegateService.queueTask(delegateTask);

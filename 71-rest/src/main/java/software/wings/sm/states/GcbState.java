@@ -31,6 +31,7 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -197,10 +198,10 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     return DelegateTask.builder()
         .accountId(application.getAccountId())
         .waitId(activityId)
-        .appId(application.getAppId())
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, application.getAppId())
         .data(asyncTaskData(GCB.name(), parameters))
-        .envId(envId)
-        .infrastructureMappingId(context.fetchInfraMappingId())
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, context.fetchInfraMappingId())
         .build();
   }
 

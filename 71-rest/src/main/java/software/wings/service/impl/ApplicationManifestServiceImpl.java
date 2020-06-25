@@ -37,6 +37,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.api.DeploymentType;
@@ -812,7 +813,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(app.getAccountId())
-                                    .appId(app.getUuid())
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
                                     .data(TaskData.builder()
                                               .async(false)
                                               .taskType(TaskType.GIT_FETCH_FILES_TASK.name())

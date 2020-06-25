@@ -30,6 +30,7 @@ import io.harness.exception.UnavailableFeatureException;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
@@ -154,7 +155,7 @@ public class SettingValidationService {
                                                           .build();
       DelegateTask delegateTask = DelegateTask.builder()
                                       .accountId(settingAttribute.getAccountId())
-                                      .appId(settingAttribute.getAppId())
+                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, settingAttribute.getAppId())
                                       .data(TaskData.builder()
                                                 .async(false)
                                                 .taskType(TaskType.CONNECTIVITY_VALIDATION.name())
@@ -509,7 +510,7 @@ public class SettingValidationService {
 
       DelegateTask delegateTask = DelegateTask.builder()
                                       .accountId(settingAttribute.getAccountId())
-                                      .appId(settingAttribute.getAppId())
+                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, settingAttribute.getAppId())
                                       .data(TaskData.builder()
                                                 .async(false)
                                                 .taskType(TaskType.HELM_REPO_CONFIG_VALIDATION.name())

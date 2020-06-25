@@ -43,6 +43,7 @@ import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import lombok.extern.slf4j.Slf4j;
@@ -773,7 +774,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .appId(appId)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
             .data(TaskData.builder()
                       .async(false)
                       .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
@@ -841,7 +842,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .appId(appId)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
             .data(TaskData.builder()
                       .async(false)
                       .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())

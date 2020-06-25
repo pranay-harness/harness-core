@@ -25,6 +25,7 @@ import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -108,7 +109,7 @@ public class SpotinstAmiInstanceSyncPerpetualTaskClient
 
     return DelegateTask.builder()
         .accountId(accountId)
-        .appId(GLOBAL_APP_ID)
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
         .tags(isNotEmpty(perpetualTaskData.awsConfig.getTag())
                 ? Collections.singletonList(perpetualTaskData.awsConfig.getTag())
                 : null)

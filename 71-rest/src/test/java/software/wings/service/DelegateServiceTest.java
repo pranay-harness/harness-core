@@ -48,8 +48,12 @@ import static software.wings.service.impl.DelegateServiceImpl.ECS;
 import static software.wings.service.impl.DelegateServiceImpl.KUBERNETES_DELEGATE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -85,6 +89,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
@@ -635,9 +640,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSaveDelegateTask() {
     DelegateTask delegateTask = DelegateTask.builder()
+                                    .uuid(generateUuid())
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
-                                    .appId(APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+                                    .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
+                                    .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
                                     .version(VERSION)
                                     .data(TaskData.builder()
                                               .async(true)
@@ -647,7 +657,8 @@ public class DelegateServiceTest extends WingsBaseTest {
                                               .build())
                                     .build();
     delegateService.queueTask(delegateTask);
-    assertThat(wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.appId, APP_ID).get())
+    assertThat(
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(delegateTask);
   }
 
@@ -706,7 +717,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
                                     .delegateId(DELEGATE_ID)
-                                    .appId(APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
                                     .version(VERSION)
                                     .data(TaskData.builder()
                                               .async(true)
@@ -744,7 +755,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .accountId(ACCOUNT_ID)
                                     .waitId(generateUuid())
                                     .delegateId(DELEGATE_ID)
-                                    .appId(APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
                                     .version(VERSION)
                                     .data(TaskData.builder()
                                               .async(true)
@@ -1711,7 +1722,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         DelegateTask.builder()
             .accountId(ACCOUNT_ID)
             .waitId(generateUuid())
-            .appId(APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
             .version(VERSION)
             .data(TaskData.builder()
                       .async(async)

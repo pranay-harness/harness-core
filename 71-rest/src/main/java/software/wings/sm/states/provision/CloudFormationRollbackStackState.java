@@ -16,6 +16,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
 import software.wings.api.ScriptStateExecutionData;
@@ -218,7 +219,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .accountId(executionContext.getAccountId())
               .waitId(activityId)
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-              .appId(executionContext.getAppId())
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getAppId())
               .data(TaskData.builder()
                         .async(true)
                         .taskType(CLOUD_FORMATION_TASK.name())
@@ -279,7 +280,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .accountId(executionContext.getApp().getAccountId())
               .waitId(activityId)
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-              .appId(executionContext.getApp().getUuid())
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
               .data(TaskData.builder()
                         .async(true)
                         .taskType(CLOUD_FORMATION_TASK.name())
@@ -313,7 +314,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .accountId(executionContext.getApp().getAccountId())
               .waitId(activityId)
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-              .appId(executionContext.getApp().getUuid())
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
               .data(TaskData.builder()
                         .async(true)
                         .taskType(CLOUD_FORMATION_TASK.name())

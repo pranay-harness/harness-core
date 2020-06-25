@@ -36,6 +36,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -412,23 +413,24 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     //    }
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(executionContext.getApp().getAccountId())
-                                    .waitId(activityId)
-                                    .tags(renderedTags)
-                                    .appId(context.getApp().getAppId())
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.SCRIPT.name())
-                                              .parameters(new Object[] {shellScriptParameters.build()})
-                                              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                              .expressionFunctorToken(expressionFunctorToken)
-                                              .build())
-                                    .envId(envId)
-                                    .infrastructureMappingId(infrastructureMappingId)
-                                    .serviceTemplateId(serviceTemplateId)
-                                    .selectionLogsTrackingEnabled(true)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(executionContext.getApp().getAccountId())
+            .waitId(activityId)
+            .tags(renderedTags)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getApp().getAppId())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.SCRIPT.name())
+                      .parameters(new Object[] {shellScriptParameters.build()})
+                      .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                      .expressionFunctorToken(expressionFunctorToken)
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
+            .selectionLogsTrackingEnabled(true)
+            .build();
 
     String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask,
         StateExecutionContext.builder()

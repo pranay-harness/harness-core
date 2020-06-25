@@ -12,6 +12,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
@@ -121,7 +122,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
           EmailRequest.builder().emailData(emailData).encryptionDetails(encryptionDetails).smtpConfig(config).build();
       DelegateTask delegateTask = DelegateTask.builder()
                                       .accountId(emailData.getAccountId())
-                                      .appId(GLOBAL_APP_ID)
+                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
                                       .waitId(waitId)
                                       .data(TaskData.builder()
                                                 .async(true)

@@ -26,6 +26,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import software.wings.annotation.EncryptableSetting;
@@ -213,21 +214,21 @@ public class AwsCodeDeployState extends State {
                                                           .codeDeployParams(codeDeployParams)
                                                           .build();
 
-    String delegateTaskId =
-        delegateService.queueTask(DelegateTask.builder()
-                                      .accountId(app.getAccountId())
-                                      .appId(app.getAppId())
-                                      .waitId(activity.getUuid())
-                                      .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-                                      .data(TaskData.builder()
-                                                .async(true)
-                                                .taskType(TaskType.COMMAND.name())
-                                                .parameters(new Object[] {command, commandExecutionContext})
-                                                .timeout(getTaskTimeout())
-                                                .build())
-                                      .envId(envId)
-                                      .infrastructureMappingId(infrastructureMapping.getUuid())
-                                      .build());
+    String delegateTaskId = delegateService.queueTask(
+        DelegateTask.builder()
+            .accountId(app.getAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getAppId())
+            .waitId(activity.getUuid())
+            .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.COMMAND.name())
+                      .parameters(new Object[] {command, commandExecutionContext})
+                      .timeout(getTaskTimeout())
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
+            .build());
 
     return ExecutionResponse.builder()
         .async(true)

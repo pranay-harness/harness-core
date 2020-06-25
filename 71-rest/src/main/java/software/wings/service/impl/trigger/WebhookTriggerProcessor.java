@@ -17,6 +17,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -127,7 +128,7 @@ public class WebhookTriggerProcessor {
                                               .timeout(TimeUnit.MINUTES.toMillis(TRIGGER_TASK_TIMEOUT))
                                               .build())
                                     .accountId(accountId)
-                                    .appId(appId)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
                                     .waitId(waitId)
                                     .build();
 

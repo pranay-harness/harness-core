@@ -12,6 +12,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -28,7 +29,7 @@ public class JiraTaskTest extends WingsBaseTest {
   static DelegateTask delegateTask = DelegateTask.builder()
                                          .uuid("id")
                                          .accountId(ACCOUNT_ID)
-                                         .appId(APP_ID)
+                                         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
                                          .waitId("")
                                          .data(TaskData.builder().async(true).taskType(TaskType.JIRA.name()).build())
                                          .build();

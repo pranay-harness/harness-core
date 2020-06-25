@@ -19,6 +19,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.api.DeploymentType;
@@ -98,7 +99,7 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClient
 
     return DelegateTask.builder()
         .accountId(accountId)
-        .appId(GLOBAL_APP_ID)
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
         .tags(isNotEmpty(taskData.getAwsConfig().getTag()) ? singletonList(taskData.getAwsConfig().getTag()) : null)
         .data(TaskData.builder()
                   .async(false)

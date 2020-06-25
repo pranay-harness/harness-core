@@ -18,6 +18,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.ListNotifyResponseData;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,7 +47,7 @@ public class ArtifactoryCollectionTaskTest extends CategoryTest {
   private DelegateTask collectionTask =
       DelegateTask.builder()
           .accountId(ACCOUNT_ID)
-          .appId(APP_ID)
+          .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
           .waitId("123456789")
           .data(TaskData.builder()
                     .async(true)

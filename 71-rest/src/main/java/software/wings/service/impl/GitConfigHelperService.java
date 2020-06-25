@@ -24,6 +24,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.GitConfig;
@@ -85,7 +86,7 @@ public class GitConfigHelperService {
       ResponseData notifyResponseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(gitConfig.getAccountId())
-              .appId(GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
               .data(TaskData.builder()
                         .async(false)
                         .taskType(TaskType.GIT_COMMAND.name())

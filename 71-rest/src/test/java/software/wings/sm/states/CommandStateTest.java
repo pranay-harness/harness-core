@@ -74,6 +74,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
@@ -344,7 +345,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(delegateService)
         .queueTask(
             DelegateTask.builder()
-                .appId(APP_ID)
+                .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
                 .accountId(ACCOUNT_ID)
                 .waitId(ACTIVITY_ID)
                 .data(
@@ -380,8 +381,8 @@ public class CommandStateTest extends WingsBaseTest {
                                 .build()})
                         .timeout(TimeUnit.MINUTES.toMillis(30))
                         .build())
-                .envId(ENV_ID)
-                .infrastructureMappingId(INFRA_MAPPING_ID)
+                .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
                 .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
@@ -552,7 +553,7 @@ public class CommandStateTest extends WingsBaseTest {
             .artifactServerEncryptedDataDetails(new ArrayList<>())
             .build();
     DelegateTaskBuilder builder = DelegateTask.builder()
-                                      .appId(APP_ID)
+                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
                                       .accountId(ACCOUNT_ID)
                                       .waitId(ACTIVITY_ID)
                                       .data(TaskData.builder()
@@ -565,7 +566,8 @@ public class CommandStateTest extends WingsBaseTest {
       commandExecutionContext.setArtifactFiles(artifact.getArtifactFiles());
       commandExecutionContext.setMetadata(artifact.getMetadata());
     }
-    return builder.envId(ENV_ID).infrastructureMappingId(INFRA_MAPPING_ID);
+    return builder.setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID);
   }
 
   /**

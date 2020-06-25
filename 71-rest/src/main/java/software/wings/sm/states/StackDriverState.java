@@ -16,6 +16,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -161,19 +162,20 @@ public class StackDriverState extends AbstractMetricAnalysisState {
 
     String waitId = generateUuid();
     String infrastructureMappingId = context.fetchInfraMappingId();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(appService.get(context.getAppId()).getAccountId())
-                                    .appId(context.getAppId())
-                                    .waitId(waitId)
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
-                                              .parameters(new Object[] {dataCollectionInfo})
-                                              .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
-                                              .build())
-                                    .envId(envId)
-                                    .infrastructureMappingId(infrastructureMappingId)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(appService.get(context.getAppId()).getAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
+            .waitId(waitId)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.STACKDRIVER_COLLECT_METRIC_DATA.name())
+                      .parameters(new Object[] {dataCollectionInfo})
+                      .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+            .build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION,
         DataCollectionCallback.builder()
             .appId(context.getAppId())
