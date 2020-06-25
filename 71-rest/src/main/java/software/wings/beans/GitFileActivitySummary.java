@@ -31,6 +31,9 @@ import javax.validation.constraints.NotNull;
 
 @CdIndex(name = "gitCommits_for_appId_indx", fields = { @Field("accountId")
                                                         , @Field("appId"), @Field("gitToHarness") })
+@CdIndex(name = "gitCommits_createdAt_direction_indx",
+    fields = { @Field("accountId")
+               , @Field("createdAt"), @Field("gitToHarness") })
 @HarnessEntity(exportable = true)
 public class GitFileActivitySummary
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {

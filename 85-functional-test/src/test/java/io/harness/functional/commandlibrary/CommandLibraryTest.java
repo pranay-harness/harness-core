@@ -14,7 +14,7 @@ import org.junit.experimental.categories.Category;
 
 public class CommandLibraryTest extends AbstractFunctionalTest {
   @Test
-  @Owner(developers = ROHIT_KUMAR)
+  @Owner(developers = ROHIT_KUMAR, intermittent = true)
   @Category(FunctionalTests.class)
   public void test_getStores() {
     final String READ_ONLY_USER = "readonlyuser@harness.io";
