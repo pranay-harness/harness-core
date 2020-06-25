@@ -15,6 +15,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.PcfConfig;
@@ -52,7 +53,7 @@ public class PcfHelperService {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
-              .appId(GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
               .data(TaskData.builder()
                         .async(false)
                         .taskType(TaskType.PCF_COMMAND_TASK.name())
@@ -113,7 +114,7 @@ public class PcfHelperService {
     pcfCommandExecutionResponse = delegateService.executeTask(
         DelegateTask.builder()
             .accountId(pcfConfig.getAccountId())
-            .appId(GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
             .data(TaskData.builder()
                       .async(false)
                       .taskType(TaskType.PCF_COMMAND_TASK.name())
@@ -181,7 +182,7 @@ public class PcfHelperService {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
-              .appId(GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
               .data(TaskData.builder()
                         .async(false)
                         .taskType(TaskType.PCF_COMMAND_TASK.name())
@@ -218,7 +219,7 @@ public class PcfHelperService {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
-              .appId(GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
               .data(TaskData.builder()
                         .async(false)
                         .taskType(TaskType.PCF_COMMAND_TASK.name())
@@ -261,7 +262,7 @@ public class PcfHelperService {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
-              .appId(GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
               .data(TaskData.builder()
                         .async(false)
                         .taskType(TaskType.PCF_COMMAND_TASK.name())
@@ -298,7 +299,7 @@ public class PcfHelperService {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
-              .appId(GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
               .data(TaskData.builder()
                         .async(false)
                         .taskType(TaskType.PCF_COMMAND_TASK.name())
@@ -336,7 +337,7 @@ public class PcfHelperService {
       pcfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
-              .appId(GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
               .data(TaskData.builder()
                         .async(false)
                         .taskType(TaskType.PCF_COMMAND_TASK.name())

@@ -73,6 +73,7 @@ import io.harness.persistence.HIterator;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -592,7 +593,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       yamlChangeSetIds.add(yamlChangeSetId);
       DelegateTask delegateTask = DelegateTask.builder()
                                       .accountId(accountId)
-                                      .appId(GLOBAL_APP_ID)
+                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
                                       .waitId(waitId)
                                       .data(TaskData.builder()
                                                 .async(true)
@@ -820,7 +821,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       GitConfig gitConfig = getGitConfig(yamlGitConfig);
       DelegateTask delegateTask = DelegateTask.builder()
                                       .accountId(accountId)
-                                      .appId(GLOBAL_APP_ID)
+                                      .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
                                       .waitId(waitId)
                                       .data(TaskData.builder()
                                                 .async(true)

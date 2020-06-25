@@ -22,6 +22,7 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.tasks.Cd1SetupFields;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -107,7 +108,7 @@ public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
     Assertions.assertThat(validationTask)
         .isEqualTo(DelegateTask.builder()
                        .accountId(InstanceSyncTestConstants.ACCOUNT_ID)
-                       .appId(GLOBAL_APP_ID)
+                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
                        .tags(singletonList("abc"))
                        .data(TaskData.builder()
                                  .async(false)

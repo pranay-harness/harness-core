@@ -40,6 +40,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import software.wings.api.AmiServiceSetupElement;
@@ -363,7 +364,7 @@ public class AwsAmiServiceDeployState extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .appId(appId)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
             .waitId(activityId)
             .data(TaskData.builder()
                       .async(true)
@@ -372,7 +373,7 @@ public class AwsAmiServiceDeployState extends State {
                       .timeout(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()))
                       .build())
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-            .envId(envId)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
             .build();
     delegateService.queueTask(delegateTask);
   }

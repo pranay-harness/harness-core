@@ -19,6 +19,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -90,7 +91,7 @@ public class AwsAmiInstanceSyncPerpetualTaskClient
     final PerpetualTaskData perpetualTaskData = getPerpetualTaskData(clientContext);
     return DelegateTask.builder()
         .accountId(perpetualTaskData.getAwsConfig().getAccountId())
-        .appId(GLOBAL_APP_ID)
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
         .tags(isNotEmpty(perpetualTaskData.getAwsConfig().getTag())
                 ? singletonList(perpetualTaskData.getAwsConfig().getTag())
                 : null)

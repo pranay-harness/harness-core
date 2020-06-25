@@ -17,6 +17,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.tasks.Cd1SetupFields;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
@@ -108,7 +109,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .accountId(executionContext.getApp().getAccountId())
         .waitId(activityId)
         .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
-        .appId(executionContext.getApp().getUuid())
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
         .data(TaskData.builder()
                   .async(true)
                   .taskType(CLOUD_FORMATION_TASK.name())

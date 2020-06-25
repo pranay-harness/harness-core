@@ -34,6 +34,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.junit.Before;
@@ -254,7 +255,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
         .uuid(generateUuid())
         .accountId(ACCOUNT_ID)
         .waitId(generateUuid())
-        .appId(APP_ID)
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
         .version(VERSION)
         .data(TaskData.builder()
                   .async(false)

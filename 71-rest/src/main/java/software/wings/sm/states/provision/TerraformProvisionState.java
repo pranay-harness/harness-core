@@ -40,6 +40,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -514,8 +515,9 @@ public abstract class TerraformProvisionState extends State {
         DelegateTask.builder()
             .accountId(requireNonNull(executionContext.getApp()).getAccountId())
             .waitId(activityId)
-            .appId(requireNonNull(executionContext.getApp()).getAppId())
-            .envId(executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : null)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, requireNonNull(executionContext.getApp()).getAppId())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD,
+                executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : null)
             .tags(getRenderedTaskTags(delegateTag, executionContext))
             .data(TaskData.builder()
                       .async(true)

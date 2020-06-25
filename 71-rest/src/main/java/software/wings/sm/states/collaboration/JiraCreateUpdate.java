@@ -22,6 +22,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -183,17 +184,18 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
       parameters.setUpdateIssueIds(issueIds);
     }
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(executionContext.getApp().getAccountId())
-                                    .waitId(activityId)
-                                    .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(JIRA.name())
-                                              .parameters(new Object[] {parameters})
-                                              .timeout(JIRA_TASK_TIMEOUT_MILLIS)
-                                              .build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(executionContext.getApp().getAccountId())
+            .waitId(activityId)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ((ExecutionContextImpl) context).getApp().getAppId())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(JIRA.name())
+                      .parameters(new Object[] {parameters})
+                      .timeout(JIRA_TASK_TIMEOUT_MILLIS)
+                      .build())
+            .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()

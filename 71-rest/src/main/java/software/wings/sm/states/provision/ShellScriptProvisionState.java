@@ -21,6 +21,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -103,7 +104,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(context.getAccountId())
                                     .waitId(activityId)
-                                    .appId(context.getAppId())
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
                                     .data(TaskData.builder()
                                               .async(true)
                                               .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.toString())

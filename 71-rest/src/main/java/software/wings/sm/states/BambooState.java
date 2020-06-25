@@ -26,6 +26,7 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -182,22 +183,23 @@ public class BambooState extends State {
     final String finalPlanName = evaluatedPlanName;
     String infrastructureMappingId = context.fetchInfraMappingId();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                    .waitId(activityId)
-                                    .appId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(getTaskType().name())
-                                              .parameters(new Object[] {bambooConfig,
-                                                  secretManager.getEncryptionDetails(bambooConfig, context.getAppId(),
-                                                      context.getWorkflowExecutionId()),
-                                                  finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
-                                              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                              .build())
-                                    .envId(envId)
-                                    .infrastructureMappingId(infrastructureMappingId)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(((ExecutionContextImpl) context).getApp().getAccountId())
+            .waitId(activityId)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ((ExecutionContextImpl) context).getApp().getAppId())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(getTaskType().name())
+                      .parameters(new Object[] {bambooConfig,
+                          secretManager.getEncryptionDetails(
+                              bambooConfig, context.getAppId(), context.getWorkflowExecutionId()),
+                          finalPlanName, evaluatedParameters, evaluatedFilePathsForAssertion})
+                      .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+            .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
     return ExecutionResponse.builder()

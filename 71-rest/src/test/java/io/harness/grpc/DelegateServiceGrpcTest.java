@@ -47,6 +47,7 @@ import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.Cd1SetupFields;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -110,11 +111,11 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
     ByteString kryoParams = ByteString.copyFrom(kryoSerializer.asDeflatedBytes(ScriptType.BASH));
 
     Map<String, String> setupAbstractions = new HashMap<>();
-    setupAbstractions.put(DelegateTaskKeys.appId, "appId");
-    setupAbstractions.put(DelegateTaskKeys.envId, "envId");
-    setupAbstractions.put(DelegateTaskKeys.infrastructureMappingId, "infrastructureMappingId");
-    setupAbstractions.put(DelegateTaskKeys.serviceTemplateId, "serviceTemplateId");
-    setupAbstractions.put(DelegateTaskKeys.artifactStreamId, "artifactStreamId");
+    setupAbstractions.put(Cd1SetupFields.APP_ID_FIELD, "appId");
+    setupAbstractions.put(Cd1SetupFields.ENV_ID_FIELD, "envId");
+    setupAbstractions.put(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, "infrastructureMappingId");
+    setupAbstractions.put(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, "serviceTemplateId");
+    setupAbstractions.put(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, "artifactStreamId");
     setupAbstractions.put(DelegateTaskKeys.workflowExecutionId, "workflowExecutionId");
 
     Map<String, String> expressions = new HashMap<>();

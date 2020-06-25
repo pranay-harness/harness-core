@@ -24,6 +24,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.persistence.AccountLogContext;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
@@ -130,7 +131,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
         return DelegateTask.builder()
             .accountId(accountId)
-            .appId(GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()
                       .async(true)
@@ -150,7 +151,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
         return DelegateTask.builder()
             .accountId(accountId)
-            .appId(GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()
                       .async(true)
@@ -169,7 +170,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
         return DelegateTask.builder()
             .accountId(accountId)
-            .appId(GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
             .waitId(waitId)
             .data(
                 TaskData.builder()
@@ -188,7 +189,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
         return DelegateTask.builder()
             .accountId(accountId)
-            .appId(GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()
                       .async(true)
@@ -208,7 +209,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         return DelegateTask.builder()
             .accountId(accountId)
             .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
-            .appId(GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
             .waitId(waitId)
             .data(TaskData.builder()
                       .async(true)
@@ -226,7 +227,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
         return DelegateTask.builder()
             .accountId(accountId)
-            .appId(GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
             .waitId(waitId)
             .data(
                 TaskData.builder()

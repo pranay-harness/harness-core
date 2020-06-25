@@ -31,6 +31,7 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.Test;
@@ -201,7 +202,7 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
     assertThat(client.getValidationTask(getClientContext(true), ACCOUNT_ID))
         .isEqualTo(DelegateTask.builder()
                        .accountId(ACCOUNT_ID)
-                       .appId(APP_ID)
+                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
                        .tags(ImmutableList.of("tag1", "tag2"))
                        .data(TaskData.builder()
                                  .async(false)
@@ -215,8 +216,8 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                                                .build()})
                                  .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                                  .build())
-                       .envId(ENV_ID)
-                       .infrastructureMappingId(INFRA_MAPPING_ID)
+                       .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                       .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
                        .waitId("12345")
                        .build());
   }
@@ -231,7 +232,7 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
         .isEqualTo(
             DelegateTask.builder()
                 .accountId(ACCOUNT_ID)
-                .appId(APP_ID)
+                .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
                 .tags(singletonList("tag"))
                 .data(TaskData.builder()
                           .async(false)
@@ -251,8 +252,8 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                   .build()})
                           .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                           .build())
-                .envId(ENV_ID)
-                .infrastructureMappingId(INFRA_MAPPING_ID)
+                .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
                 .build());
   }
 
@@ -265,7 +266,7 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
     assertThat(client.getValidationTask(getClientContext(false), ACCOUNT_ID))
         .isEqualTo(DelegateTask.builder()
                        .accountId(ACCOUNT_ID)
-                       .appId(APP_ID)
+                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
                        .tags(singletonList("tag"))
                        .data(TaskData.builder()
                                  .async(false)
@@ -285,8 +286,8 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                          .build()})
                                  .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                                  .build())
-                       .envId(ENV_ID)
-                       .infrastructureMappingId(INFRA_MAPPING_ID)
+                       .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                       .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
                        .build());
   }
 

@@ -23,6 +23,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -218,21 +219,21 @@ public abstract class ContainerServiceSetup extends State {
         allTaskTags.addAll(awsConfigTags);
       }
 
-      String delegateTaskId =
-          delegateService.queueTask(DelegateTask.builder()
-                                        .accountId(app.getAccountId())
-                                        .appId(app.getUuid())
-                                        .waitId(activity.getUuid())
-                                        .data(TaskData.builder()
-                                                  .async(true)
-                                                  .taskType(TaskType.COMMAND.name())
-                                                  .parameters(new Object[] {command, commandExecutionContext})
-                                                  .timeout(TimeUnit.HOURS.toMillis(1))
-                                                  .build())
-                                        .envId(env.getUuid())
-                                        .tags(isNotEmpty(allTaskTags) ? allTaskTags : null)
-                                        .infrastructureMappingId(infrastructureMapping.getUuid())
-                                        .build());
+      String delegateTaskId = delegateService.queueTask(
+          DelegateTask.builder()
+              .accountId(app.getAccountId())
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+              .waitId(activity.getUuid())
+              .data(TaskData.builder()
+                        .async(true)
+                        .taskType(TaskType.COMMAND.name())
+                        .parameters(new Object[] {command, commandExecutionContext})
+                        .timeout(TimeUnit.HOURS.toMillis(1))
+                        .build())
+              .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+              .tags(isNotEmpty(allTaskTags) ? allTaskTags : null)
+              .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
+              .build());
 
       return ExecutionResponse.builder()
           .async(true)

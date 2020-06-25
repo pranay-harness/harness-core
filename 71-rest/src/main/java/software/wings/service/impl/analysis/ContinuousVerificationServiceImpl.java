@@ -60,6 +60,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -2493,7 +2494,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       logger.info("Triggered delegate task");
       return DelegateTask.builder()
           .accountId(accountId)
-          .appId(appId)
+          .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
           .waitId(waitId)
           .data(TaskData.builder()
                     .async(true)
@@ -2501,7 +2502,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     .parameters(dataCollectionInfo)
                     .timeout(TimeUnit.MINUTES.toMillis(5))
                     .build())
-          .envId(envId)
+          .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
           .build();
     }
   }

@@ -24,6 +24,7 @@ import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +98,7 @@ public class AwsSshPerpetualTaskServiceClient
 
     return DelegateTask.builder()
         .accountId(accountId)
-        .appId(GLOBAL_APP_ID)
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
         .tags(isNotEmpty(taskData.getAwsConfig().getTag()) ? singletonList(taskData.getAwsConfig().getTag()) : null)
         .data(TaskData.builder()
                   .async(false)

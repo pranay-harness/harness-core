@@ -44,6 +44,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Before;
@@ -183,8 +184,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder()
             .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .envId(ENV_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
             .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
 
     DelegateBuilder delegateBuilder = Delegate.builder().accountId(ACCOUNT_ID).uuid(DELEGATE_ID);
@@ -337,7 +338,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
                                                   .accountId(ACCOUNT_ID)
-                                                  .appId(APP_ID)
+                                                  .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
                                                   .data(TaskData.builder()
                                                             .async(true)
                                                             .taskType(TaskType.SCRIPT.name())
@@ -364,7 +365,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
           .logMissingSelector(eq(batch), eq(ACCOUNT_ID), eq(DELEGATE_ID), anyString());
     }
 
-    delegateTaskBuilder.envId(ENV_ID);
+    delegateTaskBuilder.setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID);
     delegateBuilder.excludeScopes(
         ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()));
 
@@ -409,7 +410,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
                                                   .accountId(ACCOUNT_ID)
-                                                  .appId(APP_ID)
+                                                  .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
                                                   .data(TaskData.builder()
                                                             .async(true)
                                                             .taskType(TaskType.SCRIPT.name())
@@ -689,8 +690,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void testAssignDelegateWithNullIncludeScope() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .envId(ENV_ID)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
     Delegate delegate = Delegate.builder()
@@ -710,8 +711,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void testAssignDelegateWithNullExcludeScope() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .envId(ENV_ID)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
 
@@ -732,8 +733,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void testAssignDelegateWithMultipleIncludeScopes() {
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .envId(ENV_ID)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
 
@@ -777,21 +778,23 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                    .services(ImmutableList.of(SERVICE_ID))
                    .build());
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .appId(APP_ID)
-                                    .envId(ENV_ID)
-                                    .infrastructureMappingId(infrastructureMapping.getUuid())
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(ACCOUNT_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
+            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+            .build();
 
-    DelegateTask delegateTask2 = DelegateTask.builder()
-                                     .accountId(ACCOUNT_ID)
-                                     .appId(APP_ID)
-                                     .envId(ENV_ID)
-                                     .infrastructureMappingId(WRONG_INFRA_MAPPING_ID)
-                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-                                     .build();
+    DelegateTask delegateTask2 =
+        DelegateTask.builder()
+            .accountId(ACCOUNT_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, WRONG_INFRA_MAPPING_ID)
+            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+            .build();
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .uuid(DELEGATE_ID)

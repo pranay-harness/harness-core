@@ -25,6 +25,7 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.tasks.Cd1SetupFields;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.TaskType;
 
@@ -76,13 +77,13 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable {
     return DelegateTask.builder()
         .accountId(ambiance.getSetupAbstractions().get("accountId"))
         .waitId(waitId)
-        .appId(ambiance.getSetupAbstractions().get("appId"))
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, (String) ambiance.getSetupAbstractions().get("appId"))
         .data(TaskData.builder()
                   .taskType(TaskType.HTTP.name())
                   .parameters(new Object[] {httpTaskParameters})
                   .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                   .build())
-        .infrastructureMappingId(waitId)
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, waitId)
         .build();
   }
 

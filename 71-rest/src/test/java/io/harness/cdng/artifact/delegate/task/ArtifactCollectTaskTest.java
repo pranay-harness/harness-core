@@ -21,6 +21,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.rule.Owner;
+import io.harness.tasks.Cd1SetupFields;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,7 +42,7 @@ public class ArtifactCollectTaskTest extends CategoryTest {
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private final DelegateTask collectionTask = DelegateTask.builder()
                                                   .accountId(ACCOUNT_ID)
-                                                  .appId(APP_ID)
+                                                  .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
                                                   .waitId("123456789")
                                                   .data(TaskData.builder()
                                                             .async(true)

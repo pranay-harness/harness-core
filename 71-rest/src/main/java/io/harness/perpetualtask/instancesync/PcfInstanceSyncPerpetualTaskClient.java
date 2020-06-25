@@ -24,6 +24,7 @@ import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +105,7 @@ public class PcfInstanceSyncPerpetualTaskClient
       List<EncryptedDataDetail> encryptionDetails) {
     return DelegateTask.builder()
         .accountId(pcfConfig.getAccountId())
-        .appId(GLOBAL_APP_ID)
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.PCF_COMMAND_TASK.name())

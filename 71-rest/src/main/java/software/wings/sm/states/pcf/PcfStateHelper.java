@@ -50,6 +50,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.pcf.PcfFileTypeChecker;
 import io.harness.pcf.model.ManifestType;
 import io.harness.pcf.model.PcfConstants;
+import io.harness.tasks.Cd1SetupFields;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -146,7 +147,7 @@ public class PcfStateHelper {
   public DelegateTask getDelegateTask(PcfDelegateTaskCreationData taskCreationData) {
     return DelegateTask.builder()
         .accountId(taskCreationData.getAccountId())
-        .appId(taskCreationData.getAppId())
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, taskCreationData.getAppId())
         .waitId(taskCreationData.getWaitId())
         .data(TaskData.builder()
                   .async(true)
@@ -154,10 +155,10 @@ public class PcfStateHelper {
                   .parameters(taskCreationData.getParameters())
                   .timeout(TimeUnit.MINUTES.toMillis(taskCreationData.getTimeout()))
                   .build())
-        .envId(taskCreationData.getEnvId())
-        .infrastructureMappingId(taskCreationData.getInfrastructureMappingId())
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, taskCreationData.getEnvId())
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, taskCreationData.getInfrastructureMappingId())
         .tags(ListUtils.emptyIfNull(taskCreationData.getTagList()))
-        .serviceTemplateId(taskCreationData.getServiceTemplateId())
+        .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, taskCreationData.getServiceTemplateId())
         .build();
   }
 
@@ -622,9 +623,9 @@ public class PcfStateHelper {
     String waitId = generateUuid();
     return DelegateTask.builder()
         .accountId(app.getAccountId())
-        .appId(app.getUuid())
-        .envId(env.getUuid())
-        .infrastructureMappingId(infraMapping.getUuid())
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)

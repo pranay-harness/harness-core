@@ -9,6 +9,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
@@ -87,7 +88,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       ResponseData responseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(ACCOUNT_ID)
-              .appId(GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
               .data(TaskData.builder()
                         .taskType(TaskType.CI_BUILD.name())
                         .async(false)
@@ -128,7 +129,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       ResponseData responseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(ACCOUNT_ID)
-              .appId(GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
               .data(TaskData.builder()
                         .taskType(TaskType.EXECUTE_COMMAND.name())
                         .async(false)
@@ -166,7 +167,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       ResponseData responseData = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(ACCOUNT_ID)
-              .appId(GLOBAL_APP_ID)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
               .data(TaskData.builder()
                         .taskType(TaskType.CI_CLEANUP.name())
                         .async(false)

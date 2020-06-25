@@ -18,6 +18,7 @@ import com.hazelcast.util.Preconditions;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -198,7 +199,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(appService.get(context.getAppId()).getAccountId())
-            .appId(context.getAppId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .waitId(waitId)
             .tags(isNotEmpty(dataCollectionInfo.getAwsConfig().getTag())
                     ? singletonList(dataCollectionInfo.getAwsConfig().getTag())
@@ -209,8 +210,8 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
                       .parameters(new Object[] {dataCollectionInfo})
                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                       .build())
-            .envId(envId)
-            .infrastructureMappingId(infrastructureMappingId)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION,
         DataCollectionCallback.builder()

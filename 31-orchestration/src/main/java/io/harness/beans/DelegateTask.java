@@ -19,10 +19,12 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -70,14 +72,9 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   @NotEmpty private String accountId;
   private boolean selectionLogsTrackingEnabled;
 
-  protected String appId;
-  private String envId;
-  private String infrastructureMappingId;
-  private String serviceTemplateId;
-  private String artifactStreamId;
   private String workflowExecutionId;
 
-  private Map<String, String> setupAbstractions;
+  @Singular private Map<String, String> setupAbstractions;
 
   private String version;
   private List<String> tags;
@@ -105,6 +102,48 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   private long expiry;
 
   @FdTtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
+
+  // Following getters, setters have been added temporarily because of backward compatibility
+
+  @Deprecated
+  /**
+   * @deprecated Value should be moved to setupAbstractions map and read from there
+   */
+  public String getAppId() {
+    return setupAbstractions.get(Cd1SetupFields.APP_ID_FIELD);
+  }
+
+  @Deprecated
+  /**
+   * @deprecated Value should be moved to setupAbstractions map and read from there
+   */
+  public String getEnvId() {
+    return setupAbstractions.get(Cd1SetupFields.ENV_ID_FIELD);
+  }
+
+  @Deprecated
+  /**
+   * @deprecated Value should be moved to setupAbstractions map and read from there
+   */
+  public String getInfrastructureMappingId() {
+    return setupAbstractions.get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD);
+  }
+
+  @Deprecated
+  /**
+   * @deprecated Value should be moved to setupAbstractions map and read from there
+   */
+  public String getServiceTemplateId() {
+    return setupAbstractions.get(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD);
+  }
+
+  @Deprecated
+  /**
+   * @deprecated Value should be moved to setupAbstractions map and read from there
+   */
+  public String getArtifactStreamId() {
+    return setupAbstractions.get(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD);
+  }
 
   @Override
   @JsonIgnore

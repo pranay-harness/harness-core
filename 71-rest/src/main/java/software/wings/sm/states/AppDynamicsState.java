@@ -20,6 +20,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -413,7 +414,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     String waitId = generateUuid();
     delegateTasks.add(DelegateTask.builder()
                           .accountId(appService.get(context.getAppId()).getAccountId())
-                          .appId(context.getAppId())
+                          .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
                           .waitId(waitId)
                           .data(TaskData.builder()
                                     .async(true)
@@ -421,7 +422,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
                                     .parameters(new Object[] {dataCollectionInfo})
                                     .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                                     .build())
-                          .envId(envId)
+                          .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
                           .build());
     return waitId;
   }

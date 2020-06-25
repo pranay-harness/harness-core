@@ -38,6 +38,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import software.wings.annotation.EncryptableSetting;
@@ -299,7 +300,7 @@ public class SpotInstStateHelper {
       String infrastructureMappingId, SpotInstCommandRequest spotInstCommandRequest) {
     return DelegateTask.builder()
         .accountId(accountId)
-        .appId(appId)
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
         .waitId(waitId)
         .tags(commandHelper.nonEmptyTag(spotInstCommandRequest.getAwsConfig()))
         .data(TaskData.builder()
@@ -309,8 +310,8 @@ public class SpotInstStateHelper {
                   .timeout(TimeUnit.MINUTES.toMillis(generateTimeOutForDelegateTask(
                       spotInstCommandRequest.getSpotInstTaskParameters().getTimeoutIntervalInMin())))
                   .build())
-        .envId(envId)
-        .infrastructureMappingId(infrastructureMappingId)
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
         .build();
   }
 

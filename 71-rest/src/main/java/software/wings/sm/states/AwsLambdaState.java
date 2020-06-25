@@ -32,6 +32,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -337,9 +338,9 @@ public class AwsLambdaState extends State {
           DelegateTask.builder()
               .accountId(app.getAccountId())
               .waitId(activity.getUuid())
-              .appId(context.getAppId())
-              .envId(envId)
-              .infrastructureMappingId(infrastructureMapping.getUuid())
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
+              .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+              .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
               .tags(isNotEmpty(wfRequest.getAwsConfig().getTag()) ? singletonList(wfRequest.getAwsConfig().getTag())
                                                                   : null)
               .data(TaskData.builder()

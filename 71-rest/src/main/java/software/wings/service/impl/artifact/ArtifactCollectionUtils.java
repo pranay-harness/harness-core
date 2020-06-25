@@ -48,6 +48,7 @@ import io.harness.network.Http;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
@@ -284,7 +285,8 @@ public class ArtifactCollectionUtils {
 
   public DelegateTaskBuilder fetchCustomDelegateTask(String waitId, ArtifactStream artifactStream,
       ArtifactStreamAttributes artifactStreamAttributes, boolean isCollection) {
-    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().appId(GLOBAL_APP_ID).waitId(waitId);
+    DelegateTaskBuilder delegateTaskBuilder =
+        DelegateTask.builder().setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID).waitId(waitId);
     final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name());
 
     BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;

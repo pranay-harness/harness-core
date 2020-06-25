@@ -15,6 +15,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -34,7 +35,7 @@ public class AzureArtifactsValidationTest extends WingsBaseTest {
   private static DelegateTask collectionDelegateTask =
       DelegateTask.builder()
           .accountId(ACCOUNT_ID)
-          .appId(APP_ID)
+          .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
           .waitId("waitId")
           .data(TaskData.builder()
                     .async(true)
@@ -62,7 +63,7 @@ public class AzureArtifactsValidationTest extends WingsBaseTest {
       DelegateTask.builder()
           .uuid("uuid")
           .accountId(ACCOUNT_ID)
-          .appId(APP_ID)
+          .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
           .waitId("waitId")
           .data(TaskData.builder()
                     .async(true)

@@ -29,6 +29,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
 import software.wings.annotation.EncryptableSetting;
@@ -208,7 +209,7 @@ public abstract class ContainerServiceDeploy extends State {
       String delegateTaskId = delegateService.queueTask(
           DelegateTask.builder()
               .accountId(contextData.app.getAccountId())
-              .appId(contextData.appId)
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, contextData.appId)
               .waitId(waitId)
               .tags(isNotEmpty(allTaskTags) ? allTaskTags : null)
               .data(TaskData.builder()
@@ -217,8 +218,8 @@ public abstract class ContainerServiceDeploy extends State {
                         .parameters(new Object[] {contextData.command, commandExecutionContext})
                         .timeout(TimeUnit.HOURS.toMillis(1))
                         .build())
-              .envId(contextData.env.getUuid())
-              .infrastructureMappingId(contextData.infrastructureMappingId)
+              .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, contextData.env.getUuid())
+              .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, contextData.infrastructureMappingId)
               .build());
 
       return ExecutionResponse.builder()

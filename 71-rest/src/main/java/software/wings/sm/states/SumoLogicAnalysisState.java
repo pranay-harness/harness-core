@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -138,7 +139,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
       String infrastructureMappingId = context.fetchInfraMappingId();
       delegateTasks.add(DelegateTask.builder()
                             .accountId(appService.get(context.getAppId()).getAccountId())
-                            .appId(context.getAppId())
+                            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
                             .waitId(waitId)
                             .data(TaskData.builder()
                                       .async(true)
@@ -146,8 +147,8 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
                                       .parameters(new Object[] {dataCollectionInfo})
                                       .timeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 60))
                                       .build())
-                            .envId(envId)
-                            .infrastructureMappingId(infrastructureMappingId)
+                            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+                            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
                             .build());
       waitIds[i++] = waitId;
     }

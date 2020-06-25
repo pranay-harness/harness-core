@@ -64,7 +64,7 @@ public class ManifestFetchStep implements Step, TaskExecutable {
 
     final TaskDataBuilder dataBuilder =
         TaskData.builder().async(true).taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name());
-    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().appId("kmpySmUISimoRrJL6NL73w").waitId(waitId);
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().accountId("kmpySmUISimoRrJL6NL73w").waitId(waitId);
 
     // Set timeout.
     dataBuilder.parameters(new Object[] {gitFetchRequest}).timeout(DEFAULT_TIMEOUT);

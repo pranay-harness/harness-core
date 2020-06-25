@@ -18,6 +18,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
@@ -128,9 +129,9 @@ public class AwsLambdaVerification extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .appId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
-            .envId(infrastructureMapping.getEnvId())
-            .infrastructureMappingId(infrastructureMapping.getUuid())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, infrastructureMapping.getEnvId())
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .data(TaskData.builder()
                       .async(true)

@@ -37,6 +37,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
@@ -537,20 +538,21 @@ public class CommandState extends State {
   private String queueDelegateTask(String activityId, String appId, String envId, String infrastructureMappingId,
       Command command, String accountId, CommandExecutionContext commandExecutionContext) {
     String delegateTaskId;
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(accountId)
-                                    .appId(appId)
-                                    .waitId(activityId)
-                                    .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.COMMAND.name())
-                                              .parameters(new Object[] {command, commandExecutionContext})
-                                              .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(30)))
-                                              .build())
-                                    .envId(envId)
-                                    .infrastructureMappingId(infrastructureMappingId)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(accountId)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
+            .waitId(activityId)
+            .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.COMMAND.name())
+                      .parameters(new Object[] {command, commandExecutionContext})
+                      .timeout(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(30)))
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+            .build();
     delegateTaskId = delegateService.queueTask(delegateTask);
     return delegateTaskId;
   }

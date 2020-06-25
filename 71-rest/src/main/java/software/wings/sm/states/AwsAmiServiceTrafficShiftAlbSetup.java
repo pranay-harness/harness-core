@@ -25,6 +25,7 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -117,21 +118,22 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
         renderExpression(context, autoScalingSteadyStateTimeout, (int) DEFAULT_ASYNC_CALL_TIMEOUT));
     setTimeoutMillis((int) timeout);
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(awsAmiTrafficShiftAlbData.getApp().getAccountId())
-                                    .appId(awsAmiTrafficShiftAlbData.getApp().getUuid())
-                                    .waitId(activity.getUuid())
-                                    .tags(isNotEmpty(amiTrafficShiftRequest.getAwsConfig().getTag())
-                                            ? singletonList(amiTrafficShiftRequest.getAwsConfig().getTag())
-                                            : null)
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.AWS_AMI_ASYNC_TASK.name())
-                                              .parameters(new Object[] {amiTrafficShiftRequest})
-                                              .timeout(timeout)
-                                              .build())
-                                    .envId(awsAmiTrafficShiftAlbData.getEnv().getUuid())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(awsAmiTrafficShiftAlbData.getApp().getAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, awsAmiTrafficShiftAlbData.getApp().getUuid())
+            .waitId(activity.getUuid())
+            .tags(isNotEmpty(amiTrafficShiftRequest.getAwsConfig().getTag())
+                    ? singletonList(amiTrafficShiftRequest.getAwsConfig().getTag())
+                    : null)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.AWS_AMI_ASYNC_TASK.name())
+                      .parameters(new Object[] {amiTrafficShiftRequest})
+                      .timeout(timeout)
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, awsAmiTrafficShiftAlbData.getEnv().getUuid())
+            .build();
     delegateService.queueTask(delegateTask);
   }
 

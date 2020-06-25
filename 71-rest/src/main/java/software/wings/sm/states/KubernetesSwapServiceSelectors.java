@@ -27,6 +27,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.serializer.KryoUtils;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -283,20 +284,21 @@ public class KubernetesSwapServiceSelectors extends State {
             .service1(renderedService1)
             .service2(renderedService2)
             .build();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(app.getAccountId())
-                                    .appId(app.getUuid())
-                                    .waitId(activity.getUuid())
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.name())
-                                              .parameters(new Object[] {kubernetesSwapServiceSelectorsParams})
-                                              .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                              .build())
-                                    .envId(env.getUuid())
-                                    .tags(isNotEmpty(taskTags) ? taskTags : null)
-                                    .infrastructureMappingId(containerInfraMapping.getUuid())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(app.getAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+            .waitId(activity.getUuid())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK.name())
+                      .parameters(new Object[] {kubernetesSwapServiceSelectorsParams})
+                      .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+            .tags(isNotEmpty(taskTags) ? taskTags : null)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
+            .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()

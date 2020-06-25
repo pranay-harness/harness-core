@@ -20,6 +20,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -126,19 +127,20 @@ public class KubernetesSteadyStateCheck extends State {
               .labels(labelMap)
               .timeoutMillis(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
               .build();
-      DelegateTask delegateTask = DelegateTask.builder()
-                                      .accountId(app.getAccountId())
-                                      .appId(app.getUuid())
-                                      .waitId(activity.getUuid())
-                                      .data(TaskData.builder()
-                                                .async(true)
-                                                .taskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK.name())
-                                                .parameters(new Object[] {kubernetesSteadyStateCheckParams})
-                                                .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                                .build())
-                                      .envId(env.getUuid())
-                                      .infrastructureMappingId(containerInfraMapping.getUuid())
-                                      .build();
+      DelegateTask delegateTask =
+          DelegateTask.builder()
+              .accountId(app.getAccountId())
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+              .waitId(activity.getUuid())
+              .data(TaskData.builder()
+                        .async(true)
+                        .taskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK.name())
+                        .parameters(new Object[] {kubernetesSteadyStateCheckParams})
+                        .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+                        .build())
+              .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+              .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
+              .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return ExecutionResponse.builder()
           .async(true)

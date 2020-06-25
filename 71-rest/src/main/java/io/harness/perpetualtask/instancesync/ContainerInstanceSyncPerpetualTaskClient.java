@@ -29,6 +29,7 @@ import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -170,9 +171,9 @@ public class ContainerInstanceSyncPerpetualTaskClient
                   .timeout(TimeUnit.MINUTES.toMillis(VALIDATION_TIMEOUT_MINUTES))
                   .build())
         .accountId(taskData.getAccountId())
-        .appId(taskData.getAppId())
-        .envId(taskData.getEnvId())
-        .infrastructureMappingId(clientParams.get(INFRASTRUCTURE_MAPPING_ID))
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, taskData.getAppId())
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, taskData.getEnvId())
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, clientParams.get(INFRASTRUCTURE_MAPPING_ID))
         .tags(k8sStateHelper.fetchTagsFromK8sCloudProvider(delegateTaskParams))
         .build();
   }
@@ -191,7 +192,7 @@ public class ContainerInstanceSyncPerpetualTaskClient
 
     return DelegateTask.builder()
         .accountId(taskData.getAccountId())
-        .appId(taskData.getAppId())
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, taskData.getAppId())
         .waitId(UUIDGenerator.generateUuid())
         .tags(ListUtils.union(k8sStateHelper.fetchTagsFromK8sTaskParams(delegateTaskParams),
             awsCommandHelper.getAwsConfigTagsFromK8sConfig(delegateTaskParams)))
@@ -201,8 +202,8 @@ public class ContainerInstanceSyncPerpetualTaskClient
                   .parameters(new Object[] {delegateTaskParams})
                   .timeout(TimeUnit.MINUTES.toMillis(VALIDATION_TIMEOUT_MINUTES))
                   .build())
-        .envId(taskData.getEnvId())
-        .infrastructureMappingId(infraMappingId)
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, taskData.getEnvId())
+        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMappingId)
         .build();
   }
 

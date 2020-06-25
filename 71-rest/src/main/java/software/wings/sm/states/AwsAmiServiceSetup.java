@@ -31,6 +31,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiServiceSetupElement;
@@ -303,7 +304,7 @@ public class AwsAmiServiceSetup extends State {
       DelegateTask delegateTask =
           DelegateTask.builder()
               .accountId(app.getAccountId())
-              .appId(app.getUuid())
+              .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
               .waitId(activity.getUuid())
               .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
               .data(TaskData.builder()
@@ -312,7 +313,7 @@ public class AwsAmiServiceSetup extends State {
                         .parameters(new Object[] {request})
                         .timeout(MINUTES.toMillis(getTimeOut()))
                         .build())
-              .envId(env.getUuid())
+              .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
               .build();
       delegateService.queueTask(delegateTask);
     } catch (Exception exception) {

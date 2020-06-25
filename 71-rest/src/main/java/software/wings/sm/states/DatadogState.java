@@ -26,6 +26,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.YamlUtils;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -201,19 +202,20 @@ public class DatadogState extends AbstractMetricAnalysisState {
 
     String waitId = generateUuid();
     String infrastructureMappingId = context.fetchInfraMappingId();
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(accountId)
-                                    .appId(context.getAppId())
-                                    .waitId(waitId)
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
-                                              .parameters(new Object[] {dataCollectionInfo})
-                                              .timeout(TimeUnit.MINUTES.toMillis(timeDurationInInteger + 120))
-                                              .build())
-                                    .envId(envId)
-                                    .infrastructureMappingId(infrastructureMappingId)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(accountId)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
+            .waitId(waitId)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.APM_METRIC_DATA_COLLECTION_TASK.name())
+                      .parameters(new Object[] {dataCollectionInfo})
+                      .timeout(TimeUnit.MINUTES.toMillis(timeDurationInInteger + 120))
+                      .build())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+            .build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION,
         DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitId);
 
