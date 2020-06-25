@@ -22,4 +22,8 @@ public interface BillingDataPipelineService {
   TransferRun getTransferRuns(String transferRunResourceName, String impersonatedServiceAccount) throws IOException;
   String createDataSet(Account account);
   DataTransferServiceClient getDataTransferClient() throws IOException;
+  String createTransferScheduledQueriesForGCP(String scheduledQueryName, String dstDataSetId,
+      String impersonatedServiceAccount, String srcTablePrefix) throws IOException;
+  String createRunOnceScheduledQueryGCP(String runOnceScheduledQueryName, String gcpBqProjectId, String gcpBqDatasetId,
+      String dstDataSetId, String serviceAccountEmail) throws IOException;
 }

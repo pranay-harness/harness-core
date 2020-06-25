@@ -33,6 +33,7 @@ public class GcpBillingAccount implements PersistentEntity, UuidAware, AccountAc
   boolean exportEnabled;
   String bqProjectId;
   String bqDatasetId;
+  String bqDataSetRegion;
 
   long createdAt;
   long lastUpdatedAt;

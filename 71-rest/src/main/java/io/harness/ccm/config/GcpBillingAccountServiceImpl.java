@@ -34,10 +34,16 @@ public class GcpBillingAccountServiceImpl implements GcpBillingAccountService {
         "Validating access to GCP billing report by impersonating the service account %s", impersonatedServiceAccount));
     ValidationResult result = validateAccessToBillingReport(billingAccount, impersonatedServiceAccount);
     if (result.isValid()) {
+      billingAccount.setBqDataSetRegion(getBqDatasetRegion(billingAccount, impersonatedServiceAccount));
       return gcpBillingAccountDao.upsert(billingAccount);
     } else {
       throw new InvalidRequestException(result.getErrorMessage());
     }
+  }
+
+  public String getBqDatasetRegion(GcpBillingAccount gcpBillingAccount, String impersonatedServiceAccount) {
+    BigQuery bigQuery = bigQueryService.get(gcpBillingAccount.getBqProjectId(), impersonatedServiceAccount);
+    return bigQuery.getDataset(gcpBillingAccount.getBqDatasetId()).getLocation();
   }
 
   @Override
@@ -71,6 +77,20 @@ public class GcpBillingAccountServiceImpl implements GcpBillingAccountService {
 
   @Override
   public void update(String billingAccountId, GcpBillingAccount billingAccount) {
-    gcpBillingAccountDao.update(billingAccountId, billingAccount);
+    GcpOrganization gcpOrganization = gcpOrganizationService.get(billingAccount.getOrganizationSettingId());
+    if (null == gcpOrganization) {
+      throw new InvalidRequestException(
+          "A valid GCP organization information should be provided for the billing account.");
+    }
+    String impersonatedServiceAccount = gcpOrganization.getServiceAccountEmail();
+    logger.info(format(
+        "Validating access to GCP billing report by impersonating the service account %s", impersonatedServiceAccount));
+    ValidationResult result = validateAccessToBillingReport(billingAccount, impersonatedServiceAccount);
+    if (result.isValid()) {
+      billingAccount.setBqDataSetRegion(getBqDatasetRegion(billingAccount, impersonatedServiceAccount));
+      gcpBillingAccountDao.update(billingAccountId, billingAccount);
+    } else {
+      throw new InvalidRequestException(result.getErrorMessage());
+    }
   }
 }

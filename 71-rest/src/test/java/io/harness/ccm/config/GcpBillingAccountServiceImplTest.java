@@ -1,11 +1,14 @@
 package io.harness.ccm.config;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.ROHIT;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.Dataset;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -38,12 +41,15 @@ public class GcpBillingAccountServiceImplTest extends CategoryTest {
   private GcpBillingAccount gcpBillingAccount;
   private String bqProjectId = "BQ_PROJECT_ID";
   private String bqDatasetId = "BQ_DATASET_ID";
+  private String dataSetLocation = "location";
+  private String billingAccountId = "billingAccountId";
 
   @Mock private GcpBillingAccountDao gcpBillingAccountDao;
   @Mock private GcpOrganizationService gcpOrganizationService;
   @Mock private GcpServiceAccountServiceImpl gcpServiceAccountService;
   @Mock private BigQueryService bigQueryService;
   @Mock private BigQuery bigQuery;
+  @Mock private Dataset dataset;
   @InjectMocks private GcpBillingAccountServiceImpl gcpBillingAccountService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -54,6 +60,8 @@ public class GcpBillingAccountServiceImplTest extends CategoryTest {
 
     gcpBillingAccount = getGcpBillingAccount(organizationSettingId);
     when(bigQueryService.get(eq(bqProjectId), eq(impersonatedServiceAccount))).thenReturn(bigQuery);
+    when(dataset.getLocation()).thenReturn(dataSetLocation);
+    when(bigQuery.getDataset(anyString())).thenReturn(dataset);
     when(bigQueryService.canAccessDataset(eq(bigQuery), eq(bqProjectId), eq(bqDatasetId)))
         .thenReturn(ValidationResult.builder().valid(true).build());
   }
@@ -80,6 +88,23 @@ public class GcpBillingAccountServiceImplTest extends CategoryTest {
   public void shouldNotCreateForInvalidBillingAccount() {
     GcpBillingAccount gcpBillingAccount = getGcpBillingAccount(null);
     gcpBillingAccountService.create(gcpBillingAccount);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateForInvalidBillingAccount() {
+    GcpBillingAccount gcpBillingAccount = getGcpBillingAccount(null);
+    gcpBillingAccountService.update(billingAccountId, gcpBillingAccount);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateForValidationFailure() {
+    when(bigQueryService.canAccessDataset(eq(bigQuery), eq(bqProjectId), eq(bqDatasetId)))
+        .thenReturn(ValidationResult.builder().valid(false).errorMessage("ErrorMessage").build());
+    gcpBillingAccountService.update(billingAccountId, gcpBillingAccount);
   }
 
   @Test
