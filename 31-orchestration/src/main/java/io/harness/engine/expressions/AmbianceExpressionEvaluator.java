@@ -19,13 +19,16 @@ import io.harness.engine.expressions.functors.NodeExecutionQualifiedFunctor;
 import io.harness.engine.expressions.functors.OutcomeFunctor;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outputs.ExecutionSweepingOutputService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.VariableResolverTracker;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
@@ -41,6 +44,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   private final Ambiance ambiance;
   private final Set<NodeExecutionEntityType> entityTypes;
   private final boolean refObjectSpecific;
+  private final Map<String, String> groupAliases;
 
   @Builder
   public AmbianceExpressionEvaluator(VariableResolverTracker variableResolverTracker, Ambiance ambiance,
@@ -53,6 +57,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
 
     this.entityTypes = entityTypes == null ? NodeExecutionEntityType.allEntities() : entityTypes;
     this.refObjectSpecific = refObjectSpecific;
+    this.groupAliases = new HashMap<>();
   }
 
   @Override
@@ -96,6 +101,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
             .executionSweepingOutputService(executionSweepingOutputService)
             .ambiance(ambiance)
             .entityTypes(entityTypes)
+            .groupAliases(groupAliases)
             .build());
     // Access StepParameters and Outcomes using fully qualified names.
     addToContext("qualified",
@@ -106,6 +112,23 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
             .ambiance(ambiance)
             .entityTypes(entityTypes)
             .build());
+  }
+
+  /**
+   * Add a group alias. Any expression that starts with `aliasName` will be replaced by the identifier of the first
+   * ancestor node with the given groupName.
+   *
+   * @param aliasName   the name of the alias
+   * @param groupName the name of the group
+   */
+  protected void addGroupAlias(@NotNull String aliasName, @NotNull String groupName) {
+    if (isInitialized()) {
+      return;
+    }
+    if (!validAliasName(aliasName)) {
+      throw new InvalidRequestException("Invalid alias: " + aliasName);
+    }
+    groupAliases.put(aliasName, groupName);
   }
 
   @Override

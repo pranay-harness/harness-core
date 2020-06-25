@@ -19,15 +19,17 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class EngineJexlContext implements JexlContext {
   EngineExpressionEvaluator engineExpressionEvaluator;
+  Map<String, String> staticAliases;
   List<String> prefixes;
   Map<String, Object> originalMap;
   Map<String, Object> updatesMap;
   @NonFinal boolean recursive;
 
-  public EngineJexlContext(@NotNull EngineExpressionEvaluator engineExpressionEvaluator,
-      @NotNull Map<String, Object> originalMap, @NotNull List<String> prefixes) {
+  public EngineJexlContext(
+      @NotNull EngineExpressionEvaluator engineExpressionEvaluator, @NotNull Map<String, Object> originalMap) {
     this.engineExpressionEvaluator = engineExpressionEvaluator;
-    this.prefixes = prefixes;
+    this.staticAliases = engineExpressionEvaluator.getStaticAliases();
+    this.prefixes = engineExpressionEvaluator.fetchPrefixes();
     this.originalMap = originalMap;
     this.updatesMap = new HashMap<>();
     this.recursive = false;
@@ -40,12 +42,19 @@ public class EngineJexlContext implements JexlContext {
 
   @Override
   public synchronized Object get(String key) {
+    boolean usesOriginalKey = false;
     Object object = null;
     if (updatesMap.containsKey(key)) {
       object = updatesMap.get(key);
+      usesOriginalKey = true;
     } else if (recursive) {
       object = originalMap.get(key);
+      usesOriginalKey = true;
     } else {
+      if (staticAliases.containsKey(key)) {
+        key = staticAliases.get(key);
+      }
+
       for (String prefix : prefixes) {
         String prefixedKey = EmptyPredicate.isEmpty(prefix) ? key : prefix + "." + key;
         object = originalMap.get(prefixedKey);
@@ -61,7 +70,10 @@ public class EngineJexlContext implements JexlContext {
             logger.debug(format("Failed to evaluate prefixed key: %s", prefixedKey), ex);
           } finally {
             recursive = false;
+            usesOriginalKey = false;
           }
+        } else {
+          usesOriginalKey = true;
         }
 
         if (object != null) {
@@ -70,7 +82,7 @@ public class EngineJexlContext implements JexlContext {
       }
     }
 
-    if (object instanceof LateBindingValue) {
+    if (usesOriginalKey && object instanceof LateBindingValue) {
       originalMap.remove(key);
       object = ((LateBindingValue) object).bind();
       originalMap.put(key, object);

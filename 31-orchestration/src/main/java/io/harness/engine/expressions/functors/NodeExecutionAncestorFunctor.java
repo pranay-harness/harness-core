@@ -13,6 +13,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import java.util.Map;
 import java.util.Set;
 
 @OwnedBy(CDC)
@@ -25,6 +26,7 @@ public class NodeExecutionAncestorFunctor extends LateBindingMap {
   transient ExecutionSweepingOutputService executionSweepingOutputService;
   transient Ambiance ambiance;
   transient Set<NodeExecutionEntityType> entityTypes;
+  transient Map<String, String> groupAliases;
 
   @Override
   public synchronized Object get(Object key) {
@@ -46,6 +48,10 @@ public class NodeExecutionAncestorFunctor extends LateBindingMap {
   }
 
   private NodeExecution findStartNodeExecution(String key) {
+    if (groupAliases != null && groupAliases.containsKey(key)) {
+      return findStartNodeExecutionByGroup(groupAliases.get(key));
+    }
+
     String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
     if (nodeExecutionId == null) {
       return null;
@@ -55,6 +61,21 @@ public class NodeExecutionAncestorFunctor extends LateBindingMap {
          currNodeExecution = nodeExecutionsCache.fetch(currNodeExecution.getParentId())) {
       if (!currNodeExecution.getNode().isSkipExpressionChain()
           && key.equals(currNodeExecution.getNode().getIdentifier())) {
+        return currNodeExecution;
+      }
+    }
+    return null;
+  }
+
+  private NodeExecution findStartNodeExecutionByGroup(String groupName) {
+    String nodeExecutionId = ambiance.obtainCurrentRuntimeId();
+    if (nodeExecutionId == null) {
+      return null;
+    }
+
+    for (NodeExecution currNodeExecution = nodeExecutionsCache.fetch(nodeExecutionId); currNodeExecution != null;
+         currNodeExecution = nodeExecutionsCache.fetch(currNodeExecution.getParentId())) {
+      if (groupName.equals(currNodeExecution.getNode().getGroup())) {
         return currNodeExecution;
       }
     }

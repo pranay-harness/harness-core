@@ -6,6 +6,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
+
 import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
@@ -67,7 +69,8 @@ public class NodeExecutionValueTest extends CategoryTest {
                          .node(preparePlanNode(true, "c"))
                          .resolvedStepParameters(prepareStepParameters("co"))
                          .build();
-    nodeExecution4 = NodeExecution.builder().uuid(generateUuid()).node(preparePlanNode(false, "d", "di1")).build();
+    nodeExecution4 =
+        NodeExecution.builder().uuid(generateUuid()).node(preparePlanNode(false, "d", "di1", "STAGE")).build();
     nodeExecution5 = NodeExecution.builder()
                          .uuid(generateUuid())
                          .node(preparePlanNode(false, "d", "di2"))
@@ -138,7 +141,10 @@ public class NodeExecutionValueTest extends CategoryTest {
             .nodeExecutionsCache(new NodeExecutionsCache(nodeExecutionService, newAmbiance))
             .outcomeService(outcomeService)
             .ambiance(newAmbiance)
+            .groupAliases(ImmutableMap.of("stage", "STAGE"))
             .build();
+    assertThat(engine.getProperty(functor, "stage.param")).isEqualTo("di1");
+    assertThat(engine.getProperty(functor, "stage.e.param")).isEqualTo("eo");
     assertThat(engine.getProperty(functor, "a.b.param")).isEqualTo("bo");
     assertThat(engine.getProperty(functor, "a.d[0].param")).isEqualTo("di1");
     assertThat(engine.getProperty(functor, "a.d[1].param")).isEqualTo("do2");
@@ -170,10 +176,16 @@ public class NodeExecutionValueTest extends CategoryTest {
   }
 
   private PlanNode preparePlanNode(boolean skipExpressionChain, String identifier, String paramValue) {
+    return preparePlanNode(skipExpressionChain, identifier, paramValue, null);
+  }
+
+  private PlanNode preparePlanNode(
+      boolean skipExpressionChain, String identifier, String paramValue, String groupName) {
     return PlanNode.builder()
         .uuid(generateUuid())
         .name(identifier + "n")
         .stepType(StepType.builder().type("DUMMY").build())
+        .group(groupName)
         .identifier(identifier)
         .skipExpressionChain(skipExpressionChain)
         .stepParameters(prepareStepParameters(paramValue))
