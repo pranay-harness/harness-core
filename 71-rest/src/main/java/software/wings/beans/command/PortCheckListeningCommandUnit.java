@@ -20,7 +20,7 @@ public class PortCheckListeningCommandUnit extends ExecCommandUnit {
     setCommandUnitType(CommandUnitType.PORT_CHECK_LISTENING);
   }
 
-  @DefaultValue("set -x\nnc -v -z -w 5 localhost 8080")
+  @DefaultValue("nc -v -z -w 5 localhost 8080")
   @Override
   public String getCommandString() {
     return super.getCommandString();

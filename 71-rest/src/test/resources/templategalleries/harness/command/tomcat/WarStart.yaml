@@ -21,7 +21,6 @@ templateObject:
        name: Start Service
        workingDirectory: ${RuntimePath}/tomcat/bin
      - command: |-
-           set -x
            i=0
            while [ "$i" -lt 30 ]
            do
@@ -42,7 +41,6 @@ templateObject:
        deploymentType: SSH
        name: Process Running
      - command: |-
-           set -x
            server_xml="${RuntimePath}/tomcat/conf/server.xml"
 
            if [ -f "$server_xml" ]

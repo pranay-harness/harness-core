@@ -28,7 +28,7 @@ public class ProcessCheckStoppedCommandUnit extends ExecCommandUnit {
   }
 
   @Attributes(title = "Command")
-  @DefaultValue("set -x\npgrep -f \"\\-Dcatalina.home=$WINGS_RUNTIME_PATH/tomcat\"\nrc=$?"
+  @DefaultValue("pgrep -f \"\\-Dcatalina.home=$WINGS_RUNTIME_PATH/tomcat\"\nrc=$?"
       + "\nif [ \"$rc\" -eq 0 ]\nthen\nexit 1\nfi")
   @Override
   public String

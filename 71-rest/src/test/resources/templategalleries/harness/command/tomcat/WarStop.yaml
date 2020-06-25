@@ -36,7 +36,6 @@ templateObject:
        deploymentType: SSH
        name: Process Stopped
      - command: |-
-           set -x
            server_xml="${RuntimePath}/tomcat/conf/server.xml"
            if [ -f "$server_xml" ]
            then

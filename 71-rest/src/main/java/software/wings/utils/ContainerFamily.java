@@ -70,8 +70,7 @@ public enum ContainerFamily {
                       .type(PROCESS_CHECK_RUNNING.name())
                       .properties(ImmutableMap.<String, Object>builder()
                                       .put("commandString",
-                                          "set -x\n"
-                                              + "i=0\n"
+                                          "i=0\n"
                                               + "while [ \"$i\" -lt 30 ]\n"
                                               + "do\n"
                                               + "  pgrep -f \"\\-Dcatalina.home=$WINGS_RUNTIME_PATH/tomcat\"\n"
@@ -96,8 +95,7 @@ public enum ContainerFamily {
                       .properties(
                           ImmutableMap.<String, Object>builder()
                               .put("commandString",
-                                  "set -x\n"
-                                      + "server_xml=\"$WINGS_RUNTIME_PATH/tomcat/conf/server.xml\"\n"
+                                  "server_xml=\"$WINGS_RUNTIME_PATH/tomcat/conf/server.xml\"\n"
                                       + "\n"
                                       + "if [ -f \"$server_xml\" ]\n"
                                       + "then\n"
@@ -158,8 +156,7 @@ public enum ContainerFamily {
                       .properties(
                           ImmutableMap.<String, Object>builder()
                               .put("commandString",
-                                  "set -x\n"
-                                      + "server_xml=\"$WINGS_RUNTIME_PATH/tomcat/conf/server.xml\"\n"
+                                  "server_xml=\"$WINGS_RUNTIME_PATH/tomcat/conf/server.xml\"\n"
                                       + "if [ -f \"$server_xml\" ]\n"
                                       + "then\n"
                                       + "port=$(grep \"<Connector[ ]*port=\\\"[0-9]*\\\"[ ]*protocol=\\\"HTTP/1.1\\\"\" \"$server_xml\" |cut -d '\"' -f2)\n"
@@ -251,8 +248,7 @@ public enum ContainerFamily {
                       .type(PROCESS_CHECK_RUNNING.name())
                       .properties(ImmutableMap.<String, Object>builder()
                                       .put("commandString",
-                                          "set -x\n"
-                                              + "i=0\n"
+                                          "i=0\n"
                                               + "while [ \"$i\" -lt 30 ]\n"
                                               + "do\n"
                                               + "  pgrep -f \"\\-Djboss.home.dir=$WINGS_RUNTIME_PATH/jboss\"\n"
@@ -277,8 +273,7 @@ public enum ContainerFamily {
                       .properties(
                           ImmutableMap.<String, Object>builder()
                               .put("commandString",
-                                  "set -x\n"
-                                      + "standalone_xml=\"$WINGS_RUNTIME_PATH/jboss/standalone/configuration/standalone.xml\"\n"
+                                  "standalone_xml=\"$WINGS_RUNTIME_PATH/jboss/standalone/configuration/standalone.xml\"\n"
                                       + "\n"
                                       + "if [ -f \"$standalone_xml\" ]\n"
                                       + "then\n"
@@ -340,8 +335,7 @@ public enum ContainerFamily {
                       .properties(
                           ImmutableMap.<String, Object>builder()
                               .put("commandString",
-                                  "set -x\n"
-                                      + "standalone_xml=\"$WINGS_RUNTIME_PATH/jboss/standalone/configuration/standalone.xml\"\n"
+                                  "standalone_xml=\"$WINGS_RUNTIME_PATH/jboss/standalone/configuration/standalone.xml\"\n"
                                       + "if [ -f \"$standalone_xml\" ]\n"
                                       + "then\n"
                                       + "port=$(grep \"<socket-binding name=\\\"http\\\" port=\\\"\\${jboss.http.port\" \"$standalone_xml\" | cut -d \":\" -f2 | cut -d \"}\" -f1)\n"
