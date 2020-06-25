@@ -495,7 +495,7 @@ public class AzureHelperService {
       logger.error("Error occurred while getting repositories from subscriptionId/registryName :" + subscriptionId + "/"
               + registryName,
           e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", ExceptionUtils.getMessage(e));
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, e).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -538,7 +538,7 @@ public class AzureHelperService {
           .getTags();
     } catch (Exception e) {
       logger.error("Error occurred while getting Tags for Repository :" + registryHostName + "/" + repositoryName, e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", ExceptionUtils.getMessage(e));
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, e).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -624,7 +624,7 @@ public class AzureHelperService {
           .clientKey(currentAuthInfo.getClientKeyData().toCharArray())
           .build();
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", ExceptionUtils.getMessage(e));
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, e).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 

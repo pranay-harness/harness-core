@@ -83,7 +83,7 @@ public class GcrServiceImpl implements GcrService {
       checkValidImage(imageName, response);
       return processBuildResponse(artifactStreamAttributes, response.body());
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER, e).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
@@ -153,7 +153,7 @@ public class GcrServiceImpl implements GcrService {
           registryRestClient.listImageTags(basicAuthHeader, artifactStreamAttributes.getImageName()).execute();
       return isSuccessful(response);
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER, e).addParam("message", ExceptionUtils.getMessage(e));
     }
   }
 
