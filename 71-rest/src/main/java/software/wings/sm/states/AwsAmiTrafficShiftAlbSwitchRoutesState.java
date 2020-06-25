@@ -24,6 +24,7 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -166,7 +167,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(awsAmiTrafficShiftAlbData.getApp().getAccountId())
-            .appId(awsAmiTrafficShiftAlbData.getApp().getAppId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, awsAmiTrafficShiftAlbData.getApp().getAppId())
             .waitId(activity.getUuid())
             .data(TaskData.builder()
                       .async(true)
@@ -177,7 +178,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
             .tags(isNotEmpty(trafficShiftRequest.getAwsConfig().getTag())
                     ? singletonList(trafficShiftRequest.getAwsConfig().getTag())
                     : null)
-            .envId(awsAmiTrafficShiftAlbData.getEnv().getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, awsAmiTrafficShiftAlbData.getEnv().getUuid())
             .build();
     delegateService.queueTask(delegateTask);
 
