@@ -2,6 +2,7 @@ package io.harness.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.FdIndex;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +11,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.Map;
 
@@ -24,8 +24,8 @@ import java.util.Map;
 @Entity(value = "serviceGuardTimeseriesCumulativeSums", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class TimeSeriesCumulativeSums {
-  @NotEmpty @Indexed private String cvConfigId;
-  @NotEmpty @Indexed private int analysisMinute;
+  @NotEmpty @FdIndex private String cvConfigId;
+  @NotEmpty @FdIndex private int analysisMinute;
 
   private Map<String, Map<String, TransactionMetricSums>> transactionMetricSums;
 }
