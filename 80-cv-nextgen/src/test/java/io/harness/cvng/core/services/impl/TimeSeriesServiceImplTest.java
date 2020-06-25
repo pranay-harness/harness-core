@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
   private String cvConfigId;
@@ -47,10 +49,10 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testSave_whenAllWithinAnHour() {
+  public void testSave_whenAllWithinBucket() {
     int numOfMetrics = 4;
     int numOfTxnx = 5;
-    int numOfMins = 60;
+    long numOfMins = CV_ANALYSIS_WINDOW_MINUTES;
     List<TimeSeriesDataCollectionRecord> collectionRecords = new ArrayList<>();
     for (int i = 0; i < numOfMins; i++) {
       TimeSeriesDataCollectionRecord collectionRecord = TimeSeriesDataCollectionRecord.builder()
@@ -86,12 +88,12 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
   }
 
   private void validateSavedRecords(
-      int numOfMetrics, int numOfTxnx, int numOfMins, List<TimeSeriesRecord> timeSeriesRecords) {
+      int numOfMetrics, int numOfTxnx, long numOfMins, List<TimeSeriesRecord> timeSeriesRecords) {
     for (int i = 0; i < numOfMetrics; i++) {
       TimeSeriesRecord timeSeriesRecord = timeSeriesRecords.get(i);
       assertThat(timeSeriesRecord.getCvConfigId()).isEqualTo(cvConfigId);
       assertThat(timeSeriesRecord.getAccountId()).isEqualTo(accountId);
-      assertThat(timeSeriesRecord.getHourStartBoundary()).isEqualTo(0);
+      assertThat(timeSeriesRecord.getTimeBucketBoundary()).isEqualTo(0);
       assertThat(timeSeriesRecord.getMetricName()).isEqualTo("metric-" + i);
       assertThat(timeSeriesRecord.getTimeSeriesGroupValues().size()).isEqualTo(numOfTxnx * numOfMins);
       ArrayList<TimeSeriesRecord.TimeSeriesGroupValue> timeSeriesGroupValues =
@@ -125,11 +127,11 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testSave_whenWithinMultipleHour() {
+  public void testSave_whenWithinMultipleBucket() {
     int numOfMetrics = 4;
     int numOfTxnx = 5;
-    int numOfMins = 150;
-    int numOfTimeBuckets = 4; // 35-59, 60-119, 120-179, 180-185
+    int numOfMins = 17;
+    int numOfTimeBuckets = 4; // 35-39, 40-44, 45-49, 50-52
     List<TimeSeriesDataCollectionRecord> collectionRecords = new ArrayList<>();
     for (int i = 35; i < 35 + numOfMins; i++) {
       TimeSeriesDataCollectionRecord collectionRecord = TimeSeriesDataCollectionRecord.builder()
@@ -155,18 +157,18 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
     List<TimeSeriesRecord> timeSeriesRecords =
         hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority).asList();
     assertThat(timeSeriesRecords.size()).isEqualTo(numOfTimeBuckets * numOfMetrics);
-    AtomicInteger timeStamp = new AtomicInteger(0);
+    AtomicLong timeStamp = new AtomicLong(35);
     AtomicInteger recordNum = new AtomicInteger(0);
     AtomicInteger metricNum = new AtomicInteger(0);
     timeSeriesRecords.forEach(timeSeriesRecord -> {
       assertThat(timeSeriesRecord.getMetricName()).isEqualTo("metric-" + metricNum.get());
-      assertThat(timeSeriesRecord.getHourStartBoundary()).isEqualTo(TimeUnit.HOURS.toMillis(timeStamp.get()));
+      assertThat(timeSeriesRecord.getTimeBucketBoundary()).isEqualTo(TimeUnit.MINUTES.toMillis(timeStamp.get()));
       recordNum.incrementAndGet();
       metricNum.incrementAndGet();
 
       if (recordNum.get() % numOfMetrics == 0) {
         metricNum.set(0);
-        timeStamp.incrementAndGet();
+        timeStamp.addAndGet(CV_ANALYSIS_WINDOW_MINUTES);
       }
     });
   }

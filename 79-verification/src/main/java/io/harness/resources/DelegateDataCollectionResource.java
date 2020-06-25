@@ -30,8 +30,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api(CVNextGenConstants.DELEGATE_DATA_COLLETION)
-@Path("/" + CVNextGenConstants.DELEGATE_DATA_COLLETION)
+@Api(CVNextGenConstants.DELEGATE_DATA_COLLECTION)
+@Path("/" + CVNextGenConstants.DELEGATE_DATA_COLLECTION)
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
 @DelegateAuth

@@ -1,6 +1,6 @@
 package io.harness.managerclient;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLETION;
+import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION;
 
 import io.harness.rest.RestResponse;
 import retrofit2.Call;
@@ -22,23 +22,23 @@ import java.util.List;
  * Created by raghu on 09/17/18.
  */
 public interface VerificationServiceClient {
-  @POST(DELEGATE_DATA_COLLETION + "/save-metrics")
+  @POST(DELEGATE_DATA_COLLECTION + "/save-metrics")
   Call<RestResponse<Boolean>> saveTimeSeriesMetrics(@Query("accountId") String accountId,
       @Query("applicationId") String applicationId, @Query("stateExecutionId") String stateExecutionId,
       @Query("delegateTaskId") String delegateTaskId, @Body List<NewRelicMetricDataRecord> metricData);
 
-  @POST(DELEGATE_DATA_COLLETION + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
+  @POST(DELEGATE_DATA_COLLECTION + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   Call<RestResponse<Boolean>> saveLogs(@Query("accountId") String accountId, @Query("appId") String appId,
       @Query("cvConfigId") String cvConfigId, @Query("stateExecutionId") String stateExecutionId,
       @Query("workflowId") String workflowId, @Query("workflowExecutionId") String workflowExecutionId,
       @Query("serviceId") String serviceId, @Query("clusterLevel") ClusterLevel clusterLevel,
       @Query("delegateTaskId") String delegateTaskId, @Query("stateType") StateType stateType,
       @Body List<LogElement> metricData);
-  @POST(DELEGATE_DATA_COLLETION + VerificationConstants.SAVE_CV_ACTIVITY_LOGS_PATH)
+  @POST(DELEGATE_DATA_COLLECTION + VerificationConstants.SAVE_CV_ACTIVITY_LOGS_PATH)
   Call<RestResponse<Void>> saveActivityLogs(
       @Query("accountId") String accountId, @Body List<CVActivityLog> activityLogs);
 
-  @POST(DELEGATE_DATA_COLLETION + VerificationConstants.CV_TASK_STATUS_UPDATE_PATH)
+  @POST(DELEGATE_DATA_COLLECTION + VerificationConstants.CV_TASK_STATUS_UPDATE_PATH)
   Call<RestResponse<Void>> updateCVTaskStatus(@Query("accountId") String accountId, @Query("cvTaskId") String cvTaskId,
       @Body DataCollectionTaskResult dataCollectionTaskResult);
 }

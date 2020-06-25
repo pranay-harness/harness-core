@@ -8,9 +8,14 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.cvng.perpetualtask.DataCollectionPerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -34,6 +39,8 @@ import java.util.Map;
 
 public class DataCollectionPerpetualTaskServiceClientTest extends WingsBaseTest {
   private DataCollectionPerpetualTaskServiceClient dataCollectionPerpetualTaskServiceClient;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private MetricPackService metricPackService;
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
   private String connectorId;
@@ -44,13 +51,17 @@ public class DataCollectionPerpetualTaskServiceClientTest extends WingsBaseTest 
     dataCollectionPerpetualTaskServiceClient = new DataCollectionPerpetualTaskServiceClient();
     FieldUtils.writeField(dataCollectionPerpetualTaskServiceClient, "settingsService", settingsService, true);
     FieldUtils.writeField(dataCollectionPerpetualTaskServiceClient, "secretManager", secretManager, true);
+    FieldUtils.writeField(dataCollectionPerpetualTaskServiceClient, "cvConfigService", cvConfigService, true);
+    FieldUtils.writeField(dataCollectionPerpetualTaskServiceClient, "metricPackService", metricPackService, true);
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void getTaskParams() {
-    String cvConfigId = generateUuid();
+    AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
+    appDynamicsCVConfig.setMetricPack(MetricPack.builder().identifier(generateUuid()).build());
+    String cvConfigId = wingsPersistence.save(appDynamicsCVConfig);
     String accountId = generateUuid();
     SplunkConfig splunkConfig = SplunkConfig.builder().username("user").encryptedPassword("pass").build();
     when(settingsService.get(eq(connectorId)))
@@ -69,6 +80,7 @@ public class DataCollectionPerpetualTaskServiceClientTest extends WingsBaseTest 
     CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
                                                     .settingValue(splunkConfig)
                                                     .encryptedDataDetails(Lists.newArrayList(encryptedDataDetail))
+                                                    .cvConfig(appDynamicsCVConfig)
                                                     .build();
     assertThat(dataCollectionInfo.getDataCollectionInfo())
         .isEqualTo(ByteString.copyFrom(KryoUtils.asBytes(cvDataCollectionInfo)));

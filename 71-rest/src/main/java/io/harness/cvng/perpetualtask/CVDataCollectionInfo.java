@@ -1,5 +1,6 @@
 package io.harness.cvng.perpetualtask;
 
+import io.harness.cvng.core.services.entities.CVConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Value;
@@ -12,4 +13,5 @@ import java.util.List;
 public class CVDataCollectionInfo {
   SettingValue settingValue;
   List<EncryptedDataDetail> encryptedDataDetails;
+  CVConfig cvConfig;
 }

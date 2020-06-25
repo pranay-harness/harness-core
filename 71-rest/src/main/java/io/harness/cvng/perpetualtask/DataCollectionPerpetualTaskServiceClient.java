@@ -5,6 +5,10 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
 import io.harness.beans.DelegateTask;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.entities.CVConfig;
+import io.harness.cvng.core.services.entities.MetricCVConfig;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
@@ -28,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskServiceClient {
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private MetricPackService metricPackService;
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
@@ -36,6 +42,11 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
     String connectorId = clientParams.get("connectorId");
 
     SettingAttribute settingAttribute = settingsService.get(connectorId);
+    final CVConfig cvConfig = cvConfigService.get(cvConfigId);
+    if (cvConfig instanceof MetricCVConfig) {
+      metricPackService.populatePaths(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(), cvConfig.getType(),
+          ((MetricCVConfig) cvConfig).getMetricPack());
+    }
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     if (settingAttribute.getValue() instanceof EncryptableSetting) {
       encryptedDataDetails = secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue());
@@ -43,6 +54,7 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
     CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
                                                     .settingValue(settingAttribute.getValue())
                                                     .encryptedDataDetails(encryptedDataDetails)
+                                                    .cvConfig(cvConfig)
                                                     .build();
     ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(cvDataCollectionInfo));
     return DataCollectionPerpetualTaskParams.newBuilder()

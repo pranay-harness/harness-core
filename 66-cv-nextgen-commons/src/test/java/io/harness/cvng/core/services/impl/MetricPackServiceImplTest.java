@@ -51,7 +51,7 @@ public class MetricPackServiceImplTest extends CVNextGenCommonBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testMetricPackFilesAdded() {
-    final URL metricPackUrl = MetricPackService.class.getResource("/metric-packs/appdynamics");
+    final URL metricPackUrl = MetricPackService.class.getResource("/appdynamics/metric-packs");
     final Collection<File> metricPackYamls = FileUtils.listFiles(new File(metricPackUrl.getFile()), null, false);
     assertThat(metricPackYamls.size()).isEqualTo(MetricPackServiceImpl.APPDYNAMICS_METRICPACK_FILES.size());
   }
@@ -134,9 +134,10 @@ public class MetricPackServiceImplTest extends CVNextGenCommonBaseTest {
       metricDefinition.setValidationPath(null);
     });
 
-    metricPackService.populateValidationPaths(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS, qualityPack);
-    qualityPack.getMetrics().forEach(
-        metricDefinition -> { assertThat(metricDefinition.getValidationPath()).isNotEmpty(); });
+    assertThat(qualityPack.getDataCollectionDsl()).isNull();
+    metricPackService.populatePaths(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS, qualityPack);
+    qualityPack.getMetrics().forEach(metricDefinition -> assertThat(metricDefinition.getValidationPath()).isNotEmpty());
+    assertThat(qualityPack.getDataCollectionDsl()).isEqualTo(MetricPackServiceImpl.APPDYNAMICS_QUALITY_PACK_DSL);
   }
 
   @Test

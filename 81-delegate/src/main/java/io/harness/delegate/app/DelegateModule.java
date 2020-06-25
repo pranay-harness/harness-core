@@ -11,6 +11,8 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import io.harness.datacollection.DataCollectionDSLService;
+import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.message.MessageServiceImpl;
 import io.harness.delegate.message.MessengerType;
@@ -645,6 +647,7 @@ public class DelegateModule extends DependencyModule {
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.APPLY.name()).to(K8sApplyTaskHandler.class);
     bind(TerraformConfigInspectClient.class).toInstance(new TerraformConfigInspectClientImpl());
     bind(TerraformConfigInspectService.class).toInstance(new TerraformConfigInspectServiceImpl());
+    bind(DataCollectionDSLService.class).to(DataCollectionServiceImpl.class);
   }
 
   @Override
