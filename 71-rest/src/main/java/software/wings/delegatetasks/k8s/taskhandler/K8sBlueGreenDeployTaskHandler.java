@@ -171,6 +171,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
                                                          .k8sPodList(podList)
                                                          .primaryServiceName(primaryService.getResourceId().getName())
                                                          .stageServiceName(stageService.getResourceId().getName())
+                                                         .stageColor(stageColor)
                                                          .helmChartInfo(helmChartInfo)
                                                          .build(),
         SUCCESS);

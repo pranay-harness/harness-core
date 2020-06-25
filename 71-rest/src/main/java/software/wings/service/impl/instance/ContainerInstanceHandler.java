@@ -37,6 +37,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
@@ -200,7 +201,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       Collection<Instance> instancesInDB, List<ContainerInfo> latestContainerInfoList) {
     // Key - containerId(taskId in ECS / podId+namespace in Kubernetes), Value - ContainerInfo
     Map<String, ContainerInfo> latestContainerInfoMap = new HashMap<>();
-    HelmChartInfo helmChartInfo = getRelevantHelmChartInfo(deploymentSummaryMap.get(containerMetadata), instancesInDB);
+    HelmChartInfo helmChartInfo = getContainerHelmChartInfo(deploymentSummaryMap.get(containerMetadata), instancesInDB);
     for (ContainerInfo info : latestContainerInfoList) {
       if (info instanceof KubernetesContainerInfo) {
         KubernetesContainerInfo k8sInfo = (KubernetesContainerInfo) info;
@@ -315,31 +316,19 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
   }
 
   @VisibleForTesting
-  HelmChartInfo getRelevantHelmChartInfo(DeploymentSummary deploymentSummary, Collection<Instance> existingInstances) {
+  HelmChartInfo getContainerHelmChartInfo(DeploymentSummary deploymentSummary, Collection<Instance> existingInstances) {
     return Optional.ofNullable(deploymentSummary)
         .map(DeploymentSummary::getDeploymentInfo)
-        .flatMap(deploymentInfo -> {
-          HelmChartInfo helmChartInfo = null;
-          if (ContainerDeploymentInfoWithLabels.class == deploymentInfo.getClass()) {
-            helmChartInfo = ((ContainerDeploymentInfoWithLabels) deploymentInfo).getHelmChartInfo();
-          } else if (K8sDeploymentInfo.class == deploymentInfo.getClass()) {
-            helmChartInfo = ((K8sDeploymentInfo) deploymentInfo).getHelmChartInfo();
-          }
-          return Optional.ofNullable(helmChartInfo);
-        })
+        .filter(ContainerDeploymentInfoWithLabels.class ::isInstance)
+        .map(ContainerDeploymentInfoWithLabels.class ::cast)
+        .map(ContainerDeploymentInfoWithLabels::getHelmChartInfo)
         .orElseGet(()
                        -> existingInstances.stream()
                               .sorted(Comparator.comparingLong(Instance::getLastDeployedAt).reversed())
                               .map(Instance::getInstanceInfo)
-                              .map(instanceInfo -> {
-                                HelmChartInfo helmChartInfo = null;
-                                if (KubernetesContainerInfo.class == instanceInfo.getClass()) {
-                                  helmChartInfo = ((KubernetesContainerInfo) instanceInfo).getHelmChartInfo();
-                                } else if (K8sPodInfo.class == instanceInfo.getClass()) {
-                                  helmChartInfo = ((K8sPodInfo) instanceInfo).getHelmChartInfo();
-                                }
-                                return helmChartInfo;
-                              })
+                              .filter(KubernetesContainerInfo.class ::isInstance)
+                              .map(KubernetesContainerInfo.class ::cast)
+                              .map(KubernetesContainerInfo::getHelmChartInfo)
                               .filter(Objects::nonNull)
                               .findFirst()
                               .orElse(null));
@@ -396,7 +385,6 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
     SetView<String> instancesToBeAdded = Sets.difference(currentPodsMap.keySet(), dbPodMap.keySet());
     SetView<String> instancesToBeDeleted = Sets.difference(dbPodMap.keySet(), currentPodsMap.keySet());
-    SetView<String> instancesToBeUpdated = Sets.intersection(currentPodsMap.keySet(), dbPodMap.keySet());
 
     Set<String> instanceIdsToBeDeleted =
         instancesToBeDeleted.stream().map(instancePodName -> dbPodMap.get(instancePodName).getUuid()).collect(toSet());
@@ -412,13 +400,14 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     }
 
     DeploymentSummary deploymentSummary = deploymentSummaryMap.get(containerMetadata);
-    HelmChartInfo helmChartInfo = getRelevantHelmChartInfo(deploymentSummary, instancesInDB);
     for (String podName : instancesToBeAdded) {
       if (deploymentSummary == null && !instancesInDB.isEmpty()) {
         deploymentSummary =
             DeploymentSummary.builder().deploymentInfo(ContainerDeploymentInfoWithNames.builder().build()).build();
         generateDeploymentSummaryFromInstance(instancesInDB.stream().findFirst().get(), deploymentSummary);
       }
+      HelmChartInfo helmChartInfo =
+          getK8sPodHelmChartInfo(deploymentSummary, currentPodsMap.get(podName), instancesInDB);
       Instance instance =
           buildInstanceFromPodInfo(containerInfraMapping, currentPodsMap.get(podName), deploymentSummary);
       ContainerInfo containerInfo = (ContainerInfo) instance.getInstanceInfo();
@@ -428,33 +417,60 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
     logger.info("Instances to be added {}", instancesToBeAdded.size());
 
-    if (deploymentSummary != null) {
+    if (deploymentSummaryMap.get(containerMetadata) != null) {
+      deploymentSummary = deploymentSummaryMap.get(containerMetadata);
+      SetView<String> instancesToBeUpdated = Sets.intersection(currentPodsMap.keySet(), dbPodMap.keySet());
+
       for (String podName : instancesToBeUpdated) {
         Instance instanceToBeUpdated = dbPodMap.get(podName);
+        K8sPod k8sPod = currentPodsMap.get(podName);
         String deploymentWorkflowName = Optional.ofNullable(deploymentSummary.getWorkflowExecutionName()).orElse("");
         if (deploymentWorkflowName.equals(instanceToBeUpdated.getLastWorkflowExecutionName())
-            && updateHelmChartInfoForK8sPodInstanceInfo(instanceToBeUpdated, deploymentSummary)) {
+            && updateHelmChartInfoForExistingK8sPod(instanceToBeUpdated, k8sPod, deploymentSummary)) {
           instanceService.saveOrUpdate(instanceToBeUpdated);
         }
       }
     }
   }
 
-  private boolean updateHelmChartInfoForK8sPodInstanceInfo(Instance instance, DeploymentSummary deploymentSummary) {
-    boolean updated = false;
-    if (instance.getInstanceInfo() instanceof K8sPodInfo
-        && deploymentSummary.getDeploymentInfo() instanceof K8sDeploymentInfo) {
-      K8sPodInfo k8sPodInfo = (K8sPodInfo) instance.getInstanceInfo();
+  private HelmChartInfo getK8sPodHelmChartInfo(
+      DeploymentSummary deploymentSummary, K8sPod pod, Collection<Instance> instances) {
+    if (deploymentSummary != null && deploymentSummary.getDeploymentInfo() instanceof K8sDeploymentInfo) {
       K8sDeploymentInfo deploymentInfo = (K8sDeploymentInfo) deploymentSummary.getDeploymentInfo();
+      return StringUtils.equals(pod.getColor(), deploymentInfo.getBlueGreenStageColor())
+          ? deploymentInfo.getHelmChartInfo()
+          : null;
+    }
 
+    return instances.stream()
+        .sorted(Comparator.comparingLong(Instance::getLastDeployedAt).reversed())
+        .map(Instance::getInstanceInfo)
+        .filter(K8sPodInfo.class ::isInstance)
+        .map(K8sPodInfo.class ::cast)
+        .filter(podInfo -> StringUtils.equals(podInfo.getBlueGreenColor(), pod.getColor()))
+        .findFirst()
+        .map(K8sPodInfo::getHelmChartInfo)
+        .orElse(null);
+  }
+
+  private boolean updateHelmChartInfoForExistingK8sPod(
+      Instance instance, K8sPod pod, DeploymentSummary deploymentSummary) {
+    if (!(instance.getInstanceInfo() instanceof K8sPodInfo)
+        || !(deploymentSummary.getDeploymentInfo() instanceof K8sDeploymentInfo)) {
+      return false;
+    }
+
+    K8sPodInfo k8sPodInfo = (K8sPodInfo) instance.getInstanceInfo();
+    K8sDeploymentInfo deploymentInfo = (K8sDeploymentInfo) deploymentSummary.getDeploymentInfo();
+    if (StringUtils.equals(deploymentInfo.getBlueGreenStageColor(), pod.getColor())) {
       if (deploymentInfo.getHelmChartInfo() != null
           && !deploymentInfo.getHelmChartInfo().equals(k8sPodInfo.getHelmChartInfo())) {
         k8sPodInfo.setHelmChartInfo(deploymentInfo.getHelmChartInfo());
-        updated = true;
+        return true;
       }
     }
 
-    return updated;
+    return false;
   }
 
   private Map<ContainerMetadata, DeploymentSummary> getDeploymentSummaryMap(
@@ -777,6 +793,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         .releaseNumber(k8sExecutionSummary.getReleaseNumber())
         .namespaces(k8sExecutionSummary.getNamespaces())
         .helmChartInfo(k8sExecutionSummary.getHelmChartInfo())
+        .blueGreenStageColor(k8sExecutionSummary.getBlueGreenStageColor())
         .build();
   }
 
@@ -831,6 +848,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
                                                         .image(container.getImage())
                                                         .build())
                                              .collect(toList()))
+                             .blueGreenColor(pod.getColor())
                              .build());
 
     boolean instanceBuilderUpdated = false;

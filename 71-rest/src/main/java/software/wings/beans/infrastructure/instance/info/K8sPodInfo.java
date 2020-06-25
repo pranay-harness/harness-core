@@ -18,10 +18,11 @@ public class K8sPodInfo extends ContainerInfo {
   private String namespace;
   private List<K8sContainerInfo> containers;
   private HelmChartInfo helmChartInfo;
+  private String blueGreenColor;
 
   @Builder
   public K8sPodInfo(String clusterName, String releaseName, String podName, String ip, String namespace,
-      List<K8sContainerInfo> containers, HelmChartInfo helmChartInfo) {
+      List<K8sContainerInfo> containers, HelmChartInfo helmChartInfo, String blueGreenColor) {
     super(clusterName);
     this.releaseName = releaseName;
     this.podName = podName;
@@ -29,5 +30,6 @@ public class K8sPodInfo extends ContainerInfo {
     this.namespace = namespace;
     this.containers = containers;
     this.helmChartInfo = helmChartInfo;
+    this.blueGreenColor = blueGreenColor;
   }
 }

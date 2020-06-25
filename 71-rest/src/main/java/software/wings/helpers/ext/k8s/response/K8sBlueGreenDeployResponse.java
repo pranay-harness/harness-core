@@ -16,5 +16,6 @@ public class K8sBlueGreenDeployResponse implements K8sTaskResponse {
   String stageServiceName;
   String primaryWorkload;
   String stageWorkload;
+  String stageColor;
   HelmChartInfo helmChartInfo;
 }
