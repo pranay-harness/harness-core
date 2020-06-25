@@ -16,10 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 @Redesign
 public class ExecutionEngineDispatcher implements Runnable {
   Ambiance ambiance;
-  ExecutionEngine executionEngine;
+  OrchestrationEngine orchestrationEngine;
 
   @Override
   public void run() {
-    executionEngine.startNodeExecution(ambiance);
+    orchestrationEngine.startNodeExecution(ambiance);
   }
 }

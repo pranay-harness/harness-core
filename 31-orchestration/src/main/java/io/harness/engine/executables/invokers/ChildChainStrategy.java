@@ -11,8 +11,8 @@ import com.google.inject.name.Named;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.ExecutionEngine;
 import io.harness.engine.ExecutionEngineDispatcher;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.InvokeStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -32,7 +32,7 @@ import java.util.concurrent.ExecutorService;
 
 @OwnedBy(CDC)
 public class ChildChainStrategy implements InvokeStrategy {
-  @Inject private ExecutionEngine engine;
+  @Inject private OrchestrationEngine engine;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
@@ -72,7 +72,7 @@ public class ChildChainStrategy implements InvokeStrategy {
                                            .build();
     nodeExecutionService.save(childNodeExecution);
     executorService.submit(
-        ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).executionEngine(engine).build());
+        ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).orchestrationEngine(engine).build());
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, childInstanceId);
     nodeExecutionService.update(

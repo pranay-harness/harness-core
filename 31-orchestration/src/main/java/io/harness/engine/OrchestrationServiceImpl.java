@@ -22,8 +22,8 @@ import javax.validation.Valid;
 @Redesign
 @OwnedBy(HarnessTeam.CDC)
 @Slf4j
-public class EngineServiceImpl implements EngineService {
-  @Inject private ExecutionEngine executionEngine;
+public class OrchestrationServiceImpl implements OrchestrationService {
+  @Inject private OrchestrationEngine orchestrationEngine;
   @Inject private PlanExecutionService planExecutionService;
 
   @Override
@@ -48,7 +48,7 @@ public class EngineServiceImpl implements EngineService {
     PlanExecution savedPlanExecution = planExecutionService.save(planExecution);
     Ambiance ambiance =
         Ambiance.builder().setupAbstractions(setupAbstractions).planExecutionId(savedPlanExecution.getUuid()).build();
-    executionEngine.triggerExecution(ambiance, planNode);
+    orchestrationEngine.triggerExecution(ambiance, planNode);
     return savedPlanExecution;
   }
 }

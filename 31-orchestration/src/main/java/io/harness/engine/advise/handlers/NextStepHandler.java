@@ -9,13 +9,13 @@ import io.harness.adviser.advise.NextStepAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.EngineObtainmentHelper;
-import io.harness.engine.ExecutionEngine;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.advise.AdviseHandler;
 import io.harness.plan.PlanNode;
 
 @OwnedBy(CDC)
 public class NextStepHandler implements AdviseHandler<NextStepAdvise> {
-  @Inject private ExecutionEngine engine;
+  @Inject private OrchestrationEngine engine;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
 
   @Override

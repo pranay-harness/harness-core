@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.engine.ExecutionEngine;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.persistence.converters.DurationConverter;
 import io.harness.state.io.StepInputPackage;
@@ -20,7 +20,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Converters({DurationConverter.class})
 public class EngineWaitResumeCallback implements NotifyCallback {
-  @Inject private ExecutionEngine executionEngine;
+  @Inject private OrchestrationEngine orchestrationEngine;
 
   Ambiance ambiance;
   FacilitatorResponse facilitatorResponse;
@@ -35,7 +35,7 @@ public class EngineWaitResumeCallback implements NotifyCallback {
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    executionEngine.invokeState(ambiance, facilitatorResponse, inputPackage);
+    orchestrationEngine.invokeState(ambiance, facilitatorResponse, inputPackage);
   }
 
   @Override

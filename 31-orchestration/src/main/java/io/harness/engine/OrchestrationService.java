@@ -13,7 +13,7 @@ import javax.validation.Valid;
 
 @OwnedBy(CDC)
 @Redesign
-public interface EngineService {
+public interface OrchestrationService {
   PlanExecution startExecution(@Valid Plan plan, EmbeddedUser createdBy);
   PlanExecution startExecution(@Valid Plan plan, Map<String, String> setupAbstractions, EmbeddedUser createdBy);
 }

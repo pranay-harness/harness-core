@@ -49,10 +49,10 @@ import org.junit.experimental.categories.Category;
 import java.time.Duration;
 import java.util.Map;
 
-public class ExecutionEngineTest extends OrchestrationTest {
+public class OrchestrationEngineTest extends OrchestrationTest {
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private StepRegistry stepRegistry;
-  @Inject private EngineService engineService;
+  @Inject private OrchestrationService orchestrationService;
   @Inject private EngineTestHelper engineTestHelper;
 
   private static final AdviserType TEST_ADVISER_TYPE =
@@ -90,7 +90,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
 
     EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
 
-    PlanExecution response = engineService.startExecution(oneNodePlan, prepareInputArgs(), user);
+    PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), user);
 
     engineTestHelper.waitForPlanCompletion(response.getUuid());
     response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -137,7 +137,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
 
     EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
 
-    PlanExecution response = engineService.startExecution(oneNodePlan, prepareInputArgs(), user);
+    PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), user);
 
     engineTestHelper.waitForPlanCompletion(response.getUuid());
     response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -189,7 +189,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
     EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
 
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      PlanExecution response = engineService.startExecution(oneNodePlan, prepareInputArgs(), user);
+      PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), user);
 
       engineTestHelper.waitForPlanCompletion(response.getUuid());
       response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -209,7 +209,7 @@ public class ExecutionEngineTest extends OrchestrationTest {
 
     EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
 
-    assertThatThrownBy(() -> engineService.startExecution(oneNodePlan, prepareInputArgs(), user))
+    assertThatThrownBy(() -> orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), user))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith(exceptionStartMessage);
   }

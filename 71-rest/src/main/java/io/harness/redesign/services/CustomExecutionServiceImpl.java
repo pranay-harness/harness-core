@@ -11,7 +11,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.CDPipeline;
-import io.harness.engine.EngineService;
+import io.harness.engine.OrchestrationService;
 import io.harness.engine.graph.GraphGenerationService;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
@@ -34,7 +34,7 @@ import java.util.Map;
 @Redesign
 @Singleton
 public class CustomExecutionServiceImpl implements CustomExecutionService {
-  @Inject private EngineService engineService;
+  @Inject private OrchestrationService orchestrationService;
   @Inject private InterruptManager interruptManager;
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
   @Inject private GraphGenerationService graphGenerationService;
@@ -45,80 +45,80 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
 
   @Override
   public PlanExecution executeHttpSwitch() {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideHttpSwitchPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeHttpFork() {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideHttpForkPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeSectionPlan() {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideHttpSectionPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeRetryIgnorePlan() {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideHttpRetryIgnorePlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeRetryAbortPlan() {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideHttpRetryAbortPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeRollbackPlan() {
     User user = UserThreadLocal.get();
-    return engineService.startExecution(CustomExecutionUtils.provideHttpRollbackPlan(), getAbstractions(),
+    return orchestrationService.startExecution(CustomExecutionUtils.provideHttpRollbackPlan(), getAbstractions(),
         EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
   }
 
   @Override
   public PlanExecution executeSimpleShellScriptPlan(String accountId, String appId) {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideSimpleShellScriptPlan(), getAbstractions(accountId, appId), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeTaskChainPlan() {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideTaskChainPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution executeSectionChainPlan() {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideSectionChainPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution testInfraState() throws IOException {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideInfraStateTestPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution testGraphPlan() {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideGraphTestPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution testArtifactState() {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideArtifactStateTestPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
   public PlanExecution testServiceState() {
-    return engineService.startExecution(
+    return orchestrationService.startExecution(
         CustomExecutionUtils.provideServiceStateTestPlan(), getAbstractions(), getEmbeddedUser());
   }
 
@@ -148,7 +148,7 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
     try {
       cdPipeline = YamlPipelineUtils.read(pipelineYaml, CDPipeline.class);
       final Plan planForPipeline = executionPlanCreatorService.createPlanForPipeline(cdPipeline, accountId);
-      return engineService.startExecution(
+      return orchestrationService.startExecution(
           planForPipeline, ImmutableMap.of("accountId", accountId, "appId", appId), getEmbeddedUser());
     } catch (IOException e) {
       throw new GeneralException("error while testing execution plan", e);

@@ -73,12 +73,12 @@ import javax.validation.constraints.NotNull;
 
 /**
  * Please do not use this class outside of orchestration module. All the interactions with engine must be done via
- * {@link EngineService}. This is for the internal workings of the engine
+ * {@link OrchestrationService}. This is for the internal workings of the engine
  */
 @Slf4j
 @Redesign
 @OwnedBy(CDC)
-public class ExecutionEngine {
+public class OrchestrationEngine {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Injector injector;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
@@ -155,7 +155,7 @@ public class ExecutionEngine {
             .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
             .build();
     nodeExecutionService.save(nodeExecution);
-    executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).executionEngine(this).build());
+    executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).orchestrationEngine(this).build());
   }
 
   private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNode node, String uuid) {
@@ -311,7 +311,7 @@ public class ExecutionEngine {
                                   .ambiance(ambiance)
                                   .response(response)
                                   .asyncError(asyncError)
-                                  .executionEngine(this)
+                                  .orchestrationEngine(this)
                                   .stepRegistry(stepRegistry)
                                   .injector(injector)
                                   .build());

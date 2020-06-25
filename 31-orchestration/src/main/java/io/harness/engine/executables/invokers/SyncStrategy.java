@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.ExecutionEngine;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.InvokeStrategy;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.facilitator.modes.sync.SyncExecutable;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Redesign
 @Slf4j
 public class SyncStrategy implements InvokeStrategy {
-  @Inject private ExecutionEngine engine;
+  @Inject private OrchestrationEngine engine;
 
   @Override
   public void invoke(InvokerPackage invokerPackage) {
