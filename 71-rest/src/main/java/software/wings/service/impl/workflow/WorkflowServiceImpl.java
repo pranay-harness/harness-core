@@ -126,6 +126,7 @@ import software.wings.api.InstanceElement;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.ArtifactStreamMetadata;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -2171,7 +2172,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                   && isNotEmpty(artifactVariable.getAllowedList())
                   && artifactVariable.getAllowedList().contains(
                          previousArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId())) {
-                artifactVariable.setArtifactStreamMetadata(previousArtifactVariable.getArtifactStreamMetadata());
+                artifactVariable.setArtifactStreamMetadata(
+                    fetchArtifactStreamMetadataInArtifactVariable(previousArtifactVariable));
                 artifactVariable.setUiDisplayName(previousArtifactVariable.getUiDisplayName());
                 break;
               }
@@ -2180,6 +2182,31 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
     }
+  }
+
+  private ArtifactStreamMetadata fetchArtifactStreamMetadataInArtifactVariable(
+      ArtifactVariable previousArtifactVariable) {
+    ArtifactStreamMetadata artifactStreamMetadata = null;
+    if (previousArtifactVariable != null && previousArtifactVariable.getArtifactStreamMetadata() != null) {
+      String artifactStreamId = previousArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId();
+      ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+      if (artifactStream != null && artifactStream.isArtifactStreamParameterized()) {
+        Map<String, Object> previousRuntimeValues =
+            previousArtifactVariable.getArtifactStreamMetadata().getRuntimeValues();
+        Map<String, Object> runtimeValues = new HashMap<>();
+        List<String> parameters = artifactStreamService.getArtifactStreamParameters(artifactStreamId);
+        // since artifact stream is parameterized this won't be empty but still adding a check
+        if (isNotEmpty(parameters)) {
+          for (String parameter : parameters) {
+            runtimeValues.put(parameter, previousRuntimeValues.getOrDefault(parameter, ""));
+          }
+        }
+        runtimeValues.put("buildNo", previousRuntimeValues.get("buildNo")); // special handling for buildNo
+        artifactStreamMetadata =
+            ArtifactStreamMetadata.builder().artifactStreamId(artifactStreamId).runtimeValues(runtimeValues).build();
+      }
+    }
+    return artifactStreamMetadata;
   }
 
   @Override
