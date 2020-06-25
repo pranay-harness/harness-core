@@ -1,6 +1,6 @@
 package io.harness.cvng.core.resources;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLETION;
+import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION;
 
 import com.google.inject.Inject;
 
@@ -21,8 +21,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api(DELEGATE_DATA_COLLETION)
-@Path(DELEGATE_DATA_COLLETION)
+@Api(DELEGATE_DATA_COLLECTION)
+@Path(DELEGATE_DATA_COLLECTION)
 @Produces("application/json")
 public class DataCollectionResource {
   @Inject private TimeSeriesService timeSeriesService;

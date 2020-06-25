@@ -1,5 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
@@ -27,7 +29,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
         -> hPersistence.getDatastore(TimeSeriesRecord.class)
                .update(hPersistence.createQuery(TimeSeriesRecord.class)
                            .filter(TimeSeriesRecordKeys.cvConfigId, timeSeriesRecordCell.getValue().getCvConfigId())
-                           .filter(TimeSeriesRecordKeys.hourStartBoundary, timeSeriesRecordCell.getRowKey())
+                           .filter(TimeSeriesRecordKeys.timeBucketBoundary, timeSeriesRecordCell.getRowKey())
                            .filter(TimeSeriesRecordKeys.metricName, timeSeriesRecordCell.getColumnKey()),
                    hPersistence.createUpdateOperations(TimeSeriesRecord.class)
                        .set(TimeSeriesRecordKeys.accountId, timeSeriesRecordCell.getValue().getAccountId())
@@ -41,23 +43,23 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
       List<TimeSeriesDataCollectionRecord> dataRecords) {
     TreeBasedTable<Long, String, TimeSeriesRecord> rv = TreeBasedTable.create();
     dataRecords.forEach(dataRecord -> {
-      long hourBoundary =
-          dataRecord.getTimeStamp() - Math.floorMod(dataRecord.getTimeStamp(), TimeUnit.HOURS.toMillis(1));
+      long bucketBoundary = dataRecord.getTimeStamp()
+          - Math.floorMod(dataRecord.getTimeStamp(), TimeUnit.MINUTES.toMillis(CV_ANALYSIS_WINDOW_MINUTES));
       dataRecord.getMetricValues().forEach(timeSeriesDataRecordMetricValue -> {
         String metricName = timeSeriesDataRecordMetricValue.getMetricName();
-        if (!rv.contains(hourBoundary, metricName)) {
-          rv.put(hourBoundary, metricName,
+        if (!rv.contains(bucketBoundary, metricName)) {
+          rv.put(bucketBoundary, metricName,
               TimeSeriesRecord.builder()
                   .accountId(dataRecord.getAccountId())
                   .cvConfigId(dataRecord.getCvConfigId())
                   .accountId(dataRecord.getAccountId())
-                  .hourStartBoundary(hourBoundary)
+                  .timeBucketBoundary(bucketBoundary)
                   .metricName(metricName)
                   .build());
         }
 
         timeSeriesDataRecordMetricValue.getTimeSeriesValues().forEach(timeSeriesDataRecordGroupValue
-            -> rv.get(hourBoundary, metricName)
+            -> rv.get(bucketBoundary, metricName)
                    .getTimeSeriesGroupValues()
                    .add(TimeSeriesGroupValue.builder()
                             .groupName(timeSeriesDataRecordGroupValue.getGroupName())

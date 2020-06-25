@@ -1,9 +1,11 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.cvng.models.Connector;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -13,6 +15,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.codec.binary.Base64;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
@@ -22,8 +25,12 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.sm.StateType;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -33,7 +40,8 @@ import java.util.List;
 @Builder
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
-public class AppDynamicsConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+public class AppDynamicsConfig
+    extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander, Connector {
   @Attributes(title = "User Name", required = true) @NotEmpty private String username;
   @Attributes(title = "Account Name", required = true) @NotEmpty private String accountname;
   @Attributes(title = "Password", required = true) @Encrypted(fieldName = "password") private char[] password;
@@ -69,6 +77,36 @@ public class AppDynamicsConfig extends SettingValue implements EncryptableSettin
   @Override
   public String fetchResourceCategory() {
     return ResourceType.VERIFICATION_PROVIDER.name();
+  }
+
+  @Override
+  @JsonIgnore
+  public String getBaseUrl() {
+    if (controllerUrl.endsWith("/")) {
+      return controllerUrl;
+    }
+    return controllerUrl + "/";
+  }
+
+  @Override
+  @JsonIgnore
+  public Map<String, String> collectionHeaders() {
+    Map<String, String> headers = new HashMap<>();
+    headers.put("Authorization", getHeaderWithCredentials());
+    return headers;
+  }
+
+  @Override
+  @JsonIgnore
+  public Map<String, String> collectionParams() {
+    return Collections.emptyMap();
+  }
+
+  private String getHeaderWithCredentials() {
+    return "Basic "
+        + Base64.encodeBase64String(
+              String.format("%s@%s:%s", getUsername(), getAccountname(), new String(getPassword()))
+                  .getBytes(StandardCharsets.UTF_8));
   }
 
   @Data

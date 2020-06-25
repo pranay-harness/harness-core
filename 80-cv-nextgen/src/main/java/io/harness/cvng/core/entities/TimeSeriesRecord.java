@@ -37,9 +37,12 @@ public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAcces
   @FdIndex private String cvConfigId;
   @FdIndex private String host;
   @FdIndex private String metricName;
-  private long hourStartBoundary;
+  private double riskScore;
+  private long timeBucketBoundary;
+
   private long createdAt;
   @Default private Set<TimeSeriesGroupValue> timeSeriesGroupValues = new HashSet<>();
+  private Set<TimeSeriesRiskSummary> timeSeriesRiskSummaries;
 
   @JsonIgnore
   @SchemaIgnore
@@ -55,5 +58,14 @@ public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAcces
     private String groupName;
     private long timeStamp;
     private double metricValue;
+  }
+
+  @Data
+  @Builder
+  @FieldNameConstants(innerTypeName = "TimeSeriesRiskSummaryKeys")
+  @EqualsAndHashCode(of = {"groupName"})
+  public static class TimeSeriesRiskSummary {
+    private String groupName;
+    private double riskScore;
   }
 }

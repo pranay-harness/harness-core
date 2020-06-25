@@ -332,14 +332,14 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
       stateExecutionInstance.setAppId(applicationId);
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
-      WebTarget target = client.target(VERIFICATION_API_BASE + "/" + CVNextGenConstants.DELEGATE_DATA_COLLETION
+      WebTarget target = client.target(VERIFICATION_API_BASE + "/" + CVNextGenConstants.DELEGATE_DATA_COLLECTION
           + "/save-metrics?accountId=" + accountId + "&applicationId=" + applicationId
           + "&stateExecutionId=" + stateExecutionId + "&delegateTaskId=" + delegateTaskId);
       RestResponse<Boolean> restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(
           entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
       assertThat(restResponse.getResource()).isTrue();
 
-      target = client.target(VERIFICATION_API_BASE + "/" + CVNextGenConstants.DELEGATE_DATA_COLLETION
+      target = client.target(VERIFICATION_API_BASE + "/" + CVNextGenConstants.DELEGATE_DATA_COLLECTION
           + "/save-metrics?accountId=" + accountId + "&applicationId=" + applicationId
           + "&stateExecutionId=" + stateExecutionId + "&delegateTaskId=" + delegateTaskId);
       restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(

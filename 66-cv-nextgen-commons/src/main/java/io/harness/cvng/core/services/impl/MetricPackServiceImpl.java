@@ -1,5 +1,8 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.APPD_PERFORMANCE_PACK_IDENTIFIER;
+import static io.harness.cvng.core.services.CVNextGenConstants.APPD_QUALITY_PACK_IDENTIFIER;
+import static io.harness.cvng.core.services.CVNextGenConstants.APPD_RESOURCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -22,18 +25,48 @@ import io.harness.cvng.core.services.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.entities.TimeSeriesThreshold.TimeSeriesThresholdKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.YamlUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class MetricPackServiceImpl implements MetricPackService {
   static final List<String> APPDYNAMICS_METRICPACK_FILES =
-      Lists.newArrayList("/metric-packs/appdynamics/business-transactions-pack.yml",
-          "/metric-packs/appdynamics/quality-pack.yml", "/metric-packs/appdynamics/resource-pack.yml");
+      Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml",
+          "/appdynamics/metric-packs/resource-pack.yml");
+  private static final URL APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH =
+      MetricPackServiceImpl.class.getResource("/appdynamics/dsl/performance-pack.datacollection");
+  public static final String APPDYNAMICS_PERFORMANCE_PACK_DSL;
+  private static final URL APPDYNAMICS_QUALITY_PACK_DSL_PATH =
+      MetricPackServiceImpl.class.getResource("/appdynamics/dsl/quality-pack.datacollection");
+  public static final String APPDYNAMICS_QUALITY_PACK_DSL;
+  private static final URL APPDYNAMICS_RESOURCE_PACK_DSL_PATH =
+      MetricPackServiceImpl.class.getResource("/appdynamics/dsl/resource-pack.datacollection");
+  public static final String APPDYNAMICS_RESOURCE_PACK_DSL;
+  static {
+    String peformancePackDsl = null;
+    String qualityPackDsl = null;
+    String resourcePackDsl = null;
+    try {
+      peformancePackDsl = Resources.toString(APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH, Charsets.UTF_8);
+      qualityPackDsl = Resources.toString(APPDYNAMICS_QUALITY_PACK_DSL_PATH, Charsets.UTF_8);
+      resourcePackDsl = Resources.toString(APPDYNAMICS_RESOURCE_PACK_DSL_PATH, Charsets.UTF_8);
+    } catch (Exception e) {
+      // TODO: this should throw an exception but we risk delegate not starting up. We can remove this log term and
+      // throw and exception once things stabilize
+      logger.error("Invalid metric pack dsl path", e);
+    }
+    APPDYNAMICS_PERFORMANCE_PACK_DSL = peformancePackDsl;
+    APPDYNAMICS_QUALITY_PACK_DSL = qualityPackDsl;
+    APPDYNAMICS_RESOURCE_PACK_DSL = resourcePackDsl;
+  }
+
   @Inject private HPersistence hPersistence;
 
   @Override
@@ -196,7 +229,7 @@ public class MetricPackServiceImpl implements MetricPackService {
   }
 
   @Override
-  public void populateValidationPaths(
+  public void populatePaths(
       String accountId, String projectIdentifier, DataSourceType dataSourceType, MetricPack metricPack) {
     final List<MetricPack> metricPacksForProject = getMetricPacks(accountId, projectIdentifier, dataSourceType);
     final MetricPack metricPackForProject =
@@ -207,7 +240,7 @@ public class MetricPackServiceImpl implements MetricPackService {
     if (metricPackForProject == null) {
       return;
     }
-
+    populateDataCollectionDsl(dataSourceType, metricPack);
     metricPack.getMetrics().forEach(metricDefinition -> {
       final MetricDefinition metricDefinitionFromProject =
           metricPackForProject.getMetrics()
@@ -216,8 +249,33 @@ public class MetricPackServiceImpl implements MetricPackService {
               .findFirst()
               .orElse(null);
       if (metricDefinitionFromProject != null) {
+        metricDefinition.setPath(metricDefinitionFromProject.getPath());
         metricDefinition.setValidationPath(metricDefinitionFromProject.getValidationPath());
       }
     });
+  }
+
+  private void populateDataCollectionDsl(DataSourceType dataSourceType, MetricPack metricPack) {
+    switch (dataSourceType) {
+      case APP_DYNAMICS:
+        metricPack.setDataCollectionDsl(getAppdynamicsMetricPackDsl(metricPack));
+        break;
+      default:
+        throw new IllegalArgumentException("Invalid type " + dataSourceType);
+    }
+  }
+
+  private String getAppdynamicsMetricPackDsl(MetricPack metricPack) {
+    switch (metricPack.getIdentifier()) {
+      case APPD_PERFORMANCE_PACK_IDENTIFIER:
+        return APPDYNAMICS_PERFORMANCE_PACK_DSL;
+      case APPD_QUALITY_PACK_IDENTIFIER:
+        return APPDYNAMICS_QUALITY_PACK_DSL;
+      case APPD_RESOURCE_PACK_IDENTIFIER:
+        return APPDYNAMICS_RESOURCE_PACK_DSL;
+
+      default:
+        throw new IllegalArgumentException("Invalid identifier " + metricPack.getIdentifier());
+    }
   }
 }

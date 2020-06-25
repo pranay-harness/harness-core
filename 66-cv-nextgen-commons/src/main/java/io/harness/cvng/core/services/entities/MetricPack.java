@@ -55,6 +55,12 @@ public class MetricPack
   @NotNull private DataSourceType dataSourceType;
   @Trimmed @NotEmpty private String identifier;
   @NotEmpty private Set<MetricDefinition> metrics;
+  private String dataCollectionDsl;
+
+  @JsonIgnore
+  public String getDataCollectionDsl() {
+    return dataCollectionDsl;
+  }
 
   @Data
   @Builder

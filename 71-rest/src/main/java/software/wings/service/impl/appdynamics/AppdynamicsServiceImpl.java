@@ -263,8 +263,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     Preconditions.checkState(isNotEmpty(metricPacks), "No metric packs found for project {} with the name {}",
         projectIdentifier, metricPacks);
     metricPacks.forEach(metricPack
-        -> metricPackService.populateValidationPaths(
-            accountId, projectIdentifier, DataSourceType.APP_DYNAMICS, metricPack));
+        -> metricPackService.populatePaths(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS, metricPack));
     final SettingAttribute settingAttribute = settingsService.get(connectorId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
