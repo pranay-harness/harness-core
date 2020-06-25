@@ -16,8 +16,6 @@ export WINGS_STAGING_PATH="/tmp/staging"
 echo "export PORT=\"8080\""
 echo "export PASSWORD=\"*****\""
 
-set -x
-
 if [ "$#" -gt 1 ]
 then
   key="$1"

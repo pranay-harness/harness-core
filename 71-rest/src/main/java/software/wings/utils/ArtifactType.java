@@ -77,8 +77,7 @@ public enum ArtifactType {
                                  .type(PROCESS_CHECK_RUNNING.name())
                                  .properties(ImmutableMap.<String, Object>builder()
                                                  .put("commandString",
-                                                     "set -x\n"
-                                                         + "i=0\n"
+                                                     "i=0\n"
                                                          + "while [ \"$i\" -lt 30 ]\n"
                                                          + "do\n"
                                                          + "  pgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"\n"

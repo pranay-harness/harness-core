@@ -22,7 +22,7 @@ public class PortCheckClearedCommandUnit extends ExecCommandUnit {
   }
 
   @Attributes(title = "Command")
-  @DefaultValue("set -x\nnc -v -z -w 5 localhost 8080\nrc=$?"
+  @DefaultValue("nc -v -z -w 5 localhost 8080\nrc=$?"
       + "\nif [ \"$rc\" -eq 0 ]\nthen\nexit 1\nfi")
   @Override
   public String

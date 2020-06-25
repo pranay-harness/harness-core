@@ -22,7 +22,6 @@ templateObject:
     scriptType: BASH
     workingDirectory: "${RuntimePath}/jboss/bin"
   - command: |-
-      set -x
       i=0
       while [ "$i" -lt 30 ]
       do
@@ -44,7 +43,6 @@ templateObject:
     name: Process Running
     scriptType: BASH
   - command: |-
-      set -x
       standalone_xml="${RuntimePath}/jboss/standalone/configuration/standalone.xml"
 
       if [ -f "$standalone_xml" ]

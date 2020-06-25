@@ -28,7 +28,7 @@ public class ProcessCheckRunningCommandUnit extends ExecCommandUnit {
   }
 
   @Attributes(title = "Command")
-  @DefaultValue("set -x\npgrep -f \"\\-Dcatalina.home=$WINGS_RUNTIME_PATH/tomcat\"")
+  @DefaultValue("pgrep -f \"\\-Dcatalina.home=$WINGS_RUNTIME_PATH/tomcat\"")
   @Override
   public String getCommandString() {
     return super.getCommandString();

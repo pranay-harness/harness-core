@@ -13,8 +13,6 @@ export ${envVariable}="${envVariables[envVariable]}"
 echo "export ${safeEnvVariable}=\"${safeEnvVariables[safeEnvVariable]}\""
 </#list>
 
-set -x
-
 if [ "$#" -gt 1 ]
 then
   key="$1"
