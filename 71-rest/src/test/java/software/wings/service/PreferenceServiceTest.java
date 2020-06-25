@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.EXISTS;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.USER_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -153,5 +155,26 @@ public class PreferenceServiceTest extends WingsBaseTest {
     // delete preference
     preferenceService.delete(ACCOUNT_ID, USER_ID, PREFERENCE_ID);
     assertThat(preferenceService.get(ACCOUNT_ID, USER_ID, PREFERENCE_ID)).isNull();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnUpdatingPreferenceNameToExistingOne() {
+    Preference preferenceWithSameName = new DeploymentPreference();
+    preferenceWithSameName.setAccountId(ACCOUNT_ID);
+    preferenceWithSameName.setUserId(TEST_USER_ID);
+    preferenceWithSameName.setUuid(PREFERENCE_ID);
+    preferenceWithSameName.setAppId(GLOBAL_APP_ID);
+    preferenceWithSameName.setName("OTHER_NAME");
+    preference.setName("NAME");
+    preference.setAccountId(ACCOUNT_ID);
+
+    preferenceService.save(ACCOUNT_ID, TEST_USER_ID, preference);
+    preferenceService.save(ACCOUNT_ID, TEST_USER_ID, preferenceWithSameName);
+
+    preferenceWithSameName.setName("NAME");
+
+    preferenceService.update(ACCOUNT_ID, TEST_USER_ID, PREFERENCE_ID, preferenceWithSameName);
   }
 }
