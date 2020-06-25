@@ -20,13 +20,19 @@ import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 @Entity(value = "entityYamlRecord", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "EntityYamlRecordKeys")
-
 @CdIndex(name = "index_1",
     fields =
     {
       @Field(EntityYamlRecordKeys.accountId)
       , @Field(EntityYamlRecordKeys.entityId), @Field(EntityYamlRecordKeys.entityType),
           @Field(value = EntityYamlRecordKeys.createdAt, type = IndexType.DESC)
+    })
+@CdIndex(name = "index_2",
+    fields =
+    {
+      @Field(EntityYamlRecordKeys.accountId)
+      , @Field(EntityYamlRecordKeys.entityType), @Field(value = EntityYamlRecordKeys.createdAt, type = IndexType.DESC),
+          @Field(EntityYamlRecordKeys.yamlPath)
     })
 public class EntityYamlRecord implements PersistentEntity, UuidAccess, CreatedAtAccess, AccountAccess {
   @Id private String uuid;
