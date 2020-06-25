@@ -211,6 +211,7 @@ entityVersions {"name": "app_type_uuid_version", "background": true} {"appId": 1
 entityVersions {"name": "createdAt_1", "background": true} {"createdAt": 1}
 entityVersions {"name": "locate", "unique": true} {"entityType": 1, "entityUuid": 1, "version": 1}
 entityYamlRecord {"name": "index_1", "background": true} {"accountId": 1, "entityId": 1, "entityType": 1, "createdAt": -1}
+entityYamlRecord {"name": "index_2", "background": true} {"accountId": 1, "entityType": 1, "createdAt": -1, "yamlPath": 1}
 environments {"name": "accountId_1", "background": true} {"accountId": 1}
 environments {"name": "appId_1", "background": true} {"appId": 1}
 environments {"name": "createdAt_1", "background": true} {"createdAt": 1}
