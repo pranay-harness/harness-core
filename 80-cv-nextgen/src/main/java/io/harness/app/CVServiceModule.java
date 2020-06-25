@@ -14,6 +14,12 @@ import io.harness.cvng.core.services.impl.VerificationServiceSecretManagerImpl;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
+import io.harness.service.TimeSeriesAnalysisServiceImpl;
+import io.harness.service.intfc.TimeSeriesAnalysisService;
+import io.harness.statemachine.service.AnalysisStateMachineServiceImpl;
+import io.harness.statemachine.service.OrchestrationServiceImpl;
+import io.harness.statemachine.service.intfc.AnalysisStateMachineService;
+import io.harness.statemachine.service.intfc.OrchestrationService;
 import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
 import org.apache.commons.io.IOUtils;
@@ -60,9 +66,13 @@ public class CVServiceModule extends AbstractModule {
       bind(VerificationServiceSecretManager.class).to(VerificationServiceSecretManagerImpl.class);
       bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
       bind(TimeSeriesService.class).to(TimeSeriesServiceImpl.class);
+      bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
+      bind(AnalysisStateMachineService.class).to(AnalysisStateMachineServiceImpl.class);
+      bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
       bind(DataCollectionTaskService.class).to(DataCollectionTaskServiceImpl.class);
       bind(VerificationManagerService.class).to(VerificationManagerServiceImpl.class);
       bind(Clock.class).toInstance(Clock.systemUTC());
+
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }
