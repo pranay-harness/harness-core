@@ -9,8 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 @Redesign
 public interface RefObject {
   String getName();
-
   String getProducerId();
-
   RefType getRefType();
+  String getKey();
 }
