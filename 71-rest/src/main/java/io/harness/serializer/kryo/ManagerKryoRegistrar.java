@@ -126,6 +126,7 @@ import software.wings.api.jira.JiraProjectData;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sExecutionSummary;
+import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.k8s.K8sSwapServiceElement;
 import software.wings.api.pcf.DeploySweepingOutputPcf;
@@ -1735,5 +1736,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AccountEventType.class, 7446);
     kryo.register(TechStack.class, 7447);
     kryo.register(ParameterEntry.class, 7448);
+    kryo.register(K8sHelmDeploymentElement.class, 7449);
   }
 }

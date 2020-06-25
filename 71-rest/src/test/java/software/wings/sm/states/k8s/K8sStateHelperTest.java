@@ -25,6 +25,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -103,6 +105,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.k8s.K8sElement;
+import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Account;
 import software.wings.beans.Activity;
@@ -128,6 +131,8 @@ import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
+import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
@@ -136,6 +141,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
@@ -163,7 +169,9 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -173,6 +181,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -208,6 +217,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private OpenShiftManagerService openShiftManagerService;
   @Mock private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
+  @Mock private InstanceService instanceService;
 
   @Inject @InjectMocks private K8sStateHelper k8sStateHelper;
 
@@ -1450,5 +1460,91 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(k8sStateHelper.getTimeoutMillisFromMinutes(0)).isNull();
     assertThat(k8sStateHelper.getTimeoutMillisFromMinutes(10)).isEqualTo(600000);
     assertThat(k8sStateHelper.getTimeoutMillisFromMinutes(Integer.MAX_VALUE)).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetK8sHelmDeploymentElement() {
+    ArgumentCaptor<SweepingOutputInquiry> inquiryCaptor = ArgumentCaptor.forClass(SweepingOutputInquiry.class);
+    k8sStateHelper.getK8sHelmDeploymentElement(context);
+    verify(sweepingOutputService, times(1)).findSweepingOutput(inquiryCaptor.capture());
+
+    SweepingOutputInquiry inquiry = inquiryCaptor.getValue();
+    assertThat(inquiry.getName()).isEqualTo(K8sHelmDeploymentElement.SWEEPING_OUTPUT_NAME);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testStorePreviousHelmDeploymentInfo() {
+    long epochNow = Instant.now().toEpochMilli();
+    HelmChartInfo chartInfo = HelmChartInfo.builder().name("chart").version("1.1.0").build();
+    HelmChartInfo oldChartInfo = HelmChartInfo.builder().name("chart").version("1.0.0").build();
+    List<Instance> singleInstanceList = singletonList(instanceWithHelmChartInfoAndDeployedAt(chartInfo, epochNow));
+    List<Instance> multipleInstancesWithNulls = asList(instanceWithHelmChartInfoAndDeployedAt(null, epochNow),
+        instanceWithHelmChartInfoAndDeployedAt(null, epochNow), instanceWithHelmChartInfoAndDeployedAt(null, epochNow));
+    List<Instance> multipleInstancesWithDifferentDeployedTime =
+        asList(instanceWithHelmChartInfoAndDeployedAt(oldChartInfo, epochNow - 1000),
+            instanceWithHelmChartInfoAndDeployedAt(oldChartInfo, epochNow - 2000),
+            instanceWithHelmChartInfoAndDeployedAt(chartInfo, epochNow));
+
+    // Not helm chart deployment
+    testStorePreviousHelmDeploymentInfoForNonHelmDeployment();
+    // Shouldn't override existing K8sHelmDeploymentElement
+    testDoNotOverrideExistingK8sHelmDeploymentElement();
+    // With single existing instance
+    testStorePreviousHelmDeploymentInfoForHelmDeployment(HelmChartRepo, singleInstanceList, chartInfo);
+    // With multiple existing instances and null values
+    testStorePreviousHelmDeploymentInfoForHelmDeployment(HelmSourceRepo, multipleInstancesWithNulls, null);
+    // With multiple existing instances with different deployed time
+    testStorePreviousHelmDeploymentInfoForHelmDeployment(
+        HelmChartRepo, multipleInstancesWithDifferentDeployedTime, chartInfo);
+    // With empty existing instances
+    testStorePreviousHelmDeploymentInfoForHelmDeployment(HelmSourceRepo, emptyList(), null);
+  }
+
+  private Instance instanceWithHelmChartInfoAndDeployedAt(HelmChartInfo helmChartInfo, long deployedAt) {
+    return Instance.builder()
+        .instanceInfo(K8sPodInfo.builder().helmChartInfo(helmChartInfo).build())
+        .lastDeployedAt(deployedAt)
+        .build();
+  }
+
+  private void testStorePreviousHelmDeploymentInfoForNonHelmDeployment() {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(Local).build();
+    k8sStateHelper.storePreviousHelmDeploymentInfo(context, applicationManifest);
+    verify(sweepingOutputService, never()).findSweepingOutput(any(SweepingOutputInquiry.class));
+    verify(sweepingOutputService, never()).save(any(SweepingOutputInstance.class));
+    verify(instanceService, never()).getInstancesForAppAndInframapping(anyString(), anyString());
+  }
+
+  private void testStorePreviousHelmDeploymentInfoForHelmDeployment(
+      StoreType storeType, List<Instance> instances, HelmChartInfo expectedChartInfo) {
+    reset(sweepingOutputService);
+    ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(storeType).build();
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(null).when(sweepingOutputService).findSweepingOutput(any(SweepingOutputInquiry.class));
+
+    k8sStateHelper.storePreviousHelmDeploymentInfo(context, applicationManifest);
+    ArgumentCaptor<SweepingOutputInstance> instanceCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(instanceCaptor.capture());
+
+    SweepingOutputInstance instance = instanceCaptor.getValue();
+    assertThat(instance.getValue()).isExactlyInstanceOf(K8sHelmDeploymentElement.class);
+    K8sHelmDeploymentElement k8sHelmDeploymentElement = (K8sHelmDeploymentElement) instance.getValue();
+    assertThat(k8sHelmDeploymentElement.getPreviousDeployedHelmChart()).isEqualTo(expectedChartInfo);
+  }
+
+  private void testDoNotOverrideExistingK8sHelmDeploymentElement() {
+    reset(sweepingOutputService);
+    ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(HelmChartRepo).build();
+    K8sHelmDeploymentElement existingElement = K8sHelmDeploymentElement.builder().build();
+    doReturn(existingElement).when(sweepingOutputService).findSweepingOutput(any(SweepingOutputInquiry.class));
+
+    k8sStateHelper.storePreviousHelmDeploymentInfo(context, applicationManifest);
+    verify(sweepingOutputService, times(1)).findSweepingOutput(any(SweepingOutputInquiry.class));
+    verify(instanceService, never()).getInstancesForAppAndInframapping(anyString(), anyString());
+    verify(sweepingOutputService, never()).save(any(SweepingOutputInstance.class));
   }
 }

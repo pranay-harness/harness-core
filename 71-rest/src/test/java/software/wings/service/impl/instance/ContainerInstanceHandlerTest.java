@@ -55,11 +55,13 @@ import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
+import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.HelmSetupExecutionSummary;
 import software.wings.api.K8sDeploymentInfo;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -90,6 +92,7 @@ import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.states.k8s.K8sStateHelper;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -864,30 +867,17 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSetHelmChartVersionToContainerInfo() {
     setHelmChartVersionForHelmDeploymentInfo();
-    doNothingIfNonHelmDeploymentInfo();
-    doNothingIfNullDeploymentSummary();
+    doNothingIfNullHelmChartInfo();
   }
 
-  private void doNothingIfNullDeploymentSummary() {
+  private void doNothingIfNullHelmChartInfo() {
     containerInstanceHandler.setHelmChartInfoToContainerInfo(null, null);
-  }
-
-  private void doNothingIfNonHelmDeploymentInfo() {
-    DeploymentSummary deploymentSummary =
-        DeploymentSummary.builder().deploymentInfo(ContainerDeploymentInfoWithNames.builder().build()).build();
-    KubernetesContainerInfo k8sInfo = KubernetesContainerInfo.builder().build();
-    containerInstanceHandler.setHelmChartInfoToContainerInfo(deploymentSummary, k8sInfo);
-    assertThat(k8sInfo.getHelmChartInfo()).isNull();
   }
 
   private void setHelmChartVersionForHelmDeploymentInfo() {
     HelmChartInfo helmChartInfo = HelmChartInfo.builder().version("0.1.1").name("harness").build();
-    DeploymentSummary deploymentSummary =
-        DeploymentSummary.builder()
-            .deploymentInfo(ContainerDeploymentInfoWithLabels.builder().helmChartInfo(helmChartInfo).build())
-            .build();
     KubernetesContainerInfo k8sInfo = KubernetesContainerInfo.builder().build();
-    containerInstanceHandler.setHelmChartInfoToContainerInfo(deploymentSummary, k8sInfo);
+    containerInstanceHandler.setHelmChartInfoToContainerInfo(helmChartInfo, k8sInfo);
     assertThat(k8sInfo.getHelmChartInfo().getVersion()).isEqualTo("0.1.1");
     assertThat(k8sInfo.getHelmChartInfo().getName()).isEqualTo("harness");
   }
@@ -1142,20 +1132,8 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .getPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
-        asList(
-            DeploymentSummary.builder()
-                .accountId(ACCOUNT_ID)
-                .infraMappingId(INFRA_MAPPING_ID)
-                .workflowExecutionId("workflowExecution_1")
-                .stateExecutionInstanceId("stateExecutionInstanceId")
-                .deploymentInfo(
-                    K8sDeploymentInfo.builder()
-                        .namespace("default")
-                        .releaseName("release-123")
-                        .helmChartInfo(
-                            HelmChartInfo.builder().name("helmChartName").version("1.0.0").repoUrl("repoUrl").build())
-                        .build())
-                .build()),
+        asList(getDeploymentSummaryWithHelmChartInfo(
+            HelmChartInfo.builder().name("helmChartName").version("1.0.0").repoUrl("repoUrl").build())),
         false, OnDemandRollbackInfo.builder().onDemandRollback(false).build());
     ArgumentCaptor<Instance> instanceCaptor = ArgumentCaptor.forClass(Instance.class);
     verify(instanceService, times(1)).saveOrUpdate(instanceCaptor.capture());
@@ -1192,26 +1170,19 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                         .podIP("ip-127.0.0.1")
                         .namespace("default")
                         .containerList(asList(K8sContainer.builder().image("nginx:0.1").build()))
-                        .build()))
+                        .build(),
+                 K8sPod.builder()
+                     .name("sample-pod-2")
+                     .podIP("ip-127.0.0.1")
+                     .namespace("default")
+                     .containerList(asList(K8sContainer.builder().image("nginx:0.1").build()))
+                     .build()))
         .when(k8sStateHelper)
         .getPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
-        asList(
-            DeploymentSummary.builder()
-                .accountId(ACCOUNT_ID)
-                .infraMappingId(INFRA_MAPPING_ID)
-                .workflowExecutionId("workflowExecution_1")
-                .stateExecutionInstanceId("stateExecutionInstanceId")
-                .workflowExecutionName("Current Workflow")
-                .deploymentInfo(
-                    K8sDeploymentInfo.builder()
-                        .namespace("default")
-                        .releaseName("release-123")
-                        .helmChartInfo(
-                            HelmChartInfo.builder().name("helmChartName").version("1.1.0").repoUrl("repoUrl").build())
-                        .build())
-                .build()),
+        asList(getDeploymentSummaryWithHelmChartInfo(
+            HelmChartInfo.builder().name("helmChartName").version("1.1.0").repoUrl("repoUrl").build())),
         false, OnDemandRollbackInfo.builder().onDemandRollback(false).build());
 
     ArgumentCaptor<Instance> instanceCaptor = ArgumentCaptor.forClass(Instance.class);
@@ -1224,5 +1195,111 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(k8sPodInfo.getHelmChartInfo().getName()).isEqualTo("helmChartName");
     assertThat(k8sPodInfo.getHelmChartInfo().getVersion()).isEqualTo("1.1.0");
     assertThat(k8sPodInfo.getHelmChartInfo().getRepoUrl()).isEqualTo("repoUrl");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void test_K8sHelmChartDeployment_autoScaleSync() throws Exception {
+    HelmChartInfo helmChartInfo =
+        HelmChartInfo.builder().name("helmChartName").version("1.1.0").repoUrl("repoUrl").build();
+    final List<Instance> instances = buildK8sInstanceWithHelmChartInfo("smaple-pod-1", helmChartInfo);
+
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(asList(K8sPod.builder()
+                        .name("sample-pod-2")
+                        .namespace("default")
+                        .containerList(asList(K8sContainer.builder().image("helm-image:1.0").build()))
+                        .build()))
+        .when(k8sStateHelper)
+        .getPodList(any(ContainerInfrastructureMapping.class), anyString(), anyString());
+    containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.ITERATOR);
+    ArgumentCaptor<Instance> instanceCaptor = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(1)).saveOrUpdate(instanceCaptor.capture());
+
+    K8sPodInfo k8sPodInfo = (K8sPodInfo) instanceCaptor.getValue().getInstanceInfo();
+    assertThat(k8sPodInfo.getPodName()).isEqualTo("sample-pod-2");
+    assertThat(k8sPodInfo.getHelmChartInfo()).isEqualTo(helmChartInfo);
+  }
+
+  private DeploymentSummary getDeploymentSummaryWithHelmChartInfo(HelmChartInfo helmChartInfo) {
+    return DeploymentSummary.builder()
+        .accountId(ACCOUNT_ID)
+        .infraMappingId(INFRA_MAPPING_ID)
+        .workflowExecutionId("workflowExecution_1")
+        .stateExecutionInstanceId("stateExecutionInstanceId")
+        .workflowExecutionName("Current Workflow")
+        .deploymentInfo(K8sDeploymentInfo.builder()
+                            .namespace("default")
+                            .releaseName("release-123")
+                            .helmChartInfo(helmChartInfo)
+                            .build())
+        .build();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void test_GetRelevantHelmChartInfo_fromDeploymentSummary() {
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().name("chart").version("1.0.0").build();
+    ContainerDeploymentInfoWithLabels deploymentInfoWithLabels =
+        ContainerDeploymentInfoWithLabels.builder().helmChartInfo(helmChartInfo).build();
+    testGetRelevantHelmChartInfoWithDeploymentInfo(deploymentInfoWithLabels, helmChartInfo);
+
+    K8sDeploymentInfo k8sDeploymentInfo = K8sDeploymentInfo.builder().helmChartInfo(helmChartInfo).build();
+    testGetRelevantHelmChartInfoWithDeploymentInfo(k8sDeploymentInfo, helmChartInfo);
+
+    ContainerDeploymentInfoWithNames deploymentInfoWithNames = ContainerDeploymentInfoWithNames.builder().build();
+    ContainerDeploymentInfoWithLabels withLabelsAndNoChartInfo = ContainerDeploymentInfoWithLabels.builder().build();
+    K8sDeploymentInfo k8sDeploymentAndChartInfo = K8sDeploymentInfo.builder().build();
+    testGetRelevantHelmChartInfoWithDeploymentInfo(deploymentInfoWithNames, null);
+    testGetRelevantHelmChartInfoWithDeploymentInfo(withLabelsAndNoChartInfo, null);
+    testGetRelevantHelmChartInfoWithDeploymentInfo(k8sDeploymentAndChartInfo, null);
+  }
+
+  private void testGetRelevantHelmChartInfoWithDeploymentInfo(DeploymentInfo deploymentInfo, HelmChartInfo expected) {
+    List<Instance> emptyInstances = Collections.emptyList();
+    DeploymentSummary deploymentSummary = DeploymentSummary.builder().deploymentInfo(deploymentInfo).build();
+    HelmChartInfo result = containerInstanceHandler.getRelevantHelmChartInfo(deploymentSummary, emptyInstances);
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void test_GetRelevantHelmChartInfo_fromExistingInstances() {
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().name("chart").version("1.0.0").build();
+    List<Instance> sample = buildK8sInstanceWithHelmChartInfo("sample-pod-1", helmChartInfo);
+    testGetRelevantHelmChartInfoWithExistingInstances(sample, helmChartInfo);
+
+    List<Instance> multiple = new ArrayList<>();
+    multiple.addAll(buildK8sInstanceWithHelmChartInfo("sample-pod-1", helmChartInfo));
+    multiple.addAll(buildK8sInstanceWithHelmChartInfo("sample-pod-2", helmChartInfo));
+    testGetRelevantHelmChartInfoWithExistingInstances(multiple, helmChartInfo);
+
+    List<Instance> atLeastOneHasHelmChartInfo = new ArrayList<>();
+    atLeastOneHasHelmChartInfo.addAll(buildK8sInstanceWithHelmChartInfo("sample-pod-1", null));
+    atLeastOneHasHelmChartInfo.addAll(buildK8sInstanceWithHelmChartInfo("sample-pod-2", null));
+    atLeastOneHasHelmChartInfo.addAll(buildK8sInstanceWithHelmChartInfo("sample-pod-3", helmChartInfo));
+    testGetRelevantHelmChartInfoWithExistingInstances(atLeastOneHasHelmChartInfo, helmChartInfo);
+
+    HelmChartInfo outdatedHelmChartInfo = HelmChartInfo.builder().name("chart").version("0.9.0").build();
+    long epochNow = Instant.now().toEpochMilli();
+    List<Instance> useLatest = new ArrayList<>();
+    useLatest.addAll(buildK8sInstanceWithHelmChartInfo("sample-pod-1", outdatedHelmChartInfo));
+    useLatest.addAll(buildK8sInstanceWithHelmChartInfo("sample-pod-2", helmChartInfo));
+    useLatest.addAll(buildK8sInstanceWithHelmChartInfo("sample-pod-3", outdatedHelmChartInfo));
+    useLatest.get(0).setLastDeployedAt(epochNow - 1000L); // outdated
+    useLatest.get(1).setLastDeployedAt(epochNow); // actual
+    useLatest.get(2).setLastDeployedAt(epochNow - 500L); // outdated
+    testGetRelevantHelmChartInfoWithExistingInstances(useLatest, helmChartInfo);
+  }
+
+  private void testGetRelevantHelmChartInfoWithExistingInstances(List<Instance> instances, HelmChartInfo expected) {
+    HelmChartInfo result = containerInstanceHandler.getRelevantHelmChartInfo(null, instances);
+    assertThat(result).isEqualTo(expected);
   }
 }
