@@ -123,6 +123,7 @@ import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sExecutionSummary;
+import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.lambda.AwsLambdaDeploymentInfo;
 import software.wings.api.pcf.DeploySweepingOutputPcf;
@@ -1123,6 +1124,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.jira.JiraExecutionData", JiraExecutionData.class);
     w.put("api.JiraExecutionData", JiraExecutionData.class);
     w.put("api.k8s.K8sContextElement", K8sContextElement.class);
+    w.put("api.k8s.K8sHelmElement", K8sHelmDeploymentElement.class);
     w.put("api.k8s.K8sExecutionSummary", K8sExecutionSummary.class);
     w.put("api.k8s.K8sStateExecutionData", K8sStateExecutionData.class);
     w.put("api.K8sDeploymentInfo", K8sDeploymentInfo.class);

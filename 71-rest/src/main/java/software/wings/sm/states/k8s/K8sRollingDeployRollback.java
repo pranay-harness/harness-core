@@ -19,6 +19,7 @@ import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.k8s.K8sContextElement;
+import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.command.K8sDummyCommandUnit;
@@ -121,8 +122,12 @@ public class K8sRollingDeployRollback extends State {
 
       activityService.updateStatus(k8sStateHelper.getActivityId(context), appId, executionStatus);
 
+      K8sHelmDeploymentElement k8SHelmDeploymentElement = k8sStateHelper.getK8sHelmDeploymentElement(context);
       K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
+      if (k8SHelmDeploymentElement != null) {
+        stateExecutionData.setHelmChartInfo(k8SHelmDeploymentElement.getPreviousDeployedHelmChart());
+      }
 
       return ExecutionResponse.builder()
           .executionStatus(executionStatus)

@@ -97,6 +97,7 @@ import software.wings.sm.states.k8s.K8sStateHelper;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -199,12 +200,13 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       Collection<Instance> instancesInDB, List<ContainerInfo> latestContainerInfoList) {
     // Key - containerId(taskId in ECS / podId+namespace in Kubernetes), Value - ContainerInfo
     Map<String, ContainerInfo> latestContainerInfoMap = new HashMap<>();
+    HelmChartInfo helmChartInfo = getRelevantHelmChartInfo(deploymentSummaryMap.get(containerMetadata), instancesInDB);
     for (ContainerInfo info : latestContainerInfoList) {
       if (info instanceof KubernetesContainerInfo) {
         KubernetesContainerInfo k8sInfo = (KubernetesContainerInfo) info;
         String namespace = isNotBlank(k8sInfo.getNamespace()) ? k8sInfo.getNamespace() : "";
         latestContainerInfoMap.put(k8sInfo.getPodName() + namespace, info);
-        setHelmChartInfoToContainerInfo(deploymentSummaryMap.get(containerMetadata), k8sInfo);
+        setHelmChartInfoToContainerInfo(helmChartInfo, k8sInfo);
       } else {
         latestContainerInfoMap.put(((EcsContainerInfo) info).getTaskArn(), info);
       }
@@ -313,11 +315,43 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
   }
 
   @VisibleForTesting
-  void setHelmChartInfoToContainerInfo(DeploymentSummary deploymentSummary, KubernetesContainerInfo k8sInfo) {
-    Optional.ofNullable(deploymentSummary).ifPresent(summary -> {
-      DeploymentInfo deploymentInfo = summary.getDeploymentInfo();
-      if (deploymentInfo instanceof ContainerDeploymentInfoWithLabels) {
-        k8sInfo.setHelmChartInfo(((ContainerDeploymentInfoWithLabels) deploymentInfo).getHelmChartInfo());
+  HelmChartInfo getRelevantHelmChartInfo(DeploymentSummary deploymentSummary, Collection<Instance> existingInstances) {
+    return Optional.ofNullable(deploymentSummary)
+        .map(DeploymentSummary::getDeploymentInfo)
+        .flatMap(deploymentInfo -> {
+          HelmChartInfo helmChartInfo = null;
+          if (ContainerDeploymentInfoWithLabels.class == deploymentInfo.getClass()) {
+            helmChartInfo = ((ContainerDeploymentInfoWithLabels) deploymentInfo).getHelmChartInfo();
+          } else if (K8sDeploymentInfo.class == deploymentInfo.getClass()) {
+            helmChartInfo = ((K8sDeploymentInfo) deploymentInfo).getHelmChartInfo();
+          }
+          return Optional.ofNullable(helmChartInfo);
+        })
+        .orElseGet(()
+                       -> existingInstances.stream()
+                              .sorted(Comparator.comparingLong(Instance::getLastDeployedAt).reversed())
+                              .map(Instance::getInstanceInfo)
+                              .map(instanceInfo -> {
+                                HelmChartInfo helmChartInfo = null;
+                                if (KubernetesContainerInfo.class == instanceInfo.getClass()) {
+                                  helmChartInfo = ((KubernetesContainerInfo) instanceInfo).getHelmChartInfo();
+                                } else if (K8sPodInfo.class == instanceInfo.getClass()) {
+                                  helmChartInfo = ((K8sPodInfo) instanceInfo).getHelmChartInfo();
+                                }
+                                return helmChartInfo;
+                              })
+                              .filter(Objects::nonNull)
+                              .findFirst()
+                              .orElse(null));
+  }
+
+  @VisibleForTesting
+  void setHelmChartInfoToContainerInfo(HelmChartInfo helmChartInfo, ContainerInfo k8sInfo) {
+    Optional.ofNullable(helmChartInfo).ifPresent(chartInfo -> {
+      if (KubernetesContainerInfo.class == k8sInfo.getClass()) {
+        ((KubernetesContainerInfo) k8sInfo).setHelmChartInfo(helmChartInfo);
+      } else if (K8sPodInfo.class == k8sInfo.getClass()) {
+        ((K8sPodInfo) k8sInfo).setHelmChartInfo(helmChartInfo);
       }
     });
   }
@@ -378,6 +412,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     }
 
     DeploymentSummary deploymentSummary = deploymentSummaryMap.get(containerMetadata);
+    HelmChartInfo helmChartInfo = getRelevantHelmChartInfo(deploymentSummary, instancesInDB);
     for (String podName : instancesToBeAdded) {
       if (deploymentSummary == null && !instancesInDB.isEmpty()) {
         deploymentSummary =
@@ -386,6 +421,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       }
       Instance instance =
           buildInstanceFromPodInfo(containerInfraMapping, currentPodsMap.get(podName), deploymentSummary);
+      ContainerInfo containerInfo = (ContainerInfo) instance.getInstanceInfo();
+      setHelmChartInfoToContainerInfo(helmChartInfo, containerInfo);
       instanceService.saveOrUpdate(instance);
     }
 
@@ -778,10 +815,6 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
   private Instance buildInstanceFromPodInfo(
       InfrastructureMapping infraMapping, K8sPod pod, DeploymentSummary deploymentSummary) {
-    HelmChartInfo helmChartInfo = null;
-    if (deploymentSummary != null && deploymentSummary.getDeploymentInfo() instanceof K8sDeploymentInfo) {
-      helmChartInfo = ((K8sDeploymentInfo) deploymentSummary.getDeploymentInfo()).getHelmChartInfo();
-    }
     InstanceBuilder builder = buildInstanceBase(null, infraMapping, deploymentSummary);
     builder.podInstanceKey(PodInstanceKey.builder().podName(pod.getName()).namespace(pod.getNamespace()).build());
     builder.instanceInfo(K8sPodInfo.builder()
@@ -789,7 +822,6 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
                              .podName(pod.getName())
                              .ip(pod.getPodIP())
                              .namespace(pod.getNamespace())
-                             .helmChartInfo(helmChartInfo)
                              .containers(pod.getContainerList()
                                              .stream()
                                              .map(container

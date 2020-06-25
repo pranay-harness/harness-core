@@ -66,6 +66,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.k8s.K8sElement;
+import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
@@ -88,6 +89,8 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
@@ -95,6 +98,7 @@ import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
+import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
@@ -122,6 +126,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -141,11 +146,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -175,6 +182,7 @@ public class K8sStateHelper {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private OpenShiftManagerService openShiftManagerService;
   @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
+  @Inject private InstanceService instanceService;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
 
@@ -1066,5 +1074,47 @@ public class K8sStateHelper {
     boolean isOpenShiftManifestConfig = openShiftManagerService.isOpenShiftManifestConfig(context);
     AppManifestKind appManifestKind = isOpenShiftManifestConfig ? AppManifestKind.OC_PARAMS : AppManifestKind.VALUES;
     return applicationManifestUtils.getApplicationManifests(context, appManifestKind);
+  }
+
+  public K8sHelmDeploymentElement getK8sHelmDeploymentElement(ExecutionContext context) {
+    SweepingOutputInquiry sweepingOutputInquiry =
+        context.prepareSweepingOutputInquiryBuilder().name(K8sHelmDeploymentElement.SWEEPING_OUTPUT_NAME).build();
+
+    return sweepingOutputService.findSweepingOutput(sweepingOutputInquiry);
+  }
+
+  public void storePreviousHelmDeploymentInfo(ExecutionContext context, ApplicationManifest manifest) {
+    if (StoreType.HelmChartRepo != manifest.getStoreType() && StoreType.HelmSourceRepo != manifest.getStoreType()) {
+      return;
+    }
+
+    if (getK8sHelmDeploymentElement(context) == null) {
+      String infrastructureMappingId = getContainerInfrastructureMappingId(context);
+      String appId = context.getAppId();
+      HelmChartInfo latestHelmChartInfo = getLatestDeployedChartInfo(appId, infrastructureMappingId);
+      saveK8sHelmDeploymentElement(
+          context, K8sHelmDeploymentElement.builder().previousDeployedHelmChart(latestHelmChartInfo).build());
+    }
+  }
+
+  private HelmChartInfo getLatestDeployedChartInfo(String appId, String infraMappingId) {
+    return instanceService.getInstancesForAppAndInframapping(appId, infraMappingId)
+        .stream()
+        .sorted(Comparator.comparingLong(Instance::getLastDeployedAt).reversed())
+        .map(Instance::getInstanceInfo)
+        .filter(K8sPodInfo.class ::isInstance)
+        .map(K8sPodInfo.class ::cast)
+        .map(K8sPodInfo::getHelmChartInfo)
+        .filter(Objects::nonNull)
+        .findFirst()
+        .orElse(null);
+  }
+
+  private void saveK8sHelmDeploymentElement(
+      ExecutionContext context, K8sHelmDeploymentElement k8SHelmDeploymentElement) {
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+                                   .name(K8sHelmDeploymentElement.SWEEPING_OUTPUT_NAME)
+                                   .value(k8SHelmDeploymentElement)
+                                   .build());
   }
 }
