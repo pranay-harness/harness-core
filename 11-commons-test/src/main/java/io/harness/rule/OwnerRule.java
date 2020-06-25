@@ -75,6 +75,7 @@ public class OwnerRule implements TestRule {
   public static final String ANKIT = "ankit.singhal";
   public static final String ANSHUL = "anshul";
   public static final String ANUBHAW = "anubhaw";
+  public static final String ARVIND = "arvind.choudhary";
   public static final String AVMOHAN = "abhijith.mohan";
   public static final String BRETT = "brett";
   public static final String DEEPAK = "deepak.patankar";
@@ -159,6 +160,7 @@ public class OwnerRule implements TestRule {
           .put(ANKIT, defaultDevInfo(ANKIT).slack("UF76W0NN5").team(PLATFORM).build())
           .put(ANSHUL, defaultDevInfo(ANSHUL).slack("UASUA3E65").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(ANUBHAW, defaultDevInfo(ANUBHAW).slack("U0Z1U0HNW").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
+          .put(ARVIND, defaultDevInfo(ARVIND).slack("U01542TQGCU").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(AVMOHAN, defaultDevInfo(AVMOHAN).slack("UK72UTBJR").team(CONTINUOUS_EFFICIENCY).build())
           .put(BRETT, defaultDevInfo(BRETT).slack("U40VBHCGH").team(SWAT).build())
           .put(DEEPAK, defaultDevInfo(DEEPAK).slack("UK9EKBKQS").team(DEVELOPER_EXPERIENCE).build())
