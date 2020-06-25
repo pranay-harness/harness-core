@@ -49,7 +49,7 @@ public class ImportTemplateFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ABHINAV)
+  @Owner(developers = ABHINAV, intermittent = true)
   @Category(FunctionalTests.class)
   public void testDownloadTemplate() {
     GenericType<RestResponse<Template>> templateType = new GenericType<RestResponse<Template>>() {

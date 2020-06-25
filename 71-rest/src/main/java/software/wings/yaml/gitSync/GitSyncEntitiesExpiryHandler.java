@@ -73,7 +73,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
   public void handle(Account account) {
     long oneMonthExpiryMillis = System.currentTimeMillis() - ONE_MONTH_IN_MILLIS;
     long twelveMonthExpiryMillis = System.currentTimeMillis() - TWELVE_MONTH_IN_MILLIS;
-
+    logger.info("Running git sync expiry handler {} .", account.getUuid());
     handleGitCommitInGitFileActivitySummary(account, twelveMonthExpiryMillis);
     handleGitFileActivity(account, twelveMonthExpiryMillis);
     handleGitError(account, oneMonthExpiryMillis);
@@ -86,6 +86,8 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
     List<String> expiredCommits =
         appIds.stream()
             .map(appId -> {
+              logger.info("Running git file activity summary expiry handler for account {} and app {} .",
+                  account.getUuid(), appId);
               int total = 0;
               String offset = "0";
               String limit = "1000";
@@ -95,7 +97,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
                 pageResponse = gitSyncService.fetchGitCommits(
                     PageRequestBuilder.aPageRequest()
                         .addFilter(GitFileActivitySummaryKeys.accountId, SearchFilter.Operator.EQ, account.getUuid())
-                        .addFilter(GitFileActivitySummaryKeys.lastUpdatedAt, SearchFilter.Operator.LT, expiryMillis)
+                        .addFilter(GitFileActivitySummaryKeys.createdAt, SearchFilter.Operator.LT, expiryMillis)
                         .withLimit(limit)
                         .withOffset(offset)
                         .build(),
@@ -128,6 +130,8 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
     List<String> expiredActivities =
         appIds.stream()
             .map(appId -> {
+              logger.info(
+                  "Running git file activity  expiry handler for account {} and app {} .", account.getUuid(), appId);
               int total = 0;
               String offset = "0";
               String limit = "1000";
@@ -137,7 +141,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
                 pageResponse = gitSyncService.fetchGitSyncActivity(
                     PageRequestBuilder.aPageRequest()
                         .addFilter(GitFileActivityKeys.accountId, SearchFilter.Operator.EQ, account.getUuid())
-                        .addFilter(GitFileActivityKeys.lastUpdatedAt, SearchFilter.Operator.LT, expiryMillis)
+                        .addFilter(GitFileActivityKeys.createdAt, SearchFilter.Operator.LT, expiryMillis)
                         .withLimit(limit)
                         .withOffset(offset)
                         .build(),

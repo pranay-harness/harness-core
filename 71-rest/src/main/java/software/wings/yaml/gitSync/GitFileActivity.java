@@ -3,6 +3,7 @@ package software.wings.yaml.gitSync;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -32,6 +33,9 @@ import javax.ws.rs.DefaultValue;
                                                  , @Field("filePath") })
 @CdIndex(name = "accountId_commitId_Idx", fields = { @Field("accountId")
                                                      , @Field("commitId") })
+@CdIndex(name = "accountId_appId_createdAt_Idx",
+    fields = { @Field("accountId")
+               , @Field("appId"), @Field(value = "createdAt", type = IndexType.DESC) })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "GitFileActivityKeys")
