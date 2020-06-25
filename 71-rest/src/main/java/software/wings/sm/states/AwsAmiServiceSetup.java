@@ -2,11 +2,11 @@ package software.wings.sm.states;
 
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
@@ -310,7 +310,7 @@ public class AwsAmiServiceSetup extends State {
                         .async(true)
                         .taskType(TaskType.AWS_AMI_ASYNC_TASK.name())
                         .parameters(new Object[] {request})
-                        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                        .timeout(MINUTES.toMillis(getTimeOut()))
                         .build())
               .envId(env.getUuid())
               .build();
