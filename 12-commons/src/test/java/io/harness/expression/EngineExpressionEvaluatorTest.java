@@ -118,6 +118,7 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
                                              .put("i22", 222)
                                              .build());
 
+    validateSingleExpression(evaluator, "bVal1CVal1.strVal", "c11", false);
     validateExpression(evaluator, "bVal1.cVal1.strVal", "c11");
     validateExpression(evaluator, "bVal1.cVal2.strVal", "finalC12", true);
     validateExpression(evaluator, "bVal1.strVal1", "b11");
@@ -264,6 +265,12 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   public static class SampleEngineExpressionEvaluator extends EngineExpressionEvaluator {
     public SampleEngineExpressionEvaluator() {
       super(null);
+    }
+
+    @Override
+    protected void initialize() {
+      super.initialize();
+      addStaticAlias("bVal1CVal1", "bVal1.cVal1");
     }
 
     @NotNull

@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.utils.ParameterField;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
@@ -13,9 +15,11 @@ import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.logging.impl.NoOpLog;
 import org.apache.commons.text.StrLookup;
 import org.apache.commons.text.StrSubstitutor;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,17 +34,20 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
   private static final Pattern variablePattern = Pattern.compile("\\$\\{[^{}]*}");
   private static final Pattern secretVariablePattern = Pattern.compile("\\$\\{secretManager.[^{}]*}");
   private static final Pattern validVariableNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
+  private static final Pattern aliasNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
 
   private final JexlEngine engine;
   private final VariableResolverTracker variableResolverTracker;
   private final Map<String, Object> contextMap;
-  private boolean initialized;
+  @Getter private final Map<String, String> staticAliases;
+  @Getter private boolean initialized;
 
   public EngineExpressionEvaluator(VariableResolverTracker variableResolverTracker) {
     this.engine = new JexlBuilder().logger(new NoOpLog()).create();
     this.variableResolverTracker =
         variableResolverTracker == null ? new VariableResolverTracker() : variableResolverTracker;
     this.contextMap = new LateBindingMap();
+    this.staticAliases = new HashMap<>();
   }
 
   protected void initialize() {
@@ -51,11 +58,34 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
 
   /**
    * Add objects/functors to contextMap. Should be called within the constructor or initialize only.
+   *
    * @param name   the name of the functor
    * @param object the object to put against the name
    */
   protected void addToContext(@NotNull String name, @NotNull Object object) {
+    if (initialized) {
+      return;
+    }
     contextMap.put(name, object);
+  }
+
+  /**
+   * Add a static alias. Any expression that starts with `aliasName` will be replaced by `replacement`.
+   *
+   * @param aliasName   the name of the alias
+   * @param replacement the string to replace the alias name with
+   */
+  protected void addStaticAlias(@NotNull String aliasName, @NotEmpty String replacement) {
+    if (initialized) {
+      return;
+    }
+    if (!validAliasName(aliasName)) {
+      throw new InvalidRequestException("Invalid alias: " + aliasName);
+    }
+    if (aliasName.equals(replacement)) {
+      throw new InvalidRequestException("Alias and replacement cannot be the same: " + aliasName);
+    }
+    staticAliases.put(aliasName, replacement);
   }
 
   /**
@@ -151,7 +181,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
 
     Map<String, Object> clonedContext = new LateBindingMap();
     clonedContext.putAll(contextMap);
-    return new EngineJexlContext(this, clonedContext, fetchPrefixes());
+    return new EngineJexlContext(this, clonedContext);
   }
 
   private static String stripDelimiters(String str) {
@@ -211,6 +241,14 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     }
 
     return validVariableNamePattern.matcher(name).matches();
+  }
+
+  public static boolean validAliasName(String name) {
+    if (EmptyPredicate.isEmpty(name)) {
+      return false;
+    }
+
+    return aliasNamePattern.matcher(name).matches();
   }
 
   public static String createExpression(String expr) {
