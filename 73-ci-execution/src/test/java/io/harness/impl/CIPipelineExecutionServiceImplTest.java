@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.CIPipeline;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.EngineService;
+import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -25,7 +25,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 public class CIPipelineExecutionServiceImplTest extends CIExecutionTest {
-  @Mock private EngineService engineService;
+  @Mock private OrchestrationService orchestrationService;
   @Inject CIPipelineExecutionService ciPipelineExecutionService;
   @Inject CIExecutionPlanTestHelper executionPlanTestHelper;
   @Inject private CIExecutionPlanCreatorRegistrar ciExecutionPlanCreatorRegistrar;
@@ -33,7 +33,7 @@ public class CIPipelineExecutionServiceImplTest extends CIExecutionTest {
   @Before
   public void setUp() {
     ciExecutionPlanCreatorRegistrar.register();
-    on(ciPipelineExecutionService).set("engineService", engineService);
+    on(ciPipelineExecutionService).set("orchestrationService", orchestrationService);
   }
 
   @Test
@@ -42,10 +42,10 @@ public class CIPipelineExecutionServiceImplTest extends CIExecutionTest {
   public void executePipeline() {
     CIPipeline ciPipeline = executionPlanTestHelper.getCIPipeline();
 
-    when(engineService.startExecution(any(), any())).thenReturn(PlanExecution.builder().status(RUNNING).build());
+    when(orchestrationService.startExecution(any(), any())).thenReturn(PlanExecution.builder().status(RUNNING).build());
 
     PlanExecution planExecution = ciPipelineExecutionService.executePipeline(ciPipeline);
     assertThat(planExecution).isNotNull();
-    verify(engineService, times(1)).startExecution(any(), any());
+    verify(orchestrationService, times(1)).startExecution(any(), any());
   }
 }

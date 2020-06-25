@@ -12,7 +12,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.engine.EngineService;
+import io.harness.engine.OrchestrationService;
 import io.harness.engine.graph.GraphGenerationService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
@@ -37,7 +37,7 @@ import software.wings.security.UserThreadLocal;
  */
 public class CustomExecutionServiceImplTest extends WingsBaseTest {
   @Inject private TestUtils testUtils;
-  @Mock private EngineService engineService;
+  @Mock private OrchestrationService orchestrationService;
   @Mock private GraphGenerationService graphGenerationService;
   @InjectMocks @Inject private CustomExecutionServiceImpl customExecutionService;
 
@@ -55,7 +55,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteHttpSwitch() {
     UserThreadLocal.set(user);
     Plan expectedSwitchHttpPlan = CustomExecutionUtils.provideHttpSwitchPlan();
-    when(engineService.startExecution(any(), any(), any()))
+    when(orchestrationService.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(RUNNING).plan(expectedSwitchHttpPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeHttpSwitch();
 
@@ -69,7 +69,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteHttpFork() {
     UserThreadLocal.set(user);
     Plan expectedForkPlan = CustomExecutionUtils.provideHttpForkPlan();
-    when(engineService.startExecution(any(), any(), any()))
+    when(orchestrationService.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(RUNNING).plan(expectedForkPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeHttpFork();
 
@@ -83,7 +83,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteSectionPlan() {
     UserThreadLocal.set(user);
     Plan expectedSelectionPlan = CustomExecutionUtils.provideHttpSectionPlan();
-    when(engineService.startExecution(any(), any(), any()))
+    when(orchestrationService.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(RUNNING).plan(expectedSelectionPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeSectionPlan();
 
@@ -97,7 +97,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteRetryPlan() {
     UserThreadLocal.set(user);
     Plan expectedRetryPlan = CustomExecutionUtils.provideHttpRetryIgnorePlan();
-    when(engineService.startExecution(any(), any(), any()))
+    when(orchestrationService.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(RUNNING).plan(expectedRetryPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeRetryIgnorePlan();
 
@@ -111,7 +111,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteSimpleShellScriptPlan() {
     UserThreadLocal.set(user);
     Plan expectedShellScriptPlan = CustomExecutionUtils.provideSimpleShellScriptPlan();
-    when(engineService.startExecution(any(), any(), any()))
+    when(orchestrationService.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(Status.RUNNING).plan(expectedShellScriptPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeSimpleShellScriptPlan(ACCOUNT_ID, APP_ID);
 

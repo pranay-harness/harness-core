@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.ExecutionEngine;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
@@ -47,7 +47,7 @@ public class AbortHelper {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private MongoTemplate mongoTemplate;
-  @Inject private ExecutionEngine engine;
+  @Inject private OrchestrationEngine engine;
 
   public void discontinueMarkedInstance(NodeExecution nodeExecution, Status finalStatus) {
     try {

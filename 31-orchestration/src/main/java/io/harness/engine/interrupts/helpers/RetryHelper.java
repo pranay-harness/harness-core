@@ -14,8 +14,8 @@ import com.mongodb.client.result.UpdateResult;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.ExecutionEngine;
 import io.harness.engine.ExecutionEngineDispatcher;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 public class RetryHelper {
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private ExecutionEngine engine;
+  @Inject private OrchestrationEngine engine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private MongoTemplate mongoTemplate;
 
@@ -56,7 +56,7 @@ public class RetryHelper {
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
     updateRelationShips(nodeExecution, savedNodeExecution.getUuid());
     updateOldExecution(nodeExecution);
-    executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).executionEngine(engine).build());
+    executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).orchestrationEngine(engine).build());
   }
 
   private NodeExecution cloneForRetry(NodeExecution nodeExecution) {

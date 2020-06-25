@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.EngineService;
+import io.harness.engine.OrchestrationService;
 import io.harness.engine.PlanRepo;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
@@ -38,7 +38,7 @@ import java.util.List;
 
 @Listeners(OrchestrationNotifyEventListener.class)
 public class PauseAndResumeHandlerTest extends WingsBaseTest {
-  @Inject private EngineService engineService;
+  @Inject private OrchestrationService orchestrationService;
   @Inject private StepRegistry stepRegistry;
   @Inject private InterruptTestHelper interruptTestHelper;
   @Inject private InterruptManager interruptManager;
@@ -57,7 +57,7 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestRegisterAndHandleInterrupt() {
     // Execute Plan And wait it to be in RUNNING status
-    PlanExecution execution = engineService.startExecution(PlanRepo.planWithBigWait(), EMBEDDED_USER);
+    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithBigWait(), EMBEDDED_USER);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     // Issue Pause Interrupt

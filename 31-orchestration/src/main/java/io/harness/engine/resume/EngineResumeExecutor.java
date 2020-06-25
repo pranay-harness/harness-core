@@ -10,7 +10,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.engine.ExecutionEngine;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
@@ -43,7 +43,7 @@ public class EngineResumeExecutor implements Runnable {
   Map<String, ResponseData> response;
   NodeExecution nodeExecution;
   Ambiance ambiance;
-  ExecutionEngine executionEngine;
+  OrchestrationEngine orchestrationEngine;
   Injector injector;
   StepRegistry stepRegistry;
 
@@ -59,7 +59,7 @@ public class EngineResumeExecutor implements Runnable {
                                                          .errorMessage(errorNotifyResponseData.getErrorMessage())
                                                          .build())
                                         .build();
-        executionEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+        orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
         return;
       }
 
@@ -95,7 +95,8 @@ public class EngineResumeExecutor implements Runnable {
                 ambiance, nodeExecution.getResolvedStepParameters(), lastLinkResponse.getPassThroughData(), response);
             break;
           } else {
-            executionEngine.triggerLink(step, ambiance, nodeExecution, lastLinkResponse.getPassThroughData(), response);
+            orchestrationEngine.triggerLink(
+                step, ambiance, nodeExecution, lastLinkResponse.getPassThroughData(), response);
             return;
           }
         case CHILD_CHAIN:
@@ -107,7 +108,7 @@ public class EngineResumeExecutor implements Runnable {
                 lastChildChainExecutableResponse.getPassThroughData(), response);
             break;
           } else {
-            executionEngine.triggerLink(
+            orchestrationEngine.triggerLink(
                 step, ambiance, nodeExecution, lastChildChainExecutableResponse.getPassThroughData(), response);
             return;
           }
@@ -116,9 +117,9 @@ public class EngineResumeExecutor implements Runnable {
       }
       Preconditions.checkNotNull(
           stepResponse, "Step Response Cannot Be null. NodeExecutionId: " + nodeExecution.getUuid());
-      executionEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+      orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
     } catch (Exception ex) {
-      executionEngine.handleError(ambiance, ex);
+      orchestrationEngine.handleError(ambiance, ex);
     }
   }
 }

@@ -9,8 +9,8 @@ import com.google.inject.Injector;
 import com.google.inject.name.Names;
 
 import io.harness.engine.EngineObtainmentHelper;
-import io.harness.engine.EngineService;
-import io.harness.engine.EngineServiceImpl;
+import io.harness.engine.OrchestrationService;
+import io.harness.engine.OrchestrationServiceImpl;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -65,7 +65,7 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
     bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
     bind(OutcomeService.class).to(OutcomeServiceImpl.class);
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class);
-    bind(EngineService.class).to(EngineServiceImpl.class);
+    bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
     bind(GraphGenerationService.class).to(GraphGenerationServiceImpl.class);
     bind(EngineObtainmentHelper.class).toInstance(new EngineObtainmentHelper());
     bind(ExecutorService.class)

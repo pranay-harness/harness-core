@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.EngineService;
+import io.harness.engine.OrchestrationService;
 import io.harness.engine.PlanRepo;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
@@ -34,7 +34,7 @@ import software.wings.rules.Listeners;
 @Listeners(OrchestrationNotifyEventListener.class)
 public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   @Inject private InterruptManager interruptManager;
-  @Inject private EngineService engineService;
+  @Inject private OrchestrationService orchestrationService;
   @Inject private StepRegistry stepRegistry;
   @Inject private InterruptTestHelper interruptTestHelper;
 
@@ -50,7 +50,7 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterrupt() {
-    PlanExecution execution = engineService.startExecution(PlanRepo.planWithBigWait(),
+    PlanExecution execution = orchestrationService.startExecution(PlanRepo.planWithBigWait(),
         ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid()), EMBEDDED_USER);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 

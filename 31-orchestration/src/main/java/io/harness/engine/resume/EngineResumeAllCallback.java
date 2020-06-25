@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.engine.ExecutionEngine;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.waiter.NotifyCallback;
 import lombok.Builder;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 public class EngineResumeAllCallback implements NotifyCallback {
-  @Inject ExecutionEngine executionEngine;
+  @Inject OrchestrationEngine orchestrationEngine;
 
   String nodeExecutionId;
 
@@ -25,7 +25,7 @@ public class EngineResumeAllCallback implements NotifyCallback {
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    executionEngine.startNodeExecution(nodeExecutionId);
+    orchestrationEngine.startNodeExecution(nodeExecutionId);
   }
 
   @Override
