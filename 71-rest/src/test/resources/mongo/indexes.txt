@@ -507,8 +507,10 @@ secretUsageLogs {"name": "appId_1", "background": true} {"appId": 1}
 secretUsageLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretUsageLogs {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 segmentGroupEventJobContexts {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
+serverless-instance {"name": "accountId_1", "background": true} {"accountId": 1}
 serverless-instance {"name": "appId_1", "background": true} {"appId": 1}
 serverless-instance {"name": "createdAt_1", "background": true} {"createdAt": 1}
+serverless-instance {"name": "deletedAt_1", "background": true} {"deletedAt": 1}
 serverless-instance {"name": "isDeleted_1", "background": true} {"isDeleted": 1}
 serverless-instance {"name": "serverless_instance_index1", "background": true} {"appId": 1, "isDeleted": 1, "deletedAt": 1}
 serverless-instance {"name": "serverless_instance_index2", "background": true} {"appId": 1, "infraMappingId": 1, "isDeleted": 1, "deletedAt": 1}

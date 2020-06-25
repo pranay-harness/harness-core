@@ -66,7 +66,7 @@ public class ServerlessInstance implements PersistentEntity, UuidAware, CreatedA
   private String envId;
   private String envName;
   private EnvironmentType envType;
-  private String accountId;
+  @FdIndex private String accountId;
   private String appName;
   private String serviceId;
   private String serviceName;
@@ -97,7 +97,7 @@ public class ServerlessInstance implements PersistentEntity, UuidAware, CreatedA
   private ServerlessInstanceInfo instanceInfo;
 
   @FdIndex private boolean isDeleted;
-  private long deletedAt;
+  @FdIndex private long deletedAt;
 
   @Builder(toBuilder = true)
   public ServerlessInstance(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
