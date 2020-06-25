@@ -17,13 +17,16 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -47,11 +50,17 @@ import static software.wings.delegatetasks.k8s.K8sTestHelper.configMap;
 import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ContainerStatusBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodBuilder;
+import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.filesystem.FileIo;
@@ -64,6 +73,8 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutHistoryCommand;
 import io.harness.k8s.kubectl.ScaleCommand;
 import io.harness.k8s.kubectl.Utils;
+import io.harness.k8s.model.K8sContainer;
+import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
@@ -114,7 +125,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /*
  * Do not use powermock because jacoco does not support coverage using it. If you are sure that jacoco supports it now,
@@ -1051,5 +1065,67 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   private void assertHelmChartInfo(HelmChartInfo helmChartInfo) {
     assertThat(helmChartInfo.getName()).isEqualTo("chart");
     assertThat(helmChartInfo.getVersion()).isEqualTo("1.0.0");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetPodDetailsWithLabels() throws Exception {
+    KubernetesConfig config = KubernetesConfig.builder().build();
+    Map<String, String> labelsQuery = ImmutableMap.of("release-name", "releaseName");
+    List<Pod> existingPods =
+        asList(k8sApiMockPodWith("uid-1", ImmutableMap.of("marker", "marker-value"), singletonList("container")),
+            k8sApiMockPodWith("uid-2", ImmutableMap.of("release", "releaseName", "color", "green"), emptyList()),
+            k8sApiMockPodWith("uid-3", ImmutableMap.of(), asList("container-1", "container-2", "container-3")));
+
+    doReturn(existingPods)
+        .when(mockKubernetesContainerService)
+        .getRunningPodsWithLabels(config, emptyList(), "default", labelsQuery);
+    doAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call())
+        .when(mockTimeLimiter)
+        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+    List<K8sPod> pods = helper.getPodDetailsWithLabels(config, "default", "releaseName", labelsQuery);
+
+    assertThat(pods).isNotEmpty();
+    assertThat(pods).hasSize(3);
+    assertThat(pods.get(0).getUid()).isEqualTo("uid-1");
+    assertThatK8sPodHas(pods.get(0), "uid-1", ImmutableMap.of("marker", "marker-value"), singletonList("container"));
+    assertThatK8sPodHas(pods.get(1), "uid-2", ImmutableMap.of("release", "releaseName", "color", "green"), emptyList());
+    assertThatK8sPodHas(pods.get(2), "uid-3", ImmutableMap.of(), asList("container-1", "container-2", "container-3"));
+  }
+
+  private void assertThatK8sPodHas(K8sPod pod, String uid, Map<String, String> labels, List<String> containerIds) {
+    assertThat(pod.getUid()).isEqualTo(uid);
+    assertThat(pod.getName()).isEqualTo(uid + "-name");
+    assertThat(pod.getLabels()).isEqualTo(labels);
+    assertThat(pod.getContainerList()).hasSize(containerIds.size());
+    IntStream.range(0, containerIds.size()).forEach(idx -> {
+      K8sContainer container = pod.getContainerList().get(idx);
+      String expectedContainerId = containerIds.get(idx);
+      assertThat(container.getContainerId()).isEqualTo(expectedContainerId);
+      assertThat(container.getName()).isEqualTo(expectedContainerId + "-name");
+      assertThat(container.getImage()).isEqualTo("example:0.0.1");
+    });
+  }
+
+  private Pod k8sApiMockPodWith(String uid, Map<String, String> labels, List<String> containerIds) {
+    return new PodBuilder()
+        .withMetadata(new ObjectMetaBuilder()
+                          .withUid(uid)
+                          .withName(uid + "-name")
+                          .withNamespace("default")
+                          .withLabels(labels)
+                          .build())
+        .withStatus(new PodStatusBuilder()
+                        .withContainerStatuses(containerIds.stream()
+                                                   .map(id
+                                                       -> new ContainerStatusBuilder()
+                                                              .withContainerID(id)
+                                                              .withName(id + "-name")
+                                                              .withImage("example:0.0.1")
+                                                              .build())
+                                                   .collect(Collectors.toList()))
+                        .build())
+        .build();
   }
 }

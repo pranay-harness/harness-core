@@ -1315,6 +1315,7 @@ public class K8sTaskHelper {
                                                    .image(container.getImage())
                                                    .build())
                                         .collect(toList()))
+                     .labels(pod.getMetadata().getLabels())
                      .build())
           .collect(toList());
     }, 10, TimeUnit.SECONDS, true);
