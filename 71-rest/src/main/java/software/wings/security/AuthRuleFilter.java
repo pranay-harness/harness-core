@@ -13,6 +13,7 @@ import static javax.ws.rs.Priorities.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -41,6 +42,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.ListAPI;
+import software.wings.security.annotations.NextGenManagerAuth;
 import software.wings.security.annotations.ScimAPI;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -178,7 +180,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)
-        || isIdentityServiceRequest(requestContext) || isAdminPortalRequest(requestContext)) {
+        || isIdentityServiceRequest(requestContext) || isAdminPortalRequest(requestContext)
+        || isNextGenManagerRequest(requestContext)) {
       return;
     }
 
@@ -479,6 +482,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
                requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.ADMIN_PORTAL_PREFIX);
   }
 
+  @VisibleForTesting
+  boolean isNextGenManagerRequest(ContainerRequestContext requestContext) {
+    return isNextGenManagerAPI()
+        && startsWith(
+               requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), AuthenticationFilter.NEXT_GEN_MANAGER_PREFIX);
+  }
+
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
     // externalAPI() doesn't need any authorization
     return publicAPI() || requestContext.getMethod().equals(OPTIONS) || identityServiceAPI() || harnessClientApi()
@@ -509,6 +519,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Method resourceMethod = resourceInfo.getResourceMethod();
     return resourceMethod.getAnnotation(AdminPortalAuth.class) != null
         || resourceClass.getAnnotation(AdminPortalAuth.class) != null;
+  }
+
+  private boolean isNextGenManagerAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    return resourceMethod.getAnnotation(NextGenManagerAuth.class) != null
+        || resourceClass.getAnnotation(NextGenManagerAuth.class) != null;
   }
 
   private boolean publicAPI() {

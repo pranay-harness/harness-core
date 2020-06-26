@@ -30,6 +30,7 @@ public class PortalConfig {
   private String jwtMarketPlaceSecret;
   private String jwtIdentityServiceSecret;
   private String jwtDataHandlerSecret;
+  private String jwtNextGenManagerSecret;
   private String delegateDockerImage;
   private int externalGraphQLRateLimitPerMinute = 500;
   private int customDashGraphQLRateLimitPerMinute = 1000;

@@ -59,3 +59,9 @@ mongo:
 #  maxConnectionIdleTime: 600000
 #  connectionsPerHost: 300
 #  indexManagerMode: AUTO
+
+secretManagerClient:
+  baseUrl: http://localhost:3457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+  serviceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

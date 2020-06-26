@@ -1,8 +1,9 @@
-package software.wings.service.impl.security;
+package software.wings.security;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -28,13 +29,9 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.resources.AccountResource;
 import software.wings.resources.graphql.GraphQLUtils;
-import software.wings.security.AppPermissionSummaryForUI;
-import software.wings.security.AuthRuleFilter;
-import software.wings.security.PermissionAttribute;
+import software.wings.resources.secretsmanagement.NGSecretsResource;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
-import software.wings.security.UserPermissionInfo;
-import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -54,6 +51,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
@@ -152,6 +150,22 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     testHarnessUserMethod("/api/services", "GET", false);
   }
 
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testFilter_For_NextGenRequest() {
+    Class clazz = NGSecretsResource.class;
+    when(resourceInfo.getResourceClass()).thenReturn(clazz);
+    when(resourceInfo.getResourceMethod()).thenReturn(getNgMockResourceMethod());
+    boolean isNextGenRequest = authRuleFilter.isNextGenManagerRequest(requestContext);
+    assertThat(isNextGenRequest).isFalse();
+
+    when(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION))
+        .thenReturn(AuthenticationFilter.NEXT_GEN_MANAGER_PREFIX);
+    isNextGenRequest = authRuleFilter.isNextGenManagerRequest(requestContext);
+    assertThat(isNextGenRequest).isTrue();
+  }
+
   private void testHarnessUserMethod(String url, String method, boolean exception) {
     Set<Action> actions = new HashSet<>();
     actions.add(Action.READ);
@@ -180,6 +194,15 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     Class mockClass = AccountResource.class;
     try {
       return mockClass.getMethod("getAccount", String.class);
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  private Method getNgMockResourceMethod() {
+    Class mockClass = NGSecretsResource.class;
+    try {
+      return mockClass.getMethod("get", String.class, String.class, String.class);
     } catch (NoSuchMethodException e) {
       return null;
     }

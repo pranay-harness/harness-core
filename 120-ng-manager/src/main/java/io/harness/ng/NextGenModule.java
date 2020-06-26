@@ -8,6 +8,7 @@ import io.harness.connector.ConnectorModule;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.CoreModule;
+import io.harness.ng.core.SecretManagementModule;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
 
@@ -48,6 +49,7 @@ public class NextGenModule extends AbstractModule {
     install(new PersistenceModule());
     install(new CoreModule());
     install(new ConnectorModule());
+    install(new SecretManagementModule(this.appConfig.getSecretManagerClientConfig()));
   }
 
   private ValidatorFactory getValidatorFactory() {
