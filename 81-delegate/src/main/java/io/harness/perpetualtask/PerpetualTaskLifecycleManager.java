@@ -1,5 +1,7 @@
 package io.harness.perpetualtask;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.util.Durations;
@@ -8,6 +10,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
+import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -64,7 +67,7 @@ public class PerpetualTaskLifecycleManager {
   Void call() {
     Instant taskStartTime = Instant.now();
     PerpetualTaskResponse perpetualTaskResponse;
-    try {
+    try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
       perpetualTaskResponse =
           perpetualTaskExecutor.runOnce(taskId, params, HTimestamps.toInstant(context.getHeartbeatTimestamp()));
     } catch (UncheckedTimeoutException tex) {
