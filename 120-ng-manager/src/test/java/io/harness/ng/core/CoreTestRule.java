@@ -29,6 +29,8 @@ public class CoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(mongoTypeModule(annotations));
     modules.add(new CoreModule());
     modules.add(new PersistenceTestModule());
+    modules.add(new SecretManagementModule(
+        SecretManagerClientConfig.builder().baseUrl("http://localhost:8080/").serviceSecret("test_secret").build()));
     return modules;
   }
 

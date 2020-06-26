@@ -5,20 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
-
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProjectDTO {
-  String id;
-  String accountId;
-  String orgId;
-  String identifier;
+public class SecretDTO {
   String name;
-  String color;
-  String purpose;
-  String description;
-  List<String> owners;
-  List<String> tags;
 }

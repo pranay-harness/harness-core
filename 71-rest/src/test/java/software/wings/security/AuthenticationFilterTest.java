@@ -1,9 +1,11 @@
 package software.wings.security;
 
+import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -18,6 +20,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
+import static software.wings.security.AuthenticationFilter.NEXT_GEN_MANAGER_PREFIX;
 import static software.wings.security.AuthenticationFilter.USER_IDENTITY_HEADER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -36,6 +39,8 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
+import software.wings.resources.AccountResource;
+import software.wings.resources.secretsmanagement.NGSecretsResource;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
@@ -44,17 +49,21 @@ import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashMap;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 public class AuthenticationFilterTest extends CategoryTest {
+  private ResourceInfo resourceInfo = mock(ResourceInfo.class);
   @Mock MainConfiguration configuration = mock(MainConfiguration.class);
   @Mock AuthService authService = mock(AuthService.class);
   @Mock UserService userService = mock(UserService.class);
@@ -160,6 +169,7 @@ public class AuthenticationFilterTest extends CategoryTest {
     doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
     doReturn(false).when(authenticationFilter).delegateAPI();
     doReturn(false).when(authenticationFilter).isAdminPortalRequest();
+    doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
     doReturn(true).when(authenticationFilter).identityServiceAPI();
     authenticationFilter.filter(context);
     assertThat(context.getSecurityContext().isSecure()).isTrue();
@@ -192,6 +202,7 @@ public class AuthenticationFilterTest extends CategoryTest {
     doReturn(false).when(authenticationFilter).delegateAPI();
     doReturn(false).when(authenticationFilter).identityServiceAPI();
     doReturn(false).when(authenticationFilter).isAdminPortalRequest();
+    doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
     doReturn(true).when(authenticationFilter).isAuthenticatedByIdentitySvc(any(ContainerRequestContext.class));
     User user = mock(User.class);
     doReturn(user).when(userService).getUserFromCacheOrDB("userId");
@@ -258,6 +269,7 @@ public class AuthenticationFilterTest extends CategoryTest {
       doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
       doReturn(false).when(authenticationFilter).identityServiceAPI();
       doReturn(false).when(authenticationFilter).isAdminPortalRequest();
+      doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
       when(authService.validateToken(anyString())).thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
       authenticationFilter.filter(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -278,6 +290,7 @@ public class AuthenticationFilterTest extends CategoryTest {
       doReturn(false).when(authenticationFilter).externalFacingAPI();
       doReturn(false).when(authenticationFilter).identityServiceAPI();
       doReturn(false).when(authenticationFilter).isAdminPortalRequest();
+      doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
       AuthToken authToken = new AuthToken(ACCOUNT_ID, "testUser", 0L);
       authToken.setUser(mock(User.class));
       when(authService.validateToken(anyString())).thenReturn(authToken);
@@ -298,10 +311,59 @@ public class AuthenticationFilterTest extends CategoryTest {
       doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
       doReturn(false).when(authenticationFilter).externalFacingAPI();
       doReturn(false).when(authenticationFilter).isAdminPortalRequest();
+      doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
       doReturn(false).when(authenticationFilter).identityServiceAPI();
       authenticationFilter.filter(context);
     } catch (WingsException e) {
       assertThatExceptionOfType(WingsException.class);
+    }
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testIsNextGenAuthorizationValid_For_NextGenAuthorization() {
+    when(secretManager.verifyJWTToken(anyString(), eq(SecretManager.JWT_CATEGORY.NEXT_GEN_MANAGER_SECRET)))
+        .thenReturn(new HashMap<>());
+    when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn(NEXT_GEN_MANAGER_PREFIX);
+    boolean isAuthorizationValid = authenticationFilter.isNextGenAuthorizationValid(context);
+    assertThat(isAuthorizationValid).isTrue();
+
+    when(secretManager.verifyJWTToken(anyString(), eq(SecretManager.JWT_CATEGORY.NEXT_GEN_MANAGER_SECRET)))
+        .thenThrow(new WingsException(INVALID_CREDENTIAL));
+    try {
+      isAuthorizationValid = authenticationFilter.isNextGenAuthorizationValid(context);
+    } catch (WingsException ex) {
+      isAuthorizationValid = false;
+      assertThat(ex.getCode()).isEqualTo(INVALID_CREDENTIAL);
+    }
+    assertThat(isAuthorizationValid).isFalse();
+  }
+
+  @Test
+  @Owner(developers = VIKAS)
+  @Category(UnitTests.class)
+  public void testIsNextGenManagerRequest_For_NextGenAuthorization() {
+    Class clazz = NGSecretsResource.class;
+    when(resourceInfo.getResourceClass()).thenReturn(clazz);
+    when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
+
+    boolean isAuthorizationValid = authenticationFilter.isNextGenManagerRequest(resourceInfo);
+    assertThat(isAuthorizationValid).isTrue();
+
+    clazz = AccountResource.class;
+    when(resourceInfo.getResourceClass()).thenReturn(clazz);
+
+    isAuthorizationValid = authenticationFilter.isNextGenManagerRequest(resourceInfo);
+    assertThat(isAuthorizationValid).isFalse();
+  }
+
+  private Method getMockResourceMethod() {
+    Class mockClass = NGSecretsResource.class;
+    try {
+      return mockClass.getMethod("get", String.class, String.class, String.class);
+    } catch (NoSuchMethodException e) {
+      return null;
     }
   }
 }

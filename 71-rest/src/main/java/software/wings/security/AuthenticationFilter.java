@@ -33,6 +33,7 @@ import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.annotations.AdminPortalAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
+import software.wings.security.annotations.NextGenManagerAuth;
 import software.wings.security.annotations.ScimAPI;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
@@ -61,6 +62,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   @VisibleForTesting public static final String USER_IDENTITY_HEADER = "X-Identity-User";
   public static final String IDENTITY_SERVICE_PREFIX = "IdentityService ";
   public static final String ADMIN_PORTAL_PREFIX = "AdminPortal ";
+  public static final String NEXT_GEN_MANAGER_PREFIX = "NextGenManager ";
   private static final int NUM_MANAGERS = 3;
 
   @Context private ResourceInfo resourceInfo;
@@ -151,6 +153,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return;
     }
 
+    if (isNextGenManagerRequest(resourceInfo) && isNextGenAuthorizationValid(containerRequestContext)) {
+      return;
+    }
+
     if (isAuthenticatedByIdentitySvc(containerRequestContext)) {
       String identityServiceToken =
           substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
@@ -200,6 +206,21 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   protected boolean isAdminPortalRequest() {
     return resourceInfo.getResourceMethod().getAnnotation(AdminPortalAuth.class) != null
         || resourceInfo.getResourceClass().getAnnotation(AdminPortalAuth.class) != null;
+  }
+
+  @VisibleForTesting
+  boolean isNextGenManagerRequest(ResourceInfo requestResourceInfo) {
+    return requestResourceInfo.getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
+        || requestResourceInfo.getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+  }
+
+  @VisibleForTesting
+  boolean isNextGenAuthorizationValid(ContainerRequestContext containerRequestContext) {
+    String nextGenManagerToken =
+        substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), NEXT_GEN_MANAGER_PREFIX)
+            .trim();
+    secretManager.verifyJWTToken(nextGenManagerToken, JWT_CATEGORY.NEXT_GEN_MANAGER_SECRET);
+    return true;
   }
 
   private boolean checkIfBearerTokenAndValidate(String authHeader, ContainerRequestContext containerRequestContext) {
