@@ -1,6 +1,6 @@
 KEYS=`git log --pretty=oneline --abbrev-commit |\
       awk "/${PREVIOUS_CUT_COMMIT_MESSAGE}/ {exit} {print}" |\
-      grep -o -iE '(CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|DEL|DOC|DX|ER|PL|SEC|SWAT)-[0-9]+' | sort | uniq`
+      grep -o -iE '(CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|OPS|PL|SEC|SWAT)-[0-9]+' | sort | uniq`
 
 if [ "${PURPOSE}" = "saas" ]
 then
