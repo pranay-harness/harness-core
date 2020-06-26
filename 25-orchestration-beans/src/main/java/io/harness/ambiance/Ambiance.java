@@ -44,6 +44,10 @@ public class Ambiance {
   }
 
   public AutoLogContext autoLogContext() {
+    return new AutoLogContext(logContextMap(), OVERRIDE_NESTS);
+  }
+
+  public Map<String, String> logContextMap() {
     Map<String, String> logContext = setupAbstractions == null ? new HashMap<>() : new HashMap<>(setupAbstractions);
     logContext.put(AmbianceKeys.planExecutionId, planExecutionId);
     levels.forEach(level -> {
@@ -51,9 +55,7 @@ public class Ambiance {
       logContext.put("runtimeId", level.getRuntimeId());
       logContext.put("setupId", level.getSetupId());
     });
-
-    // Execution engine starts
-    return new AutoLogContext(logContext, OVERRIDE_NESTS);
+    return logContext;
   }
 
   public void addLevel(@Valid @NotNull Level level) {

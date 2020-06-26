@@ -11,15 +11,19 @@ import com.google.inject.Singleton;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.execution.events.OrchestrationEventHandler;
+import io.harness.execution.events.OrchestrationEventType;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.govern.DependencyModule;
 import io.harness.references.RefType;
 import io.harness.registries.adviser.AdviserRegistry;
+import io.harness.registries.events.OrchestrationEventHandlerRegistry;
 import io.harness.registries.facilitator.FacilitatorRegistry;
 import io.harness.registries.registrar.AdviserRegistrar;
 import io.harness.registries.registrar.EngineRegistrar;
 import io.harness.registries.registrar.FacilitatorRegistrar;
+import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.registries.registrar.ResolverRegistrar;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.registries.resolver.ResolverRegistry;
@@ -54,12 +58,14 @@ public class RegistryModule extends DependencyModule {
           .put(RegistryType.ADVISER, AdviserRegistrar.class)
           .put(RegistryType.FACILITATOR, FacilitatorRegistrar.class)
           .put(RegistryType.RESOLVER, ResolverRegistrar.class)
+          .put(RegistryType.ORCHESTRATION_EVENT, OrchestrationEventHandlerRegistrar.class)
           .build();
 
   private static final Set stepClasses = collectClasses(RegistryType.STEP);
   private static final Set adviserClasses = collectClasses(RegistryType.ADVISER);
   private static final Set facilitatorClasses = collectClasses(RegistryType.FACILITATOR);
   private static final Set resolverClasses = collectClasses(RegistryType.RESOLVER);
+  private static final Set eventHandlerClasses = collectClasses(RegistryType.ORCHESTRATION_EVENT);
 
   private static synchronized Set collectClasses(RegistryType registryType) {
     Set classes = new ConcurrentHashSet<>();
@@ -81,11 +87,11 @@ public class RegistryModule extends DependencyModule {
   @Singleton
   StepRegistry providesStateRegistry(Injector injector) {
     StepRegistry stepRegistry = new StepRegistry();
+    injector.injectMembers(stepRegistry);
     stepClasses.forEach(pair -> {
       Pair<StepType, Class<? extends Step>> statePair = (Pair<StepType, Class<? extends Step>>) pair;
       stepRegistry.register(statePair.getLeft(), statePair.getRight());
     });
-    injector.injectMembers(stepRegistry);
     return stepRegistry;
   }
 
@@ -93,11 +99,11 @@ public class RegistryModule extends DependencyModule {
   @Singleton
   AdviserRegistry providesAdviserRegistry(Injector injector) {
     AdviserRegistry adviserRegistry = new AdviserRegistry();
+    injector.injectMembers(adviserRegistry);
     adviserClasses.forEach(pair -> {
       Pair<AdviserType, Class<? extends Adviser>> adviserPair = (Pair<AdviserType, Class<? extends Adviser>>) pair;
       adviserRegistry.register(adviserPair.getLeft(), adviserPair.getRight());
     });
-    injector.injectMembers(adviserRegistry);
     return adviserRegistry;
   }
 
@@ -105,11 +111,11 @@ public class RegistryModule extends DependencyModule {
   @Singleton
   ResolverRegistry providesResolverRegistry(Injector injector) {
     ResolverRegistry resolverRegistry = new ResolverRegistry();
+    injector.injectMembers(resolverRegistry);
     resolverClasses.forEach(pair -> {
       Pair<RefType, Class<? extends Resolver<?>>> statePair = (Pair<RefType, Class<? extends Resolver<?>>>) pair;
       resolverRegistry.register(statePair.getLeft(), statePair.getRight());
     });
-    injector.injectMembers(resolverRegistry);
     return resolverRegistry;
   }
 
@@ -117,13 +123,26 @@ public class RegistryModule extends DependencyModule {
   @Singleton
   FacilitatorRegistry providesFacilitatorRegistry(Injector injector) {
     FacilitatorRegistry facilitatorRegistry = new FacilitatorRegistry();
+    injector.injectMembers(facilitatorRegistry);
     facilitatorClasses.forEach(pair -> {
       Pair<FacilitatorType, Class<? extends Facilitator>> statePair =
           (Pair<FacilitatorType, Class<? extends Facilitator>>) pair;
       facilitatorRegistry.register(statePair.getLeft(), statePair.getRight());
     });
-    injector.injectMembers(facilitatorRegistry);
     return facilitatorRegistry;
+  }
+
+  @Provides
+  @Singleton
+  OrchestrationEventHandlerRegistry providesEventHandlerRegistry(Injector injector) {
+    OrchestrationEventHandlerRegistry handlerRegistry = new OrchestrationEventHandlerRegistry();
+    injector.injectMembers(handlerRegistry);
+    eventHandlerClasses.forEach(pair -> {
+      Pair<OrchestrationEventType, Class<? extends OrchestrationEventHandler>> eventHandlerPair =
+          (Pair<OrchestrationEventType, Class<? extends OrchestrationEventHandler>>) pair;
+      handlerRegistry.register(eventHandlerPair.getLeft(), eventHandlerPair.getRight());
+    });
+    return handlerRegistry;
   }
 
   @Override
