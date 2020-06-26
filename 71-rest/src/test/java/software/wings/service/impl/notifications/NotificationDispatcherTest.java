@@ -2,6 +2,8 @@ package software.wings.service.impl.notifications;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
@@ -20,6 +22,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -34,6 +37,7 @@ import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.UserGroup;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
+import software.wings.processingcontrollers.NotificationProcessingController;
 import software.wings.service.intfc.NotificationSetupService;
 
 import java.util.Collections;
@@ -92,7 +96,7 @@ public class NotificationDispatcherTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
-  public void testUserGroupBasedDispatcher() {
+  public void testUserGroupBasedDispatcher() throws IllegalAccessException {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
 
     SlackNotificationSetting slackConfig = SlackNotificationSetting.emptyConfig();
@@ -119,6 +123,10 @@ public class NotificationDispatcherTest extends WingsBaseTest {
                                                    WORKFLOW_NAME, "ENV_NAME", ENV_NAME, "DATE", "DATE"))
                                                .build();
 
+    NotificationProcessingController notificationProcessingController = mock(NotificationProcessingController.class);
+    when(notificationProcessingController.shouldProcessAccount(anyString())).thenReturn(true);
+    FieldUtils.writeField(
+        userGroupNotificationDispatcher, "notificationProcessingController", notificationProcessingController, true);
     List<Notification> notifications = Collections.singletonList(notification);
     userGroupNotificationDispatcher.dispatch(notifications, userGroup);
     verify(emailDispatcher).dispatch(notifications, toAddresses);

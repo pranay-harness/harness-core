@@ -22,6 +22,7 @@ import software.wings.beans.User;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
+import software.wings.processingcontrollers.NotificationProcessingController;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.UserService;
@@ -46,10 +47,17 @@ public class UserGroupBasedDispatcher implements NotificationDispatcher<UserGrou
   @Inject private UserService userService;
   @Inject private AccountService accountService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private NotificationProcessingController notificationProcessingController;
 
   @Override
   public void dispatch(List<Notification> notifications, UserGroup userGroup) {
     if (isEmpty(notifications)) {
+      return;
+    }
+
+    if (!notificationProcessingController.shouldProcessAccount(userGroup.getAccountId())) {
+      log.info("User Group's {} account {} is disabled. Notifications cannot be dispatched", userGroup.getUuid(),
+          userGroup.getAccountId());
       return;
     }
 
