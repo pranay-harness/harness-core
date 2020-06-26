@@ -35,3 +35,9 @@ module "event-service" {
   source = "./event-service"
   deployment = var.deployment
 }
+
+module "batch-processing" {
+  source = "./batch-processing"
+  deployment = var.deployment
+  projectId = var.projectId
+}
