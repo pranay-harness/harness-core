@@ -684,12 +684,19 @@ public class KubernetesResource {
   }
 
   public boolean isDirectApply() {
-    String isDirectApply = (String) this.getField("metadata.annotations." + encodeDot(HarnessAnnotations.directApply));
-    return StringUtils.equalsIgnoreCase(isDirectApply, "true");
+    return hasMetadataAnnotation(HarnessAnnotations.directApply);
+  }
+
+  public boolean isManagedWorkload() {
+    return hasMetadataAnnotation(HarnessAnnotations.managedWorkload);
   }
 
   public boolean isManaged() {
-    String isManaged = (String) this.getField("metadata.annotations." + encodeDot(HarnessAnnotations.managed));
+    return hasMetadataAnnotation(HarnessAnnotations.managed);
+  }
+
+  private boolean hasMetadataAnnotation(String harnessAnnotation) {
+    String isManaged = (String) this.getField("metadata.annotations." + encodeDot(harnessAnnotation));
     return StringUtils.equalsIgnoreCase(isManaged, "true");
   }
 

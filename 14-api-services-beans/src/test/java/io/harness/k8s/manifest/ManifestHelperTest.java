@@ -8,6 +8,7 @@ import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.manifest.ManifestHelper.validateValuesFileContents;
 import static io.harness.k8s.manifest.ObjectYamlUtils.toYaml;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static java.util.Arrays.asList;
@@ -334,6 +335,125 @@ public class ManifestHelperTest extends CategoryTest {
         asList(deployment, statefulSet, daemonSet, deploymentDirectApply.get(0)));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
+
+    KubernetesResource deploymentManagedWorkload = ManifestHelper
+                                                       .processYaml("apiVersion: apps/v1\n"
+                                                           + "kind: Deployment\n"
+                                                           + "metadata:\n"
+                                                           + "  name: deployment\n"
+                                                           + "  annotations:\n"
+                                                           + "    harness.io/managed-workload: true\n"
+                                                           + "spec:\n"
+                                                           + "  replicas: 1")
+                                                       .get(0);
+
+    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(
+        asList(deployment, statefulSet, daemonSet, deploymentManagedWorkload));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetManagedWorkloads() {
+    KubernetesResource deployment = KubernetesResource.builder()
+                                        .resourceId(KubernetesResourceId.builder().kind(Kind.Deployment.name()).build())
+                                        .build();
+
+    KubernetesResource managedDeployment = ManifestHelper
+                                               .processYaml("apiVersion: apps/v1\n"
+                                                   + "kind: Deployment\n"
+                                                   + "metadata:\n"
+                                                   + "  name: deployment\n"
+                                                   + "  annotations:\n"
+                                                   + "    harness.io/managed-workload: true\n"
+                                                   + "spec:\n"
+                                                   + "  replicas: 1")
+                                               .get(0);
+
+    List<KubernetesResource> kubernetesResources =
+        ManifestHelper.getManagedWorkloads(asList(deployment, managedDeployment));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(managedDeployment);
+
+    KubernetesResource deploymentConfig =
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder().kind(Kind.DeploymentConfig.name()).build())
+            .build();
+
+    KubernetesResource managedDeploymentConfig = ManifestHelper
+                                                     .processYaml("apiVersion: apps/v1\n"
+                                                         + "kind: DeploymentConfig\n"
+                                                         + "metadata:\n"
+                                                         + "  name: deployment_config\n"
+                                                         + "  annotations:\n"
+                                                         + "    harness.io/managed-workload: true\n"
+                                                         + "spec:\n"
+                                                         + "  replicas: 1")
+                                                     .get(0);
+
+    kubernetesResources =
+        ManifestHelper.getManagedWorkloads(asList(managedDeployment, deploymentConfig, managedDeploymentConfig));
+    assertThat(kubernetesResources.size()).isEqualTo(2);
+    assertThat(kubernetesResources.containsAll(ImmutableList.of(managedDeployment, managedDeploymentConfig))).isTrue();
+
+    KubernetesResource statefulSet =
+        KubernetesResource.builder()
+            .resourceId(KubernetesResourceId.builder().kind(Kind.StatefulSet.name()).build())
+            .build();
+
+    KubernetesResource managedStatefulSet = ManifestHelper
+                                                .processYaml("apiVersion: apps/v1\n"
+                                                    + "kind: StatefulSet\n"
+                                                    + "metadata:\n"
+                                                    + "  name: stateful_set\n"
+                                                    + "  annotations:\n"
+                                                    + "    harness.io/managed-workload: true\n"
+                                                    + "spec:\n"
+                                                    + "  replicas: 1")
+                                                .get(0);
+
+    kubernetesResources = ManifestHelper.getManagedWorkloads(asList(statefulSet, managedStatefulSet));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(managedStatefulSet);
+
+    KubernetesResource daemonSet = KubernetesResource.builder()
+                                       .resourceId(KubernetesResourceId.builder().kind(Kind.DaemonSet.name()).build())
+                                       .build();
+
+    KubernetesResource managedDaemonSet = ManifestHelper
+                                              .processYaml("apiVersion: apps/v1\n"
+                                                  + "kind: DaemonSet\n"
+                                                  + "metadata:\n"
+                                                  + "  name: daemon_set\n"
+                                                  + "  annotations:\n"
+                                                  + "    harness.io/managed-workload: true\n"
+                                                  + "spec:\n"
+                                                  + "  replicas: 1")
+                                              .get(0);
+
+    kubernetesResources =
+        ManifestHelper.getManagedWorkloads(asList(deployment, statefulSet, daemonSet, managedDaemonSet));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(managedDaemonSet);
+
+    KubernetesResource managedDeploymentDirectAppy = ManifestHelper
+                                                         .processYaml("apiVersion: apps/v1\n"
+                                                             + "kind: Deployment\n"
+                                                             + "metadata:\n"
+                                                             + "  name: deployment\n"
+                                                             + "  annotations:\n"
+                                                             + "    harness.io/managed-workload: true\n"
+                                                             + "    harness.io/direct-apply: true\n"
+                                                             + "spec:\n"
+                                                             + "  replicas: 1")
+                                                         .get(0);
+
+    kubernetesResources = ManifestHelper.getManagedWorkloads(
+        asList(managedDeployment, statefulSet, daemonSet, managedDeploymentDirectAppy));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(managedDeployment);
   }
 
   @Test

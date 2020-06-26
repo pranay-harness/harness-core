@@ -6,4 +6,5 @@ public interface HarnessAnnotations {
   String primaryService = "harness.io/primary-service";
   String stageService = "harness.io/stage-service";
   String managed = "harness.io/managed";
+  String managedWorkload = "harness.io/managed-workload";
 }
