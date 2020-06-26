@@ -8,6 +8,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 @Value
 @Builder
 public class QLK8sLabelFilter {
+  private QLIdFilter accountId;
   private QLIdFilter cluster;
   private QLIdFilter namespace;
   private QLIdFilter workloadName;
