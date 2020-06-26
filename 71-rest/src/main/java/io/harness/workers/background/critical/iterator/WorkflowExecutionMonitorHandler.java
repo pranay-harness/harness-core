@@ -2,6 +2,7 @@ package io.harness.workers.background.critical.iterator;
 
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
+import static io.harness.beans.ExecutionStatus.PREPARING;
 import static io.harness.beans.ExecutionStatus.flowingStatuses;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.interrupts.ExecutionInterruptType.MARK_EXPIRED;
@@ -10,6 +11,7 @@ import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anE
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
@@ -19,11 +21,16 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
@@ -42,8 +49,10 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject private ExecutorService executorService;
   @Inject private StateMachineExecutor stateMachineExecutor;
+  @Inject private FeatureFlagService featureFlagService;
 
   private static final Duration INACTIVITY_TIMEOUT = Duration.ofSeconds(30);
+  private static final Duration EXPIRE_THRESHOLD = Duration.ofMinutes(10);
 
   public void registerIterators() {
     PumpExecutorOptions options = PumpExecutorOptions.builder()
@@ -66,6 +75,14 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
   @Override
   public void handle(WorkflowExecution entity) {
     try {
+      // logic to expire workflowExecution if its stuck in preparing state for more than 10 mins
+      if (featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, entity.getAccountId())) {
+        if (entity.getStatus() == PREPARING
+            && System.currentTimeMillis() - entity.getStartTs() > EXPIRE_THRESHOLD.toMillis()) {
+          updateStartStatusAndUnsetMessage(entity.getAppId(), entity.getUuid(), EXPIRED);
+          return;
+        }
+      }
       boolean hasActiveStates = false;
       try (HIterator<StateExecutionInstance> stateExecutionInstances =
                new HIterator<>(wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -140,5 +157,19 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
     } catch (Exception exception) {
       logger.error("Error in monitoring the workflow execution {}", entity.getUuid());
     }
+  }
+
+  private void updateStartStatusAndUnsetMessage(String appId, String workflowExecutionId, ExecutionStatus status) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.appId, appId)
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
+                                         .filter(WorkflowExecutionKeys.status, PREPARING);
+
+    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                        .set(WorkflowExecutionKeys.status, status)
+                                                        .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis())
+                                                        .unset(WorkflowExecutionKeys.message);
+
+    wingsPersistence.findAndModify(query, updateOps, HPersistence.returnNewOptions);
   }
 }
