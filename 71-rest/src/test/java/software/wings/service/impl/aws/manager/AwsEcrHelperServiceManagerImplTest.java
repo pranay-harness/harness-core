@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -31,6 +32,9 @@ public class AwsEcrHelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsEcrGetAuthTokenResponse.builder().ecrAuthToken("token").build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     String token = service.getAmazonEcrAuthToken(AwsConfig.builder().build(), emptyList(), "aws", "us-east-1", APP_ID);
     assertThat(token).isEqualTo("token");
   }
@@ -45,6 +49,9 @@ public class AwsEcrHelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsEcrGetImageUrlResponse.builder().ecrImageUrl("url").build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     String url = service.getEcrImageUrl(AwsConfig.builder().build(), emptyList(), "us-east-1", "img", APP_ID);
     assertThat(url).isEqualTo("url");
   }

@@ -6,6 +6,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -37,6 +38,9 @@ public class AwsRoute53HelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<AwsRoute53HostedZoneData> data =
         service.listHostedZones(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(data).isNotNull();

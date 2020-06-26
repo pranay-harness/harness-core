@@ -9,7 +9,6 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -41,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 public class AwsCodeDeployHelperServiceManagerImpl implements AwsCodeDeployHelperServiceManager {
   private static final long TIME_OUT_IN_MINUTES = 2;
   @Inject private DelegateService delegateService;
+  @Inject private AwsHelperServiceManager helper;
 
   @Override
   public List<String> listApplications(
@@ -127,11 +127,10 @@ public class AwsCodeDeployHelperServiceManagerImpl implements AwsCodeDeployHelpe
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
-      if (notifyResponseData instanceof ErrorNotifyResponseData) {
-        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
-      }
+      helper.validateDelegateSuccessForSyncTask(notifyResponseData);
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }
   }

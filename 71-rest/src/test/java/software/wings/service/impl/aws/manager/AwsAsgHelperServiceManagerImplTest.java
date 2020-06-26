@@ -6,6 +6,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -37,6 +38,9 @@ public class AwsAsgHelperServiceManagerImplTest extends CategoryTest {
     AwsAsgHelperServiceManagerImpl service = spy(AwsAsgHelperServiceManagerImpl.class);
     DelegateService mockDelegateService = mock(DelegateService.class);
     on(service).set("delegateService", mockDelegateService);
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     doReturn(AwsAsgListAllNamesResponse.builder().aSgNames(asList("foo", "bar")).build())
         .when(mockDelegateService)
         .executeTask(any());
@@ -55,6 +59,9 @@ public class AwsAsgHelperServiceManagerImplTest extends CategoryTest {
     AwsAsgHelperServiceManagerImpl service = spy(AwsAsgHelperServiceManagerImpl.class);
     DelegateService mockDelegateService = mock(DelegateService.class);
     on(service).set("delegateService", mockDelegateService);
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     doReturn(AwsAsgListInstancesResponse.builder()
                  .instances(asList(new Instance().withInstanceId("id-1234"), new Instance().withInstanceId("id-2345")))
                  .build())
@@ -76,6 +83,9 @@ public class AwsAsgHelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsAsgListDesiredCapacitiesResponse.builder().capacities(ImmutableMap.of("asg_1", 1, "asg_2", 1)).build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     Map<String, Integer> capacities = service.getDesiredCapacitiesOfAsgs(
         AwsConfig.builder().build(), emptyList(), "us-east-1", asList("asg_1", "asg_2"), "appId");
     assertThat(capacities).isNotNull();
@@ -96,6 +106,9 @@ public class AwsAsgHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     AwsAsgGetRunningCountData data = service.getCurrentlyRunningInstanceCount(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "inf-id", "appId");
     assertThat(data).isNotNull();

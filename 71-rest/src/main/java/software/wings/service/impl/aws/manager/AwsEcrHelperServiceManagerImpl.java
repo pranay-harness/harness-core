@@ -10,7 +10,6 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -36,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 public class AwsEcrHelperServiceManagerImpl implements AwsEcrHelperServiceManager {
   private static final long TIME_OUT_IN_MINUTES = 2;
   @Inject private DelegateService delegateService;
+  @Inject private AwsHelperServiceManager helper;
 
   @Override
   public String getAmazonEcrAuthToken(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
@@ -80,11 +80,10 @@ public class AwsEcrHelperServiceManagerImpl implements AwsEcrHelperServiceManage
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
-      if (notifyResponseData instanceof ErrorNotifyResponseData) {
-        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
-      }
+      helper.validateDelegateSuccessForSyncTask(notifyResponseData);
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }
   }

@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -45,6 +46,9 @@ public class AwsEc2HelperServiceManagerImplTest extends CategoryTest {
     AwsEc2HelperServiceManagerImpl service = spy(AwsEc2HelperServiceManagerImpl.class);
     DelegateService mockDelegateService = mock(DelegateService.class);
     on(service).set("delegateService", mockDelegateService);
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     doReturn(AwsEc2ValidateCredentialsResponse.builder().valid(false).build())
         .when(mockDelegateService)
         .executeTask(any());
@@ -62,6 +66,9 @@ public class AwsEc2HelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsEc2ListRegionsResponse.builder().regions(asList("us-east-1", "us-east-2")).build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<String> regions = service.listRegions(AwsConfig.builder().build(), emptyList(), APP_ID);
     assertThat(regions).isNotNull();
     assertThat(regions.size()).isEqualTo(2);
@@ -84,6 +91,9 @@ public class AwsEc2HelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<AwsVPC> vpcs = service.listVPCs(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(vpcs).isNotNull();
     assertThat(vpcs.size()).isEqualTo(2);
@@ -103,6 +113,9 @@ public class AwsEc2HelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<AwsSubnet> subnets =
         service.listSubnets(AwsConfig.builder().build(), emptyList(), "us-east-1", singletonList("vpc-id"), APP_ID);
     assertThat(subnets).isNotNull();
@@ -124,6 +137,9 @@ public class AwsEc2HelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<AwsSecurityGroup> groups =
         service.listSGs(AwsConfig.builder().build(), emptyList(), "us-east-1", singletonList("vpc-id"), APP_ID);
     assertThat(groups).isNotNull();
@@ -142,6 +158,9 @@ public class AwsEc2HelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsEc2ListTagsResponse.builder().tags(newHashSet("tag-0", "tag-1")).build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     Set<String> tags = service.listTags(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(tags).isNotNull();
     assertThat(tags.size()).isEqualTo(2);
@@ -159,6 +178,9 @@ public class AwsEc2HelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<Instance> instances =
         service.listEc2Instances(AwsConfig.builder().build(), emptyList(), "us-east-1", emptyList(), APP_ID);
     assertThat(instances).isNotNull();
