@@ -720,7 +720,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       setSwitchStorage(true);
     } else if (StringUtils.equals(message, USE_STORAGE_PROXY)) {
       setSwitchStorage(false);
-    } else if (StringUtils.equals(message, UPDATE_PERPETUAL_TASK + delegateId)) {
+    } else if (StringUtils.contains(message, UPDATE_PERPETUAL_TASK)) {
       updateTasks();
     } else if (StringUtils.startsWith(message, MIGRATE)) {
       migrate(StringUtils.substringAfter(message, MIGRATE));

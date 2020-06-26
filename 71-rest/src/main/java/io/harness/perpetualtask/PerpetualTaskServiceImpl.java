@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.eclipse.jetty.util.ConcurrentHashSet;
+import software.wings.beans.PerpetualTaskBroadcastEvent;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
@@ -63,10 +64,12 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
       sendingHashSet = new HashSet<>(broadcastAggregateSet);
       broadcastAggregateSet.clear();
     }
-
     sendingHashSet.forEach(setEntry
         -> broadcasterFactory.lookup(DelegateTaskBroadcastHelper.STREAM_DELEGATE_PATH + setEntry.getLeft(), true)
-               .broadcast(UPDATE_PERPETUAL_TASK + setEntry.getRight()));
+               .broadcast(PerpetualTaskBroadcastEvent.builder()
+                              .eventType(UPDATE_PERPETUAL_TASK)
+                              .broadcastDelegateId(setEntry.getRight())
+                              .build()));
   }
 
   @Override
