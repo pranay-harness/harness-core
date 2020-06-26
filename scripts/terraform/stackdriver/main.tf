@@ -41,3 +41,8 @@ module "batch-processing" {
   deployment = var.deployment
   projectId = var.projectId
 }
+  
+module "mongo-dashboards" {
+  source = "./mongo"
+  deployment = var.deployment
+}
