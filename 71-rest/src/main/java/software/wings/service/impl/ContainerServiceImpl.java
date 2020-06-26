@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.KubernetesSetupCommandUnit.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -38,6 +39,7 @@ import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.helpers.ext.azure.AzureHelperService;
+import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.service.intfc.ContainerService;
 import software.wings.settings.SettingValue;
 
@@ -117,43 +119,60 @@ public class ContainerServiceImpl implements ContainerService {
       logger.info("Kubernetes cluster config for account {}, controller: {}", accountId, containerServiceName);
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       notNullCheck("KubernetesConfig", kubernetesConfig);
-      HasMetadata controller = kubernetesContainerService.getController(
-          kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceName);
-      if (controller != null) {
-        logger.info("Got controller {} for account {}", controller.getMetadata().getName(), accountId);
-        Map<String, String> labels =
-            kubernetesContainerService.getPodTemplateSpec(controller).getMetadata().getLabels();
-        Map<String, String> serviceLabels = new HashMap<>(labels);
-        serviceLabels.remove(HARNESS_KUBERNETES_REVISION_LABEL_KEY);
-        List<io.fabric8.kubernetes.api.model.Service> services = kubernetesContainerService.getServices(
-            kubernetesConfig, containerServiceParams.getEncryptionDetails(), serviceLabels);
-        String serviceName = services.isEmpty() ? "None" : services.get(0).getMetadata().getName();
-        logger.info("Got Service {} for controller {} for account {}", serviceName, containerServiceName, accountId);
-        List<Pod> pods =
-            kubernetesContainerService.getPods(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
-        logger.info("Got {} pods for controller {} for account {}", pods != null ? pods.size() : 0,
-            containerServiceName, accountId);
-        if (isEmpty(pods)) {
-          return result;
-        }
-
-        for (Pod pod : pods) {
-          String phase = pod.getStatus().getPhase();
-          logger.info("Phase: {} for pod {} for controller {} for account {}", pod.getStatus().getPhase(),
-              pod.getMetadata().getName(), containerServiceName, accountId);
-          if ("Running".equals(phase)) {
-            result.add(KubernetesContainerInfo.builder()
-                           .clusterName(containerServiceParams.getClusterName())
-                           .podName(pod.getMetadata().getName())
-                           .ip(pod.getStatus().getPodIP())
-                           .controllerName(containerServiceName)
-                           .serviceName(serviceName)
-                           .namespace(containerServiceParams.getNamespace())
-                           .build());
+      if (isNotEmpty(containerServiceName)) {
+        HasMetadata controller = kubernetesContainerService.getController(
+            kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceName);
+        if (controller != null) {
+          logger.info("Got controller {} for account {}", controller.getMetadata().getName(), accountId);
+          Map<String, String> labels =
+              kubernetesContainerService.getPodTemplateSpec(controller).getMetadata().getLabels();
+          Map<String, String> serviceLabels = new HashMap<>(labels);
+          serviceLabels.remove(HARNESS_KUBERNETES_REVISION_LABEL_KEY);
+          List<io.fabric8.kubernetes.api.model.Service> services = kubernetesContainerService.getServices(
+              kubernetesConfig, containerServiceParams.getEncryptionDetails(), serviceLabels);
+          String serviceName = services.isEmpty() ? "None" : services.get(0).getMetadata().getName();
+          logger.info("Got Service {} for controller {} for account {}", serviceName, containerServiceName, accountId);
+          List<Pod> pods = kubernetesContainerService.getPods(
+              kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
+          logger.info("Got {} pods for controller {} for account {}", pods != null ? pods.size() : 0,
+              containerServiceName, accountId);
+          if (isEmpty(pods)) {
+            return result;
           }
+
+          for (Pod pod : pods) {
+            String phase = pod.getStatus().getPhase();
+            logger.info("Phase: {} for pod {} for controller {} for account {}", pod.getStatus().getPhase(),
+                pod.getMetadata().getName(), containerServiceName, accountId);
+            if ("Running".equals(phase)) {
+              result.add(KubernetesContainerInfo.builder()
+                             .clusterName(containerServiceParams.getClusterName())
+                             .podName(pod.getMetadata().getName())
+                             .ip(pod.getStatus().getPodIP())
+                             .controllerName(containerServiceName)
+                             .serviceName(serviceName)
+                             .namespace(containerServiceParams.getNamespace())
+                             .releaseName(containerServiceParams.getReleaseName())
+                             .build());
+            }
+          }
+        } else {
+          logger.info("Could not get controller {} for account {}", containerServiceName, accountId);
         }
       } else {
-        logger.info("Could not get controller {} for account {}", containerServiceName, accountId);
+        final List<Pod> pods = kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig,
+            containerServiceParams.getEncryptionDetails(), containerServiceParams.getNamespace(),
+            ImmutableMap.of(HelmConstants.HELM_RELEASE_LABEL, containerServiceParams.getReleaseName()));
+        return pods.stream()
+            .map(pod
+                -> KubernetesContainerInfo.builder()
+                       .clusterName(containerServiceParams.getClusterName())
+                       .podName(pod.getMetadata().getName())
+                       .ip(pod.getStatus().getPodIP())
+                       .namespace(containerServiceParams.getNamespace())
+                       .releaseName(containerServiceParams.getReleaseName())
+                       .build())
+            .collect(toList());
       }
     } else if (value instanceof AwsConfig) {
       AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(

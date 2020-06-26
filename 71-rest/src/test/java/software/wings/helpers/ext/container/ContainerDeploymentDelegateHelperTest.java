@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.container;
 
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -27,6 +28,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.client.VersionInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.oidc.model.OidcTokenRequestData;
@@ -42,11 +44,13 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.OidcGrantType;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.oidc.OidcTokenRetriever;
 import software.wings.service.impl.ContainerServiceParams;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -240,5 +244,80 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
         containerDeploymentDelegateHelper.getExistingPodsByLabels(containerServiceParams, kubernetesConfig, labels);
     assertThat(pods).hasSize(1);
     verify(kubernetesContainerService, times(1)).getPods(kubernetesConfig, Collections.emptyList(), labels);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void k8sVersionIsGreaterOrEqualTo116() throws Exception {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
+    ContainerServiceParams containerServiceParams =
+        ContainerServiceParams.builder()
+            .settingAttribute(SettingAttribute.Builder.aSettingAttribute().withValue(kubernetesConfig).build())
+            .encryptionDetails(Collections.emptyList())
+            .build();
+
+    Map<String, String> jsonData = new HashMap<>();
+    jsonData.put("major", "1");
+    jsonData.put("minor", "16");
+    jsonData.put("buildDate", "2020-06-06T10:54:00Z");
+    VersionInfo version = new VersionInfo(jsonData);
+
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
+    when(kubernetesContainerService.getVersion(kubernetesConfig, new ArrayList<>())).thenReturn(version);
+
+    boolean result =
+        containerDeploymentDelegateHelper.isK8sVersion116OrAbove(containerServiceParams, new ExecutionLogCallback());
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void k8sVersionIsGreaterOrEqualTo116WithCharacter() throws Exception {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
+    ContainerServiceParams containerServiceParams =
+        ContainerServiceParams.builder()
+            .settingAttribute(SettingAttribute.Builder.aSettingAttribute().withValue(kubernetesConfig).build())
+            .encryptionDetails(Collections.emptyList())
+            .build();
+
+    Map<String, String> jsonData = new HashMap<>();
+    jsonData.put("major", "1");
+    jsonData.put("minor", "16+144");
+    jsonData.put("buildDate", "2020-06-06T10:54:00Z");
+    VersionInfo version = new VersionInfo(jsonData);
+
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
+    when(kubernetesContainerService.getVersion(kubernetesConfig, new ArrayList<>())).thenReturn(version);
+
+    boolean result =
+        containerDeploymentDelegateHelper.isK8sVersion116OrAbove(containerServiceParams, new ExecutionLogCallback());
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void k8sVersionIsLessThan116() throws Exception {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
+    ContainerServiceParams containerServiceParams =
+        ContainerServiceParams.builder()
+            .settingAttribute(SettingAttribute.Builder.aSettingAttribute().withValue(kubernetesConfig).build())
+            .encryptionDetails(Collections.emptyList())
+            .build();
+
+    Map<String, String> jsonData = new HashMap<>();
+    jsonData.put("major", "1");
+    jsonData.put("minor", "15");
+    jsonData.put("buildDate", "2020-06-06T10:54:00Z");
+    VersionInfo version = new VersionInfo(jsonData);
+
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
+    when(kubernetesContainerService.getVersion(kubernetesConfig, new ArrayList<>())).thenReturn(version);
+
+    boolean result =
+        containerDeploymentDelegateHelper.isK8sVersion116OrAbove(containerServiceParams, new ExecutionLogCallback());
+    assertThat(result).isFalse();
   }
 }

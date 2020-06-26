@@ -23,4 +23,9 @@ public class ContainerSyncResponse implements DelegateTaskNotifyResponseData {
   private List<ContainerInfo> containerInfoList;
   private String errorMessage;
   private CommandExecutionStatus commandExecutionStatus;
+
+  /*
+  This field should help if the containerInfoList is empty to tell which controller has has being scaled down to 0
+   */
+  private String controllerName;
 }

@@ -296,7 +296,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(k8sTaskHelper)
         .doStatusCheckForAllResources(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), anyString(),
-            any(ExecutionLogCallback.class));
+            any(ExecutionLogCallback.class), eq(true));
     Reflect.on(handler).set("workloads",
         asList(KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build(),
             KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build()));
@@ -312,7 +312,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
 
     verify(k8sTaskHelper, times(1))
         .doStatusCheckForAllResources(any(Kubectl.class), captor.capture(), any(K8sDelegateTaskParams.class),
-            anyString(), any(ExecutionLogCallback.class));
+            anyString(), any(ExecutionLogCallback.class), eq(true));
 
     verify(k8sTaskHelper, times(1))
         .describe(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));

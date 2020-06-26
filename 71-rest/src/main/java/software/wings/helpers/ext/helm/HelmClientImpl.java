@@ -395,8 +395,13 @@ public class HelmClientImpl implements HelmClient {
   }
 
   private String getHelmCommandTemplateWithHelmPath(HelmCliCommandType commandType, HelmVersion helmVersion) {
-    String helmPath = helmVersion == HelmVersion.V3 ? k8sGlobalConfigService.getHelmPath(HelmVersion.V3) : "helm";
+    String helmPath = getHelmPath(helmVersion);
     return HelmCommandTemplateFactory.getHelmCommandTemplate(commandType, helmVersion)
         .replace(HelmConstants.HELM_PATH_PLACEHOLDER, helmPath);
+  }
+
+  @Override
+  public String getHelmPath(HelmVersion helmVersion) {
+    return helmVersion == HelmVersion.V3 ? k8sGlobalConfigService.getHelmPath(HelmVersion.V3) : "helm";
   }
 }

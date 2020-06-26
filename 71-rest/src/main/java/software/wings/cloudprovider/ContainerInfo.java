@@ -27,4 +27,9 @@ public class ContainerInfo {
   private boolean newContainer;
   private EcsContainerDetails ecsContainerDetails;
   private boolean containerTasksReachable;
+
+  /*
+   * Helm Release to which the kubernetes pods belong to
+   */
+  private String releaseName;
 }

@@ -11,12 +11,15 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.api.BaseContainerDeploymentInfo;
+import software.wings.api.ContainerDeploymentInfoWithLabels;
 import software.wings.api.ContainerDeploymentInfoWithNames;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
@@ -31,6 +34,7 @@ import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.ContainerMetadataType;
 import software.wings.service.intfc.instance.InstanceService;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -125,8 +129,7 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
         deploymentSummaries.stream()
             .map(DeploymentSummary::getDeploymentInfo)
             .filter(deploymentInfo
-                -> deploymentInfo instanceof ContainerDeploymentInfoWithNames
-                    || deploymentInfo instanceof K8sDeploymentInfo)
+                -> deploymentInfo instanceof BaseContainerDeploymentInfo || deploymentInfo instanceof K8sDeploymentInfo)
             .flatMap(deploymentInfo -> extractContainerMetadata(deploymentInfo).stream())
             .collect(Collectors.toSet());
 
@@ -157,17 +160,45 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
   }
 
   private Set<ContainerMetadata> extractContainerMetadata(DeploymentInfo deploymentInfo) {
-    return deploymentInfo instanceof ContainerDeploymentInfoWithNames
-        ? getContainerMetadataFromDeploymentInfoWithNames((ContainerDeploymentInfoWithNames) deploymentInfo)
+    return deploymentInfo instanceof BaseContainerDeploymentInfo
+        ? getContainerMetadataFromContainerDeploymentInfo((BaseContainerDeploymentInfo) deploymentInfo)
         : getContainerMetadataFromK8DeploymentInfo((K8sDeploymentInfo) deploymentInfo);
   }
 
-  private Set<ContainerMetadata> getContainerMetadataFromDeploymentInfoWithNames(
-      ContainerDeploymentInfoWithNames containerDeploymentInfoWithNames) {
-    return ImmutableSet.of(ContainerMetadata.builder()
-                               .containerServiceName(containerDeploymentInfoWithNames.getContainerSvcName())
-                               .namespace(containerDeploymentInfoWithNames.getNamespace())
-                               .build());
+  private Set<ContainerMetadata> getContainerMetadataFromContainerDeploymentInfo(
+      BaseContainerDeploymentInfo baseContainerDeploymentInfo) {
+    if (baseContainerDeploymentInfo instanceof ContainerDeploymentInfoWithNames) {
+      return ImmutableSet.of(
+          ContainerMetadata.builder()
+              .containerServiceName(
+                  ((ContainerDeploymentInfoWithNames) baseContainerDeploymentInfo).getContainerSvcName())
+              .namespace(((ContainerDeploymentInfoWithNames) baseContainerDeploymentInfo).getNamespace())
+              .build());
+    } else if (baseContainerDeploymentInfo instanceof ContainerDeploymentInfoWithLabels) {
+      Set<String> controllers =
+          emptyIfNull(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getContainerInfoList())
+              .stream()
+              .map(software.wings.cloudprovider.ContainerInfo::getWorkloadName)
+              .filter(EmptyPredicate::isNotEmpty)
+              .collect(Collectors.toSet());
+      if (isNotEmpty(controllers)) {
+        return controllers.stream()
+            .map(controller
+                -> ContainerMetadata.builder()
+                       .namespace(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getNamespace())
+                       .containerServiceName(controller)
+                       .releaseName(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getReleaseName())
+                       .build())
+            .collect(Collectors.toSet());
+      } else if (isNotEmpty(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getContainerInfoList())) {
+        return ImmutableSet.of(
+            ContainerMetadata.builder()
+                .namespace(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getNamespace())
+                .releaseName(((ContainerDeploymentInfoWithLabels) baseContainerDeploymentInfo).getReleaseName())
+                .build());
+      }
+    }
+    return Collections.emptySet();
   }
 
   private Set<ContainerMetadata> getContainerMetadataFromK8DeploymentInfo(K8sDeploymentInfo k8sDeploymentInfo) {

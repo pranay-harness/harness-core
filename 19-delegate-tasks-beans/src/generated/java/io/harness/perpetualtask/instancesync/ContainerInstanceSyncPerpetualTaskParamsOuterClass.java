@@ -38,7 +38,7 @@ public final class ContainerInstanceSyncPerpetualTaskParamsOuterClass {
         + "accountId\022\025\n\006app_id\030\002 \001(\tR\005appId\022,\n\022k8s_"
         + "cluster_config\030\003 \001(\014R\020k8sClusterConfig\022\034"
         + "\n\tnamespace\030\004 \001(\tR\tnamespace\022!\n\014release_"
-        + "name\030\005 \001(\tR\013releaseName\"\367\002\n#ContainerSer"
+        + "name\030\005 \001(\tR\013releaseName\"\232\003\n#ContainerSer"
         + "vicePerpetualTaskParams\022+\n\021setting_attri"
         + "bute\030\001 \001(\014R\020settingAttribute\022,\n\022containe"
         + "r_svc_name\030\002 \001(\tR\020containerSvcName\022-\n\022en"
@@ -48,17 +48,18 @@ public final class ContainerInstanceSyncPerpetualTaskParamsOuterClass {
         + "(\tR\006region\022\'\n\017subscription_id\030\007 \001(\tR\016sub"
         + "scriptionId\022%\n\016resource_group\030\010 \001(\tR\rres"
         + "ourceGroup\022\035\n\nmaster_url\030\t \001(\tR\tmasterUr"
-        + "l\"\227\003\n(ContainerInstanceSyncPerpetualTask"
-        + "Params\022%\n\016container_type\030\001 \001(\tR\rcontaine"
-        + "rType\022\240\001\n#k8s_container_perpetual_task_p"
-        + "arams\030\002 \001(\0132R.io.harness.perpetualtask.i"
-        + "nstancesync.K8sContainerInstanceSyncPerp"
-        + "etualTaskParamsR\037k8sContainerPerpetualTa"
-        + "skParams\022\240\001\n\'container_service_perpetual"
-        + "_task_params\030\003 \001(\0132J.io.harness.perpetua"
-        + "ltask.instancesync.ContainerServicePerpe"
-        + "tualTaskParamsR#containerServicePerpetua"
-        + "lTaskParamsB\002P\001b\006proto3"};
+        + "l\022!\n\014release_name\030\n \001(\tR\013releaseName\"\227\003\n"
+        + "(ContainerInstanceSyncPerpetualTaskParam"
+        + "s\022%\n\016container_type\030\001 \001(\tR\rcontainerType"
+        + "\022\240\001\n#k8s_container_perpetual_task_params"
+        + "\030\002 \001(\0132R.io.harness.perpetualtask.instan"
+        + "cesync.K8sContainerInstanceSyncPerpetual"
+        + "TaskParamsR\037k8sContainerPerpetualTaskPar"
+        + "ams\022\240\001\n\'container_service_perpetual_task"
+        + "_params\030\003 \001(\0132J.io.harness.perpetualtask"
+        + ".instancesync.ContainerServicePerpetualT"
+        + "askParamsR#containerServicePerpetualTask"
+        + "ParamsB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
         descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
     internal_static_io_harness_perpetualtask_instancesync_K8sContainerInstanceSyncPerpetualTaskParams_descriptor =
@@ -88,6 +89,7 @@ public final class ContainerInstanceSyncPerpetualTaskParamsOuterClass {
                 "SubscriptionId",
                 "ResourceGroup",
                 "MasterUrl",
+                "ReleaseName",
             });
     internal_static_io_harness_perpetualtask_instancesync_ContainerInstanceSyncPerpetualTaskParams_descriptor =
         getDescriptor().getMessageTypes().get(2);

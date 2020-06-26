@@ -75,6 +75,7 @@ import software.wings.beans.infrastructure.instance.key.deployment.ContainerDepl
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -119,6 +120,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
   @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ContainerInstanceSyncPerpetualTaskCreator taskCreator;
+  @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Override
   public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
     // Key - containerSvcName, Value - Instances
@@ -172,6 +174,13 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
           handleK8sInstances(responseData, instanceSyncFlow, containerInfraMapping, deploymentSummaryMap,
               containerMetadata, instancesInDB);
         } else {
+          if (responseData != null && instanceSyncFlow == PERPETUAL_TASK) {
+            ContainerSyncResponse syncResponse = (ContainerSyncResponse) responseData;
+            if (isNotEmpty(syncResponse.getControllerName())
+                && !syncResponse.getControllerName().equals(containerMetadata.getContainerServiceName())) {
+              continue;
+            }
+          }
           logger.info("Found {} instances in DB for app {} and containerServiceName {}", instancesInDB.size(), appId,
               containerMetadata.getContainerServiceName());
 
@@ -473,9 +482,9 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     return false;
   }
 
-  private Map<ContainerMetadata, DeploymentSummary> getDeploymentSummaryMap(
-      List<DeploymentSummary> newDeploymentSummaries, Multimap<ContainerMetadata, Instance> containerInstances,
-      ContainerInfrastructureMapping containerInfraMapping) {
+  @VisibleForTesting
+  Map<ContainerMetadata, DeploymentSummary> getDeploymentSummaryMap(List<DeploymentSummary> newDeploymentSummaries,
+      Multimap<ContainerMetadata, Instance> containerInstances, ContainerInfrastructureMapping containerInfraMapping) {
     if (EmptyPredicate.isEmpty(newDeploymentSummaries)) {
       return emptyMap();
     }
@@ -486,24 +495,45 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
             instanceof ContainerDeploymentInfoWithLabels) {
       Map<String, String> labelMap = new HashMap<>();
       for (DeploymentSummary deploymentSummary : newDeploymentSummaries) {
-        ((ContainerDeploymentInfoWithLabels) deploymentSummary.getDeploymentInfo())
-            .getLabels()
-            .forEach(labelEntry -> labelMap.put(labelEntry.getName(), labelEntry.getValue()));
+        ContainerDeploymentInfoWithLabels containerDeploymentInfo =
+            (ContainerDeploymentInfoWithLabels) deploymentSummary.getDeploymentInfo();
+        containerDeploymentInfo.getLabels().forEach(
+            labelEntry -> labelMap.put(labelEntry.getName(), labelEntry.getValue()));
 
         String namespace = containerInfraMapping.getNamespace();
         if (ExpressionEvaluator.containsVariablePattern(namespace)) {
-          namespace = ((ContainerDeploymentInfoWithLabels) deploymentSummary.getDeploymentInfo()).getNamespace();
+          namespace = containerDeploymentInfo.getNamespace();
         }
-        Set<String> controllerNames = containerSync.getControllerNames(containerInfraMapping, labelMap, namespace);
 
-        logger.info(
-            "Number of controllers returned for executionId [{}], inframappingId [{}], appId [{}] from labels: {}",
-            newDeploymentSummaries.iterator().next().getWorkflowExecutionId(), containerInfraMapping.getUuid(),
-            newDeploymentSummaries.iterator().next().getAppId(), controllerNames.size());
+        boolean isControllerNamesRetrievable = emptyIfNull(containerDeploymentInfo.getContainerInfoList())
+                                                   .stream()
+                                                   .map(software.wings.cloudprovider.ContainerInfo::getWorkloadName)
+                                                   .anyMatch(EmptyPredicate::isNotEmpty);
+        /*
+         We need controller names only if release name is not set
+         */
+        if (isControllerNamesRetrievable || isEmpty(containerDeploymentInfo.getContainerInfoList())) {
+          Set<String> controllerNames = containerSync.getControllerNames(containerInfraMapping, labelMap, namespace);
 
-        for (String controllerName : controllerNames) {
-          ContainerMetadata containerMetadata =
-              ContainerMetadata.builder().containerServiceName(controllerName).namespace(namespace).build();
+          logger.info(
+              "Number of controllers returned for executionId [{}], inframappingId [{}], appId [{}] from labels: {}",
+              newDeploymentSummaries.iterator().next().getWorkflowExecutionId(), containerInfraMapping.getUuid(),
+              newDeploymentSummaries.iterator().next().getAppId(), controllerNames.size());
+
+          for (String controllerName : controllerNames) {
+            ContainerMetadata containerMetadata = ContainerMetadata.builder()
+                                                      .containerServiceName(controllerName)
+                                                      .namespace(namespace)
+                                                      .releaseName(containerDeploymentInfo.getReleaseName())
+                                                      .build();
+            deploymentSummaryMap.put(containerMetadata, deploymentSummary);
+            containerInstances.put(containerMetadata, null);
+          }
+        } else {
+          ContainerMetadata containerMetadata = ContainerMetadata.builder()
+                                                    .namespace(namespace)
+                                                    .releaseName(containerDeploymentInfo.getReleaseName())
+                                                    .build();
           deploymentSummaryMap.put(containerMetadata, deploymentSummary);
           containerInstances.put(containerMetadata, null);
         }
@@ -556,12 +586,14 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         ContainerInfo containerInfo = (ContainerInfo) instanceInfo;
         String containerSvcName = getContainerSvcName(containerInfo);
         String namespace = null;
+        String releaseName = null;
         if (containerInfo instanceof KubernetesContainerInfo) {
           namespace = ((KubernetesContainerInfo) containerInfo).getNamespace();
+          releaseName = ((KubernetesContainerInfo) containerInfo).getReleaseName();
         } else if (containerInfo instanceof K8sPodInfo) {
           namespace = ((K8sPodInfo) containerInfo).getNamespace();
+          releaseName = ((K8sPodInfo) containerInfo).getReleaseName();
         }
-        String releaseName = containerInfo instanceof K8sPodInfo ? ((K8sPodInfo) containerInfo).getReleaseName() : null;
         ContainerMetadataType type = containerInfo instanceof K8sPodInfo ? ContainerMetadataType.K8S : null;
         instanceMap.put(ContainerMetadata.builder()
                             .type(type)
@@ -783,6 +815,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         .labels(labels)
         .newVersion(version.toString())
         .helmChartInfo(helmExecutionSummary.getHelmChartInfo())
+        .containerInfoList(helmExecutionSummary.getContainerInfoList())
+        .releaseName(helmExecutionSummary.getReleaseName())
         .build();
   }
 

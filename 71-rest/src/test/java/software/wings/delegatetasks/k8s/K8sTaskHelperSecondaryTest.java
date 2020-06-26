@@ -160,8 +160,8 @@ public class K8sTaskHelperSecondaryTest extends WingsBaseTest {
     Kubectl client = Kubectl.client("kubectl", "config-path");
 
     if (allResources) {
-      helper.doStatusCheckForAllResources(
-          client, Arrays.asList(resource.getResourceId()), k8sDelegateTaskParams, "default", executionLogCallback);
+      helper.doStatusCheckForAllResources(client, Arrays.asList(resource.getResourceId()), k8sDelegateTaskParams,
+          "default", executionLogCallback, true);
     } else {
       helper.doStatusCheck(client, resource.getResourceId(), k8sDelegateTaskParams, executionLogCallback);
     }

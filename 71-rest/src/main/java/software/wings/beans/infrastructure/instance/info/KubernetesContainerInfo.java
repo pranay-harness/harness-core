@@ -20,12 +20,17 @@ public class KubernetesContainerInfo extends ContainerInfo {
   private String ip;
   private String namespace;
 
+  /*
+  Helm Release to which the kubernetes pods belong to
+   */
+  private String releaseName;
+
   // only applicable for helm deployments
   private HelmChartInfo helmChartInfo;
 
   @Builder
   public KubernetesContainerInfo(String clusterName, String controllerType, String controllerName, String serviceName,
-      String podName, String ip, String namespace, HelmChartInfo helmChartInfo) {
+      String podName, String ip, String namespace, HelmChartInfo helmChartInfo, String releaseName) {
     super(clusterName);
     this.controllerType = controllerType;
     this.controllerName = controllerName;
@@ -34,5 +39,6 @@ public class KubernetesContainerInfo extends ContainerInfo {
     this.ip = ip;
     this.namespace = namespace;
     this.helmChartInfo = helmChartInfo;
+    this.releaseName = releaseName;
   }
 }

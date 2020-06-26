@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -39,6 +40,7 @@ import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.io.IOException;
 
@@ -48,6 +50,7 @@ public class HelmCommandTaskTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private HelmCommandHelper helmCommandHelper;
   @Mock private HelmCommandRequest dummyCommandRequest;
+  @Mock private K8sGlobalConfigService k8sGlobalConfigService;
 
   @InjectMocks
   private final HelmCommandTask helmCommandTask = (HelmCommandTask) TaskType.HELM_COMMAND_TASK.getDelegateRunnableTask(
@@ -62,6 +65,8 @@ public class HelmCommandTaskTest extends WingsBaseTest {
     HelmCommandResponse ensureHelmInstalledResponse =
         new HelmCommandResponse(CommandExecutionStatus.SUCCESS, "Helm3 is installed at [mock]");
     doReturn(ensureHelmInstalledResponse).when(helmDeployService).ensureHelmInstalled(any(HelmCommandRequest.class));
+
+    when(k8sGlobalConfigService.getOcPath()).thenReturn("/tmp");
   }
 
   @Test

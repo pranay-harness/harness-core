@@ -143,8 +143,9 @@ public class ContainerSyncImpl implements ContainerSync {
         logger.info("getInstances() call for app {} and containerSvcName {}", containerInfraMapping.getAppId(),
             containerMetadata);
 
-        ContainerServiceParams containerServiceParams = getContainerServiceParams(
-            containerInfraMapping, containerMetadata.getContainerServiceName(), containerMetadata.getNamespace());
+        ContainerServiceParams containerServiceParams =
+            getContainerServiceParams(containerInfraMapping, containerMetadata.getContainerServiceName(),
+                containerMetadata.getNamespace(), containerMetadata.getReleaseName());
 
         List<String> tags = new ArrayList<>();
         tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
@@ -184,7 +185,8 @@ public class ContainerSyncImpl implements ContainerSync {
   @Override
   public Set<String> getControllerNames(
       ContainerInfrastructureMapping containerInfraMapping, Map<String, String> labels, String namespace) {
-    ContainerServiceParams containerServiceParams = getContainerServiceParams(containerInfraMapping, null, namespace);
+    ContainerServiceParams containerServiceParams =
+        getContainerServiceParams(containerInfraMapping, null, namespace, null);
 
     Application app = appService.get(containerInfraMapping.getAppId());
     SyncTaskContext syncTaskContext =
@@ -201,8 +203,8 @@ public class ContainerSyncImpl implements ContainerSync {
         .getControllerNames(containerServiceParams, labels);
   }
 
-  private ContainerServiceParams getContainerServiceParams(
-      ContainerInfrastructureMapping containerInfraMapping, String containerSvcName, String namespace) {
+  private ContainerServiceParams getContainerServiceParams(ContainerInfrastructureMapping containerInfraMapping,
+      String containerSvcName, String namespace, String releaseName) {
     SettingAttribute settingAttribute;
     String clusterName = null;
     String region = null;
@@ -233,6 +235,7 @@ public class ContainerSyncImpl implements ContainerSync {
         .subscriptionId(subscriptionId)
         .resourceGroup(resourceGroup)
         .masterUrl(masterUrl)
+        .releaseName(releaseName)
         .build();
   }
 }

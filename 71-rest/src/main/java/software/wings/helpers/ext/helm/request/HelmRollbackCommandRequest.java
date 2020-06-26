@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
@@ -34,10 +35,12 @@ public class HelmRollbackCommandRequest extends HelmCommandRequest {
       int prevReleaseVersion, int rollbackVersion, long timeoutInMillis, HelmChartSpecification chartSpecification,
       String repoName, GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails,
       LogCallback executionLogCallback, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig,
-      HelmVersion helmVersion) {
+      HelmVersion helmVersion, String ocPath, String workingDir, GitFileConfig gitFileConfig,
+      List<String> variableOverridesYamlFiles) {
     super(HelmCommandType.ROLLBACK, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails,
-        executionLogCallback, commandFlags, sourceRepoConfig, helmVersion);
+        executionLogCallback, commandFlags, sourceRepoConfig, helmVersion, ocPath, workingDir,
+        variableOverridesYamlFiles, gitFileConfig);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;
     this.rollbackVersion = rollbackVersion;

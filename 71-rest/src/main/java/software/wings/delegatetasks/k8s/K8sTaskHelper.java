@@ -38,8 +38,10 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.LogWeight.Normal;
 import static software.wings.beans.Log.color;
+import static software.wings.delegatetasks.k8s.K8sTask.KUBECONFIG_FILENAME;
 import static software.wings.delegatetasks.k8s.taskhandler.K8sTrafficSplitTaskHandler.ISTIO_DESTINATION_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
+import static software.wings.helpers.ext.helm.HelmConstants.HELM_RELEASE_LABEL;
 import static software.wings.sm.states.k8s.K8sApplyState.SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT;
 import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
 
@@ -122,6 +124,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.k8s.istio.IstioDestinationWeight;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
@@ -129,6 +132,7 @@ import software.wings.helpers.ext.helm.HelmCommandTemplateFactory;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
@@ -267,6 +271,18 @@ public class K8sTaskHelper {
   }
   public boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
+    return doStatusCheck(client, resourceId, k8sDelegateTaskParams.getWorkingDirectory(),
+        k8sDelegateTaskParams.getOcPath(), k8sDelegateTaskParams.getKubeconfigPath(), executionLogCallback);
+  }
+
+  public boolean doHelmStatusCheck(Kubectl client, KubernetesResourceId resourceId,
+      HelmCommandRequest helmInstallCommandRequest, ExecutionLogCallback executionLogCallback) throws Exception {
+    return doStatusCheck(client, resourceId, helmInstallCommandRequest.getWorkingDir(),
+        helmInstallCommandRequest.getOcPath(), KUBECONFIG_FILENAME, executionLogCallback);
+  }
+
+  private boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId, String workingDirectory, String ocPath,
+      String kubeconfigPath, ExecutionLogCallback executionLogCallback) throws Exception {
     final String eventFormat = "%-7s: %s";
     final String statusFormat = "%n%-7s: %s";
 
@@ -308,18 +324,16 @@ public class K8sTaskHelper {
                  executionLogCallback.saveExecutionLog(format(statusFormat, "Status", line), ERROR);
                }
              }) {
-      eventWatchProcess =
-          getEventWatchProcess(k8sDelegateTaskParams, getEventsCommand, watchInfoStream, watchErrorStream);
+      eventWatchProcess = getEventWatchProcess(workingDirectory, getEventsCommand, watchInfoStream, watchErrorStream);
 
       ProcessResult result;
       if (Kind.DeploymentConfig.name().equals(resourceId.getKind())) {
-        String rolloutStatusCommand = getRolloutStatusCommandForDeploymentConfig(k8sDelegateTaskParams, resourceId);
+        String rolloutStatusCommand = getRolloutStatusCommandForDeploymentConfig(ocPath, kubeconfigPath, resourceId);
 
         executionLogCallback.saveExecutionLog(
             rolloutStatusCommand.substring(rolloutStatusCommand.indexOf("oc --kubeconfig")) + "\n");
 
-        result =
-            executeCommandUsingUtils(k8sDelegateTaskParams, statusInfoStream, statusErrorStream, rolloutStatusCommand);
+        result = executeCommandUsingUtils(workingDirectory, statusInfoStream, statusErrorStream, rolloutStatusCommand);
       } else {
         RolloutStatusCommand rolloutStatusCommand = client.rollout()
                                                         .status()
@@ -330,8 +344,7 @@ public class K8sTaskHelper {
         executionLogCallback.saveExecutionLog(
             RolloutStatusCommand.getPrintableCommand(rolloutStatusCommand.command()) + "\n");
 
-        result = rolloutStatusCommand.execute(
-            k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, false);
+        result = rolloutStatusCommand.execute(workingDirectory, statusInfoStream, statusErrorStream, false);
       }
 
       success = result.getExitValue() == 0;
@@ -358,45 +371,52 @@ public class K8sTaskHelper {
   }
 
   @VisibleForTesting
-  StartedProcess getEventWatchProcess(K8sDelegateTaskParams k8sDelegateTaskParams, GetCommand getEventsCommand,
+  StartedProcess getEventWatchProcess(String workingDirectory, GetCommand getEventsCommand,
       LogOutputStream watchInfoStream, LogOutputStream watchErrorStream) throws Exception {
-    return getEventsCommand.executeInBackground(
-        k8sDelegateTaskParams.getWorkingDirectory(), watchInfoStream, watchErrorStream);
+    return getEventsCommand.executeInBackground(workingDirectory, watchInfoStream, watchErrorStream);
   }
 
   @VisibleForTesting
   ProcessResult executeCommandUsingUtils(K8sDelegateTaskParams k8sDelegateTaskParams, LogOutputStream statusInfoStream,
       LogOutputStream statusErrorStream, String command) throws Exception {
-    return Utils.executeScript(
-        k8sDelegateTaskParams.getWorkingDirectory(), command, statusInfoStream, statusErrorStream);
+    return executeCommandUsingUtils(
+        k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, command);
+  }
+
+  @VisibleForTesting
+  ProcessResult executeCommandUsingUtils(String workingDirectory, LogOutputStream statusInfoStream,
+      LogOutputStream statusErrorStream, String command) throws Exception {
+    return Utils.executeScript(workingDirectory, command, statusInfoStream, statusErrorStream);
   }
 
   public static String getOcCommandPrefix(K8sDelegateTaskParams k8sDelegateTaskParams) {
+    return getOcCommandPrefix(k8sDelegateTaskParams.getOcPath(), k8sDelegateTaskParams.getKubeconfigPath());
+  }
+
+  public static String getOcCommandPrefix(String ocPath, String kubeConfigPath) {
     StringBuilder command = new StringBuilder(128);
 
-    String ocPath = k8sDelegateTaskParams.getOcPath();
     if (StringUtils.isNotBlank(ocPath)) {
       command.append(encloseWithQuotesIfNeeded(ocPath));
     } else {
       command.append("oc");
     }
 
-    String kubeconfigPath = k8sDelegateTaskParams.getKubeconfigPath();
-    if (StringUtils.isNotBlank(kubeconfigPath)) {
-      command.append(" --kubeconfig=").append(encloseWithQuotesIfNeeded(kubeconfigPath));
+    if (StringUtils.isNotBlank(kubeConfigPath)) {
+      command.append(" --kubeconfig=").append(encloseWithQuotesIfNeeded(kubeConfigPath));
     }
 
     return command.toString();
   }
 
   private String getRolloutStatusCommandForDeploymentConfig(
-      K8sDelegateTaskParams k8sDelegateTaskParams, KubernetesResourceId resourceId) {
+      String ocPath, String kubeConfigPath, KubernetesResourceId resourceId) {
     String namespace = "";
     if (StringUtils.isNotBlank(resourceId.getNamespace())) {
       namespace = "--namespace=" + resourceId.getNamespace() + " ";
     }
 
-    return ocRolloutStatusCommand.replace("{OC_COMMAND_PREFIX}", getOcCommandPrefix(k8sDelegateTaskParams))
+    return ocRolloutStatusCommand.replace("{OC_COMMAND_PREFIX}", getOcCommandPrefix(ocPath, kubeConfigPath))
         .replace("{RESOURCE_ID}", resourceId.kindNameRef())
         .replace("{NAMESPACE}", namespace);
   }
@@ -505,7 +525,8 @@ public class K8sTaskHelper {
       ProcessResult result;
 
       if (Kind.DeploymentConfig.name().equals(resourceId.getKind())) {
-        String rolloutStatusCommand = getRolloutStatusCommandForDeploymentConfig(k8sDelegateTaskParams, resourceId);
+        String rolloutStatusCommand = getRolloutStatusCommandForDeploymentConfig(
+            k8sDelegateTaskParams.getOcPath(), k8sDelegateTaskParams.getKubeconfigPath(), resourceId);
 
         executionLogCallback.saveExecutionLog(
             rolloutStatusCommand.substring(rolloutStatusCommand.indexOf("oc --kubeconfig")) + "\n");
@@ -535,9 +556,21 @@ public class K8sTaskHelper {
     }
   }
 
-  public boolean doStatusCheckForAllResources(Kubectl client, List<KubernetesResourceId> resourceIds,
-      K8sDelegateTaskParams k8sDelegateTaskParams, String namespace, ExecutionLogCallback executionLogCallback)
+  public boolean doStatusCheckAllResourcesForHelm(Kubectl client, List<KubernetesResourceId> resourceIds, String ocPath,
+      String workingDir, String namespace, String kubeconfigPath, ExecutionLogCallback executionLogCallback)
       throws Exception {
+    return doStatusCheckForAllResources(client, resourceIds,
+        K8sDelegateTaskParams.builder()
+            .ocPath(ocPath)
+            .workingDirectory(workingDir)
+            .kubeconfigPath(kubeconfigPath)
+            .build(),
+        namespace, executionLogCallback, false);
+  }
+
+  public boolean doStatusCheckForAllResources(Kubectl client, List<KubernetesResourceId> resourceIds,
+      K8sDelegateTaskParams k8sDelegateTaskParams, String namespace, ExecutionLogCallback executionLogCallback,
+      boolean denoteOverallSuccess) throws Exception {
     if (isEmpty(resourceIds)) {
       return true;
     }
@@ -595,8 +628,8 @@ public class K8sTaskHelper {
                }
              }) {
       for (GetCommand getEventsCommand : getEventCommands) {
-        eventWatchProcesses.add(
-            getEventWatchProcess(k8sDelegateTaskParams, getEventsCommand, watchInfoStream, watchErrorStream));
+        eventWatchProcesses.add(getEventWatchProcess(
+            k8sDelegateTaskParams.getWorkingDirectory(), getEventsCommand, watchInfoStream, watchErrorStream));
       }
 
       for (KubernetesResourceId kubernetesResourceId : resourceIds) {
@@ -623,9 +656,13 @@ public class K8sTaskHelper {
         eventWatchProcess.getProcess().destroyForcibly().waitFor();
       }
       if (success) {
-        executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+        if (denoteOverallSuccess) {
+          executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+        }
       } else {
-        executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+        executionLogCallback.saveExecutionLog(
+            format("%nStatus check for resources in namespace [%s] failed.", namespace), INFO,
+            CommandExecutionStatus.FAILURE);
       }
     }
   }
@@ -841,11 +878,10 @@ public class K8sTaskHelper {
     }
   }
 
-  private List<ManifestFile> renderTemplateForHelm(K8sDelegateTaskParams k8sDelegateTaskParams,
-      String manifestFilesDirectory, List<String> valuesFiles, String releaseName, String namespace,
-      ExecutionLogCallback executionLogCallback, HelmVersion helmVersion) throws Exception {
+  public List<ManifestFile> renderTemplateForHelm(String helmPath, String manifestFilesDirectory,
+      List<String> valuesFiles, String releaseName, String namespace, ExecutionLogCallback executionLogCallback,
+      HelmVersion helmVersion) throws Exception {
     String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
-    String helmPath = k8sDelegateTaskParams.getHelmPath();
     logger.info("Values file options: " + valuesFileOptions);
 
     printHelmPath(executionLogCallback, helmPath);
@@ -962,15 +998,15 @@ public class K8sTaskHelper {
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback);
 
       case HelmSourceRepo:
-        return renderTemplateForHelm(k8sDelegateTaskParams, manifestFilesDirectory, valuesFiles, releaseName, namespace,
-            executionLogCallback, k8sTaskParameters.getHelmVersion());
+        return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, valuesFiles,
+            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion());
 
       case HelmChartRepo:
         manifestFilesDirectory =
             Paths.get(manifestFilesDirectory, k8sDelegateManifestConfig.getHelmChartConfigParams().getChartName())
                 .toString();
-        return renderTemplateForHelm(k8sDelegateTaskParams, manifestFilesDirectory, valuesFiles, releaseName, namespace,
-            executionLogCallback, k8sTaskParameters.getHelmVersion());
+        return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, valuesFiles,
+            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion());
 
       case KustomizeSourceRepo:
         return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
@@ -1290,6 +1326,13 @@ public class K8sTaskHelper {
   public List<K8sPod> getPodDetails(KubernetesConfig kubernetesConfig, String namespace, String releaseName)
       throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName);
+    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels);
+  }
+
+  @VisibleForTesting
+  List<K8sPod> getHelmPodDetails(KubernetesConfig kubernetesConfig, String namespace, String releaseName)
+      throws Exception {
+    Map<String, String> labels = ImmutableMap.of(HELM_RELEASE_LABEL, releaseName);
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels);
   }
 
@@ -1855,6 +1898,28 @@ public class K8sTaskHelper {
         .append('/')
         .append(resourceId.getName())
         .toString();
+  }
+
+  public List<ContainerInfo> getContainerInfos(KubernetesConfig kubernetesConfig, String releaseName, String namespace)
+      throws Exception {
+    List<K8sPod> helmPods = getHelmPodDetails(kubernetesConfig, namespace, releaseName);
+
+    return helmPods.stream()
+        .map(pod
+            -> ContainerInfo.builder()
+                   .hostName(pod.getName())
+                   .ip(pod.getPodIP())
+                   .containerId(getPodContainerId(pod))
+                   .podName(pod.getName())
+                   .newContainer(true)
+                   .status(ContainerInfo.Status.SUCCESS)
+                   .releaseName(releaseName)
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  private String getPodContainerId(K8sPod pod) {
+    return isEmpty(pod.getContainerList()) ? EMPTY : pod.getContainerList().get(0).getContainerId();
   }
 
   private static final Set<String> openshiftResources = ImmutableSet.of("Route");

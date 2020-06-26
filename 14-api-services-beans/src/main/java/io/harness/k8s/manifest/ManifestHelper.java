@@ -175,7 +175,7 @@ public class ManifestHelper {
         .collect(Collectors.toList());
   }
 
-  public static List<KubernetesResource> getWorkloadsForApplyState(List<KubernetesResource> resources) {
+  public static List<KubernetesResource> getEligibleWorkloads(List<KubernetesResource> resources) {
     return resources.stream()
         .filter(resource
             -> ImmutableSet

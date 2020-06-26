@@ -26,6 +26,7 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
+import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -39,6 +40,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
   @Inject private HelmDeployService helmDeployService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private HelmCommandHelper helmCommandHelper;
+  @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   public HelmCommandTask(
       DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -80,7 +82,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     } catch (Exception ex) {
       String errorMsg = ex.getMessage();
       helmCommandRequest.getExecutionLogCallback().saveExecutionLog(
-          errorMsg + "\nFailed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+          errorMsg + "\n Overall deployment Failed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
       logger.error(format("Exception in processing helm task [%s]", helmCommandRequest.toString()), ex);
       return HelmCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -112,6 +114,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     String configLocation = containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(
         helmCommandRequest.getContainerServiceParams());
     helmCommandRequest.setKubeConfigLocation(configLocation);
+    helmCommandRequest.setOcPath(k8sGlobalConfigService.getOcPath());
     executionLogCallback.saveExecutionLog(
         "Setting KubeConfig\nKUBECONFIG_PATH=" + configLocation, LogLevel.INFO, CommandExecutionStatus.RUNNING);
 

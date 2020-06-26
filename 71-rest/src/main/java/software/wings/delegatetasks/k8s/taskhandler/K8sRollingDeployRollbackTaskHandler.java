@@ -103,7 +103,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       List<KubernetesResourceId> kubernetesResourceIds =
           previousManagedWorkloads.stream().map(KubernetesResourceIdRevision::getWorkload).collect(Collectors.toList());
       k8sTaskHelper.doStatusCheckForAllResources(client, kubernetesResourceIds, k8sDelegateTaskParams,
-          kubernetesConfig.getNamespace(), k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState));
+          kubernetesConfig.getNamespace(), k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState), true);
 
       release.setStatus(Status.Failed);
       // update the revision on the previous release.

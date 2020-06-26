@@ -15,6 +15,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
@@ -43,11 +44,14 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
@@ -69,6 +73,7 @@ import software.wings.api.K8sDeploymentInfo;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -88,8 +93,10 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
+import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.AppService;
@@ -773,7 +780,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
     OnDemandRollbackInfo onDemandRollbackInfo = OnDemandRollbackInfo.builder().onDemandRollback(false).build();
 
-    Map<String, String> metadata = new HashMap<>();
+    final Map<String, String> metadata = new HashMap<>();
     metadata.put("image", "image1:version1");
     wingsPersistence.save(anArtifact()
                               .withUuid(ARTIFACT_ID)
@@ -894,20 +901,21 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getContainerDeploymentInfosWithLabelsForHelm() {
-    HelmSetupExecutionSummary helmSetupExecutionSummary =
+    final HelmSetupExecutionSummary helmSetupExecutionSummary =
         HelmSetupExecutionSummary.builder().namespace("default").releaseName("test").newVersion(1).build();
-    HelmChartInfo helmChartInfo = HelmChartInfo.builder().version("1.1.1").name("harness").build();
+    final HelmChartInfo helmChartInfo = HelmChartInfo.builder().version("1.1.1").name("harness").build();
 
-    ContainerDeploymentInfoWithLabels deploymentInfo =
+    final ContainerDeploymentInfoWithLabels deploymentInfo =
         (ContainerDeploymentInfoWithLabels) containerInstanceHandler.getContainerDeploymentInfosWithLabelsForHelm(
             "harness", helmSetupExecutionSummary.getNamespace(), asList(aLabel().build()), helmSetupExecutionSummary,
-            HelmExecutionSummary.builder().helmChartInfo(helmChartInfo).build());
+            HelmExecutionSummary.builder().helmChartInfo(helmChartInfo).releaseName("r-1").build());
     assertThat(deploymentInfo.getHelmChartInfo().getVersion()).isEqualTo("1.1.1");
     assertThat(deploymentInfo.getHelmChartInfo().getName()).isEqualTo("harness");
     assertThat(deploymentInfo.getClusterName()).isEqualTo("harness");
     assertThat(deploymentInfo.getNamespace()).isEqualTo("default");
     assertThat(deploymentInfo.getNewVersion()).isEqualTo("1");
     assertThat(deploymentInfo.getLabels()).hasSize(1);
+    assertThat(deploymentInfo.getReleaseName()).isEqualTo("r-1");
   }
 
   @Test
@@ -1504,5 +1512,186 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .containerList(singletonList(K8sContainer.builder().image("nginx:0.1").build()))
         .labels(ImmutableMap.of(HarnessLabels.color, colorValue))
         .build();
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void getDeploymentSummaryMapIfContainerSvcNamePresent() {
+    final ContainerInfrastructureMapping infraMapping =
+        DirectKubernetesInfrastructureMapping.builder().namespace("default").build();
+    final List<DeploymentSummary> deploymentSummaries = asList(
+        DeploymentSummary.builder()
+            .deploymentInfo(ContainerDeploymentInfoWithLabels.builder()
+                                .labels(asList(aLabel().withName("key").withValue("value").build()))
+                                .containerInfoList(asList(ContainerInfo.builder().workloadName("workload").build()))
+                                .releaseName("release")
+                                .build())
+            .build(),
+        DeploymentSummary.builder()
+            .deploymentInfo(ContainerDeploymentInfoWithLabels.builder()
+                                .labels(asList(aLabel().withName("key").withValue("value-1").build()))
+                                .containerInfoList(asList(ContainerInfo.builder().workloadName("workload-1").build()))
+                                .releaseName("release-1")
+                                .build())
+            .build());
+
+    doReturn(Sets.newHashSet("workload"))
+        .when(containerSync)
+        .getControllerNames(eq(infraMapping), eq(ImmutableMap.of("key", "value")), eq("default"));
+    doReturn(Sets.newHashSet("workload-1"))
+        .when(containerSync)
+        .getControllerNames(eq(infraMapping), eq(ImmutableMap.of("key", "value-1")), eq("default"));
+
+    final Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap =
+        containerInstanceHandler.getDeploymentSummaryMap(deploymentSummaries, ArrayListMultimap.create(), infraMapping);
+
+    assertThat(deploymentSummaryMap.keySet())
+        .containsExactlyInAnyOrder(ContainerMetadata.builder()
+                                       .releaseName("release")
+                                       .containerServiceName("workload")
+                                       .namespace("default")
+                                       .build(),
+            ContainerMetadata.builder()
+                .namespace("default")
+                .containerServiceName("workload-1")
+                .releaseName("release-1")
+                .build());
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void getDeploymentSummaryMapIfContainerSvcNameNotPresent() {
+    final ContainerInfrastructureMapping infraMapping =
+        DirectKubernetesInfrastructureMapping.builder().namespace("default").build();
+    final List<DeploymentSummary> deploymentSummaries =
+        asList(DeploymentSummary.builder()
+                   .deploymentInfo(ContainerDeploymentInfoWithLabels.builder()
+                                       .labels(asList(aLabel().withName("key").withValue("value").build()))
+                                       .containerInfoList(asList(ContainerInfo.builder().build()))
+                                       .releaseName("release")
+                                       .build())
+                   .build(),
+            DeploymentSummary.builder()
+                .deploymentInfo(ContainerDeploymentInfoWithLabels.builder()
+                                    .labels(asList(aLabel().withName("key").withValue("value-1").build()))
+                                    .containerInfoList(asList(ContainerInfo.builder().build()))
+                                    .releaseName("release-1")
+                                    .build())
+                .build());
+
+    doReturn(Sets.newHashSet("workload"))
+        .when(containerSync)
+        .getControllerNames(eq(infraMapping), eq(ImmutableMap.of("key", "value")), eq("default"));
+    doReturn(Sets.newHashSet("workload-1"))
+        .when(containerSync)
+        .getControllerNames(eq(infraMapping), eq(ImmutableMap.of("key", "value-1")), eq("default"));
+
+    final Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap =
+        containerInstanceHandler.getDeploymentSummaryMap(deploymentSummaries, ArrayListMultimap.create(), infraMapping);
+
+    assertThat(deploymentSummaryMap.keySet())
+        .containsExactlyInAnyOrder(ContainerMetadata.builder().releaseName("release").namespace("default").build(),
+            ContainerMetadata.builder().namespace("default").releaseName("release-1").build());
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void shouldUpdateAllIfWorkloadNameIsEmpty() {
+    final List<Instance> instances = asList(
+        Instance.builder()
+            .uuid(INSTANCE_1_ID)
+            .instanceType(KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:0").namespace("default").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_0")
+                              .controllerName("controllerName:0")
+                              .podName("pod:0")
+                              .build())
+            .build(),
+        Instance.builder()
+            .uuid(INSTANCE_2_ID)
+            .instanceType(KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:1").namespace("default").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_1")
+                              .controllerName("controllerName:1")
+                              .podName("pod:1")
+                              .build())
+            .build());
+
+    ContainerSyncResponse responseData;
+    responseData = ContainerSyncResponse.builder()
+                       .containerInfoList(Collections.emptyList())
+                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                       .build();
+    ContainerInfrastructureMapping infrastructureMapping;
+    infrastructureMapping = DirectKubernetesInfrastructureMapping.builder().build();
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+
+    containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, responseData);
+
+    verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_1_ID));
+    verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_2_ID));
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void shouldUpdateInstancesWithMatchingWorkloadName() {
+    final List<Instance> instances = asList(
+        Instance.builder()
+            .uuid(INSTANCE_1_ID)
+            .instanceType(KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:0").namespace("default").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_0")
+                              .controllerName("controllerName:0")
+                              .podName("pod:0")
+                              .build())
+            .build(),
+        Instance.builder()
+            .uuid(INSTANCE_2_ID)
+            .instanceType(KUBERNETES_CONTAINER_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId("pod:1").namespace("default").build())
+            .instanceInfo(KubernetesContainerInfo.builder()
+                              .clusterName(KUBE_CLUSTER)
+                              .serviceName("service_a_1")
+                              .controllerName("controllerName:1")
+                              .podName("pod:1")
+                              .build())
+            .build());
+
+    ContainerSyncResponse responseData;
+    responseData = ContainerSyncResponse.builder()
+                       .containerInfoList(Collections.emptyList())
+                       .controllerName("controllerName:0")
+                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                       .build();
+    ContainerInfrastructureMapping infrastructureMapping;
+    infrastructureMapping = DirectKubernetesInfrastructureMapping.builder().build();
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+
+    containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, responseData);
+
+    verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_1_ID));
+    verify(instanceService, never()).delete(Sets.newHashSet(INSTANCE_2_ID));
+
+    responseData = ContainerSyncResponse.builder()
+                       .containerInfoList(Collections.emptyList())
+                       .controllerName("controllerName:1")
+                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                       .build();
+    infrastructureMapping = DirectKubernetesInfrastructureMapping.builder().build();
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+
+    containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, responseData);
+
+    verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_2_ID));
   }
 }

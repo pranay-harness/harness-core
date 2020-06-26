@@ -18,6 +18,7 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
+import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest.HelmRollbackCommandRequestBuilder;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.ContainerServiceParams;
@@ -56,23 +57,33 @@ public class HelmRollbackState extends HelmDeployState {
       previousReleaseRevision = ((HelmDeployContextElement) contextElement).getPreviousReleaseRevision();
     }
 
-    return HelmRollbackCommandRequest.builder()
-        .releaseName(releaseName)
-        .prevReleaseVersion(previousReleaseRevision != null ? previousReleaseRevision : -1)
-        .accountId(accountId)
-        .appId(context.getAppId())
-        .activityId(activityId)
-        .commandName(HELM_COMMAND_NAME)
-        .timeoutInMillis(getSafeTimeout())
-        .containerServiceParams(containerServiceParams)
-        .chartSpecification(helmChartSpecification)
-        .repoName(repoName)
-        .gitConfig(gitConfig)
-        .encryptedDataDetails(encryptedDataDetails)
-        .commandFlags(commandFlags)
-        .sourceRepoConfig(repoConfig)
-        .helmVersion(helmVersion)
-        .build();
+    List<String> helmValueOverridesYamlFilesEvaluated =
+        getValuesYamlOverrides(context, containerServiceParams, imageTag, appManifestMap);
+
+    HelmRollbackCommandRequestBuilder requestBuilder =
+        HelmRollbackCommandRequest.builder()
+            .releaseName(releaseName)
+            .prevReleaseVersion(previousReleaseRevision != null ? previousReleaseRevision : -1)
+            .accountId(accountId)
+            .appId(context.getAppId())
+            .activityId(activityId)
+            .commandName(HELM_COMMAND_NAME)
+            .timeoutInMillis(getSafeTimeout())
+            .containerServiceParams(containerServiceParams)
+            .chartSpecification(helmChartSpecification)
+            .repoName(repoName)
+            .gitConfig(gitConfig)
+            .encryptedDataDetails(encryptedDataDetails)
+            .commandFlags(commandFlags)
+            .sourceRepoConfig(repoConfig)
+            .helmVersion(helmVersion)
+            .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated);
+
+    if (getGitFileConfig() != null) {
+      requestBuilder.gitFileConfig(getGitFileConfig());
+    }
+
+    return requestBuilder.build();
   }
 
   @Override

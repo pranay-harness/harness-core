@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.container.Label;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 
 import java.util.List;
@@ -22,14 +23,21 @@ public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentIn
   private String newVersion;
   private String namespace;
   private HelmChartInfo helmChartInfo;
+  private List<ContainerInfo> containerInfoList;
+  /*
+   *   Helm Release to which the kubernetes pods belong to
+   */
+  private String releaseName;
 
   @Builder
-  public ContainerDeploymentInfoWithLabels(
-      String clusterName, List<Label> labels, String newVersion, String namespace, HelmChartInfo helmChartInfo) {
+  public ContainerDeploymentInfoWithLabels(String clusterName, List<Label> labels, String newVersion, String namespace,
+      HelmChartInfo helmChartInfo, List<ContainerInfo> containerInfoList, String releaseName) {
     super(clusterName);
     this.labels = labels;
     this.newVersion = newVersion;
     this.namespace = namespace;
     this.helmChartInfo = helmChartInfo;
+    this.containerInfoList = containerInfoList;
+    this.releaseName = releaseName;
   }
 }

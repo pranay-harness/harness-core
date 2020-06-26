@@ -25,6 +25,7 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     subscriptionId_ = "";
     resourceGroup_ = "";
     masterUrl_ = "";
+    releaseName_ = "";
   }
 
   @java.
@@ -103,6 +104,12 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
             java.lang.String s = input.readStringRequireUtf8();
 
             masterUrl_ = s;
+            break;
+          }
+          case 82: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            releaseName_ = s;
             break;
           }
           default: {
@@ -381,6 +388,38 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     }
   }
 
+  public static final int RELEASE_NAME_FIELD_NUMBER = 10;
+  private volatile java.lang.Object releaseName_;
+  /**
+   * <code>string release_name = 10[json_name = "releaseName"];</code>
+   * @return The releaseName.
+   */
+  public java.lang.String getReleaseName() {
+    java.lang.Object ref = releaseName_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      releaseName_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string release_name = 10[json_name = "releaseName"];</code>
+   * @return The bytes for releaseName.
+   */
+  public com.google.protobuf.ByteString getReleaseNameBytes() {
+    java.lang.Object ref = releaseName_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      releaseName_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -423,6 +462,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     if (!getMasterUrlBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 9, masterUrl_);
     }
+    if (!getReleaseNameBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 10, releaseName_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -460,6 +502,9 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     if (!getMasterUrlBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(9, masterUrl_);
     }
+    if (!getReleaseNameBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(10, releaseName_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -494,6 +539,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       return false;
     if (!getMasterUrl().equals(other.getMasterUrl()))
       return false;
+    if (!getReleaseName().equals(other.getReleaseName()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -524,6 +571,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
     hash = (53 * hash) + getResourceGroup().hashCode();
     hash = (37 * hash) + MASTER_URL_FIELD_NUMBER;
     hash = (53 * hash) + getMasterUrl().hashCode();
+    hash = (37 * hash) + RELEASE_NAME_FIELD_NUMBER;
+    hash = (53 * hash) + getReleaseName().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -660,6 +709,8 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
 
       masterUrl_ = "";
 
+      releaseName_ = "";
+
       return this;
     }
 
@@ -700,6 +751,7 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       result.subscriptionId_ = subscriptionId_;
       result.resourceGroup_ = resourceGroup_;
       result.masterUrl_ = masterUrl_;
+      result.releaseName_ = releaseName_;
       onBuilt();
       return result;
     }
@@ -774,6 +826,10 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       }
       if (!other.getMasterUrl().isEmpty()) {
         masterUrl_ = other.masterUrl_;
+        onChanged();
+      }
+      if (!other.getReleaseName().isEmpty()) {
+        releaseName_ = other.releaseName_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -1347,6 +1403,75 @@ public final class ContainerServicePerpetualTaskParams extends com.google.protob
       checkByteStringIsUtf8(value);
 
       masterUrl_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object releaseName_ = "";
+    /**
+     * <code>string release_name = 10[json_name = "releaseName"];</code>
+     * @return The releaseName.
+     */
+    public java.lang.String getReleaseName() {
+      java.lang.Object ref = releaseName_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        releaseName_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string release_name = 10[json_name = "releaseName"];</code>
+     * @return The bytes for releaseName.
+     */
+    public com.google.protobuf.ByteString getReleaseNameBytes() {
+      java.lang.Object ref = releaseName_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        releaseName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string release_name = 10[json_name = "releaseName"];</code>
+     * @param value The releaseName to set.
+     * @return This builder for chaining.
+     */
+    public Builder setReleaseName(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      releaseName_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string release_name = 10[json_name = "releaseName"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearReleaseName() {
+      releaseName_ = getDefaultInstance().getReleaseName();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string release_name = 10[json_name = "releaseName"];</code>
+     * @param value The bytes for releaseName to set.
+     * @return This builder for chaining.
+     */
+    public Builder setReleaseNameBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      releaseName_ = value;
       onChanged();
       return this;
     }

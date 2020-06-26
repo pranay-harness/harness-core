@@ -3,6 +3,7 @@ package software.wings.helpers.ext.helm;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -26,6 +27,7 @@ import static org.powermock.api.mockito.PowerMockito.spy;
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V3;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -34,6 +36,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.model.KubernetesResource;
+import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.joor.Reflect;
@@ -56,6 +61,7 @@ import software.wings.beans.yaml.GitFile;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.delegatetasks.helm.HelmCommandHelper;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
+import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
@@ -78,6 +84,7 @@ import software.wings.utils.HelmTestConstants;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -93,6 +100,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private HelmTaskHelper helmTaskHelper;
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
+  @Mock private K8sTaskHelper k8sTaskHelper;
   @InjectMocks private HelmDeployServiceImpl helmDeployService;
 
   private HelmDeployServiceImpl spyHelmDeployService = spy(new HelmDeployServiceImpl());
@@ -139,6 +147,99 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    verify(helmClient).install(helmInstallCommandRequest);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testDeployInstallK116() throws Exception {
+    helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+    helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
+    List<KubernetesResource> resources = ImmutableList.of(
+        KubernetesResource.builder()
+            .resourceId(
+                KubernetesResourceId.builder().name("helm-deploy").namespace("default").kind("Deployment").build())
+            .build(),
+        KubernetesResource.builder()
+            .resourceId(
+                KubernetesResourceId.builder().name("helm-deploy-1").namespace("default-1").kind("StatefulSet").build())
+            .build(),
+        KubernetesResource.builder()
+            .resourceId(
+                KubernetesResourceId.builder().name("helm-deploy-2").namespace("default").kind("StatefulSet").build())
+            .build());
+    ContainerInfo expectedContainerInfo = ContainerInfo.builder().hostName("test").build();
+    List<ContainerInfo> containerInfos = ImmutableList.of(expectedContainerInfo);
+
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
+    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    when(containerDeploymentDelegateHelper.isK8sVersion116OrAbove(any(), any())).thenReturn(true);
+    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
+    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString())).thenReturn(containerInfos);
+    when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
+             anyString(), anyString(), any(ExecutionLogCallback.class)))
+        .thenReturn(true);
+
+    HelmInstallCommandResponse helmCommandResponse =
+        (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
+    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(helmCommandResponse.getContainerInfoList()).isNotEmpty();
+    ContainerInfo actualContainerInfo = helmCommandResponse.getContainerInfoList().get(0);
+    assertThat(actualContainerInfo).isEqualTo(expectedContainerInfo);
+
+    verify(helmClient).install(helmInstallCommandRequest);
+
+    verify(k8sTaskHelper, times(1))
+        .doStatusCheckAllResourcesForHelm(any(Kubectl.class),
+            eq(asList(
+                KubernetesResourceId.builder().name("helm-deploy").namespace("default").kind("Deployment").build(),
+                KubernetesResourceId.builder().name("helm-deploy-2").namespace("default").kind("StatefulSet").build())),
+            anyString(), anyString(), eq("default"), anyString(), any(ExecutionLogCallback.class));
+    verify(k8sTaskHelper, times(1))
+        .doStatusCheckAllResourcesForHelm(any(Kubectl.class),
+            eq(asList(KubernetesResourceId.builder()
+                          .name("helm-deploy-1")
+                          .namespace("default-1")
+                          .kind("StatefulSet")
+                          .build())),
+            anyString(), anyString(), eq("default-1"), anyString(), any(ExecutionLogCallback.class));
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testDeployInstallK116NonRepo() throws Exception {
+    helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+    helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
+    List<KubernetesResource> resources = ImmutableList.of(
+        KubernetesResource.builder()
+            .resourceId(
+                KubernetesResourceId.builder().name("helm-deploy").namespace("default").kind("Deployment").build())
+            .build());
+    ContainerInfo expectedContainerInfo = ContainerInfo.builder().hostName("test").build();
+    List<ContainerInfo> containerInfos = ImmutableList.of(expectedContainerInfo);
+
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
+    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    when(containerDeploymentDelegateHelper.isK8sVersion116OrAbove(any(), any())).thenReturn(true);
+    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
+    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString())).thenReturn(containerInfos);
+    when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
+             eq("default"), anyString(), any(ExecutionLogCallback.class)))
+        .thenReturn(true);
+
+    HelmInstallCommandRequest helmInstallCommandRequest = createHelmInstallCommandRequestNoSourceRepo();
+    HelmInstallCommandResponse helmCommandResponse =
+        (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
+    assertThat(helmInstallCommandRequest.getWorkingDir()).isNotEmpty();
+    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(helmCommandResponse.getContainerInfoList()).isNotEmpty();
+    ContainerInfo actualContainerInfo = helmCommandResponse.getContainerInfoList().get(0);
+    assertThat(actualContainerInfo).isEqualTo(expectedContainerInfo);
+
     verify(helmClient).install(helmInstallCommandRequest);
   }
 
@@ -233,10 +334,32 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   }
 
   private HelmInstallCommandRequest createHelmInstallCommandRequest() {
+    HelmInstallCommandRequest request =
+        HelmInstallCommandRequest.builder()
+            .releaseName(HelmTestConstants.HELM_RELEASE_NAME_KEY)
+            .kubeConfigLocation(HelmTestConstants.HELM_KUBE_CONFIG_LOCATION_KEY)
+            .chartSpecification(HelmChartSpecification.builder().chartName(HelmTestConstants.CHART_NAME_KEY).build())
+            .containerServiceParams(ContainerServiceParams.builder().namespace("default").build())
+            .executionLogCallback(logCallback)
+            .sourceRepoConfig(K8sDelegateManifestConfig.builder()
+                                  .manifestStoreTypes(StoreType.HelmSourceRepo)
+                                  .gitConfig(GitConfig.builder().build())
+                                  .gitFileConfig(GitFileConfig.builder().filePath("test").build())
+                                  .build())
+            .build();
+    request.setWorkingDir("tmp");
+    return request;
+  }
+
+  private HelmInstallCommandRequest createHelmInstallCommandRequestNoSourceRepo() {
     return HelmInstallCommandRequest.builder()
         .releaseName(HelmTestConstants.HELM_RELEASE_NAME_KEY)
         .kubeConfigLocation(HelmTestConstants.HELM_KUBE_CONFIG_LOCATION_KEY)
-        .chartSpecification(HelmChartSpecification.builder().chartName(HelmTestConstants.CHART_NAME_KEY).build())
+        .containerServiceParams(ContainerServiceParams.builder().namespace("default").build())
+        .chartSpecification(HelmChartSpecification.builder()
+                                .chartName(HelmTestConstants.CHART_NAME_KEY)
+                                .chartUrl("http://127.0.0.1")
+                                .build())
         .executionLogCallback(logCallback)
         .build();
   }
@@ -656,8 +779,14 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     setFakeTimeLimiter();
     HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder()
                                              .containerServiceParams(ContainerServiceParams.builder().build())
+                                             .chartSpecification(HelmChartSpecification.builder()
+                                                                     .chartName(HelmTestConstants.CHART_NAME_KEY)
+                                                                     .chartUrl("http://127.0.0.1")
+                                                                     .build())
+
                                              .releaseName("first-release")
                                              .build();
+
     KubernetesConfig kubernetesConfig = new KubernetesConfig();
 
     when(helmClient.rollback(request))
@@ -678,6 +807,48 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     HelmInstallCommandResponse response = (HelmInstallCommandResponse) helmDeployService.rollback(request);
     assertThat(response.getContainerInfoList()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testRollbacklK116() throws Exception {
+    setFakeTimeLimiter();
+    HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder()
+                                             .containerServiceParams(ContainerServiceParams.builder().build())
+                                             .chartSpecification(HelmChartSpecification.builder()
+                                                                     .chartName(HelmTestConstants.CHART_NAME_KEY)
+                                                                     .chartUrl("http://127.0.0.1")
+                                                                     .build())
+
+                                             .releaseName("first-release")
+                                             .build();
+
+    List<KubernetesResource> resources = ImmutableList.of(
+        KubernetesResource.builder()
+            .resourceId(
+                KubernetesResourceId.builder().name("helm-deploy").namespace("default").kind("Deployment").build())
+            .build());
+    ContainerInfo expectedContainerInfo = ContainerInfo.builder().hostName("test").build();
+    List<ContainerInfo> containerInfos = ImmutableList.of(expectedContainerInfo);
+
+    when(helmClient.rollback(request))
+        .thenReturn(HelmInstallCommandResponse.builder()
+                        .output("Rollback was a success.")
+                        .commandExecutionStatus(SUCCESS)
+                        .build());
+    when(containerDeploymentDelegateHelper.isK8sVersion116OrAbove(any(), any())).thenReturn(true);
+    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
+    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString())).thenReturn(containerInfos);
+    when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
+             eq("default"), anyString(), any(ExecutionLogCallback.class)))
+        .thenReturn(true);
+
+    HelmInstallCommandResponse helmCommandResponse = (HelmInstallCommandResponse) helmDeployService.rollback(request);
+    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(helmCommandResponse.getContainerInfoList()).isNotEmpty();
+    ContainerInfo actualContainerInfo = helmCommandResponse.getContainerInfoList().get(0);
+    assertThat(actualContainerInfo).isEqualTo(expectedContainerInfo);
   }
 
   private void successWhenHelm3PresentInClientTools() throws InterruptedException, IOException, TimeoutException {
@@ -791,5 +962,44 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmDeployService.deleteAndPurgeHelmRelease(helmInstallCommandRequest, new ExecutionLogCallback());
 
     verify(helmClient, times(1)).deleteHelmRelease(helmInstallCommandRequest);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void shouldFailIfSteadyStateCheckFails() throws Exception {
+    helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+    helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
+    List<KubernetesResource> resources = ImmutableList.of(
+        KubernetesResource.builder()
+            .resourceId(
+                KubernetesResourceId.builder().name("helm-deploy").namespace("default").kind("Deployment").build())
+            .build(),
+        KubernetesResource.builder()
+            .resourceId(
+                KubernetesResourceId.builder().name("helm-deploy-1").namespace("default-1").kind("StatefulSet").build())
+            .build(),
+        KubernetesResource.builder()
+            .resourceId(
+                KubernetesResourceId.builder().name("helm-deploy-2").namespace("default").kind("StatefulSet").build())
+            .build());
+    ContainerInfo expectedContainerInfo = ContainerInfo.builder().hostName("test").build();
+    List<ContainerInfo> containerInfos = ImmutableList.of(expectedContainerInfo);
+
+    when(containerDeploymentDelegateHelper.isK8sVersion116OrAbove(any(), any())).thenReturn(true);
+    when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
+    when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
+             anyString(), anyString(), any(ExecutionLogCallback.class)))
+        .thenReturn(false);
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(()
+                        -> helmDeployService.getKubectlContainerInfos(
+                            helmInstallCommandRequest, Collections.emptyList(), executionLogCallback))
+        .withMessage("Steady state check failed");
+
+    verify(k8sTaskHelper, times(1))
+        .doStatusCheckAllResourcesForHelm(
+            any(), any(), any(), anyString(), anyString(), anyString(), any(ExecutionLogCallback.class));
   }
 }

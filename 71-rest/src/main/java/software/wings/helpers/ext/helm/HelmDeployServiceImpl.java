@@ -3,10 +3,12 @@ package software.wings.helpers.ext.helm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.k8s.manifest.ManifestHelper.getEligibleWorkloads;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
+import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 
@@ -22,8 +24,10 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.KubernetesResource;
+import io.harness.k8s.model.KubernetesResourceId;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -77,6 +81,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -91,6 +96,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class HelmDeployServiceImpl implements HelmDeployService {
   public static final String MANIFEST_FILE_NAME = "manifest.yaml";
+  @Inject private transient K8sTaskHelper k8sTaskHelper;
   @Inject private HelmClient helmClient;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private TimeLimiter timeLimiter;
@@ -102,7 +108,6 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private HelmTaskHelper helmTaskHelper;
   @Inject private HelmHelper helmHelper;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
-  @Inject private K8sTaskHelper k8sTaskHelper;
 
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
   private static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
@@ -149,12 +154,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback =
           markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.WaitForSteadyState);
 
-      List<ContainerInfo> containerInfos = new ArrayList<>();
-      LogCallback finalExecutionLogCallback = executionLogCallback;
-      timeLimiter.callWithTimeout(()
-                                      -> containerInfos.addAll(fetchContainerInfo(
-                                          commandRequest, finalExecutionLogCallback, new ArrayList<>())),
-          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
+      List<ContainerInfo> containerInfos = getContainerInfos(commandRequest,
+          commandRequest.getVariableOverridesYamlFiles(), executionLogCallback, commandRequest.getTimeoutInMillis());
       commandResponse.setContainerInfoList(containerInfos);
 
       executionLogCallback = markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.WrapUp);
@@ -195,11 +196,80 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
   }
 
-  private void prepareRepoAndCharts(HelmInstallCommandRequest commandRequest) throws Exception {
+  private List<ContainerInfo> getContainerInfos(HelmCommandRequest commandRequest,
+      List<String> variableOverridesYamlFiles, LogCallback executionLogCallback, long timeoutInMillis)
+      throws Exception {
+    boolean isK8sV116OrAbove = containerDeploymentDelegateHelper.isK8sVersion116OrAbove(
+        commandRequest.getContainerServiceParams(), (ExecutionLogCallback) executionLogCallback);
+    return isK8sV116OrAbove ? getKubectlContainerInfos(commandRequest, variableOverridesYamlFiles, executionLogCallback)
+                            : getFabric8ContainerInfos(commandRequest, executionLogCallback, timeoutInMillis);
+  }
+
+  private List<ContainerInfo> getFabric8ContainerInfos(
+      HelmCommandRequest commandRequest, LogCallback executionLogCallback, long timeoutInMillis) throws Exception {
+    List<ContainerInfo> containerInfos = new ArrayList<>();
+    LogCallback finalExecutionLogCallback = executionLogCallback;
+    timeLimiter.callWithTimeout(
+        ()
+            -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback, new ArrayList<>())),
+        timeoutInMillis, TimeUnit.MILLISECONDS, true);
+    return containerInfos;
+  }
+
+  @VisibleForTesting
+  List<ContainerInfo> getKubectlContainerInfos(HelmCommandRequest commandRequest,
+      List<String> variableOverridesYamlFiles, LogCallback executionLogCallback) throws Exception {
+    Kubectl client = Kubectl.client(k8sGlobalConfigService.getKubectlPath(), commandRequest.getKubeConfigLocation());
+
+    String workingDirPath = Paths.get(commandRequest.getWorkingDir()).normalize().toAbsolutePath().toString();
+    k8sTaskHelper.deleteSkippedManifestFiles(workingDirPath, (ExecutionLogCallback) executionLogCallback);
+
+    List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplateForHelm(
+        helmClient.getHelmPath(commandRequest.getHelmVersion()), workingDirPath, variableOverridesYamlFiles,
+        commandRequest.getReleaseName(), commandRequest.getContainerServiceParams().getNamespace(),
+        (ExecutionLogCallback) executionLogCallback, commandRequest.getHelmVersion());
+
+    List<KubernetesResource> resources =
+        k8sTaskHelper.readManifests(manifestFiles, (ExecutionLogCallback) executionLogCallback);
+    k8sTaskHelper.setNamespaceToKubernetesResourcesIfRequired(
+        resources, commandRequest.getContainerServiceParams().getNamespace());
+
+    List<KubernetesResource> workloads = getEligibleWorkloads(resources);
+    List<ContainerInfo> containerInfoList = new ArrayList<>();
+    final Map<String, List<KubernetesResourceId>> namespacewiseResources =
+        workloads.stream()
+            .map(KubernetesResource::getResourceId)
+            .collect(Collectors.groupingBy(KubernetesResourceId::getNamespace));
+    boolean success = true;
+    for (Map.Entry<String, List<KubernetesResourceId>> entry : namespacewiseResources.entrySet()) {
+      if (success) {
+        final String namespace = entry.getKey();
+        success = success
+            && k8sTaskHelper.doStatusCheckAllResourcesForHelm(client, entry.getValue(), commandRequest.getOcPath(),
+                   commandRequest.getWorkingDir(), namespace, commandRequest.getKubeConfigLocation(),
+                   (ExecutionLogCallback) executionLogCallback);
+        executionLogCallback.saveExecutionLog(
+            format("Status check done with success [%s] for resources in namespace: [%s]", success, namespace));
+        containerInfoList.addAll(k8sTaskHelper.getContainerInfos(
+            containerDeploymentDelegateHelper.getKubernetesConfig(commandRequest.getContainerServiceParams()),
+            commandRequest.getReleaseName(), namespace));
+      }
+    }
+    executionLogCallback.saveExecutionLog(format("Currently running Containers: [%s]", containerInfoList.size()));
+    if (success) {
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return containerInfoList;
+    } else {
+      throw new InvalidRequestException("Steady state check failed", USER);
+    }
+  }
+
+  private void prepareRepoAndCharts(HelmCommandRequest commandRequest) throws Exception {
     K8sDelegateManifestConfig repoConfig = commandRequest.getRepoConfig();
     if (repoConfig == null) {
       addRepoForCommand(commandRequest);
       repoUpdate(commandRequest);
+
       if (!helmCommandHelper.isValidChartSpecification(commandRequest.getChartSpecification())) {
         String msg = "Couldn't find valid helm chart specification from service or values.yaml from git\n"
             + ((commandRequest.getChartSpecification() != null) ? commandRequest.getChartSpecification() + "\n" : "")
@@ -208,12 +278,14 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         commandRequest.getExecutionLogCallback().saveExecutionLog(msg);
         throw new InvalidRequestException(msg, USER);
       }
+
+      fetchInlineChartUrl(commandRequest);
     } else {
       fetchRepo(commandRequest);
     }
   }
 
-  void fetchRepo(HelmInstallCommandRequest commandRequest) throws Exception {
+  void fetchRepo(HelmCommandRequest commandRequest) throws Exception {
     K8sDelegateManifestConfig repoConfig = commandRequest.getRepoConfig();
     switch (repoConfig.getManifestStoreTypes()) {
       case HelmSourceRepo:
@@ -228,7 +300,18 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @VisibleForTesting
-  void fetchChartRepo(HelmInstallCommandRequest commandRequest) throws Exception {
+  void fetchInlineChartUrl(HelmCommandRequest commandRequest) throws Exception {
+    HelmChartSpecification helmChartSpecification = commandRequest.getChartSpecification();
+    String workingDirectory = Paths.get(getWorkingDirectory(commandRequest)).toString();
+
+    helmTaskHelper.downloadChartFiles(helmChartSpecification, workingDirectory, commandRequest);
+    commandRequest.setWorkingDir(Paths.get(workingDirectory, helmChartSpecification.getChartName()).toString());
+
+    commandRequest.getExecutionLogCallback().saveExecutionLog("Helm Chart Repo checked-out locally");
+  }
+
+  @VisibleForTesting
+  void fetchChartRepo(HelmCommandRequest commandRequest) throws Exception {
     HelmChartConfigParams helmChartConfigParams = commandRequest.getRepoConfig().getHelmChartConfigParams();
     String workingDirectory = Paths.get(getWorkingDirectory(commandRequest)).toString();
 
@@ -239,7 +322,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @VisibleForTesting
-  void fetchSourceRepo(HelmInstallCommandRequest commandRequest) {
+  void fetchSourceRepo(HelmCommandRequest commandRequest) {
     K8sDelegateManifestConfig sourceRepoConfig = commandRequest.getRepoConfig();
     if (sourceRepoConfig == null) {
       return;
@@ -349,15 +432,20 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       if (commandResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
         return commandResponse;
       }
+
+      boolean isK8sV116OrAbove = containerDeploymentDelegateHelper.isK8sVersion116OrAbove(
+          commandRequest.getContainerServiceParams(), (ExecutionLogCallback) executionLogCallback);
+
+      if (isK8sV116OrAbove) {
+        fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
+        prepareRepoAndCharts(commandRequest);
+      }
+
       executionLogCallback =
           markDoneAndStartNew(commandRequest, executionLogCallback, HelmDummyCommandUnit.WaitForSteadyState);
 
-      List<ContainerInfo> containerInfos = new ArrayList<>();
-      LogCallback finalExecutionLogCallback = executionLogCallback;
-      timeLimiter.callWithTimeout(()
-                                      -> containerInfos.addAll(fetchContainerInfo(
-                                          commandRequest, finalExecutionLogCallback, new ArrayList<>())),
-          commandRequest.getTimeoutInMillis(), TimeUnit.MILLISECONDS, true);
+      List<ContainerInfo> containerInfos = getContainerInfos(commandRequest,
+          commandRequest.getVariableOverridesYamlFiles(), executionLogCallback, commandRequest.getTimeoutInMillis());
       commandResponse.setContainerInfoList(containerInfos);
 
       executionLogCallback.saveExecutionLog("\nDone", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
@@ -612,7 +700,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     return status.equalsIgnoreCase("failed");
   }
 
-  private void fetchValuesYamlFromGitRepo(HelmInstallCommandRequest commandRequest, LogCallback executionLogCallback) {
+  private void fetchValuesYamlFromGitRepo(HelmCommandRequest commandRequest, LogCallback executionLogCallback) {
     if (commandRequest.getGitConfig() == null) {
       return;
     }
@@ -716,7 +804,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
   }
 
-  private void addRepoForCommand(HelmInstallCommandRequest helmCommandRequest)
+  private void addRepoForCommand(HelmCommandRequest helmCommandRequest)
       throws InterruptedException, IOException, TimeoutException {
     LogCallback executionLogCallback = helmCommandRequest.getExecutionLogCallback();
 
@@ -735,7 +823,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
   }
 
-  private void repoUpdate(HelmInstallCommandRequest helmCommandRequest)
+  private void repoUpdate(HelmCommandRequest helmCommandRequest)
       throws InterruptedException, TimeoutException, IOException {
     if (HelmCommandType.INSTALL != helmCommandRequest.getHelmCommandType()) {
       return;

@@ -66,6 +66,7 @@ import software.wings.delegatetasks.collect.artifacts.AzureArtifactsCollectionTa
 import software.wings.delegatetasks.collect.artifacts.BambooCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
+import software.wings.delegatetasks.container.ContainerDummyTask;
 import software.wings.delegatetasks.cv.MetricsDataCollectionTask;
 import software.wings.delegatetasks.delegatecapability.CapabilityCheckController;
 import software.wings.delegatetasks.helm.HelmCommandTask;
@@ -337,6 +338,7 @@ public enum TaskType {
   CONTAINER_CONNECTION_VALIDATION(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   FETCH_CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   LIST_CLUSTERS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
+  CONTAINER_VALIDATION(TaskGroup.CONTAINER, ContainerDummyTask.class, ContainerValidation.class),
 
   FETCH_MASTER_URL(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, MasterUrlFetchValidation.class),
 
