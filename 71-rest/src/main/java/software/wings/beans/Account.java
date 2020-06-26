@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
@@ -416,6 +417,10 @@ public class Account extends Base implements PersistentRegularIterable {
     }
 
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public long getNumberOfDaysSinceExpiry(long currentTime) {
+    return TimeUnit.MILLISECONDS.toDays(currentTime - getLicenseInfo().getExpiryTime());
   }
 
   public static final class Builder {
