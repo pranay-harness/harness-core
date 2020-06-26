@@ -6,6 +6,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -35,6 +36,9 @@ public class AwsEcsHelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsEcsListClustersResponse.builder().clusters(asList("cluster-0", "cluster-1")).build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<String> clusters = service.listClusters(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(clusters).isNotNull();
     assertThat(clusters.size()).isEqualTo(2);
@@ -54,6 +58,9 @@ public class AwsEcsHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<Service> services =
         service.listClusterServices(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID, "cluster");
     assertThat(services).isNotNull();

@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -52,6 +53,9 @@ public class AwsCFHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<AwsCFTemplateParamsData> data = service.getParamsData(
         "GIT", "data", SETTING_ID, "us-east-1", "appId", SETTING_ID, "branch", "path", "commitId", true);
     assertThat(data).isNotNull();

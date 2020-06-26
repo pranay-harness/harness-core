@@ -9,7 +9,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
@@ -33,6 +32,7 @@ import java.util.List;
 public class AwsRoute53HelperServiceManagerImpl implements AwsRoute53HelperServiceManager {
   private static final long TIME_OUT_IN_MINUTES = 2;
   @Inject private DelegateService delegateService;
+  @Inject private AwsHelperServiceManager helper;
 
   @Override
   public List<AwsRoute53HostedZoneData> listHostedZones(
@@ -62,11 +62,10 @@ public class AwsRoute53HelperServiceManagerImpl implements AwsRoute53HelperServi
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
-      if (notifyResponseData instanceof ErrorNotifyResponseData) {
-        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
-      }
+      helper.validateDelegateSuccessForSyncTask(notifyResponseData);
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
       throw new InvalidRequestException(ExceptionUtils.getMessage(ex), WingsException.USER);
     }
   }

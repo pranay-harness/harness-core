@@ -2,7 +2,10 @@ package software.wings.service.impl.spotinst;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.spotinst.model.SpotInstConstants.defaultSyncSpotinstTimeoutMin;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -25,7 +28,6 @@ import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupNamesRe
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.tasks.Cd1SetupFields;
@@ -33,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.List;
@@ -100,7 +103,13 @@ public class SpotinstHelperServiceManager {
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
-        throw new InvalidRequestException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+        throw new InvalidRequestException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage(), USER);
+      } else if (notifyResponseData instanceof RemoteMethodReturnValueData) {
+        throw new InvalidRequestException(
+            getMessage(((RemoteMethodReturnValueData) notifyResponseData).getException()), USER);
+      } else if (!(notifyResponseData instanceof SpotInstTaskExecutionResponse)) {
+        throw new InvalidRequestException(
+            format("Unknown response from delegate: [%s]", notifyResponseData.getClass().getSimpleName()), USER);
       }
       SpotInstTaskExecutionResponse response = (SpotInstTaskExecutionResponse) notifyResponseData;
       if (FAILURE == response.getCommandExecutionStatus()) {
@@ -108,7 +117,8 @@ public class SpotinstHelperServiceManager {
       }
       return response.getSpotInstTaskResponse();
     } catch (InterruptedException ex) {
-      throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
+      Thread.currentThread().interrupt();
+      throw new InvalidRequestException(ex.getMessage(), USER);
     }
   }
 }

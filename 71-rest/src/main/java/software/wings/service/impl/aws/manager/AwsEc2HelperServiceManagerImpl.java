@@ -1,6 +1,7 @@
 package software.wings.service.impl.aws.manager;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -12,7 +13,6 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.ResourceType;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
@@ -54,6 +54,7 @@ import java.util.concurrent.TimeUnit;
 public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManager {
   private static final long TIME_OUT_IN_MINUTES = 2;
   @Inject private DelegateService delegateService;
+  @Inject private AwsHelperServiceManager helper;
 
   @Override
   public void validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
@@ -177,12 +178,11 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
             .build();
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
-      if (notifyResponseData instanceof ErrorNotifyResponseData) {
-        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
-      }
+      helper.validateDelegateSuccessForSyncTask(notifyResponseData);
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {
-      throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
+      Thread.currentThread().interrupt();
+      throw new InvalidRequestException(ex.getMessage(), USER);
     }
   }
 }

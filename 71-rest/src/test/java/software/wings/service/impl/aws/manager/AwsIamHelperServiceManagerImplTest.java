@@ -6,6 +6,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -37,6 +38,9 @@ public class AwsIamHelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsIamListRolesResponse.builder().roles(ImmutableMap.of("k1", "v1", "k2", "v2")).build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     Map<String, String> roles = service.listIamRoles(AwsConfig.builder().build(), emptyList(), APP_ID);
     assertThat(roles).isNotNull();
     assertThat(roles.size()).isEqualTo(2);
@@ -56,6 +60,9 @@ public class AwsIamHelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsIamListInstanceRolesResponse.builder().instanceRoles(asList("r-0", "r-1")).build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<String> roles = service.listIamInstanceRoles(AwsConfig.builder().build(), emptyList(), APP_ID);
     assertThat(roles).isNotNull();
     assertThat(roles.size()).isEqualTo(2);

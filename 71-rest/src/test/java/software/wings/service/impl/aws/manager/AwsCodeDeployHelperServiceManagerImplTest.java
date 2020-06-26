@@ -6,6 +6,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -39,6 +40,9 @@ public class AwsCodeDeployHelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsCodeDeployListAppResponse.builder().applications(asList("app_1", "app_2")).build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<String> applications = service.listApplications(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(applications).isNotNull();
     assertThat(applications.size()).isEqualTo(2);
@@ -56,6 +60,9 @@ public class AwsCodeDeployHelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsCodeDeployListDeploymentConfigResponse.builder().deploymentConfig(asList("conf_1", "conf_2")).build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<String> configs =
         service.listDeploymentConfiguration(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(configs).isNotNull();
@@ -74,6 +81,9 @@ public class AwsCodeDeployHelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsCodeDeployListDeploymentGroupResponse.builder().deploymentGroups(asList("gp_1", "gp_2")).build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<String> groups =
         service.listDeploymentGroups(AwsConfig.builder().build(), emptyList(), "us-east-1", "appName", APP_ID);
     assertThat(groups).isNotNull();
@@ -94,6 +104,9 @@ public class AwsCodeDeployHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<Instance> instances =
         service.listDeploymentInstances(AwsConfig.builder().build(), emptyList(), "us-east-1", "depId", APP_ID);
     assertThat(instances).isNotNull();
@@ -115,6 +128,9 @@ public class AwsCodeDeployHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     AwsCodeDeployS3LocationData data =
         service.listAppRevision(AwsConfig.builder().build(), emptyList(), "us-east-1", "appName", "depGp", APP_ID);
     assertThat(data).isNotNull();

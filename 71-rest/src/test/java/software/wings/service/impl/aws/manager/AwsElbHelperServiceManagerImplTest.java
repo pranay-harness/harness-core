@@ -7,6 +7,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -42,6 +43,9 @@ public class AwsElbHelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsElbListClassicElbsResponse.builder().classicElbs(asList("class-0", "class-1")).build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<String> lbs = service.listClassicLoadBalancers(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(lbs).isNotNull();
     assertThat(lbs.size()).isEqualTo(2);
@@ -62,6 +66,9 @@ public class AwsElbHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<String> lbs =
         service.listApplicationLoadBalancers(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(lbs).isNotNull();
@@ -83,6 +90,9 @@ public class AwsElbHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<AwsLoadBalancerDetails> details =
         service.listApplicationLoadBalancerDetails(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(details).isNotNull();
@@ -104,6 +114,9 @@ public class AwsElbHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<String> lbs = service.listElasticLoadBalancers(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(lbs).isNotNull();
     assertThat(lbs.size()).isEqualTo(2);
@@ -124,6 +137,9 @@ public class AwsElbHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<AwsLoadBalancerDetails> details =
         service.listElasticLoadBalancerDetails(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(details).isNotNull();
@@ -145,6 +161,9 @@ public class AwsElbHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<String> lbs = service.listNetworkLoadBalancers(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(lbs).isNotNull();
     assertThat(lbs.size()).isEqualTo(2);
@@ -165,6 +184,9 @@ public class AwsElbHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<AwsLoadBalancerDetails> details =
         service.listNetworkLoadBalancerDetails(AwsConfig.builder().build(), emptyList(), "us-east-1", APP_ID);
     assertThat(details).isNotNull();
@@ -183,6 +205,9 @@ public class AwsElbHelperServiceManagerImplTest extends CategoryTest {
     doReturn(AwsElbListTargetGroupsResponse.builder().targetGroups(ImmutableMap.of("k", "v")).build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     Map<String, String> groups =
         service.listTargetGroupsForAlb(AwsConfig.builder().build(), emptyList(), "us-east-1", "lbName", APP_ID);
     assertThat(groups).isNotNull();
@@ -204,6 +229,9 @@ public class AwsElbHelperServiceManagerImplTest extends CategoryTest {
                  .build())
         .when(mockDelegateService)
         .executeTask(any());
+    AwsHelperServiceManager mockHelper = mock(AwsHelperServiceManager.class);
+    on(service).set("helper", mockHelper);
+    doNothing().when(mockHelper).validateDelegateSuccessForSyncTask(any());
     List<AwsElbListener> listeners =
         service.listListenersForElb(AwsConfig.builder().build(), emptyList(), "us-east-1", "lbName", APP_ID);
     assertThat(listeners).isNotNull();
