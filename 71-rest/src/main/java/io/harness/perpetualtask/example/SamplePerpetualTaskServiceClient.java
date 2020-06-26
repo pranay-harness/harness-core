@@ -18,19 +18,23 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class SamplePerpetualTaskServiceClient implements PerpetualTaskServiceClient {
   @Inject private PerpetualTaskService perpetualTaskService;
-
-  private static final String COUNTRY_NAME = "countryName";
+  @Inject private SamplePTaskService samplePTaskService;
+  static final String COUNTRY_NAME = "countryName";
 
   @Override
   public SamplePerpetualTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
-    return SamplePerpetualTaskParams.newBuilder().setCountry(clientParams.get(COUNTRY_NAME)).build();
+    int population = samplePTaskService.getPopulation(clientParams.get(COUNTRY_NAME));
+    return SamplePerpetualTaskParams.newBuilder()
+        .setCountry(clientParams.get(COUNTRY_NAME))
+        .setPopulation(population)
+        .build();
   }
 
   @Override
   public void onTaskStateChange(
       String taskId, PerpetualTaskResponse newPerpetualTaskResponse, PerpetualTaskResponse oldPerpetualTaskResponse) {
-    logger.debug("Nothing to do !!");
+    logger.debug("Nothing to do !");
   }
 
   @Override

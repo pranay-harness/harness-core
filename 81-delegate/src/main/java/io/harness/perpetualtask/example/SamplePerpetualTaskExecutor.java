@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.example;
 
+import static java.lang.Thread.sleep;
+
 import com.google.inject.Singleton;
 
 import io.harness.grpc.utils.AnyUtils;
@@ -20,7 +22,13 @@ public class SamplePerpetualTaskExecutor implements PerpetualTaskExecutor {
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     SamplePerpetualTaskParams sampleParams =
         AnyUtils.unpack(params.getCustomizedParams(), SamplePerpetualTaskParams.class);
-    logger.info("Hello there !! {} ", sampleParams.getCountry());
+    try {
+      sleep(30000);
+    } catch (InterruptedException e) {
+      logger.error("The Sample PTask is interrupted", e);
+      Thread.currentThread().interrupt();
+    }
+    logger.info("The country {} has a population of {}", sampleParams.getCountry(), sampleParams.getPopulation());
     return PerpetualTaskResponse.builder()
         .responseCode(200)
         .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
