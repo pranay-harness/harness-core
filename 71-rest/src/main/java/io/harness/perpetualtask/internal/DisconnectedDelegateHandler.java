@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.internal;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -44,7 +45,8 @@ public class DisconnectedDelegateHandler implements Handler<PerpetualTaskRecord>
 
   @Override
   public void handle(PerpetualTaskRecord pTask) {
-    if (!delegateService.checkDelegateConnected(pTask.getAccountId(), pTask.getDelegateId())) {
+    String delegateId = pTask.getDelegateId();
+    if (isNotEmpty(delegateId) && !delegateService.checkDelegateConnected(pTask.getAccountId(), delegateId)) {
       logger.info("Resetting perpetual tasks assigned to disconnected delegate with id={}", pTask.getDelegateId());
       perpetualTaskService.resetTask(pTask.getAccountId(), pTask.getUuid());
     }

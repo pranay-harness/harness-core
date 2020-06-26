@@ -17,4 +17,10 @@ public interface SamplePerpetualTaskParamsOrBuilder extends
    * @return The bytes for country.
    */
   com.google.protobuf.ByteString getCountryBytes();
+
+  /**
+   * <code>int64 population = 2[json_name = "population"];</code>
+   * @return The population.
+   */
+  long getPopulation();
 }

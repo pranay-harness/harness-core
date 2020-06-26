@@ -53,6 +53,10 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
             country_ = s;
             break;
           }
+          case 16: {
+            population_ = input.readInt64();
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -116,6 +120,16 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
     }
   }
 
+  public static final int POPULATION_FIELD_NUMBER = 2;
+  private long population_;
+  /**
+   * <code>int64 population = 2[json_name = "population"];</code>
+   * @return The population.
+   */
+  public long getPopulation() {
+    return population_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -134,6 +148,9 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
     if (!getCountryBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, country_);
     }
+    if (population_ != 0L) {
+      output.writeInt64(2, population_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -146,6 +163,9 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
     size = 0;
     if (!getCountryBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, country_);
+    }
+    if (population_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream.computeInt64Size(2, population_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -165,6 +185,8 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
 
     if (!getCountry().equals(other.getCountry()))
       return false;
+    if (getPopulation() != other.getPopulation())
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -179,6 +201,8 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + COUNTRY_FIELD_NUMBER;
     hash = (53 * hash) + getCountry().hashCode();
+    hash = (37 * hash) + POPULATION_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getPopulation());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -295,6 +319,8 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
       super.clear();
       country_ = "";
 
+      population_ = 0L;
+
       return this;
     }
 
@@ -327,6 +353,7 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
       io.harness.perpetualtask.example.SamplePerpetualTaskParams result =
           new io.harness.perpetualtask.example.SamplePerpetualTaskParams(this);
       result.country_ = country_;
+      result.population_ = population_;
       onBuilt();
       return result;
     }
@@ -372,6 +399,9 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
       if (!other.getCountry().isEmpty()) {
         country_ = other.country_;
         onChanged();
+      }
+      if (other.getPopulation() != 0L) {
+        setPopulation(other.getPopulation());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -465,6 +495,34 @@ public final class SamplePerpetualTaskParams extends com.google.protobuf.Generat
       checkByteStringIsUtf8(value);
 
       country_ = value;
+      onChanged();
+      return this;
+    }
+
+    private long population_;
+    /**
+     * <code>int64 population = 2[json_name = "population"];</code>
+     * @return The population.
+     */
+    public long getPopulation() {
+      return population_;
+    }
+    /**
+     * <code>int64 population = 2[json_name = "population"];</code>
+     * @param value The population to set.
+     * @return This builder for chaining.
+     */
+    public Builder setPopulation(long value) {
+      population_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>int64 population = 2[json_name = "population"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearPopulation() {
+      population_ = 0L;
       onChanged();
       return this;
     }
