@@ -1,6 +1,10 @@
 package io.harness.workers.background.critical.iterator;
 
+import static io.harness.beans.ExecutionStatus.EXPIRED;
+import static io.harness.beans.ExecutionStatus.PREPARING;
+import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
@@ -8,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
@@ -33,6 +38,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
+import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionInterrupt;
@@ -40,6 +46,8 @@ import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutionCallbackMock;
 import software.wings.sm.StateMachineExecutor;
+
+import java.time.Duration;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({WorkflowExecutionMonitorHandler.class, PersistenceIteratorFactory.class})
@@ -54,6 +62,7 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
   private ArgumentCaptor<MongoPersistenceIteratorBuilder> captor =
       ArgumentCaptor.forClass(MongoPersistenceIteratorBuilder.class);
   private WorkflowExecution workflowExecution;
+  private static final Duration EXPIRE_THRESHOLD = Duration.ofMinutes(11);
 
   @Before
   public void setUp() throws Exception {
@@ -121,5 +130,26 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
     workflowExecutionMonitorHandler.handle(workflowExecution);
     verify(stateMachineExecutor, never()).executeCallback(any(), any(), any(), any());
     wingsPersistence.delete(failedStateExecutionInstance);
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void testExpireWorkflowInPreparingState() {
+    WorkflowExecution execution = WorkflowExecution.builder()
+                                      .appId(APP_ID)
+                                      .accountId(ACCOUNT_ID)
+                                      .uuid(WORKFLOW_EXECUTION_ID)
+                                      .startTs(System.currentTimeMillis() - EXPIRE_THRESHOLD.toMillis())
+                                      .status(PREPARING)
+                                      .message("Starting artifact collection")
+                                      .build();
+    wingsPersistence.save(execution);
+    featureFlagService.enableAccount(FeatureName.NAS_SUPPORT, ACCOUNT_ID);
+    workflowExecutionMonitorHandler.handle(execution);
+    WorkflowExecution updatedWorkflowExecution = wingsPersistence.get(WorkflowExecution.class, WORKFLOW_EXECUTION_ID);
+    assertThat(updatedWorkflowExecution.getStatus()).isEqualTo(EXPIRED);
+    assertThat(updatedWorkflowExecution.getMessage()).isNull();
+    wingsPersistence.delete(updatedWorkflowExecution);
   }
 }

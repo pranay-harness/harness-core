@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -2716,6 +2717,29 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             workflowExecutionUpdate, stdParams, app, workflow, null, executionArgs, null);
     workflowExecution = wingsPersistence.getWithAppId(WorkflowExecution.class, app.getUuid(), WORKFLOW_EXECUTION_ID);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.ABORTED);
+    assertThat(workflowExecution.getMessage()).isNull();
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldAbortExecutionInPreparingState() {
+    wingsPersistence.save(WorkflowExecution.builder()
+                              .accountId(ACCOUNT_ID)
+                              .appId(app.getUuid())
+                              .status(PREPARING)
+                              .message("Starting artifact collection")
+                              .uuid(WORKFLOW_EXECUTION_ID)
+                              .build());
+    ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
+                                                .appId(app.getUuid())
+                                                .executionUuid(WORKFLOW_EXECUTION_ID)
+                                                .executionInterruptType(ExecutionInterruptType.ABORT_ALL)
+                                                .build();
+    workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
+    WorkflowExecution workflowExecution =
+        wingsPersistence.getWithAppId(WorkflowExecution.class, app.getUuid(), WORKFLOW_EXECUTION_ID);
+    assertThat(workflowExecution.getStatus()).isEqualTo(ABORTED);
     assertThat(workflowExecution.getMessage()).isNull();
   }
 }

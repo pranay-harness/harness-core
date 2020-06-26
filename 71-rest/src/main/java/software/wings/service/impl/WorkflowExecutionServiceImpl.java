@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.fabric8.utils.Lists.isNullOrEmpty;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ApiKeyInfo.getEmbeddedUserFromApiKey;
+import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
@@ -112,6 +113,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
 import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoUtils;
 import io.harness.serializer.MapperUtils;
@@ -1412,7 +1414,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                         .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis())
-                                                        .set(WorkflowExecutionKeys.status, ExecutionStatus.ABORTED);
+                                                        .set(WorkflowExecutionKeys.status, ABORTED);
     wingsPersistence.update(query, updateOps);
   }
 
@@ -2001,6 +2003,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     wingsPersistence.update(query, updateOps);
   }
 
+  private void updateStartStatusAndUnsetMessage(String appId, String workflowExecutionId, ExecutionStatus status) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.appId, appId)
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
+                                         .filter(WorkflowExecutionKeys.status, PREPARING);
+
+    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                        .set(WorkflowExecutionKeys.status, status)
+                                                        .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis())
+                                                        .unset(WorkflowExecutionKeys.message);
+
+    wingsPersistence.findAndModify(query, updateOps, HPersistence.returnNewOptions);
+  }
+
   @Override
   public WorkflowExecution triggerEnvExecution(
       String appId, String envId, ExecutionArgs executionArgs, Trigger trigger) {
@@ -2428,6 +2444,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution == null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args", "No WorkflowExecution for executionUuid:" + executionUuid);
+    }
+
+    // handling abort_all interrupt explicitly when execution in preparing state.
+    if (workflowExecution.getStatus() == PREPARING && executionInterrupt.getExecutionInterruptType() == ABORT_ALL) {
+      updateStartStatusAndUnsetMessage(workflowExecution.getAppId(), workflowExecution.getUuid(), ABORTED);
+      wingsPersistence.save(executionInterrupt);
+      return executionInterrupt;
     }
 
     if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
