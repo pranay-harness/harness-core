@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.facilitator.async.AsyncFacilitator;
+import io.harness.facilitator.barrier.BarrierFacilitator;
 import io.harness.facilitator.chain.ChildChainFacilitator;
 import io.harness.facilitator.chain.TaskChainFacilitator;
 import io.harness.facilitator.child.ChildFacilitator;
@@ -28,5 +29,6 @@ public class OrchestrationFacilitatorRegistrar implements FacilitatorRegistrar {
     facilitatorClasses.add(Pair.of(TaskFacilitator.FACILITATOR_TYPE, TaskFacilitator.class));
     facilitatorClasses.add(Pair.of(TaskChainFacilitator.FACILITATOR_TYPE, TaskChainFacilitator.class));
     facilitatorClasses.add(Pair.of(ChildChainFacilitator.FACILITATOR_TYPE, ChildChainFacilitator.class));
+    facilitatorClasses.add(Pair.of(BarrierFacilitator.FACILITATOR_TYPE, BarrierFacilitator.class));
   }
 }
