@@ -225,7 +225,7 @@ public class BillingStatsFilterValuesDataFetcher
     if (!workloadNames.isEmpty()) {
       k8sLabels = k8sLabelConnectionDataFetcher.fetchAllLabels(
           Arrays.asList(prepareLabelFilters(getClusterIdsFromFilters(queryData.getFilters()),
-              workloadNames.toArray(new String[0]), namespaces.toArray(new String[0]))));
+              workloadNames.toArray(new String[0]), namespaces.toArray(new String[0]), accountId)));
     }
 
     if (!instanceIds.isEmpty()) {
@@ -290,8 +290,10 @@ public class BillingStatsFilterValuesDataFetcher
     return clusterIds.toArray(new String[0]);
   }
 
-  private QLK8sLabelFilter prepareLabelFilters(String[] clusterIds, String[] workloadNames, String[] namespaces) {
+  private QLK8sLabelFilter prepareLabelFilters(
+      String[] clusterIds, String[] workloadNames, String[] namespaces, String accountId) {
     QLK8sLabelFilterBuilder builder = QLK8sLabelFilter.builder();
+    builder.accountId(QLIdFilter.builder().operator(QLIdOperator.IN).values(new String[] {accountId}).build());
     if (clusterIds.length != 0) {
       builder.cluster(QLIdFilter.builder().operator(QLIdOperator.IN).values(clusterIds).build());
     }

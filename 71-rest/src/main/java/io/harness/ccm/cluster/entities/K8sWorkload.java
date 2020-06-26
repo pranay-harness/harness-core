@@ -39,11 +39,11 @@ import java.util.stream.Collectors;
 @CdIndex(name = "accountId_clusterId_uid",
     fields = { @Field(K8sWorkloadKeys.accountId)
                , @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.uid) })
-@CdIndex(name = "accountId_name_clusterId_namespace",
+@CdIndex(name = "accountId_clusterId_namespace_name",
     fields =
     {
       @Field(K8sWorkloadKeys.accountId)
-      , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.namespace)
+      , @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.namespace), @Field(K8sWorkloadKeys.name)
     })
 @CdIndex(name = "accountId_name_labels",
     fields = { @Field(K8sWorkloadKeys.accountId)

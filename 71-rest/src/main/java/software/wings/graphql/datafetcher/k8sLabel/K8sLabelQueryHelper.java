@@ -26,6 +26,12 @@ public class K8sLabelQueryHelper {
     filters.forEach(filter -> {
       FieldEnd<? extends Query<SettingAttribute>> field;
 
+      if (filter.getAccountId() != null) {
+        field = query.field("accountId");
+        QLIdFilter accountFilter = filter.getAccountId();
+        utils.setIdFilter(field, accountFilter);
+      }
+
       if (filter.getCluster() != null) {
         field = query.field("clusterId");
         QLIdFilter clusterFilter = filter.getCluster();

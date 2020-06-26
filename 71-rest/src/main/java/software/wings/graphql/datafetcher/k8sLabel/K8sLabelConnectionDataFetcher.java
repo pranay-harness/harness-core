@@ -69,7 +69,7 @@ public class K8sLabelConnectionDataFetcher
 
   // To fetch all labels (so that pagination is avoided)
   public List<QLK8sLabel> fetchAllLabels(List<QLK8sLabelFilter> filters) {
-    Query<K8sWorkload> query = populateFilters(wingsPersistence, filters, K8sWorkload.class, true);
+    Query<K8sWorkload> query = populateFilters(wingsPersistence, filters, K8sWorkload.class, false);
     List<K8sWorkload> workloads = k8sWorkloadDao.list(query);
     List<QLK8sLabel> fetchedLabels = new ArrayList<>();
     Map<String, Set<String>> labels = new HashMap<>();
