@@ -15,6 +15,7 @@ import org.atmosphere.cpr.BroadcastFilter.BroadcastAction.ACTION;
 import org.atmosphere.cpr.BroadcastFilterAdapter;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.DelegateTaskBroadcast;
+import software.wings.beans.PerpetualTaskBroadcastEvent;
 import software.wings.service.intfc.DelegateService;
 
 public class DelegateEventFilter extends BroadcastFilterAdapter {
@@ -78,6 +79,15 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
       return continueWith(message);
     }
 
+    if (message instanceof PerpetualTaskBroadcastEvent) {
+      PerpetualTaskBroadcastEvent taskBroadcastEvent = (PerpetualTaskBroadcastEvent) message;
+
+      if (isNotBlank(taskBroadcastEvent.getBroadcastDelegateId())
+          && !StringUtils.equals(taskBroadcastEvent.getBroadcastDelegateId(), delegateId)) {
+        return abort(message);
+      }
+      return continueWith(message);
+    }
     return continueWith(message);
   }
 
