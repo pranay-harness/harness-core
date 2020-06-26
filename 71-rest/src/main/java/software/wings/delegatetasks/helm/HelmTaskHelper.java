@@ -30,6 +30,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
@@ -40,6 +41,7 @@ import software.wings.helpers.ext.helm.HelmCommandTemplateFactory;
 import software.wings.helpers.ext.helm.HelmCommandTemplateFactory.HelmCliCommandType;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
@@ -105,6 +107,20 @@ public class HelmTaskHelper {
   public void downloadChartFiles(HelmChartConfigParams helmChartConfigParams, String destinationDirectory)
       throws Exception {
     String workingDirectory = createDirectory(Paths.get(destinationDirectory).toString());
+
+    fetchChartFiles(helmChartConfigParams, workingDirectory);
+  }
+
+  public void downloadChartFiles(HelmChartSpecification helmChartSpecification, String destinationDirectory,
+      HelmCommandRequest helmCommandRequest) throws Exception {
+    String workingDirectory = createDirectory(Paths.get(destinationDirectory).toString());
+    HelmChartConfigParams helmChartConfigParams = HelmChartConfigParams.builder()
+                                                      .chartName(helmChartSpecification.getChartName())
+                                                      .chartVersion(helmChartSpecification.getChartVersion())
+                                                      .chartUrl(helmChartSpecification.getChartUrl())
+                                                      .repoName(helmCommandRequest.getRepoName())
+                                                      .helmVersion(helmCommandRequest.getHelmVersion())
+                                                      .build();
 
     fetchChartFiles(helmChartConfigParams, workingDirectory);
   }

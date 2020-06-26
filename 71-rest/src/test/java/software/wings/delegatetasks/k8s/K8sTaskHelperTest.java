@@ -403,7 +403,9 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
   private void setupForDoStatusCheckForAllResources() throws Exception {
     ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    doReturn(processResult).when(spyHelper).executeCommandUsingUtils(any(), any(), any(), any());
+    doReturn(processResult)
+        .when(spyHelper)
+        .executeCommandUsingUtils(any(K8sDelegateTaskParams.class), any(), any(), any());
     StartedProcess startedProcess = mock(StartedProcess.class);
     Process process = mock(Process.class);
     doReturn(startedProcess).when(spyHelper).getEventWatchProcess(any(), any(), any(), any());
@@ -423,13 +425,14 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     if (allResources) {
       spyHelper.doStatusCheckForAllResources(
-          client, asList(resource.getResourceId()), k8sDelegateTaskParams, "default", executionLogCallback);
+          client, asList(resource.getResourceId()), k8sDelegateTaskParams, "default", executionLogCallback, true);
     } else {
       spyHelper.doStatusCheck(client, resource.getResourceId(), k8sDelegateTaskParams, executionLogCallback);
     }
 
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    verify(spyHelper, times(1)).executeCommandUsingUtils(any(), any(), any(), eq(expectedOutput));
+    verify(spyHelper, times(1))
+        .executeCommandUsingUtils(any(K8sDelegateTaskParams.class), any(), any(), eq(expectedOutput));
   }
 
   @Test
@@ -760,7 +763,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
                      + "139\t\tComplete\tconfig change\n"
                      + "140\t\tComplete\tconfig change\n"))
         .when(spyHelper)
-        .executeCommandUsingUtils(any(), any(), any(), any());
+        .executeCommandUsingUtils(any(K8sDelegateTaskParams.class), any(), any(), any());
     String latestRevision;
     latestRevision = spyHelper.getLatestRevision(Kubectl.client("kubectl", "kubeconfig"),
         K8sTestHelper.deploymentConfig().getResourceId(),

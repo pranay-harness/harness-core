@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.helm;
 
 import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
+import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
@@ -113,4 +114,6 @@ public interface HelmClient {
    */
   HelmCliResponse renderChart(HelmCommandRequest commandRequest, String chartLocation, String namespace,
       List<String> valuesOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException;
+
+  String getHelmPath(HelmVersion helmVersion);
 }

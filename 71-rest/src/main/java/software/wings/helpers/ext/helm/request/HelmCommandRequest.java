@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
@@ -47,6 +48,10 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
   @Expression private String commandFlags;
   private K8sDelegateManifestConfig repoConfig;
   @Builder.Default private HelmVersion helmVersion = V2;
+  private String ocPath;
+  private String workingDir;
+  @Expression private List<String> variableOverridesYamlFiles;
+  private GitFileConfig gitFileConfig;
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;

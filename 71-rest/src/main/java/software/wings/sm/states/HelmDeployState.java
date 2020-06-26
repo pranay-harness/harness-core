@@ -22,6 +22,7 @@ import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNE
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.StateType.HELM_DEPLOY;
+import static software.wings.sm.StateType.HELM_ROLLBACK;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -244,7 +245,7 @@ public class HelmDeployState extends State {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new EnumMap<>(K8sValuesLocation.class);
     Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap = new EnumMap<>(K8sValuesLocation.class);
 
-    if (HELM_DEPLOY.name().equals(this.getStateType())) {
+    if (HELM_DEPLOY.name().equals(this.getStateType()) || HELM_ROLLBACK.name().equals(this.getStateType())) {
       appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
       helmOverrideManifestMap = applicationManifestUtils.getApplicationManifests(context, HELM_CHART_OVERRIDE);
       valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
@@ -1097,7 +1098,7 @@ public class HelmDeployState extends State {
         context, activityId, helmDeployStateExecutionData.getAppManifestMap(), helmOverrideManifestMap);
   }
 
-  private List<String> getValuesYamlOverrides(ExecutionContext context, ContainerServiceParams containerServiceParams,
+  List<String> getValuesYamlOverrides(ExecutionContext context, ContainerServiceParams containerServiceParams,
       ImageDetails imageDetails, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     Map<K8sValuesLocation, Collection<String>> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
 
@@ -1277,34 +1278,39 @@ public class HelmDeployState extends State {
 
   private void updateHelmExecutionSummary(ExecutionContext context, HelmCommandResponse helmCommandResponse) {
     try {
-      if (HELM_DEPLOY.name().equals(this.getStateType()) && helmCommandResponse instanceof HelmInstallCommandResponse) {
+      if (helmCommandResponse instanceof HelmInstallCommandResponse) {
         HelmInstallCommandResponse helmInstallCommandResponse = (HelmInstallCommandResponse) helmCommandResponse;
-        HelmChartInfo helmChartInfo = helmInstallCommandResponse.getHelmChartInfo();
-        if (helmChartInfo == null) {
-          return;
-        }
-
         WorkflowExecution workflowExecution =
             workflowExecutionService.getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
         if (workflowExecution == null) {
           return;
         }
-
         HelmExecutionSummary summary = workflowExecution.getHelmExecutionSummary();
-        if (summary.getHelmChartInfo() == null) {
-          summary.setHelmChartInfo(HelmChartInfo.builder().build());
+        if (HELM_DEPLOY.name().equals(getStateType())) {
+          HelmChartInfo helmChartInfo = helmInstallCommandResponse.getHelmChartInfo();
+          if (helmChartInfo == null) {
+            return;
+          }
+
+          if (summary.getHelmChartInfo() == null) {
+            summary.setHelmChartInfo(HelmChartInfo.builder().build());
+          }
+
+          if (isNotBlank(helmChartInfo.getName())) {
+            summary.getHelmChartInfo().setName(helmChartInfo.getName());
+          }
+
+          if (isNotBlank(helmChartInfo.getVersion())) {
+            summary.getHelmChartInfo().setVersion(helmChartInfo.getVersion());
+          }
+
+          if (isNotBlank(helmChartInfo.getRepoUrl())) {
+            summary.getHelmChartInfo().setRepoUrl(helmChartInfo.getRepoUrl());
+          }
         }
 
-        if (isNotBlank(helmChartInfo.getName())) {
-          summary.getHelmChartInfo().setName(helmChartInfo.getName());
-        }
-
-        if (isNotBlank(helmChartInfo.getVersion())) {
-          summary.getHelmChartInfo().setVersion(helmChartInfo.getVersion());
-        }
-
-        if (isNotBlank(helmChartInfo.getRepoUrl())) {
-          summary.getHelmChartInfo().setRepoUrl(helmChartInfo.getRepoUrl());
+        if (isNotEmpty(helmInstallCommandResponse.getContainerInfoList())) {
+          summary.setContainerInfoList(helmInstallCommandResponse.getContainerInfoList());
         }
 
         workflowExecutionService.refreshHelmExecutionSummary(context.getWorkflowExecutionId(), summary);

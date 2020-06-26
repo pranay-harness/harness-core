@@ -1,12 +1,15 @@
 package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
@@ -17,18 +20,20 @@ import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.sm.ExecutionContext;
+import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.Collections;
 
 public class HelmRollbackStateTest extends WingsBaseTest {
   @Mock private ExecutionContext executionContext;
+  @Mock private ApplicationManifestUtils applicationManifestUtils;
+  @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("Helm-Rollback");
 
   @Test
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void getHelmCommandRequestTimeoutValue() {
-    HelmRollbackState helmRollbackState = new HelmRollbackState("Helm-Rollback");
     HelmRollbackCommandRequest commandRequest;
 
     helmRollbackState.setSteadyStateTimeout(0);
@@ -45,6 +50,7 @@ public class HelmRollbackStateTest extends WingsBaseTest {
   }
 
   private HelmRollbackCommandRequest getHelmRollbackCommandRequest(HelmRollbackState helmRollbackState) {
+    doNothing().when(applicationManifestUtils).populateValuesFilesFromAppManifest(any(), any());
     return (HelmRollbackCommandRequest) helmRollbackState.getHelmCommandRequest(executionContext,
         HelmChartSpecification.builder().build(), ContainerServiceParams.builder().build(), "release-name",
         WingsTestConstants.ACCOUNT_ID, WingsTestConstants.APP_ID, WingsTestConstants.ACTIVITY_ID,

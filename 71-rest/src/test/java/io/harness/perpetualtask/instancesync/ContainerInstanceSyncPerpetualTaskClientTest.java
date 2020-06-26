@@ -236,8 +236,8 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                 .tags(singletonList("tag"))
                 .data(TaskData.builder()
                           .async(false)
-                          .taskType(TaskType.CONTAINER_INFO.name())
-                          .parameters(new Object[] {
+                          .taskType(TaskType.CONTAINER_VALIDATION.name())
+                          .parameters(new Object[] {null, null,
                               ContainerServiceParams.builder()
                                   .settingAttribute(
                                       SettingAttribute.Builder.aSettingAttribute().withValue(azureConfig).build())
@@ -249,6 +249,7 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                   .subscriptionId("subscription_id")
                                   .resourceGroup("resource_group")
                                   .masterUrl("master_url")
+                                  .releaseName("release_name")
                                   .build()})
                           .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                           .build())
@@ -270,8 +271,8 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                        .tags(singletonList("tag"))
                        .data(TaskData.builder()
                                  .async(false)
-                                 .taskType(TaskType.CONTAINER_INFO.name())
-                                 .parameters(new Object[] {
+                                 .taskType(TaskType.CONTAINER_VALIDATION.name())
+                                 .parameters(new Object[] {null, null,
                                      ContainerServiceParams.builder()
                                          .settingAttribute(
                                              SettingAttribute.Builder.aSettingAttribute().withValue(awsConfig).build())
@@ -283,6 +284,7 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                          .subscriptionId("")
                                          .resourceGroup("")
                                          .masterUrl("")
+                                         .releaseName("release_name")
                                          .build()})
                                  .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                                  .build())

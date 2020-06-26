@@ -115,6 +115,7 @@ public class ContainerInstanceSyncPerpetualTaskClient
                                                     .setSubscriptionId(taskData.getSubscriptionId())
                                                     .setResourceGroup(taskData.getResourceGroup())
                                                     .setMasterUrl(taskData.getMasterUrl())
+                                                    .setReleaseName(taskData.getReleaseName())
                                                     .build())
         .build();
   }
@@ -161,13 +162,14 @@ public class ContainerInstanceSyncPerpetualTaskClient
                                                     .subscriptionId(taskData.getSubscriptionId())
                                                     .resourceGroup(taskData.getResourceGroup())
                                                     .masterUrl(taskData.getMasterUrl())
+                                                    .releaseName(taskData.getReleaseName())
                                                     .build();
 
     return DelegateTask.builder()
         .data(TaskData.builder()
                   .async(false)
-                  .taskType(TaskType.CONTAINER_INFO.name())
-                  .parameters(new Object[] {delegateTaskParams})
+                  .taskType(TaskType.CONTAINER_VALIDATION.name())
+                  .parameters(new Object[] {null, null, delegateTaskParams})
                   .timeout(TimeUnit.MINUTES.toMillis(VALIDATION_TIMEOUT_MINUTES))
                   .build())
         .accountId(taskData.getAccountId())

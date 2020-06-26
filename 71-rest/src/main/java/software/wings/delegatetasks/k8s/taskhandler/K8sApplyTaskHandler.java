@@ -3,7 +3,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForApplyState;
+import static io.harness.k8s.manifest.ManifestHelper.getEligibleWorkloads;
 import static java.lang.String.format;
 import static software.wings.beans.Log.LogColor.Gray;
 import static software.wings.beans.Log.LogColor.White;
@@ -110,7 +110,8 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
         success = k8sTaskHelper.doStatusCheckForAllResources(client, kubernetesResourceIds, k8sDelegateTaskParams,
             k8sTaskParameters.getK8sClusterConfig().getNamespace(),
             new ExecutionLogCallback(delegateLogService, k8sTaskParameters.getAccountId(), k8sTaskParameters.getAppId(),
-                k8sTaskParameters.getActivityId(), WaitForSteadyState));
+                k8sTaskParameters.getActivityId(), WaitForSteadyState),
+            true);
 
         if (!success) {
           return k8sTaskHelper.getK8sTaskExecutionResponse(k8sApplyResponse, CommandExecutionStatus.FAILURE);
@@ -182,7 +183,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog(
           "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
 
-      workloads = getWorkloadsForApplyState(resources);
+      workloads = getEligibleWorkloads(resources);
       if (isEmpty(workloads)) {
         executionLogCallback.saveExecutionLog(color("\nNo Workload found.", Yellow, Bold));
       } else {

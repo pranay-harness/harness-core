@@ -89,6 +89,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
             .subscriptionId(containerServicePerpetualTaskParams.getSubscriptionId())
             .resourceGroup(containerServicePerpetualTaskParams.getResourceGroup())
             .masterUrl(containerServicePerpetualTaskParams.getMasterUrl())
+            .releaseName(containerServicePerpetualTaskParams.getReleaseName())
             .build();
 
     try {
@@ -96,6 +97,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
       return ContainerSyncResponse.builder()
           .containerInfoList(containerInfos)
           .commandExecutionStatus((containerInfos != null) ? SUCCESS : FAILURE)
+          .controllerName(request.getContainerServiceName())
           .build();
     } catch (Exception exception) {
       logger.error(String.format("Failed to fetch containers info for namespace: [%s] and svc:[%s] ",

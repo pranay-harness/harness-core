@@ -38,6 +38,7 @@ import com.google.inject.Singleton;
 import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.VersionInfo;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -86,6 +87,9 @@ public class ContainerDeploymentDelegateHelper {
   @Inject private OidcTokenRetriever oidcTokenRetriever;
 
   private static final String KUBE_CONFIG_DIR = "./repository/helm/.kube/";
+  private static final int KUBERNETESS_116_VERSION = 116;
+  private static final String NON_DIGITS_REGEX = "\\D+";
+  private static final int VERSION_LENGTH = 3;
 
   public static final LoadingCache<String, Object> lockObjects =
       CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build(CacheLoader.from(Object::new));
@@ -336,6 +340,22 @@ public class ContainerDeploymentDelegateHelper {
 
     return fetchContainersUsingControllersWhenReady(
         containerServiceParams, kubernetesConfig, executionLogCallback, controllers, existingPods);
+  }
+
+  public boolean isK8sVersion116OrAbove(
+      ContainerServiceParams containerServiceParams, ExecutionLogCallback executionLogCallback) {
+    List<EncryptedDataDetail> encryptionDetails = containerServiceParams.getEncryptionDetails();
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+    VersionInfo versionInfo = kubernetesContainerService.getVersion(kubernetesConfig, encryptionDetails);
+    executionLogCallback.saveExecutionLog(
+        format("Kubernetess version [%s.%s]", versionInfo.getMajor(), versionInfo.getMinor()));
+    int versionMajorMin = Integer.parseInt(escapeNonDigitsAndTruncate(versionInfo.getMajor() + versionInfo.getMinor()));
+    return KUBERNETESS_116_VERSION <= versionMajorMin;
+  }
+
+  private String escapeNonDigitsAndTruncate(String value) {
+    String digits = value.replaceAll(NON_DIGITS_REGEX, EMPTY);
+    return digits.length() > VERSION_LENGTH ? digits.substring(0, VERSION_LENGTH) : digits;
   }
 
   private List<ContainerInfo> fetchContainersUsingControllersWhenReady(ContainerServiceParams containerServiceParams,

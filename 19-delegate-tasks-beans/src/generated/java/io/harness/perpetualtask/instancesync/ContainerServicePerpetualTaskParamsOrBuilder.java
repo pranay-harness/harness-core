@@ -96,4 +96,15 @@ public interface ContainerServicePerpetualTaskParamsOrBuilder extends
    * @return The bytes for masterUrl.
    */
   com.google.protobuf.ByteString getMasterUrlBytes();
+
+  /**
+   * <code>string release_name = 10[json_name = "releaseName"];</code>
+   * @return The releaseName.
+   */
+  java.lang.String getReleaseName();
+  /**
+   * <code>string release_name = 10[json_name = "releaseName"];</code>
+   * @return The bytes for releaseName.
+   */
+  com.google.protobuf.ByteString getReleaseNameBytes();
 }

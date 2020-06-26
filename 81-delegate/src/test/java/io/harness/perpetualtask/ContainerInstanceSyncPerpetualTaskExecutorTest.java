@@ -201,6 +201,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
         .isEqualTo(CommandExecutionResult.CommandExecutionStatus.SUCCESS);
     assertThat(containerSyncResponse.getContainerInfoList()).isNotNull();
     assertThat(containerSyncResponse.getContainerInfoList()).containsExactly(containerInfo);
+    assertThat(containerSyncResponse.getControllerName()).isEqualTo("service");
 
     assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("TASK_RUN_SUCCEEDED");
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(Response.SC_OK);

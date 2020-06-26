@@ -41,6 +41,8 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
   private Set<String> containerServiceNames;
   private boolean cloudCostEnabled;
 
+  private String releaseName;
+
   public boolean isKubernetesClusterConfig() {
     if (settingAttribute == null) {
       return false;

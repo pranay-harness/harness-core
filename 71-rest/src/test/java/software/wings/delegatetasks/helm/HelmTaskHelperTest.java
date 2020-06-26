@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.helm;
 
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,6 +38,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
@@ -44,6 +46,8 @@ import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumClient;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumServer;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.helm.request.HelmCommandRequest;
+import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -273,6 +277,36 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     FileUtils.deleteDirectory(outputTemporaryDir.toFile());
   }
 
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testDownloadChartFilesForEmptyHelmRepoBySpec() throws Exception {
+    HelmChartSpecification helmChartSpecification = getHelmChartSpecification(null);
+    Path outputTemporaryDir = Files.createTempDirectory("chartFile");
+
+    ProcessResult successfulResult = new ProcessResult(0, null);
+    doReturn(successfulResult).when(processExecutor).execute();
+
+    HelmCommandRequest helmCommandRequest =
+        HelmInstallCommandRequest.builder().helmVersion(V3).repoName("repoName").build();
+
+    // With empty chart Url
+    helmTaskHelper.downloadChartFiles(helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest);
+    verify(helmTaskHelper, times(1))
+        .createProcessExecutor("v3/helm pull repoName/chartName --untar ", outputTemporaryDir.toString());
+
+    // With not empty chart Url
+    helmChartSpecification.setChartUrl("http://127.0.0.1:1234/chart");
+    helmTaskHelper.downloadChartFiles(helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest);
+    verify(helmTaskHelper, times(1))
+        .createProcessExecutor(
+            "v3/helm repo add repoName http://127.0.0.1:1234/chart  ", outputTemporaryDir.toString());
+    verify(helmTaskHelper, times(2))
+        .createProcessExecutor("v3/helm pull repoName/chartName --untar ", outputTemporaryDir.toString());
+    verify(helmTaskHelper, times(1)).createProcessExecutor("v3/helm repo remove repoName", null);
+    FileUtils.deleteDirectory(outputTemporaryDir.toFile());
+  }
+
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
@@ -349,5 +383,9 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .helmVersion(V3)
         .repoName("repoName")
         .build();
+  }
+
+  private HelmChartSpecification getHelmChartSpecification(String url) {
+    return HelmChartSpecification.builder().chartName("chartName").chartVersion("").chartUrl(url).build();
   }
 }

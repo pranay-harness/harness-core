@@ -22,6 +22,7 @@ message ContainerServicePerpetualTaskParams {
   string subscription_id = 7;
   string resource_group = 8;
   string master_url = 9;
+  string release_name = 10;
 }
 
 message ContainerInstanceSyncPerpetualTaskParams {
