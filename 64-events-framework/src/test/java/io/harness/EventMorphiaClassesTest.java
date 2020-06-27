@@ -2,8 +2,6 @@ package io.harness;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 
-import com.google.common.collect.ImmutableSet;
-
 import io.harness.category.element.UnitTests;
 import io.harness.morphia.MorphiaModule;
 import io.harness.rule.Owner;
@@ -23,7 +21,7 @@ public class EventMorphiaClassesTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testEventSearchAndList() {
-    new MorphiaModule().testAutomaticSearch(ImmutableSet.<Class>builder().build());
+    new MorphiaModule().testAutomaticSearch();
   }
 
   @Test

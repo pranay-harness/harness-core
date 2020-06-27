@@ -2,8 +2,6 @@ package io.harness.mongo;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 
-import com.google.common.collect.ImmutableSet;
-
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.morphia.MorphiaModule;
@@ -24,7 +22,7 @@ public class PersistenceMorphiaClassesTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testPersistenceSearchAndList() {
-    new MorphiaModule().testAutomaticSearch(ImmutableSet.<Class>builder().build());
+    new MorphiaModule().testAutomaticSearch();
   }
 
   @Test
