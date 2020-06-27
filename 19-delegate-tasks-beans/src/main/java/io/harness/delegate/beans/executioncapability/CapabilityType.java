@@ -25,5 +25,6 @@ public enum CapabilityType {
   CLUSTER_MASTER_URL,
   SHELL_CONNECTION,
   GIT_CONNECTION,
-  KUSTOMIZE;
+  KUSTOMIZE,
+  SMB;
 }
