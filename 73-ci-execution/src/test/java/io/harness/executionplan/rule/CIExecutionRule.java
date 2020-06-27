@@ -15,7 +15,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.tasks.TaskExecutor;
-import io.harness.testlib.PersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -70,7 +69,7 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
         });
       }
     });
-    modules.add(new PersistenceTestModule());
+    modules.add(new CIExecutionPersistenceTestModule());
     modules.addAll(new CIExecutionServiceModule().cumulativeDependencies());
     modules.add(new AbstractModule() {
       @Override

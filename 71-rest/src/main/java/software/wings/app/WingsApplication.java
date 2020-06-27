@@ -83,7 +83,6 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.QuartzCleaner;
-import io.harness.ng.PersistenceModule;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -338,7 +337,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
 
-    modules.add(new PersistenceModule());
+    modules.add(new WingsPersistenceModule());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()

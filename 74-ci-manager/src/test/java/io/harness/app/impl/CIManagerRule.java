@@ -30,7 +30,6 @@ import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationKryoRegister;
 import io.harness.serializer.kryo.PersistenceRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
-import io.harness.testlib.PersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -98,7 +97,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         });
       }
     });
-    modules.add(new PersistenceTestModule());
+    modules.add(new CIManagerPersistenceTestModule());
     modules.addAll(new CIManagerServiceModule(CIManagerConfiguration.builder().build(), null).cumulativeDependencies());
     return modules;
   }

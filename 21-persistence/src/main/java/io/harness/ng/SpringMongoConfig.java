@@ -8,19 +8,16 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import com.mongodb.MongoClient;
-import io.harness.annotation.HarnessRepo;
 import io.harness.exception.GeneralException;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.reflections.Reflections;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.guice.annotation.GuiceModule;
 
 import java.lang.reflect.Constructor;
@@ -30,12 +27,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-@EnableMongoRepositories(basePackages = {"io.harness.engine", "io.harness.ng", "io.harness.connector"},
-    includeFilters = @ComponentScan.Filter(HarnessRepo.class))
-@EnableMongoAuditing
 @Configuration
+@EnableMongoAuditing
 @GuiceModule
-public class SpringMongoConfig extends AbstractMongoConfiguration {
+public abstract class SpringMongoConfig extends AbstractMongoConfiguration {
   private final AdvancedDatastore advancedDatastore;
   private static final Collection<String> BASE_PACKAGES = ImmutableList.of("io.harness");
 

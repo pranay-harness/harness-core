@@ -46,7 +46,7 @@ public class NextGenModule extends AbstractModule {
        }
      });*/
     install(new ValidationModule(getValidatorFactory()));
-    install(new PersistenceModule());
+    install(new NextGenPersistenceModule());
     install(new CoreModule());
     install(new ConnectorModule());
     install(new SecretManagementModule(this.appConfig.getSecretManagerClientConfig()));

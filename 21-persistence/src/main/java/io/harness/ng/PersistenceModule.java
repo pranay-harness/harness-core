@@ -5,15 +5,18 @@ import com.google.inject.Module;
 
 import io.harness.govern.DependencyModule;
 import io.harness.mongo.MongoModule;
+import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.guice.module.BeanFactoryProvider;
 import org.springframework.guice.module.SpringModule;
 
-public class PersistenceModule extends AbstractModule {
+public abstract class PersistenceModule extends AbstractModule {
   @Override
   protected void configure() {
-    install(new SpringModule(BeanFactoryProvider.from(SpringMongoConfig.class)));
+    install(new SpringModule(BeanFactoryProvider.from(getConfigClass())));
     installModule(getMongoModule());
   }
+
+  protected abstract Class<? extends AbstractMongoConfiguration> getConfigClass();
 
   protected Module getMongoModule() {
     return new MongoModule();
