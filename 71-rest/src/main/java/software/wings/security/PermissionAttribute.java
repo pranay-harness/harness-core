@@ -386,6 +386,10 @@ public class PermissionAttribute {
      */
     AUDIT_VIEWER,
 
-    TAG_MANAGEMENT
+    TAG_MANAGEMENT,
+
+    CE_ADMIN,
+
+    CE_VIEWER
   }
 }
