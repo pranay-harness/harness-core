@@ -63,6 +63,7 @@ public class MongoPersistence implements HPersistence {
   }
 
   @Inject Morphia morphia;
+  @Inject IndexManager indexManager;
 
   private Map<String, Info> storeInfo = new HashMap<>();
   private Map<Class, Store> classStores = new HashMap<>();
@@ -140,7 +141,7 @@ public class MongoPersistence implements HPersistence {
     classSet.add(cls);
     locMorphia.map(classSet);
 
-    IndexManager.ensureIndexes(AUTO, datastore, locMorphia);
+    indexManager.ensureIndexes(AUTO, datastore, locMorphia);
   }
 
   @Override

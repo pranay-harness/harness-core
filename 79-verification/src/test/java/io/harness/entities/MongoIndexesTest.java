@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import io.harness.VerificationBaseTest;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.HObjectFactory;
-import io.harness.mongo.IndexManager;
+import io.harness.mongo.IndexCreator;
 import io.harness.mongo.IndexManagerSession;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -41,8 +41,7 @@ public class MongoIndexesTest extends VerificationBaseTest {
     morphia.getMapper().getOptions().setMapSubPackages(true);
     morphia.map(classes);
 
-    List<IndexManager.IndexCreator> indexCreators =
-        IndexManagerSession.allIndexes(persistence.getDatastore(Account.class), morphia);
+    List<IndexCreator> indexCreators = IndexManagerSession.allIndexes(persistence.getDatastore(Account.class), morphia);
 
     List<String> indexes = indexCreators.stream()
                                .map(creator

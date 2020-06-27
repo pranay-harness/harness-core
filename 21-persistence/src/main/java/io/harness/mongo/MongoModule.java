@@ -6,14 +6,15 @@ import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import io.harness.govern.DependencyModule;
-import io.harness.govern.DependencyProviderModule;
 import io.harness.logging.MorphiaLoggerFactory;
+import io.harness.mongo.index.migrator.Migrator;
 import io.harness.morphia.MorphiaModule;
 import io.harness.serializer.KryoModule;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ import org.mongodb.morphia.ObjectFactory;
 import java.util.Set;
 
 @Slf4j
-public class MongoModule extends DependencyProviderModule {
+public class MongoModule extends DependencyModule {
   public static final MongoClientOptions defaultMongoClientOptions = MongoClientOptions.builder()
                                                                          .retryWrites(true)
                                                                          .connectTimeout(30000)
@@ -50,6 +51,11 @@ public class MongoModule extends DependencyProviderModule {
       // happens when MorphiaLoggerFactory.get has already been called.
       logger.warn("Failed to register logger", e);
     }
+  }
+
+  @Override
+  protected void configure() {
+    MapBinder.newMapBinder(binder(), String.class, Migrator.class);
   }
 
   @Provides
@@ -97,7 +103,8 @@ public class MongoModule extends DependencyProviderModule {
   @Provides
   @Named("primaryDatastore")
   @Singleton
-  public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, Morphia morphia, ObjectFactory objectFactory) {
+  public AdvancedDatastore primaryDatastore(
+      MongoConfig mongoConfig, Morphia morphia, ObjectFactory objectFactory, IndexManager indexManager) {
     MongoClientOptions primaryMongoClientOptions = MongoClientOptions.builder()
                                                        .retryWrites(defaultMongoClientOptions.getRetryWrites())
                                                        .connectTimeout(mongoConfig.getConnectTimeout())
@@ -113,7 +120,7 @@ public class MongoModule extends DependencyProviderModule {
     AdvancedDatastore primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
     primaryDatastore.setQueryFactory(new QueryFactory());
 
-    IndexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia);
+    indexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia);
 
     HObjectFactory hObjectFactory = (HObjectFactory) objectFactory;
 

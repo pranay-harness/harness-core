@@ -4,6 +4,7 @@ import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static java.time.Duration.ofSeconds;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -14,8 +15,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
-import io.harness.mongo.IndexManager.IndexCreator;
-import io.harness.mongo.IndexManager.IndexCreator.IndexCreatorBuilder;
+import io.harness.mongo.IndexCreator.IndexCreatorBuilder;
 import io.harness.mongo.IndexManagerSession.Accesses;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -38,7 +38,8 @@ public class IndexManagerSessionTest extends PersistenceTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testMongoBehaviorCreateIndexWithExistingMatchingFields() {
-    IndexManagerSession session = new IndexManagerSession(AUTO);
+    IndexManagerSession session =
+        new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     IndexCreator original = buildIndexCreator(collection, "foo", 1).build();
@@ -61,7 +62,8 @@ public class IndexManagerSessionTest extends PersistenceTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testMongoBehaviorCreateIndexWithExistingNonMatchingFields() {
-    IndexManagerSession session = new IndexManagerSession(AUTO);
+    IndexManagerSession session =
+        new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     IndexCreator original = buildIndexCreator(collection, "foo", 1).build();
@@ -83,7 +85,8 @@ public class IndexManagerSessionTest extends PersistenceTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testMongoRebuiltIndexInTime() {
-    IndexManagerSession session = new IndexManagerSession(AUTO);
+    IndexManagerSession session =
+        new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     IndexCreator original = buildIndexCreator(collection, "foo", 1).build();
@@ -141,7 +144,8 @@ public class IndexManagerSessionTest extends PersistenceTest {
     assertThat(creators.get("ttlTest_1").getOptions().get(IndexManagerSession.EXPIRE_AFTER_SECONDS))
         .isEqualTo(Integer.valueOf(11));
 
-    IndexManagerSession session = new IndexManagerSession(AUTO);
+    IndexManagerSession session =
+        new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     assertThat(session.createNewIndexes(createCollectionSession(collection), creators)).isEqualTo(creators.size());
     Date afterCreatingIndexes = new Date();
 

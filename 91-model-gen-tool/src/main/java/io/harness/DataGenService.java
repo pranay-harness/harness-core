@@ -150,6 +150,7 @@ public class DataGenService {
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LoginSettingsService loginSettingsService;
+  @Inject private IndexManager indexManager;
 
   public void populateData() {
     dropDBAndEnsureIndexes();
@@ -197,7 +198,7 @@ public class DataGenService {
 
   protected void dropDBAndEnsureIndexes() {
     wingsPersistence.getDatastore(DEFAULT_STORE).getDB().dropDatabase();
-    IndexManager.ensureIndexes(AUTO, primaryDatastore, morphia);
+    indexManager.ensureIndexes(AUTO, primaryDatastore, morphia);
   }
 
   private void createGlobalSettings(Account account) {

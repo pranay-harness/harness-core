@@ -66,6 +66,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
+import software.wings.app.IndexMigratorModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -245,6 +246,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
+    modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());

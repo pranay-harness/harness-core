@@ -6,14 +6,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 
 import com.mongodb.MongoClient;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.DependencyModule;
-import io.harness.govern.DependencyProviderModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.QueryFactory;
+import io.harness.mongo.index.migrator.Migrator;
 import io.harness.morphia.MorphiaModule;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -23,7 +24,7 @@ import org.mongodb.morphia.ObjectFactory;
 import java.util.Set;
 
 @Slf4j
-public class TestMongoModule extends DependencyProviderModule implements MongoRuleMixin {
+public class TestMongoModule extends DependencyModule implements MongoRuleMixin {
   @Provides
   @Named("databaseName")
   @Singleton
@@ -92,5 +93,10 @@ public class TestMongoModule extends DependencyProviderModule implements MongoRu
   @Override
   public Set<DependencyModule> dependencies() {
     return ImmutableSet.<DependencyModule>of(MorphiaModule.getInstance());
+  }
+
+  @Override
+  protected void configure() {
+    MapBinder.newMapBinder(binder(), String.class, Migrator.class);
   }
 }
