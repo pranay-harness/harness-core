@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.batch.processing.entities.InstanceData;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -8,6 +9,7 @@ import java.util.Set;
 public class BatchProcessingMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
+    set.add(InstanceData.class);
     // TODO: add the batch processing morphia classes here
   }
 
