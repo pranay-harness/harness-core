@@ -1,7 +1,6 @@
 package io.harness;
 
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.VIKAS;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -9,9 +8,10 @@ import io.harness.category.element.UnitTests;
 import io.harness.morphia.MorphiaModule;
 import io.harness.rule.Owner;
 import io.harness.serializer.morphia.BatchProcessingMorphiaRegistrar;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.integration.common.MongoDBTest;
+import software.wings.integration.dl.PageRequestTest;
 
 public class BatchProcessingMorphiaClassesTest extends CategoryTest {
   @Test
@@ -22,11 +22,11 @@ public class BatchProcessingMorphiaClassesTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = VIKAS)
+  @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  @Ignore("fix this later, the setup for this test project is incomplete")
   public void testEventSearchAndList() {
-    new MorphiaModule().testAutomaticSearch(ImmutableSet.<Class>builder().build());
+    new MorphiaModule().testAutomaticSearch(
+        ImmutableSet.<Class>builder().add(MongoDBTest.MongoEntity.class).add(PageRequestTest.Dummy.class).build());
   }
 
   @Test
