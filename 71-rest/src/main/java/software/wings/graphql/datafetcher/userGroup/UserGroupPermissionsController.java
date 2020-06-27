@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.userGroup;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.elasticsearch.common.util.set.Sets.newHashSet;
+import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.ADMINISTER_CE;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.ADMINISTER_OTHER_ACCOUNT_FUNCTIONS;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.CREATE_AND_DELETE_APPLICATION;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.MANAGE_TAGS;
@@ -10,6 +11,7 @@ import static software.wings.graphql.schema.type.permissions.QLAccountPermission
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.MANAGE_USERS_AND_GROUPS;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.READ_USERS_AND_GROUPS;
 import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.VIEW_AUDITS;
+import static software.wings.graphql.schema.type.permissions.QLAccountPermissionType.VIEW_CE;
 import static software.wings.security.PermissionAttribute.Action.CREATE;
 import static software.wings.security.PermissionAttribute.Action.DELETE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
@@ -21,6 +23,8 @@ import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
@@ -134,6 +138,10 @@ public class UserGroupPermissionsController {
         return AUDIT_VIEWER;
       case MANAGE_TAGS:
         return TAG_MANAGEMENT;
+      case ADMINISTER_CE:
+        return CE_ADMIN;
+      case VIEW_CE:
+        return CE_VIEWER;
       default:
         logger.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }
@@ -391,6 +399,10 @@ public class UserGroupPermissionsController {
         return VIEW_AUDITS;
       case TAG_MANAGEMENT:
         return MANAGE_TAGS;
+      case CE_ADMIN:
+        return ADMINISTER_CE;
+      case CE_VIEWER:
+        return VIEW_CE;
       default:
         logger.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }

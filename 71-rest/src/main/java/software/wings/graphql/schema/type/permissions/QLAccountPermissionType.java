@@ -9,7 +9,9 @@ public enum QLAccountPermissionType implements QLEnum {
   MANAGE_TEMPLATE_LIBRARY,
   ADMINISTER_OTHER_ACCOUNT_FUNCTIONS,
   VIEW_AUDITS,
-  MANAGE_TAGS;
+  MANAGE_TAGS,
+  ADMINISTER_CE,
+  VIEW_CE;
 
   @Override
   public String getStringValue() {
