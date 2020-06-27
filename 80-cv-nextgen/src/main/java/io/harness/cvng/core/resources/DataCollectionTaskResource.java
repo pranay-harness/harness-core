@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.app.cvng.api.DataCollectionTaskService;
+import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.entities.DataCollectionTask;
 import io.harness.cvng.core.services.entities.DataCollectionTask.DataCollectionTaskResult;
 import io.harness.rest.RestResponse;

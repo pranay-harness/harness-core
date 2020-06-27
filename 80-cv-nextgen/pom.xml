@@ -70,7 +70,7 @@
                 <groupId>com.github.chrisdchristo</groupId>
                 <artifactId>capsule-maven-plugin</artifactId>
                 <configuration>
-                    <appClass>io.harness.app.VerificationApplication</appClass>
+                    <appClass>io.harness.cvng.VerificationApplication</appClass>
                     <type>fat</type>
                     <manifest>
                         <entry>
@@ -105,7 +105,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
-                    <mainClass>io.harness.app.VerificationApplication</mainClass>
+                    <mainClass>io.harness.cvng.VerificationApplication</mainClass>
                     <arguments>
                         <argument>server</argument>
                         <argument>./cv-nextgen-config.yml</argument>

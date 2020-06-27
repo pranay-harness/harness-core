@@ -59,7 +59,6 @@ import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
-import io.harness.cvng.core.resources.MetricPackResource;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.cvng.perpetualtask.DataCollectionPerpetualTaskServiceClient;
 import io.harness.delay.DelayEventListener;
@@ -113,7 +112,6 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.kryo.ApiServiceKryoRegister;
 import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.CVNextGenRestBeansKryoRegistrar;
 import io.harness.serializer.kryo.CommonsKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentKryoRegister;
 import io.harness.serializer.kryo.DelegateKryoRegister;
@@ -327,7 +325,6 @@ public class WingsApplication extends Application<MainConfiguration> {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .add(ApiServiceKryoRegister.class)
             .add(CVNextGenCommonsBeansKryoRegistrar.class)
-            .add(CVNextGenRestBeansKryoRegistrar.class)
             .add(CommonsKryoRegistrar.class)
             .add(DelegateAgentKryoRegister.class)
             .add(DelegateKryoRegister.class)
@@ -423,8 +420,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     registerStores(configuration, injector);
 
     registerResources(environment, injector);
-
-    registerCVNextGenResources(environment, injector);
 
     registerManagedBeans(configuration, environment, injector);
 
@@ -630,16 +625,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     Reflections reflections = new Reflections(AppResource.class.getPackage().getName());
 
     Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
-    for (Class<?> resource : resourceClasses) {
-      if (Resource.isAcceptable(resource)) {
-        environment.jersey().register(injector.getInstance(resource));
-      }
-    }
-  }
-
-  private void registerCVNextGenResources(Environment environment, Injector injector) {
-    Reflections reflections = new Reflections(MetricPackResource.class.getPackage().getName());
-    Set<Class<?>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
     for (Class<?> resource : resourceClasses) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));

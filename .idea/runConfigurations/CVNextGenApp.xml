@@ -1,13 +1,13 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="CVNextGenApp" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="io.harness.app.VerificationApplication" />
+    <option name="MAIN_CLASS_NAME" value="io.harness.cvng.VerificationApplication" />
     <module name="80-cv-nextgen" />
     <option name="PROGRAM_PARAMETERS" value="server cv-nextgen-config.yml" />
     <option name="VM_PARAMETERS" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar" />
     <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="io.harness.app.*" />
+        <option name="PATTERN" value="io.harness.cvng.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

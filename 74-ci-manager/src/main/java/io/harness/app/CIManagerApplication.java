@@ -38,7 +38,6 @@ import io.harness.serializer.kryo.ApiServiceKryoRegister;
 import io.harness.serializer.kryo.CIBeansRegistrar;
 import io.harness.serializer.kryo.CIExecutionRegistrar;
 import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.CVNextGenRestBeansKryoRegistrar;
 import io.harness.serializer.kryo.CommonsKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentKryoRegister;
 import io.harness.serializer.kryo.DelegateKryoRegister;
@@ -111,7 +110,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
             .add(CIExecutionRegistrar.class)
             .add(CommonsKryoRegistrar.class)
             .add(CVNextGenCommonsBeansKryoRegistrar.class)
-            .add(CVNextGenRestBeansKryoRegistrar.class)
             .add(DelegateAgentKryoRegister.class)
             .add(DelegateKryoRegister.class)
             .add(DelegateTasksKryoRegister.class)

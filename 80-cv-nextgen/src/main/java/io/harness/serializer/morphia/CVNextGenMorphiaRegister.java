@@ -1,10 +1,10 @@
 package io.harness.serializer.morphia;
 
 import io.harness.cvng.core.entities.TimeSeriesRecord;
+import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
+import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.statemachine.entity.AnalysisOrchestrator;
-import io.harness.statemachine.entity.AnalysisStateMachine;
 
 import java.util.Set;
 

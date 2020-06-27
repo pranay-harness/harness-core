@@ -5,9 +5,9 @@ import static io.harness.cvng.core.services.entities.DataCollectionTask.Executio
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.cvng.beans.Connector;
 import io.harness.cvng.core.services.entities.CVConfig;
 import io.harness.cvng.core.services.entities.DataCollectionTask.DataCollectionTaskResult;
-import io.harness.cvng.models.Connector;
 import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.RuntimeParameters;
