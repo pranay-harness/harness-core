@@ -110,7 +110,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
    * @deprecated Value should be moved to setupAbstractions map and read from there
    */
   public String getAppId() {
-    return setupAbstractions.get(Cd1SetupFields.APP_ID_FIELD);
+    return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.APP_ID_FIELD);
   }
 
   @Deprecated
@@ -118,7 +118,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
    * @deprecated Value should be moved to setupAbstractions map and read from there
    */
   public String getEnvId() {
-    return setupAbstractions.get(Cd1SetupFields.ENV_ID_FIELD);
+    return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.ENV_ID_FIELD);
   }
 
   @Deprecated
@@ -126,7 +126,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
    * @deprecated Value should be moved to setupAbstractions map and read from there
    */
   public String getInfrastructureMappingId() {
-    return setupAbstractions.get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD);
+    return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD);
   }
 
   @Deprecated
@@ -134,7 +134,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
    * @deprecated Value should be moved to setupAbstractions map and read from there
    */
   public String getServiceTemplateId() {
-    return setupAbstractions.get(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD);
+    return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD);
   }
 
   @Deprecated
@@ -142,7 +142,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
    * @deprecated Value should be moved to setupAbstractions map and read from there
    */
   public String getArtifactStreamId() {
-    return setupAbstractions.get(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD);
+    return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD);
   }
 
   @Override
