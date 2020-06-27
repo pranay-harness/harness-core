@@ -73,7 +73,6 @@ public class ExecutionPhasesPlanCreator implements SupportDefinedExecutorPlanCre
         .identifier(EXECUTION)
         .stepType(SectionChainStep.STEP_TYPE)
         .group(StepGroup.PHASES.name())
-        .skipExpressionChain(true)
         .stepParameters(SectionChainStepParameters.builder()
                             .childNodeIds(planForPhases.stream()
                                               .map(CreateExecutionPlanResponse::getStartingNodeId)

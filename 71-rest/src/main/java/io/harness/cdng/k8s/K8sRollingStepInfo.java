@@ -1,10 +1,9 @@
-package io.harness.cdng.pipeline;
+package io.harness.cdng.k8s;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cdng.k8s.K8sRollingStep;
+import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.state.StepType;
-import io.harness.state.io.K8sRollingStepParameters;
 import lombok.Builder;
 import lombok.Value;
 

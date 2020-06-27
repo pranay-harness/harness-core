@@ -13,11 +13,15 @@ import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
+import io.harness.cdng.common.beans.Tag;
+import io.harness.cdng.environment.beans.EnvironmentType;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.manifest.state.ManifestListConfig;
 import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
+import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.service.OverrideConfig;
@@ -62,5 +66,9 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8SDirectInfrastructure.class, 8028);
     kryo.register(EnvironmentYaml.class, 8029);
     kryo.register(FetchType.class, 8030);
+    kryo.register(ManifestOutcome.class, 8031);
+    kryo.register(Tag.class, 8032);
+    kryo.register(EnvironmentType.class, 8033);
+    kryo.register(K8sRollingOutcome.class, 8034);
   }
 }
