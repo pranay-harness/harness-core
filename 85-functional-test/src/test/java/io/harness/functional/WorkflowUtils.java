@@ -894,12 +894,45 @@ public class WorkflowUtils {
     List<PhaseStep> phaseSteps = new ArrayList<>();
     List<GraphNode> steps = new ArrayList<>();
     steps.add(GraphNode.builder()
-                  .name("shell-script-" + System.currentTimeMillis())
+                  .name("shell_script_" + System.currentTimeMillis())
                   .type(StateType.SHELL_SCRIPT.toString())
                   .properties(ImmutableMap.<String, Object>builder()
                                   .put("scriptType", scriptType)
                                   .put("scriptString", script)
                                   .put("executeOnDelegate", "true")
+                                  .build())
+                  .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.PREPARE_STEPS, PREPARE_STEPS.toString()).build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.COLLECT_ARTIFACT, PhaseStepType.COLLECT_ARTIFACT.toString())
+                       .addAllSteps(steps)
+                       .build());
+    phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
+
+    Workflow buildWorkflow =
+        aWorkflow()
+            .name(name + System.currentTimeMillis())
+            .appId(appId)
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(aBuildOrchestrationWorkflow()
+                                       .withWorkflowPhases(asList(aWorkflowPhase().phaseSteps(phaseSteps).build()))
+                                       .build())
+            .build();
+    return buildWorkflow;
+  }
+
+  public Workflow createWorkflowWithShellScriptAndDelegateSelector(
+      @NotEmpty String name, String appId, @NotEmpty String scriptType, @NotEmpty String script, String[] tags) {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+    List<GraphNode> steps = new ArrayList<>();
+    steps.add(GraphNode.builder()
+                  .name("shell_script_" + System.currentTimeMillis())
+                  .type(StateType.SHELL_SCRIPT.toString())
+                  .properties(ImmutableMap.<String, Object>builder()
+                                  .put("scriptType", scriptType)
+                                  .put("scriptString", script)
+                                  .put("executeOnDelegate", "true")
+                                  .put("tags", tags)
                                   .build())
                   .build());
 

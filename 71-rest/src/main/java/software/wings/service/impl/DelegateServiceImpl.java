@@ -98,6 +98,7 @@ import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.environment.SystemEnvironment;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.ExceptionUtils;
@@ -262,6 +263,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final String JRE_MAC_DIRECTORY = "jreMacDirectory";
   private static final String JRE_TAR_PATH = "jreTarPath";
   public static final String JRE_VERSION_KEY = "jreVersion";
+  private static final String ENV_ENV_VAR = "ENV";
 
   static {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -300,6 +302,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private ConfigurationController configurationController;
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
   @Inject private DelegateConnectionDao delegateConnectionDao;
+  @Inject private SystemEnvironment sysenv;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
@@ -525,6 +528,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     setUnset(updateOperations, DelegateKeys.sampleDelegate, delegate.isSampleDelegate());
     return updateOperations;
   }
+
   @Override
   public Delegate updateDescription(String accountId, String delegateId, String newDescription) {
     logger.info("Updating delegate description", delegateId);
@@ -818,15 +822,19 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         jarRelativePath = substringAfter(delegateMatadata, " ").trim();
         delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;
       }
-      int responseCode = -1;
-      try (Response response = Http.getUnsafeOkHttpClient(delegateJarDownloadUrl, 10, 10)
-                                   .newCall(new Builder().url(delegateJarDownloadUrl).head().build())
-                                   .execute()) {
-        responseCode = response.code();
+      if ("local".equals(getEnv())) {
+        jarFileExists = true;
+      } else {
+        int responseCode = -1;
+        try (Response response = Http.getUnsafeOkHttpClient(delegateJarDownloadUrl, 10, 10)
+                                     .newCall(new Builder().url(delegateJarDownloadUrl).head().build())
+                                     .execute()) {
+          responseCode = response.code();
+        }
+        logger.info("HEAD on downloadUrl got statusCode {}", responseCode);
+        jarFileExists = responseCode == 200;
+        logger.info("jarFileExists [{}]", jarFileExists);
       }
-      logger.info("HEAD on downloadUrl got statusCode {}", responseCode);
-      jarFileExists = responseCode == 200;
-      logger.info("jarFileExists [{}]", jarFileExists);
     } catch (IOException | ExecutionException e) {
       logger.warn("Unable to fetch delegate version information", e);
       logger.warn("CurrentVersion: [{}], LatestVersion=[{}], delegateJarDownloadUrl=[{}]", inquiry.getVersion(),
@@ -908,8 +916,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     return null;
   }
 
+  protected String getEnv() {
+    return Optional.ofNullable(sysenv.get(ENV_ENV_VAR)).orElse("local");
+  }
+
   /**
    * Returns JreConfig for a given account Id on the basis of UPGRADE_JRE and USE_CDN_FOR_STORAGE_FILES FeatureFlags.
+   *
    * @param accountId
    * @return
    */
@@ -935,6 +948,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   /**
    * Returns delegate's JRE version for a given account Id
+   *
    * @param accountId
    * @return
    */
@@ -2625,7 +2639,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   /**
    * ECS delegate sends keepAlive request every 20 secs. KeepAlive request is a frequent and light weight
    * mode for indicating that delegate is active.
-   *
+   * <p>
    * We just update "lastUpdatedAt" field with latest time for DelegateSequenceConfig associated with delegate,
    * so we can found stale config (not updated in last 100 secs) when we need to reuse it for new delegate
    * registration.
@@ -2706,14 +2720,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   /**
    * Delegate sent token and seqNum but null UUID.
    * 1. See if DelegateSequenceConfig record with same {accId, SeqNum} has same token as passed by delegate.
-   *    If yes,
-   *       - get delegate associated with this DelegateSequenceConfig if exists and update it.
-   *       - if delegate does not present in db, create a new record (init it with config from similar delegate and
+   * If yes,
+   * - get delegate associated with this DelegateSequenceConfig if exists and update it.
+   * - if delegate does not present in db, create a new record (init it with config from similar delegate and
    * create record)
-   *
-   *    IF No,
-   *      - Means that seqNum has been acquired by another delegate.
-   *      - Generate a new SeqNum and create delegate record using it (init it with config from similar delegate and
+   * <p>
+   * IF No,
+   * - Means that seqNum has been acquired by another delegate.
+   * - Generate a new SeqNum and create delegate record using it (init it with config from similar delegate and
    * create record).
    */
   @VisibleForTesting
@@ -2789,7 +2803,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   /**
    * Get existing delegate having same {hostName (prefix without seqNum), AccId, type = ECS}
    * Copy {SCOPE/PROFILE/TAG/KEYWORDS/DESCRIPTION} config into new delegate being registered
-   *
    */
   @VisibleForTesting
   void initDelegateWithConfigFromExistingDelegate(Delegate delegate) {
@@ -2823,8 +2836,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   /**
    * Either
    * 1. find a stale DelegateSeqConfig (not updated for last 100 secs),
-   *    delete delegate associated with it and use this seqNum for new delegate registration.
-   *
+   * delete delegate associated with it and use this seqNum for new delegate registration.
+   * <p>
    * 2. Else no such config exists from point 1, Create new SequenceConfig and associate with delegate.
    * (In both cases, we copy config {SCOPE/TAG/PROFILE} from existing delegates to this new delegate being registered)
    */

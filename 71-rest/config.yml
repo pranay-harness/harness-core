@@ -1,29 +1,29 @@
 xxxxxxxx
   applicationConnectors:
-  - type: h2
-    port: 9090
-    keyStorePath: keystore.jks
-    keyStorePassword: password
-    trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
-    certAlias: localhost
-    validateCerts: false
-    maxRequestHeaderSize: 100KiB
-  - type: http
-    port: 3457
-    maxRequestHeaderSize: 100KiB
+    - type: h2
+      port: 9090
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+      maxRequestHeaderSize: 100KiB
+    - type: http
+      port: 3457
+      maxRequestHeaderSize: 100KiB
   adminConnectors:
-  - type: h2
-    port: 9091
-    keyStorePath: keystore.jks
-    keyStorePassword: password
-    trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
-    certAlias: localhost
-    validateCerts: false
+    - type: h2
+      port: 9091
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
   requestLog:
     appenders:
-    - type: console
-      target: STDOUT
-      threshold: ERROR
+      - type: console
+        target: STDOUT
+        threshold: ERROR
   maxThreads: 1024
 
 backgroundScheduler:
@@ -166,10 +166,10 @@ globalWhitelistConfig:
 defaultSalesContacts:
   enabled: false
   accountTypeDefaults:
-  - accountType: TRIAL
-    emailIds: se@harness.io
-  - accountType: PAID
-    emailIds: csm@harness.io
+    - accountType: TRIAL
+      emailIds: se@harness.io
+    - accountType: PAID
+      emailIds: csm@harness.io
 
 supportEmail: support@harness.io
 
@@ -185,14 +185,14 @@ logging:
     com.novemberain.quartz.mongodb.TriggerRunner: "OFF"
     org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
   appenders:
-  - type: console
-    threshold: TRACE
-    target: STDOUT
-    logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
-  - type: gke-console
-    threshold: TRACE
-    target: STDOUT
-    stackdriverLogEnabled: false
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
 
 timescaledb:
   timescaledbUrl: ""
@@ -238,12 +238,12 @@ elasticsearch:
   mongoTagKey: none
   mongoTagValue: none
 
-watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
+watcherMetadataUrl: file:///local-storage/wingswatchers/watcherlocal.txt
 
-delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
+delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt
 
-apiUrl: "http://localhost:8080"
-deployMode: AWS
+apiUrl: "https://docker.for.mac.localhost:9090"
+deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
@@ -300,45 +300,45 @@ awsRegionIdToName:
   cn-northwest-1: China (Ningxia)
 
 awsInstanceTypes:
-- t2.nano
-- t2.micro
-- t2.small
-- t2.medium
-- t2.large
-- m3.medium
-- m3.large
-- m3.xlarge
-- m3.2xlarge
-- m4.large
-- m4.xlarge
-- m4.2xlarge
-- m4.4xlarge
-- m4.10xlarge
-- c4.large
-- c4.xlarge
-- c4.2xlarge
-- c4.4xlarge
-- c4.8xlarge
-- c3.large
-- c3.xlarge
-- c3.2xlarge
-- c3.4xlarge
-- c3.8xlarge
-- r3.large
-- r3.xlarge
-- r3.2xlarge
-- r3.4xlarge
-- r3.8xlarge
-- g2.2xlarge
-- g2.8xlarge
-- i2.xlarge
-- i2.2xlarge
-- i2.4xlarge
-- i2.8xlarge
-- d2.xlarge
-- d2.2xlarge
-- d2.4xlarge
-- d2.8xlarge
+  - t2.nano
+  - t2.micro
+  - t2.small
+  - t2.medium
+  - t2.large
+  - m3.medium
+  - m3.large
+  - m3.xlarge
+  - m3.2xlarge
+  - m4.large
+  - m4.xlarge
+  - m4.2xlarge
+  - m4.4xlarge
+  - m4.10xlarge
+  - c4.large
+  - c4.xlarge
+  - c4.2xlarge
+  - c4.4xlarge
+  - c4.8xlarge
+  - c3.large
+  - c3.xlarge
+  - c3.2xlarge
+  - c3.4xlarge
+  - c3.8xlarge
+  - r3.large
+  - r3.xlarge
+  - r3.2xlarge
+  - r3.4xlarge
+  - r3.8xlarge
+  - g2.2xlarge
+  - g2.8xlarge
+  - i2.xlarge
+  - i2.2xlarge
+  - i2.4xlarge
+  - i2.8xlarge
+  - d2.xlarge
+  - d2.2xlarge
+  - d2.4xlarge
+  - d2.8xlarge
 
 techStacks:
   Deployment-Kubernetes:
