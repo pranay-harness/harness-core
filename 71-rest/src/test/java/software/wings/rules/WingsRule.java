@@ -64,7 +64,6 @@ import io.harness.serializer.kryo.OrchestrationKryoRegister;
 import io.harness.serializer.kryo.PersistenceRegistrar;
 import io.harness.serializer.kryo.TestManagerRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
-import io.harness.testlib.PersistenceTestModule;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -307,7 +306,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
 
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
-    modules.add(new PersistenceTestModule());
+    modules.add(new WingsPersistenceTestModule());
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());

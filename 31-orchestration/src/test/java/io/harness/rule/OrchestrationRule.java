@@ -31,7 +31,6 @@ import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.tasks.TaskExecutor;
-import io.harness.testlib.PersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -119,7 +118,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     });
 
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
-    modules.add(new PersistenceTestModule());
+    modules.add(new OrchestrationPersistenceTestModule());
     modules.addAll(new OrchestrationModule(OrchestrationModuleConfig.builder()
                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                                .build())

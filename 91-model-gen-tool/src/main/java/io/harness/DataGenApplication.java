@@ -22,7 +22,6 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
-import io.harness.ng.PersistenceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
@@ -81,7 +80,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(20, 1000, 500L, TimeUnit.MILLISECONDS));
 
     List<Module> modules = new ArrayList<>();
-    modules.add(new PersistenceModule());
+    modules.add(new DataGenPersistenceModule());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()

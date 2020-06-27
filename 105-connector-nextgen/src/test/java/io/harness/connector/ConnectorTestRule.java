@@ -6,7 +6,6 @@ import com.google.inject.Module;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
-import io.harness.testlib.PersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -27,7 +26,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       }
     });
     modules.add(mongoTypeModule(annotations));
-    modules.add(new PersistenceTestModule());
+    modules.add(new ConnectorPersistenceTestModule());
     modules.add(new ConnectorModule());
     return modules;
   }

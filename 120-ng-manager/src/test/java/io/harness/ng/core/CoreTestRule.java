@@ -6,7 +6,6 @@ import com.google.inject.Module;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
-import io.harness.testlib.PersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -28,7 +27,7 @@ public class CoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     });
     modules.add(mongoTypeModule(annotations));
     modules.add(new CoreModule());
-    modules.add(new PersistenceTestModule());
+    modules.add(new CorePersistenceTestModule());
     modules.add(new SecretManagementModule(
         SecretManagerClientConfig.builder().baseUrl("http://localhost:8080/").serviceSecret("test_secret").build()));
     return modules;
