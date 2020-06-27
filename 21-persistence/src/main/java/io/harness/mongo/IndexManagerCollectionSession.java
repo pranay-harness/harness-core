@@ -12,7 +12,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import io.harness.logging.AutoLogContext;
-import io.harness.mongo.IndexManager.IndexCreator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;

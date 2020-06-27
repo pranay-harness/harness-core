@@ -87,6 +87,7 @@ import software.wings.WingsTestModule;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GeneralNotifyEventListener;
+import software.wings.app.IndexMigratorModule;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -308,6 +309,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new PersistenceTestModule());
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
+    modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());
     modules.add(new ManagerExecutorModule());
     modules.add(new WingsTestModule());

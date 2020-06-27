@@ -37,10 +37,13 @@ import java.util.concurrent.TimeUnit;
 public class ApplicationReadyListener {
   private final TimeScaleDBService timeScaleDBService;
   private final HPersistence hPersistence;
+  private final IndexManager indexManager;
 
-  public ApplicationReadyListener(TimeScaleDBService timeScaleDBService, HPersistence hPersistence) {
+  public ApplicationReadyListener(
+      TimeScaleDBService timeScaleDBService, HPersistence hPersistence, IndexManager indexManager) {
     this.timeScaleDBService = timeScaleDBService;
     this.hPersistence = hPersistence;
+    this.indexManager = indexManager;
   }
 
   @EventListener(ApplicationReadyEvent.class)
@@ -68,7 +71,7 @@ public class ApplicationReadyListener {
                                              .getBean(BatchMainConfig.class)
                                              .getEventsMongo()
                                              .getIndexManagerMode();
-    IndexManager.ensureIndexes(indexManagerMode, datastore, locMorphia);
+    indexManager.ensureIndexes(indexManagerMode, datastore, locMorphia);
   }
 
   @EventListener(ApplicationReadyEvent.class)

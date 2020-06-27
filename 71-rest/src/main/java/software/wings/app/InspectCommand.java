@@ -48,6 +48,8 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
       }
     });
     modules.addAll(new MongoModule().cumulativeDependencies());
+    modules.add(new IndexMigratorModule());
+
     Injector injector = Guice.createInjector(modules);
     injector.getInstance(Key.get(AdvancedDatastore.class, Names.named("primaryDatastore")));
   }

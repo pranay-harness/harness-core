@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
-import io.harness.mongo.IndexManager.IndexCreator;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;

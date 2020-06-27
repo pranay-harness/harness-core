@@ -3,6 +3,7 @@ package io.harness.mongo;
 import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableSet;
@@ -13,8 +14,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
-import io.harness.mongo.IndexManager.IndexCreator;
-import io.harness.mongo.IndexManager.IndexCreator.IndexCreatorBuilder;
+import io.harness.mongo.IndexCreator.IndexCreatorBuilder;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -39,7 +39,8 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testFindIndexByFields() {
-    IndexManagerSession session = new IndexManagerSession(AUTO);
+    IndexManagerSession session =
+        new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     IndexCreator indexCreator = buildIndexCreator(collection, "foo", 1).build();
@@ -59,7 +60,8 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testFindIndexByFieldsAndDirection() {
-    IndexManagerSession session = new IndexManagerSession(AUTO);
+    IndexManagerSession session =
+        new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     IndexCreator indexCreator = buildIndexCreator(collection, "foo", 1).build();
@@ -79,7 +81,8 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testFindIndexByName() {
-    IndexManagerSession session = new IndexManagerSession(AUTO);
+    IndexManagerSession session =
+        new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     session.create(buildIndexCreator(collection, "index", 1).build());
@@ -93,7 +96,8 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testIsRebuiltNeeded() {
-    IndexManagerSession session = new IndexManagerSession(AUTO);
+    IndexManagerSession session =
+        new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     IndexCreator indexCreator = buildIndexCreator(collection, "foo", 1).build();
@@ -115,7 +119,8 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
   @Category(UnitTests.class)
   @RealMongo
   public void testIsCreateNeeded() {
-    IndexManagerSession session = new IndexManagerSession(AUTO);
+    IndexManagerSession session =
+        new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     IndexCreator indexCreator = buildIndexCreator(collection, "foo", 1).build();
@@ -131,7 +136,8 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
   @Category(UnitTests.class)
   @RealMongo
   public void obsoleteIndexes() {
-    IndexManagerSession session = new IndexManagerSession(AUTO);
+    IndexManagerSession session =
+        new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
     Set<String> names = ImmutableSet.<String>builder().add("foo2").build();

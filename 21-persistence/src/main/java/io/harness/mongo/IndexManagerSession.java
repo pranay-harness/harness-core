@@ -30,8 +30,8 @@ import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.data.structure.ListUtils.OneAndOnlyOne;
 import io.harness.govern.Switch;
 import io.harness.logging.AutoLogContext;
-import io.harness.mongo.IndexManager.IndexCreator;
-import io.harness.mongo.IndexManager.IndexCreator.IndexCreatorBuilder;
+import io.harness.mongo.IndexCreator.IndexCreatorBuilder;
+import io.harness.mongo.IndexManager.Mode;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdSparseIndex;
 import io.harness.mongo.index.CdUniqueIndex;
@@ -40,6 +40,7 @@ import io.harness.mongo.index.FdSparseIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.migrator.Migrator;
 import io.harness.threading.Morpheus;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -74,7 +75,9 @@ public class IndexManagerSession {
   // We do not want to drop temporary index before we created the new one. Make the soaking period smaller.
   public static final Duration REBUILD_SOAKING_PERIOD = SOAKING_PERIOD.minus(ofHours(1));
 
-  private IndexManager.Mode mode;
+  private Map<String, Migrator> migrators;
+  private AdvancedDatastore datastore;
+  private Mode mode;
 
   @Value
   @AllArgsConstructor
@@ -312,11 +315,21 @@ public class IndexManagerSession {
     }
   }
 
-  IndexManagerSession(IndexManager.Mode mode) {
+  IndexManagerSession(AdvancedDatastore datastore, Map<String, Migrator> migrators, Mode mode) {
+    this.datastore = datastore;
+    this.migrators = migrators;
     this.mode = mode;
   }
 
   public void create(IndexCreator indexCreator) {
+    if (migrators != null) {
+      Migrator migrator = migrators.get(indexCreator.getCollection().getName() + "." + indexCreator.name());
+      if (migrator != null) {
+        logger.info("Execute migration {} for index {}", migrator.getClass().getName(), indexCreator.name());
+        migrator.execute(datastore);
+      }
+    }
+
     switch (mode) {
       case AUTO:
         logger.warn("Creating index {} {}", indexCreator.getOptions().toString(), indexCreator.getKeys().toString());
@@ -463,7 +476,7 @@ public class IndexManagerSession {
     return created;
   }
 
-  public boolean ensureIndexes(AdvancedDatastore datastore, Morphia morphia) {
+  public boolean ensureIndexes(Morphia morphia) {
     // Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
     // There is no way to override this behavior.
     // https://github.com/mongodb/morphia/issues/706
