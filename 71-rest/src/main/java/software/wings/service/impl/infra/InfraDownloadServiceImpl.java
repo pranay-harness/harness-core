@@ -41,11 +41,11 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   private static final String WATCHER_JAR = "watcher.jar";
   private static final String BUILDS_PATH = "/builds/";
   private static final String ON_PREM_ENV_STRING = "on-prem";
-
-  private static final String LOGGING_SERVICE_ACCOUNT_ENV_VAR = "LOGGING_SERVICE_ACC";
-
-  static final String DEFAULT_ERROR_STRING = "ERROR_GETTING_DATA";
   private static final String ENV_ENV_VAR = "ENV";
+  private static final String LOGGING_SERVICE_ACCOUNT_ENV_VAR = "LOGGING_SERVICE_ACC";
+  static final String DEFAULT_ERROR_STRING = "ERROR_GETTING_DATA";
+  static final String LOCAL_DELEGATE = "file:///local-storage/wingsdelegates/delegate/delegate.jar";
+  static final String LOCAL_WATCHER = "file:///local-storage/wingswatchers/watcher/watcher.jar";
 
   @Inject private GcsUtils gcsUtil;
   @Inject private SystemEnvironment sysenv;
@@ -92,6 +92,9 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
     if (isEmpty(envString)) {
       envString = getEnv();
     }
+    if ("local".equals(envString)) {
+      return LOCAL_DELEGATE;
+    }
 
     if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)
         && !ON_PREM_ENV_STRING.equals(envString)) {
@@ -116,6 +119,9 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   public String getDownloadUrlForWatcher(String version, String envString, String accountId) {
     if (isEmpty(envString)) {
       envString = getEnv();
+    }
+    if ("local".equals(envString)) {
+      return LOCAL_WATCHER;
     }
 
     if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)
@@ -173,7 +179,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   }
 
   protected String getEnv() {
-    return Optional.ofNullable(sysenv.get(ENV_ENV_VAR)).orElse("ci");
+    return Optional.ofNullable(sysenv.get(ENV_ENV_VAR)).orElse("local");
   }
 
   private String getServiceAccountJson(String serviceAccountEnvVarName) {

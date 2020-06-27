@@ -83,6 +83,7 @@ public class OwnerRule implements TestRule {
   public static final String DINESH = "dinesh.garg";
   public static final String GARVIT = "garvit.pahal";
   public static final String GEORGE = "george";
+  public static final String GUNA = "guna.chandrasekaran";
   public static final String HANTANG = "hannah.tang";
   public static final String HARSH = "harsh.jain";
   public static final String HITESH = "hitesh.aringa";
@@ -168,6 +169,7 @@ public class OwnerRule implements TestRule {
           .put(DINESH, DevInfo.builder().email("dinesh.garg@harness.io").slack("UQ0DMQG11").build())
           .put(GARVIT, defaultDevInfo(GARVIT).slack("UHH98EXDK").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(GEORGE, defaultDevInfo(GEORGE).slack("U88CA877V").team(DELEGATE).build())
+          .put(GUNA, defaultDevInfo(GUNA).slack("UD45NV41W").team(DELEGATE).build())
           .put(HANTANG, defaultDevInfo(HANTANG).slack("UK8AQJSCS").team(CONTINUOUS_EFFICIENCY).build())
           .put(HARSH, defaultDevInfo(HARSH).slack("UJ1CDM3FY").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(HITESH, defaultDevInfo(HITESH).slack("UK41C9QJH").team(CONTINUOUS_EFFICIENCY).build())

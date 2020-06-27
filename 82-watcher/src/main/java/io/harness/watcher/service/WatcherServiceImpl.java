@@ -732,8 +732,14 @@ public class WatcherServiceImpl implements WatcherService {
       FileUtils.forceDelete(destination);
     }
     Stopwatch timer = Stopwatch.createStarted();
-    try (InputStream stream = Http.getResponseStreamFromUrl(downloadUrl, 600, 600)) {
-      FileUtils.copyInputStreamToFile(stream, destination);
+
+    if (downloadUrl.startsWith("file://")) {
+      String sourceFile = downloadUrl.substring(7);
+      FileUtils.copyFile(new File(sourceFile), destination);
+    } else {
+      try (InputStream stream = Http.getResponseStreamFromUrl(downloadUrl, 600, 600)) {
+        FileUtils.copyInputStreamToFile(stream, destination);
+      }
     }
     logger.info("Finished downloading delegate jar version {} in {} seconds", version, timer.elapsed(TimeUnit.SECONDS));
   }
@@ -885,9 +891,15 @@ public class WatcherServiceImpl implements WatcherService {
     }
     try {
       // TODO - if multiVersion use manager endpoint
-      String watcherMetadata = Http.getResponseStringFromUrl(watcherConfiguration.getUpgradeCheckLocation(), 10, 10);
-      String latestVersion = substringBefore(watcherMetadata, " ").trim();
-      boolean upgrade = !StringUtils.equals(getVersion(), latestVersion);
+      boolean upgrade;
+      String latestVersion = "";
+      if (watcherConfiguration.getDelegateCheckLocation().startsWith("file://")) {
+        upgrade = false;
+      } else {
+        String watcherMetadata = Http.getResponseStringFromUrl(watcherConfiguration.getUpgradeCheckLocation(), 10, 10);
+        latestVersion = substringBefore(watcherMetadata, " ").trim();
+        upgrade = !StringUtils.equals(getVersion(), latestVersion);
+      }
       if (upgrade) {
         logger.info("[Old] Upgrading watcher");
         working.set(true);

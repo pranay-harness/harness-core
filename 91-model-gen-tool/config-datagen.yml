@@ -96,10 +96,10 @@ mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
-watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
-delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
-apiUrl:
-deployMode: AWS
+watcherMetadataUrl: file:///local-storage/wingswatchers/watcherlocal.txt
+delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt
+apiUrl: "https://localhost:9090"
+deployMode: KUBERNETES
 
 portal:
   url: https://localhost:8000
