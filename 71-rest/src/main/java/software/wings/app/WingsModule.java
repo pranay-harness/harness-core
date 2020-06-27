@@ -39,7 +39,7 @@ import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;
 import io.harness.cdng.NGModule;
 import io.harness.config.PipelineConfig;
-import io.harness.cvng.CVNextGenRestServiceModule;
+import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskServiceImpl;
 import io.harness.dashboard.DashboardSettingsService;
@@ -1108,7 +1108,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
 
     install(new PerpetualTaskServiceModule());
     install(new CESetupServiceModule());
-    install(new CVNextGenRestServiceModule());
+    install(new CVNextGenCommonsServiceModule());
     // Custom Workflow Dependencies
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     MapBinder<String, TaskExecutor> taskExecutorMap =

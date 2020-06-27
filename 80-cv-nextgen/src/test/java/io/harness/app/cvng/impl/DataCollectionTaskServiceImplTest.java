@@ -11,12 +11,12 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
-import io.harness.app.cvng.api.DataCollectionTaskService;
-import io.harness.app.cvng.client.VerificationManagerService;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionInfo;
+import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.services.entities.DataCollectionTask;
 import io.harness.cvng.core.services.entities.DataCollectionTask.DataCollectionTaskKeys;

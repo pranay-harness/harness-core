@@ -3,8 +3,7 @@ package io.harness.cvng;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
-import io.harness.app.CVServiceModule;
-import io.harness.app.cvng.client.VerificationManagerClientModule;
+import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;

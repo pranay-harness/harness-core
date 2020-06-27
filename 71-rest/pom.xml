@@ -776,7 +776,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>67-cv-nextgen-rest</artifactId>
+            <artifactId>66-cv-nextgen-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -26,7 +26,6 @@
         <module>57-command-library-common</module>
         <module>64-events-framework</module>
         <module>66-cv-nextgen-commons</module>
-        <module>67-cv-nextgen-rest</module>
         <module>68-cd-nextgen</module>
         <module>70-delegate-agent</module>
         <module>70-delegate-service</module>
