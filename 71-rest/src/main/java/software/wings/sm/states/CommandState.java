@@ -7,6 +7,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.eraro.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -776,8 +777,12 @@ public class CommandState extends State {
           }
           SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
           if (keySettingAttribute == null) {
-            throw new ShellScriptException("SSH Connection Attribute provided in Shell Script Step not found",
-                ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
+            keySettingAttribute = settingsService.getSettingAttributeByName(context.getApp().getAccountId(), sshKeyRef);
+            if (keySettingAttribute == null) {
+              throw new ShellScriptException("SSH Connection Attribute provided in Shell Script Step not found",
+                  ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
+            }
+            sshKeyRef = keySettingAttribute.getUuid();
           }
 
           String hostName = context.renderExpression(getHost());
@@ -806,8 +811,17 @@ public class CommandState extends State {
             throw new ShellScriptException("WinRM Connection Attribute not provided in Shell Script Step",
                 ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
           }
+          SettingAttribute keySettingAttribute = settingsService.get(connectionAttributes);
+          if (keySettingAttribute == null) {
+            keySettingAttribute =
+                settingsService.getSettingAttributeByName(context.getApp().getAccountId(), connectionAttributes);
+            notNullCheck("Winrm Connection Attribute provided in Shell Script Step not found", keySettingAttribute);
+            connectionAttributes = keySettingAttribute.getUuid();
+          }
+
           WinRmConnectionAttributes winRmConnectionAttributes =
-              (WinRmConnectionAttributes) settingsService.get(connectionAttributes).getValue();
+              (WinRmConnectionAttributes) keySettingAttribute.getValue();
+
           if (winRmConnectionAttributes == null) {
             throw new ShellScriptException("Winrm Connection Attribute provided in Shell Script Step not found",
                 ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
