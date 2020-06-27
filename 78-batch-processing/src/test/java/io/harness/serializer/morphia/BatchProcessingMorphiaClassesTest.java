@@ -1,17 +1,13 @@
-package io.harness;
+package io.harness.serializer.morphia;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 
-import com.google.common.collect.ImmutableSet;
-
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.morphia.MorphiaModule;
 import io.harness.rule.Owner;
-import io.harness.serializer.morphia.BatchProcessingMorphiaRegistrar;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.integration.common.MongoDBTest;
-import software.wings.integration.dl.PageRequestTest;
 
 public class BatchProcessingMorphiaClassesTest extends CategoryTest {
   @Test
@@ -25,8 +21,7 @@ public class BatchProcessingMorphiaClassesTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testEventSearchAndList() {
-    new MorphiaModule().testAutomaticSearch(
-        ImmutableSet.<Class>builder().add(MongoDBTest.MongoEntity.class).add(PageRequestTest.Dummy.class).build());
+    new MorphiaModule().testAutomaticSearch();
   }
 
   @Test

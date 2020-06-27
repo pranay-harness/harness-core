@@ -27,8 +27,6 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.common.PartitionProcessorTest.SampleElement;
 import software.wings.infra.InfraMappingInfrastructureProvider;
-import software.wings.integration.common.MongoDBTest.MongoEntity;
-import software.wings.integration.dl.PageRequestTest.Dummy;
 import software.wings.service.impl.WorkflowExecutionUpdateFake;
 import software.wings.service.impl.analysis.DataCollectionInfo;
 import software.wings.service.impl.analysis.LogDataCollectionInfoV2;
@@ -60,8 +58,7 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testManagerSearchAndList() {
-    new MorphiaModule().testAutomaticSearch(
-        ImmutableSet.<Class>builder().add(Dummy.class).add(MongoEntity.class).build());
+    new MorphiaModule().testAutomaticSearch();
   }
 
   @Test

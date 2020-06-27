@@ -17,7 +17,6 @@ import org.reflections.Reflections;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
@@ -73,18 +72,15 @@ public class MorphiaModule extends DependencyProviderModule {
     return Collections.emptySet();
   }
 
-  public void testAutomaticSearch(Set<Class> testClasses) {
+  public void testAutomaticSearch() {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setMapSubPackages(true);
     morphia.mapPackage("software.wings");
     morphia.mapPackage("io.harness");
 
-    final Set<Class> classes = new HashSet<>(morphiaClasses);
-    classes.addAll(testClasses);
-
     boolean success = true;
     for (MappedClass cls : morphia.getMapper().getMappedClasses()) {
-      if (!classes.contains(cls.getClazz())) {
+      if (!morphiaClasses.contains(cls.getClazz())) {
         logger.error(cls.getClazz().toString());
         success = false;
       }
