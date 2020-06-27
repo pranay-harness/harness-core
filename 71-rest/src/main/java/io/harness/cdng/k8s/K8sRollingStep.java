@@ -8,8 +8,8 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTask;
+import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.infra.yaml.Infrastructure;
-import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.FetchType;
@@ -18,7 +18,6 @@ import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
-import io.harness.cdng.pipeline.K8sRollingStepInfo;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
@@ -39,17 +38,14 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
-import io.harness.state.io.K8sRollingStepParameters;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.validation.Validator;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
-import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.StoreType;
@@ -58,11 +54,11 @@ import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
-import software.wings.helpers.ext.k8s.request.K8sClusterConfig.K8sClusterConfigBuilder;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig.K8sDelegateManifestConfigBuilder;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -81,6 +77,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
   @Inject private SettingsService settingsService;
   @Inject private OutcomeService outcomeService;
   @Inject private EngineExpressionService engineExpressionService;
+  @Inject private K8sStepHelper k8sStepHelper;
 
   @Override
   public TaskChainResponse startChainLink(
@@ -130,9 +127,9 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
       if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfig().getKind())) {
         GitStore gitStore = (GitStore) valuesManifest.getStoreConfig();
         String connectorId = gitStore.getConnectorId();
-        GitConfig gitConfig = (GitConfig) getSettingAttribute(connectorId).getValue();
+        GitConfig gitConfig = (GitConfig) k8sStepHelper.getSettingAttribute(connectorId).getValue();
 
-        List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(gitConfig);
+        List<EncryptedDataDetail> encryptionDetails = k8sStepHelper.getEncryptedDataDetails(gitConfig);
         gitFetchFilesConfigs.add(GitFetchFilesConfig.builder()
                                      .encryptedDataDetails(encryptionDetails)
                                      .gitConfig(gitConfig)
@@ -144,7 +141,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
       }
     }
 
-    String accountId = ambiance.getSetupAbstractions().get("accountId");
+    String accountId = AmbianceHelper.getAccountId(ambiance);
     GitFetchRequest gitFetchRequest =
         GitFetchRequest.builder().gitFetchFilesConfigs(gitFetchFilesConfigs).accountId(accountId).build();
 
@@ -170,19 +167,9 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
         .build();
   }
 
-  private List<EncryptedDataDetail> getEncryptedDataDetails(EncryptableSetting encryptableSetting) {
-    // TODO: move to new secret manager apis without app and workflowIds
-    return secretManager.getEncryptionDetails(encryptableSetting, "", null);
-  }
-
   private List<String> getValuesFileContentsForLocalStore(List<ValuesManifest> aggregatedValuesManifests) {
     // TODO: implement when local store is available
     return Collections.emptyList();
-  }
-
-  private SettingAttribute getSettingAttribute(String connectorId) {
-    // TODO: change when Connectors NG comes up
-    return settingsService.get(connectorId);
   }
 
   private TaskChainResponse executeK8sTask(K8sManifest k8sManifest, Ambiance ambiance,
@@ -191,8 +178,8 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
     StoreConfig storeConfig = k8sManifest.getStoreConfig();
 
     K8sDelegateManifestConfig k8sDelegateManifestConfig = getK8sDelegateManifestConfig(storeConfig);
-    K8sClusterConfig k8sClusterConfig = getK8sClusterConfig(infrastructure);
-    String releaseName = getReleaseName(infrastructure);
+    K8sClusterConfig k8sClusterConfig = k8sStepHelper.getK8sClusterConfig(infrastructure);
+    String releaseName = k8sStepHelper.getReleaseName(infrastructure);
 
     K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters =
         K8sRollingDeployTaskParameters.builder()
@@ -206,7 +193,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
             .localOverrideFeatureFlag(false)
             .timeoutIntervalInMin(stepParameters.getTimeout())
             .valuesYamlList(renderedValuesList)
-            .accountId(ambiance.getSetupAbstractions().get("accountId"))
+            .accountId(AmbianceHelper.getAccountId(ambiance))
             .k8sClusterConfig(k8sClusterConfig)
             .activityId(UUIDGenerator.generateUuid())
             .build();
@@ -220,11 +207,11 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .data(taskData)
-                                    .accountId(ambiance.getSetupAbstractions().get("accountId"))
+                                    .accountId(AmbianceHelper.getAccountId(ambiance))
                                     .waitId(UUIDGenerator.generateUuid())
                                     .build();
 
-    return TaskChainResponse.builder().task(delegateTask).chainEnd(true).build();
+    return TaskChainResponse.builder().task(delegateTask).chainEnd(true).passThroughData(infrastructure).build();
   }
 
   private List<String> renderValues(Ambiance ambiance, List<String> valuesFileContents) {
@@ -237,26 +224,15 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
         .collect(Collectors.toList());
   }
 
-  private String getReleaseName(Infrastructure infrastructure) {
-    switch (infrastructure.getKind()) {
-      case K8S_DIRECT:
-        K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
-        return k8SDirectInfrastructure.getReleaseName();
-      default:
-        throw new UnsupportedOperationException(
-            String.format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
-    }
-  }
-
   private K8sDelegateManifestConfig getK8sDelegateManifestConfig(StoreConfig storeConfig) {
     K8sDelegateManifestConfigBuilder k8sDelegateManifestConfigBuilder = K8sDelegateManifestConfig.builder();
 
     if (storeConfig.getKind().equals(ManifestStoreType.GIT)) {
       StoreType storeType = StoreType.Remote;
       GitStore gitStore = (GitStore) storeConfig;
-      SettingAttribute gitConfigSettingAttribute = getSettingAttribute(gitStore.getConnectorId());
+      SettingAttribute gitConfigSettingAttribute = k8sStepHelper.getSettingAttribute(gitStore.getConnectorId());
       List<EncryptedDataDetail> encryptionDetails =
-          getEncryptedDataDetails((GitConfig) gitConfigSettingAttribute.getValue());
+          k8sStepHelper.getEncryptedDataDetails((GitConfig) gitConfigSettingAttribute.getValue());
 
       GitFileConfig gitFileConfig =
           GitFileConfig.builder()
@@ -275,26 +251,6 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
     }
     // TODO: local store preparation later
     return k8sDelegateManifestConfigBuilder.build();
-  }
-
-  private K8sClusterConfig getK8sClusterConfig(Infrastructure infrastructure) {
-    K8sClusterConfigBuilder k8sClusterConfigBuilder = K8sClusterConfig.builder();
-
-    switch (infrastructure.getKind()) {
-      case K8S_DIRECT:
-        K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
-        SettingAttribute cloudProvider = getSettingAttribute(k8SDirectInfrastructure.getConnectorId());
-        List<EncryptedDataDetail> encryptionDetails =
-            getEncryptedDataDetails((KubernetesClusterConfig) cloudProvider.getValue());
-        k8sClusterConfigBuilder.cloudProvider(cloudProvider.getValue())
-            .namespace(k8SDirectInfrastructure.getNamespace())
-            .cloudProviderEncryptionDetails(encryptionDetails)
-            .cloudProviderName(cloudProvider.getName());
-        return k8sClusterConfigBuilder.build();
-      default:
-        throw new UnsupportedOperationException(
-            String.format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
-    }
   }
 
   private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifest> aggregatedValuesManifests) {
@@ -418,7 +374,23 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
         (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionResult.CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder().status(Status.SUCCEEDED).build();
+      Infrastructure infrastructure = (Infrastructure) passThroughData;
+      K8sRollingDeployResponse k8sTaskResponse =
+          (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
+
+      K8sRollingOutcome k8sRollingOutcome = K8sRollingOutcome.builder()
+                                                .releaseName(k8sStepHelper.getReleaseName(infrastructure))
+                                                .releaseNumber(k8sTaskResponse.getReleaseNumber())
+                                                .build();
+
+      return StepResponse.builder()
+          .status(Status.SUCCEEDED)
+          .stepOutcome(StepResponse.StepOutcome.builder()
+                           .group("PHASES")
+                           .name("rollingOutcome")
+                           .outcome(k8sRollingOutcome)
+                           .build())
+          .build();
     } else {
       return StepResponse.builder()
           .status(Status.FAILED)

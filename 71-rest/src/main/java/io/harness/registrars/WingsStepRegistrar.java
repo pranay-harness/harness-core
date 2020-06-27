@@ -7,6 +7,7 @@ import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.environment.steps.EnvironmentStep;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
+import io.harness.cdng.k8s.K8sRollingRollbackStep;
 import io.harness.cdng.k8s.K8sRollingStep;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
@@ -47,5 +48,6 @@ public class WingsStepRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(DeploymentStageStep.STEP_TYPE, DeploymentStageStep.class));
     stateClasses.add(Pair.of(ServiceStep.STEP_TYPE, ServiceStep.class));
     stateClasses.add(Pair.of(K8sRollingStep.STEP_TYPE, K8sRollingStep.class));
+    stateClasses.add(Pair.of(K8sRollingRollbackStep.STEP_TYPE, K8sRollingRollbackStep.class));
   }
 }
