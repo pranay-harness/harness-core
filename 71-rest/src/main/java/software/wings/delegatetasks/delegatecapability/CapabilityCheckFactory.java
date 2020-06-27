@@ -22,6 +22,7 @@ import software.wings.delegatetasks.validation.capabilitycheck.PcfConnectivityCa
 import software.wings.delegatetasks.validation.capabilitycheck.SSHHostValidationCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SftpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.ShellConnectionCapabilityCheck;
+import software.wings.delegatetasks.validation.capabilitycheck.SmbConnectionCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.SmtpCapabilityCheck;
 import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidationCapabilityCheck;
 
@@ -46,6 +47,7 @@ public class CapabilityCheckFactory {
   @Inject ShellConnectionCapabilityCheck shellConnectionCapabilityCheck;
   @Inject GitConnectionCapabilityCheck gitConnectionCapabilityCheck;
   @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
+  @Inject SmbConnectionCapabilityCheck smbConnectionCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -87,6 +89,8 @@ public class CapabilityCheckFactory {
         return gitConnectionCapabilityCheck;
       case KUSTOMIZE:
         return kustomizeCapabilityCheck;
+      case SMB:
+        return smbConnectionCapabilityCheck;
       default:
         return null;
     }

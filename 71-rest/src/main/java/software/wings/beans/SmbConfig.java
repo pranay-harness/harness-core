@@ -8,7 +8,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +17,7 @@ import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
+import software.wings.delegatetasks.validation.capabilities.SmbConnectionCapability;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
@@ -68,8 +68,7 @@ public class SmbConfig extends SettingValue implements EncryptableSetting {
    */
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Collections.singletonList(
-        SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(smbUrl));
+    return Collections.singletonList(SmbConnectionCapability.builder().smbUrl(smbUrl).build());
   }
 
   @Data
