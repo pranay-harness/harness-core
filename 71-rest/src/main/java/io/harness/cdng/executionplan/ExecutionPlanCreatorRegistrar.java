@@ -7,7 +7,6 @@ import io.harness.cdng.infra.InfraPlanCreator;
 import io.harness.cdng.pipeline.plancreators.ArtifactStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.DeploymentStagePlanCreator;
 import io.harness.cdng.pipeline.plancreators.ExecutionPhasesPlanCreator;
-import io.harness.cdng.pipeline.plancreators.HttpStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.ManifestStepPlanCreator;
 import io.harness.cdng.pipeline.plancreators.PhasePlanCreator;
 import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
@@ -28,7 +27,6 @@ public class ExecutionPlanCreatorRegistrar {
   @Inject private DeploymentStagePlanCreator deploymentStagePlanCreator;
   @Inject private ExecutionPhasesPlanCreator executionPhasesPlanCreator;
   @Inject private PhasePlanCreator phasePlanCreator;
-  @Inject private HttpStepPlanCreator httpStepPlanCreator;
   @Inject private ParallelStepPlanCreator parallelStepPlanCreator;
   @Inject private ArtifactStepPlanCreator artifactStepPlanCreator;
   @Inject private ManifestStepPlanCreator manifestStepPlanCreator;
@@ -43,7 +41,6 @@ public class ExecutionPlanCreatorRegistrar {
     register(deploymentStagePlanCreator);
     register(executionPhasesPlanCreator);
     register(phasePlanCreator);
-    register(httpStepPlanCreator);
     register(parallelStepPlanCreator);
     register(artifactStepPlanCreator);
     register(manifestStepPlanCreator);

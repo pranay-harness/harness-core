@@ -5,12 +5,14 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
+import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanCreatorType;
+import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -22,18 +24,31 @@ import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.yaml.core.intfc.Stage;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class StagesPlanCreator implements SupportDefinedExecutorPlanCreator<List<Stage>> {
+public class StagesPlanCreator
+    extends AbstractPlanCreatorWithChildren<List<Stage>> implements SupportDefinedExecutorPlanCreator<List<Stage>> {
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(List<Stage> stagesList, CreateExecutionPlanContext context) {
-    final List<CreateExecutionPlanResponse> planForStages = getPlanForStages(context, stagesList);
-    final PlanNode stagesPlanNode = prepareStagesNode(context, planForStages);
+  public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
+      List<Stage> stagesList, CreateExecutionPlanContext context) {
+    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
+    List<CreateExecutionPlanResponse> planForStages = getPlanForStages(context, stagesList);
+    childrenPlanMap.put("STAGES", planForStages);
+    return childrenPlanMap;
+  }
+
+  @Override
+  public CreateExecutionPlanResponse createPlanForSelf(List<Stage> input,
+      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
+    List<CreateExecutionPlanResponse> planForStages = planForChildrenMap.get("STAGES");
+    final PlanNode stagesPlanNode = prepareStagesNode(planForStages);
     return CreateExecutionPlanResponse.builder()
         .planNode(stagesPlanNode)
         .planNodes(getPlanNodes(planForStages))
@@ -59,8 +74,7 @@ public class StagesPlanCreator implements SupportDefinedExecutorPlanCreator<List
         PlanCreatorType.STAGE_PLAN_CREATOR.getName(), stage, context, "no execution plan creator found for  stage");
   }
 
-  private PlanNode prepareStagesNode(
-      CreateExecutionPlanContext context, List<CreateExecutionPlanResponse> planForStages) {
+  private PlanNode prepareStagesNode(List<CreateExecutionPlanResponse> planForStages) {
     final String nodeId = generateUuid();
 
     final String STAGES = "stages";
@@ -92,5 +106,10 @@ public class StagesPlanCreator implements SupportDefinedExecutorPlanCreator<List
   @Override
   public List<String> getSupportedTypes() {
     return singletonList(PlanCreatorType.STAGES_PLAN_CREATOR.getName());
+  }
+
+  @Override
+  public String getPlanNodeType(List<Stage> input) {
+    return PlanNodeType.STAGES.name();
   }
 }

@@ -5,6 +5,7 @@ import static io.harness.cdng.executionplan.CDPlanCreatorType.INFRA_PLAN_CREATOR
 import static io.harness.cdng.executionplan.CDPlanCreatorType.SERVICE_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STAGE_PLAN_CREATOR;
+import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -13,11 +14,13 @@ import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.ServiceConfig;
+import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -29,44 +32,48 @@ import io.harness.yaml.core.auxiliary.intfc.PhaseWrapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Singleton
 @Slf4j
-public class DeploymentStagePlanCreator implements SupportDefinedExecutorPlanCreator<DeploymentStage> {
+public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<DeploymentStage>
+    implements SupportDefinedExecutorPlanCreator<DeploymentStage> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
-    try {
-      prePlanning(deploymentStage, context);
-      final CreateExecutionPlanResponse planForExecution =
-          createPlanForExecution(deploymentStage.getDeployment().getExecution(), context);
-      final CreateExecutionPlanResponse planForService =
-          createPlanForService(deploymentStage.getDeployment().getService(), context);
-      final CreateExecutionPlanResponse planForInfrastructure =
-          createPlanForInfrastructure(deploymentStage.getDeployment().getInfrastructure(), context);
-      final PlanNode deploymentStageNode =
-          prepareDeploymentNode(deploymentStage, context, planForExecution, planForService, planForInfrastructure);
-
-      return CreateExecutionPlanResponse.builder()
-          .planNode(deploymentStageNode)
-          .planNodes(planForService.getPlanNodes())
-          .planNodes(planForInfrastructure.getPlanNodes())
-          .planNodes(planForExecution.getPlanNodes())
-          .startingNodeId(deploymentStageNode.getUuid())
-          .build();
-    } finally {
-      postPlanning(deploymentStage, context);
-    }
+  public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
+      DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
+    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
+    final CreateExecutionPlanResponse planForService =
+        createPlanForService(deploymentStage.getDeployment().getService(), context);
+    final CreateExecutionPlanResponse planForInfrastructure =
+        createPlanForInfrastructure(deploymentStage.getDeployment().getInfrastructure(), context);
+    final CreateExecutionPlanResponse planForExecution =
+        createPlanForExecution(deploymentStage.getDeployment().getExecution(), context);
+    childrenPlanMap.put("SERVICE", singletonList(planForService));
+    childrenPlanMap.put("INFRA", singletonList(planForInfrastructure));
+    childrenPlanMap.put("EXECUTION", singletonList(planForExecution));
+    return childrenPlanMap;
   }
 
-  private void postPlanning(DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
-    PlanCreatorConfigUtils.setCurrentStageConfig(null, context);
-  }
+  @Override
+  public CreateExecutionPlanResponse createPlanForSelf(DeploymentStage deploymentStage,
+      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
+    CreateExecutionPlanResponse planForService = planForChildrenMap.get("SERVICE").get(0);
+    CreateExecutionPlanResponse planForInfrastructure = planForChildrenMap.get("INFRA").get(0);
+    CreateExecutionPlanResponse planForExecution = planForChildrenMap.get("EXECUTION").get(0);
+    final PlanNode deploymentStageNode =
+        prepareDeploymentNode(deploymentStage, planForExecution, planForService, planForInfrastructure);
 
-  private void prePlanning(DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
-    PlanCreatorConfigUtils.setCurrentStageConfig(deploymentStage, context);
+    return CreateExecutionPlanResponse.builder()
+        .planNode(deploymentStageNode)
+        .planNodes(planForService.getPlanNodes())
+        .planNodes(planForInfrastructure.getPlanNodes())
+        .planNodes(planForExecution.getPlanNodes())
+        .startingNodeId(deploymentStageNode.getUuid())
+        .build();
   }
 
   private CreateExecutionPlanResponse createPlanForInfrastructure(
@@ -77,9 +84,8 @@ public class DeploymentStagePlanCreator implements SupportDefinedExecutorPlanCre
     return executionPlanCreator.createPlan(pipelineInfrastructure, context);
   }
 
-  private PlanNode prepareDeploymentNode(DeploymentStage deploymentStage, CreateExecutionPlanContext context,
-      CreateExecutionPlanResponse planForExecution, CreateExecutionPlanResponse planForService,
-      CreateExecutionPlanResponse planForInfrastructure) {
+  private PlanNode prepareDeploymentNode(DeploymentStage deploymentStage, CreateExecutionPlanResponse planForExecution,
+      CreateExecutionPlanResponse planForService, CreateExecutionPlanResponse planForInfrastructure) {
     final String deploymentStageUid = generateUuid();
 
     return PlanNode.builder()
@@ -125,5 +131,22 @@ public class DeploymentStagePlanCreator implements SupportDefinedExecutorPlanCre
   @Override
   public List<String> getSupportedTypes() {
     return Collections.singletonList(STAGE_PLAN_CREATOR.getName());
+  }
+
+  @Override
+  public void prePlanCreation(DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
+    super.prePlanCreation(deploymentStage, context);
+    PlanCreatorConfigUtils.setCurrentStageConfig(deploymentStage, context);
+  }
+
+  @Override
+  public void postPlanCreation(DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
+    super.postPlanCreation(deploymentStage, context);
+    PlanCreatorConfigUtils.setCurrentStageConfig(null, context);
+  }
+
+  @Override
+  public String getPlanNodeType(DeploymentStage input) {
+    return PlanNodeType.STAGE.name();
   }
 }

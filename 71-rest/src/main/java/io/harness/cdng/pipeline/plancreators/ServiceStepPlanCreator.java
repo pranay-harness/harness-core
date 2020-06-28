@@ -4,12 +4,14 @@ import static io.harness.cdng.executionplan.CDPlanCreatorType.ARTIFACT_PLAN_CREA
 import static io.harness.cdng.executionplan.CDPlanCreatorType.MANIFEST_PLAN_CREATOR;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.SERVICE_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.executionplan.CDPlanNodeType;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.CDStage;
 import io.harness.cdng.pipeline.DeploymentStage;
@@ -17,6 +19,7 @@ import io.harness.cdng.service.ServiceConfig;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
@@ -31,22 +34,36 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
-public class ServiceStepPlanCreator implements SupportDefinedExecutorPlanCreator<ServiceConfig> {
+public class ServiceStepPlanCreator
+    extends AbstractPlanCreatorWithChildren<ServiceConfig> implements SupportDefinedExecutorPlanCreator<ServiceConfig> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
+  public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
+      ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
+    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
     ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, context);
     final List<CreateExecutionPlanResponse> planForArtifacts =
         getPlanForArtifacts(context, actualServiceConfig.getServiceSpec().getArtifacts());
-
     final CreateExecutionPlanResponse planForManifests = getPlanForManifests(context, actualServiceConfig);
+    childrenPlanMap.put("ARTIFACTS", planForArtifacts);
+    childrenPlanMap.put("MANIFESTS", singletonList(planForManifests));
+    return childrenPlanMap;
+  }
+
+  @Override
+  public CreateExecutionPlanResponse createPlanForSelf(ServiceConfig serviceConfig,
+      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
+    ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, context);
+    List<CreateExecutionPlanResponse> planForArtifacts = planForChildrenMap.get("ARTIFACTS");
+    CreateExecutionPlanResponse planForManifests = planForChildrenMap.get("MANIFESTS").get(0);
 
     // Add artifactNodes and ManifestNode as children
     List<String> childNodeIds =
@@ -110,6 +127,9 @@ public class ServiceStepPlanCreator implements SupportDefinedExecutorPlanCreator
   /** Method returns actual Service object by resolving useFromStage if present. */
   private ServiceConfig getActualServiceConfig(ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
     if (serviceConfig.getUseFromStage() != null) {
+      if (serviceConfig.getServiceSpec() != null) {
+        throw new IllegalArgumentException("ServiceSpec should not exist with UseFromStage.");
+      }
       //  Add validation for not chaining of stages
       CDStage previousStage = PlanCreatorConfigUtils.getGivenDeploymentStageFromPipeline(
           context, serviceConfig.getUseFromStage().getStage());
@@ -146,6 +166,11 @@ public class ServiceStepPlanCreator implements SupportDefinedExecutorPlanCreator
 
   @Override
   public List<String> getSupportedTypes() {
-    return Collections.singletonList(SERVICE_PLAN_CREATOR.getName());
+    return singletonList(SERVICE_PLAN_CREATOR.getName());
+  }
+
+  @Override
+  public String getPlanNodeType(ServiceConfig input) {
+    return CDPlanNodeType.SERVICE.name();
   }
 }

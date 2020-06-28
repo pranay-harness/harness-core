@@ -16,7 +16,7 @@ public class PlanCreatorConfigUtils {
   public static final String CD_CURRENT_PHASE_CONFIG = "CD_CURRENT_PHASE_CONFIG";
 
   public static void setPipelineConfig(CDPipeline pipeline, CreateExecutionPlanContext context) {
-    setConfig(pipeline, CD_PIPELINE_CONFIG, context);
+    setConfig(CD_PIPELINE_CONFIG, pipeline, context);
   }
 
   public static Optional<CDPipeline> getPipelineConfig(CreateExecutionPlanContext context) {
@@ -24,7 +24,7 @@ public class PlanCreatorConfigUtils {
   }
 
   public static void setCurrentStageConfig(CDStage stage, CreateExecutionPlanContext context) {
-    setConfig(stage, CD_CURRENT_STAGE_CONFIG, context);
+    setConfig(CD_CURRENT_STAGE_CONFIG, stage, context);
   }
 
   public static Optional<CDStage> getCurrentStageConfig(CreateExecutionPlanContext context) {
@@ -32,14 +32,14 @@ public class PlanCreatorConfigUtils {
   }
 
   public static void setCurrentPhaseConfig(CDPhase phase, CreateExecutionPlanContext context) {
-    setConfig(phase, CD_CURRENT_PHASE_CONFIG, context);
+    setConfig(CD_CURRENT_PHASE_CONFIG, phase, context);
   }
 
   public static Optional<CDPhase> getCurrentPhaseConfig(CreateExecutionPlanContext context) {
     return getConfig(CD_CURRENT_PHASE_CONFIG, context);
   }
 
-  private <T> void setConfig(T config, String key, CreateExecutionPlanContext context) {
+  private <T> void setConfig(String key, T config, CreateExecutionPlanContext context) {
     if (config == null) {
       context.removeAttribute(key);
     } else {
