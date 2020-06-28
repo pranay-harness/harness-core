@@ -1,5 +1,6 @@
 package io.harness.connector;
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.annotation.HarnessRepo;
@@ -12,6 +13,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @EnableMongoRepositories(
     basePackages = {"io.harness.connector"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 public class ConnectorPersistenceConfig extends SpringPersistenceConfig {
+  @Inject
   public ConnectorPersistenceConfig(Injector injector) {
     super(injector);
   }

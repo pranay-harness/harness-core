@@ -1,12 +1,11 @@
 package io.harness;
 
 import io.harness.ng.PersistenceModule;
-import io.harness.ng.SpringMongoConfig;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import io.harness.ng.SpringPersistenceConfig;
 
 public class DataGenPersistenceModule extends PersistenceModule {
   @Override
-  protected Class<? extends AbstractMongoConfiguration> getConfigClass() {
-    return SpringMongoConfig.class;
+  protected Class<? extends SpringPersistenceConfig>[] getConfigClasses() {
+    return new Class[] {SpringPersistenceConfig.class};
   }
 }
