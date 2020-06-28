@@ -99,6 +99,12 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public PlanExecution executeSectionChainRollbackPlan() {
+    return orchestrationService.startExecution(
+        CustomExecutionUtils.provideSectionChainRollbackPlan(), getAbstractions(), getEmbeddedUser());
+  }
+
+  @Override
   public PlanExecution testInfraState() throws IOException {
     return orchestrationService.startExecution(
         CustomExecutionUtils.provideInfraStateTestPlan(), getAbstractions(), getEmbeddedUser());

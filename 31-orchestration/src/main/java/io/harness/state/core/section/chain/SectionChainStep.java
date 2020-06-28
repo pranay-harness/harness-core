@@ -1,7 +1,6 @@
 package io.harness.state.core.section.chain;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.execution.status.Status.SUCCEEDED;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
@@ -14,6 +13,7 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponseNotifyData;
 
 import java.util.Map;
 
@@ -26,9 +26,9 @@ public class SectionChainStep implements Step, ChildChainExecutable {
       Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     SectionChainStepParameters parameters = (SectionChainStepParameters) stepParameters;
     return ChildChainResponse.builder()
-        .childNodeId(parameters.getChildNodeIds().get(0))
+        .nextChildId(parameters.getChildNodeIds().get(0))
         .passThroughData(SectionChainPassThroughData.builder().childIndex(0).build())
-        .chainEnd(parameters.getChildNodeIds().size() == 1)
+        .lastLink(parameters.getChildNodeIds().size() == 1)
         .build();
   }
 
@@ -38,18 +38,21 @@ public class SectionChainStep implements Step, ChildChainExecutable {
     SectionChainStepParameters parameters = (SectionChainStepParameters) stepParameters;
     SectionChainPassThroughData chainPassThroughData = (SectionChainPassThroughData) passThroughData;
     int nextChildIndex = chainPassThroughData.getChildIndex() + 1;
-    boolean chainEnd = nextChildIndex + 1 == parameters.getChildNodeIds().size();
+    String previousChildId = responseDataMap.keySet().iterator().next();
+    boolean lastLink = nextChildIndex + 1 == parameters.getChildNodeIds().size();
     chainPassThroughData.setChildIndex(nextChildIndex);
     return ChildChainResponse.builder()
         .passThroughData(chainPassThroughData)
-        .childNodeId(parameters.getChildNodeIds().get(nextChildIndex))
-        .chainEnd(chainEnd)
+        .nextChildId(parameters.getChildNodeIds().get(nextChildIndex))
+        .lastLink(lastLink)
+        .previousChildId(previousChildId)
         .build();
   }
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, StepParameters stepParameters,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    return StepResponse.builder().status(SUCCEEDED).build();
+    StepResponseNotifyData notifyData = (StepResponseNotifyData) responseDataMap.values().iterator().next();
+    return StepResponse.builder().status(notifyData.getStatus()).failureInfo(notifyData.getFailureInfo()).build();
   }
 }

@@ -17,8 +17,9 @@ import java.util.List;
 @Value
 @Builder
 public class ChildChainResponse implements ExecutableResponse {
-  @NonNull String childNodeId;
+  @NonNull String nextChildId;
+  String previousChildId;
   PassThroughData passThroughData;
-  boolean chainEnd;
+  boolean lastLink;
   @Singular List<StepTransput> additionalInputs;
 }
