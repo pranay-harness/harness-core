@@ -159,12 +159,31 @@ public class ExpressionEvaluatorUtilsTest extends CategoryTest {
   private static class DummyFunctor implements ExpressionEvaluatorUtils.ResolveFunctor {
     Map<String, Object> context;
 
+    @Override
     public String renderExpression(String str) {
       return str.replaceAll("original", "updated");
     }
 
-    public Optional<Object> evaluateExpressionOptional(String str) {
-      return context != null && context.containsKey(str) ? Optional.of(context.get(str)) : Optional.empty();
+    @Override
+    public Object evaluateExpression(String str) {
+      return context != null && context.containsKey(str) ? context.get(str) : str;
+    }
+
+    @Override
+    public boolean hasVariables(String str) {
+      if (context == null) {
+        return false;
+      }
+      if ("random".equals(str)) {
+        return true;
+      }
+
+      for (Map.Entry<String, Object> entry : context.entrySet()) {
+        if (str.equals(entry.getKey())) {
+          return true;
+        }
+      }
+      return false;
     }
   }
 

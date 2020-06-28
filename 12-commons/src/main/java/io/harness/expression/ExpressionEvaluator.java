@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 /**
  * The Class ExpressionEvaluator.
  */
-public class ExpressionEvaluator implements ExpressionEvaluatorItfc {
+public class ExpressionEvaluator {
   public static final String DEFAULT_ARTIFACT_VARIABLE_NAME = "artifact";
   public static final String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
 
@@ -61,7 +61,6 @@ public class ExpressionEvaluator implements ExpressionEvaluatorItfc {
     return evaluate(expression, jc);
   }
 
-  @Override
   public Object evaluate(String expression, JexlContext context) {
     if (expression == null) {
       return null;

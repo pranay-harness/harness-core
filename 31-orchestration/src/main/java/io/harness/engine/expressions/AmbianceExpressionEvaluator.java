@@ -22,9 +22,13 @@ import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.expression.JsonFunctor;
+import io.harness.expression.RegexFunctor;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.expression.XmlFunctor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +36,18 @@ import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
+/**
+ * AmbianceExpressionEvaluator is the basic expression evaluator provided by the orchestration engine. It provides
+ * support for expressions based on the runtime graph, outcomes and sweeping output. It contains other helpful
+ * functors like regex, json and xml. Apart from this, it also supports static and group based aliases. All these
+ * concepts are explained in detail here:
+ * https://harness.atlassian.net/wiki/spaces/WR/pages/722536048/Expression+Evaluation.
+ *
+ * In order to add support for custom expressions/functors, users need to extend this class and override 2 methods -
+ * {@link #initialize()} and {@link #fetchPrefixes()}. This subclass needs a corresponding {@link
+ * ExpressionEvaluatorProvider} to be provided when adding a dependency on {@link io.harness.OrchestrationModule}. For a
+ * sample implementation, look at SampleExpressionEvaluator.java and SampleExpressionEvaluatorProvider.java.
+ */
 @OwnedBy(CDC)
 @Redesign
 @EqualsAndHashCode(callSuper = true)
@@ -60,10 +76,17 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     this.groupAliases = new HashMap<>();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected void initialize() {
+    super.initialize();
     if (!refObjectSpecific) {
-      super.initialize();
+      // Add basic functors.
+      addToContext("regex", new RegexFunctor());
+      addToContext("json", new JsonFunctor());
+      addToContext("xml", new XmlFunctor());
     }
 
     if (entityTypes.contains(NodeExecutionEntityType.OUTCOME)) {
@@ -116,7 +139,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
 
   /**
    * Add a group alias. Any expression that starts with `aliasName` will be replaced by the identifier of the first
-   * ancestor node with the given groupName.
+   * ancestor node with the given groupName. Should be called within the initialize method only.
    *
    * @param aliasName   the name of the alias
    * @param groupName the name of the group
@@ -131,8 +154,11 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     groupAliases.put(aliasName, groupName);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
-  @NotNull
+  @NotEmpty
   protected List<String> fetchPrefixes() {
     ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
     if (entityTypes.contains(NodeExecutionEntityType.OUTCOME)) {
@@ -141,7 +167,6 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     if (entityTypes.contains(NodeExecutionEntityType.SWEEPING_OUTPUT)) {
       listBuilder.add("output");
     }
-
-    return listBuilder.add("child").add("ancestor").add("qualified").add("").build();
+    return listBuilder.add("child").add("ancestor").add("qualified").addAll(super.fetchPrefixes()).build();
   }
 }

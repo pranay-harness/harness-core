@@ -1,46 +1,50 @@
 package io.harness.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.algorithm.IdentifierName;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.ParameterField;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlBuilder;
-import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlEngine;
+import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.jexl3.JexlExpression;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.impl.NoOpLog;
-import org.apache.commons.text.StrLookup;
 import org.apache.commons.text.StrSubstitutor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Slf4j
-public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, ExpressionEvaluatorUtils.ResolveFunctor {
-  // TODO(gpahal): Both of these patterns need to be changed later
+public class EngineExpressionEvaluator {
   private static final Pattern variablePattern = Pattern.compile("\\$\\{[^{}]*}");
-  private static final Pattern secretVariablePattern = Pattern.compile("\\$\\{secretManager.[^{}]*}");
-  private static final Pattern validVariableNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
+  private static final Pattern secretVariablePattern = Pattern.compile("\\$\\{secret(Manager|Delegate)\\.[^{}]*}");
+  private static final Pattern validVariableFieldNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
   private static final Pattern aliasNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
 
   private final JexlEngine engine;
-  private final VariableResolverTracker variableResolverTracker;
+  @Getter private final VariableResolverTracker variableResolverTracker;
   private final Map<String, Object> contextMap;
   @Getter private final Map<String, String> staticAliases;
-  @Getter private boolean initialized;
+  private boolean initialized;
 
   public EngineExpressionEvaluator(VariableResolverTracker variableResolverTracker) {
     this.engine = new JexlBuilder().logger(new NoOpLog()).create();
@@ -50,33 +54,41 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     this.staticAliases = new HashMap<>();
   }
 
+  /**
+   * Add objects/functors to context map and aliases. Context map and aliases can only be updated in this method.
+   */
   protected void initialize() {
-    addToContext("regex", new RegexFunctor());
-    addToContext("json", new JsonFunctor());
-    addToContext("xml", new XmlFunctor());
+    // This method will be overridden by sub-classes.
+  }
+
+  protected final boolean isInitialized() {
+    synchronized (this) {
+      return initialized;
+    }
   }
 
   /**
-   * Add objects/functors to contextMap. Should be called within the constructor or initialize only.
+   * Add objects/functors to contextMap. Should be called within the initialize method only.
    *
    * @param name   the name of the functor
    * @param object the object to put against the name
    */
-  protected void addToContext(@NotNull String name, @NotNull Object object) {
-    if (initialized) {
+  protected final void addToContext(@NotNull String name, @NotNull Object object) {
+    if (isInitialized()) {
       return;
     }
     contextMap.put(name, object);
   }
 
   /**
-   * Add a static alias. Any expression that starts with `aliasName` will be replaced by `replacement`.
+   * Add a static alias. Any expression that starts with `aliasName` will be replaced by `replacement`. Should be
+   * called within the initialize method only.
    *
    * @param aliasName   the name of the alias
    * @param replacement the string to replace the alias name with
    */
-  protected void addStaticAlias(@NotNull String aliasName, @NotEmpty String replacement) {
-    if (initialized) {
+  protected final void addStaticAlias(@NotNull String aliasName, @NotEmpty String replacement) {
+    if (isInitialized()) {
       return;
     }
     if (!validAliasName(aliasName)) {
@@ -89,7 +101,9 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
   }
 
   /**
-   * Return the prefixes to search for when evaluating expressions.
+   * Return the prefixes to search for when evaluating expressions. The return value should not be null/empty. When
+   * overriding this method, consider calling super.fetchPrefixes() and including the prefixes of the superclass in the
+   * final list.
    *
    * Example:
    *   If the expression is `a.b.c` and fetchPrefixes returns ["child", "qualified", ""]
@@ -108,7 +122,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
    *
    * @return the prefixes to search with
    */
-  @NotNull
+  @NotEmpty
   protected List<String> fetchPrefixes() {
     return Collections.singletonList("");
   }
@@ -121,43 +135,119 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
    * @return the resolved object (this can be the same object or a new one)
    */
   public Object resolve(Object o) {
-    return ExpressionEvaluatorUtils.updateExpressions(o, this);
+    return ExpressionEvaluatorUtils.updateExpressions(o, new ResolveFunctorImpl(this));
   }
 
   public String renderExpression(String expression) {
-    if (!hasExpressions(expression)) {
+    if (!hasVariables(expression)) {
       return expression;
     }
 
-    EngineJexlContext ctx = prepareContext();
-    return ExpressionEvaluatorUtils.substitute(this, expression, ctx, variableResolverTracker);
+    return ExpressionEvaluatorUtils.substitute(this, expression, prepareContext());
   }
 
   public Object evaluateExpression(String expression) {
-    // TODO(gpahal): Look at adding support for recursion and variable tracking in this method.
+    // TODO(gpahal): Look at adding support for recursion and nested expressions in this method.
+
     // NOTE: Don't check for hasExpressions here. There might be normal expressions like '"true" != "false"'
-    String normalizedExpression = stripDelimiters(expression);
-    if (EmptyPredicate.isEmpty(normalizedExpression)) {
+    if (EmptyPredicate.isEmpty(expression)) {
       return null;
     }
 
     EngineJexlContext ctx = prepareContext();
-    return evaluate(normalizedExpression, ctx);
+    StrSubstitutor strSubstitutor = new StrSubstitutor(EngineVariableResolver.builder()
+                                                           .expressionEvaluator(this)
+                                                           .ctx(ctx)
+                                                           .prefix(IdentifierName.random())
+                                                           .suffix(IdentifierName.random())
+                                                           .build());
+    return evaluateInternal(strSubstitutor.replace(expression), ctx);
   }
 
-  public Optional<Object> evaluateExpressionOptional(String expression) {
-    Object value = evaluateExpression(expression);
-    if (value instanceof String && hasExpressions((String) value)) {
-      return Optional.empty();
+  /**
+   * Evaluate a variables with the given context after applying static alias substitutions and prefixes. This variant is
+   * non-recursive.
+   */
+  public Pair<Object, Boolean> evaluateVariable(String expression, EngineJexlContext ctx) {
+    if (expression == null) {
+      return null;
     }
-    return Optional.of(value);
+
+    // Apply all the prefixes and return first one that evaluates successfully.
+    List<String> finalExpressions = preProcessExpression(expression);
+    for (String finalExpression : finalExpressions) {
+      Object object = null;
+      try {
+        object = evaluateInternal(finalExpression, ctx);
+      } catch (JexlException ex) {
+        if (ex.getCause() instanceof FunctorException) {
+          throw(FunctorException) ex.getCause();
+        }
+        logger.debug(format("Failed to evaluate final expression: %s", finalExpression), ex);
+      }
+
+      if (object != null) {
+        return Pair.of(object, Boolean.TRUE);
+      }
+    }
+
+    // No final expression could be resolved.
+    return Pair.of(createExpression(expression), Boolean.FALSE);
+  }
+
+  /**
+   * Return the expression after applying static alias substitutions and prefixes.
+   *
+   * @param expression the original expression
+   * @return the final expression
+   */
+  private List<String> preProcessExpression(String expression) {
+    String normalizedExpression = applyStaticAliases(expression);
+    return fetchPrefixes()
+        .stream()
+        .map(prefix -> EmptyPredicate.isEmpty(prefix) ? normalizedExpression : prefix + "." + normalizedExpression)
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * Return the expression after applying static alias substitutions.
+   *
+   * @param expression the original expression
+   * @return the final expression
+   */
+  private String applyStaticAliases(String expression) {
+    if (EmptyPredicate.isEmpty(expression)) {
+      return expression;
+    }
+
+    for (int i = 0; i < ExpressionEvaluatorUtils.DEPTH_LIMIT; i++) {
+      if (staticAliases.containsKey(expression)) {
+        expression = staticAliases.get(expression);
+        continue;
+      }
+
+      List<String> parts = Arrays.asList(expression.split("\\.", 2));
+      if (parts.size() < 2) {
+        return expression;
+      }
+
+      String firstPart = parts.get(0);
+      if (staticAliases.containsKey(firstPart)) {
+        parts.set(0, staticAliases.get(firstPart));
+        expression = String.join(".", parts);
+      } else {
+        return expression;
+      }
+    }
+
+    throw new CriticalExpressionEvaluationException(
+        "Infinite loop or too deep indirection in static alias interpretation", expression);
   }
 
   /**
    * Evaluate an expression with the given context. This variant is non-recursive.
    */
-  @Override
-  public Object evaluate(String expression, JexlContext ctx) {
+  private Object evaluateInternal(String expression, EngineJexlContext ctx) {
     if (expression == null) {
       return null;
     }
@@ -184,16 +274,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     return new EngineJexlContext(this, clonedContext);
   }
 
-  private static String stripDelimiters(String str) {
-    if (EmptyPredicate.isEmpty(str)) {
-      return str;
-    }
-
-    StrSubstitutor strSubstitutor = new StrSubstitutor(new IdentityStrLookup());
-    return strSubstitutor.replace(str);
-  }
-
-  public static boolean hasExpressions(String str) {
+  public static boolean hasVariables(String str) {
     if (EmptyPredicate.isEmpty(str)) {
       return false;
     }
@@ -201,7 +282,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     return variablePattern.matcher(str).find();
   }
 
-  public static List<String> findExpressions(String str) {
+  public static List<String> findVariables(String str) {
     if (EmptyPredicate.isEmpty(str)) {
       return Collections.emptyList();
     }
@@ -214,7 +295,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     return matches;
   }
 
-  public static boolean hasSecretExpressions(String str) {
+  public static boolean hasSecretVariables(String str) {
     if (EmptyPredicate.isEmpty(str)) {
       return false;
     }
@@ -222,7 +303,7 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     return secretVariablePattern.matcher(str).find();
   }
 
-  public static List<String> findSecretExpressions(String str) {
+  public static List<String> findSecretVariables(String str) {
     if (EmptyPredicate.isEmpty(str)) {
       return Collections.emptyList();
     }
@@ -235,12 +316,12 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     return matches;
   }
 
-  public static boolean validVariableName(String name) {
+  public static boolean validVariableFieldName(String name) {
     if (EmptyPredicate.isEmpty(name)) {
       return false;
     }
 
-    return validVariableNamePattern.matcher(name).matches();
+    return validVariableFieldNamePattern.matcher(name).matches();
   }
 
   public static boolean validAliasName(String name) {
@@ -255,10 +336,26 @@ public class EngineExpressionEvaluator implements ExpressionEvaluatorItfc, Expre
     return expr == null ? null : "${" + expr + "}";
   }
 
-  private static class IdentityStrLookup extends StrLookup<String> {
+  public static class ResolveFunctorImpl implements ExpressionEvaluatorUtils.ResolveFunctor {
+    private final EngineExpressionEvaluator expressionEvaluator;
+
+    public ResolveFunctorImpl(EngineExpressionEvaluator expressionEvaluator) {
+      this.expressionEvaluator = expressionEvaluator;
+    }
+
     @Override
-    public String lookup(String key) {
-      return key;
+    public String renderExpression(String expression) {
+      return expressionEvaluator.renderExpression(expression);
+    }
+
+    @Override
+    public Object evaluateExpression(String expression) {
+      return expressionEvaluator.renderExpression(expression);
+    }
+
+    @Override
+    public boolean hasVariables(String expression) {
+      return EngineExpressionEvaluator.hasVariables(expression);
     }
   }
 }

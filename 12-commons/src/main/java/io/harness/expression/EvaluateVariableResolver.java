@@ -7,9 +7,9 @@ import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.text.StrLookup;
 
 @Builder
-public class EvaluateVariableResolver extends StrLookup {
+public class EvaluateVariableResolver extends StrLookup<Object> {
   private JexlContext context;
-  private ExpressionEvaluatorItfc expressionEvaluator;
+  private ExpressionEvaluator expressionEvaluator;
   private int varIndex;
   private String prefix;
   private String suffix;
