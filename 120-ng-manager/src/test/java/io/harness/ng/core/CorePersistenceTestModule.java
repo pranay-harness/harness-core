@@ -1,12 +1,13 @@
 package io.harness.ng.core;
 
+import io.harness.connector.ConnectorPersistenceConfig;
 import io.harness.ng.NextGenPersistenceConfig;
+import io.harness.ng.SpringPersistenceConfig;
 import io.harness.testlib.PersistenceTestModule;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 
 public class CorePersistenceTestModule extends PersistenceTestModule {
   @Override
-  protected Class<? extends AbstractMongoConfiguration> getConfigClass() {
-    return NextGenPersistenceConfig.class;
+  protected Class<? extends SpringPersistenceConfig>[] getConfigClasses() {
+    return new Class[] {ConnectorPersistenceConfig.class, NextGenPersistenceConfig.class};
   }
 }

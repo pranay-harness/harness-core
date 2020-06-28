@@ -1,11 +1,12 @@
 package software.wings.app;
 
+import io.harness.OrchestrationPersistenceConfig;
 import io.harness.ng.PersistenceModule;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import io.harness.ng.SpringPersistenceConfig;
 
 public class WingsPersistenceModule extends PersistenceModule {
   @Override
-  protected Class<? extends AbstractMongoConfiguration> getConfigClass() {
-    return WingsPersistenceConfig.class;
+  protected Class<? extends SpringPersistenceConfig>[] getConfigClasses() {
+    return new Class[] {OrchestrationPersistenceConfig.class, WingsPersistenceConfig.class};
   }
 }
