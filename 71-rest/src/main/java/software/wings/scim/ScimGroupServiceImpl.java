@@ -220,6 +220,7 @@ public class ScimGroupServiceImpl implements ScimGroupService {
       updateGroup = true;
     }
     if (updateGroup) {
+      updateOperations.set(UserGroupKeys.importedByScim, true);
       wingsPersistence.update(existingGroup, updateOperations);
     }
     return Response.status(Status.NO_CONTENT).build();

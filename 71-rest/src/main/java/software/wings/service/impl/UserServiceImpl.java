@@ -2988,6 +2988,7 @@ public class UserServiceImpl implements UserService {
     } else {
       query = getListUserQuery(accountId, true);
     }
+    query.criteria(UserKeys.disabled).equal(false);
     applySortFilter(pageRequest, query);
     FindOptions findOptions = new FindOptions().skip(offset).limit(pageSize);
     List<User> userList = query.asList(findOptions);
@@ -3015,16 +3016,16 @@ public class UserServiceImpl implements UserService {
   }
 
   private Query<User> getListUserQuery(String accountId, boolean listPendingUsers) {
-    Query<User> query = wingsPersistence.createQuery(User.class, HQuery.excludeAuthority);
+    Query<User> listUserQuery = wingsPersistence.createQuery(User.class, HQuery.excludeAuthority);
 
     if (listPendingUsers) {
-      query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
-          query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+      listUserQuery.or(listUserQuery.criteria(UserKeys.accounts).hasThisOne(accountId),
+          listUserQuery.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
     } else {
-      query.criteria(UserKeys.accounts).hasThisOne(accountId);
+      listUserQuery.criteria(UserKeys.accounts).hasThisOne(accountId);
     }
-    query.order(Sort.descending("lastUpdatedAt"));
-    return query;
+    listUserQuery.order(Sort.descending("lastUpdatedAt"));
+    return listUserQuery;
   }
 
   @VisibleForTesting

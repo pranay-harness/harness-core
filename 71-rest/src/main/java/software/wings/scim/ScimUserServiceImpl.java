@@ -298,7 +298,6 @@ public class ScimUserServiceImpl implements ScimUserService {
           userResource.getDisplayName() != null ? userResource.getDisplayName() : getDisplayNameFromName(userResource);
 
       UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
-
       boolean userUpdate = false;
       if (StringUtils.isNotEmpty(displayName) && !displayName.equals(user.getName())) {
         userUpdate = true;
@@ -329,6 +328,7 @@ public class ScimUserServiceImpl implements ScimUserService {
         updateOperations.set(UserKeys.disabled, !userResource.getActive());
       }
       if (userUpdate) {
+        updateOperations.set(UserKeys.imported, true);
         wingsPersistence.update(user, updateOperations);
       }
       return Response.status(Status.OK).entity(getUser(user.getUuid(), accountId)).build();
