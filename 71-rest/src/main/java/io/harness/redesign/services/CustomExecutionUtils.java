@@ -623,8 +623,10 @@ public class CustomExecutionUtils {
                 + "echo \"section11.f1 = ${section1.sectionChild.data.f1}\"\n" // qualified
                 + "echo \"section11.f1 = ${section1.sectionChild.outcomeData.map.f1}\"\n" // qualified
                 + "echo \"shell2.scriptType = ${section1.sectionChild.shell.scriptType}\"\n" // qualified
-                + "echo \"shell2.HELLO = ${section1.sectionChild.shell.data.sweepingOutputEnvVariables.HELLO}\"\n" // qualified
-                + "echo \"shell2.HI = ${section1.sectionChild.shell.data.sweepingOutputEnvVariables.HI}\"\n" // qualified
+                + "echo \"shell2.HELLO = ${section1.sectionChild.shell.shell2.variables.HELLO}\"\n" // qualified
+                + "echo \"shell2.HI = ${section1.sectionChild.shell.shell2.variables.HI}\"\n" // qualified
+                + "echo \"shell2.HELLO = ${section1.sectionChild.shell.shellOutcome.sweepingOutputEnvVariables.HELLO}\"\n" // qualified
+                + "echo \"shell2.HI = ${section1.sectionChild.shell.shellOutcome.sweepingOutputEnvVariables.HI}\"\n" // qualified
                 + "echo \"scriptType = ${scriptType}\"\n" // child
                 + "echo \"section2.f1 = ${section2.data.f1}\"\n" // qualified
                 + "echo \"section2.f2 = ${section2.data.f2}\"\n" // qualified
@@ -643,8 +645,10 @@ public class CustomExecutionUtils {
                 + "echo \"section11.f1 = ${qualified.section1.sectionChild.data.f1}\"\n"
                 + "echo \"section11.f1 = ${qualified.section1.sectionChild.outcomeData.map.f1}\"\n"
                 + "echo \"shell2.scriptType = ${qualified.section1.sectionChild.shell.scriptType}\"\n"
-                + "echo \"shell2.HELLO = ${qualified.section1.sectionChild.shell.data.sweepingOutputEnvVariables.HELLO}\"\n"
-                + "echo \"shell2.HI = ${qualified.section1.sectionChild.shell.data.sweepingOutputEnvVariables.HI}\"\n"
+                + "echo \"shell2.HELLO = ${qualified.section1.sectionChild.shell.shell2.variables.HELLO}\"\n"
+                + "echo \"shell2.HI = ${qualified.section1.sectionChild.shell.shell2.variables.HI}\"\n"
+                + "echo \"shell2.HELLO = ${qualified.section1.sectionChild.shell.shellOutcome.sweepingOutputEnvVariables.HELLO}\"\n"
+                + "echo \"shell2.HI = ${qualified.section1.sectionChild.shell.shellOutcome.sweepingOutputEnvVariables.HI}\"\n"
                 + "echo \"scriptType = ${child.scriptType}\"\n"
                 + "echo \"section2.f1 = ${qualified.section2.data.f1}\"\n"
                 + "echo \"section2.f2 = ${qualified.section2.data.f2}\"\n"

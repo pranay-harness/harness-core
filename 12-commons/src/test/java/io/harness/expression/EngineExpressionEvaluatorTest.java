@@ -157,71 +157,71 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testHasExpressions() {
-    assertThat(EngineExpressionEvaluator.hasExpressions(null)).isFalse();
-    assertThat(EngineExpressionEvaluator.hasExpressions("abc")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasExpressions("abc ${")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasExpressions("abc ${}")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasExpressions("abc ${ab}")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasExpressions("abc ${ab} ${cd}")).isTrue();
+  public void testHasVariables() {
+    assertThat(EngineExpressionEvaluator.hasVariables(null)).isFalse();
+    assertThat(EngineExpressionEvaluator.hasVariables("abc")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasVariables("abc ${")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasVariables("abc ${}")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasVariables("abc ${ab}")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasVariables("abc ${ab} ${cd}")).isTrue();
   }
 
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testFindExpressions() {
-    assertThat(EngineExpressionEvaluator.findExpressions(null)).isEmpty();
-    assertThat(EngineExpressionEvaluator.findExpressions("abc")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findExpressions("abc ${")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findExpressions("abc ${}")).containsExactly("${}");
-    assertThat(EngineExpressionEvaluator.findExpressions("abc ${ab}")).containsExactly("${ab}");
-    assertThat(EngineExpressionEvaluator.findExpressions("abc ${ab} ${cd}")).containsExactly("${ab}", "${cd}");
+  public void testFindVariables() {
+    assertThat(EngineExpressionEvaluator.findVariables(null)).isEmpty();
+    assertThat(EngineExpressionEvaluator.findVariables("abc")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findVariables("abc ${")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findVariables("abc ${}")).containsExactly("${}");
+    assertThat(EngineExpressionEvaluator.findVariables("abc ${ab}")).containsExactly("${ab}");
+    assertThat(EngineExpressionEvaluator.findVariables("abc ${ab} ${cd}")).containsExactly("${ab}", "${cd}");
   }
 
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testHasSecretExpressions() {
-    assertThat(EngineExpressionEvaluator.hasSecretExpressions(null)).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${}")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${ab}")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${secretManager.ab} ${cd}")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${ab} ${secretManager.cd}")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasSecretExpressions("abc ${secretManager.ab} ${secretManager.cd}")).isTrue();
+  public void testHasSecretVariables() {
+    assertThat(EngineExpressionEvaluator.hasSecretVariables(null)).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${}")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${ab}")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${secretManager.ab} ${cd}")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${ab} ${secretManager.cd}")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${secretManager.ab} ${secretManager.cd}")).isTrue();
   }
 
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testFindSecretExpressions() {
-    assertThat(EngineExpressionEvaluator.findSecretExpressions(null)).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${}")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${ab}")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${ab} ${cd}")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${secretManager.ab} ${cd}"))
+  public void testFindSecretVariables() {
+    assertThat(EngineExpressionEvaluator.findSecretVariables(null)).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${}")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${ab}")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${ab} ${cd}")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${secretManager.ab} ${cd}"))
         .containsExactly("${secretManager.ab}");
-    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${ab} ${secretManager.cd}"))
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${ab} ${secretManager.cd}"))
         .containsExactly("${secretManager.cd}");
-    assertThat(EngineExpressionEvaluator.findSecretExpressions("abc ${secretManager.ab} ${secretManager.cd}"))
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${secretManager.ab} ${secretManager.cd}"))
         .containsExactly("${secretManager.ab}", "${secretManager.cd}");
   }
 
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testValidVariableName() {
-    assertThat(EngineExpressionEvaluator.validVariableName(null)).isFalse();
-    assertThat(EngineExpressionEvaluator.validVariableName("")).isFalse();
-    assertThat(EngineExpressionEvaluator.validVariableName("abc_9")).isTrue();
-    assertThat(EngineExpressionEvaluator.validVariableName("__abc_9")).isTrue();
-    assertThat(EngineExpressionEvaluator.validVariableName("__abc-9")).isFalse();
-    assertThat(EngineExpressionEvaluator.validVariableName("__abc$9")).isFalse();
-    assertThat(EngineExpressionEvaluator.validVariableName("__abc{9")).isFalse();
-    assertThat(EngineExpressionEvaluator.validVariableName("__abc}9")).isFalse();
+  public void testValidVariableFieldName() {
+    assertThat(EngineExpressionEvaluator.validVariableFieldName(null)).isFalse();
+    assertThat(EngineExpressionEvaluator.validVariableFieldName("")).isFalse();
+    assertThat(EngineExpressionEvaluator.validVariableFieldName("abc_9")).isTrue();
+    assertThat(EngineExpressionEvaluator.validVariableFieldName("__abc_9")).isTrue();
+    assertThat(EngineExpressionEvaluator.validVariableFieldName("__abc-9")).isFalse();
+    assertThat(EngineExpressionEvaluator.validVariableFieldName("__abc$9")).isFalse();
+    assertThat(EngineExpressionEvaluator.validVariableFieldName("__abc{9")).isFalse();
+    assertThat(EngineExpressionEvaluator.validVariableFieldName("__abc}9")).isFalse();
   }
 
   @Value

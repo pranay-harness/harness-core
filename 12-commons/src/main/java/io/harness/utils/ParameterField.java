@@ -3,10 +3,11 @@ package io.harness.utils;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import lombok.Getter;
 
+@Getter
 public class ParameterField<T> {
-  @Getter private final String expressionValue;
-  @Getter private boolean isExpression;
-  @Getter private T value;
+  private String expressionValue;
+  private boolean isExpression;
+  private T value;
 
   private static final ParameterField<?> EMPTY = new ParameterField<>(null, false, null);
 
@@ -30,6 +31,11 @@ public class ParameterField<T> {
 
   public Object get(String key) {
     return isExpression ? expressionValue : ExpressionEvaluatorUtils.fetchField(value, key).orElse(null);
+  }
+
+  public void updateWithExpression(String newExpression) {
+    isExpression = true;
+    expressionValue = newExpression;
   }
 
   public void updateWithValue(Object newValue) {

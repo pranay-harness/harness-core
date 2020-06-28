@@ -1,7 +1,9 @@
 package io.harness.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.algorithm.IdentifierName;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.utils.ParameterField;
@@ -13,6 +15,7 @@ import org.apache.commons.jexl3.JexlEngine;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.logging.impl.NoOpLog;
+import org.apache.commons.text.StrLookup;
 import org.apache.commons.text.StrSubstitutor;
 
 import java.lang.reflect.Array;
@@ -23,7 +26,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDC)
 @UtilityClass
 @Slf4j
 public class ExpressionEvaluatorUtils {
@@ -33,25 +38,44 @@ public class ExpressionEvaluatorUtils {
 
   private final JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
 
-  public String substitute(
-      ExpressionEvaluatorItfc expressionEvaluator, String expression, JexlContext jc, VariableResolverTracker tracker) {
+  public String substitute(EngineExpressionEvaluator expressionEvaluator, String expression, EngineJexlContext ctx) {
     if (expression == null) {
       return null;
     }
 
     String prefix = IdentifierName.random();
     String suffix = IdentifierName.random();
-
     Pattern pattern = Pattern.compile(prefix + "[0-9]+" + suffix);
+    EngineVariableResolver variableResolver = EngineVariableResolver.builder()
+                                                  .expressionEvaluator(expressionEvaluator)
+                                                  .ctx(ctx)
+                                                  .prefix(prefix)
+                                                  .suffix(suffix)
+                                                  .build();
+    return substitute(expression, ctx, variableResolver, pattern);
+  }
 
-    final EvaluateVariableResolver variableResolver = EvaluateVariableResolver.builder()
-                                                          .expressionEvaluator(expressionEvaluator)
-                                                          .context(jc)
-                                                          .variableResolverTracker(tracker)
-                                                          .prefix(prefix)
-                                                          .suffix(suffix)
-                                                          .build();
+  public String substitute(
+      ExpressionEvaluator expressionEvaluator, String expression, JexlContext ctx, VariableResolverTracker tracker) {
+    if (expression == null) {
+      return null;
+    }
 
+    String prefix = IdentifierName.random();
+    String suffix = IdentifierName.random();
+    Pattern pattern = Pattern.compile(prefix + "[0-9]+" + suffix);
+    EvaluateVariableResolver variableResolver = EvaluateVariableResolver.builder()
+                                                    .expressionEvaluator(expressionEvaluator)
+                                                    .context(ctx)
+                                                    .variableResolverTracker(tracker)
+                                                    .prefix(prefix)
+                                                    .suffix(suffix)
+                                                    .build();
+    return substitute(expression, ctx, variableResolver, pattern);
+  }
+
+  public String substitute(
+      @NotNull String expression, JexlContext ctx, StrLookup<Object> variableResolver, Pattern pattern) {
     StrSubstitutor substitutor = new StrSubstitutor();
     substitutor.setEnableSubstitutionInVariables(true);
     substitutor.setVariableResolver(variableResolver);
@@ -71,7 +95,7 @@ public class ExpressionEvaluatorUtils {
         StringBuffer sb = new StringBuffer();
         do {
           String name = matcher.group(0);
-          String value = String.valueOf(jc.get(name));
+          String value = String.valueOf(ctx.get(name));
           matcher.appendReplacement(sb, value.replace("\\", "\\\\").replace("$", "\\$"));
         } while (matcher.find());
         matcher.appendTail(sb);
@@ -111,8 +135,9 @@ public class ExpressionEvaluatorUtils {
   }
 
   public interface ResolveFunctor {
-    String renderExpression(String str);
-    Optional<Object> evaluateExpressionOptional(String str);
+    String renderExpression(String expression);
+    Object evaluateExpression(String expression);
+    boolean hasVariables(String expression);
   }
 
   /**
@@ -186,11 +211,15 @@ public class ExpressionEvaluatorUtils {
       ParameterField<?> parameterField = (ParameterField<?>) obj;
       Object value;
       if (parameterField.isExpression()) {
-        Optional<Object> optional = functor.evaluateExpressionOptional(parameterField.getExpressionValue());
-        if (optional.isPresent()) {
-          value = optional.get();
-        } else {
-          return false;
+        value = functor.evaluateExpression(parameterField.getExpressionValue());
+        if (value instanceof String && functor.hasVariables((String) value)) {
+          String newExpression = (String) value;
+          if (newExpression.equals(parameterField.getExpressionValue())) {
+            return false;
+          }
+
+          parameterField.updateWithExpression(newExpression);
+          return true;
         }
       } else {
         value = parameterField.getValue();
