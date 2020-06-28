@@ -9,7 +9,9 @@ import static java.util.Collections.singletonList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.cdng.executionplan.CDPlanNodeType;
 import io.harness.cdng.pipeline.CDPhase;
+import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
@@ -25,17 +27,30 @@ import io.harness.state.core.section.chain.SectionChainStepParameters;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
-public class ExecutionPhasesPlanCreator implements SupportDefinedExecutorPlanCreator<List<CDPhase>> {
+public class ExecutionPhasesPlanCreator
+    extends AbstractPlanCreatorWithChildren<List<CDPhase>> implements SupportDefinedExecutorPlanCreator<List<CDPhase>> {
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(List<CDPhase> phases, CreateExecutionPlanContext context) {
+  public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
+      List<CDPhase> phases, CreateExecutionPlanContext context) {
+    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
     final List<CreateExecutionPlanResponse> planForPhases = getPlanForPhases(context, phases);
+    childrenPlanMap.put("PHASES", planForPhases);
+    return childrenPlanMap;
+  }
+
+  @Override
+  public CreateExecutionPlanResponse createPlanForSelf(List<CDPhase> input,
+      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
+    List<CreateExecutionPlanResponse> planForPhases = planForChildrenMap.get("PHASES");
     final PlanNode executionPlanNode = prepareExecutionPhasesNode(context, planForPhases);
     return CreateExecutionPlanResponse.builder()
         .planNode(executionPlanNode)
@@ -94,5 +109,10 @@ public class ExecutionPhasesPlanCreator implements SupportDefinedExecutorPlanCre
   @Override
   public List<String> getSupportedTypes() {
     return singletonList(EXECUTION_PHASES_PLAN_CREATOR.getName());
+  }
+
+  @Override
+  public String getPlanNodeType(List<CDPhase> input) {
+    return CDPlanNodeType.EXECUTION.name();
   }
 }

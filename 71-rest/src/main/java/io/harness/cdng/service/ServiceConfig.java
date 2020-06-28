@@ -26,6 +26,7 @@ public class ServiceConfig implements Outcome {
         .description(
             EmptyPredicate.isNotEmpty(serviceConfig.getDescription()) ? serviceConfig.getDescription() : description)
         .overrides(serviceConfig.getOverrides())
+        .serviceSpec(serviceSpec)
         .build();
   }
 }

@@ -2,10 +2,10 @@ package io.harness.executionplan.plancreator.beans;
 
 import io.harness.state.StepType;
 import io.harness.state.io.StepParameters;
+import io.harness.yaml.core.intfc.WithIdentifier;
 
-public interface GenericStepInfo extends StepParameters {
+public interface GenericStepInfo extends StepParameters, WithIdentifier {
   String getDisplayName();
-  String getIdentifier();
   StepType getStepType();
   String getFacilitatorType();
   default StepParameters getStepParameters() {

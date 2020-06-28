@@ -11,11 +11,13 @@ import com.google.inject.Singleton;
 import io.harness.cdng.executionplan.CDPlanCreatorType;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.CDPhase;
+import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -28,39 +30,41 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
-public class PhasePlanCreator implements SupportDefinedExecutorPlanCreator<CDPhase> {
+public class PhasePlanCreator
+    extends AbstractPlanCreatorWithChildren<CDPhase> implements SupportDefinedExecutorPlanCreator<CDPhase> {
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(CDPhase phase, CreateExecutionPlanContext context) {
-    try {
-      prePlanning(phase, context);
-      final List<CreateExecutionPlanResponse> planForSteps = getPlanForSteps(context, phase.getSteps());
-      final List<CreateExecutionPlanResponse> planForRollbackSteps =
-          getPlanForSteps(context, emptyIfNull(phase.getRollbackSteps()));
-      final PlanNode phasePlanNode = preparePhaseNode(phase, context, planForSteps, planForRollbackSteps);
-      return CreateExecutionPlanResponse.builder()
-          .planNode(phasePlanNode)
-          .planNodes(getPlanNodes(planForSteps))
-          .planNodes(getPlanNodes(planForRollbackSteps))
-          .startingNodeId(phasePlanNode.getUuid())
-          .build();
-    } finally {
-      postPlanning(phase, context);
-    }
+  public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
+      CDPhase phase, CreateExecutionPlanContext context) {
+    Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
+    final List<CreateExecutionPlanResponse> planForSteps = getPlanForSteps(context, phase.getSteps());
+    final List<CreateExecutionPlanResponse> planForRollbackSteps =
+        getPlanForSteps(context, emptyIfNull(phase.getRollbackSteps()));
+    childrenPlanMap.put("STEPS", planForSteps);
+    childrenPlanMap.put("ROLLBACK", planForRollbackSteps);
+    return childrenPlanMap;
   }
 
-  private void prePlanning(CDPhase phase, CreateExecutionPlanContext context) {
-    PlanCreatorConfigUtils.setCurrentPhaseConfig(phase, context);
-  }
-
-  private void postPlanning(CDPhase phase, CreateExecutionPlanContext context) {
-    PlanCreatorConfigUtils.setCurrentPhaseConfig(null, context);
+  @Override
+  public CreateExecutionPlanResponse createPlanForSelf(CDPhase phase,
+      Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
+    List<CreateExecutionPlanResponse> planForSteps = planForChildrenMap.get("STEPS");
+    List<CreateExecutionPlanResponse> planForRollbackSteps = planForChildrenMap.get("ROLLBACK");
+    final PlanNode phasePlanNode = preparePhaseNode(phase, context, planForSteps, planForRollbackSteps);
+    return CreateExecutionPlanResponse.builder()
+        .planNode(phasePlanNode)
+        .planNodes(getPlanNodes(planForSteps))
+        .planNodes(getPlanNodes(planForRollbackSteps))
+        .startingNodeId(phasePlanNode.getUuid())
+        .build();
   }
 
   @NotNull
@@ -113,5 +117,22 @@ public class PhasePlanCreator implements SupportDefinedExecutorPlanCreator<CDPha
   @Override
   public List<String> getSupportedTypes() {
     return Collections.singletonList(CDPlanCreatorType.PHASE_PLAN_CREATOR.getName());
+  }
+
+  @Override
+  public void prePlanCreation(CDPhase phase, CreateExecutionPlanContext context) {
+    super.prePlanCreation(phase, context);
+    PlanCreatorConfigUtils.setCurrentPhaseConfig(phase, context);
+  }
+
+  @Override
+  public void postPlanCreation(CDPhase phase, CreateExecutionPlanContext context) {
+    super.postPlanCreation(phase, context);
+    PlanCreatorConfigUtils.setCurrentPhaseConfig(null, context);
+  }
+
+  @Override
+  public String getPlanNodeType(CDPhase input) {
+    return PlanNodeType.PHASE.name();
   }
 }
