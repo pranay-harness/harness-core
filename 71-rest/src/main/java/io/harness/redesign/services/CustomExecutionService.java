@@ -32,6 +32,8 @@ public interface CustomExecutionService {
 
   PlanExecution executeSectionChainPlan();
 
+  PlanExecution executeSectionChainRollbackPlan();
+
   PlanExecution testInfraState() throws IOException;
 
   PlanExecution testGraphPlan();

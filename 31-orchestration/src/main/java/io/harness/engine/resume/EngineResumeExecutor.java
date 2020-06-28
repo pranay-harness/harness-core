@@ -1,6 +1,7 @@
 package io.harness.engine.resume;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.execution.status.Status.brokeStatuses;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Injector;
@@ -27,6 +28,7 @@ import io.harness.registries.state.StepRegistry;
 import io.harness.state.Step;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepResponse;
+import io.harness.state.io.StepResponseNotifyData;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -103,7 +105,9 @@ public class EngineResumeExecutor implements Runnable {
           ChildChainExecutable childChainExecutable = (ChildChainExecutable) stepRegistry.obtain(node.getStepType());
           ChildChainResponse lastChildChainExecutableResponse =
               Preconditions.checkNotNull((ChildChainResponse) nodeExecution.obtainLatestExecutableResponse());
-          if (lastChildChainExecutableResponse.isChainEnd()) {
+          StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) response.values().iterator().next();
+          if (lastChildChainExecutableResponse.isLastLink()
+              || brokeStatuses().contains(responseNotifyData.getStatus())) {
             stepResponse = childChainExecutable.finalizeExecution(ambiance, nodeExecution.getResolvedStepParameters(),
                 lastChildChainExecutableResponse.getPassThroughData(), response);
             break;

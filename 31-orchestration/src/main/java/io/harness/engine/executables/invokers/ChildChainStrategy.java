@@ -58,7 +58,7 @@ public class ChildChainStrategy implements InvokeStrategy {
     PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
     NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
     Plan plan = planExecution.getPlan();
-    PlanNode node = plan.fetchNode(childChainResponse.getChildNodeId());
+    PlanNode node = plan.fetchNode(childChainResponse.getNextChildId());
     Ambiance clonedAmbiance = ambiance.cloneForChild();
     clonedAmbiance.addLevel(Level.fromPlanNode(childInstanceId, node));
     NodeExecution childNodeExecution = NodeExecution.builder()

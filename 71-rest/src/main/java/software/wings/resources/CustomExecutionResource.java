@@ -79,6 +79,12 @@ public class CustomExecutionResource {
   }
 
   @GET
+  @Path("/section-chain-rollback")
+  public RestResponse<PlanExecution> executeSectionChainRollbackPlan() {
+    return new RestResponse<>(customExecutionService.executeSectionChainRollbackPlan());
+  }
+
+  @GET
   @Path("/abort-plan")
   public RestResponse<Interrupt> abortPlan(
       @QueryParam("accountId") String accountId, @QueryParam("planExecutionId") String planExecutionId) {
