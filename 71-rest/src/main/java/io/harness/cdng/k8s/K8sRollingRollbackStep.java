@@ -72,6 +72,7 @@ public class K8sRollingRollbackStep implements Step, TaskExecutable {
                   .taskType(TaskType.K8S_COMMAND_TASK.name())
                   .parameters(new Object[] {taskParameters})
                   .build())
+        .setupAbstractions(ambiance.getSetupAbstractions())
         .build();
   }
 

@@ -25,6 +25,9 @@ public class OnFailAdviser implements Adviser {
     }
     OnFailAdviserParameters parameters =
         (OnFailAdviserParameters) Preconditions.checkNotNull(advisingEvent.getAdviserParameters());
+    if (parameters.getNextNodeId() == null) {
+      return null;
+    }
     return NextStepAdvise.builder().nextNodeId(parameters.getNextNodeId()).build();
   }
 }

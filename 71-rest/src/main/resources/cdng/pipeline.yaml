@@ -96,9 +96,111 @@ pipeline:
                 k8sRolling:
                   timeout: 120000
                   skipDryRun: false
-            rollback-steps:
+            - step:
+                displayName: "http"
+                identifier: http
+                http:
+                  socketTimeoutMillis: 1000
+                  method: GET
+                  url: wrongUrl
+            - step:
+                identifier: shellScript
+                shellScript:
+                  executeOnDelegate: true
+                  connectionType: SSH
+                  scriptType: BASH
+                  scriptString: |
+                    echo 'I should not execute'
+            rollbackSteps:
             - step:
                 displayName: "Rollback Rollout Deployment"
                 identifier: rollbackRolloutDeployment
                 k8sRollingRollback:
                   timeout: 120000
+            - step:
+                identifier: shellScript2
+                shellScript:
+                  executeOnDelegate: true
+                  connectionType: SSH
+                  scriptType: BASH
+                  scriptString: |
+                    echo 'I should be executed during rollback'
+#             - step:
+#             displayName: "Rollback Rollout Deployment"
+#             identifier: rollbackRolloutDeployment
+#             k8sRollingRollback:
+#               timeout: 120000
+  - stage:
+      identifier: prodStage
+      displayName: "prod stage"
+      deployment:
+        service:
+          identifier: manager
+          serviceSpec:
+            deploymentType: kubernetes
+            artifacts:
+              primary:
+                dockerhub:
+                  dockerhubConnector: "https://registry.hub.docker.com/"
+                  imagePath: "library/nginx"
+                  tag: "1.18"
+            manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
+              - manifest:
+                  identifier: baseValues
+                  k8s:
+                    git:
+                      connectorId: BBPSsTiCQ3OnD87_SHrSmw
+                      fetchType: BRANCH
+                      fetchValue: master
+                      paths:
+                        - test/spec
+                    valuesFilePaths:
+                      - test/baseValues.yaml
+          overrides:
+            manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
+              - manifest:
+                  identifier: prodOverride
+                  values:
+                    git:
+                      connectorId: BBPSsTiCQ3OnD87_SHrSmw
+                      fetchType: BRANCH
+                      fetchValue: master
+                      paths:
+                        - test/prod/values.yaml
+        infrastructure:
+          environment:
+            # Give a name to the environment where deployment is being done (Dev, QA, Production, etc). You can give any name and if an environment with this name doesn't exist, it will be created. REQUIRED
+            displayName:
+            identifier: stagingInfra
+            # Type of the environment where deployment is being done if the environment doesn't already exist. Options: pre-production | production. pre-production is default. OPTIONAL
+            # If there is an existing environment with the specified name, the type of existing environment will be used.
+            type: PRE_PRODUCTION
+            tags:
+              - key: cloud
+                value: AWS
+              - key: team
+                value: cdp
+          # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
+          # Dynamic type ???
+          infrastructureSpec:
+            # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
+            # Dynamic type ???
+            kubernetesDirect:
+              # Spec for Infrastructure Type kubernetes-direct
+              connectorId: 2JrX8ESYSTWbhBTPBu7slQ
+              # namespace
+              namespace: default
+              # release name
+              releaseName: vaibhav
+        execution:
+          - phase:
+              # Name of the phase. REQUIRED
+              displayName:  Deploy
+              identifier: phase1
+              steps:
+                - step:
+                    displayName: "Rollout Deployment"
+                    identifier: rolloutDeployment
+                    k8sRolling:
+                      timeout: 120000
+                      skipDryRun: false
