@@ -45,6 +45,11 @@ public class CodeUtils {
     return false;
   }
 
+  public static boolean isTestClass(Class clazz) {
+    String location = location(clazz);
+    return location.endsWith("/test-classes/");
+  }
+
   public static void checkHarnessClassesBelongToModule(String location, Set<? extends Class> classes) {
     for (Class clazz : classes) {
       if (!thirdPartyOrBelongsToModule(location, clazz)) {

@@ -1,12 +1,16 @@
 package io.harness.morphia;
 
+import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
+
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 
 import io.harness.exception.GeneralException;
+import io.harness.exception.UnexpectedException;
 import io.harness.govern.DependencyModule;
+import io.harness.reflection.CodeUtils;
 import io.harness.testing.TestExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.util.ConcurrentHashSet;
@@ -84,15 +88,23 @@ public class MorphiaModule extends DependencyModule {
   }
 
   public void testAutomaticSearch() {
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setMapSubPackages(true);
-    morphia.mapPackage("software.wings");
-    morphia.mapPackage("io.harness");
+    Morphia morphia;
+    try {
+      morphia = new Morphia();
+      morphia.getMapper().getOptions().setMapSubPackages(true);
+      morphia.mapPackage("software.wings");
+      morphia.mapPackage("io.harness");
+    } catch (NoClassDefFoundError error) {
+      ignoredOnPurpose(error);
+      return;
+    }
+
+    logger.info("Checking {} classes", morphia.getMapper().getMappedClasses().size());
 
     boolean success = true;
     for (MappedClass cls : morphia.getMapper().getMappedClasses()) {
       if (!morphiaClasses.contains(cls.getClazz())) {
-        logger.error(cls.getClazz().toString());
+        logger.error(cls.getClazz().getName());
         success = false;
       }
     }
@@ -102,12 +114,34 @@ public class MorphiaModule extends DependencyModule {
     }
   }
 
+  public void testAllRegistrars() {
+    Reflections reflections = new Reflections("io.harness.serializer.morphia");
+    try {
+      for (Class clazz : reflections.getSubTypesOf(MorphiaRegistrar.class)) {
+        Constructor<?> constructor = null;
+        constructor = clazz.getConstructor();
+        final MorphiaRegistrar morphiaRegistrar = (MorphiaRegistrar) constructor.newInstance();
+
+        if (CodeUtils.isTestClass(clazz)) {
+          continue;
+        }
+
+        logger.info("Checking registrar {}", clazz.getName());
+        morphiaRegistrar.testClassesModule();
+        morphiaRegistrar.testImplementationClassesModule();
+      }
+    } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+      throw new UnexpectedException("Unexpected exception while constructing registrar", e);
+    }
+  }
+
   @Override
   protected void configure() {
     if (!inSpring) {
       MapBinder<String, TestExecution> testExecutionMapBinder =
           MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
-      testExecutionMapBinder.addBinding("MorphiaRegistration").toInstance(() -> testAutomaticSearch());
+      testExecutionMapBinder.addBinding("Morphia test registration").toInstance(() -> testAutomaticSearch());
+      testExecutionMapBinder.addBinding("Morphia test registrars").toInstance(() -> testAllRegistrars());
     }
   }
 }
