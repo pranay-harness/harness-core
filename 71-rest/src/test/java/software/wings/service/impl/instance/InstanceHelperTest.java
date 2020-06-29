@@ -151,6 +151,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @Mock private ExecutionContext context;
   @Mock private ContainerSync containerSync;
   @Mock private DeploymentService deploymentService;
+  @Mock InstanceHandlerFactory instanceHandlerFactory;
   @Mock private InstanceSyncPerpetualTaskService instanceSyncPerpetualTaskService;
   @Inject private FeatureFlagService featureFlagService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
@@ -335,6 +336,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
     doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+    doReturn(awsCodeDeployInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
 
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
         phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, context);
@@ -380,6 +382,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
     doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+    doReturn(awsCodeDeployInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
 
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
         phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, context);
@@ -425,6 +428,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
     doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+    doReturn(awsAmiInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
 
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
         phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, context);
@@ -496,6 +500,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
     doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+    doReturn(awsCodeDeployInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
 
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
         phaseStepExecutionData, workflowStandardParams, "app_1", workflowExecution, phaseStepSubWorkflow, context);
@@ -547,6 +552,7 @@ public class InstanceHelperTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
     doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+    doReturn(containerInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
 
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
@@ -616,6 +622,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
     doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+    doReturn(containerInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
 
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
         phaseStepExecutionData, workflowStandardParams, APP_ID, workflowExecution, phaseStepSubWorkflow, context);
@@ -688,6 +695,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(false);
     doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+    doReturn(containerInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
 
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
         phaseStepExecutionData, workflowStandardParams, APP_ID, helmWorkflowExecution, phaseStepSubWorkflow, context);
@@ -755,6 +763,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("Name");
     phaseStepSubWorkflow.setRollback(true);
     doReturn(INFRA_MAP_ID).when(context).fetchInfraMappingId();
+    doReturn(containerInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
 
     instanceHelper.extractInstanceOrDeploymentInfoBaseOnType(STATE_EXECUTION_INSTANCE_ID, phaseExecutionData,
         phaseStepExecutionData, workflowStandardParams, APP_ID, helmWorkflowExecution, phaseStepSubWorkflow, context);
@@ -1054,6 +1063,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     InfrastructureMapping infrastructureMapping = mock(InfrastructureMapping.class);
     when(infrastructureMapping.getInfraMappingType()).thenReturn(InfrastructureMappingType.PCF_PCF.getName());
     when(infrastructureMapping.getAccountId()).thenReturn(WingsTestConstants.ACCOUNT_ID);
+    doReturn(pcfInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
 
     assertTrue(instanceHelper.shouldSkipIteratorInstanceSync(infrastructureMapping));
   }
@@ -1065,6 +1075,8 @@ public class InstanceHelperTest extends WingsBaseTest {
     InfrastructureMapping infrastructureMapping = getMockInfrastructureMapping();
 
     List<DeploymentSummary> deploymentSummaries = Collections.emptyList();
+    doReturn(awsCodeDeployInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
+
     instanceHelper.createPerpetualTaskForNewDeploymentIfEnabled(infrastructureMapping, deploymentSummaries);
 
     verifyZeroInteractions(instanceSyncPerpetualTaskService);
@@ -1077,6 +1089,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     InfrastructureMapping infrastructureMapping = getMockInfrastructureMapping();
 
     featureFlagService.enableAccount(FeatureName.MOVE_PCF_INSTANCE_SYNC_TO_PERPETUAL_TASK, ACCOUNT_ID);
+    doReturn(pcfInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
 
     List<DeploymentSummary> deploymentSummaries = Collections.emptyList();
     instanceHelper.createPerpetualTaskForNewDeploymentIfEnabled(infrastructureMapping, deploymentSummaries);
@@ -1114,6 +1127,7 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     InfrastructureMapping infrastructureMapping = getMockInfrastructureMapping();
     when(infraMappingService.get(WingsTestConstants.APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+    doReturn(pcfInstanceHandler).when(instanceHandlerFactory).getInstanceHandler(any());
 
     PcfConfig pcfConfig = mock(PcfConfig.class);
     SettingAttribute settingAttribute = mock(SettingAttribute.class);
