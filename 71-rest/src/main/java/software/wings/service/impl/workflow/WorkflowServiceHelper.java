@@ -75,6 +75,7 @@ import static software.wings.sm.StateType.ECS_ROUTE53_DNS_WEIGHT_UPDATE;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP_ROLLBACK;
+import static software.wings.sm.StateType.ELASTIC_LOAD_BALANCER;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
@@ -82,6 +83,8 @@ import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SWAP_SERVICE_SELECTORS;
 import static software.wings.sm.StateType.ROLLING_NODE_SELECT;
+import static software.wings.sm.states.ElasticLoadBalancerState.Operation.Disable;
+import static software.wings.sm.states.ElasticLoadBalancerState.Operation.Enable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -99,6 +102,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.AwsAmiInfrastructureMapping;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -110,6 +114,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
@@ -126,9 +131,12 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.infra.AwsAmiInfrastructure;
+import software.wings.infra.AwsInstanceInfrastructure;
+import software.wings.infra.CloudProviderInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.PhysicalInfra;
 import software.wings.service.impl.aws.model.AwsConstants;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -1440,16 +1448,19 @@ public class WorkflowServiceHelper {
       String appId, WorkflowPhase workflowPhase, OrchestrationWorkflowType orchestrationWorkflowType) {
     // For DC only - for other types it has to be customized
     String computeProviderType;
+    boolean attachElbSteps;
     boolean infraRefactor =
         featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId));
     if (infraRefactor) {
       InfrastructureDefinition infrastructureDefinition =
           infrastructureDefinitionService.get(appId, workflowPhase.getInfraDefinitionId());
       computeProviderType = infrastructureDefinition.getCloudProviderType().name();
+      attachElbSteps = attachElbSteps(infrastructureDefinition.getInfrastructure());
     } else {
       InfrastructureMapping infrastructureMapping =
           infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       computeProviderType = infrastructureMapping.getComputeProviderType();
+      attachElbSteps = attachElbSteps(infrastructureMapping);
     }
 
     StateType stateType;
@@ -1485,6 +1496,19 @@ public class WorkflowServiceHelper {
     List<GraphNode> disableServiceSteps = commandNodes(commandMap, CommandType.DISABLE);
     List<GraphNode> enableServiceSteps = commandNodes(commandMap, CommandType.ENABLE);
 
+    if (attachElbSteps) {
+      disableServiceSteps.add(GraphNode.builder()
+                                  .type(ELASTIC_LOAD_BALANCER.name())
+                                  .name("Elastic Load Balancer")
+                                  .properties(ImmutableMap.<String, Object>builder().put("operation", Disable).build())
+                                  .build());
+      enableServiceSteps.add(GraphNode.builder()
+                                 .type(ELASTIC_LOAD_BALANCER.name())
+                                 .name("Elastic Load Balancer")
+                                 .properties(ImmutableMap.<String, Object>builder().put("operation", Enable).build())
+                                 .build());
+    }
+
     phaseSteps.add(aPhaseStep(PhaseStepType.DISABLE_SERVICE, DISABLE_SERVICE).addAllSteps(disableServiceSteps).build());
 
     phaseSteps.add(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, DEPLOY_SERVICE)
@@ -1498,6 +1522,19 @@ public class WorkflowServiceHelper {
                        .build());
 
     phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
+  }
+
+  private boolean attachElbSteps(InfrastructureMapping infrastructureMapping) {
+    return (infrastructureMapping instanceof PhysicalInfrastructureMappingBase
+               && isNotBlank(((PhysicalInfrastructureMappingBase) infrastructureMapping).getLoadBalancerId()))
+        || (infrastructureMapping instanceof AwsInfrastructureMapping
+               && isNotBlank(((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId()));
+  }
+
+  private boolean attachElbSteps(CloudProviderInfrastructure infrastructure) {
+    return (infrastructure instanceof PhysicalInfra && isNotBlank(((PhysicalInfra) infrastructure).getLoadBalancerId()))
+        || (infrastructure instanceof AwsInstanceInfrastructure
+               && isNotBlank(((AwsInstanceInfrastructure) infrastructure).getLoadBalancerId()));
   }
 
   public WorkflowPhase generateRollbackWorkflowPhaseForPCF(WorkflowPhase workflowPhase) {
@@ -1839,8 +1876,26 @@ public class WorkflowServiceHelper {
     Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+
     List<GraphNode> disableServiceSteps = commandNodes(commandMap, CommandType.DISABLE, true);
     List<GraphNode> enableServiceSteps = commandNodes(commandMap, CommandType.ENABLE, true);
+
+    if (attachElbSteps(infrastructureMapping)) {
+      disableServiceSteps.add(GraphNode.builder()
+                                  .type(ELASTIC_LOAD_BALANCER.name())
+                                  .name("Elastic Load Balancer")
+                                  .properties(ImmutableMap.<String, Object>builder().put("operation", Disable).build())
+                                  .rollback(true)
+                                  .build());
+      enableServiceSteps.add(GraphNode.builder()
+                                 .type(ELASTIC_LOAD_BALANCER.name())
+                                 .name("Elastic Load Balancer")
+                                 .properties(ImmutableMap.<String, Object>builder().put("operation", Enable).build())
+                                 .rollback(true)
+                                 .build());
+    }
 
     return rollbackWorkflow(workflowPhase)
         .phaseSteps(asList(aPhaseStep(PhaseStepType.DISABLE_SERVICE, DISABLE_SERVICE)
