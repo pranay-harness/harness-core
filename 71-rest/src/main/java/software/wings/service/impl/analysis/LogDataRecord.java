@@ -60,6 +60,9 @@ import java.util.List;
     fields =
     { @Field("cvConfigId")
       , @Field(value = "logCollectionMinute", type = IndexType.ASC), @Field("clusterLevel") })
+@CdIndex(name = "cv_config_created_at_idx",
+    fields = { @Field("cvConfigId")
+               , @Field(value = "createdAt", type = IndexType.DESC) })
 @CdIndex(name = "cv_bump_idx",
     fields =
     {
