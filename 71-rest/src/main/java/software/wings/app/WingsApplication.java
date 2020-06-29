@@ -195,7 +195,7 @@ import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.BarrierServiceImpl;
 import software.wings.service.impl.DelegateProfileServiceImpl;
-import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.DelegateSyncServiceImpl;
 import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
@@ -692,7 +692,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         .scheduleWithFixedDelay(
             injector.getInstance(GitChangeSetRunnable.class), random.nextInt(4), 4L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
     if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
       injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
           .scheduleWithFixedDelay(

@@ -1,5 +1,7 @@
 package io.harness.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.Task;
 import io.harness.annotation.HarnessEntity;
@@ -70,6 +72,7 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
 
   @Id private String uuid;
   @NotEmpty private String accountId;
+  private String description;
   private boolean selectionLogsTrackingEnabled;
 
   private String workflowExecutionId;
@@ -104,6 +107,13 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
   @FdTtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
 
   // Following getters, setters have been added temporarily because of backward compatibility
+
+  public String calcDescription() {
+    if (isEmpty(description)) {
+      return data.getTaskType();
+    }
+    return description;
+  }
 
   @Deprecated
   /**

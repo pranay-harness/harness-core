@@ -19,7 +19,6 @@ import static io.harness.delegate.message.ManagerMessageConstants.USE_CDN;
 import static io.harness.delegate.message.ManagerMessageConstants.USE_STORAGE_PROXY;
 import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.govern.Switch.noop;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
@@ -58,7 +57,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -107,7 +105,6 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.LimitsExceededException;
-import io.harness.exception.TimeoutException;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
@@ -192,6 +189,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateSyncService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -220,11 +218,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
@@ -233,7 +228,7 @@ import javax.ws.rs.ServiceUnavailableException;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-public class DelegateServiceImpl implements DelegateService, Runnable {
+public class DelegateServiceImpl implements DelegateService {
   /**
    * The constant DELEGATE_DIR.
    */
@@ -244,7 +239,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public static final String ECS_DELEGATE = HARNESS_DELEGATE + "-ecs";
   private static final Configuration templateConfiguration = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
-  private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
   private static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
   private static final String DELIMITER = "_";
   public static final String ECS = "ECS";
@@ -303,10 +297,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private SystemEnvironment sysenv;
+  @Inject private DelegateSyncService delegateSyncService;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
-
-  final ConcurrentMap<String, AtomicLong> syncTaskWaitMap = new ConcurrentHashMap<>();
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -329,39 +322,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                   wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegateId).get());
             }
           });
-
-  /* (non-Javadoc)
-   * @see java.lang.Runnable#run()
-   */
-  @Override
-  @SuppressWarnings({"PMD", "SynchronizationOnLocalVariableOrMethodParameter"})
-  public void run() {
-    try {
-      if (isNotEmpty(syncTaskWaitMap)) {
-        List<String> completedSyncTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                              .filter(DelegateTaskKeys.data_async, false)
-                                              .field(DelegateTaskKeys.status)
-                                              .in(TASK_COMPLETED_STATUSES)
-                                              .field(DelegateTaskKeys.uuid)
-                                              .in(syncTaskWaitMap.keySet())
-                                              .asKeyList()
-                                              .stream()
-                                              .map(key -> key.getId().toString())
-                                              .collect(toList());
-        for (String taskId : completedSyncTasks) {
-          AtomicLong endAt = syncTaskWaitMap.get(taskId);
-          if (endAt != null) {
-            synchronized (endAt) {
-              endAt.set(0L);
-              endAt.notifyAll();
-            }
-          }
-        }
-      }
-    } catch (Exception exception) {
-      logger.warn("Exception is of type Exception. Ignoring.", exception);
-    }
-  }
 
   @Override
   public List<Integer> getCountOfDelegatesForAccounts(List<String> accountIds) {
@@ -1770,10 +1730,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   @SuppressWarnings({"unchecked", "SynchronizationOnLocalVariableOrMethodParameter"})
   public <T extends ResponseData> T executeTask(DelegateTask task) {
-    // Wait for task to complete
-    DelegateTask completedTask;
-    ResponseData responseData;
-
     task.getData().setAsync(false);
     saveDelegateTask(task);
 
@@ -1786,40 +1742,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         throw new ServiceUnavailableException("Delegates are not available");
       }
 
-      try {
-        logger.info("Executing sync task");
-        broadcastHelper.rebroadcastDelegateTask(task);
-        AtomicLong endAt = syncTaskWaitMap.computeIfAbsent(
-            task.getUuid(), k -> new AtomicLong(clock.millis() + task.getData().getTimeout()));
-        synchronized (endAt) {
-          while (clock.millis() < endAt.get()) {
-            endAt.wait(task.getData().getTimeout());
-          }
-        }
-        completedTask = wingsPersistence.get(DelegateTask.class, task.getUuid());
-      } catch (Exception e) {
-        logger.error("Error while waiting for sync task", e);
-        throw new InvalidArgumentsException(Pair.of("args", "Error while waiting for completion"));
-      } finally {
-        syncTaskWaitMap.remove(task.getUuid());
-        wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
-                                    .filter(DelegateTaskKeys.accountId, task.getAccountId())
-                                    .filter(DelegateTaskKeys.uuid, task.getUuid()));
-      }
-
-      if (completedTask == null) {
-        logger.info("Task was deleted while waiting for completion");
-        throw new InvalidArgumentsException(Pair.of("args", "Task was deleted while waiting for completion"));
-      }
-
-      responseData = completedTask.getNotifyResponse();
-      if (responseData == null || !TASK_COMPLETED_STATUSES.contains(completedTask.getStatus())) {
-        String delegateName = obtainDelegateName(completedTask.getAccountId(), completedTask.getDelegateId(), false);
-        throw new TimeoutException("Harness delegate", "Delegate (" + delegateName + ")", USER_ADMIN);
-      }
-      logger.info("Returning response to calling function for delegate task");
+      broadcastHelper.rebroadcastDelegateTask(task);
+      return delegateSyncService.waitForTask(task);
     }
-    return (T) responseData;
   }
 
   @Override

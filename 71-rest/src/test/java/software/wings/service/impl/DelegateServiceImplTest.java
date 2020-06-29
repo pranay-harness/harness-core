@@ -64,6 +64,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private BroadcasterFactory broadcasterFactory;
   @Mock private DelegateTaskBroadcastHelper broadcastHelper;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
+  @InjectMocks @Inject private DelegateSyncServiceImpl delegateSyncService;
   @Mock private AssignDelegateService assignDelegateService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
@@ -98,7 +99,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
              eq(delegateTask.getAccountId()), any(BatchDelegateSelectionLog.class)))
         .thenReturn(List.of(delegate.getUuid()));
     Thread thread = new Thread(() -> {
-      await().atMost(5L, TimeUnit.SECONDS).until(() -> isNotEmpty(delegateService.syncTaskWaitMap));
+      await().atMost(5L, TimeUnit.SECONDS).until(() -> isNotEmpty(delegateSyncService.syncTaskWaitMap));
       DelegateTask task =
           wingsPersistence.createQuery(DelegateTask.class).filter("accountId", delegateTask.getAccountId()).get();
       delegateService.processDelegateResponse(task.getAccountId(), delegate.getUuid(), task.getUuid(),
@@ -107,7 +108,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
               .response(HttpStateExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build())
               .responseCode(ResponseCode.OK)
               .build());
-      new Thread(delegateService).start();
+      new Thread(delegateSyncService).start();
     });
     thread.start();
     ResponseData responseData = delegateService.executeTask(delegateTask);
