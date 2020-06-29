@@ -69,6 +69,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionData;
+import software.wings.sm.states.spotinst.SpotInstStateHelper;
 
 import java.util.Collections;
 
@@ -81,6 +82,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private AwsStateHelper awsStateHelper;
   @Mock private AwsAmiServiceStateHelper awsAmiServiceHelper;
+  @Mock private SpotInstStateHelper spotinstStateHelper;
 
   private final AwsAmiServiceTrafficShiftAlbDeployState state =
       spy(new AwsAmiServiceTrafficShiftAlbDeployState("deploy-state"));
@@ -156,6 +158,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployStateTest extends WingsBaseTest {
     on(state).set("sweepingOutputService", sweepingOutputService);
     on(state).set("awsStateHelper", awsStateHelper);
     on(state).set("awsAmiServiceHelper", awsAmiServiceHelper);
+    on(state).set("spotinstStateHelper", spotinstStateHelper);
 
     LbDetailsForAlbTrafficShift lbDetails = LbDetailsForAlbTrafficShift.builder()
                                                 .loadBalancerName("lbName")

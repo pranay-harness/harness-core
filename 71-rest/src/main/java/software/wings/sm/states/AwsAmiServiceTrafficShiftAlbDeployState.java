@@ -72,6 +72,7 @@ import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.sm.states.spotinst.SpotInstStateHelper;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
 
@@ -93,6 +94,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
   @Inject protected SweepingOutputService sweepingOutputService;
   @Inject protected AwsStateHelper awsStateHelper;
   @Inject protected AwsAmiServiceStateHelper awsAmiServiceHelper;
+  @Inject private SpotInstStateHelper spotinstStateHelper;
   @Attributes(title = "Command")
   @DefaultValue(ASG_COMMAND_NAME)
   private static final String COMMAND_NAME = ASG_COMMAND_NAME;
@@ -203,7 +205,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
     } catch (Exception exception) {
       return taskCreationFailureResponse(exception, activity.getUuid(), executionLogCallback);
     }
-    return taskCreationSuccessResponse(activity.getUuid(), serviceSetupElement);
+    return taskCreationSuccessResponse(activity.getUuid(), serviceSetupElement, context);
   }
 
   private AmiServiceTrafficShiftAlbSetupElement validateAndGetContextElement(ExecutionContext context) {
@@ -279,7 +281,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
   }
 
   protected AwsAmiDeployStateExecutionData prepareStateExecutionData(
-      String activityId, AmiServiceTrafficShiftAlbSetupElement serviceSetupElement) {
+      String activityId, AmiServiceTrafficShiftAlbSetupElement serviceSetupElement, ExecutionContext context) {
     List<ContainerServiceData> newInstanceData =
         singletonList(ContainerServiceData.builder()
                           .name(serviceSetupElement.getNewAutoScalingGroupName())
@@ -295,6 +297,8 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
     awsAmiDeployStateExecutionData.setOldAutoScalingGroupName(serviceSetupElement.getOldAutoScalingGroupName());
     awsAmiDeployStateExecutionData.setMaxInstances(serviceSetupElement.getMaxInstances());
     awsAmiDeployStateExecutionData.setNewInstanceData(newInstanceData);
+    awsAmiDeployStateExecutionData.setInstanceCount(spotinstStateHelper.renderCount(instanceCountExpr, context, 100));
+    awsAmiDeployStateExecutionData.setInstanceUnitType(instanceUnitType);
     return awsAmiDeployStateExecutionData;
   }
 
@@ -365,9 +369,9 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
   }
 
   private ExecutionResponse taskCreationSuccessResponse(
-      String activityId, AmiServiceTrafficShiftAlbSetupElement serviceSetupElement) {
+      String activityId, AmiServiceTrafficShiftAlbSetupElement serviceSetupElement, ExecutionContext context) {
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
-        prepareStateExecutionData(activityId, serviceSetupElement);
+        prepareStateExecutionData(activityId, serviceSetupElement, context);
     return createResponse(activityId, SUCCESS, null, awsAmiDeployStateExecutionData, null, true);
   }
 
