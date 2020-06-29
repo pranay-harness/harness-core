@@ -24,6 +24,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
@@ -43,6 +44,8 @@ import java.util.List;
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
+@ToString(exclude = {"password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "serviceAccountToken",
+              "oidcClientId", "oidcSecret", "oidcPassword"})
 @EqualsAndHashCode(callSuper = true)
 public class KubernetesClusterConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private boolean useKubernetesDelegate;
