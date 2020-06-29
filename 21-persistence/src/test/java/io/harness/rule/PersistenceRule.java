@@ -32,6 +32,7 @@ import io.harness.queue.TestNoTopicQueuableObjectListener;
 import io.harness.queue.TestTopicQueuableObject;
 import io.harness.queue.TestTopicQueuableObjectListener;
 import io.harness.redis.RedisConfig;
+import io.harness.testing.ComponentTestsModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -89,6 +90,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
 
     List<Module> modules = new ArrayList<>();
+    modules.add(new ComponentTestsModule());
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
 

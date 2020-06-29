@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.mongo.HObjectFactory;
-import io.harness.morphia.MorphiaModule;
 import io.harness.rule.Owner;
 import io.harness.waiter.NotifyCallback;
 import lombok.extern.slf4j.Slf4j;
@@ -52,13 +51,6 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testManagerClassesModule() {
     new ManagerMorphiaRegistrar().testClassesModule();
-  }
-
-  @Test
-  @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
-  public void testManagerSearchAndList() {
-    new MorphiaModule().testAutomaticSearch();
   }
 
   @Test

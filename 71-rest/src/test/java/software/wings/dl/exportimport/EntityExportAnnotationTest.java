@@ -51,8 +51,8 @@ public class EntityExportAnnotationTest extends CategoryTest {
     });
 
     if (violationCounter.get() > 0) {
-      fail(
-          "Entity class should be annotated either with @HarnessEntity or @HarnessEntity(exportable = false). Exportable entity need to have either an 'accountId' or 'appId' field defined. Found "
+      fail("Entity class should be annotated either with @HarnessEntity or @HarnessEntity(exportable = false)."
+          + " Exportable entity need to have either an 'accountId' or 'appId' field defined. Found "
           + violationCounter.get() + " violations.");
     }
   }
