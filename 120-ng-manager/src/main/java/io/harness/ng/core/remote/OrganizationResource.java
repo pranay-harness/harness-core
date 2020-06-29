@@ -6,6 +6,9 @@ import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 
 import com.google.inject.Inject;
 
+import io.harness.ng.core.ErrorDTO;
+import io.harness.ng.core.FailureDTO;
+import io.harness.ng.core.ResponseDTO;
 import io.harness.ng.core.RestQueryFilterParser;
 import io.harness.ng.core.dto.CreateOrganizationDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
@@ -15,6 +18,8 @@ import io.harness.ng.core.services.api.OrganizationService;
 import io.harness.ng.core.utils.PageUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -41,55 +46,60 @@ import javax.ws.rs.QueryParam;
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@ApiResponses(value =
+    {
+      @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
+    })
 public class OrganizationResource {
   private final OrganizationService organizationService;
   private final RestQueryFilterParser restQueryFilterParser;
 
   @POST
   @ApiOperation(value = "Create an Organization", nickname = "postOrganization")
-  public OrganizationDTO create(@NotNull @Valid CreateOrganizationDTO request) {
+  public ResponseDTO<OrganizationDTO> create(@NotNull @Valid CreateOrganizationDTO request) {
     Organization organization = organizationService.create(toOrganization(request));
-    return writeDto(organization);
+    return ResponseDTO.newResponse(writeDto(organization));
   }
 
   @GET
   @Path("{organizationId}")
   @ApiOperation(value = "Get an Organization", nickname = "getOrganization")
-  public Optional<OrganizationDTO> get(@PathParam("organizationId") @NotEmpty String organizationId) {
+  public ResponseDTO<Optional<OrganizationDTO>> get(@PathParam("organizationId") @NotEmpty String organizationId) {
     Optional<Organization> organizationOptional = organizationService.get(organizationId);
-    return organizationOptional.map(OrganizationMapper::writeDto);
+    return ResponseDTO.newResponse(organizationOptional.map(OrganizationMapper::writeDto));
   }
 
   @GET
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
-  public Page<OrganizationDTO> list(@QueryParam("accountId") @NotEmpty String accountId,
+  public ResponseDTO<Page<OrganizationDTO>> list(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("filter") String filter, @QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") @DefaultValue("100") int size, @QueryParam("sort") @DefaultValue("[]") List<String> sort) {
     Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filter, Organization.class);
     Page<Organization> organizations =
         organizationService.list(accountId, criteria, PageUtils.getPageRequest(page, size, sort));
-    return organizations.map(OrganizationMapper::writeDto);
+    return ResponseDTO.newResponse(organizations.map(OrganizationMapper::writeDto));
   }
 
   @PUT
   @Path("{organizationId}")
   @ApiOperation(value = "Update Organization by id", nickname = "putOrganization")
-  public Optional<OrganizationDTO> update(@PathParam("organizationId") @NotEmpty String organizationId,
+  public ResponseDTO<Optional<OrganizationDTO>> update(@PathParam("organizationId") @NotEmpty String organizationId,
       @NotNull @Valid UpdateOrganizationDTO updateOrganizationDTO) {
     Optional<Organization> organizationOptional = organizationService.get(organizationId);
     if (organizationOptional.isPresent()) {
       Organization organization = organizationOptional.get();
       Organization updatedOrganization =
           organizationService.update(applyUpdateToOrganization(organization, updateOrganizationDTO));
-      return Optional.ofNullable(writeDto(updatedOrganization));
+      return ResponseDTO.newResponse(Optional.ofNullable(writeDto(updatedOrganization)));
     }
-    return Optional.empty();
+    return ResponseDTO.newResponse(Optional.empty());
   }
 
   @DELETE
   @Path("{organizationId}")
   @ApiOperation(value = "Delete Organization by id", nickname = "deleteOrganization")
-  public boolean delete(@PathParam("organizationId") String organizationId) {
-    return organizationService.delete(organizationId);
+  public ResponseDTO<Boolean> delete(@PathParam("organizationId") String organizationId) {
+    return ResponseDTO.newResponse(organizationService.delete(organizationId));
   }
 }

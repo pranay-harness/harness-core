@@ -1,0 +1,43 @@
+package io.harness.ng.core.exceptionmappers;
+
+import io.dropwizard.jersey.validation.JerseyViolationException;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
+import io.harness.ng.core.FailureDTO;
+import io.harness.ng.core.Status;
+import io.harness.ng.core.ValidationError;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import javax.validation.ConstraintViolation;
+import javax.validation.Path;
+import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+
+@Slf4j
+public class JerseyViolationExceptionMapperV2 implements ExceptionMapper<JerseyViolationException> {
+  @Context ResourceInfo resourceInfo;
+
+  @Override
+  public Response toResponse(JerseyViolationException exception) {
+    logger.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
+    Set<ConstraintViolation<?>> constraintViolations = exception.getConstraintViolations();
+
+    List<ValidationError> validationErrors = new ArrayList<>();
+    constraintViolations.forEach(constraintViolation -> {
+      String field = null;
+      for (Path.Node node : constraintViolation.getPropertyPath()) {
+        field = node.getName();
+      }
+      validationErrors.add(ValidationError.of(field, constraintViolation.getMessage()));
+    });
+    FailureDTO failureDto =
+        FailureDTO.toBody(Status.FAILURE, ErrorCode.INVALID_REQUEST, exception.getMessage(), validationErrors);
+    return Response.status(Response.Status.BAD_REQUEST).entity(failureDto).type(MediaType.APPLICATION_JSON).build();
+  }
+}

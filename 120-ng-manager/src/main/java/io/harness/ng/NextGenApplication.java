@@ -10,21 +10,20 @@ import com.google.inject.Injector;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import software.wings.app.CharsetResponseFilter;
-import software.wings.exception.ConstraintViolationExceptionMapper;
-import software.wings.exception.GenericExceptionMapper;
-import software.wings.exception.JsonProcessingExceptionMapper;
-import software.wings.exception.WingsExceptionMapper;
 
 import java.util.EnumSet;
 import javax.servlet.DispatcherType;
@@ -71,6 +70,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerJerseyProviders(environment);
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
+    registerCorrelationFilter(environment, injector);
   }
 
   private void registerCorsFilter(NextGenConfiguration appConfig, Environment environment) {
@@ -91,11 +91,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   private void registerJerseyProviders(Environment environment) {
-    environment.jersey().register(EarlyEofExceptionMapper.class);
-    environment.jersey().register(ConstraintViolationExceptionMapper.class);
-    environment.jersey().register(WingsExceptionMapper.class);
-    environment.jersey().register(JsonProcessingExceptionMapper.class);
-    environment.jersey().register(GenericExceptionMapper.class);
+    environment.jersey().register(JerseyViolationExceptionMapperV2.class);
+    environment.jersey().register(WingsExceptionMapperV2.class);
+    environment.jersey().register(GenericExceptionMapperV2.class);
   }
 
   private void registerJerseyFeatures(Environment environment) {
@@ -104,5 +102,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerCharsetResponseFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
+  }
+
+  private void registerCorrelationFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 }
