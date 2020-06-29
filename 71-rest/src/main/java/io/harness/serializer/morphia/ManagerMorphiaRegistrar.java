@@ -648,6 +648,7 @@ import software.wings.sm.states.EcsServiceRollback;
 import software.wings.sm.states.EcsServiceSetup;
 import software.wings.sm.states.EcsSetupRollback;
 import software.wings.sm.states.EcsSteadyStateCheck;
+import software.wings.sm.states.ElasticLoadBalancerState;
 import software.wings.sm.states.ElkAnalysisState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvLoopState;
@@ -1480,6 +1481,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.EcsServiceSetup", EcsServiceSetup.class);
     w.put("sm.states.EcsSetupRollback", EcsSetupRollback.class);
     w.put("sm.states.EcsSteadyStateCheck", EcsSteadyStateCheck.class);
+    w.put("sm.states.ElasticLoadBalancerState", ElasticLoadBalancerState.class);
     w.put("sm.states.ElkAnalysisState", ElkAnalysisState.class);
     w.put("sm.states.EmailState", EmailState.class);
     w.put("sm.states.EnvResumeState", EnvResumeState.class);
