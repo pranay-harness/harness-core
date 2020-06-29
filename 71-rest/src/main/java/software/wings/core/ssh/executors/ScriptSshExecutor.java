@@ -31,6 +31,7 @@ import com.jcraft.jsch.SftpException;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -215,7 +216,8 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
       command = "cd " + directoryPath + "\n" + command;
       if (!envVariablesToCollect.isEmpty()) {
         envVariablesFilename = "harness-" + this.config.getExecutionId() + ".out";
-        command = addEnvVariablesCollector(command, envVariablesToCollect, directoryPath + envVariablesFilename);
+        command = addEnvVariablesCollector(
+            command, envVariablesToCollect, directoryPath + envVariablesFilename, ScriptType.BASH);
       }
 
       try (OutputStream outputStream = channel.getOutputStream(); InputStream inputStream = channel.getInputStream()) {

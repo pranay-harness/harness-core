@@ -9,7 +9,6 @@ import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.CommandExecutionException;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.delegation.ShellScriptParameters;
@@ -49,9 +48,6 @@ public class ShellScriptTaskHandler {
       }
       if (parameters.isLocalOverrideFeatureFlag()) {
         parameters.setScript(delegateLocalConfigService.replacePlaceholdersWithLocalConfig(parameters.getScript()));
-      }
-      if (parameters.getScriptType() == ScriptType.POWERSHELL) {
-        parameters.setScript(processPowerShellScript(parameters.getScript()));
       }
       return executor.executeCommandString(parameters.getScript(), items);
     }
@@ -94,12 +90,5 @@ public class ShellScriptTaskHandler {
             .errorMessage(format("Unsupported ConnectionType %s", parameters.getConnectionType()))
             .build();
     }
-  }
-
-  private String processPowerShellScript(String scriptString) {
-    StringBuilder scriptStringBuilder =
-        new StringBuilder("pwsh -ExecutionPolicy \"$ErrorActionPreference=Stop\" -Command \" & {");
-    scriptStringBuilder.append(scriptString.replace("$", "\\$").replace("\"", "\\\"")).append("}\"");
-    return scriptStringBuilder.toString();
   }
 }
