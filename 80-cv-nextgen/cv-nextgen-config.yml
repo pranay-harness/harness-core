@@ -39,7 +39,7 @@ logging:
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
 
 mongo:
-  uri: mongodb://localhost:27017/harness
+  uri: mongodb://localhost:27017/cvng
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
