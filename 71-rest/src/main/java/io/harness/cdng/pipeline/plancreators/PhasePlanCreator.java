@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline.plancreators;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
 import static java.lang.String.format;
@@ -8,15 +9,20 @@ import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.adviser.AdviserObtainment;
+import io.harness.adviser.AdviserType;
+import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.cdng.executionplan.CDPlanCreatorType;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.CDPhase;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.core.impl.CreateExecutionPlanResponseImpl.CreateExecutionPlanResponseImplBuilder;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
@@ -58,13 +64,19 @@ public class PhasePlanCreator
       Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
     List<CreateExecutionPlanResponse> planForSteps = planForChildrenMap.get("STEPS");
     List<CreateExecutionPlanResponse> planForRollbackSteps = planForChildrenMap.get("ROLLBACK");
-    final PlanNode phasePlanNode = preparePhaseNode(phase, context, planForSteps, planForRollbackSteps);
-    return CreateExecutionPlanResponse.builder()
-        .planNode(phasePlanNode)
-        .planNodes(getPlanNodes(planForSteps))
-        .planNodes(getPlanNodes(planForRollbackSteps))
-        .startingNodeId(phasePlanNode.getUuid())
-        .build();
+    final PlanNode rollbackPlanNode = prepareRollbackPlanNode(planForRollbackSteps);
+    final PlanNode phasePlanNode = preparePhaseNode(phase, context, planForSteps, rollbackPlanNode);
+
+    CreateExecutionPlanResponseImplBuilder planResponseImplBuilder = CreateExecutionPlanResponse.builder()
+                                                                         .planNode(phasePlanNode)
+                                                                         .planNodes(getPlanNodes(planForSteps))
+                                                                         .planNodes(getPlanNodes(planForRollbackSteps))
+                                                                         .startingNodeId(phasePlanNode.getUuid());
+
+    if (rollbackPlanNode != null) {
+      planResponseImplBuilder.planNode(rollbackPlanNode);
+    }
+    return planResponseImplBuilder.build();
   }
 
   @NotNull
@@ -88,7 +100,7 @@ public class PhasePlanCreator
   }
 
   private PlanNode preparePhaseNode(CDPhase phase, CreateExecutionPlanContext context,
-      List<CreateExecutionPlanResponse> planForSteps, List<CreateExecutionPlanResponse> planForRollbackSteps) {
+      List<CreateExecutionPlanResponse> planForSteps, PlanNode rollbackPlanNode) {
     final String nodeId = generateUuid();
     // TODO @rk: 02/06/20 : rollback steps wont be running as of now, they should run only if any of steps failed
     final String phaseIdentifier = phase.getIdentifier();
@@ -106,6 +118,34 @@ public class PhasePlanCreator
         .facilitatorObtainment(FacilitatorObtainment.builder()
                                    .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
                                    .build())
+        .adviserObtainment(AdviserObtainment.builder()
+                               .type(AdviserType.builder().type(AdviserType.ON_FAIL).build())
+                               .parameters(OnFailAdviserParameters.builder()
+                                               .nextNodeId(rollbackPlanNode == null ? null : rollbackPlanNode.getUuid())
+                                               .build())
+                               .build())
+        .build();
+  }
+
+  private PlanNode prepareRollbackPlanNode(List<CreateExecutionPlanResponse> planForRollbackSteps) {
+    if (isEmpty(planForRollbackSteps)) {
+      return null;
+    }
+
+    return PlanNode.builder()
+        .uuid(UUIDGenerator.generateUuid())
+        .identifier("rollbackSteps")
+        .name("rollbacks steps")
+        .skipExpressionChain(true)
+        .stepType(SectionChainStep.STEP_TYPE)
+        .facilitatorObtainment(FacilitatorObtainment.builder()
+                                   .type(FacilitatorType.builder().type(FacilitatorType.CHILD_CHAIN).build())
+                                   .build())
+        .stepParameters(SectionChainStepParameters.builder()
+                            .childNodeIds(planForRollbackSteps.stream()
+                                              .map(CreateExecutionPlanResponse::getStartingNodeId)
+                                              .collect(Collectors.toList()))
+                            .build())
         .build();
   }
 

@@ -153,7 +153,12 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
                             .parameters(new Object[] {gitFetchRequest})
                             .build();
 
-    DelegateTask delegateTask = DelegateTask.builder().accountId(accountId).waitId(waitId).data(taskData).build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(accountId)
+                                    .waitId(waitId)
+                                    .data(taskData)
+                                    .setupAbstractions(ambiance.getSetupAbstractions())
+                                    .build();
 
     K8sRollingStepPassThroughData k8sRollingStepPassThroughData = K8sRollingStepPassThroughData.builder()
                                                                       .k8sManifest(k8sManifest)
@@ -209,6 +214,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
                                     .data(taskData)
                                     .accountId(AmbianceHelper.getAccountId(ambiance))
                                     .waitId(UUIDGenerator.generateUuid())
+                                    .setupAbstractions(ambiance.getSetupAbstractions())
                                     .build();
 
     return TaskChainResponse.builder().task(delegateTask).chainEnd(true).passThroughData(infrastructure).build();
