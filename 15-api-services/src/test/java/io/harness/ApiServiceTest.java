@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 
 @Slf4j
-public class ApiServiceTest extends CategoryTest {
+public abstract class ApiServiceTest extends CategoryTest {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public ApiServiceRule apiServiceRule = new ApiServiceRule(lifecycleRule.getClosingFactory());
 }

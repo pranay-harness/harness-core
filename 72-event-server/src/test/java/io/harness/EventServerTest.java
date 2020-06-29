@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 
 @Slf4j
-public class EventServerTest extends CategoryTest {
+public abstract class EventServerTest extends CategoryTest {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public EventServerRule apiServiceRule = new EventServerRule(lifecycleRule.getClosingFactory());
 }

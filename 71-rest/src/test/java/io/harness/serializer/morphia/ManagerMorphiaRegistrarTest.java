@@ -49,20 +49,6 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void testManagerClassesModule() {
-    new ManagerMorphiaRegistrar().testClassesModule();
-  }
-
-  @Test
-  @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
-  public void testManagerImplementationClassesModule() {
-    new ManagerMorphiaRegistrar().testImplementationClassesModule();
-  }
-
-  @Test
-  @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
   public void testManagerImplementationClasses() {
     Map<String, Class> classes = new HashedMap(objectFactory.getMorphiaInterfaceImplementers());
 

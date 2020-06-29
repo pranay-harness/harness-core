@@ -1,12 +1,12 @@
 package io.harness;
 
-import io.harness.rule.CiBeansRule;
+import io.harness.rule.CommonRule;
 import io.harness.rule.LifecycleRule;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 
 @Slf4j
-public abstract class CiBeansTest extends CategoryTest {
+public abstract class CommonTest extends CategoryTest {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
-  @Rule public CiBeansRule apiServiceRule = new CiBeansRule(lifecycleRule.getClosingFactory());
+  @Rule public CommonRule apiServiceRule = new CommonRule(lifecycleRule.getClosingFactory());
 }
