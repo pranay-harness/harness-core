@@ -36,13 +36,13 @@ public class ProjectResourceTest extends BaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void testCreateProject() {
-    assertFalse(projectResource.get(randomAlphabetic(10)).isPresent());
+    assertFalse(projectResource.get(randomAlphabetic(10)).getData().isPresent());
 
     CreateProjectDTO createProjectDTO = random(CreateProjectDTO.class);
-    ProjectDTO projectDTO = projectResource.create(createProjectDTO);
+    ProjectDTO projectDTO = projectResource.create(createProjectDTO).getData();
 
     assertTrue(isNotEmpty(projectDTO.getId()));
-    assertEquals(projectDTO, projectResource.get(projectDTO.getId()).orElse(null));
+    assertEquals(projectDTO, projectResource.get(projectDTO.getId()).getData().orElse(null));
   }
 
   @Test
@@ -50,11 +50,11 @@ public class ProjectResourceTest extends BaseTest {
   @Category(UnitTests.class)
   public void testList_For_OrgIdFilterOnly() {
     String orgId = "ABC";
-    assertTrue(projectResource.list(orgId, "", 0, 10, null).isEmpty());
+    assertTrue(projectResource.list(orgId, "", 0, 10, null).getData().isEmpty());
 
     List<ProjectDTO> createdProjectDTOs = createProjects(orgId, ACCOUNT_ID, 2);
 
-    Page<ProjectDTO> projectDTOs = projectResource.list(orgId, "", 0, 10, null);
+    Page<ProjectDTO> projectDTOs = projectResource.list(orgId, "", 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOs);
     assertEquals("Count of DTOs should match", createdProjectDTOs.size(), projectDTOs.getTotalElements());
     assertNotNull("Page contents should not be null", projectDTOs.getContent());
@@ -78,7 +78,7 @@ public class ProjectResourceTest extends BaseTest {
           CreateProjectDTO projectDTO = random(CreateProjectDTO.class);
           projectDTO.setOrgId(orgId);
           projectDTO.setAccountId(accountId);
-          return projectResource.create(projectDTO);
+          return projectResource.create(projectDTO).getData();
         })
         .collect(Collectors.toList());
   }
@@ -95,7 +95,7 @@ public class ProjectResourceTest extends BaseTest {
 
     List<ProjectDTO> secondOrgProjectDTOs = createProjects(secondOrgId, ACCOUNT_ID, 2);
 
-    final Page<ProjectDTO> projectDTOS = projectResource.list(null, "orgId==" + firstOrgId, 0, 10, null);
+    final Page<ProjectDTO> projectDTOS = projectResource.list(null, "orgId==" + firstOrgId, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOS);
     assertEquals("Count of DTOs should match", firstOrgProjectDTOs.size(), projectDTOS.getTotalElements());
     assertNotNull("Page contents should not be null", projectDTOS.getContent());
@@ -112,7 +112,8 @@ public class ProjectResourceTest extends BaseTest {
       assertTrue("Fetched DTO should be present ", isPresentInResult);
     });
 
-    final Page<ProjectDTO> allProjectDTOS = projectResource.list(null, "accountId==" + ACCOUNT_ID, 0, 10, null);
+    final Page<ProjectDTO> allProjectDTOS =
+        projectResource.list(null, "accountId==" + ACCOUNT_ID, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOS);
     assertEquals("Count of DTOs should match", firstOrgProjectDTOs.size() + secondOrgProjectDTOs.size(),
         allProjectDTOS.getTotalElements());
@@ -136,13 +137,13 @@ public class ProjectResourceTest extends BaseTest {
   @Category(UnitTests.class)
   public void testUpdateExistentProject() {
     CreateProjectDTO createProjectDTO = random(CreateProjectDTO.class);
-    ProjectDTO createdProject = projectResource.create(createProjectDTO);
+    ProjectDTO createdProject = projectResource.create(createProjectDTO).getData();
 
     UpdateProjectDTO updateProjectDTO = random(UpdateProjectDTO.class);
-    ProjectDTO updatedProject = projectResource.update(createdProject.getId(), updateProjectDTO).orElse(null);
+    ProjectDTO updatedProject = projectResource.update(createdProject.getId(), updateProjectDTO).getData().orElse(null);
 
     assertNotNull(updatedProject);
-    assertEquals(updatedProject, projectResource.get(createdProject.getId()).orElse(null));
+    assertEquals(updatedProject, projectResource.get(createdProject.getId()).getData().orElse(null));
 
     assertEquals(updateProjectDTO.getName(), updatedProject.getName());
     assertEquals(updateProjectDTO.getDescription(), updatedProject.getDescription());
@@ -159,7 +160,7 @@ public class ProjectResourceTest extends BaseTest {
   @Category(UnitTests.class)
   public void testUpdateNonExistentProject() {
     UpdateProjectDTO updateProjectDTO = random(UpdateProjectDTO.class);
-    Optional<ProjectDTO> updatedProject = projectResource.update(randomAlphabetic(10), updateProjectDTO);
+    Optional<ProjectDTO> updatedProject = projectResource.update(randomAlphabetic(10), updateProjectDTO).getData();
 
     assertFalse(updatedProject.isPresent());
   }
@@ -171,10 +172,10 @@ public class ProjectResourceTest extends BaseTest {
     CreateProjectDTO createOrganizationDTO = random(CreateProjectDTO.class);
     String accountId = randomAlphabetic(10);
     createOrganizationDTO.setAccountId(accountId);
-    ProjectDTO firstOrganization = projectResource.create(createOrganizationDTO);
+    ProjectDTO firstOrganization = projectResource.create(createOrganizationDTO).getData();
 
-    boolean isDeleted = projectResource.delete(firstOrganization.getId());
+    boolean isDeleted = projectResource.delete(firstOrganization.getId()).getData();
     assertThat(isDeleted).isTrue();
-    assertThat(projectResource.get(firstOrganization.getId()).isPresent()).isFalse();
+    assertThat(projectResource.get(firstOrganization.getId()).getData().isPresent()).isFalse();
   }
 }
