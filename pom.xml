@@ -72,6 +72,7 @@
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
         <grpc.version>1.21.0</grpc.version>
+        <guice.version>4.2.3</guice.version>
         <ibatis.core.version>3.0</ibatis.core.version>
         <jacoco.filename>jacoco</jacoco.filename>
         <jacoco.integration.skip>true</jacoco.integration.skip>
@@ -645,17 +646,17 @@
             <dependency>
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
-                <version>4.0</version>
+                <version>${guice.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.inject.extensions</groupId>
                 <artifactId>guice-assistedinject</artifactId>
-                <version>4.0</version>
+                <version>${guice.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.inject.extensions</groupId>
                 <artifactId>guice-multibindings</artifactId>
-                <version>4.0</version>
+                <version>${guice.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.protobuf</groupId>
