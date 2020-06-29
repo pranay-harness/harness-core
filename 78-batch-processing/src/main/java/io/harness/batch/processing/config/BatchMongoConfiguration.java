@@ -50,7 +50,7 @@ public class BatchMongoConfiguration {
   @Bean
   @Profile("!test")
   public MorphiaModule morphiaModule() {
-    return MorphiaModule.getInstance();
+    return new MorphiaModule(true);
   }
 
   @Bean
