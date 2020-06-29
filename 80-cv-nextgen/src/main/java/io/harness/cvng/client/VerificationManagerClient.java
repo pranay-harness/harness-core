@@ -1,6 +1,7 @@
 package io.harness.cvng.client;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_DATA_COLLECTION_PATH;
+import static io.harness.cvng.core.services.CVNextGenConstants.CV_NEXTGEN_RESOURCE_PREFIX;
 
 import io.harness.rest.RestResponse;
 import retrofit2.Call;
@@ -9,6 +10,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 import java.util.List;
+import javax.ws.rs.container.ContainerRequestContext;
 
 /**
  * Interface containing API's to interact with manager.
@@ -25,4 +27,8 @@ public interface VerificationManagerClient {
   @POST(CV_DATA_COLLECTION_PATH + "/create-task")
   Call<RestResponse<String>> createDataCollectionTask(
       @Query("accountId") String accountId, @Query("cvConfigId") String cvConfigId);
+
+  @GET(CV_NEXTGEN_RESOURCE_PREFIX + "/auth/validate-token")
+  Call<RestResponse<Boolean>> authenticateUser(
+      @Query("containerRequestContext") ContainerRequestContext containerRequestContext);
 }

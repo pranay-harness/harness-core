@@ -108,7 +108,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
   }
 
   @VisibleForTesting
-  ClientType[] getClientTypesFromHarnessApiKeyAuth(ResourceInfo resourceInfo) {
+  protected ClientType[] getClientTypesFromHarnessApiKeyAuth(ResourceInfo resourceInfo) {
     Method resourceMethod = resourceInfo.getResourceMethod();
     HarnessApiKeyAuth methodAnnotations = resourceMethod.getAnnotation(HarnessApiKeyAuth.class);
     if (null != methodAnnotations) {
@@ -125,7 +125,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
   }
 
   @VisibleForTesting
-  boolean isHarnessClientApi(ResourceInfo resourceInfo) {
+  protected boolean isHarnessClientApi(ResourceInfo resourceInfo) {
     return resourceInfo.getResourceMethod().getAnnotation(HarnessApiKeyAuth.class) != null
         || resourceInfo.getResourceClass().getAnnotation(HarnessApiKeyAuth.class) != null;
   }
@@ -137,11 +137,11 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");
   }
 
-  private boolean isDelegateRequest(ContainerRequestContext requestContext) {
+  protected boolean isDelegateRequest(ContainerRequestContext requestContext) {
     return delegateAPI() && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate ");
   }
 
-  private boolean delegateAPI() {
+  protected boolean delegateAPI() {
     Class<?> resourceClass = resourceInfo.getResourceClass();
     Method resourceMethod = resourceInfo.getResourceMethod();
 
@@ -163,7 +163,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     }
   }
 
-  private String getRequestParamFromContext(
+  protected String getRequestParamFromContext(
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
     return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : pathParameters.getFirst(key);
   }
@@ -176,7 +176,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
         || resourceClass.getAnnotation(PublicApi.class) != null;
   }
 
-  private boolean isLearningEngineServiceRequest(ContainerRequestContext requestContext) {
+  protected boolean isLearningEngineServiceRequest(ContainerRequestContext requestContext) {
     return learningEngineServiceAPI()
         && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "LearningEngine ");
   }
@@ -189,7 +189,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
         || resourceClass.getAnnotation(LearningEngineAuth.class) != null;
   }
 
-  private void validateLearningEngineServiceToken(String learningEngineServiceToken) {
+  protected void validateLearningEngineServiceToken(String learningEngineServiceToken) {
     String jwtLearningEngineServiceSecret = verificationServiceSecretManager.getVerificationServiceSecretKey();
     if (StringUtils.isBlank(jwtLearningEngineServiceSecret)) {
       throw new InvalidRequestException("no secret key for service found for " + ServiceType.LEARNING_ENGINE);
@@ -212,7 +212,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     }
   }
 
-  private void validateDelegateToken(String accountId, String tokenString) {
+  protected void validateDelegateToken(String accountId, String tokenString) {
     logger.info("Delegate token validation, account id [{}] token requested", accountId);
     String accountKey = cvNextGenCache.getAccountKey(accountId);
     if (accountKey == null) {
@@ -251,7 +251,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     }
   }
 
-  private boolean validateHarnessClientApiRequest(ClientType clientType, String apiKey) {
+  protected boolean validateHarnessClientApiRequest(ClientType clientType, String apiKey) {
     if (clientType == null || apiKey == null) {
       return false;
     }
@@ -270,11 +270,11 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     return getDecryptedKey(encryptedApiKey);
   }
 
-  private String getDecryptedKey(byte[] encryptedKey) {
+  protected String getDecryptedKey(byte[] encryptedKey) {
     return new String(EncryptionUtils.decrypt(encryptedKey, null), Charset.forName("UTF-8"));
   }
 
-  private String extractToken(ContainerRequestContext requestContext, String prefix) {
+  protected String extractToken(ContainerRequestContext requestContext, String prefix) {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorizationHeader == null || !authorizationHeader.startsWith(prefix)) {
       throw new UnauthorizedException("Invalid token", USER_ADMIN);

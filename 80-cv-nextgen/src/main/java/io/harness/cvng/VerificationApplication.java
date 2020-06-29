@@ -43,7 +43,6 @@ import io.harness.mongo.MongoModule;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
-import io.harness.security.VerificationServiceAuthenticationFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -200,7 +199,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
   }
 
   private void registerAuthFilters(Environment environment, Injector injector) {
-    environment.jersey().register(injector.getInstance(VerificationServiceAuthenticationFilter.class));
+    environment.jersey().register(injector.getInstance(CVNGAuthenticationFilter.class));
   }
 
   private void initializeServiceSecretKeys(Injector injector) {
