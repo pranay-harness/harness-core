@@ -25,7 +25,7 @@ import java.util.Map;
 public class TestConfiguration implements MongoRuleMixin {
   @Bean
   MorphiaModule morphiaModule() {
-    return MorphiaModule.getInstance();
+    return new MorphiaModule(true);
   }
 
   @Bean

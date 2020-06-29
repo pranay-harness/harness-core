@@ -2,11 +2,12 @@ package io.harness.morphia;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 
 import io.harness.exception.GeneralException;
 import io.harness.govern.DependencyModule;
-import io.harness.govern.DependencyProviderModule;
+import io.harness.testing.TestExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.mongodb.morphia.Morphia;
@@ -20,7 +21,7 @@ import java.util.Collections;
 import java.util.Set;
 
 @Slf4j
-public class MorphiaModule extends DependencyProviderModule {
+public class MorphiaModule extends DependencyModule {
   private static volatile MorphiaModule instance;
 
   public static MorphiaModule getInstance() {
@@ -28,6 +29,16 @@ public class MorphiaModule extends DependencyProviderModule {
       instance = new MorphiaModule();
     }
     return instance;
+  }
+
+  private boolean inSpring;
+
+  public MorphiaModule() {
+    inSpring = false;
+  }
+
+  public MorphiaModule(boolean inSpring) {
+    this.inSpring = inSpring;
   }
 
   private static synchronized Set<Class> collectMorphiaClasses() {
@@ -88,6 +99,15 @@ public class MorphiaModule extends DependencyProviderModule {
 
     if (!success) {
       throw new GeneralException("there are classes that are not registered");
+    }
+  }
+
+  @Override
+  protected void configure() {
+    if (!inSpring) {
+      MapBinder<String, TestExecution> testExecutionMapBinder =
+          MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
+      testExecutionMapBinder.addBinding("MorphiaRegistration").toInstance(() -> testAutomaticSearch());
     }
   }
 }

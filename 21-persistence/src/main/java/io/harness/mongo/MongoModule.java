@@ -64,42 +64,6 @@ public class MongoModule extends DependencyModule {
     return new HObjectFactory();
   }
 
-  /*
-   [secondary-db]: Uncomment the below section of code if you want to connect to another database
-   */
-
-  /*
-  @Provides
-  @Named("secondaryDatastore")
-  @Singleton
-  public AdvancedDatastore secondaryDatastore(
-      @Named("secondaryMongoConfig") MongoConfig mongoConfig, Morphia morphia, ObjectFactory objectFactory) {
-    MongoClientOptions primaryMongoClientOptions = MongoClientOptions.builder()
-                                                       .retryWrites(defaultMongoClientOptions.getRetryWrites())
-                                                       .connectTimeout(mongoConfig.getConnectTimeout())
-                                                       .serverSelectionTimeout(mongoConfig.getServerSelectionTimeout())
-                                                       .maxConnectionIdleTime(mongoConfig.getMaxConnectionIdleTime())
-                                                       .connectionsPerHost(mongoConfig.getConnectionsPerHost())
-                                                       .readPreference(mongoConfig.getReadPreference())
-                                                       .build();
-    MongoClientURI uri =
-        new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(primaryMongoClientOptions));
-    MongoClient mongoClient = new MongoClient(uri);
-
-    AdvancedDatastore primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
-    primaryDatastore.setQueryFactory(new QueryFactory());
-
-    IndexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia);
-
-    HObjectFactory hObjectFactory = (HObjectFactory) objectFactory;
-
-    ClassRefactoringManager.updateMovedClasses(primaryDatastore, hObjectFactory.getMorphiaInterfaceImplementers());
-    hObjectFactory.setDatastore(primaryDatastore);
-
-    return primaryDatastore;
-  }
-  */
-
   @Provides
   @Named("primaryDatastore")
   @Singleton
