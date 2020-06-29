@@ -29,7 +29,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -44,7 +43,6 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "NodeExecutionKeys")
 @Entity(value = "nodeExecutions")
 @Document("nodeExecutions")
-@TypeAlias("nodeExecutions")
 public final class NodeExecution implements PersistentEntity, UuidAware {
   // Immutable
   @Id @org.mongodb.morphia.annotations.Id String uuid;

@@ -21,7 +21,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -47,7 +46,6 @@ import java.util.List;
 @CdIndex(name = "planExecutionIdIdx", fields = { @Field(OutcomeInstanceKeys.planExecutionId) })
 @Entity(value = "outcomeInstances")
 @Document("outcomeInstances")
-@TypeAlias("outcomeInstances")
 public class OutcomeInstance implements PersistentEntity, UuidAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotEmpty String planExecutionId;

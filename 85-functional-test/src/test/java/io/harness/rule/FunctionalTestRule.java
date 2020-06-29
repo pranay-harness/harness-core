@@ -23,6 +23,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import graphql.GraphQL;
 import io.dropwizard.Configuration;
+import io.harness.OrchestrationPersistenceConfig;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
@@ -167,7 +168,8 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new ProviderModule() {
       @Override
       public void configure() {
-        install(new SpringModule(BeanFactoryProvider.from(FunctionalTestSpringMongoConfig.class)));
+        install(new SpringModule(
+            BeanFactoryProvider.from(FunctionalTestSpringMongoConfig.class, OrchestrationPersistenceConfig.class)));
       }
 
       @EnableMongoRepositories(basePackages = "io.harness")

@@ -8,6 +8,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import graphql.ExecutionInput;
 import graphql.GraphQL;
@@ -83,7 +84,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
   @Inject AuthHandler authHandler;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private MongoTemplate mongoTemplate;
+  @Inject @Named("orchestrationMongoTemplate") private MongoTemplate mongoTemplate;
   @Inject CommandLibraryServiceExecutor commandLibraryServiceExecutor;
 
   @Override
