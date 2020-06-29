@@ -1,4 +1,4 @@
-package io.harness.ng.core.utils;
+package io.harness.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
