@@ -16,6 +16,7 @@ import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -231,7 +232,7 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
   }
 
   protected String addEnvVariablesCollector(
-      String command, List<String> envVariablesToCollect, String envVariablesOutputFilePath) {
+      String command, List<String> envVariablesToCollect, String envVariablesOutputFilePath, ScriptType scriptType) {
     StringBuilder wrapperCommand = new StringBuilder(command);
     wrapperCommand.append('\n');
     String redirect = ">";
@@ -241,6 +242,7 @@ public abstract class AbstractScriptExecutor implements ScriptExecutor {
           .append(' ')
           .append(env)
           .append("=\"$")
+          .append(scriptType == ScriptType.POWERSHELL ? "env:" : "")
           .append(env)
           .append("\" ")
           .append(HARNESS_END_TOKEN)

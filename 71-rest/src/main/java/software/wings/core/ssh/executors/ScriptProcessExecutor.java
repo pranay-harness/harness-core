@@ -227,8 +227,14 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
     if (!envVariablesToCollect.isEmpty()) {
       envVariablesFilename = "harness-" + this.config.getExecutionId() + ".out";
       envVariablesOutputFile = new File(workingDirectory, envVariablesFilename);
-      command = addEnvVariablesCollector(command, envVariablesToCollect, envVariablesOutputFile.getAbsolutePath());
+      command = addEnvVariablesCollector(
+          command, envVariablesToCollect, envVariablesOutputFile.getAbsolutePath(), this.scriptType);
     }
+
+    if (this.scriptType == ScriptType.POWERSHELL) {
+      command = processPowerShellScript(command);
+    }
+
     Map<String, String> envVariablesMap = new HashMap<>();
     try (FileOutputStream outputStream = new FileOutputStream(scriptFile)) {
       outputStream.write(command.getBytes(Charset.forName("UTF-8")));
@@ -333,6 +339,13 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
             .withLogLine(line)
             .withExecutionResult(commandExecutionStatus)
             .build());
+  }
+
+  private String processPowerShellScript(String scriptString) {
+    StringBuilder scriptStringBuilder =
+        new StringBuilder("pwsh -ExecutionPolicy \"$ErrorActionPreference=Stop\" -Command \" & {");
+    scriptStringBuilder.append(scriptString.replace("$", "\\$").replace("\"", "\\\"")).append("}\"");
+    return scriptStringBuilder.toString();
   }
 
   @Override

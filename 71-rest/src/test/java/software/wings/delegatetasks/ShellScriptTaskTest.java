@@ -211,8 +211,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
     assertThat(commandExecutionResult).isNotNull();
     assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(commandExecutionResult.getCommandExecutionData()).isNotNull();
-    assertThat(scriptStringCaptor.getValue())
-        .isEqualTo("pwsh -ExecutionPolicy \"$ErrorActionPreference=Stop\" -Command \" & {Write-Host hello}\"");
+    assertThat(scriptStringCaptor.getValue()).isEqualTo("Write-Host hello");
   }
 
   @Test
