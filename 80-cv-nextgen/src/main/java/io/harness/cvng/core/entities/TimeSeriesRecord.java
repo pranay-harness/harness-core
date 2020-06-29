@@ -18,6 +18,7 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashSet;
@@ -38,11 +39,10 @@ public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAcces
   @FdIndex private String host;
   @FdIndex private String metricName;
   private double riskScore;
-  private long timeBucketBoundary;
+  private Instant bucketStartTime;
 
   private long createdAt;
   @Default private Set<TimeSeriesGroupValue> timeSeriesGroupValues = new HashSet<>();
-  private Set<TimeSeriesRiskSummary> timeSeriesRiskSummaries;
 
   @JsonIgnore
   @SchemaIgnore
@@ -56,16 +56,8 @@ public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAcces
   @EqualsAndHashCode(of = {"groupName", "timeStamp"})
   public static class TimeSeriesGroupValue {
     private String groupName;
-    private long timeStamp;
+    private Instant timeStamp;
     private double metricValue;
-  }
-
-  @Data
-  @Builder
-  @FieldNameConstants(innerTypeName = "TimeSeriesRiskSummaryKeys")
-  @EqualsAndHashCode(of = {"groupName"})
-  public static class TimeSeriesRiskSummary {
-    private String groupName;
     private double riskScore;
   }
 }
