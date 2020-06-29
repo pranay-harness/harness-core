@@ -14,6 +14,7 @@ import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.UpdateOptions;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +30,8 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
         -> hPersistence.getDatastore(TimeSeriesRecord.class)
                .update(hPersistence.createQuery(TimeSeriesRecord.class)
                            .filter(TimeSeriesRecordKeys.cvConfigId, timeSeriesRecordCell.getValue().getCvConfigId())
-                           .filter(TimeSeriesRecordKeys.timeBucketBoundary, timeSeriesRecordCell.getRowKey())
+                           .filter(TimeSeriesRecordKeys.bucketStartTime,
+                               Instant.ofEpochMilli(timeSeriesRecordCell.getRowKey()))
                            .filter(TimeSeriesRecordKeys.metricName, timeSeriesRecordCell.getColumnKey()),
                    hPersistence.createUpdateOperations(TimeSeriesRecord.class)
                        .set(TimeSeriesRecordKeys.accountId, timeSeriesRecordCell.getValue().getAccountId())
@@ -53,7 +55,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
                   .accountId(dataRecord.getAccountId())
                   .cvConfigId(dataRecord.getCvConfigId())
                   .accountId(dataRecord.getAccountId())
-                  .timeBucketBoundary(bucketBoundary)
+                  .bucketStartTime(Instant.ofEpochMilli(bucketBoundary))
                   .metricName(metricName)
                   .build());
         }
@@ -63,7 +65,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
                    .getTimeSeriesGroupValues()
                    .add(TimeSeriesGroupValue.builder()
                             .groupName(timeSeriesDataRecordGroupValue.getGroupName())
-                            .timeStamp(dataRecord.getTimeStamp())
+                            .timeStamp(Instant.ofEpochMilli(dataRecord.getTimeStamp()))
                             .metricValue(timeSeriesDataRecordGroupValue.getValue())
                             .build()));
       });

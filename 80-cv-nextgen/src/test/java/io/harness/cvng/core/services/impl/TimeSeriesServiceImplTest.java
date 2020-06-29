@@ -93,7 +93,7 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
       TimeSeriesRecord timeSeriesRecord = timeSeriesRecords.get(i);
       assertThat(timeSeriesRecord.getCvConfigId()).isEqualTo(cvConfigId);
       assertThat(timeSeriesRecord.getAccountId()).isEqualTo(accountId);
-      assertThat(timeSeriesRecord.getTimeBucketBoundary()).isEqualTo(0);
+      assertThat(timeSeriesRecord.getBucketStartTime().toEpochMilli()).isEqualTo(0);
       assertThat(timeSeriesRecord.getMetricName()).isEqualTo("metric-" + i);
       assertThat(timeSeriesRecord.getTimeSeriesGroupValues().size()).isEqualTo(numOfTxnx * numOfMins);
       ArrayList<TimeSeriesRecord.TimeSeriesGroupValue> timeSeriesGroupValues =
@@ -103,7 +103,7 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
           return StringUtils.compare(o1.getGroupName(), o2.getGroupName());
         }
         if (o1.getTimeStamp() != o2.getTimeStamp()) {
-          return Long.compare(o1.getTimeStamp(), o2.getTimeStamp());
+          return Long.compare(o1.getTimeStamp().toEpochMilli(), o2.getTimeStamp().toEpochMilli());
         }
         return 0;
       });
@@ -112,7 +112,8 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
       AtomicInteger recordNum = new AtomicInteger(0);
       timeSeriesGroupValues.forEach(timeSeriesGroupValue -> {
         assertThat(timeSeriesGroupValue.getGroupName()).isEqualTo("group-" + groupNum.get());
-        assertThat(timeSeriesGroupValue.getTimeStamp()).isEqualTo(TimeUnit.MINUTES.toMillis(timeStamp.get()));
+        assertThat(timeSeriesGroupValue.getTimeStamp().toEpochMilli())
+            .isEqualTo(TimeUnit.MINUTES.toMillis(timeStamp.get()));
         recordNum.incrementAndGet();
         timeStamp.incrementAndGet();
 
@@ -162,7 +163,8 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
     AtomicInteger metricNum = new AtomicInteger(0);
     timeSeriesRecords.forEach(timeSeriesRecord -> {
       assertThat(timeSeriesRecord.getMetricName()).isEqualTo("metric-" + metricNum.get());
-      assertThat(timeSeriesRecord.getTimeBucketBoundary()).isEqualTo(TimeUnit.MINUTES.toMillis(timeStamp.get()));
+      assertThat(timeSeriesRecord.getBucketStartTime().toEpochMilli())
+          .isEqualTo(TimeUnit.MINUTES.toMillis(timeStamp.get()));
       recordNum.incrementAndGet();
       metricNum.incrementAndGet();
 
