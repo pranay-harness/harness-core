@@ -54,6 +54,7 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     Map<String, String> metaData = new HashMap<>();
     CloudProvider k8SCloudProvider =
         cloudProviderService.getK8SCloudProvider(nodeInfo.getCloudProviderId(), nodeInfo.getProviderId());
+    String cloudProviderInstanceId = getCloudProviderInstanceId(nodeInfo.getProviderId());
     if (CloudProvider.UNKNOWN == k8SCloudProvider) {
       return InstanceInfo.builder().metaData(metaData).build();
     }
@@ -65,6 +66,7 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, labelsMap.get(K8sCCMConstants.INSTANCE_FAMILY));
     metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM, labelsMap.get(K8sCCMConstants.OPERATING_SYSTEM));
     metaData.put(InstanceMetaDataConstants.NODE_UID, nodeUid);
+    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, cloudProviderInstanceId);
     metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, getInstanceCategory(k8SCloudProvider, labelsMap).name());
     if (null != labelsMap.get(K8sCCMConstants.COMPUTE_TYPE)) {
       metaData.put(InstanceMetaDataConstants.COMPUTE_TYPE, labelsMap.get(K8sCCMConstants.COMPUTE_TYPE));
@@ -87,6 +89,7 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
         .settingId(nodeInfo.getCloudProviderId())
         .instanceId(nodeUid)
         .clusterId(clusterId)
+        .cloudProviderInstanceId(cloudProviderInstanceId)
         .clusterName(nodeInfo.getClusterName())
         .instanceName(nodeInfo.getNodeName())
         .instanceType(InstanceType.K8S_NODE)
@@ -124,5 +127,10 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
       }
     }
     return instanceCategory;
+  }
+
+  @VisibleForTesting
+  public String getCloudProviderInstanceId(String providerId) {
+    return providerId.substring(providerId.lastIndexOf('/') + 1);
   }
 }

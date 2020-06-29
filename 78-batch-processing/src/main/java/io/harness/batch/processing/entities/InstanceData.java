@@ -62,6 +62,7 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   String instanceName;
   String clusterName;
   String clusterId;
+  String cloudProviderInstanceId;
   InstanceType instanceType;
   Resource totalResource;
   Resource limitResource;

@@ -16,6 +16,7 @@ public class InstanceInfo {
   String clusterId;
   String clusterName;
   String instanceName;
+  String cloudProviderInstanceId;
   InstanceType instanceType;
   InstanceState instanceState;
   Resource resource;
