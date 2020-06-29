@@ -102,6 +102,10 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
         updateOperations.set(InstanceDataKeys.totalResource, instanceInfo.getResource());
       }
 
+      if (!isNull(instanceInfo.getCloudProviderInstanceId())) {
+        updateOperations.set(InstanceDataKeys.cloudProviderInstanceId, instanceInfo.getCloudProviderInstanceId());
+      }
+
       if (!isNull(instanceInfo.getResourceLimit())) {
         updateOperations.set(InstanceDataKeys.limitResource, instanceInfo.getResourceLimit());
       }

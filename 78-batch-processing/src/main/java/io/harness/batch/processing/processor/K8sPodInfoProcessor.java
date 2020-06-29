@@ -87,6 +87,9 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
       if (null != nodeMetaData.get(InstanceMetaDataConstants.COMPUTE_TYPE)) {
         metaData.put(InstanceMetaDataConstants.COMPUTE_TYPE, nodeMetaData.get(InstanceMetaDataConstants.COMPUTE_TYPE));
       }
+      if (null != instanceData.getCloudProviderInstanceId()) {
+        metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData.getCloudProviderInstanceId());
+      }
     } else {
       logger.warn(
           "Node detail not found settingId {} node name {}", podInfo.getCloudProviderId(), podInfo.getNodeName());

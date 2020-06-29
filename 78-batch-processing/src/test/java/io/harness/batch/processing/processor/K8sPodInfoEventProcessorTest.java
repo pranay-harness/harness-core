@@ -65,6 +65,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
   private static final long MEMORY_LIMIT_AMOUNT = 1024L * 1024 * 2;
   private static final String NODE_NAME = "node_name";
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
+  private static final String CLOUD_PROVIDER_INSTANCE_ID = "cloud_provider_instance_id";
   private static final String ACCOUNT_ID = "account_id";
   private static final String CLUSTER_ID = "cluster_id";
   private static final String CLUSTER_NAME = "cluster_name";
@@ -157,6 +158,8 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     assertThat(metaData.get(InstanceMetaDataConstants.WORKLOAD_NAME)).isEqualTo(WORKLOAD_NAME);
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY))
         .isEqualTo(String.valueOf((double) MEMORY_AMOUNT));
+    assertThat(metaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID))
+        .isEqualTo(CLOUD_PROVIDER_INSTANCE_ID);
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU))
         .isEqualTo(String.valueOf((double) CPU_AMOUNT));
     verify(workloadRepository).savePodWorkload(ACCOUNT_ID, (PodInfo) k8sPodInfoMessage.getMessage());
@@ -216,6 +219,7 @@ public class K8sPodInfoEventProcessorTest extends CategoryTest {
     return InstanceData.builder()
         .instanceId(NODE_NAME)
         .instanceType(InstanceType.K8S_NODE)
+        .cloudProviderInstanceId(CLOUD_PROVIDER_INSTANCE_ID)
         .totalResource(instanceResource)
         .metaData(nodeMetaData)
         .build();

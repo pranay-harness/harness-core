@@ -19,7 +19,6 @@ import io.harness.batch.processing.events.timeseries.service.intfc.CostEventServ
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -47,6 +46,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
 
   private static final String RUNNING_INSTANCE_ID = "running_instance_id";
   private static final String INSTANCE_NAME = "instance_name";
+  private static final String CLOUD_PROVIDER_INSTANCE_ID = "cloud_provider_instance_id";
   private static final String ACCOUNT_ID = "account_id";
   private static final String CLOUD_PROVIDER_ID = "cloud_provider_id";
   private static final String CLUSTER_NAME = "cluster_name";
@@ -111,7 +111,6 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
-  @Ignore("TODO: Ignoring for now will enable with deployment events.")
   public void shouldUpsertInstanceInfo() {
     InstanceData instanceData = instanceDataDao.upsert(instanceInfo());
     verify(costEventService).updateDeploymentEvent(costEventDataArgumentCaptor.capture());
@@ -128,6 +127,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
     assertThat(instanceData.getTotalResource()).isEqualTo(resource());
     assertThat(instanceData.getLabels()).isEqualTo(label());
     assertThat(instanceData.getUsageStartTime()).isNull();
+    assertThat(instanceData.getCloudProviderInstanceId()).isEqualTo(CLOUD_PROVIDER_INSTANCE_ID);
     InstanceData duplicateInstanceData = instanceDataDao.upsert(instanceInfo());
     assertThat(duplicateInstanceData).isNotNull();
   }
@@ -192,6 +192,7 @@ public class InstanceDataDaoImplTest extends WingsBaseTest {
         .accountId(ACCOUNT_ID)
         .instanceName(INSTANCE_NAME)
         .instanceId(RUNNING_INSTANCE_ID)
+        .cloudProviderInstanceId(CLOUD_PROVIDER_INSTANCE_ID)
         .instanceType(InstanceType.K8S_POD)
         .settingId(CLOUD_PROVIDER_ID)
         .clusterId(CLUSTER_ID)

@@ -136,6 +136,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
     assertThat(instanceInfo.getInstanceType()).isEqualTo(InstanceType.K8S_NODE);
     assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
+    assertThat(instanceInfo.getCloudProviderInstanceId()).isEqualTo("gke-dev-private-delegate-596a23b8-hww7");
     assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
     assertThat(infoResource.getMemoryMb()).isEqualTo(1024.0);
     assertThat(infoAllocatableResource.getCpuUnits()).isEqualTo(1024.0);
@@ -195,6 +196,15 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
+  public void shouldReturnCloudProviderInstance() {
+    String providerId = "aws:///eu-west-2c/i-072ecaefff88547de";
+    String cloudProviderInstanceId = k8sNodeInfoProcessor.getCloudProviderInstanceId(providerId);
+    assertThat(cloudProviderInstanceId).isEqualTo("i-072ecaefff88547de");
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
   public void shouldReturnAzureSpotInstance() {
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
@@ -231,6 +241,7 @@ public class K8sNodeInfoEventProcessorTest extends CategoryTest {
                             .setClusterId(clusterId)
                             .setClusterName(clusterName)
                             .setCreationTime(timestamp)
+                            .setProviderId("gce://qa-setup/us-west1-b/gke-dev-private-delegate-596a23b8-hww7")
                             .putAllLabels(label)
                             .putAllAllocatableResource(resource)
                             .build();
