@@ -232,6 +232,8 @@ public class PermissionAttribute {
 
     K8S_EVENT_YAML_DIFF(ACCOUNT),
 
+    K8S_RECOMMENDATION(ACCOUNT),
+
     CE_CLUSTER(ACCOUNT),
 
     CE_CONNECTOR(ACCOUNT),

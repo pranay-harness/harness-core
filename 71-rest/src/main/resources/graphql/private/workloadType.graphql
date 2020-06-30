@@ -1,0 +1,13 @@
+input WorkloadTypeFilter {
+  operator: EnumOperator
+  values: [WorkloadType]
+}
+
+enum WorkloadType {
+  DaemonSet
+  StatefulSet
+  Deployment
+  ReplicaSet
+  Job
+  CronJob
+}
