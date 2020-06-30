@@ -62,4 +62,6 @@ public interface AwsAsgHelperServiceDelegate {
       String asgName, ExecutionLogCallback logCallback);
   void attachScalingPoliciesToAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String asgName, List<String> scalingPolicyJSONs, ExecutionLogCallback logCallback);
+  void addUpdateTagAutoScalingGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String asgName,
+      String region, String tagKey, String tagValue, ExecutionLogCallback executionLogCallback);
 }

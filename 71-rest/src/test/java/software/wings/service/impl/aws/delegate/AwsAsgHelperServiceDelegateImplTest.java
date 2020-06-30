@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -20,6 +21,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.BG_BLUE;
+import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.BG_VERSION;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.HARNESS_AUTOSCALING_GROUP_TAG;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 
@@ -31,6 +34,7 @@ import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationResult;
+import com.amazonaws.services.autoscaling.model.CreateOrUpdateTagsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsResult;
 import com.amazonaws.services.autoscaling.model.DescribePoliciesResult;
@@ -39,6 +43,7 @@ import com.amazonaws.services.autoscaling.model.LaunchTemplateSpecification;
 import com.amazonaws.services.autoscaling.model.PutScalingPolicyResult;
 import com.amazonaws.services.autoscaling.model.ScalingPolicy;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityResult;
+import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
@@ -91,6 +96,31 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(result.size()).isEqualTo(2);
     assertThat(result.get(0)).isEqualTo("name1");
     assertThat(result.get(1)).isEqualTo("name2");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testAddUpdateTagAutoScalingGroup() {
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    ExecutionLogCallback mockExecutionLogCallback = mock(ExecutionLogCallback.class);
+    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doNothing().when(mockTracker).trackASGCall(anyString());
+    String asgName = "asg_name";
+    String tagKey = BG_VERSION;
+    String tagValue = BG_BLUE;
+    awsAsgHelperServiceDelegate.addUpdateTagAutoScalingGroup(
+        AwsConfig.builder().build(), emptyList(), asgName, "us-east-1", tagKey, tagValue, mockExecutionLogCallback);
+    CreateOrUpdateTagsRequest createOrUpdateTagsRequest = new CreateOrUpdateTagsRequest();
+    Tag blueVersionTag = new Tag();
+    blueVersionTag.withKey(tagKey)
+        .withValue(tagValue)
+        .withPropagateAtLaunch(true)
+        .withResourceId(asgName)
+        .withResourceType("auto-scaling-group");
+    createOrUpdateTagsRequest.withTags(blueVersionTag);
+    verify(mockClient).createOrUpdateTags(createOrUpdateTagsRequest);
   }
 
   @Test
