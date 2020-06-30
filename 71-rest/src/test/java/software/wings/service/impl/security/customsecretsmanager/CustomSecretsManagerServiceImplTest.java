@@ -43,6 +43,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.security.CustomSecretsManagerEncryptionService;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
@@ -56,6 +57,7 @@ import java.util.Set;
 
 public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Mock private AccountService accountService;
+  @Mock private CustomSecretsManagerEncryptionService customSecretsManagerEncryptionService;
   @Inject @InjectMocks private TemplateService templateService;
   @Inject @InjectMocks private TemplateGalleryService templateGalleryService;
   @Inject @InjectMocks private CustomSecretsManagerService customSecretsManagerService;
