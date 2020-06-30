@@ -19,6 +19,7 @@ import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.IndexType;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Update;
 import lombok.Data;
@@ -52,6 +53,11 @@ import javax.annotation.Nullable;
                                          , @Field("envId"), @Field("name") })
 @CdIndex(name = "app_infratype", fields = { @Field("appId")
                                             , @Field("infraMappingType") })
+@CdIndex(name = "app_envId_serviceTemplateId",
+    fields =
+    {
+      @Field("appId"), @Field("envId"), @Field("serviceTemplateId"), @Field(value = "createdAt", type = IndexType.DESC)
+    })
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")
