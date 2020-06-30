@@ -1,7 +1,5 @@
 package io.harness.cvng.core.resources;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.CV_NEXTGEN_RESOURCE_PREFIX;
-
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -24,14 +22,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api(CV_NEXTGEN_RESOURCE_PREFIX + "/metric-pack")
-@Path(CV_NEXTGEN_RESOURCE_PREFIX + "/metric-pack")
+@Api("/metric-pack")
+@Path("/metric-pack")
 @Produces("application/json")
 public class MetricPackResource {
   @Inject private MetricPackService metricPackService;
 
   @GET
-  @Path("/metric-packs")
   @Timed
   @ExceptionMetered
   public RestResponse<List<MetricPack>> getMetricPacks(@QueryParam("accountId") @NotNull String accountId,
@@ -41,7 +38,6 @@ public class MetricPackResource {
   }
 
   @POST
-  @Path("/metric-packs")
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> saveMetricPacks(@QueryParam("accountId") @NotNull String accountId,

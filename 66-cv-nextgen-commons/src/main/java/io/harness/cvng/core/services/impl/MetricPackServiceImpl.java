@@ -85,11 +85,8 @@ public class MetricPackServiceImpl implements MetricPackService {
     }
 
     metricPacksFromDb.forEach(metricPack -> metricPack.getMetrics().forEach(metricDefinition -> {
-      if (metricDefinition.getFailFastHints() == null) {
-        metricDefinition.setFailFastHints(Collections.emptyList());
-      }
-      if (metricDefinition.getIgnoreHints() == null) {
-        metricDefinition.setIgnoreHints(Collections.emptyList());
+      if (metricDefinition.getThresholds() == null) {
+        metricDefinition.setThresholds(Collections.emptyList());
       }
     }));
     return metricPacksFromDb;
@@ -112,10 +109,8 @@ public class MetricPackServiceImpl implements MetricPackService {
             metricPack.setAccountId(accountId);
             metricPack.setProjectIdentifier(projectIdentifier);
             metricPack.setDataSourceType(dataSourceType);
-            metricPack.getMetrics().forEach(metricDefinition -> {
-              metricDefinition.setFailFastHints(Collections.emptyList());
-              metricDefinition.setIgnoreHints(Collections.emptyList());
-            });
+            metricPack.getMetrics().forEach(
+                metricDefinition -> { metricDefinition.setThresholds(Collections.emptyList()); });
             metricPacks.put(metricPack.getIdentifier(), metricPack);
           } catch (IOException e) {
             throw new IllegalStateException("Error reading metric packs", e);
@@ -196,17 +191,17 @@ public class MetricPackServiceImpl implements MetricPackService {
     List<TimeSeriesThreshold> timeSeriesThresholds = new ArrayList<>();
     metricPack.getMetrics().forEach(metricDefinition -> {
       final List<TimeSeriesThresholdCriteria> thresholds = metricDefinition.getType().getThresholds();
-      thresholds.forEach(threshold -> {
-        timeSeriesThresholds.add(TimeSeriesThreshold.builder()
-                                     .accountId(accountId)
-                                     .projectIdentifier(projectIdentifier)
-                                     .dataSourceType(dataSourceType)
-                                     .metricPackIdentifier(metricPackIdentifier)
-                                     .metricName(metricDefinition.getName())
-                                     .action(TimeSeriesThresholdActionType.IGNORE)
-                                     .criteria(threshold)
-                                     .build());
-      });
+      thresholds.forEach(threshold
+          -> timeSeriesThresholds.add(TimeSeriesThreshold.builder()
+                                          .accountId(accountId)
+                                          .projectIdentifier(projectIdentifier)
+                                          .dataSourceType(dataSourceType)
+                                          .metricType(metricDefinition.getType())
+                                          .metricPackIdentifier(metricPackIdentifier)
+                                          .metricName(metricDefinition.getName())
+                                          .action(TimeSeriesThresholdActionType.IGNORE)
+                                          .criteria(threshold)
+                                          .build()));
     });
     saveMetricPackThreshold(accountId, projectIdentifier, dataSourceType, timeSeriesThresholds);
     return timeSeriesThresholds;
