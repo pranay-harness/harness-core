@@ -64,6 +64,15 @@ public class GraphNode {
   private GraphNode next;
   private GraphGroup group;
 
+  /**
+   * @deprecated Use delegateTasksDetails instead.
+   */
+  @Deprecated private String delegateTaskId;
+  /**
+   * @deprecated Use selectionLogsTrackingForTasksEnabled instead.
+   */
+  @Deprecated private boolean selectionLogsTrackingForTaskEnabled;
+
   private List<DelegateTaskDetails> delegateTasksDetails;
   private boolean selectionLogsTrackingForTasksEnabled;
 
