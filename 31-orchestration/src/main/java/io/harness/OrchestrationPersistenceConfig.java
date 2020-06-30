@@ -11,6 +11,7 @@ import io.harness.engine.executions.node.NodeExecutionAfterSaveListener;
 import io.harness.exception.GeneralException;
 import io.harness.mongo.OrchestrationTypeInformationMapper;
 import io.harness.ng.SpringPersistenceConfig;
+import io.harness.spring.AliasRegistrar;
 import org.reflections.Reflections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -78,10 +79,9 @@ public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
     Map<String, Class<?>> aliases = new ConcurrentHashMap<>();
     try {
       Reflections reflections = new Reflections("io.harness.serializer.spring");
-      for (Class clazz : reflections.getSubTypesOf(OrchestrationBeansAliasRegistrar.class)) {
+      for (Class clazz : reflections.getSubTypesOf(AliasRegistrar.class)) {
         Constructor<?> constructor = clazz.getConstructor();
-        final OrchestrationBeansAliasRegistrar aliasRegistrar =
-            (OrchestrationBeansAliasRegistrar) constructor.newInstance();
+        final AliasRegistrar aliasRegistrar = (AliasRegistrar) constructor.newInstance();
         aliasRegistrar.register(aliases);
       }
     } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {

@@ -4,6 +4,7 @@
 
 package software.wings.api;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
@@ -16,7 +17,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
-public class ServiceInstanceIdsParam implements ContextElement {
+public class ServiceInstanceIdsParam implements ContextElement, SweepingOutput {
   public static final String SERVICE_INSTANCE_IDS_PARAMS = "SERVICE_INSTANCE_IDS_PARAMS";
 
   private String serviceId;

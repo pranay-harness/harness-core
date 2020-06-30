@@ -1,11 +1,11 @@
 package io.harness.serializer.spring;
 
-import io.harness.OrchestrationBeansAliasRegistrar;
 import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.advisers.ignore.IgnoreAdviserParameters;
 import io.harness.advisers.retry.RetryAdviserParameters;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.beans.ExecutionSweepingOutputInstance;
+import io.harness.spring.AliasRegistrar;
 import io.harness.state.core.barrier.BarrierStepParameters;
 import io.harness.state.core.dummy.DummySectionOutcome;
 import io.harness.state.core.dummy.DummySectionStepParameters;
@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * DO NOT CHANGE the keys. This is how track the Interface Implementations
  */
-public class OrchestrationAliasRegistrar implements OrchestrationBeansAliasRegistrar {
+public class OrchestrationAliasRegistrar implements AliasRegistrar {
   @Override
   public void register(Map<String, Class<?>> orchestrationElements) {
     orchestrationElements.put("barrierStepParameters", BarrierStepParameters.class);
