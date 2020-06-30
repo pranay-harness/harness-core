@@ -3,6 +3,7 @@ package io.harness.ng.core.entities;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
 import io.harness.ng.core.NGAccountAccess;
@@ -15,7 +16,6 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -34,12 +34,13 @@ import javax.validation.constraints.Size;
     fields =
     { @Field(ProjectKeys.accountIdentifier)
       , @Field(ProjectKeys.orgIdentifier), @Field(ProjectKeys.identifier) })
+@CdIndex(name = "accountIdentifierIndex", fields = { @Field(ProjectKeys.accountIdentifier) })
 @Entity(value = "projects", noClassnameStored = true)
 @Document("projects")
 @TypeAlias("projects")
 public class Project implements PersistentEntity, NGAccountAccess {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
-  @Indexed @Trimmed @NotEmpty String accountIdentifier;
+  @Trimmed @NotEmpty String accountIdentifier;
   @NotEmpty @EntityIdentifier String identifier;
   @Trimmed @NotEmpty String orgIdentifier;
 
