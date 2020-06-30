@@ -23,6 +23,8 @@ import io.fabric8.kubernetes.client.Watcher;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
+import io.kubernetes.client.openapi.models.V1OwnerReferenceBuilder;
+import io.kubernetes.client.openapi.models.V1PodBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -31,6 +33,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class PodWatcher implements Watcher<Pod> {
@@ -46,8 +49,12 @@ public class PodWatcher implements Watcher<Pod> {
   private final PodInfo podInfoPrototype;
   private final PodEvent podEventPrototype;
 
+  private final K8sControllerFetcher controllerFetcher;
+
   @Inject
-  public PodWatcher(@Assisted KubernetesClient client, @Assisted ClusterDetails params, EventPublisher eventPublisher) {
+  public PodWatcher(@Assisted KubernetesClient client, @Assisted ClusterDetails params,
+      @Assisted K8sControllerFetcher controllerFetcher, EventPublisher eventPublisher) {
+    this.controllerFetcher = controllerFetcher;
     logger.info(
         "Creating new PodWatcher for cluster with id: {} name: {} ", params.getClusterId(), params.getClusterName());
     this.client = client;
@@ -76,18 +83,40 @@ public class PodWatcher implements Watcher<Pod> {
     if (podScheduledCondition != null && !publishedPods.contains(uid)) {
       Timestamp creationTimestamp = HTimestamps.parse(pod.getMetadata().getCreationTimestamp());
 
-      PodInfo podInfo = PodInfo.newBuilder(podInfoPrototype)
-                            .setPodUid(uid)
-                            .setPodName(pod.getMetadata().getName())
-                            .setNamespace(pod.getMetadata().getNamespace())
-                            .setNodeName(pod.getSpec().getNodeName())
-                            .setTotalResource(K8sResourceUtils.getEffectiveResources(pod.getSpec()))
-                            .setQosClass(pod.getStatus().getQosClass())
-                            .setCreationTimestamp(creationTimestamp)
-                            .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
-                            .putAllLabels(firstNonNull(pod.getMetadata().getLabels(), Collections.emptyMap()))
-                            .setTopLevelOwner(K8sWorkloadUtils.getTopLevelOwner(client, pod))
-                            .build();
+      PodInfo podInfo =
+          PodInfo.newBuilder(podInfoPrototype)
+              .setPodUid(uid)
+              .setPodName(pod.getMetadata().getName())
+              .setNamespace(pod.getMetadata().getNamespace())
+              .setNodeName(pod.getSpec().getNodeName())
+              .setTotalResource(K8sResourceUtils.getEffectiveResources(pod.getSpec()))
+              .setQosClass(pod.getStatus().getQosClass())
+              .setCreationTimestamp(creationTimestamp)
+              .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
+              .putAllLabels(firstNonNull(pod.getMetadata().getLabels(), Collections.emptyMap()))
+              .setTopLevelOwner(controllerFetcher.getTopLevelOwner(
+                  new V1PodBuilder()
+                      .withNewMetadata()
+                      .withUid(pod.getMetadata().getUid())
+                      .withName(pod.getMetadata().getName())
+                      .withNamespace(pod.getMetadata().getNamespace())
+                      .withOwnerReferences(pod.getMetadata()
+                                               .getOwnerReferences()
+                                               .stream()
+                                               .map(or
+                                                   -> new V1OwnerReferenceBuilder()
+                                                          .withApiVersion(or.getApiVersion())
+                                                          .withBlockOwnerDeletion(or.getBlockOwnerDeletion())
+                                                          .withController(or.getController())
+                                                          .withKind(or.getKind())
+                                                          .withName(or.getName())
+                                                          .withUid(or.getUid())
+                                                          .build())
+                                               .collect(Collectors.toList()))
+                      .withLabels(pod.getMetadata().getLabels())
+                      .endMetadata()
+                      .build()))
+              .build();
       logMessage(podInfo);
 
       eventPublisher.publishMessage(podInfo, creationTimestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));

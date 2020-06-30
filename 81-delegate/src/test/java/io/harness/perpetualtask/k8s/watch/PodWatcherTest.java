@@ -69,6 +69,15 @@ public class PodWatcherTest extends CategoryTest {
     when(kubernetesClient.pods()).thenReturn(podeOps);
     when(podeOps.inAnyNamespace()).thenReturn(ks);
     when(ks.watch(any())).thenReturn(watch);
+    K8sControllerFetcher controllerFetcher = mock(K8sControllerFetcher.class);
+    when(controllerFetcher.getTopLevelOwner(any()))
+        .thenReturn(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
+                        .setKind("Deployment")
+                        .setName("manager")
+                        .setUid("9a1e372f-a7c1-410b-8b07-e09b0b965fcc")
+                        .putLabels("app", "manager")
+                        .putLabels("harness.io/release-name", "2cb07f52-ee19-3ab3-a3e7-8b8de3e2d0d1")
+                        .build());
     podWatcher = new PodWatcher(kubernetesClient,
         ClusterDetails.builder()
             .clusterName("clusterName")
@@ -76,7 +85,7 @@ public class PodWatcherTest extends CategoryTest {
             .cloudProviderId("cloud-provider-id")
             .kubeSystemUid("cluster-uid")
             .build(),
-        eventPublisher);
+        controllerFetcher, eventPublisher);
   }
 
   @Test
@@ -228,5 +237,13 @@ public class PodWatcherTest extends CategoryTest {
     assertThat(podInfo.getLabelsMap())
         .isEqualTo(
             ImmutableMap.of("app", "manager", "harness.io/release-name", "2cb07f52-ee19-3ab3-a3e7-8b8de3e2d0d1"));
+    assertThat(podInfo.getTopLevelOwner())
+        .isEqualTo(io.harness.perpetualtask.k8s.watch.Owner.newBuilder()
+                       .setKind("Deployment")
+                       .setName("manager")
+                       .setUid("9a1e372f-a7c1-410b-8b07-e09b0b965fcc")
+                       .putLabels("app", "manager")
+                       .putLabels("harness.io/release-name", "2cb07f52-ee19-3ab3-a3e7-8b8de3e2d0d1")
+                       .build());
   }
 }
