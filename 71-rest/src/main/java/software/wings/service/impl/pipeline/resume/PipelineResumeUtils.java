@@ -32,6 +32,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -42,6 +43,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
@@ -69,6 +71,7 @@ public class PipelineResumeUtils {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PipelineService pipelineService;
   @Inject private DeploymentAuthHandler deploymentAuthHandler;
+  @Inject private FeatureFlagService featureFlagService;
 
   public Pipeline getPipelineForResume(String appId, int parallelIndexToResume, WorkflowExecution prevWorkflowExecution,
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap) {
@@ -232,17 +235,48 @@ public class PipelineResumeUtils {
       }
 
       PipelineStage pipelineStage = pipelineStages.get(i);
-
-      PipelineStageExecution stageExecution = pipelineStageExecutions.get(i);
-
       if (foundFailedStage && !pipelineStage.isParallel()) {
         // We already found a failed stage and the new stage is not parallel with previous ones. So we stop our
         // iteration.
         break;
       }
 
-      // Check for compatibility.
-      checkStageAndStageExecution(pipelineStage, stageExecution);
+      boolean isNegativeStatus = false;
+      PipelineStageExecution stageExecution;
+      if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
+        List<PipelineStageExecution> stageExecutions =
+            pipelineStageExecutions.stream()
+                .filter(t
+                    -> t.getPipelineStageElementId().equals(pipelineStage.getPipelineStageElements().get(0).getUuid()))
+                .collect(Collectors.toList());
+        if (isEmpty(stageExecutions)) {
+          // older flow when we didnt add pipeline stage element Id. Can be cleaned up after 6 months. Date:
+          // 30-June-2020
+          stageExecution = pipelineStageExecutions.get(i);
+          checkStageAndStageExecution(pipelineStage, stageExecution);
+          if (isNegativeStatus(stageExecution.getStatus())) {
+            isNegativeStatus = true;
+          }
+        } else {
+          if (stageExecutions.size() > 1 && stageExecutions.stream().anyMatch(t -> !t.isLooped())) {
+            throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
+          }
+          for (PipelineStageExecution t : stageExecutions) {
+            checkStageAndStageExecution(pipelineStage, t);
+            if (isNegativeStatus(t.getStatus())) {
+              isNegativeStatus = true;
+              break;
+            }
+          }
+        }
+      } else {
+        stageExecution = pipelineStageExecutions.get(i);
+        // Check for compatibility.
+        checkStageAndStageExecution(pipelineStage, stageExecution);
+        if (isNegativeStatus(stageExecution.getStatus())) {
+          isNegativeStatus = true;
+        }
+      }
 
       List<String> newPipelineStageElementNames = pipelineStage.getPipelineStageElements() == null
           ? Collections.emptyList()
@@ -270,7 +304,7 @@ public class PipelineResumeUtils {
         groupedInfoBuilders.add(builder);
       }
 
-      if (isNegativeStatus(stageExecution.getStatus())) {
+      if (isNegativeStatus) {
         // Found a non-successful stage in a FAILED pipeline. We will now continue only till we find a stages which are
         // parallel with the current one.
         foundFailedStage = true;

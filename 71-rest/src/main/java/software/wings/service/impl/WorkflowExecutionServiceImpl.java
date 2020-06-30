@@ -172,6 +172,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.ParallelInfo;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.PipelineExecution;
@@ -653,26 +654,30 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             if (estimatedTime == null) {
               estimatedTime = pipeline.getStateEtaMap().get(pipelineStageElement.getName());
             }
-            stageExecutionDataList.add(PipelineStageExecution.builder()
-                                           .pipelineStageElementId(pipelineStageElement.getUuid())
-                                           .stateUuid(pipelineStageElement.getUuid())
-                                           .stateType(pipelineStageElement.getType())
-                                           .stateName(pipelineStageElement.getName())
-                                           .status(ExecutionStatus.QUEUED)
-                                           .estimatedTime(estimatedTime)
-                                           .build());
+            stageExecutionDataList.add(
+                PipelineStageExecution.builder()
+                    .parallelInfo(ParallelInfo.builder().groupIndex(pipelineStageElement.getParallelIndex()).build())
+                    .pipelineStageElementId(pipelineStageElement.getUuid())
+                    .stateUuid(pipelineStageElement.getUuid())
+                    .stateType(pipelineStageElement.getType())
+                    .stateName(pipelineStageElement.getName())
+                    .status(QUEUED)
+                    .estimatedTime(estimatedTime)
+                    .build());
 
           } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())
               || APPROVAL_RESUME.name().equals(stateExecutionInstance.getStateType())) {
-            PipelineStageExecution stageExecution = PipelineStageExecution.builder()
-                                                        .pipelineStageElementId(pipelineStageElement.getUuid())
-                                                        .stateUuid(pipelineStageElement.getUuid())
-                                                        .stateType(stateExecutionInstance.getStateType())
-                                                        .status(stateExecutionInstance.getStatus())
-                                                        .stateName(stateExecutionInstance.getDisplayName())
-                                                        .startTs(stateExecutionInstance.getStartTs())
-                                                        .endTs(stateExecutionInstance.getEndTs())
-                                                        .build();
+            PipelineStageExecution stageExecution =
+                PipelineStageExecution.builder()
+                    .parallelInfo(ParallelInfo.builder().groupIndex(pipelineStageElement.getParallelIndex()).build())
+                    .pipelineStageElementId(pipelineStageElement.getUuid())
+                    .stateUuid(pipelineStageElement.getUuid())
+                    .stateType(stateExecutionInstance.getStateType())
+                    .status(stateExecutionInstance.getStatus())
+                    .stateName(stateExecutionInstance.getDisplayName())
+                    .startTs(stateExecutionInstance.getStartTs())
+                    .endTs(stateExecutionInstance.getEndTs())
+                    .build();
             StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
 
             if (stateExecutionData instanceof ApprovalStateExecutionData) {
@@ -690,16 +695,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
           } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())
               || ENV_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
-            PipelineStageExecution stageExecution = PipelineStageExecution.builder()
-                                                        .pipelineStageElementId(pipelineStageElement.getUuid())
-                                                        .stateUuid(pipelineStageElement.getUuid())
-                                                        .stateType(pipelineStageElement.getType())
-                                                        .stateName(pipelineStageElement.getName())
-                                                        .status(stateExecutionInstance.getStatus())
-                                                        .startTs(stateExecutionInstance.getStartTs())
-                                                        .looped(true)
-                                                        .endTs(stateExecutionInstance.getEndTs())
-                                                        .build();
+            PipelineStageExecution stageExecution =
+                PipelineStageExecution.builder()
+                    .parallelInfo(ParallelInfo.builder().groupIndex(pipelineStageElement.getParallelIndex()).build())
+                    .pipelineStageElementId(pipelineStageElement.getUuid())
+                    .stateUuid(pipelineStageElement.getUuid())
+                    .stateType(pipelineStageElement.getType())
+                    .stateName(pipelineStageElement.getName())
+                    .status(stateExecutionInstance.getStatus())
+                    .startTs(stateExecutionInstance.getStartTs())
+                    .looped(true)
+                    .endTs(stateExecutionInstance.getEndTs())
+                    .build();
             StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
 
             if (stateExecutionData instanceof EnvStateExecutionData) {
@@ -720,7 +727,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               && featureFlagService.isEnabled(
                      FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())) {
             handleEnvLoopStateExecutionData(workflowExecution.getAppId(), stateExecutionInstanceMap,
-                stageExecutionDataList, stateExecutionInstance, pipelineStageElement.getUuid());
+                stageExecutionDataList, stateExecutionInstance, pipelineStageElement);
           } else {
             throw new InvalidRequestException("Unknown stateType " + stateExecutionInstance.getStateType());
           }
@@ -760,7 +767,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private void handleEnvLoopStateExecutionData(String appId,
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap,
       List<PipelineStageExecution> stageExecutionDataList, StateExecutionInstance stateExecutionInstance,
-      String pipelineStageElementId) {
+      PipelineStageElement pipelineStageElement) {
     StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
 
     if (stateExecutionData instanceof ForkStateExecutionData) {
@@ -768,16 +775,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (isNotEmpty(envStateExecutionData.getForkStateNames())) {
         for (String element : envStateExecutionData.getForkStateNames()) {
           StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
-          PipelineStageExecution stageExecution = PipelineStageExecution.builder()
-                                                      .pipelineStageElementId(pipelineStageElementId)
-                                                      .stateUuid(executionInstanceLooped.getUuid())
-                                                      .stateType(executionInstanceLooped.getStateType())
-                                                      .stateName(executionInstanceLooped.getStateName())
-                                                      .status(executionInstanceLooped.getStatus())
-                                                      .startTs(executionInstanceLooped.getStartTs())
-                                                      .endTs(executionInstanceLooped.getEndTs())
-                                                      .looped(true)
-                                                      .build();
+          if (executionInstanceLooped == null) {
+            continue;
+          }
+          PipelineStageExecution stageExecution =
+              PipelineStageExecution.builder()
+                  .parallelInfo(ParallelInfo.builder().groupIndex(pipelineStageElement.getParallelIndex()).build())
+                  .pipelineStageElementId(pipelineStageElement.getUuid())
+                  .stateUuid(executionInstanceLooped.getUuid())
+                  .stateType(executionInstanceLooped.getStateType())
+                  .stateName(executionInstanceLooped.getStateName())
+                  .status(executionInstanceLooped.getStatus())
+                  .startTs(executionInstanceLooped.getStartTs())
+                  .endTs(executionInstanceLooped.getEndTs())
+                  .looped(true)
+                  .build();
 
           StateExecutionData stateExecutionDataLooped = executionInstanceLooped.fetchStateExecutionData();
           if (stateExecutionDataLooped instanceof EnvStateExecutionData) {
