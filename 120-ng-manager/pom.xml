@@ -40,11 +40,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>105-connector-nextgen</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -56,6 +51,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>35-yaml-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>69-connector-nextgen</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
