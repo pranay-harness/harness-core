@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -12,7 +13,14 @@ import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
 import io.harness.serializer.KryoUtils;
 import io.kubernetes.client.informer.SharedInformerFactory;
+import io.kubernetes.client.informer.cache.Store;
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.models.V1DaemonSet;
+import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1Job;
+import io.kubernetes.client.openapi.models.V1ReplicaSet;
+import io.kubernetes.client.openapi.models.V1StatefulSet;
+import io.kubernetes.client.openapi.models.V1beta1CronJob;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.k8s.apiclient.ApiClientFactory;
@@ -22,10 +30,20 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import java.io.Closeable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
 public class K8sWatchServiceDelegate {
+  private static final Map<String, Class<?>> KNOWN_WORKLOAD_TYPES = ImmutableMap.<String, Class<?>>builder()
+                                                                        .put("Deployment", V1Deployment.class)
+                                                                        .put("ReplicaSet", V1ReplicaSet.class)
+                                                                        .put("DaemonSet", V1DaemonSet.class)
+                                                                        .put("StatefulSet", V1StatefulSet.class)
+                                                                        .put("Job", V1Job.class)
+                                                                        .put("CronJob", V1beta1CronJob.class)
+                                                                        .build();
+
   private final WatcherFactory watcherFactory;
   private final KubernetesClientFactory kubernetesClientFactory;
   private final SharedInformerFactoryFactory sharedInformerFactoryFactory;
@@ -78,12 +96,15 @@ public class K8sWatchServiceDelegate {
                                           .kubeSystemUid(kubeSystemUid)
                                           .build();
       ApiClient apiClient = apiClientFactory.getClient(k8sClusterConfig);
-      Watcher<Pod> podWatcher = watcherFactory.createPodWatcher(client, clusterDetails);
-      Watcher<Node> nodeWatcher = watcherFactory.createNodeWatcher(client, clusterDetails);
-      Watcher<Event> eventWatcher = watcherFactory.createClusterEventWatcher(client, clusterDetails);
       SharedInformerFactory sharedInformerFactory =
           sharedInformerFactoryFactory.createSharedInformerFactory(apiClient, clusterDetails);
       sharedInformerFactory.startAllRegisteredInformers();
+      Map<String, Store<?>> stores = KNOWN_WORKLOAD_TYPES.entrySet().stream().collect(Collectors.toMap(
+          Map.Entry::getKey, e -> sharedInformerFactory.getExistingSharedIndexInformer(e.getValue()).getIndexer()));
+      Watcher<Node> nodeWatcher = watcherFactory.createNodeWatcher(client, clusterDetails);
+      Watcher<Event> eventWatcher = watcherFactory.createClusterEventWatcher(client, clusterDetails);
+      K8sControllerFetcher controllerFetcher = new K8sControllerFetcher(stores);
+      Watcher<Pod> podWatcher = watcherFactory.createPodWatcher(client, clusterDetails, controllerFetcher);
       return WatcherGroup.builder()
           .nodeWatcher(nodeWatcher)
           .podWatcher(podWatcher)

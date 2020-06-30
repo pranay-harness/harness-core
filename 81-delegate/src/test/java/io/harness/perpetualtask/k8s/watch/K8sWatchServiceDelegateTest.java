@@ -20,7 +20,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
+import io.kubernetes.client.informer.SharedIndexInformer;
 import io.kubernetes.client.informer.SharedInformerFactory;
+import io.kubernetes.client.informer.cache.Indexer;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.Before;
@@ -52,11 +54,15 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     podWatcher = mock(PodWatcher.class);
     nodeWatcher = mock(NodeWatcher.class);
     clusterEventWatcher = mock(ClusterEventWatcher.class);
-    when(watcherFactory.createPodWatcher(any(), any())).thenReturn(podWatcher);
+    when(watcherFactory.createPodWatcher(any(), any(), any())).thenReturn(podWatcher);
     when(watcherFactory.createNodeWatcher(any(), any())).thenReturn(nodeWatcher);
     when(watcherFactory.createClusterEventWatcher(any(), any())).thenReturn(clusterEventWatcher);
     SharedInformerFactory sharedInformerFactory = mock(SharedInformerFactory.class);
     when(sharedInformerFactoryFactory.createSharedInformerFactory(any(), any())).thenReturn(sharedInformerFactory);
+    SharedIndexInformer sharedIndexInformer = mock(SharedIndexInformer.class);
+    when(sharedInformerFactory.getExistingSharedIndexInformer(any())).thenReturn(sharedIndexInformer);
+    Indexer indexer = mock(Indexer.class);
+    when(sharedIndexInformer.getIndexer()).thenReturn(indexer);
 
     // all of the below just to mock the kube-system uid call
     KubernetesClient client = mock(KubernetesClient.class);
@@ -90,7 +96,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
     assertThat(watchId).isNotNull();
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
-    verify(watcherFactory, atLeastOnce()).createPodWatcher(any(), any());
+    verify(watcherFactory, atLeastOnce()).createPodWatcher(any(), any(), any());
   }
 
   @Test
@@ -141,7 +147,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
     String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
     assertThat(watch2).isEqualTo(watch1);
-    verify(watcherFactory, times(1)).createPodWatcher(any(KubernetesClient.class), any());
+    verify(watcherFactory, times(1)).createPodWatcher(any(KubernetesClient.class), any(), any());
   }
 
   @Test
@@ -167,7 +173,7 @@ public class K8sWatchServiceDelegateTest extends CategoryTest {
     String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams1);
     String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams2);
     assertThat(watch2).isNotEqualTo(watch1);
-    verify(watcherFactory, times(2)).createPodWatcher(any(KubernetesClient.class), any());
+    verify(watcherFactory, times(2)).createPodWatcher(any(KubernetesClient.class), any(), any());
     assertThat(k8sWatchServiceDelegate.watchIds()).containsExactlyInAnyOrder(watch1, watch2);
   }
 
