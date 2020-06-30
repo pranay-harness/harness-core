@@ -11,6 +11,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContext;
 
+import java.util.stream.Collectors;
+
 @Singleton
 @Slf4j
 public class GitFileConfigHelperService {
@@ -81,6 +83,14 @@ public class GitFileConfigHelperService {
 
     if (gitFileConfig.getFilePath() != null) {
       gitFileConfig.setFilePath(context.renderExpression(gitFileConfig.getFilePath()).trim());
+    }
+
+    if (gitFileConfig.getFilePathList() != null) {
+      gitFileConfig.setFilePathList(gitFileConfig.getFilePathList()
+                                        .stream()
+                                        .map(context::renderExpression)
+                                        .map(String::trim)
+                                        .collect(Collectors.toList()));
     }
 
     return gitFileConfig;
