@@ -1649,6 +1649,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                   return;
                 }
                 List<DelegateConnectionResult> originalResults = future.get();
+                if (originalResults == null) {
+                  return;
+                }
                 boolean original = originalResults.stream().allMatch(DelegateConnectionResult::isValidated);
                 boolean alternative = alternativeResults.stream().allMatch(DelegateConnectionResult::isValidated);
                 if (original != alternative) {
