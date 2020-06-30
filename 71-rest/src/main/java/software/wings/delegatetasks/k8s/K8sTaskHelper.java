@@ -1772,7 +1772,8 @@ public class K8sTaskHelper {
     executionLogCallback.saveExecutionLog(color(helmTemplateCommand, White, Normal));
   }
 
-  private ProcessResult executeShellCommand(String commandDirectory, String command, LogOutputStream logErrorStream)
+  @VisibleForTesting
+  ProcessResult executeShellCommand(String commandDirectory, String command, LogOutputStream logErrorStream)
       throws IOException, InterruptedException, TimeoutException {
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .timeout(10, TimeUnit.SECONDS)
