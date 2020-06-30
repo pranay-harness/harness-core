@@ -1046,8 +1046,10 @@ public class TemplateServiceImpl implements TemplateService {
       if (DEFAULT_TAG.equals(templateVersion)) {
         return templateVersion;
       }
-      return importedTemplateService.getTemplateVersionFromImportedTemplateVersion(
+      String version = importedTemplateService.getTemplateVersionFromImportedTemplateVersion(
           templateUuid, templateVersion, template.getAccountId());
+      notNullCheck("Template version doesn't exist.", version);
+      return version;
     }
     return templateVersion;
   }

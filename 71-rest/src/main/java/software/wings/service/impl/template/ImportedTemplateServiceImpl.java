@@ -77,6 +77,9 @@ public class ImportedTemplateServiceImpl implements ImportedTemplateService {
                                           .filter(TemplateVersionKeys.accountId, accountId)
                                           .filter(TemplateVersionKeys.importedTemplateVersion, importedVersion)
                                           .get();
+    if (templateVersion == null) {
+      return null;
+    }
     return String.valueOf(templateVersion.getVersion());
   }
 
