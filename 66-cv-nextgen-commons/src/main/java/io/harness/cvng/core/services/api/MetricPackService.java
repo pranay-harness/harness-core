@@ -21,4 +21,6 @@ public interface MetricPackService {
   boolean deleteMetricPackThresholds(String accountId, String projectIdentifier, String thresholdId);
 
   void populatePaths(String accountId, String projectIdentifier, DataSourceType dataSourceType, MetricPack metricPack);
+
+  void populateDataCollectionDsl(DataSourceType dataSourceType, MetricPack metricPack);
 }

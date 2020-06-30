@@ -8,11 +8,10 @@ import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.CVHistogram;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.SplunkSampleResponse;
+import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.core.services.entities.AppDynamicsCVConfig;
-import io.harness.cvng.core.services.entities.CVConfig;
-import io.harness.cvng.core.services.entities.MetricCVConfig;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.cvng.core.services.entities.MetricPack.MetricDefinition;
 import io.harness.cvng.models.VerificationType;
@@ -26,9 +25,6 @@ public class CVNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(MetricDefinition.class, 9001);
     kryo.register(DataSourceType.class, 9002);
     kryo.register(TimeSeriesMetricType.class, 9003);
-    kryo.register(CVConfig.class, 9004);
-    kryo.register(MetricCVConfig.class, 9005);
-    kryo.register(AppDynamicsCVConfig.class, 9006);
     kryo.register(AppDynamicsDataCollectionInfo.class, 9007);
     kryo.register(VerificationType.class, 9008);
     kryo.register(CVHistogram.class, 9009);
@@ -36,5 +32,7 @@ public class CVNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(AppdynamicsValidationResponse.class, 9011);
     kryo.register(AppdynamicsValidationResponse.AppdynamicsMetricValueValidationResponse.class, 9012);
     kryo.register(ThirdPartyApiResponseStatus.class, 9013);
+    kryo.register(SplunkSavedSearch.class, 9014);
+    kryo.register(SplunkSampleResponse.class, 9015);
   }
 }

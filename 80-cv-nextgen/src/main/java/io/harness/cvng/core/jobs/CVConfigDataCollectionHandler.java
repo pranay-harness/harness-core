@@ -3,8 +3,8 @@ package io.harness.cvng.core.jobs;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
-import io.harness.cvng.core.services.entities.CVConfig;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,6 +1,6 @@
 package io.harness.cvng.core.services.api;
 
-import io.harness.cvng.beans.DSConfig;
+import io.harness.cvng.core.beans.DSConfig;
 
 import java.util.List;
 

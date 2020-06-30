@@ -13,9 +13,9 @@ import com.google.inject.Injector;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.TimeSeriesAnalysisService;
-import io.harness.cvng.core.services.entities.AppDynamicsCVConfig;
-import io.harness.cvng.core.services.entities.CVConfig;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;

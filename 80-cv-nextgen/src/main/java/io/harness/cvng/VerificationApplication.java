@@ -17,6 +17,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -26,11 +27,11 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.cvng.client.VerificationManagerClientModule;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
 import io.harness.cvng.core.resources.DataCollectionResource;
-import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
-import io.harness.cvng.core.services.entities.CVConfig;
-import io.harness.cvng.core.services.entities.CVConfig.CVConfigKeys;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
@@ -43,6 +44,7 @@ import io.harness.mongo.MongoModule;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.JsonSubtypeResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -91,7 +93,12 @@ public class VerificationApplication extends Application<VerificationConfigurati
       }
     });
     bootstrap.setMetricRegistry(metricRegistry);
+    configureObjectMapper(bootstrap.getObjectMapper());
     logger.info("bootstrapping done.");
+  }
+
+  public static void configureObjectMapper(final ObjectMapper mapper) {
+    mapper.setSubtypeResolver(new JsonSubtypeResolver(mapper.getSubtypeResolver()));
   }
 
   @Override
@@ -127,7 +134,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));
     modules.add(new CVNextGenCommonsServiceModule());
     Injector injector = Guice.createInjector(modules);
-    initializeServiceSecretKeys(injector);
+    initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     registerAuthFilters(environment, injector);
     registerManagedBeans(environment, injector);
@@ -202,10 +209,11 @@ public class VerificationApplication extends Application<VerificationConfigurati
     environment.jersey().register(injector.getInstance(CVNGAuthenticationFilter.class));
   }
 
-  private void initializeServiceSecretKeys(Injector injector) {
-    injector.getInstance(VerificationServiceSecretManager.class).initializeServiceSecretKeys();
-    VERIFICATION_SERVICE_SECRET.set(
-        injector.getInstance(VerificationServiceSecretManager.class).getVerificationServiceSecretKey());
+  private void initializeServiceSecretKeys() {
+    // TODO: using env variable directly for now. The whole secret management needs to move to env variable and
+    // cv-nextgen should have a new secret with manager along with other services. Change this once everything is
+    // standardized for service communication.
+    VERIFICATION_SERVICE_SECRET.set(System.getenv(CVNextGenConstants.VERIFICATION_SERVICE_SECRET));
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {

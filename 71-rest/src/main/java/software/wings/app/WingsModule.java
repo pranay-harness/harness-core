@@ -1113,6 +1113,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     install(new CESetupServiceModule());
     install(new CVNextGenCommonsServiceModule());
     // Custom Workflow Dependencies
+    install(new CVNextGenCommonsServiceModule());
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
