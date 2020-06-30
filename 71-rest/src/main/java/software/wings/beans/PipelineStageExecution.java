@@ -34,6 +34,7 @@ public class PipelineStageExecution {
   private StateExecutionData stateExecutionData;
   private String message;
   private boolean looped;
+  private ParallelInfo parallelInfo;
 
   public List<WorkflowExecution> getWorkflowExecutions() {
     return Objects.isNull(workflowExecutions) ? new ArrayList<>() : workflowExecutions;

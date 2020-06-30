@@ -2469,6 +2469,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       Set<EntityType> requiredEntityTypes, WorkflowPhase workflowPhase, Map<String, String> workflowVariables,
       Map<String, Service> serviceCache, boolean infraRefactor) {
     boolean artifactNeeded = false;
+    String accountId = appService.getAccountIdByAppId(appId);
     for (GraphNode step : phaseStep.getSteps()) {
       if (step.getTemplateUuid() != null) {
         if (isNotEmpty(step.getTemplateVariables())) {
@@ -2549,19 +2550,24 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else if (workflowPhase != null && HELM == workflowPhase.getDeploymentType()
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
         if (infraRefactor) {
-          String infraDefinitionId = getInfraDefinitionId(workflowPhase, workflowVariables);
-          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
-            InfrastructureDefinition infrastructureDefinition =
-                infrastructureDefinitionService.get(appId, infraDefinitionId);
-            if (infrastructureDefinition != null) {
-              ServiceTemplate serviceTemplate =
-                  serviceTemplateService.get(appId, serviceId, infrastructureDefinition.getEnvId());
-              if (serviceTemplate != null
-                  && serviceResourceService.checkArtifactNeededForHelm(appId, serviceTemplate.getUuid())) {
-                artifactNeeded = true;
-                break;
+          List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables, accountId);
+          for (String infraDefinitionId : infraDefinitionIds) {
+            if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
+              InfrastructureDefinition infrastructureDefinition =
+                  infrastructureDefinitionService.get(appId, infraDefinitionId);
+              if (infrastructureDefinition != null) {
+                ServiceTemplate serviceTemplate =
+                    serviceTemplateService.get(appId, serviceId, infrastructureDefinition.getEnvId());
+                if (serviceTemplate != null
+                    && serviceResourceService.checkArtifactNeededForHelm(appId, serviceTemplate.getUuid())) {
+                  artifactNeeded = true;
+                  break;
+                }
               }
             }
+          }
+          if (artifactNeeded) {
+            break;
           }
         } else {
           String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
@@ -2583,10 +2589,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
 
         if (infraRefactor) {
-          String infraDefinitionId = getInfraDefinitionId(workflowPhase, workflowVariables);
-          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)
-              && k8sStateHelper.doManifestsUseArtifact(appId, serviceId, infraDefinitionId)) {
-            artifactNeeded = true;
+          List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables, accountId);
+          for (String infraDefinitionId : infraDefinitionIds) {
+            if (k8sStateHelper.doManifestsUseArtifact(appId, serviceId, infraDefinitionId)) {
+              artifactNeeded = true;
+              break;
+            }
+          }
+          if (artifactNeeded) {
             break;
           }
         } else {
@@ -2937,6 +2947,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // NOTE: If serviceId is "", we assume those artifact variables to be workflow variables.
     // NOTE: Here, serviceId should not be an expression.
     Set<String> serviceArtifactVariableNames;
+    String accountId = appService.getAccountIdByAppId(appId);
     if (serviceArtifactVariableNamesMap.containsKey(serviceId)) {
       serviceArtifactVariableNames = serviceArtifactVariableNamesMap.get(serviceId);
     } else {
@@ -3010,13 +3021,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else if (workflowPhase != null && HELM == workflowPhase.getDeploymentType()
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
         if (infraRefactor) {
-          String infraDefinitionId = getInfraDefinitionId(workflowPhase, workflowVariables);
-          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
-            InfrastructureDefinition infraDefiniton = infrastructureDefinitionService.get(appId, infraDefinitionId);
-            ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceId, infraDefiniton.getEnvId());
-            if (serviceTemplate != null) {
-              serviceResourceService.updateArtifactVariableNamesForHelm(
-                  appId, serviceTemplate.getUuid(), serviceArtifactVariableNames);
+          List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables, accountId);
+          for (String infraDefinitionId : infraDefinitionIds) {
+            if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
+              InfrastructureDefinition infraDefiniton = infrastructureDefinitionService.get(appId, infraDefinitionId);
+              ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceId, infraDefiniton.getEnvId());
+              if (serviceTemplate != null) {
+                serviceResourceService.updateArtifactVariableNamesForHelm(
+                    appId, serviceTemplate.getUuid(), serviceArtifactVariableNames);
+              }
             }
           }
         } else {
@@ -3032,10 +3045,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       } else if (workflowPhase != null && k8sV2ArtifactNeededStateTypes.contains(step.getType())) {
         if (infraRefactor) {
-          String infraDefinitionId = getInfraDefinitionId(workflowPhase, workflowVariables);
-          if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
-            k8sStateHelper.updateManifestsArtifactVariableNamesInfraDefinition(
-                appId, infraDefinitionId, serviceArtifactVariableNames, serviceId);
+          List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables, accountId);
+          for (String infraDefinitionId : infraDefinitionIds) {
+            if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
+              k8sStateHelper.updateManifestsArtifactVariableNamesInfraDefinition(
+                  appId, infraDefinitionId, serviceArtifactVariableNames, serviceId);
+            }
           }
         } else {
           String infraMappingId = getInfraMappingId(workflowPhase, workflowVariables);
@@ -3060,17 +3075,27 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return infraMappingId;
   }
 
-  private String getInfraDefinitionId(WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
-    String infraDefinitionId = null;
+  private List<String> getInfraDefinitionId(
+      WorkflowPhase workflowPhase, Map<String, String> workflowVariables, String accountId) {
+    List<String> infraDefinitionIds = new ArrayList<>();
     if (workflowPhase.checkInfraDefinitionTemplatized()) {
       String infraDefinitionTemplatizedName = workflowPhase.fetchInfraDefinitionTemplatizedName();
       if (infraDefinitionTemplatizedName != null) {
-        infraDefinitionId = isEmpty(workflowVariables) ? null : workflowVariables.get(infraDefinitionTemplatizedName);
+        String infraDefinitionId =
+            isEmpty(workflowVariables) ? null : workflowVariables.get(infraDefinitionTemplatizedName);
+        if (infraDefinitionId != null) {
+          if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, accountId)
+              && infraDefinitionId.contains(",")) {
+            infraDefinitionIds = asList(infraDefinitionId.split(","));
+          } else {
+            infraDefinitionIds.add(infraDefinitionId);
+          }
+        }
       }
     } else {
-      infraDefinitionId = workflowPhase.getInfraDefinitionId();
+      infraDefinitionIds.add(workflowPhase.getInfraDefinitionId());
     }
-    return infraDefinitionId;
+    return infraDefinitionIds;
   }
 
   private boolean isArtifactNeeded(Object... args) {
