@@ -28,6 +28,7 @@ import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsMan
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
 import software.wings.service.impl.security.AbstractSecretServiceImpl;
 import software.wings.service.impl.security.SecretManagementException;
+import software.wings.service.intfc.security.CustomSecretsManagerEncryptionService;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 
 import java.util.HashSet;
@@ -37,12 +38,15 @@ import java.util.Set;
 public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements CustomSecretsManagerService {
   private CustomSecretsManagerShellScriptHelper customSecretsManagerShellScriptHelper;
   private CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper;
+  private CustomSecretsManagerEncryptionService customSecretsManagerEncryptionService;
 
   @Inject
   CustomSecretsManagerServiceImpl(CustomSecretsManagerShellScriptHelper customSecretsManagerShellScriptHelper,
-      CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper) {
+      CustomSecretsManagerConnectorHelper customSecretsManagerConnectorHelper,
+      CustomSecretsManagerEncryptionService customSecretsManagerEncryptionService) {
     this.customSecretsManagerShellScriptHelper = customSecretsManagerShellScriptHelper;
     this.customSecretsManagerConnectorHelper = customSecretsManagerConnectorHelper;
+    this.customSecretsManagerEncryptionService = customSecretsManagerEncryptionService;
   }
 
   @Override
@@ -178,7 +182,8 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
 
   private void validateConnectivity(
       CustomSecretsManagerConfig customSecretsManagerConfig, Set<EncryptedDataParams> testVariables) {
-    // To be implemented
+    EncryptedData encryptedData = EncryptedData.builder().name("TestSecret").parameters(testVariables).build();
+    customSecretsManagerEncryptionService.validateSecret(encryptedData, customSecretsManagerConfig);
   }
 
   private void setShellScriptInConfig(CustomSecretsManagerConfig customSecretsManagerConfig) {

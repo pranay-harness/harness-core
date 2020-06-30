@@ -13,6 +13,7 @@ import io.harness.encryption.Encrypted;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
@@ -27,6 +28,7 @@ import javax.validation.constraints.NotNull;
  */
 @JsonTypeName("HOST_CONNECTION_ATTRIBUTES")
 @Data
+@ToString(exclude = {"key", "passphrase", "sshPassword", "kerberosPassword"})
 @EqualsAndHashCode(callSuper = false)
 public class HostConnectionAttributes extends SettingValue implements EncryptableSetting {
   public static final String KEY_KEY = "key";

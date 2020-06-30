@@ -1,14 +1,12 @@
 package software.wings.security.encryption.secretsmanagerconfigs;
 
-import static io.harness.govern.Switch.unhandled;
 import static software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType.POWERSHELL;
+import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationUtils.buildShellScriptParameters;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
-import io.harness.delegate.task.mixin.SSHConnectionExecutionCapabilityGenerator;
-import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataParams;
 import lombok.Builder;
 import lombok.Data;
@@ -18,9 +16,8 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SecretManagerConfig;
-import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,18 +52,8 @@ public class CustomSecretsManagerConfig extends SecretManagerConfig implements E
       return new ArrayList<>();
     }
 
-    switch (remoteHostConnector.getSettingType()) {
-      case HOST_CONNECTION_ATTRIBUTES:
-        return Collections.singletonList(
-            SSHConnectionExecutionCapabilityGenerator.buildSSHConnectionExecutionCapability(
-                "ssh://" + host + ":" + ((HostConnectionAttributes) remoteHostConnector).getSshPort()));
-      case WINRM_CONNECTION_ATTRIBUTES:
-        return Collections.singletonList(SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(
-            host, Integer.toString(((WinRmConnectionAttributes) remoteHostConnector).getPort())));
-      default:
-        unhandled(remoteHostConnector.getSettingType());
-        return null;
-    }
+    return Collections.singletonList(
+        ShellConnectionCapability.builder().shellScriptParameters(buildShellScriptParameters(this)).build());
   }
 
   @Override
