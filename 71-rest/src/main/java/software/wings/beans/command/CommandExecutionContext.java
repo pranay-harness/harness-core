@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.command.CommandExecutionData;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -18,6 +19,7 @@ import lombok.Data;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
@@ -26,11 +28,12 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
+import software.wings.settings.SettingValue;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -188,7 +191,24 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     DeploymentType dType = DeploymentType.valueOf(getDeploymentType());
     switch (dType) {
       case KUBERNETES:
-        return CapabilityHelper.generateDelegateCapabilities(cloudProviderSetting.getValue(), cloudProviderCredentials);
+        List<ExecutionCapability> capabilities = new ArrayList<>();
+        SettingValue config = cloudProviderSetting.getValue();
+        if (config instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) config).isUseKubernetesDelegate()) {
+          capabilities.addAll(config.fetchRequiredExecutionCapabilities());
+        }
+
+        String masterUrl = null;
+        if (containerSetupParams instanceof KubernetesSetupParams) {
+          masterUrl = ((KubernetesSetupParams) containerSetupParams).getMasterUrl();
+        } else if (containerResizeParams instanceof KubernetesResizeParams) {
+          masterUrl = ((KubernetesResizeParams) containerResizeParams).getMasterUrl();
+        }
+        if (isNotBlank(masterUrl)) {
+          capabilities.add(
+              HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl));
+        }
+
+        return capabilities;
       case WINRM:
         return singletonList(WinrmHostValidationCapability.builder()
                                  .validationInfo(BasicValidationInfo.builder()

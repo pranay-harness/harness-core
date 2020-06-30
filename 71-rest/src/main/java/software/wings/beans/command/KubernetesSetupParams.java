@@ -53,6 +53,9 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String releaseName;
   private List<String[]> serviceCounts;
 
+  // For supporting delegate capability framework in K8s
+  private String masterUrl;
+
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
     private String clusterName;
@@ -98,6 +101,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private boolean useNewLabelMechanism;
     private String releaseName;
     private List<String[]> serviceCounts;
+    private String masterUrl;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -325,6 +329,11 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withMasterUrl(String masterUrl) {
+      this.masterUrl = masterUrl;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder but() {
       return aKubernetesSetupParams()
           .withServiceName(serviceName)
@@ -370,7 +379,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withEncryptedConfigFiles(encryptedConfigFiles)
           .withUseNewLabelMechanism(useNewLabelMechanism)
           .withReleaseName(releaseName)
-          .withServiceCounts(serviceCounts);
+          .withServiceCounts(serviceCounts)
+          .withMasterUrl(masterUrl);
     }
 
     public KubernetesSetupParams build() {
@@ -419,6 +429,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setUseNewLabelMechanism(useNewLabelMechanism);
       kubernetesSetupParams.setReleaseName(releaseName);
       kubernetesSetupParams.setServiceCounts(serviceCounts);
+      kubernetesSetupParams.setMasterUrl(masterUrl);
       return kubernetesSetupParams;
     }
   }

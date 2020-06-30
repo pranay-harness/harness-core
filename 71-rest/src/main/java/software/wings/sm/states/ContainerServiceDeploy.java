@@ -47,6 +47,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -58,9 +59,11 @@ import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.ContainerResizeParams;
+import software.wings.beans.command.KubernetesResizeParams;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
+import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -99,6 +102,8 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private K8sStateHelper k8sStateHelper;
+  @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
+  @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
@@ -176,6 +181,15 @@ public abstract class ContainerServiceDeploy extends State {
       }
 
       ContainerResizeParams params = buildContainerResizeParams(context, contextData);
+      if (params instanceof KubernetesResizeParams) {
+        ContainerInfrastructureMapping containerInfrastructureMapping =
+            (ContainerInfrastructureMapping) infrastructureMapping;
+        String masterUrl = containerMasterUrlHelper.fetchMasterUrl(
+            containerDeploymentManagerHelper.getContainerServiceParams(containerInfrastructureMapping, null, context),
+            containerInfrastructureMapping);
+        ((KubernetesResizeParams) params).setMasterUrl(masterUrl);
+      }
+
       DeploymentType deploymentType =
           serviceResourceService.getDeploymentType(infrastructureMapping, contextData.service, null);
 

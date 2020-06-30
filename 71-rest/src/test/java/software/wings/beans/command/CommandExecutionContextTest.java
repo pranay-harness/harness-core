@@ -1,9 +1,12 @@
 package software.wings.beans.command;
 
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
+import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -29,6 +32,8 @@ import software.wings.utils.WingsTestConstants;
 import java.util.List;
 
 public class CommandExecutionContextTest extends WingsBaseTest {
+  private static final String MASTER_URL = "http://example.com";
+
   CommandExecutionContext.Builder contextBuilder =
       aCommandExecutionContext()
           .appId(APP_ID)
@@ -36,20 +41,6 @@ public class CommandExecutionContextTest extends WingsBaseTest {
           .accountId(ACCOUNT_ID)
           .activityId(ACTIVITY_ID)
           .host(Host.Builder.aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build());
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void shouldFetchRequiredExecutionCapabilitiesK8s() {
-    CommandExecutionContext executionContext =
-        contextBuilder.deploymentType(DeploymentType.KUBERNETES.name())
-            .cloudProviderSetting(SettingAttributeTestHelper.obtainKubernetesClusterSettingAttribute(false))
-            .build();
-
-    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
-    assertThat(executionCapabilities).hasSize(1);
-    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
-  }
 
   @Test
   @Owner(developers = PRASHANT)
@@ -150,5 +141,26 @@ public class CommandExecutionContextTest extends WingsBaseTest {
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
     assertThat(executionCapabilities).hasSize(0);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testFetchRequiredExecutionCapabilitiesK8sWithParams() {
+    CommandExecutionContext executionContext =
+        contextBuilder.deploymentType(DeploymentType.KUBERNETES.name())
+            .cloudProviderSetting(SettingAttributeTestHelper.obtainKubernetesClusterSettingAttribute(false))
+            .containerSetupParams(aKubernetesSetupParams().withMasterUrl(MASTER_URL).build())
+            .build();
+
+    List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    assertThat(executionCapabilities).hasSize(1);
+    assertThat(executionCapabilities.get(0).fetchCapabilityBasis()).isEqualTo(MASTER_URL);
+
+    executionContext.setContainerSetupParams(null);
+    executionContext.setContainerResizeParams(aKubernetesResizeParams().withMasterUrl(MASTER_URL + "Resize").build());
+    executionCapabilities = executionContext.fetchRequiredExecutionCapabilities();
+    assertThat(executionCapabilities).hasSize(1);
+    assertThat(executionCapabilities.get(0).fetchCapabilityBasis()).isEqualTo(MASTER_URL + "Resize");
   }
 }
