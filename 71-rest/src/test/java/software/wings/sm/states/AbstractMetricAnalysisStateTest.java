@@ -133,7 +133,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
         .getStateExecutionData()
         .setAnalysisMinute(0);
     validateExecutionResponse(dataAnalysisResponse, executionResponse, ExecutionStatus.FAILED);
-    assertThat(executionResponse.getErrorMessage()).isEqualTo("No Analysis result found");
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("No Analysis result found. This is not a failure.");
   }
 
   @Test

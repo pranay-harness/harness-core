@@ -323,7 +323,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           continuousVerificationService.setMetaDataExecutionStatus(
               executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS, true, false);
           return isQAVerificationPath(context.getAccountId(), context.getAppId())
-              ? generateAnalysisResponse(context, ExecutionStatus.FAILED, "No Analysis result found")
+              ? generateAnalysisResponse(
+                    context, ExecutionStatus.FAILED, "No Analysis result found. This is not a failure.")
               : generateAnalysisResponse(
                     context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
         }

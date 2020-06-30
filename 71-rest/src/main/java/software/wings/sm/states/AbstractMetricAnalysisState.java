@@ -379,7 +379,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                                                                                          : ExecutionStatus.SUCCESS;
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionId(), executionStatus, true, false);
-      return generateAnalysisResponse(context, executionStatus, "No Analysis result found");
+      return generateAnalysisResponse(context, executionStatus, "No Analysis result found. This is not a failure.");
     }
 
     getLogger().info(
