@@ -36,6 +36,7 @@ import com.google.inject.Injector;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -184,10 +185,12 @@ public class GraphRendererTest extends WingsBaseTest {
                                                 .contextTransition(true)
                                                 .status(SUCCESS)
                                                 .build();
+    List<DelegateTaskDetails> delegateTaskDetailsList = new ArrayList<>();
+    delegateTaskDetailsList.add(DelegateTaskDetails.builder().delegateTaskId(generateUuid()).taskType("type").build());
 
     instance.setStateParams(ImmutableMap.of("key", "value"));
-    instance.setDelegateTaskId(generateUuid());
-    instance.setSelectionLogsTrackingForTaskEnabled(true);
+    instance.setSelectionLogsTrackingForTasksEnabled(true);
+    instance.setDelegateTasksDetails(delegateTaskDetailsList);
 
     GraphNode node = graphRenderer.convertToNode(instance);
 
@@ -197,9 +200,9 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(node.isRollback()).isEqualTo(instance.isRollback());
     assertThat(node.getStatus()).isEqualTo(instance.getStatus().name());
     assertThat(node.getProperties()).isEqualTo(instance.getStateParams());
-    assertThat(node.getDelegateTaskId()).isEqualTo(instance.getDelegateTaskId());
-    assertThat(node.isSelectionLogsTrackingForTaskEnabled())
-        .isEqualTo(instance.isSelectionLogsTrackingForTaskEnabled());
+    assertThat(node.isSelectionLogsTrackingForTasksEnabled())
+        .isEqualTo(instance.isSelectionLogsTrackingForTasksEnabled());
+    assertThat(node.getDelegateTasksDetails()).isEqualTo(instance.getDelegateTasksDetails());
   }
 
   @Test

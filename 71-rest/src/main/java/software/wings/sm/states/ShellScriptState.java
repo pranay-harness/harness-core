@@ -413,6 +413,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     //    }
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
+
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(executionContext.getApp().getAccountId())
@@ -429,7 +430,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
-            .selectionLogsTrackingEnabled(true)
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
 
     String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask,
@@ -439,6 +440,8 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .adoptDelegateDecryption(true)
             .expressionFunctorToken(expressionFunctorToken)
             .build());
+
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -475,6 +478,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
       ExpressionReflectionUtils.applyExpression(
           task.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionContext));
     }
+
     return delegateService.queueTask(task);
   }
 
@@ -512,5 +516,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
           ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
     }
     return winRmConnectionAttributes;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

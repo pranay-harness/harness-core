@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -63,8 +64,8 @@ public class GraphNode {
   private GraphNode next;
   private GraphGroup group;
 
-  private String delegateTaskId;
-  private boolean selectionLogsTrackingForTaskEnabled;
+  private List<DelegateTaskDetails> delegateTasksDetails;
+  private boolean selectionLogsTrackingForTasksEnabled;
 
   public GraphNode cloneInternal() {
     GraphNode clonedNode = GraphNode.builder()

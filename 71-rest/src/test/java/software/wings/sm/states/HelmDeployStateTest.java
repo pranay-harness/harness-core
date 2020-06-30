@@ -58,6 +58,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
@@ -143,6 +144,7 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -219,6 +221,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private LogService logService;
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private FeatureService featureService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("helmRollbackState");
@@ -375,6 +378,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(delegateService).executeTask(any());
     verify(gitConfigHelperService, times(1)).renderGitConfig(any(), any());
     verify(gitFileConfigHelperService, times(1)).renderGitFileConfig(any(), any());
+    verify(stateExecutionService, times(2)).appendDelegateTaskDetails(anyString(), any(DelegateTaskDetails.class));
   }
 
   @Test

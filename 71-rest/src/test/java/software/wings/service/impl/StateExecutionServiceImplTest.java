@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.rule.Owner;
 import org.joor.Reflect;
 import org.junit.Before;
@@ -49,6 +50,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.Builder;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -315,9 +317,10 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     assertThat(dbStateExecutionInstance.getStatus()).isEqualTo(stateExecutionInstance.getStatus());
     assertThat(dbStateExecutionInstance.isHasInspection()).isEqualTo(stateExecutionInstance.isHasInspection());
     assertThat(dbStateExecutionInstance.getAppId()).isEqualTo(stateExecutionInstance.getAppId());
-    assertThat(dbStateExecutionInstance.getDelegateTaskId()).isEqualTo(stateExecutionInstance.getDelegateTaskId());
-    assertThat(dbStateExecutionInstance.isSelectionLogsTrackingForTaskEnabled())
-        .isEqualTo(stateExecutionInstance.isSelectionLogsTrackingForTaskEnabled());
+    assertThat(dbStateExecutionInstance.isSelectionLogsTrackingForTasksEnabled())
+        .isEqualTo(stateExecutionInstance.isSelectionLogsTrackingForTasksEnabled());
+    assertThat(dbStateExecutionInstance.getDelegateTasksDetails())
+        .isEqualTo(stateExecutionInstance.getDelegateTasksDetails());
   }
 
   private StateExecutionInstance createStateExecutionInstance() {
@@ -349,7 +352,11 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     stateExecutionInstance.setInterruptHistory(Arrays.asList(ExecutionInterruptEffect.builder().build()));
     stateExecutionInstance.setHasInspection(false);
     stateExecutionInstance.setDelegateTaskId(generateUuid());
-    stateExecutionInstance.setSelectionLogsTrackingForTaskEnabled(true);
+    stateExecutionInstance.setSelectionLogsTrackingForTasksEnabled(true);
+
+    List<DelegateTaskDetails> delegateTaskDetailsList = new ArrayList<>();
+    delegateTaskDetailsList.add(DelegateTaskDetails.builder().delegateTaskId(generateUuid()).taskType("type").build());
+    stateExecutionInstance.setDelegateTasksDetails(delegateTaskDetailsList);
 
     return stateExecutionInstance;
   }
@@ -369,5 +376,20 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     assertThat(stateExecutionInstances).isNotNull();
     assertThat(stateExecutionInstances.size()).isEqualTo(1);
     assertThat(stateExecutionInstances.get(0).getUuid()).isEqualTo(id);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testAppendDelegateTaskDetails() {
+    StateExecutionInstance instance = createStateExecutionInstance();
+    String id = wingsPersistence.save(instance);
+
+    stateExecutionService.appendDelegateTaskDetails(
+        id, DelegateTaskDetails.builder().delegateTaskId(generateUuid()).taskType("type").build());
+
+    instance = stateExecutionService.getStateExecutionInstance(instance.getAppId(), instance.getExecutionUuid(), id);
+
+    assertThat(instance.getDelegateTasksDetails()).hasSize(2);
   }
 }
