@@ -1,8 +1,6 @@
 package io.harness.cvng;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
-import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.exception.WingsException.USER;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -10,7 +8,6 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.ClientType;
 import io.harness.cvng.client.VerificationManagerClient;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.cvng.utils.CVNextGenCache;
@@ -41,29 +38,6 @@ public class CVNGAuthenticationFilter
   @Override
   public void filter(ContainerRequestContext containerRequestContext) {
     if (authenticationExemptedRequests(containerRequestContext)) {
-      return;
-    }
-
-    if (super.isHarnessClientApi(resourceInfo)) {
-      String apiKeyFromHeader = extractToken(containerRequestContext, PREFIX_BEARER);
-
-      ClientType[] clientTypes = getClientTypesFromHarnessApiKeyAuth(resourceInfo);
-      if (isEmpty(clientTypes)) {
-        throw new WingsException(INVALID_TOKEN, USER);
-      }
-      if (!validateHarnessClientApiRequest(clientTypes[0], apiKeyFromHeader)) {
-        throw new WingsException(INVALID_CREDENTIAL, USER);
-      }
-      return;
-    }
-
-    String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-    if (authorization == null) {
-      throw new WingsException(INVALID_TOKEN, USER);
-    }
-
-    if (isDelegateRequest(containerRequestContext)) {
-      validateDelegateRequest(containerRequestContext);
       return;
     }
 
