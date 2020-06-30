@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>105-connector-nextgen</artifactId>
+    <artifactId>69-connector-nextgen</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.springframework.data</groupId>

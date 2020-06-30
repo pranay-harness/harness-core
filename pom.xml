@@ -44,7 +44,7 @@
         <module>84-command-library-server</module>
         <module>85-functional-test</module>
         <module>91-model-gen-tool</module>
-        <module>105-connector-nextgen</module>
+        <module>69-connector-nextgen</module>
         <module>106-git-sync-manager</module>
         <module>120-ng-manager</module>
     </modules>
