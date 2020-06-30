@@ -538,6 +538,10 @@ public class EcsSetupCommandTaskHelper {
       setDeploymentConfiguration(createServiceRequest, advancedServiceConfig);
       createServiceRequest.setTags(advancedServiceConfig.getTags());
 
+      if (isFargateTaskType && isNotEmpty(advancedServiceConfig.getPlatformVersion())) {
+        createServiceRequest.setPlatformVersion(advancedServiceConfig.getPlatformVersion());
+      }
+
       // This will only work for Daemon service. Reason is, these tags are only propgates for tasks
       // those are created with serviceCreation. We always create service with 0 count and
       // then upsize it in all case other than daemon (where ECS launches tasks with service creation)
