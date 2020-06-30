@@ -13,7 +13,7 @@ import javax.validation.constraints.Size;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrganizationDTO {
   String id;
-  String accountId;
+  String accountIdentifier;
   String identifier;
   String name;
   String color;

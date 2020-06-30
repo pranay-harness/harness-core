@@ -12,7 +12,6 @@ import lombok.experimental.UtilityClass;
 public class OrganizationMapper {
   static Organization toOrganization(CreateOrganizationDTO createOrgRequest) {
     return Organization.builder()
-        .accountId(createOrgRequest.getAccountId())
         .tags(createOrgRequest.getTags())
         .color(createOrgRequest.getColor())
         .description(createOrgRequest.getDescription())
@@ -24,10 +23,10 @@ public class OrganizationMapper {
   static OrganizationDTO writeDto(Organization organization) {
     return OrganizationDTO.builder()
         .id(organization.getId())
-        .accountId(organization.getAccountId())
         .color(organization.getColor())
         .description(organization.getDescription())
         .identifier(organization.getIdentifier())
+        .accountIdentifier(organization.getAccountIdentifier())
         .name(organization.getName())
         .tags(organization.getTags())
         .build();

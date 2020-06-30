@@ -10,11 +10,11 @@ import com.google.inject.Inject;
 import io.harness.ng.core.ErrorDTO;
 import io.harness.ng.core.FailureDTO;
 import io.harness.ng.core.ResponseDTO;
-import io.harness.ng.core.RestQueryFilterParser;
 import io.harness.ng.core.dto.CreateProjectDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.UpdateProjectDTO;
 import io.harness.ng.core.entities.Project;
+import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.api.ProjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -22,7 +22,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -42,8 +41,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api("/projects")
-@Path("/projects")
+@Api("projects")
+@Path("organizations/{orgIdentifier}/projects")
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
@@ -54,55 +53,56 @@ import javax.ws.rs.QueryParam;
     })
 public class ProjectResource {
   private final ProjectService projectService;
-  private final RestQueryFilterParser restQueryFilterParser;
 
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
-  public ResponseDTO<ProjectDTO> create(@NotNull @Valid CreateProjectDTO createProjectDTO) {
-    Project project = projectService.create(toProject(createProjectDTO));
-    return ResponseDTO.newResponse(writeDTO(project));
+  public ResponseDTO<ProjectDTO> create(
+      @PathParam("orgIdentifier") String orgIdentifier, @NotNull @Valid CreateProjectDTO createProjectDTO) {
+    Project project = toProject(createProjectDTO);
+    project.setOrgIdentifier(orgIdentifier);
+    Project createdProject = projectService.create(project);
+    return ResponseDTO.newResponse(writeDTO(createdProject));
   }
 
   @GET
-  @Path("{projectId}")
-  @ApiOperation(value = "Gets a Project by id", nickname = "getProject")
-  public ResponseDTO<Optional<ProjectDTO>> get(@PathParam("projectId") @NotEmpty String projectId) {
-    Optional<Project> project = projectService.get(projectId);
+  @Path("{projectIdentifier}")
+  @ApiOperation(value = "Gets a Project by identifier", nickname = "getProject")
+  public ResponseDTO<Optional<ProjectDTO>> get(@PathParam("orgIdentifier") String orgIdentifier,
+      @PathParam("projectIdentifier") @NotEmpty String projectIdentifier) {
+    Optional<Project> project = projectService.get(orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(project.map(ProjectMapper::writeDTO));
   }
 
   @GET
-  @ApiOperation(value = "Gets Project list", nickname = "getProjectList")
-  public ResponseDTO<Page<ProjectDTO>> list(@QueryParam("orgId") String organizationId,
-      @QueryParam("filter") String filterQuery, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("100") int size, @QueryParam("sort") List<String> sort) {
-    Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, Project.class);
-    Page<Project> projects;
-    if (StringUtils.isNotBlank(organizationId)) {
-      projects = projectService.list(organizationId, criteria, getPageRequest(page, size, sort));
-    } else {
-      projects = projectService.list(criteria, getPageRequest(page, size, sort));
-    }
-    return ResponseDTO.newResponse(projects.map(ProjectMapper::writeDTO));
+  @ApiOperation(value = "Gets Project list for an organization", nickname = "getProjectListForOrganization")
+  public Page<ProjectDTO> listProjectsForOrganization(@PathParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
+      @QueryParam("sort") List<String> sort) {
+    Criteria criteria = Criteria.where(ProjectKeys.orgIdentifier).is(orgIdentifier).and(ProjectKeys.deleted).ne(true);
+    Page<Project> projects = projectService.list(criteria, getPageRequest(page, size, sort));
+    return projects.map(ProjectMapper::writeDTO);
   }
 
   @PUT
-  @Path("{projectId}")
-  @ApiOperation(value = "Update a project by id", nickname = "putProject")
-  public ResponseDTO<Optional<ProjectDTO>> update(
-      @PathParam("projectId") @NotEmpty String projectId, @NotNull @Valid UpdateProjectDTO updateProjectDTO) {
-    Optional<Project> project = projectService.get(projectId);
-    if (project.isPresent()) {
-      Project updatedProject = projectService.update(applyUpdateToProject(project.get(), updateProjectDTO));
+  @Path("{projectIdentifier}")
+  @ApiOperation(value = "Update a project by identifier", nickname = "putProject")
+  public ResponseDTO<Optional<ProjectDTO>> update(@PathParam("orgIdentifier") String orgIdentifier,
+      @PathParam("projectIdentifier") @NotEmpty String projectIdentifier,
+      @NotNull @Valid UpdateProjectDTO updateProjectDTO) {
+    Optional<Project> projectOptional = projectService.get(orgIdentifier, projectIdentifier);
+    if (projectOptional.isPresent()) {
+      Project project = applyUpdateToProject(projectOptional.get(), updateProjectDTO);
+      Project updatedProject = projectService.update(project);
       return ResponseDTO.newResponse(Optional.ofNullable(writeDTO(updatedProject)));
     }
     return ResponseDTO.newResponse(Optional.empty());
   }
 
   @DELETE
-  @Path("{projectId}")
-  @ApiOperation(value = "Delete a project by id", nickname = "deleteProject")
-  public ResponseDTO<Boolean> delete(@PathParam("projectId") @NotEmpty String projectId) {
-    return ResponseDTO.newResponse(projectService.delete(projectId));
+  @Path("{projectIdentifier}")
+  @ApiOperation(value = "Delete a project by identifier", nickname = "deleteProject")
+  public ResponseDTO<Boolean> delete(@PathParam("orgIdentifier") String orgIdentifier,
+      @PathParam("projectIdentifier") @NotEmpty String projectIdentifier) {
+    return ResponseDTO.newResponse(projectService.delete(orgIdentifier, projectIdentifier));
   }
 }

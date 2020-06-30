@@ -10,11 +10,11 @@ import java.util.Optional;
 public interface OrganizationService {
   Organization create(Organization organization);
 
-  Optional<Organization> get(String organizationId);
+  Optional<Organization> get(String accountIdentifier, String organizationIdentifier);
 
   Organization update(Organization organization);
 
-  Page<Organization> list(String accountId, Criteria criteria, Pageable pageable);
+  Page<Organization> list(Criteria criteria, Pageable pageable);
 
-  boolean delete(String organizationId);
+  boolean delete(String accountIdentifier, String organizationIdentifier);
 }

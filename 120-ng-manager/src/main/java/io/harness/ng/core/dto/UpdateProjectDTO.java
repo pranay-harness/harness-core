@@ -22,4 +22,5 @@ public class UpdateProjectDTO {
   @Size(max = 1024) String description;
   @Size(min = 1, max = 128) List<String> owners;
   @Size(max = 128) List<String> tags;
+  @Size(max = 128) List<String> purposeList;
 }

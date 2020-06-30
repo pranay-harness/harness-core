@@ -8,7 +8,6 @@ import com.google.inject.Singleton;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.dao.api.repositories.spring.ProjectRepository;
 import io.harness.ng.core.entities.Project;
-import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.api.ProjectService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -35,14 +34,14 @@ public class ProjectServiceImpl implements ProjectService {
       return projectRepository.save(project);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(String.format("Project [%s] under Organization [%s] already exists",
-                                            project.getIdentifier(), project.getOrgId()),
+                                            project.getIdentifier(), project.getOrgIdentifier()),
           USER_SRE, ex);
     }
   }
 
   @Override
-  public Optional<Project> get(@NotNull String projectId) {
-    return projectRepository.findByIdAndDeletedNot(projectId, Boolean.TRUE);
+  public Optional<Project> get(String orgIdentifier, String projectIdentifier) {
+    return projectRepository.findByOrgIdentifierAndIdentifierAndDeletedNot(orgIdentifier, projectIdentifier, true);
   }
 
   @Override
@@ -52,20 +51,13 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  public Page<Project> list(@NotNull String organizationId, @NotNull Criteria criteria, Pageable pageable) {
-    criteria = criteria.and(ProjectKeys.orgId).is(organizationId);
-    return list(criteria, pageable);
-  }
-
-  @Override
   public Page<Project> list(@NotNull Criteria criteria, @NotNull Pageable pageable) {
-    criteria = criteria.and(ProjectKeys.deleted).ne(Boolean.TRUE);
     return projectRepository.findAll(criteria, pageable);
   }
 
   @Override
-  public boolean delete(String projectId) {
-    Optional<Project> projectOptional = get(projectId);
+  public boolean delete(String orgIdentifier, String projectIdentifier) {
+    Optional<Project> projectOptional = get(orgIdentifier, projectIdentifier);
     if (projectOptional.isPresent()) {
       Project project = projectOptional.get();
       project.setDeleted(true);
