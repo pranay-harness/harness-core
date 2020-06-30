@@ -947,6 +947,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
     for (WorkflowExecution workflowExecution : workflowExecutionList) {
       PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
+      // This is just precautionary this should never happen hence logging this
+      if (workflowExecution.isOnDemandRollback() && pipelineSummary != null) {
+        logger.error("Pipeline Summary non null for rollback execution : {}", workflowExecution.getUuid());
+        pipelineSummary = null;
+      }
       EntitySummary pipelineEntitySummary = null;
       if (pipelineSummary != null) {
         pipelineEntitySummary = getEntitySummary(
