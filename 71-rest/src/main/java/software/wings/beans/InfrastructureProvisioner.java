@@ -7,7 +7,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
@@ -17,6 +20,7 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.beans.InfrastructureProvisioner.InfrastructureProvisionerKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
@@ -34,6 +38,12 @@ import javax.validation.Valid;
   , @Type(value = ShellScriptInfrastructureProvisioner.class, name = "SHELL_SCRIPT"),
       @Type(value = CloudFormationInfrastructureProvisioner.class, name = "CLOUD_FORMATION")
 })
+@CdIndex(name = "accountIdCreatedAtIdx",
+    fields =
+    {
+      @Field(InfrastructureProvisionerKeys.accountId)
+      , @Field(value = InfrastructureProvisionerKeys.createdAt, type = IndexType.DESC)
+    })
 @Entity(value = "infrastructureProvisioner")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "InfrastructureProvisionerKeys")
