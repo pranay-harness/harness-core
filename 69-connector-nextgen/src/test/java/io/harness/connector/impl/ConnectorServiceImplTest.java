@@ -103,8 +103,8 @@ public class ConnectorServiceImplTest extends ConnectorsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.DEEPAK)
-  @Category(UnitTests.class)
+  @Owner(developers = OwnerRule.DEEPAK, intermittent = true)
+  @Category({UnitTests.class})
   public void testList() {
     createConnector();
     createConnector();
