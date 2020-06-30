@@ -1,0 +1,41 @@
+extend type Query {
+  k8sWorkloadRecommendations(filters: [WorkloadFilter], limit: Int!, offset: Int): WorkloadRecommendationConnection
+    @dataFetcher(name: k8sWorkloadRecommendations)
+}
+
+input WorkloadFilter {
+  cluster: IdFilter
+  namespace: IdFilter
+  workloadName: IdFilter
+  workloadType: WorkloadTypeFilter
+}
+
+type WorkloadRecommendationConnection {
+  pageInfo: PageInfo
+  nodes: [WorkloadRecommendation]
+}
+
+type WorkloadRecommendation {
+  namespace: String
+  workloadType: String
+  workloadName: String
+  containerRecommendations: [ContainerRecommendation]
+  estimatedSavings: Number
+}
+
+type ContainerRecommendation {
+  containerName: String
+  current: ResourceRequirements
+  burstable: ResourceRequirements
+  guaranteed: ResourceRequirements
+}
+
+type ResourceRequirements {
+  limits: [ResourceEntry]
+  requests: [ResourceEntry]
+}
+
+type ResourceEntry {
+  name: String
+  quantity: String
+}

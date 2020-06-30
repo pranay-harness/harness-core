@@ -469,6 +469,7 @@ import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapab
 import software.wings.delegatetasks.validation.capabilities.SmbConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
@@ -935,6 +936,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(InstanceSyncPerpetualTaskInfo.class);
     set.add(JenkinsArtifactStream.class);
     set.add(K8sWorkload.class);
+    set.add(K8sWorkloadRecommendation.class);
     set.add(K8sYaml.class);
     set.add(KeywordsAware.class);
     set.add(KmsConfig.class);
