@@ -10,6 +10,7 @@ import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.exception.UnexpectedException;
 import io.harness.facilitator.FacilitatorParameters;
+import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.ExecutableResponse;
 import io.harness.references.RefObject;
 import io.harness.reflection.CodeUtils;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
 public class OrchestrationAliasUtils {
   private static final Set<Class<?>> BASE_ORCHESTRATION_INTERFACES =
       ImmutableSet.of(StepParameters.class, StepTransput.class, RefObject.class, AdviserParameters.class,
-          FacilitatorParameters.class, ExecutableResponse.class);
+          FacilitatorParameters.class, ExecutableResponse.class, PassThroughData.class);
 
   public static void validateModule() {
     Map<String, Class<?>> allElements = new HashMap<>();
@@ -44,12 +45,17 @@ public class OrchestrationAliasUtils {
         constructor = clazz.getConstructor();
         final OrchestrationBeansAliasRegistrar aliasRegistrar =
             (OrchestrationBeansAliasRegistrar) constructor.newInstance();
+
         if (CodeUtils.isTestClass(clazz)) {
           continue;
         }
         logger.info("Checking registrar {}", clazz.getName());
         Map<String, Class<?>> orchestrationElements = new HashMap<>();
         aliasRegistrar.register(orchestrationElements);
+
+        CodeUtils.checkHarnessClassesBelongToModule(
+            CodeUtils.location(aliasRegistrar.getClass()), new HashSet<>(orchestrationElements.values()));
+
         Set<String> intersection = Sets.intersection(allElements.keySet(), orchestrationElements.keySet());
         if (isNotEmpty(intersection)) {
           throw new IllegalStateException("Aliases already registered. Please register with a new Alias: "

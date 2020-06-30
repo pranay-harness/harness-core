@@ -13,6 +13,7 @@ import io.harness.state.core.dummy.DummySectionStepTransput;
 import io.harness.state.core.dummy.DummyStepParameters;
 import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.core.section.SectionStepParameters;
+import io.harness.state.core.section.chain.SectionChainPassThroughData;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
 
 import java.util.Map;
@@ -34,6 +35,7 @@ public class OrchestrationAliasRegistrar implements OrchestrationBeansAliasRegis
     orchestrationElements.put("onFailAdviserParameters", OnFailAdviserParameters.class);
     orchestrationElements.put("onSuccessAdviserParameters", OnSuccessAdviserParameters.class);
     orchestrationElements.put("retryAdviserParameters", RetryAdviserParameters.class);
+    orchestrationElements.put("sectionChainPassThroughData", SectionChainPassThroughData.class);
     orchestrationElements.put("sectionChainStepParameters", SectionChainStepParameters.class);
     orchestrationElements.put("sectionStepParameters", SectionStepParameters.class);
   }

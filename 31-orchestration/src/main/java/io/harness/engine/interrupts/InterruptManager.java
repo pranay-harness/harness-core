@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.Interrupt;
+import io.harness.logging.AutoLogContext;
 
 @OwnedBy(CDC)
 public class InterruptManager {
@@ -21,7 +22,9 @@ public class InterruptManager {
                               .nodeExecutionId(interruptPackage.getNodeExecutionId())
                               .parameters(interruptPackage.getParameters())
                               .build();
-    InterruptHandler interruptHandler = interruptHandlerFactory.obtainHandler(interruptPackage.getInterruptType());
-    return interruptHandler.registerInterrupt(interrupt);
+    try (AutoLogContext ignore = interrupt.autoLogContext()) {
+      InterruptHandler interruptHandler = interruptHandlerFactory.obtainHandler(interruptPackage.getInterruptType());
+      return interruptHandler.registerInterrupt(interrupt);
+    }
   }
 }
