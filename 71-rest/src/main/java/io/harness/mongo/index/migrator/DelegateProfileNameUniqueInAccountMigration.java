@@ -5,14 +5,10 @@ import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
 
 import io.harness.persistence.HIterator;
-import io.harness.persistence.PersistentEntity;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.aggregation.AggregationPipeline;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -65,18 +61,5 @@ public class DelegateProfileNameUniqueInAccountMigration implements Migrator {
     } catch (Exception e) {
       logger.error("Unexpected error occurred while processing delegate profile.", e);
     }
-  }
-
-  @Data
-  public static class AccountAndName {
-    private String accountId;
-    private String name;
-  }
-
-  @Data
-  @Entity(noClassnameStored = true)
-  public static class AggregateResult implements PersistentEntity {
-    @Id private AccountAndName _id;
-    private Integer count;
   }
 }

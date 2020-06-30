@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -33,6 +34,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.security.SimpleEncryption;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -48,6 +50,7 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuditServiceHelper;
 
+@Slf4j
 public class ApiKeyServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private UserGroupService userGroupService;
@@ -69,7 +72,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testGenerate() {
-    ApiKeyEntry savedApiKeyEntry = generateKey();
+    ApiKeyEntry savedApiKeyEntry = generateKey("name");
 
     assertThat(savedApiKeyEntry).isNotNull();
     assertThat(savedApiKeyEntry.getDecryptedKey()).isNotEmpty();
@@ -78,10 +81,32 @@ public class ApiKeyServiceTest extends WingsBaseTest {
             eq(savedApiKeyEntry.getAccountId()), eq(null), any(ApiKeyEntry.class), eq(Type.CREATE));
   }
 
-  private ApiKeyEntry generateKey() {
+  @Test
+  @Owner(developers = NIKOLA)
+  @Category(UnitTests.class)
+  public void testGenerateWithAlreadyExistingName() {
+    ApiKeyEntry savedApiKeyEntry = generateKey("name");
+
+    assertThat(savedApiKeyEntry).isNotNull();
+    assertThat(savedApiKeyEntry.getDecryptedKey()).isNotEmpty();
+    verify(auditServiceHelper, times(1))
+        .reportForAuditingUsingAccountId(
+            eq(savedApiKeyEntry.getAccountId()), eq(null), any(ApiKeyEntry.class), eq(Type.CREATE));
+
+    ApiKeyEntry newApiKeyEntry = generateKey("name");
+
+    assertThat(newApiKeyEntry).isNotNull();
+    assertThat(newApiKeyEntry.getName()).isEqualTo("name1");
+    assertThat(newApiKeyEntry.getDecryptedKey()).isNotEmpty();
+    verify(auditServiceHelper, times(2))
+        .reportForAuditingUsingAccountId(
+            eq(newApiKeyEntry.getAccountId()), eq(null), any(ApiKeyEntry.class), eq(Type.CREATE));
+  }
+
+  private ApiKeyEntry generateKey(String name) {
     Account account = anAccount().withUuid(ACCOUNT_ID).withAccountKey(ACCOUNT_KEY).build();
     doReturn(account).when(accountService).get(ACCOUNT_ID);
-    UserGroup userGroup = UserGroup.builder().uuid(USER_GROUP_ID).build();
+    UserGroup userGroup = UserGroup.builder().uuid(USER_GROUP_ID).name(name).build();
     PageResponse pageResponse = aPageResponse().withResponse(asList(userGroup)).build();
     doReturn(pageResponse).when(userGroupService).list(anyString(), any(PageRequest.class), anyBoolean());
     ApiKeyEntry apiKeyEntry =
@@ -93,7 +118,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testUpdate() {
-    ApiKeyEntry apiKeyEntry = generateKey();
+    ApiKeyEntry apiKeyEntry = generateKey("name");
     ApiKeyEntry apiKeyEntryForUpdate = ApiKeyEntry.builder().name("newName").build();
     ApiKeyEntry updatedApiKeyEntry =
         apiKeyService.update(apiKeyEntry.getUuid(), apiKeyEntry.getAccountId(), apiKeyEntryForUpdate);
@@ -109,7 +134,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   @Owner(developers = UJJAWAL)
   @Category(UnitTests.class)
   public void testUpdateForUserGroup() {
-    ApiKeyEntry apiKeyEntry = generateKey();
+    ApiKeyEntry apiKeyEntry = generateKey("name");
 
     ApiKeyEntry apiKeyEntryForUpdate = ApiKeyEntry.builder().userGroupIds(asList(USER_GROUP_ID)).build();
     ApiKeyEntry updatedApiKeyEntry =
@@ -126,7 +151,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testDelete() {
-    ApiKeyEntry apiKeyEntry = generateKey();
+    ApiKeyEntry apiKeyEntry = generateKey("name");
     apiKeyService.delete(ACCOUNT_ID, apiKeyEntry.getUuid());
     apiKeyService.get(apiKeyEntry.getUuid(), apiKeyEntry.getAccountId());
     verify(auditServiceHelper, times(1))
@@ -143,7 +168,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testGet() {
-    ApiKeyEntry apiKeyEntry = generateKey();
+    ApiKeyEntry apiKeyEntry = generateKey("name");
     ApiKeyEntry apiKeyEntryFromGet = apiKeyService.get(apiKeyEntry.getUuid(), ACCOUNT_ID);
     assertThat(apiKeyEntryFromGet).isNotNull();
     String key = apiKeyEntryFromGet.getDecryptedKey();
@@ -154,7 +179,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testList() {
-    generateKey();
+    generateKey("name");
     PageRequest request = PageRequestBuilder.aPageRequest().addFilter("accountId", Operator.EQ, ACCOUNT_ID).build();
     PageResponse pageResponse = apiKeyService.list(request, ACCOUNT_ID, false, false);
     assertThat(pageResponse.getResponse()).isNotEmpty();
@@ -164,7 +189,7 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testValidate() {
-    ApiKeyEntry apiKeyEntry = generateKey();
+    ApiKeyEntry apiKeyEntry = generateKey("name");
     try {
       apiKeyService.validate(apiKeyEntry.getDecryptedKey(), ACCOUNT_ID);
     } catch (UnauthorizedException ex) {

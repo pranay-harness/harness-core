@@ -26,7 +26,7 @@ import io.harness.dashboard.DashboardSettings;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.execution.export.request.ExportExecutionsRequest;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
-import io.harness.mongo.index.migrator.DelegateProfileNameUniqueInAccountMigration.AggregateResult;
+import io.harness.mongo.index.migrator.AggregateResult;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.notifications.NotificationReceiverInfo;

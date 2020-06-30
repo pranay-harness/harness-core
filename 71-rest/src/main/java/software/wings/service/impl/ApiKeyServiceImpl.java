@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.System.currentTimeMillis;
 import static java.util.function.Function.identity;
@@ -106,7 +107,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
             .hashOfKey(hashpw(apiKey, BCrypt.gensalt()))
             .accountId(accountId)
             .build();
-    String id = wingsPersistence.save(apiKeyEntryToBeSaved);
+    String id = duplicateCheck(
+        () -> wingsPersistence.save(apiKeyEntryToBeSaved), ApiKeyEntryKeys.name, apiKeyEntryToBeSaved.getName());
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Type.CREATE);
     return get(id, accountId);
   }

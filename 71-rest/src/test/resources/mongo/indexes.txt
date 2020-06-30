@@ -33,8 +33,8 @@ alerts {"name": "cvCleanUpIteration_1", "background": true} {"cvCleanUpIteration
 alerts {"name": "reconciliationIterator", "background": true} {"status": 1, "alertReconciliation.needed": 1, "alertReconciliation.nextIteration": 1}
 alerts {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 allowedLimits {"name": "key_idx", "unique": true} {"key": 1, "accountId": 1}
-apiKeys {"name": "accountId_1", "background": true} {"accountId": 1}
 apiKeys {"name": "createdAt_1", "background": true} {"createdAt": 1}
+apiKeys {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
 appContainers {"name": "appId_1", "background": true} {"appId": 1}
 appContainers {"name": "createdAt_1", "background": true} {"createdAt": 1}
 appContainers {"name": "yaml", "unique": true} {"accountId": 1, "name": 1}

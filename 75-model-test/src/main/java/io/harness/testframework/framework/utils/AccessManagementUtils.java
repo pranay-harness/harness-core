@@ -1,5 +1,6 @@
 package io.harness.testframework.framework.utils;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.JsonObject;
@@ -82,6 +83,7 @@ public class AccessManagementUtils {
       int expectedStatusCodeForUsersAndGroups, int expectedStatusGroupForOthers) {
     final String READ_ONLY_USER = userId;
     final String IP_WHITELIST_VAL = "0.0.0.0";
+    String apiKeyName = generateUuid();
     logger.info("Starting with the ReadOnly Test");
 
     User readOnlyUser = UserUtils.getUser(bearerToken, account.getUuid(), READ_ONLY_USER).getUser();
@@ -93,7 +95,7 @@ public class AccessManagementUtils {
     List<String> userGroupIds = new ArrayList<>();
     userGroupIds.add(userGroup.getUuid());
     apiKeyEntry.setUserGroupIds(userGroupIds);
-    apiKeyEntry.setName("apiKey");
+    apiKeyEntry.setName(apiKeyName);
     apiKeyEntry.setAccountId(account.getUuid());
     ApiKeyEntry postedEntry = ApiKeysRestUtils.createApiKey(account.getUuid(), bearerToken, apiKeyEntry);
     //    LdapSettings ldapSettings = SSOUtils.createDefaultLdapSettings(account.getUuid());
