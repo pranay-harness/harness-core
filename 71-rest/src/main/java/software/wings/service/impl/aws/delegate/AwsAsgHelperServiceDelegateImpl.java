@@ -39,6 +39,7 @@ import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationResult;
+import com.amazonaws.services.autoscaling.model.CreateOrUpdateTagsRequest;
 import com.amazonaws.services.autoscaling.model.DeleteAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.DeleteLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.DeletePolicyRequest;
@@ -56,6 +57,7 @@ import com.amazonaws.services.autoscaling.model.PutScalingPolicyRequest;
 import com.amazonaws.services.autoscaling.model.PutScalingPolicyResult;
 import com.amazonaws.services.autoscaling.model.ScalingPolicy;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
+import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
 import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -783,6 +785,31 @@ public class AwsAsgHelperServiceDelegateImpl
       logCallback.saveExecutionLog(errorMessage);
       logger.error(errorMessage, ex);
       return null;
+    }
+  }
+
+  @Override
+  public void addUpdateTagAutoScalingGroup(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String asgName, String region, String tagKey, String tagValue, ExecutionLogCallback executionLogCallback) {
+    try {
+      executionLogCallback.saveExecutionLog(
+          format("Tagging ASG with name: [%s] with tag: [%s] -> [%s]", asgName, tagKey, tagValue));
+      encryptionService.decrypt(awsConfig, encryptedDataDetails);
+      tracker.trackASGCall("Add Update Tags to Autoscaling group");
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      CreateOrUpdateTagsRequest createOrUpdateTagsRequest = new CreateOrUpdateTagsRequest();
+      Tag blueVersionTag = new Tag();
+      blueVersionTag.withKey(tagKey)
+          .withValue(tagValue)
+          .withPropagateAtLaunch(true)
+          .withResourceId(asgName)
+          .withResourceType("auto-scaling-group");
+      createOrUpdateTagsRequest.withTags(blueVersionTag);
+      amazonAutoScalingClient.createOrUpdateTags(createOrUpdateTagsRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
   }
 

@@ -41,6 +41,7 @@ import com.amazonaws.services.autoscaling.model.LaunchTemplate;
 import com.amazonaws.services.autoscaling.model.LaunchTemplateSpecification;
 import com.amazonaws.services.autoscaling.model.MixedInstancesPolicy;
 import com.amazonaws.services.autoscaling.model.Tag;
+import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionRequest;
 import com.amazonaws.services.ec2.model.CreateLaunchTemplateVersionResult;
 import com.amazonaws.services.ec2.model.Instance;
@@ -96,6 +97,9 @@ public class AwsAmiHelperServiceDelegateImpl
   private static final String AUTOSCALING_GROUP_RESOURCE_TYPE = "auto-scaling-group";
   @VisibleForTesting static final String NAME_TAG = "Name";
   private static final int MAX_OLD_ASG_VERSION_TO_KEEP = 3;
+  static final String BG_VERSION = "BG_VERSION";
+  static final String BG_GREEN = "GREEN";
+  static final String BG_BLUE = "BLUE";
   @Inject private ExecutorService executorService;
   @Inject private DelegateLogService delegateLogService;
   @Inject private AwsAsgHelperServiceDelegate awsAsgHelperServiceDelegate;
@@ -175,6 +179,9 @@ public class AwsAmiHelperServiceDelegateImpl
 
         awsAsgHelperServiceDelegate.attachScalingPoliciesToAsg(
             awsConfig, encryptionDetails, region, newAsgName, request.getBaseScalingPolicyJSONs(), logCallback);
+
+        awsAsgHelperServiceDelegate.addUpdateTagAutoScalingGroup(
+            awsConfig, encryptionDetails, newAsgName, region, BG_VERSION, BG_BLUE, logCallback);
       }
 
       if (isNotEmpty(oldAsgName)) {
@@ -213,6 +220,9 @@ public class AwsAmiHelperServiceDelegateImpl
           awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
               awsConfig, encryptionDetails, region, oldAsgName, 0, logCallback, timeout);
         }
+
+        awsAsgHelperServiceDelegate.addUpdateTagAutoScalingGroup(
+            awsConfig, encryptionDetails, oldAsgName, region, BG_VERSION, BG_GREEN, logCallback);
       }
 
       logCallback.saveExecutionLog("Completed switch routes", INFO, CommandExecutionStatus.SUCCESS);
@@ -285,6 +295,8 @@ public class AwsAmiHelperServiceDelegateImpl
         }
         awsAsgHelperServiceDelegate.attachScalingPoliciesToAsg(
             awsConfig, encryptionDetails, region, oldAsgName, oldScalingPolicyJSONs, logCallback);
+        awsAsgHelperServiceDelegate.addUpdateTagAutoScalingGroup(
+            awsConfig, encryptionDetails, oldAsgName, region, BG_VERSION, BG_BLUE, logCallback);
       }
 
       if (isNotEmpty(newAsgName)) {
@@ -314,6 +326,8 @@ public class AwsAmiHelperServiceDelegateImpl
           });
         }
 
+        awsAsgHelperServiceDelegate.addUpdateTagAutoScalingGroup(
+            awsConfig, encryptionDetails, newAsgName, region, BG_VERSION, BG_GREEN, logCallback);
         logCallback.saveExecutionLog(format("Downscaling autoScaling Group [%s]", newAsgName));
         awsAsgHelperServiceDelegate.clearAllScalingPoliciesForAsg(
             awsConfig, encryptionDetails, region, newAsgName, logCallback);
@@ -964,17 +978,17 @@ public class AwsAmiHelperServiceDelegateImpl
       List<AutoScalingGroup> autoScalingGroupsWithNonZeroCount =
           listAllExistingAsgsWithNonZeroCount(harnessManagedAutoScalingGroups);
 
-      AutoScalingGroup mostRecentActiveAsg =
-          getMostRecentActiveAsg(harnessManagedAutoScalingGroups, autoScalingGroupsWithNonZeroCount);
+      AutoScalingGroup mostRecentOrBlueActiveAsg =
+          getMostRecentOrBlueActiveAsg(harnessManagedAutoScalingGroups, autoScalingGroupsWithNonZeroCount, request);
 
-      downsizeOrDeleteOlderAutoScalaingGroups(
-          awsConfig, encryptionDetails, request, harnessManagedAutoScalingGroups, mostRecentActiveAsg, logCallback);
+      downsizeOrDeleteOlderAutoScalaingGroups(awsConfig, encryptionDetails, request, harnessManagedAutoScalingGroups,
+          mostRecentOrBlueActiveAsg, logCallback);
 
       String lastDeployedAsgName =
-          mostRecentActiveAsg == null ? StringUtils.EMPTY : mostRecentActiveAsg.getAutoScalingGroupName();
+          mostRecentOrBlueActiveAsg == null ? StringUtils.EMPTY : mostRecentOrBlueActiveAsg.getAutoScalingGroupName();
 
       if (request.isUseCurrentRunningCount()) {
-        AwsAsgGetRunningCountData currentlyRunningInstanceCount = getAsgRunningCountData(mostRecentActiveAsg);
+        AwsAsgGetRunningCountData currentlyRunningInstanceCount = getAsgRunningCountData(mostRecentOrBlueActiveAsg);
         logCallback.saveExecutionLog(
             format("Using currently running min: [%d], max: [%d], desired: [%d] from Asg: [%s]",
                 currentlyRunningInstanceCount.getAsgMin(), currentlyRunningInstanceCount.getAsgMax(),
@@ -1003,7 +1017,7 @@ public class AwsAmiHelperServiceDelegateImpl
       awsAsgHelperServiceDelegate.createAutoScalingGroup(awsConfig, encryptionDetails, region,
           createNewAutoScalingGroupRequest(request.getInfraMappingId(), request.getInfraMappingClassisLbs(),
               request.getInfraMappingTargetGroupArns(), newAutoScalingGroupName, baseAutoScalingGroup, harnessRevision,
-              maxInstances, newLaunchTemplateVersion),
+              maxInstances, newLaunchTemplateVersion, request.isBlueGreen()),
           logCallback);
       AwsAmiServiceSetupResponseBuilder builder =
           AwsAmiServiceSetupResponse.builder()
@@ -1028,7 +1042,7 @@ public class AwsAmiHelperServiceDelegateImpl
               .baseAsgScalingPolicyJSONs(awsAsgHelperServiceDelegate.getScalingPolicyJSONs(
                   awsConfig, encryptionDetails, region, baseAutoScalingGroup.getAutoScalingGroupName(), logCallback));
 
-      populatePreDeploymentData(awsConfig, encryptionDetails, region, mostRecentActiveAsg, builder, logCallback);
+      populatePreDeploymentData(awsConfig, encryptionDetails, region, mostRecentOrBlueActiveAsg, builder, logCallback);
       logCallback.saveExecutionLog(
           format("Completed AWS AMI Setup with new autoScalingGroupName [%s]", newAutoScalingGroupName), INFO,
           CommandExecutionStatus.SUCCESS);
@@ -1044,9 +1058,18 @@ public class AwsAmiHelperServiceDelegateImpl
   }
 
   @VisibleForTesting
-  AutoScalingGroup getMostRecentActiveAsg(List<AutoScalingGroup> harnessManagedAutoScalingGroups,
-      List<AutoScalingGroup> autoScalingGroupsWithNonZeroCount) {
+  AutoScalingGroup getMostRecentOrBlueActiveAsg(List<AutoScalingGroup> harnessManagedAutoScalingGroups,
+      List<AutoScalingGroup> autoScalingGroupsWithNonZeroCount, AwsAmiServiceSetupRequest request) {
     AutoScalingGroup mostRecentActiveAsg = null;
+    if (request.isBlueGreen()) {
+      List<AutoScalingGroup> blueVersionAsgs =
+          harnessManagedAutoScalingGroups.stream()
+              .filter(asg -> checkIfContainsTag(asg.getTags(), BG_VERSION, BG_BLUE))
+              .collect(toList());
+      if (isNotEmpty(blueVersionAsgs)) {
+        return blueVersionAsgs.get(0);
+      }
+    }
 
     if (isNotEmpty(autoScalingGroupsWithNonZeroCount)) {
       mostRecentActiveAsg = autoScalingGroupsWithNonZeroCount.get(0);
@@ -1055,6 +1078,15 @@ public class AwsAmiHelperServiceDelegateImpl
     }
 
     return mostRecentActiveAsg;
+  }
+
+  boolean checkIfContainsTag(List<TagDescription> tagDescriptions, String tagKey, String tagValue) {
+    List<TagDescription> filteredTags = tagDescriptions.stream()
+                                            .filter(tagDescription
+                                                -> tagKey.equalsIgnoreCase(tagDescription.getKey())
+                                                    && tagValue.equalsIgnoreCase(tagDescription.getValue()))
+                                            .collect(toList());
+    return !isEmpty(filteredTags);
   }
 
   private List<AutoScalingGroup> listAllExistingAsgsWithNonZeroCount(
@@ -1072,8 +1104,8 @@ public class AwsAmiHelperServiceDelegateImpl
   @VisibleForTesting
   void downsizeOrDeleteOlderAutoScalaingGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       AwsAmiServiceSetupRequest request, List<AutoScalingGroup> autoScalingGroups,
-      AutoScalingGroup mostRecentAsgWithNonZeroInstanceCount, ExecutionLogCallback executionLogCallback) {
-    if (isEmpty(autoScalingGroups) || mostRecentAsgWithNonZeroInstanceCount == null) {
+      AutoScalingGroup mostRecentOrBlueAsgWithNonZeroInstanceCount, ExecutionLogCallback executionLogCallback) {
+    if (isEmpty(autoScalingGroups) || mostRecentOrBlueAsgWithNonZeroInstanceCount == null) {
       return;
     }
 
@@ -1082,10 +1114,12 @@ public class AwsAmiHelperServiceDelegateImpl
     int versionsRetained = 1;
     try {
       for (AutoScalingGroup autoScalingGroup : autoScalingGroups) {
-        if (mostRecentAsgWithNonZeroInstanceCount.getAutoScalingGroupName().equals(
-                autoScalingGroup.getAutoScalingGroupName())) {
-          executionLogCallback.saveExecutionLog(color(
-              "# Not changing Most Recent Active ASG: " + autoScalingGroup.getAutoScalingGroupName(), Yellow, Bold));
+        if (mostRecentOrBlueAsgWithNonZeroInstanceCount.getAutoScalingGroupName().equals(
+                autoScalingGroup.getAutoScalingGroupName())
+            || (request.isBlueGreen() && checkIfContainsTag(autoScalingGroup.getTags(), BG_VERSION, BG_BLUE))) {
+          executionLogCallback.saveExecutionLog(
+              color("# Not changing Most Recent Or Blue Active ASG: " + autoScalingGroup.getAutoScalingGroupName(),
+                  Yellow, Bold));
         } else {
           if (versionsRetained < MAX_OLD_ASG_VERSION_TO_KEEP) {
             if (autoScalingGroup.getDesiredCapacity() > 0) {
@@ -1097,6 +1131,7 @@ public class AwsAmiHelperServiceDelegateImpl
             executionLogCallback.saveExecutionLog(
                 color("# Deleting Existing ASG: " + autoScalingGroup.getAutoScalingGroupName(), Yellow, Bold));
             downsizeAsgToZero(awsConfig, encryptionDetails, request, executionLogCallback, autoScalingGroup);
+
             awsAsgHelperServiceDelegate.deleteAutoScalingGroups(awsConfig, encryptionDetails, request.getRegion(),
                 singletonList(autoScalingGroup), executionLogCallback);
           }
@@ -1208,33 +1243,9 @@ public class AwsAmiHelperServiceDelegateImpl
   CreateAutoScalingGroupRequest createNewAutoScalingGroupRequest(String infraMappingId,
       List<String> infraMappingClassisLbs, List<String> infraMappingTargetGroupArns, String newAutoScalingGroupName,
       AutoScalingGroup baseAutoScalingGroup, Integer harnessRevision, Integer maxInstances,
-      LaunchTemplateVersion newLaunchTemplateVersion) {
-    List<Tag> tags =
-        baseAutoScalingGroup.getTags()
-            .stream()
-            .filter(tagDescription
-                -> !Arrays.asList(HARNESS_AUTOSCALING_GROUP_TAG, NAME_TAG).contains(tagDescription.getKey()))
-            /**
-             * In case of dynamic base Asg provisioning the base Asg would have a tags like the following,
-             * which a user can't create. So we must filter those ones out
-             * - aws:cloudformation:logical-id
-             * - aws:cloudformation:stack-id
-             * - aws:cloudformation:stack-name
-             */
-            .filter(tagDescription -> !tagDescription.getKey().startsWith("aws:"))
-            .map(tagDescription
-                -> new Tag()
-                       .withKey(tagDescription.getKey())
-                       .withValue(tagDescription.getValue())
-                       .withPropagateAtLaunch(tagDescription.getPropagateAtLaunch())
-                       .withResourceType(tagDescription.getResourceType()))
-            .collect(toList());
-    tags.add(new Tag()
-                 .withKey(HARNESS_AUTOSCALING_GROUP_TAG)
-                 .withValue(AsgConvention.getRevisionTagValue(infraMappingId, harnessRevision))
-                 .withPropagateAtLaunch(true)
-                 .withResourceType(AUTOSCALING_GROUP_RESOURCE_TYPE));
-    tags.add(new Tag().withKey(NAME_TAG).withValue(newAutoScalingGroupName).withPropagateAtLaunch(true));
+      LaunchTemplateVersion newLaunchTemplateVersion, Boolean isBlueGreen) {
+    List<Tag> tagsForNewAsg =
+        getTagsForNewAsg(baseAutoScalingGroup, infraMappingId, harnessRevision, newAutoScalingGroupName, isBlueGreen);
 
     CreateAutoScalingGroupRequest createAutoScalingGroupRequest =
         new CreateAutoScalingGroupRequest()
@@ -1242,7 +1253,7 @@ public class AwsAmiHelperServiceDelegateImpl
             .withDesiredCapacity(0)
             .withMinSize(0)
             .withMaxSize(maxInstances)
-            .withTags(tags)
+            .withTags(tagsForNewAsg)
             .withDefaultCooldown(baseAutoScalingGroup.getDefaultCooldown())
             .withAvailabilityZones(baseAutoScalingGroup.getAvailabilityZones())
             .withTerminationPolicies(baseAutoScalingGroup.getTerminationPolicies())
@@ -1297,6 +1308,42 @@ public class AwsAmiHelperServiceDelegateImpl
           .collect(toList());
     }
     return emptyList();
+  }
+
+  @VisibleForTesting
+  List<Tag> getTagsForNewAsg(AutoScalingGroup baseAutoScalingGroup, String infraMappingId, Integer harnessRevision,
+      String newAutoScalingGroupName, Boolean isBlueGreen) {
+    List<Tag> tags =
+        baseAutoScalingGroup.getTags()
+            .stream()
+            .filter(tagDescription
+                -> !Arrays.asList(HARNESS_AUTOSCALING_GROUP_TAG, NAME_TAG).contains(tagDescription.getKey()))
+            /**
+             * In case of dynamic base Asg provisioning the base Asg would have a tags like the following,
+             * which a user can't create. So we must filter those ones out
+             * - aws:cloudformation:logical-id
+             * - aws:cloudformation:stack-id
+             * - aws:cloudformation:stack-name
+             */
+            .filter(tagDescription -> !tagDescription.getKey().startsWith("aws:"))
+            .map(tagDescription
+                -> new Tag()
+                       .withKey(tagDescription.getKey())
+                       .withValue(tagDescription.getValue())
+                       .withPropagateAtLaunch(tagDescription.getPropagateAtLaunch())
+                       .withResourceType(tagDescription.getResourceType()))
+            .collect(toList());
+    tags.add(new Tag()
+                 .withKey(HARNESS_AUTOSCALING_GROUP_TAG)
+                 .withValue(AsgConvention.getRevisionTagValue(infraMappingId, harnessRevision))
+                 .withPropagateAtLaunch(true)
+                 .withResourceType(AUTOSCALING_GROUP_RESOURCE_TYPE));
+    tags.add(new Tag().withKey(NAME_TAG).withValue(newAutoScalingGroupName).withPropagateAtLaunch(true));
+    if (isBlueGreen) {
+      tags.add(new Tag().withKey(BG_VERSION).withValue(BG_GREEN).withPropagateAtLaunch(true));
+    }
+
+    return tags;
   }
 
   @VisibleForTesting
