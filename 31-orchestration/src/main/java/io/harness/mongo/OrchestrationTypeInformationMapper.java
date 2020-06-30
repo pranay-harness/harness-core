@@ -41,8 +41,8 @@ public class OrchestrationTypeInformationMapper implements TypeInformationMapper
       if (clazz != null) {
         return ClassTypeInformation.from(clazz);
       }
-      logger.error("No Class recorded for Alias: {}", stringAlias);
-      return loadClass(stringAlias).orElse(null);
+      return loadClass(stringAlias)
+          .orElseThrow(() -> new OrchestrationAliasRegistryException("No class registered for alias : ", stringAlias));
     }
     return null;
   }
@@ -53,8 +53,7 @@ public class OrchestrationTypeInformationMapper implements TypeInformationMapper
     if (typeToAliasMap.containsKey(typeClass.getType())) {
       return typeToAliasMap.get(typeClass.getType());
     }
-    logger.error("No Alias recorded for OrchestrationEntity {}. Using fully qualified path", type.getType().getName());
-    return Alias.of(type.getType().getName());
+    throw new OrchestrationAliasRegistryException("No Alias Found for class : ", typeClass.getType().getName());
   }
 
   private static Optional<ClassTypeInformation<?>> loadClass(String typeName) {

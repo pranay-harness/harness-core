@@ -16,14 +16,13 @@ import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
-import org.mongodb.morphia.annotations.Transient;
 
 import java.util.Map;
 
 public class TestAsyncStep implements Step, AsyncExecutable {
   public static final StepType ASYNC_STEP_TYPE = StepType.builder().type("TEST_STATE_PLAN_ASYNC").build();
 
-  @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private transient WaitNotifyEngine waitNotifyEngine;
 
   @Override
   public AsyncExecutableResponse executeAsync(

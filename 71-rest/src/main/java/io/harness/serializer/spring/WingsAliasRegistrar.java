@@ -13,6 +13,7 @@ import io.harness.cdng.k8s.K8sRollingRollbackStepInfo;
 import io.harness.cdng.k8s.K8sRollingRollbackStepParameters;
 import io.harness.cdng.k8s.K8sRollingStepInfo;
 import io.harness.cdng.k8s.K8sRollingStepParameters;
+import io.harness.cdng.k8s.K8sRollingStepPassThroughData;
 import io.harness.cdng.manifest.state.ManifestListConfig;
 import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -134,6 +135,7 @@ public class WingsAliasRegistrar implements OrchestrationBeansAliasRegistrar {
     orchestrationElements.put("k8sDirectInfrastructure", K8SDirectInfrastructure.class);
     orchestrationElements.put("k8sHelmDeploymentElement", K8sHelmDeploymentElement.class);
     orchestrationElements.put("k8sRollingOutcome", K8sRollingOutcome.class);
+    orchestrationElements.put("k8sRollingStepPassThroughData", K8sRollingStepPassThroughData.class);
     orchestrationElements.put("k8sRollingRollback", K8sRollingRollbackStepInfo.class);
     orchestrationElements.put("k8sRollingRollbackStepParameters", K8sRollingRollbackStepParameters.class);
     orchestrationElements.put("k8sRollingStepInfo", K8sRollingStepInfo.class);

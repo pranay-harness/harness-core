@@ -1,6 +1,7 @@
 package io.harness.serializer.spring;
 
 import io.harness.OrchestrationBeansAliasRegistrar;
+import io.harness.barriers.BarrierNode;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -11,8 +12,11 @@ import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
 import io.harness.facilitator.modes.child.ChildExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.task.TaskExecutableResponse;
+import io.harness.interrupts.Interrupt;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.references.OutcomeRefObject;
 import io.harness.references.SweepingOutputRefObject;
+import io.harness.state.io.FailureInfo;
 
 import java.util.Map;
 
@@ -20,10 +24,14 @@ public class OrchestrationBeansSpringAliasRegistrar implements OrchestrationBean
   @Override
   public void register(Map<String, Class<?>> orchestrationElements) {
     orchestrationElements.put("asyncExecutableResponse", AsyncExecutableResponse.class);
+    orchestrationElements.put("barrierNode", BarrierNode.class);
     orchestrationElements.put("childChainResponse", ChildChainResponse.class);
     orchestrationElements.put("childExecutableResponse", ChildExecutableResponse.class);
     orchestrationElements.put("childrenExecutableResponse", ChildrenExecutableResponse.class);
     orchestrationElements.put("defaultFacilitatorParams", DefaultFacilitatorParams.class);
+    orchestrationElements.put("failureInfo", FailureInfo.class);
+    orchestrationElements.put("interrupt", Interrupt.class);
+    orchestrationElements.put("interruptEffect", InterruptEffect.class);
     orchestrationElements.put("nodeExecutions", NodeExecution.class);
     orchestrationElements.put("outcomeInstances", OutcomeInstance.class);
     orchestrationElements.put("outcomeRefObject", OutcomeRefObject.class);
