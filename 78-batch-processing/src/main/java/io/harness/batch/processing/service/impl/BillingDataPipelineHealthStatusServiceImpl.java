@@ -20,6 +20,7 @@ import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordBuilder;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,7 @@ import java.util.Map;
 
 @Service
 @Singleton
+@Slf4j
 public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPipelineHealthStatusService {
   private BatchMainConfig mainConfig;
   private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
@@ -70,8 +72,18 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
       nextToken = transferConfigsPagedResponse.getNextPageToken();
     } while (!nextToken.equals(""));
 
+    logFailedTransfers(transferConfigList);
+
     return transferConfigList.stream().collect(ImmutableMap.toImmutableMap(
         TransferConfig::getDisplayName, TransferConfig::getState, (existing, replacement) -> existing));
+  }
+
+  private void logFailedTransfers(List<TransferConfig> transferConfigList) {
+    for (TransferConfig transferConfig : transferConfigList) {
+      if (transferConfig.getState().getNumber() == 5) {
+        logger.error("Transfer Failed: {} ", transferConfig.getDisplayName());
+      }
+    }
   }
 
   void updateBillingPipelineRecordsStatus(Map<String, TransferState> transferToStatusMap) {
