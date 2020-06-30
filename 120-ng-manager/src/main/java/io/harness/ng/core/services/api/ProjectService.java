@@ -10,13 +10,11 @@ import java.util.Optional;
 public interface ProjectService {
   Project create(Project project);
 
-  Optional<Project> get(String projectId);
+  Optional<Project> get(String orgIdentifier, String projectIdentifier);
 
   Project update(Project project);
 
-  Page<Project> list(String organizationId, Criteria criteria, Pageable pageable);
-
   Page<Project> list(Criteria criteria, Pageable pageable);
 
-  boolean delete(String projectId);
+  boolean delete(String orgIdentifier, String projectIdentifier);
 }

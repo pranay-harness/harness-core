@@ -10,5 +10,6 @@ import java.util.Optional;
 @HarnessRepo
 public interface OrganizationRepository
     extends PagingAndSortingRepository<Organization, String>, OrganizationRepositoryCustom {
-  Optional<Organization> findByIdAndDeletedNot(String id, boolean deleted);
+  Optional<Organization> findByAccountIdentifierAndIdentifierAndDeletedNot(
+      String accountIdentifier, String organizationIdentifier, boolean notDeleted);
 }

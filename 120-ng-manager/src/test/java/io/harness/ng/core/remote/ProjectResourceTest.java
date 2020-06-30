@@ -29,32 +29,34 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ProjectResourceTest extends BaseTest {
-  private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   @Inject private ProjectResource projectResource;
+  @Inject private AccountResource accountResource;
 
   @Test
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void testCreateProject() {
-    assertFalse(projectResource.get(randomAlphabetic(10)).getData().isPresent());
+    assertFalse(projectResource.get(randomAlphabetic(10), randomAlphabetic(10)).getData().isPresent());
 
+    String orgIdentifier = randomAlphabetic(10);
     CreateProjectDTO createProjectDTO = random(CreateProjectDTO.class);
-    ProjectDTO projectDTO = projectResource.create(createProjectDTO).getData();
+    ProjectDTO projectDTO = projectResource.create(orgIdentifier, createProjectDTO).getData();
 
     assertTrue(isNotEmpty(projectDTO.getId()));
-    assertEquals(projectDTO, projectResource.get(projectDTO.getId()).getData().orElse(null));
+    assertEquals(projectDTO, projectResource.get(orgIdentifier, projectDTO.getIdentifier()).getData().orElse(null));
   }
 
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testList_For_OrgIdFilterOnly() {
-    String orgId = "ABC";
-    assertTrue(projectResource.list(orgId, "", 0, 10, null).getData().isEmpty());
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    assertTrue(projectResource.listProjectsForOrganization(orgIdentifier, 0, 10, null).isEmpty());
 
-    List<ProjectDTO> createdProjectDTOs = createProjects(orgId, ACCOUNT_ID, 2);
+    List<ProjectDTO> createdProjectDTOs = createProjects(orgIdentifier, accountIdentifier, 2);
 
-    Page<ProjectDTO> projectDTOs = projectResource.list(orgId, "", 0, 10, null).getData();
+    Page<ProjectDTO> projectDTOs = projectResource.listProjectsForOrganization(orgIdentifier, 0, 10, null);
     assertNotNull("ProjectDTO should not be null", projectDTOs);
     assertEquals("Count of DTOs should match", createdProjectDTOs.size(), projectDTOs.getTotalElements());
     assertNotNull("Page contents should not be null", projectDTOs.getContent());
@@ -67,18 +69,17 @@ public class ProjectResourceTest extends BaseTest {
 
     createdProjectDTOs.forEach(createdDTO -> {
       boolean isPresentInResult = projectDTOs.getContent().stream().anyMatch(
-          dto -> dto.getOrgId().equals(orgId) && dto.getId().equals(createdDTO.getId()));
+          dto -> dto.getOrgIdentifier().equals(orgIdentifier) && dto.getId().equals(createdDTO.getId()));
       assertTrue("Fetched DTO should be present ", isPresentInResult);
     });
   }
 
-  private List<ProjectDTO> createProjects(String orgId, String accountId, int count) {
+  private List<ProjectDTO> createProjects(String orgIdentifier, String accountIdentifier, int count) {
     return IntStream.range(0, count)
         .mapToObj(i -> {
           CreateProjectDTO projectDTO = random(CreateProjectDTO.class);
-          projectDTO.setOrgId(orgId);
-          projectDTO.setAccountId(accountId);
-          return projectResource.create(projectDTO).getData();
+          projectDTO.setAccountIdentifier(accountIdentifier);
+          return projectResource.create(orgIdentifier, projectDTO).getData();
         })
         .collect(Collectors.toList());
   }
@@ -87,15 +88,15 @@ public class ProjectResourceTest extends BaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testList_For_FilterQuery_With_OrgId_Or_AccountId() {
-    String firstOrgId = "ABC";
+    String firstOrgIdentifier = randomAlphabetic(10);
+    String secondOrgIdentifier = randomAlphabetic(10);
+    String accountIdentifier = randomAlphabetic(10);
 
-    List<ProjectDTO> firstOrgProjectDTOs = createProjects(firstOrgId, ACCOUNT_ID, 2);
+    List<ProjectDTO> firstOrgProjectDTOs = createProjects(firstOrgIdentifier, accountIdentifier, 2);
 
-    String secondOrgId = "XYZ";
+    List<ProjectDTO> secondOrgProjectDTOs = createProjects(secondOrgIdentifier, accountIdentifier, 2);
 
-    List<ProjectDTO> secondOrgProjectDTOs = createProjects(secondOrgId, ACCOUNT_ID, 2);
-
-    final Page<ProjectDTO> projectDTOS = projectResource.list(null, "orgId==" + firstOrgId, 0, 10, null).getData();
+    final Page<ProjectDTO> projectDTOS = projectResource.listProjectsForOrganization(firstOrgIdentifier, 0, 10, null);
     assertNotNull("ProjectDTO should not be null", projectDTOS);
     assertEquals("Count of DTOs should match", firstOrgProjectDTOs.size(), projectDTOS.getTotalElements());
     assertNotNull("Page contents should not be null", projectDTOS.getContent());
@@ -108,12 +109,12 @@ public class ProjectResourceTest extends BaseTest {
 
     firstOrgProjectDTOs.forEach(createdDTO -> {
       boolean isPresentInResult = projectDTOS.getContent().stream().anyMatch(
-          dto -> dto.getOrgId().equals(firstOrgId) && dto.getId().equals(createdDTO.getId()));
+          dto -> dto.getOrgIdentifier().equals(firstOrgIdentifier) && dto.getId().equals(createdDTO.getId()));
       assertTrue("Fetched DTO should be present ", isPresentInResult);
     });
 
     final Page<ProjectDTO> allProjectDTOS =
-        projectResource.list(null, "accountId==" + ACCOUNT_ID, 0, 10, null).getData();
+        accountResource.listProjectsForAccount(accountIdentifier, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOS);
     assertEquals("Count of DTOs should match", firstOrgProjectDTOs.size() + secondOrgProjectDTOs.size(),
         allProjectDTOS.getTotalElements());
@@ -127,7 +128,7 @@ public class ProjectResourceTest extends BaseTest {
 
     firstOrgProjectDTOs.forEach(createdDTO -> {
       boolean isPresentInResult = allProjectDTOS.getContent().stream().anyMatch(
-          dto -> dto.getOrgId().equals(firstOrgId) && dto.getId().equals(createdDTO.getId()));
+          dto -> dto.getOrgIdentifier().equals(firstOrgIdentifier) && dto.getId().equals(createdDTO.getId()));
       assertTrue("Fetched DTO should be present ", isPresentInResult);
     });
   }
@@ -136,14 +137,17 @@ public class ProjectResourceTest extends BaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void testUpdateExistentProject() {
+    String orgIdentifier = randomAlphabetic(10);
     CreateProjectDTO createProjectDTO = random(CreateProjectDTO.class);
-    ProjectDTO createdProject = projectResource.create(createProjectDTO).getData();
+    ProjectDTO createdProject = projectResource.create(orgIdentifier, createProjectDTO).getData();
 
     UpdateProjectDTO updateProjectDTO = random(UpdateProjectDTO.class);
-    ProjectDTO updatedProject = projectResource.update(createdProject.getId(), updateProjectDTO).getData().orElse(null);
+    ProjectDTO updatedProject =
+        projectResource.update(orgIdentifier, createdProject.getIdentifier(), updateProjectDTO).getData().orElse(null);
 
     assertNotNull(updatedProject);
-    assertEquals(updatedProject, projectResource.get(createdProject.getId()).getData().orElse(null));
+    assertEquals(
+        updatedProject, projectResource.get(orgIdentifier, createdProject.getIdentifier()).getData().orElse(null));
 
     assertEquals(updateProjectDTO.getName(), updatedProject.getName());
     assertEquals(updateProjectDTO.getDescription(), updatedProject.getDescription());
@@ -151,16 +155,18 @@ public class ProjectResourceTest extends BaseTest {
     assertEquals(updateProjectDTO.getTags(), updatedProject.getTags());
 
     assertEquals(createdProject.getId(), updatedProject.getId());
-    assertEquals(createdProject.getAccountId(), updatedProject.getAccountId());
-    assertEquals(createdProject.getOrgId(), updatedProject.getOrgId());
+    assertEquals(createdProject.getAccountIdentifier(), updatedProject.getAccountIdentifier());
+    assertEquals(createdProject.getOrgIdentifier(), updatedProject.getOrgIdentifier());
   }
 
   @Test
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void testUpdateNonExistentProject() {
+    String orgIdentifier = randomAlphabetic(10);
     UpdateProjectDTO updateProjectDTO = random(UpdateProjectDTO.class);
-    Optional<ProjectDTO> updatedProject = projectResource.update(randomAlphabetic(10), updateProjectDTO).getData();
+    Optional<ProjectDTO> updatedProject =
+        projectResource.update(orgIdentifier, randomAlphabetic(10), updateProjectDTO).getData();
 
     assertFalse(updatedProject.isPresent());
   }
@@ -169,13 +175,14 @@ public class ProjectResourceTest extends BaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testDelete() {
+    String orgIdentifier = randomAlphabetic(10);
     CreateProjectDTO createOrganizationDTO = random(CreateProjectDTO.class);
-    String accountId = randomAlphabetic(10);
-    createOrganizationDTO.setAccountId(accountId);
-    ProjectDTO firstOrganization = projectResource.create(createOrganizationDTO).getData();
+    String accountIdentifier = randomAlphabetic(10);
+    createOrganizationDTO.setAccountIdentifier(accountIdentifier);
+    ProjectDTO firstOrganization = projectResource.create(orgIdentifier, createOrganizationDTO).getData();
 
-    boolean isDeleted = projectResource.delete(firstOrganization.getId()).getData();
+    boolean isDeleted = projectResource.delete(orgIdentifier, firstOrganization.getIdentifier()).getData();
     assertThat(isDeleted).isTrue();
-    assertThat(projectResource.get(firstOrganization.getId()).getData().isPresent()).isFalse();
+    assertThat(projectResource.get(orgIdentifier, firstOrganization.getIdentifier()).getData().isPresent()).isFalse();
   }
 }

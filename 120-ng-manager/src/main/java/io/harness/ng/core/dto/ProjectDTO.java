@@ -12,12 +12,12 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProjectDTO {
   String id;
-  String accountId;
-  String orgId;
+  String accountIdentifier;
+  String orgIdentifier;
   String identifier;
   String name;
   String color;
-  String purpose;
+  List<String> purposeList;
   String description;
   List<String> owners;
   List<String> tags;

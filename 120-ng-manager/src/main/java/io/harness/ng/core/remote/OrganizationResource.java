@@ -9,11 +9,11 @@ import com.google.inject.Inject;
 import io.harness.ng.core.ErrorDTO;
 import io.harness.ng.core.FailureDTO;
 import io.harness.ng.core.ResponseDTO;
-import io.harness.ng.core.RestQueryFilterParser;
 import io.harness.ng.core.dto.CreateOrganizationDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.UpdateOrganizationDTO;
 import io.harness.ng.core.entities.Organization;
+import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.api.OrganizationService;
 import io.harness.utils.PageUtils;
 import io.swagger.annotations.Api;
@@ -22,7 +22,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -41,8 +40,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api("/organizations")
-@Path("/organizations")
+@Api("organizations")
+@Path("accounts/{accountIdentifier}/organizations")
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
@@ -53,40 +52,46 @@ import javax.ws.rs.QueryParam;
     })
 public class OrganizationResource {
   private final OrganizationService organizationService;
-  private final RestQueryFilterParser restQueryFilterParser;
 
   @POST
   @ApiOperation(value = "Create an Organization", nickname = "postOrganization")
-  public ResponseDTO<OrganizationDTO> create(@NotNull @Valid CreateOrganizationDTO request) {
-    Organization organization = organizationService.create(toOrganization(request));
-    return ResponseDTO.newResponse(writeDto(organization));
+  public ResponseDTO<OrganizationDTO> create(
+      @PathParam("accountIdentifier") String accountIdentifier, @NotNull @Valid CreateOrganizationDTO request) {
+    Organization organization = toOrganization(request);
+    organization.setAccountIdentifier(accountIdentifier);
+    Organization updatedOrganization = organizationService.create(organization);
+    return ResponseDTO.newResponse(writeDto(updatedOrganization));
   }
 
   @GET
-  @Path("{organizationId}")
+  @Path("{organizationIdentifier}")
   @ApiOperation(value = "Get an Organization", nickname = "getOrganization")
-  public ResponseDTO<Optional<OrganizationDTO>> get(@PathParam("organizationId") @NotEmpty String organizationId) {
-    Optional<Organization> organizationOptional = organizationService.get(organizationId);
+  public ResponseDTO<Optional<OrganizationDTO>> get(@PathParam("accountIdentifier") String accountIdentifier,
+      @PathParam("organizationIdentifier") String organizationIdentifier) {
+    Optional<Organization> organizationOptional = organizationService.get(accountIdentifier, organizationIdentifier);
     return ResponseDTO.newResponse(organizationOptional.map(OrganizationMapper::writeDto));
   }
 
   @GET
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
-  public ResponseDTO<Page<OrganizationDTO>> list(@QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("filter") String filter, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("100") int size, @QueryParam("sort") @DefaultValue("[]") List<String> sort) {
-    Criteria criteria = restQueryFilterParser.getCriteriaFromFilterQuery(filter, Organization.class);
-    Page<Organization> organizations =
-        organizationService.list(accountId, criteria, PageUtils.getPageRequest(page, size, sort));
+  public ResponseDTO<Page<OrganizationDTO>> list(@PathParam("accountIdentifier") String accountIdentifier,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
+      @QueryParam("sort") @DefaultValue("[]") List<String> sort) {
+    Criteria criteria = Criteria.where(OrganizationKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(OrganizationKeys.deleted)
+                            .is(false);
+    Page<Organization> organizations = organizationService.list(criteria, PageUtils.getPageRequest(page, size, sort));
     return ResponseDTO.newResponse(organizations.map(OrganizationMapper::writeDto));
   }
 
   @PUT
-  @Path("{organizationId}")
-  @ApiOperation(value = "Update Organization by id", nickname = "putOrganization")
-  public ResponseDTO<Optional<OrganizationDTO>> update(@PathParam("organizationId") @NotEmpty String organizationId,
+  @Path("{organizationIdentifier}")
+  @ApiOperation(value = "Update Organization by identifier", nickname = "putOrganization")
+  public ResponseDTO<Optional<OrganizationDTO>> update(@PathParam("accountIdentifier") String accountIdentifier,
+      @PathParam("organizationIdentifier") String orgIdentifier,
       @NotNull @Valid UpdateOrganizationDTO updateOrganizationDTO) {
-    Optional<Organization> organizationOptional = organizationService.get(organizationId);
+    Optional<Organization> organizationOptional = organizationService.get(accountIdentifier, orgIdentifier);
     if (organizationOptional.isPresent()) {
       Organization organization = organizationOptional.get();
       Organization updatedOrganization =
@@ -97,9 +102,10 @@ public class OrganizationResource {
   }
 
   @DELETE
-  @Path("{organizationId}")
-  @ApiOperation(value = "Delete Organization by id", nickname = "deleteOrganization")
-  public ResponseDTO<Boolean> delete(@PathParam("organizationId") String organizationId) {
-    return ResponseDTO.newResponse(organizationService.delete(organizationId));
+  @Path("{organizationIdentifier}")
+  @ApiOperation(value = "Delete Organization by identifier", nickname = "deleteOrganization")
+  public ResponseDTO<Boolean> delete(@PathParam("accountIdentifier") String accountIdentifier,
+      @PathParam("organizationIdentifier") String organizationIdentifier) {
+    return ResponseDTO.newResponse(organizationService.delete(accountIdentifier, organizationIdentifier));
   }
 }

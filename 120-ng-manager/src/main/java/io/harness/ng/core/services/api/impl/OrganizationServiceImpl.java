@@ -9,7 +9,6 @@ import com.google.inject.Singleton;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.dao.api.repositories.spring.OrganizationRepository;
 import io.harness.ng.core.entities.Organization;
-import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.api.OrganizationService;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -39,31 +38,32 @@ public class OrganizationServiceImpl implements OrganizationService {
       return organizationRepository.save(organization);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(String.format("Organization [%s] under account [%s] already exists",
-                                            organization.getIdentifier(), organization.getAccountId()),
+                                            organization.getIdentifier(), organization.getAccountIdentifier()),
           USER_SRE, ex);
     }
   }
 
   @Override
-  public Optional<Organization> get(String organizationId) {
-    return organizationRepository.findByIdAndDeletedNot(organizationId, Boolean.TRUE);
+  public Optional<Organization> get(String accountIdentifier, String organizationIdentifier) {
+    return organizationRepository.findByAccountIdentifierAndIdentifierAndDeletedNot(
+        accountIdentifier, organizationIdentifier, true);
   }
 
   @Override
   public Organization update(Organization organization) {
-    validatePresenceOfRequiredFields(organization.getAccountId(), organization.getIdentifier(), organization.getId());
+    validatePresenceOfRequiredFields(
+        organization.getAccountIdentifier(), organization.getIdentifier(), organization.getId());
     return organizationRepository.save(organization);
   }
 
   @Override
-  public Page<Organization> list(@NotNull String accountId, @NotNull Criteria criteria, Pageable pageable) {
-    criteria = criteria.and(OrganizationKeys.accountId).is(accountId).and(OrganizationKeys.deleted).ne(Boolean.TRUE);
+  public Page<Organization> list(@NotNull Criteria criteria, Pageable pageable) {
     return organizationRepository.findAll(criteria, pageable);
   }
 
   @Override
-  public boolean delete(String organizationId) {
-    Optional<Organization> organizationOptional = get(organizationId);
+  public boolean delete(String accountIdentifier, String organizationIdentifier) {
+    Optional<Organization> organizationOptional = get(accountIdentifier, organizationIdentifier);
     if (organizationOptional.isPresent()) {
       Organization organization = organizationOptional.get();
       organization.setDeleted(true);

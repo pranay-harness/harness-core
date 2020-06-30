@@ -1,8 +1,8 @@
 package io.harness.ng.core.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
-import io.harness.data.validator.Trimmed;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Singular;
@@ -15,8 +15,8 @@ import javax.validation.constraints.Size;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateOrganizationDTO {
-  @Trimmed @NotEmpty String accountId;
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
   @NotEmpty String color;

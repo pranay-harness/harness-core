@@ -12,30 +12,29 @@ import lombok.experimental.UtilityClass;
 public class ProjectMapper {
   static Project toProject(CreateProjectDTO createProjectDTO) {
     return Project.builder()
-        .accountId(createProjectDTO.getAccountId())
-        .orgId(createProjectDTO.getOrgId())
         .identifier(createProjectDTO.getIdentifier())
+        .accountIdentifier(createProjectDTO.getAccountIdentifier())
         .name(createProjectDTO.getName())
         .description(createProjectDTO.getDescription())
         .owners(createProjectDTO.getOwners())
         .color(createProjectDTO.getColor())
         .tags(createProjectDTO.getTags())
-        .purpose(createProjectDTO.getPurpose())
+        .purposeList(createProjectDTO.getPurposeList())
         .build();
   }
 
   static ProjectDTO writeDTO(Project project) {
     return ProjectDTO.builder()
         .id(project.getId())
-        .accountId(project.getAccountId())
-        .orgId(project.getOrgId())
+        .accountIdentifier(project.getAccountIdentifier())
+        .orgIdentifier(project.getOrgIdentifier())
         .identifier(project.getIdentifier())
         .name(project.getName())
         .description(project.getDescription())
         .owners(project.getOwners())
         .color(project.getColor())
         .tags(project.getTags())
-        .purpose(project.getPurpose())
+        .purposeList(project.getPurposeList())
         .build();
   }
 
