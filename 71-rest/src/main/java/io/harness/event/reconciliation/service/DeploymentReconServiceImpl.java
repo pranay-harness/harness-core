@@ -166,8 +166,7 @@ public class DeploymentReconServiceImpl implements DeploymentReconService {
     try (HIterator<WorkflowExecution> iterator =
              new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
                                  .order(Sort.descending(WorkflowExecutionKeys.createdAt))
-                                 .field(WorkflowExecutionKeys.accountId)
-                                 .exists()
+                                 .filter(WorkflowExecutionKeys.accountId, accountId)
                                  .field(WorkflowExecutionKeys.startTs)
                                  .exists()
                                  .field(WorkflowExecutionKeys.endTs)
