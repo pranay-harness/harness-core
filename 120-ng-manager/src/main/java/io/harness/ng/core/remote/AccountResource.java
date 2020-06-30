@@ -1,6 +1,7 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.ng.core.utils.PageUtils.getPageRequest;
+
+import static io.harness.utils.PageUtils.getPageRequest;
 
 import com.google.inject.Inject;
 
