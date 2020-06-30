@@ -2,6 +2,7 @@ package io.harness.serializer.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
 import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -107,5 +108,6 @@ public class DelegateTasksKryoRegister implements KryoRegistrar {
     kryo.register(SpotinstTrafficShiftAlbDeployParameters.class, 19041);
     kryo.register(SpotinstTrafficShiftAlbDeployResponse.class, 19042);
     kryo.register(SpotinstTrafficShiftAlbSwapRoutesParameters.class, 19043);
+    kryo.register(DelegateTaskDetails.class, 19044);
   }
 }

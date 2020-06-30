@@ -233,6 +233,11 @@ public class HelmDeployState extends State {
     return K8sStateHelper.getTimeoutMillisFromMinutes(steadyStateTimeout);
   }
 
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
+  }
+
   protected long getSafeTimeout() {
     return getTimeoutMillis() != null && getTimeoutMillis() > 0
         ? getTimeoutMillis()
@@ -391,6 +396,7 @@ public class HelmDeployState extends State {
                                     .accountId(app.getAccountId())
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
                                     .tags(tags)
+                                    .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
                                     .build();
 
     renderDelegateTask(context, delegateTask, stateExecutionContext);
@@ -400,6 +406,7 @@ public class HelmDeployState extends State {
         expressionEvaluator.substitute(helmReleaseHistoryCommandRequest.getCommandFlags(), Collections.emptyMap()));
 
     HelmCommandExecutionResponse helmCommandExecutionResponse;
+    appendDelegateTaskDetails(context, delegateTask);
     ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
     if (notifyResponseData instanceof HelmCommandExecutionResponse) {
       helmCommandExecutionResponse = (HelmCommandExecutionResponse) notifyResponseData;
@@ -876,6 +883,7 @@ public class HelmDeployState extends State {
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
 
     renderDelegateTask(context, delegateTask, stateExecutionContext);
@@ -884,6 +892,7 @@ public class HelmDeployState extends State {
     stateExecutionDataBuilder.commandFlags(
         expressionEvaluator.substitute(commandRequest.getCommandFlags(), Collections.emptyMap()));
 
+    appendDelegateTaskDetails(context, delegateTask);
     delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()
@@ -980,10 +989,12 @@ public class HelmDeployState extends State {
                       .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
                       .expressionFunctorToken(expressionFunctorToken)
                       .build())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
 
     renderDelegateTask(context, delegateTask, stateExecutionContext);
 
+    appendDelegateTaskDetails(context, delegateTask);
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     Map<K8sValuesLocation, Collection<String>> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
@@ -1202,6 +1213,7 @@ public class HelmDeployState extends State {
                       .expressionFunctorToken(expressionFunctorToken)
                       .timeout(TimeUnit.MINUTES.toMillis(10))
                       .build())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
 
     renderDelegateTask(context, delegateTask, stateExecutionContext);
@@ -1210,6 +1222,7 @@ public class HelmDeployState extends State {
     helmDeployStateExecutionDataBuilder.commandFlags(
         expressionEvaluator.substitute(helmValuesFetchTaskParameters.getHelmCommandFlags(), Collections.emptyMap()));
 
+    appendDelegateTaskDetails(context, delegateTask);
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return ExecutionResponse.builder()

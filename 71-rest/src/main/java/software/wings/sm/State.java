@@ -1,12 +1,17 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionReflectionUtils;
@@ -15,6 +20,7 @@ import lombok.experimental.FieldNameConstants;
 import software.wings.beans.EntityType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
+import software.wings.service.intfc.StateExecutionService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +35,8 @@ import java.util.Map;
 @FieldNameConstants(innerTypeName = "StateKeys")
 public abstract class State {
   protected static final Integer INFINITE_TIMEOUT = -1;
+
+  @Inject private StateExecutionService stateExecutionService;
 
   @SchemaIgnore private String id;
 
@@ -324,6 +332,24 @@ public abstract class State {
       task.setWorkflowExecutionId(context.getWorkflowExecutionId());
       ExpressionReflectionUtils.applyExpression(
           task.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionContext));
+    }
+  }
+
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return false;
+  }
+
+  protected void appendDelegateTaskDetails(ExecutionContext context, DelegateTask delegateTask) {
+    if (isSelectionLogsTrackingForTasksEnabled()) {
+      if (isBlank(delegateTask.getUuid())) {
+        delegateTask.setUuid(generateUuid());
+      }
+
+      stateExecutionService.appendDelegateTaskDetails(context.getStateExecutionInstanceId(),
+          DelegateTaskDetails.builder()
+              .delegateTaskId(delegateTask.getUuid())
+              .taskType(delegateTask.getData().getTaskType())
+              .build());
     }
   }
 }

@@ -12,6 +12,7 @@ import com.mongodb.ReadPreference;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import org.jetbrains.annotations.Nullable;
@@ -83,8 +84,8 @@ public class StateExecutionServiceImpl implements StateExecutionService {
                                  .project(StateExecutionInstanceKeys.status, true)
                                  .project(StateExecutionInstanceKeys.hasInspection, true)
                                  .project(StateExecutionInstanceKeys.appId, true)
-                                 .project(StateExecutionInstanceKeys.delegateTaskId, true)
-                                 .project(StateExecutionInstanceKeys.selectionLogsTrackingForTaskEnabled, true)
+                                 .project(StateExecutionInstanceKeys.selectionLogsTrackingForTasksEnabled, true)
+                                 .project(StateExecutionInstanceKeys.delegateTasksDetails, true)
                                  .fetch())) {
       for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
         stateExecutionInstance.getStateExecutionMap().entrySet().removeIf(
@@ -400,5 +401,13 @@ public class StateExecutionServiceImpl implements StateExecutionService {
         .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
         .filter(StateExecutionInstanceKeys.uuid, instanceId)
         .get();
+  }
+
+  @Override
+  public void appendDelegateTaskDetails(String instanceId, DelegateTaskDetails delegateTaskDetails) {
+    wingsPersistence.update(
+        wingsPersistence.createQuery(StateExecutionInstance.class).filter(StateExecutionInstanceKeys.uuid, instanceId),
+        wingsPersistence.createUpdateOperations(StateExecutionInstance.class)
+            .push(StateExecutionInstanceKeys.delegateTasksDetails, delegateTaskDetails));
   }
 }

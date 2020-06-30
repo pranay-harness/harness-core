@@ -28,6 +28,14 @@ public class ExecutionResponse {
   private StateExecutionData stateExecutionData;
   @Singular private List<ContextElement> notifyElements;
   @Singular private List<ContextElement> contextElements;
+
+  @Deprecated
+  /**
+   * @deprecated {@link software.wings.service.intfc.StateExecutionService#appendDelegateTaskDetails(String,
+   *     DelegateTaskDetails)} should be used instead. Check {@link
+   *     software.wings.sm.states.ShellScriptState#executeInternal(ExecutionContext, String)} for details. )
+   * */
   private String delegateTaskId;
+
   @Singular private List<StateExecutionInstance> stateExecutionInstances;
 }

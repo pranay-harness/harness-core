@@ -12,6 +12,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -78,8 +79,18 @@ public class StateExecutionInstance
   private ContextElement contextElement;
   private boolean contextTransition;
   private boolean rollback;
+
+  @Deprecated
+  /**
+   * @deprecated {@link software.wings.service.intfc.StateExecutionService#appendDelegateTaskDetails(String,
+   *     DelegateTaskDetails)} should be used instead. Check {@link
+   *     software.wings.sm.states.ShellScriptState#executeInternal(ExecutionContext, String)} for details. )
+   * */
   private String delegateTaskId;
-  private boolean selectionLogsTrackingForTaskEnabled;
+
+  List<DelegateTaskDetails> delegateTasksDetails;
+  private boolean selectionLogsTrackingForTasksEnabled;
+
   private String rollbackPhaseName;
   private boolean parentLoopedState;
   private LoopEnvStateParams loopedStateParams;

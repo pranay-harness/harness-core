@@ -5,6 +5,7 @@ import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.delegate.task.shell.ScriptType.BASH;
 import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRABU;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -47,6 +48,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.rule.Owner;
@@ -80,6 +82,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
@@ -115,6 +118,7 @@ public class ShellScriptStateTest extends CategoryTest {
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private TemplateExpression templateExpression;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private StateExecutionService stateExecutionService;
   @InjectMocks private ShellScriptState shellScriptState = new ShellScriptState("ShellScript");
 
   private ExecutionResponse asyncExecutionResponse;
@@ -262,6 +266,7 @@ public class ShellScriptStateTest extends CategoryTest {
     assertThat(delegateTask.getTags()).contains("T1", "T2");
 
     verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any(DelegateTaskDetails.class));
   }
 
   @Test
@@ -457,6 +462,13 @@ public class ShellScriptStateTest extends CategoryTest {
     DelegateTask delegateTask = captor.getValue();
 
     assertWinRm(delegateTask);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testSelectionLogsTrackingForTasksEnabled() {
+    assertThat(shellScriptState.isSelectionLogsTrackingForTasksEnabled()).isTrue();
   }
 
   @Test

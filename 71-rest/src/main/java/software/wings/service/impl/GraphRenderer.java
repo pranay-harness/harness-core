@@ -513,8 +513,8 @@ public class GraphRenderer {
             .rollback(instance.isRollback())
             .status(String.valueOf(instance.getStatus()).toUpperCase())
             .hasInspection(instance.isHasInspection())
-            .delegateTaskId(instance.getDelegateTaskId())
-            .selectionLogsTrackingForTaskEnabled(instance.isSelectionLogsTrackingForTaskEnabled());
+            .delegateTasksDetails(instance.getDelegateTasksDetails())
+            .selectionLogsTrackingForTasksEnabled(instance.isSelectionLogsTrackingForTasksEnabled());
 
     if (instance.getStateExecutionDataHistory() != null) {
       builder.executionHistoryCount(instance.getStateExecutionDataHistory().size());

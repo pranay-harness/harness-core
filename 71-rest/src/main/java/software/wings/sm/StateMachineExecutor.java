@@ -56,11 +56,11 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.config.PipelineConfig;
 import io.harness.delay.DelayEventHelper;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -127,12 +127,15 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -1034,24 +1037,39 @@ public class StateMachineExecutor implements StateInspectionListener {
       notNullCheck("currentState", currentState);
       injector.injectMembers(currentState);
 
-      String errorMsg = null;
+      Set<String> delegateTaskIds = new HashSet();
       if (isNotBlank(stateExecutionInstance.getDelegateTaskId())) {
+        delegateTaskIds.add(stateExecutionInstance.getDelegateTaskId());
+      }
+
+      if (isNotEmpty(stateExecutionInstance.getDelegateTasksDetails())) {
+        delegateTaskIds.addAll(stateExecutionInstance.getDelegateTasksDetails()
+                                   .stream()
+                                   .map(DelegateTaskDetails::getDelegateTaskId)
+                                   .collect(Collectors.toSet()));
+      }
+
+      StringBuilder errorMsgBuilder = new StringBuilder();
+      for (String delegateTaskId : delegateTaskIds) {
         notNullCheck("context.getApp()", context.getApp());
         if (finalStatus == ABORTED) {
-          delegateService.abortTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
+          delegateService.abortTask(context.getApp().getAccountId(), delegateTaskId);
         } else {
-          errorMsg =
-              delegateService.expireTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
+          String errorMsg = delegateService.expireTask(context.getApp().getAccountId(), delegateTaskId);
+          if (isNotBlank(errorMsg)) {
+            errorMsgBuilder.append(errorMsg);
+          }
         }
       }
+
       if (stateExecutionInstance.getStateParams() != null) {
         MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
       }
       currentState.handleAbortEvent(context);
       stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + ABORT_EXPIRY_BUFFER_MILLIS);
 
-      updated = updateStateExecutionData(
-          stateExecutionInstance, null, finalStatus, errorMsg, singletonList(DISCONTINUING), null, null, null);
+      updated = updateStateExecutionData(stateExecutionInstance, null, finalStatus, errorMsgBuilder.toString(),
+          singletonList(DISCONTINUING), null, null, null);
 
       invokeAdvisors(ExecutionEvent.builder()
                          .failureTypes(EnumSet.<FailureType>of(FailureType.EXPIRED))
@@ -1100,6 +1118,11 @@ public class StateMachineExecutor implements StateInspectionListener {
             sm.getChildStateMachines().get(childStateExecutionInstance.getChildStateMachineId()).getInitialStateName();
         childStateExecutionInstance.setDisplayName(initialStateName);
         childStateExecutionInstance.setStateName(initialStateName);
+        childStateExecutionInstance.setSelectionLogsTrackingForTasksEnabled(
+            sm.getChildStateMachines()
+                .get(childStateExecutionInstance.getChildStateMachineId())
+                .getInitialState()
+                .isSelectionLogsTrackingForTasksEnabled());
       }
       triggerExecution(sm, childStateExecutionInstance);
     }
@@ -1131,8 +1154,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     cloned.setDisplayName(nextState.getName());
     cloned.setStateName(nextState.getName());
     cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
-    cloned.setDelegateTaskId(null);
-    cloned.setSelectionLogsTrackingForTaskEnabled(false);
+    cloned.setDelegateTasksDetails(null);
+    cloned.setSelectionLogsTrackingForTasksEnabled(nextState.isSelectionLogsTrackingForTasksEnabled());
     cloned.setContextTransition(false);
     cloned.setStatus(NEW);
     cloned.setStartTs(null);
@@ -1319,11 +1342,6 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     if (isNotBlank(delegateTaskId)) {
       ops.set(StateExecutionInstanceKeys.delegateTaskId, delegateTaskId);
-
-      DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class, delegateTaskId);
-      if (delegateTask != null && delegateTask.isSelectionLogsTrackingEnabled()) {
-        ops.set(StateExecutionInstanceKeys.selectionLogsTrackingForTaskEnabled, Boolean.TRUE);
-      }
     }
 
     Query<StateExecutionInstance> query =
