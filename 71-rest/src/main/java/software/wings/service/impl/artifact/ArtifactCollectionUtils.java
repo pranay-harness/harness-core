@@ -876,7 +876,7 @@ public class ArtifactCollectionUtils {
       SettingAttribute settingAttribute = settingsService.getOnlyConnectivityError(artifactStream.getSettingId());
       if (settingAttribute == null) {
         throw new InvalidRequestException(
-            format("%s: Invalid artifact stream setting: %s", prefix, artifactStream.getSettingId()));
+            format("%s: Invalid artifact stream setting: %s", prefix, artifactStream.getSettingId()), USER);
       }
       if (isNotBlank(settingAttribute.getConnectivityError())) {
         logger.info(
