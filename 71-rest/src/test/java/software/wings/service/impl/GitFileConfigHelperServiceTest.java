@@ -5,6 +5,9 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -20,6 +23,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
+import software.wings.sm.ExecutionContext;
 
 public class GitFileConfigHelperServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
@@ -90,5 +94,29 @@ public class GitFileConfigHelperServiceTest extends WingsBaseTest {
     doReturn(null).when(settingsService).get(gitFileConfig.getConnectorId());
     assertThatThrownBy(() -> configHelperService.getGitFileConfigForToYaml(gitFileConfig))
         .hasMessageContaining("INVALID_ARGUMENT");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderGitFileConfig() {
+    ExecutionContext context = mock(ExecutionContext.class);
+
+    GitFileConfig gitFileConfig = GitFileConfig.builder()
+                                      .branch("${expression}")
+                                      .commitId("${expression}")
+                                      .filePath("${expression}")
+                                      .filePathList(asList("${expression}", "${expression}"))
+                                      .build();
+
+    doReturn("rendered").when(context).renderExpression("${expression}");
+    configHelperService.renderGitFileConfig(context, gitFileConfig);
+
+    verify(context, times(5)).renderExpression("${expression}");
+
+    assertThat(gitFileConfig.getBranch()).isEqualTo("rendered");
+    assertThat(gitFileConfig.getCommitId()).isEqualTo("rendered");
+    assertThat(gitFileConfig.getFilePath()).isEqualTo("rendered");
+    assertThat(gitFileConfig.getFilePathList()).containsExactly("rendered", "rendered");
   }
 }
