@@ -77,6 +77,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.InfraMappingSweepingOutput;
@@ -105,7 +106,9 @@ import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
+import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -138,6 +141,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   private static final String KUBERNETES_CONTROLLER_NAME = "kubernetes-rc-name.1";
   private static final String BASE_URL = "https://env.harness.io/";
   private static final String PHASE_NAME = "phaseName";
+  private static final String MASTER_URL = "http://example.com";
 
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -163,6 +167,8 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Mock private K8sStateHelper mockK8sStateHelper;
+  @Mock private ContainerMasterUrlHelper containerMasterUrlHelper;
+  @Mock private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
   @InjectMocks private KubernetesSetup kubernetesSetup = new KubernetesSetup("name");
 
@@ -336,9 +342,17 @@ public class KubernetesSetupTest extends WingsBaseTest {
   public void shouldExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
     on(context).set("featureFlagService", featureFlagService);
+    on(kubernetesSetup).set("containerDeploymentManagerHelper", containerDeploymentManagerHelper);
+
     when(artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId()))
         .thenReturn(ImageDetails.builder().name(artifactStream.getSourceName()).tag(artifact.getBuildNo()).build());
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
+
+    when(containerDeploymentManagerHelper.getContainerServiceParams(any(), any(), any()))
+        .thenReturn(ContainerServiceParams.builder().build());
+    when(containerMasterUrlHelper.fetchMasterUrl(
+             any(ContainerServiceParams.class), any(ContainerInfrastructureMapping.class)))
+        .thenReturn(MASTER_URL);
 
     kubernetesSetup.execute(context);
 
@@ -363,6 +377,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     assertThat(params.getEnvName()).isEqualTo(ENV_NAME);
     assertThat(params.getServiceName()).isEqualTo(SERVICE_NAME);
     assertThat(params.getClusterName()).isEqualTo(CLUSTER_NAME);
+    assertThat(((KubernetesSetupParams) params).getMasterUrl()).isEqualTo(MASTER_URL);
   }
 
   @Test

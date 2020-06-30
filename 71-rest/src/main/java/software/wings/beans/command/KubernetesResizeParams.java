@@ -24,6 +24,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
   private Integer trafficPercent;
   private boolean useNewLabelMechanism;
   private Map<String, String> lookupLabels;
+  // For supporting delegate capability framework in K8s
+  private String masterUrl;
 
   public static final class KubernetesResizeParamsBuilder {
     private String clusterName;
@@ -54,6 +56,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
     private List<String[]> originalTrafficWeights;
     private boolean useNewLabelMechanism;
     private Map<String, String> lookupLabels;
+    private String masterUrl;
 
     private KubernetesResizeParamsBuilder() {}
 
@@ -201,6 +204,11 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
+    public KubernetesResizeParamsBuilder withMasterUrl(String masterUrl) {
+      this.masterUrl = masterUrl;
+      return this;
+    }
+
     public KubernetesResizeParamsBuilder but() {
       return aKubernetesResizeParams()
           .withClusterName(clusterName)
@@ -230,7 +238,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
           .withOriginalServiceCounts(originalServiceCounts)
           .withOriginalTrafficWeights(originalTrafficWeights)
           .withUseNewLabelMechanism(useNewLabelMechanism)
-          .withLookupLabels(lookupLabels);
+          .withLookupLabels(lookupLabels)
+          .withMasterUrl(masterUrl);
     }
 
     public KubernetesResizeParams build() {
@@ -263,6 +272,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setOriginalTrafficWeights(originalTrafficWeights);
       kubernetesResizeParams.setUseNewLabelMechanism(useNewLabelMechanism);
       kubernetesResizeParams.setLookupLabels(lookupLabels);
+      kubernetesResizeParams.setMasterUrl(masterUrl);
       return kubernetesResizeParams;
     }
   }

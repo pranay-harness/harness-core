@@ -56,6 +56,8 @@ import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
+import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
+import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -107,6 +109,8 @@ public abstract class ContainerServiceSetup extends State {
   @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private K8sStateHelper k8sStateHelper;
+  @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
+  @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
   ContainerServiceSetup(String name, String type) {
     super(name, type);
@@ -174,6 +178,12 @@ public abstract class ContainerServiceSetup extends State {
 
       ContainerSetupParams containerSetupParams = buildContainerSetupParams(context, service.getName(), imageDetails,
           app, env, service, containerInfrastructureMapping, containerTask, clusterName);
+      if (containerSetupParams instanceof KubernetesSetupParams) {
+        String masterUrl = containerMasterUrlHelper.fetchMasterUrl(
+            containerDeploymentManagerHelper.getContainerServiceParams(containerInfrastructureMapping, null, context),
+            containerInfrastructureMapping);
+        ((KubernetesSetupParams) containerSetupParams).setMasterUrl(masterUrl);
+      }
 
       StateExecutionData executionData =
           buildStateExecutionData(app, service, clusterName, activity, containerSetupParams);
