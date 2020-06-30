@@ -3,7 +3,6 @@ package software.wings.sm;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 
 import java.util.Map;
@@ -12,7 +11,7 @@ import java.util.Map;
  * Interface for all RepeatElements.
  */
 @OwnedBy(CDC)
-public interface ContextElement extends SweepingOutput {
+public interface ContextElement {
   String WORKFLOW = "workflow";
   String DEPLOYMENT_URL = "deploymentUrl";
   String APP = "app";
