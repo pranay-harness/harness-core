@@ -4,18 +4,36 @@ import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDO
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.TestUserProvider.testUserProvider;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
+import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordGroupValue;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordMetricValue;
+import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.beans.TimeSeriesThresholdActionType;
+import io.harness.cvng.beans.TimeSeriesThresholdComparisonType;
+import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
+import io.harness.cvng.beans.TimeSeriesThresholdType;
+import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
+import io.harness.cvng.core.services.CVNextGenConstants;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.entities.MetricPack;
+import io.harness.cvng.core.services.entities.TimeSeriesThreshold;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.StringUtils;
@@ -36,14 +54,19 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
   private String cvConfigId;
   private String accountId;
   private Random random;
+  private String projectIdentifier;
   @Inject private TimeSeriesService timeSeriesService;
   @Inject private HPersistence hPersistence;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private MetricPackService metricPackService;
 
   @Before
   public void setUp() {
     cvConfigId = generateUuid();
     accountId = generateUuid();
     random = new Random(System.currentTimeMillis());
+    testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
+    hPersistence.registerUserProvider(testUserProvider);
   }
 
   @Test
@@ -173,5 +196,67 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
         timeStamp.addAndGet(CV_ANALYSIS_WINDOW_MINUTES);
       }
     });
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetTimeSeriesMetricDefinitions() {
+    metricPackService.getMetricPacks(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS);
+    AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
+    appDynamicsCVConfig.setProjectIdentifier(projectIdentifier);
+    appDynamicsCVConfig.setAccountId(accountId);
+    appDynamicsCVConfig.setMetricPack(MetricPack.builder()
+                                          .identifier(CVNextGenConstants.APPD_PERFORMANCE_PACK_IDENTIFIER)
+                                          .metrics(Sets.newHashSet(MetricPack.MetricDefinition.builder().build()))
+                                          .build());
+    AppDynamicsCVConfig cvConfig = (AppDynamicsCVConfig) cvConfigService.save(appDynamicsCVConfig);
+
+    List<TimeSeriesMetricDefinition> timeSeriesMetricDefinitions =
+        timeSeriesService.getTimeSeriesMetricDefinitions(cvConfig.getUuid());
+    int sizeWithoutCustom = timeSeriesMetricDefinitions.size();
+    timeSeriesMetricDefinitions.forEach(timeSeriesMetricDefinition -> {
+      assertThat(timeSeriesMetricDefinition.getMetricName()).isNotEmpty();
+      assertThat(timeSeriesMetricDefinition.getMetricType()).isNotNull();
+      assertThat(timeSeriesMetricDefinition.getActionType()).isEqualTo(TimeSeriesThresholdActionType.IGNORE);
+      assertThat(timeSeriesMetricDefinition.getMetricGroupName()).isEqualTo("*");
+    });
+
+    // add fail threshold and verify
+    cvConfig.getMetricPack().getMetrics().add(
+        MetricPack.MetricDefinition.builder()
+            .name("m1")
+            .type(TimeSeriesMetricType.ERROR)
+            .thresholds(
+                Lists.newArrayList(TimeSeriesThreshold.builder()
+                                       .metricGroupName("t1")
+                                       .action(TimeSeriesThresholdActionType.FAIL)
+                                       .criteria(TimeSeriesThresholdCriteria.builder()
+                                                     .criteria(" > 0.6")
+                                                     .action(TimeSeriesCustomThresholdActions.FAIL_AFTER_OCCURRENCES)
+                                                     .occurrenceCount(5)
+                                                     .thresholdType(TimeSeriesThresholdType.ACT_WHEN_HIGHER)
+                                                     .type(TimeSeriesThresholdComparisonType.RATIO)
+                                                     .build())
+                                       .build()))
+            .build());
+    cvConfigService.update(cvConfig);
+    timeSeriesMetricDefinitions = timeSeriesService.getTimeSeriesMetricDefinitions(cvConfig.getUuid());
+    assertThat(timeSeriesMetricDefinitions.size()).isEqualTo(sizeWithoutCustom + 1);
+    TimeSeriesMetricDefinition m1Definition =
+        timeSeriesMetricDefinitions.stream()
+            .filter(timeSeriesMetricDefinition -> timeSeriesMetricDefinition.getMetricName().equals("m1"))
+            .findFirst()
+            .orElse(null);
+    assertThat(m1Definition).isNotNull();
+    assertThat(m1Definition.getMetricName()).isEqualTo("m1");
+    assertThat(m1Definition.getMetricGroupName()).isEqualTo("t1");
+    assertThat(m1Definition.getActionType()).isEqualTo(TimeSeriesThresholdActionType.FAIL);
+    assertThat(m1Definition.getMetricType()).isEqualTo(TimeSeriesMetricType.ERROR);
+    assertThat(m1Definition.getComparisonType()).isEqualTo(TimeSeriesThresholdComparisonType.RATIO);
+    assertThat(m1Definition.getAction()).isEqualTo(TimeSeriesCustomThresholdActions.FAIL_AFTER_OCCURRENCES);
+    assertThat(m1Definition.getOccurrenceCount()).isEqualTo(5);
+    assertThat(m1Definition.getThresholdType()).isEqualTo(TimeSeriesThresholdType.ACT_WHEN_HIGHER);
+    assertThat(m1Definition.getValue()).isEqualTo(0.6, offset(0.01));
   }
 }

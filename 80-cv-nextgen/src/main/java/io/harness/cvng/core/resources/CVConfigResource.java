@@ -21,8 +21,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api("cv-nextgen/cv-config/")
-@Path("/cv-nextgen/cv-config")
+@Api("cv-config/")
+@Path("/cv-config")
 @Produces("application/json")
 public class CVConfigResource {
   @Inject private CVConfigService cvConfigService;

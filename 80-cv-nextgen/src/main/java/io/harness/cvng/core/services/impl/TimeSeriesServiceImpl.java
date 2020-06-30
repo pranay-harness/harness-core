@@ -1,25 +1,36 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
+import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.TimeSeriesRecord.TimeSeriesGroupValue;
 import io.harness.cvng.core.entities.TimeSeriesRecord.TimeSeriesRecordKeys;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.entities.TimeSeriesThreshold;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.UpdateOptions;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class TimeSeriesServiceImpl implements TimeSeriesService {
   @Inject private HPersistence hPersistence;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private MetricPackService metricPackService;
 
   @Override
   public boolean save(List<TimeSeriesDataCollectionRecord> dataRecords) {
@@ -71,5 +82,51 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
       });
     });
     return rv;
+  }
+
+  @Override
+  public List<TimeSeriesMetricDefinition> getTimeSeriesMetricDefinitions(String cvConfigId) {
+    CVConfig cvConfig = cvConfigService.get(cvConfigId);
+    Preconditions.checkNotNull(cvConfig, "could not find datasource with id ", cvConfigId);
+
+    MetricCVConfig metricCVConfig = (MetricCVConfig) cvConfig;
+
+    List<TimeSeriesMetricDefinition> timeSeriesMetricDefinitions = new ArrayList<>();
+    // add project level thresholds
+    List<TimeSeriesThreshold> metricPackThresholds =
+        metricPackService.getMetricPackThresholds(metricCVConfig.getAccountId(), metricCVConfig.getProjectIdentifier(),
+            metricCVConfig.getMetricPack().getIdentifier(), metricCVConfig.getType());
+    metricPackThresholds.forEach(timeSeriesThreshold
+        -> timeSeriesMetricDefinitions.add(TimeSeriesMetricDefinition.builder()
+                                               .metricName(timeSeriesThreshold.getMetricName())
+                                               .metricType(timeSeriesThreshold.getMetricType())
+                                               .metricGroupName(timeSeriesThreshold.getMetricGroupName())
+                                               .actionType(timeSeriesThreshold.getAction())
+                                               .comparisonType(timeSeriesThreshold.getCriteria().getType())
+                                               .action(timeSeriesThreshold.getCriteria().getAction())
+                                               .occurrenceCount(timeSeriesThreshold.getCriteria().getOccurrenceCount())
+                                               .thresholdType(timeSeriesThreshold.getCriteria().getThresholdType())
+                                               .value(timeSeriesThreshold.getCriteria().getValue())
+                                               .build()));
+
+    // add data source level thresholds
+    metricCVConfig.getMetricPack().getMetrics().forEach(metricDefinition -> {
+      if (isNotEmpty(metricDefinition.getThresholds())) {
+        metricDefinition.getThresholds().forEach(timeSeriesThreshold
+            -> timeSeriesMetricDefinitions.add(
+                TimeSeriesMetricDefinition.builder()
+                    .metricName(metricDefinition.getName())
+                    .metricType(metricDefinition.getType())
+                    .metricGroupName(timeSeriesThreshold.getMetricGroupName())
+                    .actionType(timeSeriesThreshold.getAction())
+                    .comparisonType(timeSeriesThreshold.getCriteria().getType())
+                    .action(timeSeriesThreshold.getCriteria().getAction())
+                    .occurrenceCount(timeSeriesThreshold.getCriteria().getOccurrenceCount())
+                    .thresholdType(timeSeriesThreshold.getCriteria().getThresholdType())
+                    .value(timeSeriesThreshold.getCriteria().getValue())
+                    .build()));
+      }
+    });
+    return timeSeriesMetricDefinitions;
   }
 }

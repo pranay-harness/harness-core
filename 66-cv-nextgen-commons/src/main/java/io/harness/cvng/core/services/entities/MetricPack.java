@@ -3,10 +3,8 @@ package io.harness.cvng.core.services.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
-import io.harness.beans.EmbeddedUser;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
@@ -15,7 +13,6 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
-import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,12 +41,10 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "metricPacks", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "MetricPackKeys")
 @HarnessEntity(exportable = true)
-public class MetricPack
-    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, UpdatedByAware {
+public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
-  private EmbeddedUser lastUpdatedBy;
   @FdIndex private String accountId;
   @NotEmpty private String projectIdentifier;
   @NotNull private DataSourceType dataSourceType;
@@ -65,14 +60,14 @@ public class MetricPack
   @Data
   @Builder
   @EqualsAndHashCode(of = {"name"})
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class MetricDefinition {
     @Trimmed @NotEmpty private String name;
     @NotNull private TimeSeriesMetricType type;
     private String path;
     private String validationPath;
     private boolean included;
-    @Default private List<TimeSeriesThresholdCriteria> ignoreHints = new ArrayList<>();
-    @Default private List<TimeSeriesThresholdCriteria> failFastHints = new ArrayList<>();
+    @Default private List<TimeSeriesThreshold> thresholds = new ArrayList<>();
 
     @JsonIgnore
     public String getPath() {

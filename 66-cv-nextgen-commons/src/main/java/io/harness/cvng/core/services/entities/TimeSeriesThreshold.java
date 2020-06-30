@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.mongo.index.FdIndex;
@@ -14,6 +15,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
@@ -40,7 +42,8 @@ public class TimeSeriesThreshold implements PersistentEntity, UuidAware, Created
   @NotNull @FdIndex private DataSourceType dataSourceType;
   @NotNull @FdIndex private String metricPackIdentifier;
   @NotNull private String metricName;
-  private String metricGroupName;
+  @NotNull private TimeSeriesMetricType metricType;
+  @Default private String metricGroupName = "*";
   @NotNull private TimeSeriesThresholdActionType action;
   @NotNull private TimeSeriesThresholdCriteria criteria;
 }
