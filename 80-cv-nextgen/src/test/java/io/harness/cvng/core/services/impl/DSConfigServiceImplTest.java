@@ -9,9 +9,9 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
-import io.harness.cvng.beans.AppDynamicsDSConfig;
-import io.harness.cvng.beans.AppDynamicsDSConfig.ServiceMapping;
-import io.harness.cvng.beans.DSConfig;
+import io.harness.cvng.core.beans.AppDynamicsDSConfig;
+import io.harness.cvng.core.beans.AppDynamicsDSConfig.ServiceMapping;
+import io.harness.cvng.core.beans.DSConfig;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.rule.Owner;

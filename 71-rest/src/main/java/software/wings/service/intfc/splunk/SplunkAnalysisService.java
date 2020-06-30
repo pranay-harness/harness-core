@@ -1,9 +1,9 @@
 package software.wings.service.intfc.splunk;
 
 import io.harness.cvng.beans.CVHistogram;
+import io.harness.cvng.beans.SplunkSampleResponse;
+import io.harness.cvng.beans.SplunkSavedSearch;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
-import software.wings.service.impl.splunk.SplunkSampleResponse;
-import software.wings.service.impl.splunk.SplunkSavedSearch;
 import software.wings.service.impl.splunk.SplunkSetupTestNodeData;
 
 import java.util.List;

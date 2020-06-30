@@ -12,8 +12,8 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
-import io.harness.cvng.core.services.entities.AppDynamicsCVConfig;
-import io.harness.cvng.core.services.entities.CVConfig;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrchestratorKeys;

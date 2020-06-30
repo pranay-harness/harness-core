@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.cvng.beans.DataCollectionTaskDTO;
+import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
-import io.harness.cvng.core.services.entities.DataCollectionTask;
-import io.harness.cvng.core.services.entities.DataCollectionTask.DataCollectionTaskResult;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.swagger.annotations.Api;
@@ -32,9 +32,9 @@ public class DataCollectionTaskResource {
   @Timed
   @ExceptionMetered
   @DelegateAuth
-  public RestResponse<Optional<DataCollectionTask>> getNextTask(
+  public RestResponse<Optional<DataCollectionTaskDTO>> getNextTask(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("cvConfigId") String cvConfigId) {
-    return new RestResponse<>(dataCollectionTaskService.getNextTask(accountId, cvConfigId));
+    return new RestResponse<>(dataCollectionTaskService.getNextTaskDTO(accountId, cvConfigId));
   }
 
   @POST

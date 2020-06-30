@@ -2,14 +2,16 @@ package io.harness.cvng.core.services.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 
-import io.harness.cvng.beans.DSConfig;
-import io.harness.cvng.beans.DSConfig.CVConfigUpdateResult;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.core.beans.DSConfig;
+import io.harness.cvng.core.beans.DSConfig.CVConfigUpdateResult;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.api.DSConfigService;
-import io.harness.cvng.core.services.entities.CVConfig;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +29,7 @@ public class DSConfigServiceImpl implements DSConfigService {
     }
     DataSourceType dataSourceType = cvConfigs.get(0).getType();
     CVConfigTransformer<? extends CVConfig, ? extends DSConfig> cvConfigTransformer =
-        injector.getInstance(dataSourceType.getCvConfigMapperClass());
+        injector.getInstance(Key.get(CVConfigTransformer.class, Names.named(dataSourceType.name())));
     Map<String, List<CVConfig>> groupById =
         cvConfigs.stream().collect(Collectors.groupingBy(CVConfig::getGroupId, Collectors.toList()));
     return groupById.values().stream().map(group -> cvConfigTransformer.transform(group)).collect(Collectors.toList());

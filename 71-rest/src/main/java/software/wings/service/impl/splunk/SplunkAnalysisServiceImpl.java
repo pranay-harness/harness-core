@@ -10,6 +10,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cvng.beans.CVHistogram;
+import io.harness.cvng.beans.SplunkSampleResponse;
+import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;

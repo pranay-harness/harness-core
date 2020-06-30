@@ -2,7 +2,9 @@ package io.harness.perpetualtask.datacollection;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,13 +15,11 @@ import com.google.protobuf.ByteString;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
+import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.core.services.CVNextGenConstants;
-import io.harness.cvng.core.services.entities.AppDynamicsCVConfig;
-import io.harness.cvng.core.services.entities.DataCollectionTask;
-import io.harness.cvng.core.services.entities.DataCollectionTask.ExecutionStatus;
 import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
-import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.datacollection.DataCollectionDSLService;
@@ -40,7 +40,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
@@ -61,10 +60,11 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
   @Mock private EncryptionService encryptionService;
   @Mock private DataCollectionDSLService dataCollectionDSLService;
   @Mock private CVNextGenServiceClient cvNextGenServiceClient;
-  private AppDynamicsCVConfig cvConfig;
   private AppDynamicsConfig appDynamicsConfig;
   private String accountId;
   private String cvConfigId;
+  private DataCollectionTaskDTO dataCollectionTaskDTO;
+  private AppDynamicsDataCollectionInfo dataCollectionInfo;
 
   private PerpetualTaskExecutionParams perpetualTaskParams;
 
@@ -84,21 +84,18 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
     FieldUtils.writeField(dataCollector, "timeSeriesDataStoreService", timeSeriesDataStoreService, true);
     FieldUtils.writeField(dataCollector, "dataCollectionDSLService", dataCollectionDSLService, true);
     FieldUtils.writeField(dataCollector, "cvNextGenServiceClient", cvNextGenServiceClient, true);
-
-    Call<RestResponse<DataCollectionTask>> nextTaskCall = Mockito.mock(Call.class);
-    when(nextTaskCall.execute())
-        .thenReturn(Response.success(new RestResponse<>(
-            DataCollectionTask.builder().accountId(accountId).status(ExecutionStatus.RUNNING).build())));
+    dataCollectionInfo = AppDynamicsDataCollectionInfo.builder().applicationId(123).tierId(1234).build();
+    dataCollectionTaskDTO =
+        DataCollectionTaskDTO.builder().accountId(accountId).dataCollectionInfo(dataCollectionInfo).build();
+    Call<RestResponse<DataCollectionTaskDTO>> nextTaskCall = mock(Call.class);
+    when(nextTaskCall.execute()).thenReturn(Response.success(new RestResponse<>(dataCollectionTaskDTO)));
     when(cvNextGenServiceClient.getNextDataCollectionTask(anyString(), anyString())).thenReturn(nextTaskCall);
-
-    cvConfig = new AppDynamicsCVConfig();
-    cvConfig.setApplicationId(100);
-    cvConfig.setTierId(343);
-    cvConfig.setVerificationType(VerificationType.TIME_SERIES);
+    Call<RestResponse<Void>> taskUpdateResult = mock(Call.class);
+    when(cvNextGenServiceClient.updateTaskStatus(anyString(), any())).thenReturn(taskUpdateResult);
   }
 
   private void createTaskParams(String metricPackIdentifier, String dataCollectionDsl) {
-    cvConfig.setMetricPack(
+    dataCollectionInfo.setMetricPack(
         MetricPack.builder()
             .identifier(metricPackIdentifier)
             .dataCollectionDsl(dataCollectionDsl)
@@ -107,11 +104,10 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
                 MetricPack.MetricDefinition.builder().name(generateUuid()).path("path2").included(false).build(),
                 MetricPack.MetricDefinition.builder().name(generateUuid()).path("path3").included(true).build()))
             .build());
-
+    dataCollectionInfo.setDataCollectionDsl(dataCollectionDsl);
     CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
                                                     .settingValue(appDynamicsConfig)
                                                     .encryptedDataDetails(Lists.newArrayList())
-                                                    .cvConfig(cvConfig)
                                                     .build();
     ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(cvDataCollectionInfo));
     perpetualTaskParams = PerpetualTaskExecutionParams.newBuilder()
@@ -125,7 +121,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
 
   @Test
   @Owner(developers = OwnerRule.RAGHU)
-  @Category(UnitTests.class)
+  @Category({UnitTests.class})
   public void testDataCollection_AppdPerformance() {
     createTaskParams(
         CVNextGenConstants.APPD_PERFORMANCE_PACK_IDENTIFIER, MetricPackServiceImpl.APPDYNAMICS_PERFORMANCE_PACK_DSL);
@@ -174,8 +170,8 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
                       .getBytes(StandardCharsets.UTF_8)));
     Map<String, Object> otherEnvVariables = runtimeParameters.getOtherEnvVariables();
     assertThat(otherEnvVariables.size()).isEqualTo(3);
-    assertThat(otherEnvVariables.get("appId")).isEqualTo(cvConfig.getApplicationId());
-    assertThat(otherEnvVariables.get("tierId")).isEqualTo(cvConfig.getTierId());
+    assertThat(otherEnvVariables.get("appId")).isEqualTo(dataCollectionInfo.getApplicationId());
+    assertThat(otherEnvVariables.get("tierId")).isEqualTo(dataCollectionInfo.getTierId());
 
     List<String> metricsToCollect = (List<String>) otherEnvVariables.get("metricsToCollect");
     assertThat(CollectionUtils.isEqualCollection(metricsToCollect, Lists.newArrayList("path1", "path3"))).isTrue();

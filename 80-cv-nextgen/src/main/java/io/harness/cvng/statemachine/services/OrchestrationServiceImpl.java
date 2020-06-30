@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import io.harness.cvng.core.services.entities.CVConfig;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrchestratorKeys;

@@ -22,6 +22,8 @@ import com.splunk.SavedSearchCollection;
 import com.splunk.Service;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVHistogram;
+import io.harness.cvng.beans.SplunkSampleResponse;
+import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;

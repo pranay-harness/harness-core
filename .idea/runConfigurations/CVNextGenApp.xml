@@ -1,5 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="CVNextGenApp" type="Application" factoryName="Application">
+    <envs>
+      <env name="VERIFICATION_SERVICE_SECRET" value="67d9b94d9856665afc21acd3aa745401" />
+    </envs>
     <option name="MAIN_CLASS_NAME" value="io.harness.cvng.VerificationApplication" />
     <module name="80-cv-nextgen" />
     <option name="PROGRAM_PARAMETERS" value="server cv-nextgen-config.yml" />

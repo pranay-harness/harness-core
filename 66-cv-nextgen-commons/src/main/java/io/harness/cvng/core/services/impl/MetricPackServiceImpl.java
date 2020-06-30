@@ -254,8 +254,8 @@ public class MetricPackServiceImpl implements MetricPackService {
       }
     });
   }
-
-  private void populateDataCollectionDsl(DataSourceType dataSourceType, MetricPack metricPack) {
+  @Override
+  public void populateDataCollectionDsl(DataSourceType dataSourceType, MetricPack metricPack) {
     switch (dataSourceType) {
       case APP_DYNAMICS:
         metricPack.setDataCollectionDsl(getAppdynamicsMetricPackDsl(metricPack));

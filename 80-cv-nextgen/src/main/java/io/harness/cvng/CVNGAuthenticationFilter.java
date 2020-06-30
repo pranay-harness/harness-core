@@ -9,10 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cvng.client.VerificationManagerClient;
-import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
-import io.harness.cvng.utils.CVNextGenCache;
 import io.harness.exception.WingsException;
-import io.harness.persistence.HPersistence;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,11 +25,7 @@ import javax.ws.rs.core.HttpHeaders;
 @Slf4j
 public class CVNGAuthenticationFilter
     extends VerificationServiceAuthenticationFilter implements ContainerRequestFilter {
-  private String PREFIX_BEARER = "Bearer";
   @Context private ResourceInfo resourceInfo;
-  @Inject private CVNextGenCache cvNextGenCache;
-  @Inject private VerificationServiceSecretManager verificationServiceSecretManager;
-  @Inject private HPersistence hPersistence;
   @Inject private VerificationManagerClient managerClient;
 
   @Override

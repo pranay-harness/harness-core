@@ -13,4 +13,8 @@ public interface CVNextGenConstants {
   String APPD_PERFORMANCE_PACK_IDENTIFIER = "Performance and Availability";
   String APPD_QUALITY_PACK_IDENTIFIER = "Quality";
   String APPD_RESOURCE_PACK_IDENTIFIER = "Resources";
+  String SPLUNK_RESOURCE_PATH = "cv-nextgen/splunk/";
+  String SPLUNK_SAVED_SEARCH_PATH = "saved-searches";
+  String SPLUNK_HISTOGRAM_PATH = "histogram";
+  String SPLUNK_SAMPLE_PATH = "samples";
 }

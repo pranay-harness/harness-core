@@ -2,14 +2,14 @@ package software.wings.service.intfc.splunk;
 
 import com.splunk.Service;
 import io.harness.cvng.beans.CVHistogram;
+import io.harness.cvng.beans.SplunkSampleResponse;
+import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.LogElement;
-import software.wings.service.impl.splunk.SplunkSampleResponse;
-import software.wings.service.impl.splunk.SplunkSavedSearch;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
