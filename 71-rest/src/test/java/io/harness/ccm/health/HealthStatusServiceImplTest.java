@@ -174,6 +174,7 @@ public class HealthStatusServiceImplTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void healthStatusForAConnectorJustCreated() {
+    when(billingDataPipelineRecordDao.fetchBillingPipelineRecord(accountId, awsConnectorId)).thenReturn(null);
     when(settingsService.get(awsConnectorId)).thenReturn(awsConnector);
     awsConnector.setCreatedAt(currentInstant.minus(0, ChronoUnit.DAYS).toEpochMilli());
     CEHealthStatus healthStatus = healthStatusService.getHealthStatus(awsConnectorId);

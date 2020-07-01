@@ -3,6 +3,8 @@ package io.harness.ccm.setup.graphql;
 import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingEnvironment;
+import io.harness.ccm.health.CEClusterHealth;
+import io.harness.ccm.health.CEHealthStatus;
 import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.setup.graphql.QLCEConnector.QLCEConnectorBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,8 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -26,6 +30,8 @@ public class CeConnectorDataFetcher
     extends AbstractConnectionV2DataFetcher<QLCESetupFilter, QLNoOpSortCriteria, QLCEConnectorData> {
   @Inject private CESetupQueryHelper ceSetupQueryHelper;
   @Inject private HealthStatusServiceImpl healthStatusService;
+
+  private static final String ERROR_FETCHING_HEALTH_STATUS = "Error Fetching Health Status";
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
@@ -44,12 +50,24 @@ public class CeConnectorDataFetcher
   }
 
   private QLCEConnector populateCEConnector(SettingAttribute settingAttribute) {
+    CEHealthStatus healthStatus = CEHealthStatus.builder()
+                                      .isHealthy(false)
+                                      .clusterHealthStatusList(Collections.singletonList(
+                                          CEClusterHealth.builder()
+                                              .isHealthy(false)
+                                              .messages(Arrays.asList(ERROR_FETCHING_HEALTH_STATUS))
+                                              .build()))
+                                      .build();
+    try {
+      healthStatus = healthStatusService.getHealthStatus(settingAttribute.getUuid());
+    } catch (Exception ex) {
+      logger.error("Error Fetching Health Status: {}", ex);
+    }
     String accountName = settingAttribute.getName();
-    QLCEConnectorBuilder qlCEConnectorBuilder =
-        QLCEConnector.builder()
-            .settingId(settingAttribute.getUuid())
-            .accountName(accountName)
-            .ceHealthStatus(healthStatusService.getHealthStatus(settingAttribute.getUuid()));
+    QLCEConnectorBuilder qlCEConnectorBuilder = QLCEConnector.builder()
+                                                    .settingId(settingAttribute.getUuid())
+                                                    .accountName(accountName)
+                                                    .ceHealthStatus(healthStatus);
     if (settingAttribute.getValue() instanceof CEAwsConfig) {
       CEAwsConfig ceAwsConfig = (CEAwsConfig) settingAttribute.getValue();
       qlCEConnectorBuilder.curReportName(ceAwsConfig.getCurReportName())
