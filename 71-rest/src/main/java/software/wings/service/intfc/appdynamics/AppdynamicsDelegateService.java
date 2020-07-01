@@ -1,7 +1,7 @@
 package software.wings.service.intfc.appdynamics;
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.core.services.entities.MetricPack;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.TaskType;
@@ -59,5 +59,5 @@ public interface AppdynamicsDelegateService {
   @DelegateTaskType(TaskType.APPDYNAMICS_METRIC_PACK_DATA)
   Set<AppdynamicsValidationResponse> getMetricPackData(AppDynamicsConfig appDynamicsConfig,
       List<EncryptedDataDetail> encryptionDetails, long appdAppId, long appdTierId, String requestGuid,
-      List<MetricPack> metricPacks, Instant startTime, Instant endTime);
+      List<MetricPackDTO> metricPacks, Instant startTime, Instant endTime);
 }

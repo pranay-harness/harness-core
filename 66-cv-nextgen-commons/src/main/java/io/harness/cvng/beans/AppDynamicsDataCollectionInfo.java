@@ -1,6 +1,5 @@
 package io.harness.cvng.beans;
 
-import io.harness.cvng.core.services.entities.MetricPack;
 import lombok.Builder;
 import lombok.Data;
 
@@ -14,7 +13,7 @@ import java.util.stream.Collectors;
 public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo {
   private long tierId;
   private long applicationId;
-  private MetricPack metricPack;
+  private MetricPackDTO metricPack;
 
   @Override
   public Map<String, Object> getDslEnvVariables() {

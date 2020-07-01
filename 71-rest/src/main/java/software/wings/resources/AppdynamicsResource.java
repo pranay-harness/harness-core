@@ -7,9 +7,11 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.core.services.entities.MetricPack;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
 import retrofit2.http.Body;
 import software.wings.security.annotations.AuthRule;
@@ -95,12 +97,14 @@ public class AppdynamicsResource {
   @Path("/metric-data")
   @Timed
   @ExceptionMetered
+  @LearningEngineAuth
+  @ExposeInternalException(withStackTrace = true)
   public RestResponse<Set<AppdynamicsValidationResponse>> getMetricData(
       @QueryParam("accountId") @NotNull String accountId,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("connectorId") @NotNull String connectorId, @QueryParam("appdAppId") @NotNull long appdAppId,
       @QueryParam("appdTierId") @NotNull long appdTierId, @QueryParam("requestGuid") @NotNull String requestGuid,
-      @NotNull @Valid @Body List<MetricPack> metricPacks) {
+      @NotNull @Valid @Body List<MetricPackDTO> metricPacks) {
     return new RestResponse<>(appdynamicsService.getMetricPackData(
         accountId, projectIdentifier, connectorId, appdAppId, appdTierId, requestGuid, metricPacks));
   }

@@ -43,6 +43,7 @@ public class DelegateCVTaskServiceImplTest extends CategoryTest {
   @Mock Call call;
   private String accountID = "accountId";
   private String cvTaskId = "cvTaskId";
+
   @Before
   public void setup() throws IllegalAccessException, IOException {
     initMocks(this);

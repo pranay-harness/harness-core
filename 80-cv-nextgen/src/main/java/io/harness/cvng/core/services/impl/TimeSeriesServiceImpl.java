@@ -15,10 +15,10 @@ import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.TimeSeriesRecord.TimeSeriesGroupValue;
 import io.harness.cvng.core.entities.TimeSeriesRecord.TimeSeriesRecordKeys;
+import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
-import io.harness.cvng.core.services.entities.TimeSeriesThreshold;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.UpdateOptions;
 

@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.services.entities.MetricPack;
+import io.harness.cvng.core.entities.MetricPack;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

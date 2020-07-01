@@ -13,9 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.services.entities.MetricPack;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -53,7 +51,6 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
   @Inject private MLServiceUtils mlServiceUtils;
-  @Inject private MetricPackService metricPackService;
 
   @Override
   public List<NewRelicApplication> getApplications(final String settingId) throws IOException {
@@ -257,14 +254,13 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
 
   @Override
   public Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectIdentifier,
-      String connectorId, long appdAppId, long appdTierId, String requestGuid, List<MetricPack> metricPacks) {
+      String connectorId, long appdAppId, long appdTierId, String requestGuid, List<MetricPackDTO> metricPacks) {
     logger.info(
         "for {} connector {} and {} found these packs", projectIdentifier, connectorId, metricPacks, metricPacks);
     Preconditions.checkState(isNotEmpty(metricPacks), "No metric packs found for project {} with the name {}",
         projectIdentifier, metricPacks);
-    metricPacks.forEach(metricPack
-        -> metricPackService.populatePaths(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS, metricPack));
     final SettingAttribute settingAttribute = settingsService.get(connectorId);
+    Preconditions.checkNotNull(settingAttribute, "Invalid connectorId");
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
                                           .appId(GLOBAL_APP_ID)

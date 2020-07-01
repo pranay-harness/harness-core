@@ -416,8 +416,6 @@ manualSyncJobStatus {"name": "appId_1", "background": true} {"appId": 1}
 manualSyncJobStatus {"name": "createdAt_1", "background": true} {"createdAt": 1}
 marketPlaces {"name": "createdAt_1", "background": true} {"createdAt": 1}
 marketPlaces {"name": "customerIdentificationCode_1", "unique": true} {"customerIdentificationCode": 1}
-metricPacks {"name": "accountId_1", "background": true} {"accountId": 1}
-metricPacks {"name": "unique_Idx", "unique": true} {"projectIdentifier": 1, "dataSourceType": 1, "identifier": 1}
 mlExperiments {"name": "appId_1", "background": true} {"appId": 1}
 mlExperiments {"name": "createdAt_1", "background": true} {"createdAt": 1}
 mlExperiments {"name": "expUniqueIdx", "unique": true} {"ml_analysis_type": 1, "experimentName": 1}
@@ -649,10 +647,6 @@ timeSeriesRiskSummary {"name": "accountId_1", "background": true} {"accountId": 
 timeSeriesRiskSummary {"name": "appId_1", "background": true} {"appId": 1}
 timeSeriesRiskSummary {"name": "createdAt_1", "background": true} {"createdAt": 1}
 timeSeriesRiskSummary {"name": "minute_idx", "background": true} {"cvConfigId": 1, "analysisMinute": 1, "tag": 1}
-timeSeriesThresholds {"name": "accountId_1", "background": true} {"accountId": 1}
-timeSeriesThresholds {"name": "dataSourceType_1", "background": true} {"dataSourceType": 1}
-timeSeriesThresholds {"name": "metricPackIdentifier_1", "background": true} {"metricPackIdentifier": 1}
-timeSeriesThresholds {"name": "projectIdentifier_1", "background": true} {"projectIdentifier": 1}
 timeseriesTransactionThresholds {"name": "accountId_1", "background": true} {"accountId": 1}
 timeseriesTransactionThresholds {"name": "appId_1", "background": true} {"appId": 1}
 timeseriesTransactionThresholds {"name": "createdAt_1", "background": true} {"createdAt": 1}

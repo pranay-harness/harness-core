@@ -10,7 +10,7 @@ public class AppDynamicsDataCollectionInfoMapper
   public AppDynamicsDataCollectionInfo toDataCollectionInfo(AppDynamicsCVConfig cvConfig) {
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo = AppDynamicsDataCollectionInfo.builder()
                                                                       .applicationId(cvConfig.getApplicationId())
-                                                                      .metricPack(cvConfig.getMetricPack())
+                                                                      .metricPack(cvConfig.getMetricPack().getDTO())
                                                                       .tierId(cvConfig.getTierId())
                                                                       .build();
     appDynamicsDataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());

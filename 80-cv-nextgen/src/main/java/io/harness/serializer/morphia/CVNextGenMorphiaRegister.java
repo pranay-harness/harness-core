@@ -5,8 +5,10 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.LogCVConfig;
 import io.harness.cvng.core.entities.MetricCVConfig;
+import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
+import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.morphia.MorphiaRegistrar;
@@ -26,6 +28,8 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(AppDynamicsCVConfig.class);
     set.add(LogCVConfig.class);
     set.add(MetricCVConfig.class);
+    set.add(MetricPack.class);
+    set.add(TimeSeriesThreshold.class);
   }
 
   @Override

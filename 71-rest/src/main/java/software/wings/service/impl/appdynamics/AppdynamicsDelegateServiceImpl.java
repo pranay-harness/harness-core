@@ -14,9 +14,9 @@ import com.google.inject.Singleton;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsMetricValueValidationResponse;
 import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsValidationResponseBuilder;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.core.services.CVNextGenConstants;
-import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -350,7 +350,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   @Override
   public Set<AppdynamicsValidationResponse> getMetricPackData(AppDynamicsConfig appDynamicsConfig,
       List<EncryptedDataDetail> encryptionDetails, long appdAppId, long appdTierId, String requestGuid,
-      List<MetricPack> metricPacks, Instant startTime, Instant endTime) {
+      List<MetricPackDTO> metricPacks, Instant startTime, Instant endTime) {
     final AppdynamicsTier appdynamicsTier = getAppdynamicsTier(appDynamicsConfig, appdAppId, appdTierId,
         encryptionDetails, createApiCallLog(appDynamicsConfig.getAccountId(), NO_STATE_EXECUTION_ID));
     Preconditions.checkNotNull(appdynamicsTier, "No tier found with id {} for app {}", appdTierId, appdAppId);

@@ -10,7 +10,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
-import io.harness.cvng.core.services.entities.MetricPack;
+import io.harness.cvng.core.entities.MetricPack;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,7 +30,7 @@ public class AppDynamicsDataCollectionInfoMapperTest extends CVNextGenBaseTest {
     cvConfig.setMetricPack(metricPack);
     cvConfig.setTierId(123);
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo = mapper.toDataCollectionInfo(cvConfig);
-    assertThat(appDynamicsDataCollectionInfo.getMetricPack()).isEqualTo(metricPack);
+    assertThat(appDynamicsDataCollectionInfo.getMetricPack()).isEqualTo(metricPack.getDTO());
     assertThat(appDynamicsDataCollectionInfo.getApplicationId()).isEqualTo(1234);
     assertThat(appDynamicsDataCollectionInfo.getTierId()).isEqualTo(123);
     assertThat(appDynamicsDataCollectionInfo.getDataCollectionDsl()).isEqualTo("metric-pack-dsl");

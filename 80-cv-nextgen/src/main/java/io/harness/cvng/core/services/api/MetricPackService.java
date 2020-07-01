@@ -1,8 +1,8 @@
 package io.harness.cvng.core.services.api;
 
 import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.core.services.entities.MetricPack;
-import io.harness.cvng.core.services.entities.TimeSeriesThreshold;
+import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.entities.TimeSeriesThreshold;
 
 import java.util.List;
 
