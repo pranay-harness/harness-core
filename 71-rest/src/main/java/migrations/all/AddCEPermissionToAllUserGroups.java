@@ -15,14 +15,12 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.PermissionAttribute.PermissionType;
-import software.wings.service.intfc.UserGroupService;
 
 import java.util.Set;
 
 @Slf4j
 public class AddCEPermissionToAllUserGroups implements Migration {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private UserGroupService userGroupService;
 
   @Override
   public void migrate() {

@@ -196,6 +196,10 @@ public class User extends Base implements Principal {
     return givenName;
   }
 
+  public boolean getDisabled() {
+    return disabled;
+  }
+
   public String getFamilyName() {
     return familyName;
   }
