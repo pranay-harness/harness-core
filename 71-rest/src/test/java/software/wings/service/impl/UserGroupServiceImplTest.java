@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.NIKOLA;
@@ -13,6 +14,7 @@ import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -35,6 +37,8 @@ import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.TAG_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
@@ -60,6 +64,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.config.CCMSettingService;
 import io.harness.exception.GeneralException;
 import io.harness.exception.UserGroupAlreadyExistException;
 import io.harness.limits.LimitCheckerFactory;
@@ -83,6 +88,7 @@ import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
@@ -105,18 +111,33 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 public class UserGroupServiceImplTest extends WingsBaseTest {
+  private String accountId = generateUuid();
+  private String userGroupId = generateUuid();
+  private String userGroup2Id = generateUuid();
+  private String description = "test description";
+  private String userGroupName = "userGroup1";
+  private String name = "userGroup1";
+  private String name2 = "userGroup2";
+  private String userName1 = "UserName1";
+  private String userName2 = "auserName2";
+  private String userName = "UserName";
+  private String user1Id = generateUuid();
+  private String user2Id = generateUuid();
+  private String userId = generateUuid();
+  private AppPermission envPermission = getEnvPermission();
+
   @Mock private AuthService authService;
   @Mock private RoleService roleService;
   @Mock private AccountService accountService;
   @Mock private EmailNotificationService emailNotificationService;
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private CCMSettingService ccmSettingService;
 
   private Account account = anAccount()
                                 .withAccountName(ACCOUNT_NAME)
@@ -135,6 +156,32 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                           .companyName(COMPANY_NAME)
                           .build();
 
+  private UserGroup userGroup1 =
+      builder()
+          .accountId(accountId)
+          .uuid(userGroupId)
+          .name(userGroupName + System.currentTimeMillis())
+          .description(description)
+          .memberIds(asList(user1Id, user2Id))
+          .appPermissions(Sets.newHashSet(envPermission))
+          .accountPermissions(AccountPermissions.builder()
+                                  .permissions(new HashSet<>(Collections.singleton(ACCOUNT_MANAGEMENT)))
+                                  .build())
+          .isDefault(true)
+          .build(); // defaultUserGroup
+
+  private UserGroup userGroup2 =
+      builder()
+          .accountId(accountId)
+          .uuid(userGroupId)
+          .name(userGroupName)
+          .description(description)
+          .memberIds(singletonList(user1Id))
+          .accountPermissions(
+              AccountPermissions.builder().permissions(new HashSet<>(Collections.singleton(AUDIT_VIEWER))).build())
+          .isDefault(false)
+          .build(); // nonDefaultUserGroup
+
   @Inject private WingsPersistence wingsPersistence;
   //  @InjectMocks @Inject private AccountService accountService = spy(AccountServiceImpl.class);
   @InjectMocks @Inject private UserService userService;
@@ -142,20 +189,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Mock private UsageLimitedFeature rbacFeature;
 
   private static final String MICROSOFT_TEAMS_WEBHOOK_URL = "https://microsoftTeamsWebhookUrl";
-
-  private String accountId = generateUuid();
-  private String userGroupId = generateUuid();
-  private String userGroup2Id = generateUuid();
-  private String description = "test description";
-  private String name = "userGroup1";
-  private String name2 = "userGroup2";
-  private String userName1 = "UserName1";
-  private String userName2 = "auserName2";
-  private String userName = "UserName";
-  private String user1Id = generateUuid();
-  private String user2Id = generateUuid();
-  private String userId = generateUuid();
-  private AppPermission envPermission = getEnvPermission();
 
   @Before
   public void setup() {
@@ -239,6 +272,75 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
+  public void testSaveAndGetForAdminWhenCeDisabled() {
+    UserGroup savedUserGroup = userGroupService.save(userGroup1);
+    assertThat(savedUserGroup)
+        .isEqualToComparingOnlyGivenFields(userGroup1, "uuid", UserGroupKeys.accountId, UserGroupKeys.name,
+            UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions);
+
+    UserGroup userGroupFromGet = userGroupService.get(accountId, userGroupId);
+    assertThat(userGroupFromGet)
+        .isEqualToComparingOnlyGivenFields(savedUserGroup, "uuid", UserGroupKeys.accountId, UserGroupKeys.name,
+            UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void testSaveAndGetForNonAdminWhenCeDisabled() {
+    UserGroup savedUserGroup = userGroupService.save(userGroup2);
+    assertThat(savedUserGroup)
+        .isEqualToComparingOnlyGivenFields(userGroup2, "uuid", UserGroupKeys.accountId, UserGroupKeys.name,
+            UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions);
+
+    UserGroup userGroupFromGet = userGroupService.get(accountId, userGroupId);
+    assertThat(userGroupFromGet)
+        .isEqualToComparingOnlyGivenFields(savedUserGroup, "uuid", UserGroupKeys.accountId, UserGroupKeys.name,
+            UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void testSaveAndGetForAdminWithCeEnabled() {
+    when(ccmSettingService.isCloudCostEnabled(eq(accountId))).thenReturn(true);
+
+    UserGroup savedUserGroup = userGroupService.save(userGroup1);
+    assertThat(savedUserGroup)
+        .isEqualToComparingOnlyGivenFields(userGroup1, UserGroupKeys.accountId, UserGroupKeys.name,
+            UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions, "uuid");
+    assertThat(savedUserGroup.getAccountPermissions().getPermissions())
+        .contains(CE_ADMIN, CE_VIEWER, ACCOUNT_MANAGEMENT);
+
+    UserGroup userGroupFromGet = userGroupService.get(accountId, userGroupId);
+    assertThat(userGroupFromGet)
+        .isEqualToComparingOnlyGivenFields(savedUserGroup, "uuid", UserGroupKeys.accountId, UserGroupKeys.name,
+            UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions);
+    assertThat(savedUserGroup.getAccountPermissions().getPermissions())
+        .contains(CE_ADMIN, CE_VIEWER, ACCOUNT_MANAGEMENT);
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void testSaveAndGetForNonAdminWithCeEnabled() {
+    when(ccmSettingService.isCloudCostEnabled(eq(accountId))).thenReturn(true);
+    UserGroup savedUserGroup = userGroupService.save(userGroup2);
+    assertThat(savedUserGroup)
+        .isEqualToComparingOnlyGivenFields(userGroup2, UserGroupKeys.accountId, UserGroupKeys.name,
+            UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions, "uuid");
+    assertThat(savedUserGroup.getAccountPermissions().getPermissions()).contains(CE_VIEWER);
+
+    UserGroup userGroupFromGet = userGroupService.get(accountId, userGroupId);
+    assertThat(userGroupFromGet)
+        .isEqualToComparingOnlyGivenFields(savedUserGroup, UserGroupKeys.accountId, UserGroupKeys.name,
+            UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions, "uuid");
+    assertThat(userGroupFromGet.getAccountPermissions().getPermissions()).contains(CE_VIEWER);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
   public void testSaveAndRead() {
     UserGroup userGroup = builder()
                               .accountId(accountId)
@@ -283,13 +385,9 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
         .build();
   }
 
-  private void compare(UserGroup lhs, UserGroup rhs) {
-    assertThat(rhs.getUuid()).isEqualTo(lhs.getUuid());
-    assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
-    assertThat(rhs.getAccountId()).isEqualTo(lhs.getAccountId());
-    assertThat(rhs.getName()).isEqualTo(lhs.getName());
-    assertThat(rhs.getMemberIds()).isEqualTo(lhs.getMemberIds());
-    assertThat(rhs.getAppPermissions()).isEqualTo(lhs.getAppPermissions());
+  private void compare(UserGroup expectedhs, UserGroup actualhs) {
+    assertThat(actualhs).isEqualToComparingOnlyGivenFields(expectedhs, "uuid", UserGroupKeys.accountId,
+        UserGroupKeys.name, UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions);
   }
 
   @Test
@@ -339,7 +437,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                                .build();
     UserGroup savedUserGroup1 = userGroupService.save(userGroup1);
 
-    List<UserGroup> userGroups = userGroupService.listByName(accountId, Collections.singletonList(name));
+    List<UserGroup> userGroups = userGroupService.listByName(accountId, singletonList(name));
     assertThat(userGroups).isNotNull();
     assertThat(userGroups).hasSize(1);
     assertThat(userGroups).containsExactlyInAnyOrder(savedUserGroup1);
@@ -471,7 +569,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
-  public void shouldUpdateTheUserGroupPermissions() {
+  public void shouldUpdateUserGroupPermissions() {
     GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
     AppPermission appPermission =
         AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
@@ -485,8 +583,9 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     appPermissions.add(appPermission);
     UserGroup updatedUserGroup =
         userGroupService.setUserGroupPermissions(accountId, saved.getUuid(), accountPermissions, appPermissions);
-    assertThat(Objects.deepEquals(updatedUserGroup.getAccountPermissions(), accountPermissions)).isTrue();
-    assertThat(Objects.deepEquals(updatedUserGroup.getAppPermissions(), appPermissions)).isTrue();
+    assertThat(updatedUserGroup.getAccountPermissions().getPermissions())
+        .containsExactlyInAnyOrderElementsOf(accountPermissions.getPermissions());
+    assertThat(updatedUserGroup.getAppPermissions()).containsExactlyInAnyOrderElementsOf(appPermissions);
   }
 
   @Test
@@ -675,18 +774,10 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void testUserGroups() {
-    UserGroup defaultUserGroup = builder()
-                                     .accountId(ACCOUNT_ID)
-                                     .name(name)
-                                     .memberIds(Collections.singletonList(user.getUuid()))
-                                     .isDefault(true)
-                                     .build();
-    UserGroup nonDefaultUserGroup = builder()
-                                        .accountId(ACCOUNT_ID)
-                                        .name(name2)
-                                        .memberIds(Collections.singletonList(user.getUuid()))
-                                        .isDefault(false)
-                                        .build();
+    UserGroup defaultUserGroup =
+        builder().accountId(ACCOUNT_ID).name(name).memberIds(singletonList(user.getUuid())).isDefault(true).build();
+    UserGroup nonDefaultUserGroup =
+        builder().accountId(ACCOUNT_ID).name(name2).memberIds(singletonList(user.getUuid())).isDefault(false).build();
 
     wingsPersistence.save(defaultUserGroup);
     wingsPersistence.save(nonDefaultUserGroup);

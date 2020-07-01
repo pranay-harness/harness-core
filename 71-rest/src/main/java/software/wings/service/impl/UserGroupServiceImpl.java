@@ -91,6 +91,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -135,7 +136,9 @@ public class UserGroupServiceImpl implements UserGroupService {
           new NotificationSettings(false, true, Collections.emptyList(), null, "", "");
       userGroup.setNotificationSettings(notificationSettings);
     }
-
+    AccountPermissions accountPermissions =
+        Optional.ofNullable(userGroup.getAccountPermissions()).orElse(AccountPermissions.builder().build());
+    userGroup.setAccountPermissions(addDefaultCePermissions(accountPermissions));
     UserGroup savedUserGroup = wingsPersistence.saveAndGet(UserGroup.class, userGroup);
     Account account = accountService.get(userGroup.getAccountId());
     notNullCheck("account", account);
@@ -145,6 +148,16 @@ public class UserGroupServiceImpl implements UserGroupService {
     logger.info("Auditing creation of new userGroup={} and account={}", userGroup.getName(), account.getAccountName());
     eventPublishHelper.publishSetupRbacEvent(userGroup.getAccountId(), savedUserGroup.getUuid(), EntityType.USER_GROUP);
     return savedUserGroup;
+  }
+
+  private AccountPermissions addDefaultCePermissions(AccountPermissions accountPermissions) {
+    Set<PermissionType> accountPermissionsSet =
+        Optional.ofNullable(accountPermissions.getPermissions()).orElse(new HashSet<>());
+    accountPermissionsSet.add(PermissionType.CE_VIEWER);
+    if (accountPermissionsSet.contains(PermissionType.ACCOUNT_MANAGEMENT)) {
+      accountPermissionsSet.add(PermissionType.CE_ADMIN);
+    }
+    return AccountPermissions.builder().permissions(accountPermissionsSet).build();
   }
 
   private void checkForUserGroupWithSameName(UserGroup userGroup) {
@@ -441,7 +454,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     checkDeploymentPermissions(userGroup);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, UserGroupKeys.appPermissions, appPermissions);
-    setUnset(operations, UserGroupKeys.accountPermissions, accountPermissions);
+    setUnset(operations, UserGroupKeys.accountPermissions,
+        addDefaultCePermissions(Optional.ofNullable(accountPermissions).orElse(AccountPermissions.builder().build())));
     UserGroup updatedUserGroup = update(userGroup, operations);
     evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
     return updatedUserGroup;
@@ -477,6 +491,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup updatePermissions(UserGroup userGroup) {
     checkImplicitPermissions(userGroup.getAccountPermissions(), userGroup.getAccountId(), userGroup.getName());
     checkDeploymentPermissions(userGroup);
+    AccountPermissions accountPermissions =
+        Optional.ofNullable(userGroup.getAccountPermissions()).orElse(AccountPermissions.builder().build());
+    userGroup.setAccountPermissions(addDefaultCePermissions(accountPermissions));
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, UserGroupKeys.appPermissions, userGroup.getAppPermissions());
     setUnset(operations, UserGroupKeys.accountPermissions, userGroup.getAccountPermissions());
