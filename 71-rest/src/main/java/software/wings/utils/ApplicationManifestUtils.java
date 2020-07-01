@@ -262,6 +262,7 @@ public class ApplicationManifestUtils {
                                             .toString());
     }
   }
+
   private String getManifestFormatName(StoreType storeType) {
     StringBuilder stringBuilder = new StringBuilder(128).append('"');
     if (HelmChartRepo == storeType) {
@@ -474,6 +475,16 @@ public class ApplicationManifestUtils {
         } else {
           manifest.getGitFileConfig().setFilePathList(emptyList());
         }
+      }
+    });
+  }
+
+  public void renderGitConfigForApplicationManifest(
+      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    appManifestMap.forEach((location, manifest) -> {
+      if (manifest.getGitFileConfig() != null) {
+        GitFileConfig gitFileConfig = manifest.getGitFileConfig();
+        gitFileConfigHelperService.renderGitFileConfig(context, gitFileConfig);
       }
     });
   }

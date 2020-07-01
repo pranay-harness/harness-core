@@ -849,6 +849,7 @@ public class K8sStateHelper {
 
     K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateExecutionData.getApplicationManifestMap();
+    applicationManifestUtils.renderGitConfigForApplicationManifest(context, appManifestMap);
     Map<K8sValuesLocation, Collection<String>> valuesFiles =
         applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
     k8sStateExecutionData.getValuesFiles().putAll(valuesFiles);
