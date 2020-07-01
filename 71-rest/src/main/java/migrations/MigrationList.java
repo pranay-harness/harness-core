@@ -8,6 +8,7 @@ import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddAccountIdToArtifactStreamsMigration;
 import migrations.all.AddAccountIdToArtifactsMigration;
 import migrations.all.AddCEPermissionToAllUserGroups;
+import migrations.all.AddDisabledFieldMigration;
 import migrations.all.AddDuplicateFieldToCVFeedbacks;
 import migrations.all.AddHarnessCommandLibraryToAccount;
 import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
@@ -348,6 +349,7 @@ public class MigrationList {
         .add(Pair.of(316, PipelineWorkflowExecutionActionQlMigration.class))
         .add(Pair.of(317, BaseMigration.class))
         .add(Pair.of(318, AddCEPermissionToAllUserGroups.class))
+        .add(Pair.of(319, AddDisabledFieldMigration.class))
         .build();
   }
 }
