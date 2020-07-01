@@ -7,7 +7,8 @@ import com.google.inject.Injector;
 import io.harness.annotation.HarnessRepo;
 import io.harness.beans.converters.SweepingOutputReadMongoConverter;
 import io.harness.beans.converters.SweepingOutputWriteMongoConverter;
-import io.harness.engine.executions.node.NodeExecutionAfterSaveListener;
+import io.harness.engine.executions.node.listeners.NodeExecutionAfterSaveListener;
+import io.harness.engine.executions.plan.listeners.PlanExecutionAfterSaveListener;
 import io.harness.exception.GeneralException;
 import io.harness.mongo.OrchestrationTypeInformationMapper;
 import io.harness.ng.SpringPersistenceConfig;
@@ -38,9 +39,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @EnableMongoRepositories(basePackages = {"io.harness.engine"},
     includeFilters = @ComponentScan.Filter(HarnessRepo.class), mongoTemplateRef = "orchestrationMongoTemplate")
 public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
+  private Injector injector;
+
   @Inject
   public OrchestrationPersistenceConfig(Injector injector) {
     super(injector);
+    this.injector = injector;
   }
 
   @Override
@@ -55,9 +59,18 @@ public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
     return new MongoTemplate(mongoDbFactory(), mappingMongoConverter());
   }
 
+  // Node Execution Listener Beans
   @Bean
   public NodeExecutionAfterSaveListener nodeExecutionAfterSaveListener() {
     return new NodeExecutionAfterSaveListener();
+  }
+
+  // Plan Execution Listener Beans
+  @Bean
+  public PlanExecutionAfterSaveListener planExecutionAfterSaveListener() {
+    PlanExecutionAfterSaveListener listener = new PlanExecutionAfterSaveListener();
+    injector.injectMembers(listener);
+    return listener;
   }
 
   @Bean
