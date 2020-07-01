@@ -7,6 +7,8 @@ import com.google.inject.name.Names;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
+import io.harness.cvng.core.dashboard.services.api.HeatMapService;
+import io.harness.cvng.core.dashboard.services.impl.HeatMapServiceImpl;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
@@ -90,6 +92,7 @@ public class CVServiceModule extends AbstractModule {
       bind(Clock.class).toInstance(Clock.systemUTC());
       bind(DSConfigService.class).to(DSConfigServiceImpl.class);
       bind(MetricPackService.class).to(MetricPackServiceImpl.class);
+      bind(HeatMapService.class).to(HeatMapServiceImpl.class);
       bind(DSConfigService.class).to(DSConfigServiceImpl.class);
       bind(MetricPackService.class).to(MetricPackServiceImpl.class);
       bind(SplunkService.class).to(SplunkServiceImpl.class);

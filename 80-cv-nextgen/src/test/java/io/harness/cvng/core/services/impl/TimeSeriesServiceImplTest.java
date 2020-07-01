@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
+import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -30,7 +31,6 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
-import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
@@ -207,7 +207,7 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
     appDynamicsCVConfig.setProjectIdentifier(projectIdentifier);
     appDynamicsCVConfig.setAccountId(accountId);
     appDynamicsCVConfig.setMetricPack(MetricPack.builder()
-                                          .identifier(CVNextGenConstants.APPD_PERFORMANCE_PACK_IDENTIFIER)
+                                          .identifier(PERFORMANCE_PACK_IDENTIFIER)
                                           .metrics(Sets.newHashSet(MetricPack.MetricDefinition.builder().build()))
                                           .build());
     AppDynamicsCVConfig cvConfig = (AppDynamicsCVConfig) cvConfigService.save(appDynamicsCVConfig);

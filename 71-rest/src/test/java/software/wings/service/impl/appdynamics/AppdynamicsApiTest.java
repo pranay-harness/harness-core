@@ -1,5 +1,8 @@
 package software.wings.service.impl.appdynamics;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
+import static io.harness.cvng.core.services.CVNextGenConstants.QUALITY_PACK_IDENTIFIER;
+import static io.harness.cvng.core.services.CVNextGenConstants.RESOURCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -345,15 +348,15 @@ public class AppdynamicsApiTest extends WingsBaseTest {
         accountId, generateUuid(), saveAppdynamicsConfig(), 100, 200, generateUuid(), metricPacks);
     assertThat(metricPacksData.size()).isEqualTo(metricPacks.size());
     metricPacksData.forEach(metricPackData -> {
-      if (metricPackData.getMetricPackName().equals("Performance and Availability")) {
+      if (metricPackData.getMetricPackName().equals(PERFORMANCE_PACK_IDENTIFIER)) {
         assertThat(metricPackData.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.SUCCESS);
       }
 
-      if (metricPackData.getMetricPackName().equals("Quality")) {
+      if (metricPackData.getMetricPackName().equals(QUALITY_PACK_IDENTIFIER)) {
         assertThat(metricPackData.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.NO_DATA);
       }
 
-      if (metricPackData.getMetricPackName().equals("Resources")) {
+      if (metricPackData.getMetricPackName().equals(RESOURCE_PACK_IDENTIFIER)) {
         assertThat(metricPackData.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.FAILED);
         metricPackData.getValues().forEach(response -> {
           if (response.getMetricName().contains("CPU")) {
