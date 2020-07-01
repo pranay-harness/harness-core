@@ -136,7 +136,8 @@ public class ApiKeyServiceTest extends WingsBaseTest {
   public void testUpdateForUserGroup() {
     ApiKeyEntry apiKeyEntry = generateKey("name");
 
-    ApiKeyEntry apiKeyEntryForUpdate = ApiKeyEntry.builder().userGroupIds(asList(USER_GROUP_ID)).build();
+    ApiKeyEntry apiKeyEntryForUpdate =
+        ApiKeyEntry.builder().name("newName").userGroupIds(asList(USER_GROUP_ID)).build();
     ApiKeyEntry updatedApiKeyEntry =
         apiKeyService.update(apiKeyEntry.getUuid(), apiKeyEntry.getAccountId(), apiKeyEntryForUpdate);
     assertThat(updatedApiKeyEntry).isNotNull();

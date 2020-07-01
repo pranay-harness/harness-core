@@ -29,6 +29,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.GeneralException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.persistence.HQuery;
 import io.harness.security.SimpleEncryption;
@@ -94,6 +95,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Override
   @RestrictedApi(ApiKeysFeature.class)
   public ApiKeyEntry generate(String accountId, ApiKeyEntry apiKeyEntry) {
+    validateApiKeyName(apiKeyEntry.getName());
     int KEY_LEN = 80;
     String randomKey = accountId + DELIMITER + CryptoUtils.secureRandAlphaNumString(KEY_LEN);
     String apiKey = Base64.getEncoder().encodeToString(randomKey.getBytes(Charsets.UTF_8));
@@ -119,6 +121,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     notNullCheck("ApiKeyEntry is null", apiKeyEntry, USER);
     notNullCheck("uuid is null for the given api key entry", uuid, USER);
     notNullCheck(UserGroup.ACCOUNT_ID_KEY, accountId, USER);
+    validateApiKeyName(apiKeyEntry.getName());
 
     ApiKeyEntry apiKeyEntryBeforeUpdate = get(uuid, accountId);
 
@@ -129,7 +132,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     Query<ApiKeyEntry> query = wingsPersistence.createQuery(ApiKeyEntry.class)
                                    .filter(ID_KEY, uuid)
                                    .filter(UserGroup.ACCOUNT_ID_KEY, accountId);
-    wingsPersistence.update(query, operations);
+
+    duplicateCheck(() -> wingsPersistence.update(query, operations), ApiKeyEntryKeys.name, apiKeyEntry.getName());
     ApiKeyEntry apiKeyEntryAfterUpdate = get(uuid, accountId);
     boolean same =
         ListUtils.isEqualList(apiKeyEntryBeforeUpdate.getUserGroupIds(), apiKeyEntryAfterUpdate.getUserGroupIds());
@@ -138,6 +142,12 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Type.UPDATE);
     return apiKeyEntryAfterUpdate;
+  }
+
+  private void validateApiKeyName(String name) {
+    if (name == null || name.trim().isEmpty() || name.trim().length() < name.length()) {
+      throw new GeneralException("Invalid API Key name", USER);
+    }
   }
 
   private void evictApiKeyAndRebuildCache(String apiKey, String accountId, boolean rebuild) {
