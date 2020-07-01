@@ -24,11 +24,17 @@ message SaveCacheStep {
   repeated string paths = 2;
 }
 
+message RestoreCacheStep {
+  string key = 1;
+  bool fail_if_not_exist = 2;
+}
+
 message Step {
   string id = 1;
   string display_name = 2;
   oneof step {
     RunStep run = 3;
     SaveCacheStep save_cache = 4;
+    RestoreCacheStep restore_cache = 5;
   }
 }

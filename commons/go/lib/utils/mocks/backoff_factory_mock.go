@@ -10,30 +10,30 @@ import (
 	reflect "reflect"
 )
 
-// MockBackOffFactory is a mock of BackOffFactory interface
+// MockBackOffFactory is a mock of BackOffFactory interface.
 type MockBackOffFactory struct {
 	ctrl     *gomock.Controller
 	recorder *MockBackOffFactoryMockRecorder
 }
 
-// MockBackOffFactoryMockRecorder is the mock recorder for MockBackOffFactory
+// MockBackOffFactoryMockRecorder is the mock recorder for MockBackOffFactory.
 type MockBackOffFactoryMockRecorder struct {
 	mock *MockBackOffFactory
 }
 
-// NewMockBackOffFactory creates a new mock instance
+// NewMockBackOffFactory creates a new mock instance.
 func NewMockBackOffFactory(ctrl *gomock.Controller) *MockBackOffFactory {
 	mock := &MockBackOffFactory{ctrl: ctrl}
 	mock.recorder = &MockBackOffFactoryMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockBackOffFactory) EXPECT() *MockBackOffFactoryMockRecorder {
 	return m.recorder
 }
 
-// NewBackOff mocks base method
+// NewBackOff mocks base method.
 func (m *MockBackOffFactory) NewBackOff() backoff.BackOff {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewBackOff")
@@ -41,7 +41,7 @@ func (m *MockBackOffFactory) NewBackOff() backoff.BackOff {
 	return ret0
 }
 
-// NewBackOff indicates an expected call of NewBackOff
+// NewBackOff indicates an expected call of NewBackOff.
 func (mr *MockBackOffFactoryMockRecorder) NewBackOff() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewBackOff", reflect.TypeOf((*MockBackOffFactory)(nil).NewBackOff))

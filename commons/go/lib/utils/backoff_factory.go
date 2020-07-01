@@ -23,6 +23,13 @@ type ExponentialBackOffFactory struct {
 	backoff backoff.ExponentialBackOff
 }
 
+// NewExponentialBackOffFactory returns an instance of ExponentialBackOffFactory
+func NewExponentialBackOffFactory() BackOffFactory {
+	return &ExponentialBackOffFactory{
+		backoff: *backoff.NewExponentialBackOff(),
+	}
+}
+
 //NewBackOff creates a new ExponentialBackOff
 func (e *ExponentialBackOffFactory) NewBackOff() backoff.BackOff {
 	bo := e.backoff
