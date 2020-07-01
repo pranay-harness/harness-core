@@ -37,7 +37,7 @@ public class ConnectivityValidationDelegateRequest implements ExecutionCapabilit
       String hostName = validationAttributes.getHostName();
       Integer port = ((HostConnectionAttributes) settingValue).getSshPort();
       executionCapabilities.add(
-          SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(hostName, String.valueOf(port)));
+          SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(hostName, Integer.toString(port)));
       return executionCapabilities;
     } else if (settingValue instanceof WinRmConnectionAttributes) {
       WinRmConnectivityValidationAttributes validationAttributes =
@@ -45,7 +45,7 @@ public class ConnectivityValidationDelegateRequest implements ExecutionCapabilit
       String hostName = validationAttributes.getHostName();
       int port = ((WinRmConnectionAttributes) settingValue).getPort();
       executionCapabilities.add(
-          SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(hostName, String.valueOf(port)));
+          SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(hostName, Integer.toString(port)));
       return executionCapabilities;
     } else if (settingValue instanceof SmtpConfig) {
       executionCapabilities.add(SmtpCapability.builder()

@@ -79,7 +79,7 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     return Collections.singletonList(
-        SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(host, String.valueOf(port)));
+        SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(host, Integer.toString(port)));
   }
 
   @Data
