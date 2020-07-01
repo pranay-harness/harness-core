@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.citasks.cik8handler.pod;
 
+import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.SHUBHAM;
 import static junit.framework.TestCase.assertEquals;
 import static org.joor.Reflect.on;
@@ -15,9 +16,11 @@ import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBu
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.basicInputWithImageCred;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.basicInputWithVolumeMount;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.containerBuilderWithVolumeMount;
+import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.containerParamsWithSecretEnvVar;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.containerParamsWithVoluemMount;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.expectedPodWithInitContainer;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.expectedPodWithInitContainerAndVolume;
+import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.getPodSpecWithEnvSecret;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.gitCloneCtrBuilder;
 
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -149,6 +152,22 @@ public class CIK8PodSpecBuilderTest extends WingsBaseTest {
                         .containerBuilder(gitCloneCtrBuilder)
                         .volumes(Arrays.asList(new Volume()))
                         .build());
+    PodBuilder responsePodBuilder = cik8PodSpecBuilder.createSpec((PodParams) podParams);
+    assertEquals(responsePodBuilder.build(), expectedPod);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void createSpecWithSecretEnv() {
+    CIK8PodParams<CIK8ContainerParams> podParams = getPodSpecWithEnvSecret();
+    CIK8ContainerParams containerParams = containerParamsWithSecretEnvVar();
+    Pod expectedPod = basicExpectedPod();
+    ContainerBuilder containerBuilder = basicContainerBuilder();
+
+    when(containerSpecBuilder.createSpec(containerParams))
+        .thenReturn(ContainerSpecBuilderResponse.builder().containerBuilder(containerBuilder).build());
+    when(gitCloneContainerSpecBuilder.createGitCloneSpec(any())).thenReturn(null);
     PodBuilder responsePodBuilder = cik8PodSpecBuilder.createSpec((PodParams) podParams);
     assertEquals(responsePodBuilder.build(), expectedPod);
   }

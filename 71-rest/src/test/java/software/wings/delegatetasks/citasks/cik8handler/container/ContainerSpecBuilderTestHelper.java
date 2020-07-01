@@ -15,6 +15,7 @@ import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.SecretKeyParams;
@@ -110,11 +111,20 @@ public class ContainerSpecBuilderTestHelper {
     return ContainerSpecBuilderResponse.builder().containerBuilder(builder).build();
   }
 
+  public static Map<String, SecretKeyParams> createSecretKeyParams() {
+    Map<String, SecretKeyParams> secretEnvVars = new HashMap<>();
+    secretEnvVars.put(secretVar, SecretKeyParams.builder().key(secretKey).secretName(secretName).build());
+    return secretEnvVars;
+  }
+
   public static CIK8ContainerParams basicCreateSpecWithSecretEnvPortWorkingDir() {
     ImageDetails imageWithoutCred = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     Map<String, String> envVars = new HashMap<>();
     envVars.put(var1, value1);
     envVars.put(var2, value2);
+
+    Map<String, EncryptedDataDetail> encryptedEnvVars = new HashMap<>();
+    encryptedEnvVars.put(secretVar, EncryptedDataDetail.builder().fieldName("abc").build());
 
     Map<String, SecretKeyParams> secretEnvVars = new HashMap<>();
     secretEnvVars.put(secretVar, SecretKeyParams.builder().key(secretKey).secretName(secretName).build());
@@ -126,6 +136,7 @@ public class ContainerSpecBuilderTestHelper {
         .envVars(envVars)
         .workingDir(workingDir)
         .ports(Arrays.asList(port))
+        .encryptedSecrets(encryptedEnvVars)
         .secretEnvVars(secretEnvVars)
         .build();
   }
@@ -145,6 +156,7 @@ public class ContainerSpecBuilderTestHelper {
                     .withSecretKeyRef(new SecretKeySelectorBuilder().withKey(secretKey).withName(secretName).build())
                     .build())
             .build());
+
     ContainerPort containerPort = new ContainerPortBuilder().withContainerPort(port).build();
     ContainerBuilder builder = new ContainerBuilder()
                                    .withName(containerName)

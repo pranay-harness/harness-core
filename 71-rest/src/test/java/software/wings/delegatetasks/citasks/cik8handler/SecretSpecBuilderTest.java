@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.citasks.cik8handler;
 
+import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.SHUBHAM;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
@@ -15,6 +16,8 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.security.encryption.EncryptionType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -23,14 +26,18 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.container.ImageDetails;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SecretSpecBuilderTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
@@ -40,6 +47,8 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
   private static final String imageName = "IMAGE";
   private static final String tag = "TAG";
   private static final String namespace = "default";
+  private static final String podName = "pod";
+  private static final String containerName = "container";
   private static final String registryUrl = "https://index.docker.io/v1/";
   private static final String registrySecretName = "hs-index-docker-io-v1-usr-hs";
   private static final String userName = "usr";
@@ -80,6 +89,31 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
         .sshSettingAttribute(attr)
         .repoUrl(gitRepoUrl)
         .build();
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldConvertCustomSecretVariables() throws IOException {
+    Map<String, EncryptedDataDetail> encryptedVariables = new HashMap<>();
+
+    EncryptedDataDetail encryptedDataDetail =
+        EncryptedDataDetail.builder()
+            .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
+            .encryptionConfig(KmsConfig.builder()
+                                  .accessKey("accessKey")
+                                  .region("us-east-1")
+                                  .secretKey("secretKey")
+                                  .kmsArn("kmsArn")
+                                  .build())
+            .build();
+
+    String secretName = podName + "-" + containerName + "-secret";
+    encryptedVariables.put("abc", encryptedDataDetail);
+    when(encryptionService.getDecryptedValue(encryptedDataDetail)).thenReturn("pass".toCharArray());
+    Secret secret =
+        secretSpecBuilder.convertCustomSecretVariables(encryptedVariables, namespace, podName, containerName);
+    assertEquals(secretName, secret.getMetadata().getName());
   }
 
   @Test

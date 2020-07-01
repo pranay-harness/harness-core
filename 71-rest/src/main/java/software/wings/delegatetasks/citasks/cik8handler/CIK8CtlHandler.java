@@ -24,6 +24,7 @@ import software.wings.beans.container.ImageDetails;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -42,6 +43,16 @@ public class CIK8CtlHandler {
     if (secret != null) {
       kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);
     }
+  }
+
+  public Secret createCustomVarSecret(KubernetesClient kubernetesClient, String namespace,
+      Map<String, EncryptedDataDetail> encryptedSecrets, String podName, String containerName) {
+    Secret secret = secretSpecBuilder.convertCustomSecretVariables(encryptedSecrets, namespace, podName, containerName);
+
+    if (secret != null) {
+      kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);
+    }
+    return secret;
   }
 
   public Pod createPod(KubernetesClient kubernetesClient, Pod pod, String namespace) {

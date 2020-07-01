@@ -59,7 +59,7 @@ public class InternalContainerParamsProvider {
     // todo send correct container type
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
-        .containerType(CIContainerType.STEP_EXECUTOR)
+        .containerType(CIContainerType.LITE_ENGINE)
         .imageDetails(InternalImageDetailsProvider.getImageDetails(LITE_ENGINE_IMAGE))
         .volumeToMountPath(map)
         .commands(SH_COMMAND)
@@ -75,7 +75,7 @@ public class InternalContainerParamsProvider {
     return CIK8ContainerParams.builder()
         .name(ADDON_CONTAINER_NAME)
         .containerResourceParams(getAddonResourceParams())
-        .containerType(CIContainerType.STEP_EXECUTOR)
+        .containerType(CIContainerType.ADD_ON)
         .imageDetails(InternalImageDetailsProvider.getImageDetails(ADDON_IMAGE))
         .volumeToMountPath(map)
         .commands(SH_COMMAND)

@@ -3,6 +3,7 @@ package io.harness.serializer.spring;
 import io.harness.beans.CIPipeline;
 import io.harness.beans.CIPipelineEntityInfo;
 import io.harness.beans.CIPipelineSetupParameters;
+import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.steps.TypeInfo;
@@ -17,7 +18,9 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.beans.steps.stepinfo.TestStepInfo;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.spring.AliasRegistrar;
 
 import java.util.Map;
@@ -59,5 +62,8 @@ public class CIBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("gitCloneStepInfo_gitClone", GitCloneStepInfo.GitClone.class);
     orchestrationElements.put("cleanUpStepInfo_cleanup", CleanupStepInfo.Cleanup.class);
     orchestrationElements.put("container_reserve", Container.Reserve.class);
+    orchestrationElements.put("k8sDirectInfraYaml", K8sDirectInfraYaml.class);
+    orchestrationElements.put("k8BuildJobEnvInfo", K8BuildJobEnvInfo.class);
+    orchestrationElements.put("gitConnectorYaml", GitConnectorYaml.class);
   }
 }
