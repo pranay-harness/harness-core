@@ -18,13 +18,18 @@ public class SocketConnectivityCapabilityCheck implements CapabilityCheck {
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     SocketConnectivityExecutionCapability socketConnCapability =
         (SocketConnectivityExecutionCapability) delegateCapability;
-    boolean valid;
-    if (socketConnCapability.getHostName() != null) {
-      valid = connectableHost(socketConnCapability.getHostName(), Integer.parseInt(socketConnCapability.getPort()));
-    } else {
-      valid = connectableHost(socketConnCapability.getUrl(), Integer.parseInt(socketConnCapability.getPort()));
+    try {
+      boolean valid;
+      if (socketConnCapability.getHostName() != null) {
+        valid = connectableHost(socketConnCapability.getHostName(), Integer.parseInt(socketConnCapability.getPort()));
+      } else {
+        valid = connectableHost(socketConnCapability.getUrl(), Integer.parseInt(socketConnCapability.getPort()));
+      }
+      return CapabilityResponse.builder().delegateCapability(socketConnCapability).validated(valid).build();
+    } catch (Exception ex) {
+      logger.error("Error Occurred while checking socketConnCapability: {}", ex.getMessage());
+      return CapabilityResponse.builder().delegateCapability(socketConnCapability).validated(false).build();
     }
-    return CapabilityResponse.builder().delegateCapability(socketConnCapability).validated(valid).build();
   }
 
   public static boolean connectableHost(String host, int port) {
