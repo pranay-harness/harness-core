@@ -9,20 +9,16 @@ import io.harness.managerclient.KryoConverterFactory;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.managerclient.ManagerClientFactory;
 import io.harness.security.ServiceTokenGenerator;
+import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.kryo.ApiServiceKryoRegister;
+import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.kryo.CIBeansRegistrar;
 import io.harness.serializer.kryo.CIExecutionRegistrar;
 import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.CommonsKryoRegistrar;
+import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateAgentKryoRegister;
-import io.harness.serializer.kryo.DelegateKryoRegister;
-import io.harness.serializer.kryo.DelegateTasksKryoRegister;
 import io.harness.serializer.kryo.ManagerKryoRegistrar;
 import io.harness.serializer.kryo.NGKryoRegistrar;
-import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
-import io.harness.serializer.kryo.OrchestrationKryoRegister;
-import io.harness.serializer.kryo.PersistenceRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 
 import java.util.Set;
@@ -32,19 +28,15 @@ public class CIExecutionTestRule extends AbstractModule {
   @Singleton
   Set<Class<? extends KryoRegistrar>> registrars() {
     return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-        .add(ApiServiceKryoRegister.class)
+        .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
+        .addAll(OrchestrationRegistrars.kryoRegistrars)
         .add(CIBeansRegistrar.class)
         .add(CIExecutionRegistrar.class)
-        .add(CommonsKryoRegistrar.class)
         .add(CVNextGenCommonsBeansKryoRegistrar.class)
         .add(DelegateAgentKryoRegister.class)
-        .add(DelegateKryoRegister.class)
-        .add(DelegateTasksKryoRegister.class)
+        .add(DelegateAgentBeansKryoRegister.class)
         .add(ManagerKryoRegistrar.class)
         .add(NGKryoRegistrar.class)
-        .add(OrchestrationBeansKryoRegistrar.class)
-        .add(OrchestrationKryoRegister.class)
-        .add(PersistenceRegistrar.class)
         .add(TestPersistenceKryoRegistrar.class)
         .build();
   }

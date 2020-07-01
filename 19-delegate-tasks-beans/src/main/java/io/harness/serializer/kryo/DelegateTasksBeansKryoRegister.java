@@ -54,7 +54,7 @@ import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbDeployR
 import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbSetupResponse;
 import io.harness.serializer.KryoRegistrar;
 
-public class DelegateTasksKryoRegister implements KryoRegistrar {
+public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(DelegateRetryableException.class, 5521);

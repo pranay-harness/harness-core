@@ -20,7 +20,7 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
 
-public class DelegateMorphiaRegistrar implements MorphiaRegistrar {
+public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(Task.class);
