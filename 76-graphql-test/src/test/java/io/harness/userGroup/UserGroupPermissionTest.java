@@ -165,7 +165,7 @@ mutation {
     // Add Permission to userGroup
     UserGroup userGroup = userGroupHelper.createUserGroupWithPermissions(accountId, accountPermissions, null);
     String userGroupId = userGroup.getUuid();
-    // Add Permission to userGroup using gql
+    // Add Permission to userGroup using graphql
     String accountPermissionsString = createAccountPermissionGQL(userGroupId);
     String mutationAccountPermissions = createMutation(userGroupId, accountPermissionsString);
 
@@ -175,8 +175,8 @@ mutation {
     }
     // Compare this two
     UserGroup updatedUserGroup = userGroupService.get(accountId, userGroupId);
-    assertThat(userGroup.getAccountPermissions())
-        .isEqualToComparingFieldByField(updatedUserGroup.getAccountPermissions());
+    assertThat(updatedUserGroup.getAccountPermissions().getPermissions())
+        .containsExactlyInAnyOrderElementsOf(userGroup.getAccountPermissions().getPermissions());
     // delete the userGroup
     userGroupService.delete(accountId, userGroupId, true);
   }

@@ -1,11 +1,12 @@
 package io.harness.userGroup;
 
-import static com.google.common.collect.Iterables.getFirst;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
 import io.harness.GraphQLTest;
@@ -19,10 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.UserGroup;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.intfc.UserGroupService;
-
-import java.util.Set;
 
 @Slf4j
 public class AddAccountPermissionTest extends GraphQLTest {
@@ -53,29 +51,24 @@ public class AddAccountPermissionTest extends GraphQLTest {
    */ AddAppPermissionTest.class);
     String query = String.format(
         userGroupQueryPattern, createAddAccountPermissionInput(userGroup.getUuid(), "CREATE_AND_DELETE_APPLICATION"));
-    // The case when no account permission was added to the usergroup
+    // The case when no account permission was added to the user group
     QLTestObject qlUserGroupObject = qlExecute(query, getAccountId());
     UserGroup updatedUserGroup = userGroupService.get(getAccountId(), userGroup.getUuid());
     AccountPermissions accountPermissions = updatedUserGroup.getAccountPermissions();
     assertThat(accountPermissions).isNotNull();
-    Set<PermissionType> accountPermissionSet = accountPermissions.getPermissions();
-    assertThat(accountPermissionSet).isNotEmpty();
-    assertThat(accountPermissionSet.size()).isEqualTo(1);
-    PermissionType permissionType = getFirst(accountPermissionSet, null);
-    assertThat(permissionType).isNotNull();
-    assertThat(permissionType).isEqualTo(APPLICATION_CREATE_DELETE);
+    assertThat(accountPermissions.getPermissions()).isNotEmpty().hasSize(2).contains(APPLICATION_CREATE_DELETE);
 
-    // The case when a new account permission is added to the usergroup
+    // The case when a new account permission is added to the user group
     String addQuery = String.format(
         userGroupQueryPattern, createAddAccountPermissionInput(userGroup.getUuid(), "MANAGE_TEMPLATE_LIBRARY"));
     qlExecute(addQuery, getAccountId());
     UserGroup updatedUserGroupWithTwoPerm = userGroupService.get(getAccountId(), userGroup.getUuid());
-    AccountPermissions updatedAccountPermissisons = updatedUserGroupWithTwoPerm.getAccountPermissions();
-    assertThat(updatedAccountPermissisons).isNotNull();
-    Set<PermissionType> updatedAccountPermissionSet = updatedAccountPermissisons.getPermissions();
-    assertThat(updatedAccountPermissionSet).isNotEmpty();
-    assertThat(updatedAccountPermissionSet.size()).isEqualTo(2);
-    assertThat(updatedAccountPermissionSet.contains(APPLICATION_CREATE_DELETE)).isTrue();
-    assertThat(updatedAccountPermissionSet.contains(TEMPLATE_MANAGEMENT)).isTrue();
+    AccountPermissions updatedAccountPermissions = updatedUserGroupWithTwoPerm.getAccountPermissions();
+    assertThat(updatedAccountPermissions).isNotNull();
+    assertThat(updatedAccountPermissions.getPermissions())
+        .isNotEmpty()
+        .hasSize(3)
+        .containsExactlyInAnyOrderElementsOf(
+            ImmutableSet.of(APPLICATION_CREATE_DELETE, TEMPLATE_MANAGEMENT, CE_VIEWER));
   }
 }

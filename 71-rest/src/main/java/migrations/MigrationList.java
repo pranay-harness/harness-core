@@ -7,6 +7,7 @@ import lombok.experimental.UtilityClass;
 import migrations.all.AddAccountIdToAppEntities;
 import migrations.all.AddAccountIdToArtifactStreamsMigration;
 import migrations.all.AddAccountIdToArtifactsMigration;
+import migrations.all.AddCEPermissionToAllUserGroups;
 import migrations.all.AddDuplicateFieldToCVFeedbacks;
 import migrations.all.AddHarnessCommandLibraryToAccount;
 import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
@@ -346,6 +347,7 @@ public class MigrationList {
         .add(Pair.of(315, TrimURLsForAPMVerificationSettings.class))
         .add(Pair.of(316, PipelineWorkflowExecutionActionQlMigration.class))
         .add(Pair.of(317, BaseMigration.class))
+        .add(Pair.of(318, AddCEPermissionToAllUserGroups.class))
         .build();
   }
 }
