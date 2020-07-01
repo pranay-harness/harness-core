@@ -1,4 +1,4 @@
-package executor
+package steps
 
 import (
 	"context"
@@ -20,12 +20,12 @@ const (
 
 var execCmdCtx = exec.CommandContext
 
-// RunStepExecutor represents interface to execute a run step
-type RunStepExecutor interface {
+// RunStep represents interface to execute a run step
+type RunStep interface {
 	Run(ctx context.Context) error
 }
 
-type runStepExecutor struct {
+type runStep struct {
 	id          string
 	displayName string
 	commands    []string
@@ -36,8 +36,8 @@ type runStepExecutor struct {
 	fs          filesystem.FileSystem
 }
 
-// NewRunStepExecutor creates a run step executor
-func NewRunStepExecutor(step *pb.Step, relLogPath string, fs filesystem.FileSystem, log *zap.SugaredLogger) RunStepExecutor {
+// NewRunStep creates a run step executor
+func NewRunStep(step *pb.Step, relLogPath string, fs filesystem.FileSystem, log *zap.SugaredLogger) RunStep {
 	r := step.GetRun()
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
 	if timeoutSecs == 0 {
@@ -48,7 +48,7 @@ func NewRunStepExecutor(step *pb.Step, relLogPath string, fs filesystem.FileSyst
 	if numRetries == 0 {
 		numRetries = defaultNumRetries
 	}
-	return &runStepExecutor{
+	return &runStep{
 		id:          step.GetId(),
 		displayName: step.GetDisplayName(),
 		commands:    r.GetCommands(),
@@ -61,7 +61,7 @@ func NewRunStepExecutor(step *pb.Step, relLogPath string, fs filesystem.FileSyst
 }
 
 // Executes customer provided run step commands with retries and timeout handling
-func (e *runStepExecutor) Run(ctx context.Context) error {
+func (e *runStep) Run(ctx context.Context) error {
 	var err error
 	if err = e.validate(); err != nil {
 		return err
@@ -74,7 +74,7 @@ func (e *runStepExecutor) Run(ctx context.Context) error {
 	return err
 }
 
-func (e *runStepExecutor) validate() error {
+func (e *runStep) validate() error {
 	if len(e.commands) == 0 {
 		err := fmt.Errorf("commands in run step should have atleast one item")
 		e.log.Warnw(
@@ -87,7 +87,7 @@ func (e *runStepExecutor) validate() error {
 	return nil
 }
 
-func (e *runStepExecutor) execute(ctx context.Context, retryCount int32) error {
+func (e *runStep) execute(ctx context.Context, retryCount int32) error {
 	start := time.Now()
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(e.timeoutSecs))
 	defer cancel()

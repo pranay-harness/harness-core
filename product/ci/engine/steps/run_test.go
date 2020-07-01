@@ -1,8 +1,7 @@
-package executor
+package steps
 
 import (
 	"context"
-	// "fmt"
 	"os"
 	"os/exec"
 	"strconv"
@@ -39,15 +38,15 @@ func fakeExecCommandWithContext(ctx context.Context, command string, args ...str
 	return cmd
 }
 
-func TestValidate(t *testing.T) {
+func TestRunStepValidate(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	e := runStepExecutor{
+	e := runStep{
 		log: log.Sugar(),
 	}
 	err := e.validate()
 	assert.NotNil(t, err)
 
-	e = runStepExecutor{
+	e = runStep{
 		commands: []string{"ls"},
 		log:      log.Sugar(),
 	}
@@ -62,7 +61,7 @@ func TestExecuteFileNotFound(t *testing.T) {
 	var retryCount int32 = 1
 	fs := filesystem.NewMockFileSystem(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	e := runStepExecutor{
+	e := runStep{
 		log:      log.Sugar(),
 		commands: []string{"ls"},
 		fs:       fs,
@@ -86,7 +85,7 @@ func TestExecuteDeadlineExceeded(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 	logFile := filesystem.NewMockFile(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	e := runStepExecutor{
+	e := runStep{
 		log:         log.Sugar(),
 		commands:    []string{"l"},
 		fs:          fs,
@@ -113,7 +112,7 @@ func TestExecuteNonZeroStatus(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 	logFile := filesystem.NewMockFile(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	e := runStepExecutor{
+	e := runStep{
 		log:         log.Sugar(),
 		commands:    []string{"l"},
 		fs:          fs,
@@ -145,7 +144,7 @@ func TestExecuteSuccess(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 	logFile := filesystem.NewMockFile(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	e := runStepExecutor{
+	e := runStep{
 		log:         log.Sugar(),
 		commands:    []string{"l"},
 		fs:          fs,
@@ -167,7 +166,7 @@ func TestRunValidateErr(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
-	executor := NewRunStepExecutor(nil, logFilePath, fs, log.Sugar())
+	executor := NewRunStep(nil, logFilePath, fs, log.Sugar())
 	err := executor.Run(ctx)
 	assert.NotNil(t, err)
 }
@@ -190,7 +189,7 @@ func TestRunExecuteErr(t *testing.T) {
 
 	fs.EXPECT().Create(gomock.Any()).Return(nil, os.ErrPermission)
 
-	executor := NewRunStepExecutor(step, logFilePath, fs, log.Sugar())
+	executor := NewRunStep(step, logFilePath, fs, log.Sugar())
 	err := executor.Run(ctx)
 	assert.NotNil(t, err)
 }

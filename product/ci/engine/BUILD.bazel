@@ -9,7 +9,6 @@ go_library(
         "//commons/go/lib/logs:go_default_library",
         "//product/ci/engine/executor:go_default_library",
         "@com_github_alexflint_go_arg//:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
     ],
 )
 

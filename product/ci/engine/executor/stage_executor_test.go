@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func getEncodedProto(t *testing.T, execution *pb.Execution) string {
+func getEncodedStageProto(t *testing.T, execution *pb.Execution) string {
 	data, err := proto.Marshal(execution)
 	if err != nil {
 		t.Fatalf("marshaling error: %v", err)
@@ -18,7 +18,8 @@ func getEncodedProto(t *testing.T, execution *pb.Execution) string {
 	return base64.StdEncoding.EncodeToString(data)
 }
 
-func Test_Run(t *testing.T) {
+func TestStageRun(t *testing.T) {
+	tmpFilePath := "/tmp"
 	executionProto1 := &pb.Execution{
 		Steps: []*pb.Step{
 			{
@@ -39,8 +40,8 @@ func Test_Run(t *testing.T) {
 		},
 	}
 
-	encodedExecutionProto1 := getEncodedProto(t, executionProto1)
-	encodedExecutionProto2 := getEncodedProto(t, executionProto2)
+	encodedExecutionProto1 := getEncodedStageProto(t, executionProto1)
+	encodedExecutionProto2 := getEncodedStageProto(t, executionProto2)
 	incorrectBase64Enc := "x"
 	invalidStageEnc := "YWJjZA=="
 	logPath := "/a/b"
@@ -52,12 +53,6 @@ func Test_Run(t *testing.T) {
 		logPath      string
 		expectedErr  bool
 	}{
-		{
-			name:         "empty log path",
-			encodedStage: "",
-			logPath:      "",
-			expectedErr:  true,
-		},
 		{
 			name:         "incorrect encoded stage",
 			encodedStage: incorrectBase64Enc,
@@ -90,10 +85,19 @@ func Test_Run(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		e := NewStageExecutor(tc.encodedStage, tc.logPath, log.Sugar())
+		e := NewStageExecutor(tc.encodedStage, tc.logPath, tmpFilePath, log.Sugar())
 		got := e.Run()
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
 	}
+}
+
+func TestExecuteStage(t *testing.T) {
+	logPath := "/a/b"
+	tmpFilePath := "/tmp"
+	emptyStage := ""
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+
+	ExecuteStage(emptyStage, logPath, tmpFilePath, log.Sugar())
 }
