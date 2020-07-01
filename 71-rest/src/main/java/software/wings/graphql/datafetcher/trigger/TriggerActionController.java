@@ -281,6 +281,10 @@ public class TriggerActionController {
 
     List<QLVariableInput> qlVariables = triggerActionInput.getVariables();
 
+    if (qlVariables == null) {
+      return new HashMap<>();
+    }
+
     String appId = qlCreateOrUpdateTriggerInput.getApplicationId();
 
     Map<String, String> workflowVariables = new HashMap<>();
