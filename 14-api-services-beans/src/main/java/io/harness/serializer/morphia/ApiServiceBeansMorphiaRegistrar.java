@@ -10,7 +10,7 @@ import io.harness.security.encryption.EncryptionConfig;
 
 import java.util.Set;
 
-public class ApiServiceMorphiaRegistrar implements MorphiaRegistrar {
+public class ApiServiceBeansMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(EncryptionConfig.class);

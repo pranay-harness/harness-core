@@ -12,7 +12,7 @@ import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.serializer.KryoRegistrar;
 
-public class DelegateKryoRegister implements KryoRegistrar {
+public class DelegateAgentBeansKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(DelegateScripts.class, 5002);

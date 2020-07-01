@@ -60,7 +60,7 @@ import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import org.json.JSONException;
 
-public class ApiServiceKryoRegister implements KryoRegistrar {
+public class ApiServiceBeansKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(Instance.class, 1001);

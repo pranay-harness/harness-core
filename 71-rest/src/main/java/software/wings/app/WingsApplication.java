@@ -106,20 +106,16 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.kryo.ApiServiceKryoRegister;
+import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.CommonsKryoRegistrar;
+import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateAgentKryoRegister;
-import io.harness.serializer.kryo.DelegateKryoRegister;
-import io.harness.serializer.kryo.DelegateTasksKryoRegister;
 import io.harness.serializer.kryo.ManagerKryoRegistrar;
 import io.harness.serializer.kryo.NGKryoRegistrar;
-import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
-import io.harness.serializer.kryo.OrchestrationKryoRegister;
-import io.harness.serializer.kryo.PersistenceRegistrar;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.stream.GuiceObjectFactory;
@@ -322,17 +318,13 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .add(ApiServiceKryoRegister.class)
+            .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
+            .addAll(OrchestrationRegistrars.kryoRegistrars)
             .add(CVNextGenCommonsBeansKryoRegistrar.class)
-            .add(CommonsKryoRegistrar.class)
             .add(DelegateAgentKryoRegister.class)
-            .add(DelegateKryoRegister.class)
-            .add(DelegateTasksKryoRegister.class)
+            .add(DelegateAgentBeansKryoRegister.class)
             .add(ManagerKryoRegistrar.class)
             .add(NGKryoRegistrar.class)
-            .add(OrchestrationBeansKryoRegistrar.class)
-            .add(OrchestrationKryoRegister.class)
-            .add(PersistenceRegistrar.class)
             .build();
       }
     });
