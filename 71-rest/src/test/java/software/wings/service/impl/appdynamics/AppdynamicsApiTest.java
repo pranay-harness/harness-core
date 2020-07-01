@@ -16,18 +16,20 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
-import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.services.entities.MetricPack;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.serializer.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -59,7 +61,6 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -74,7 +75,6 @@ import java.util.stream.Collectors;
 public class AppdynamicsApiTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
 
-  @Inject private MetricPackService metricPackService;
   @Inject private AppdynamicsResource appdynamicsResource;
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private WingsPersistence wingsPersistence;
@@ -102,7 +102,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     FieldUtils.writeField(delegateService, "delegateLogService", delegateLogService, true);
     FieldUtils.writeField(delegateService, "requestExecutor", requestExecutor, true);
     FieldUtils.writeField(delegateService, "dataCollectionService", dataCollectionService, true);
-    accountId = generateUuid();
+    accountId = "TrPOn4AoS022KD8HzSDefA";
   }
 
   @Test
@@ -336,8 +336,11 @@ public class AppdynamicsApiTest extends WingsBaseTest {
           }
           return metricDataSuccessCall;
         });
-    final List<MetricPack> metricPacks =
-        new ArrayList<>(metricPackService.getMetricPacks(accountId, generateUuid(), DataSourceType.APP_DYNAMICS));
+    YamlUtils yamlUtils = new YamlUtils();
+    final String metricPackYaml = Resources.toString(
+        AppdynamicsApiTest.class.getResource("/appdynamics/app-dynamics-metric-packs-list.yaml"), Charsets.UTF_8);
+    final List<MetricPackDTO> metricPacks = yamlUtils.read(metricPackYaml, new TypeReference<List<MetricPackDTO>>() {});
+
     final Set<AppdynamicsValidationResponse> metricPacksData = appdynamicsService.getMetricPackData(
         accountId, generateUuid(), saveAppdynamicsConfig(), 100, 200, generateUuid(), metricPacks);
     assertThat(metricPacksData.size()).isEqualTo(metricPacks.size());

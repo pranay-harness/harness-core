@@ -7,16 +7,20 @@ import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_RESOURCE_P
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_SAMPLE_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_SAVED_SEARCH_PATH;
 
+import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.CVHistogram;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.SplunkSampleResponse;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.rest.RestResponse;
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 import java.util.List;
+import java.util.Set;
 import javax.ws.rs.container.ContainerRequestContext;
 
 public interface VerificationManagerClient {
@@ -43,4 +47,12 @@ public interface VerificationManagerClient {
   @GET(CV_NEXTGEN_RESOURCE_PREFIX + "/auth/validate-token")
   Call<RestResponse<Boolean>> authenticateUser(
       @Query("containerRequestContext") ContainerRequestContext containerRequestContext);
+  @POST("appdynamics"
+      + "/metric-data")
+
+  Call<RestResponse<Set<AppdynamicsValidationResponse>>>
+  getAppDynamicsMetricData(@Query("accountId") String accountId, @Query("projectIdentifier") String projectIdentifier,
+      @Query("connectorId") String connectorId, @Query("appdAppId") long appdAppId,
+      @Query("appdTierId") long appdTierId, @Query("requestGuid") String requestGuid,
+      @Body List<MetricPackDTO> metricPacks);
 }

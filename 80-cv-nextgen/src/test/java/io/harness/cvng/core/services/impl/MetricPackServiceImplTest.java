@@ -10,16 +10,17 @@ import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.CVNextGenCommonBaseTest;
+import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
 import io.harness.cvng.beans.TimeSeriesThresholdComparisonType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.cvng.beans.TimeSeriesThresholdType;
+import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
+import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.services.entities.MetricPack;
-import io.harness.cvng.core.services.entities.TimeSeriesThreshold;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
@@ -33,7 +34,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MetricPackServiceImplTest extends CVNextGenCommonBaseTest {
+public class MetricPackServiceImplTest extends CVNextGenBaseTest {
   @Inject private MetricPackService metricPackService;
   @Inject private HPersistence hPersistence;
   private String accountId;
@@ -111,8 +112,7 @@ public class MetricPackServiceImplTest extends CVNextGenCommonBaseTest {
     performancePack = performancePacks.get(0);
 
     assertThat(performancePack.getMetrics().size()).isEqualTo(performancePackSize);
-    assertThat(performancePack.getMetrics())
-        .contains(MetricPack.MetricDefinition.builder().name("Number of Slow Calls").build());
+    assertThat(performancePack.getMetrics()).contains(MetricDefinition.builder().name("Number of Slow Calls").build());
     performancePack.getMetrics().forEach(metricDefinition -> assertThat(metricDefinition.isIncluded()).isTrue());
 
     performancePack.getMetrics().forEach(metric -> assertThat(metric.getPath()).isNotEmpty());

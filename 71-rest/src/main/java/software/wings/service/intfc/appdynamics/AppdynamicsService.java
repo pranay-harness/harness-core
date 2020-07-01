@@ -1,7 +1,7 @@
 package software.wings.service.intfc.appdynamics;
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.core.services.entities.MetricPack;
+import io.harness.cvng.beans.MetricPackDTO;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
@@ -46,5 +46,5 @@ public interface AppdynamicsService {
       String analysisServerConfigId, String applicationId, String tierName, ThirdPartyApiCallLog apiCallLog);
 
   Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectIdentifier, String connectorId,
-      long appdAppId, long appdTierId, String requestGuid, List<MetricPack> metricPacks);
+      long appdAppId, long appdTierId, String requestGuid, List<MetricPackDTO> metricPacks);
 }

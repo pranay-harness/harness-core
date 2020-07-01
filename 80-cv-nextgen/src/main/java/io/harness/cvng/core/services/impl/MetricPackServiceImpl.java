@@ -17,12 +17,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
+import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
+import io.harness.cvng.core.entities.MetricPack.MetricPackKeys;
+import io.harness.cvng.core.entities.TimeSeriesThreshold;
+import io.harness.cvng.core.entities.TimeSeriesThreshold.TimeSeriesThresholdKeys;
 import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.services.entities.MetricPack;
-import io.harness.cvng.core.services.entities.MetricPack.MetricDefinition;
-import io.harness.cvng.core.services.entities.MetricPack.MetricPackKeys;
-import io.harness.cvng.core.services.entities.TimeSeriesThreshold;
-import io.harness.cvng.core.services.entities.TimeSeriesThreshold.TimeSeriesThresholdKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -110,7 +110,7 @@ public class MetricPackServiceImpl implements MetricPackService {
             metricPack.setProjectIdentifier(projectIdentifier);
             metricPack.setDataSourceType(dataSourceType);
             metricPack.getMetrics().forEach(
-                metricDefinition -> { metricDefinition.setThresholds(Collections.emptyList()); });
+                metricDefinition -> metricDefinition.setThresholds(Collections.emptyList()));
             metricPacks.put(metricPack.getIdentifier(), metricPack);
           } catch (IOException e) {
             throw new IllegalStateException("Error reading metric packs", e);

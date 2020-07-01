@@ -1,4 +1,4 @@
-package io.harness.cvng.core.services.entities;
+package io.harness.cvng.core.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

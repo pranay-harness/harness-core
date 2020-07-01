@@ -1,0 +1,174 @@
+---
+- uuid: 2ray40vMTW2DEAAN8bhexA
+  createdAt: 1593539547225
+  lastUpdatedAt: 1593539547225
+  accountId: TrPOn4AoS022KD8HzSDefA
+  projectIdentifier: i-COW1zqSEWINL8l3hx5vw
+  dataSourceType: APP_DYNAMICS
+  identifier: Quality
+  metrics:
+    - name: Number of Errors
+      type: ERROR
+      path: Errors|__tier_name__|__group_name__|Number of Errors
+      validationPath: Overall Application Performance|__tier_name__|Exceptions per Minute
+      included: true
+      ignoreHints: []
+      failFastHints: []
+    - name: Errors per Minute
+      type: ERROR
+      path: Errors|__tier_name__|__group_name__|Errors per Minute
+      validationPath: Overall Application Performance|__tier_name__|Errors per Minute
+      included: true
+      ignoreHints: []
+      failFastHints: []
+- uuid: 67NHS4r2TRGICfhopM9fUg
+  createdAt: 1593539547243
+  lastUpdatedAt: 1593539547243
+  accountId: TrPOn4AoS022KD8HzSDefA
+  projectIdentifier: i-COW1zqSEWINL8l3hx5vw
+  dataSourceType: APP_DYNAMICS
+  identifier: Performance and Availability
+  metrics:
+    - name: Stall Count
+      type: ERROR
+      path: Business Transaction Performance|Business Transactions|__tier_name__|__group_name__|Stall
+        Count
+      validationPath: Overall Application Performance|__tier_name__|Stall Count
+      included: true
+      ignoreHints: []
+      failFastHints: []
+    - name: Normal Average Response Time (ms)
+      type: RESP_TIME
+      path: Business Transaction Performance|Business Transactions|__tier_name__|__group_name__|Normal
+        Average Response Time (ms)
+      validationPath: Overall Application Performance|__tier_name__|Normal Average Response
+        Time (ms)
+      included: false
+      ignoreHints: []
+      failFastHints: []
+    - name: Number of Very Slow Calls
+      type: ERROR
+      path: Business Transaction Performance|Business Transactions|__tier_name__|__group_name__|Number
+        of Very Slow Calls
+      validationPath: Overall Application Performance|__tier_name__|Number of Very Slow
+        Calls
+      included: false
+      ignoreHints: []
+      failFastHints: []
+    - name: Calls per Minute
+      type: THROUGHPUT
+      path: Business Transaction Performance|Business Transactions|__tier_name__|__group_name__|Calls
+        per Minute
+      validationPath: Overall Application Performance|__tier_name__|Calls per Minute
+      included: true
+      ignoreHints: []
+      failFastHints: []
+    - name: Average Response Time (ms)
+      type: RESP_TIME
+      path: Business Transaction Performance|Business Transactions|__tier_name__|__group_name__|Average
+        Response Time (ms)
+      validationPath: Overall Application Performance|__tier_name__|Average Response
+        Time (ms)
+      included: true
+      ignoreHints: []
+      failFastHints: []
+    - name: Number of Slow Calls
+      type: ERROR
+      path: Business Transaction Performance|Business Transactions|__tier_name__|__group_name__|Number
+        of Slow Calls
+      validationPath: Overall Application Performance|__tier_name__|Number of Slow Calls
+      included: false
+      ignoreHints: []
+      failFastHints: []
+    - name: 95th Percentile Response Time (ms)
+      type: RESP_TIME
+      path: Business Transaction Performance|Business Transactions|__tier_name__|__group_name__|95th
+        Percentile Response Time (ms)
+      included: false
+      ignoreHints: []
+      failFastHints: []
+    - name: Average Block Time (ms)
+      type: RESP_TIME
+      path: Business Transaction Performance|Business Transactions|__tier_name__|__group_name__|Average
+        Block Time (ms)
+      included: false
+      ignoreHints: []
+      failFastHints: []
+    - name: Average CPU Used (ms)
+      type: INFRA
+      path: Business Transaction Performance|Business Transactions|__tier_name__|__group_name__|Average
+        CPU Used (ms)
+      included: false
+      ignoreHints: []
+      failFastHints: []
+    - name: Errors per Minute
+      type: ERROR
+      path: Business Transaction Performance|Business Transactions|__tier_name__|__group_name__|Errors
+        per Minute
+      validationPath: Overall Application Performance|__tier_name__|Errors per Minute
+      included: true
+      ignoreHints: []
+      failFastHints: []
+    - name: Average Wait Time (ms)
+      type: RESP_TIME
+      path: Business Transaction Performance|Business Transactions|__tier_name__|__group_name__|Average
+        Wait Time (ms)
+      included: false
+      ignoreHints: []
+      failFastHints: []
+- uuid: 76M-ybh_S-6xWFrJxel05w
+  createdAt: 1593539547287
+  lastUpdatedAt: 1593539547287
+  accountId: TrPOn4AoS022KD8HzSDefA
+  projectIdentifier: i-COW1zqSEWINL8l3hx5vw
+  dataSourceType: APP_DYNAMICS
+  identifier: Resources
+  metrics:
+    - name: CPU.User
+      type: INFRA
+      path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|User
+      validationPath: Application Infrastructure Performance|__tier_name__|Hardware
+        Resources|CPU|User
+      included: false
+      ignoreHints: []
+      failFastHints: []
+    - name: CPU.%Busy
+      type: INFRA
+      path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|%Busy
+      validationPath: Application Infrastructure Performance|__tier_name__|Hardware
+        Resources|CPU|%Busy
+      included: true
+      ignoreHints: []
+      failFastHints: []
+    - name: CPU.%Idle
+      type: INFRA
+      path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|%Idle
+      validationPath: Application Infrastructure Performance|__tier_name__|Hardware
+        Resources|CPU|%Idle
+      included: false
+      ignoreHints: []
+      failFastHints: []
+    - name: CPU.%Stolen
+      type: INFRA
+      path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|%Stolen
+      validationPath: Application Infrastructure Performance|__tier_name__|Hardware
+        Resources|CPU|%Stolen
+      included: false
+      ignoreHints: []
+      failFastHints: []
+    - name: CPU.IOWait
+      type: INFRA
+      path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|IOWait
+      validationPath: Application Infrastructure Performance|__tier_name__|Hardware
+        Resources|CPU|IOWait
+      included: false
+      ignoreHints: []
+      failFastHints: []
+    - name: CPU.System
+      type: INFRA
+      path: Application Infrastructure Performance|__tier_name__|Hardware Resources|CPU|System
+      validationPath: Application Infrastructure Performance|__tier_name__|Hardware
+        Resources|CPU|System
+      included: false
+      ignoreHints: []
+      failFastHints: []

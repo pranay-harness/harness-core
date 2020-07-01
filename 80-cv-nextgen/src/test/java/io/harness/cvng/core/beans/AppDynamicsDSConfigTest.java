@@ -10,7 +10,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.beans.DSConfig.CVConfigUpdateResult;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.services.entities.MetricPack;
+import io.harness.cvng.core.entities.MetricPack;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

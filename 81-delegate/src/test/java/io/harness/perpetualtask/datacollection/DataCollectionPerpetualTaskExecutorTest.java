@@ -17,9 +17,9 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
+import io.harness.cvng.beans.MetricPackDTO;
+import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.core.services.CVNextGenConstants;
-import io.harness.cvng.core.services.entities.MetricPack;
-import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
 import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.datacollection.DataCollectionDSLService;
@@ -96,13 +96,12 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
 
   private void createTaskParams(String metricPackIdentifier, String dataCollectionDsl) {
     dataCollectionInfo.setMetricPack(
-        MetricPack.builder()
+        MetricPackDTO.builder()
             .identifier(metricPackIdentifier)
-            .dataCollectionDsl(dataCollectionDsl)
-            .metrics(Sets.newHashSet(
-                MetricPack.MetricDefinition.builder().name(generateUuid()).path("path1").included(true).build(),
-                MetricPack.MetricDefinition.builder().name(generateUuid()).path("path2").included(false).build(),
-                MetricPack.MetricDefinition.builder().name(generateUuid()).path("path3").included(true).build()))
+            .metrics(
+                Sets.newHashSet(MetricDefinitionDTO.builder().name(generateUuid()).path("path1").included(true).build(),
+                    MetricDefinitionDTO.builder().name(generateUuid()).path("path2").included(false).build(),
+                    MetricDefinitionDTO.builder().name(generateUuid()).path("path3").included(true).build()))
             .build());
     dataCollectionInfo.setDataCollectionDsl(dataCollectionDsl);
     CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
@@ -122,31 +121,10 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.RAGHU)
   @Category({UnitTests.class})
-  public void testDataCollection_AppdPerformance() {
-    createTaskParams(
-        CVNextGenConstants.APPD_PERFORMANCE_PACK_IDENTIFIER, MetricPackServiceImpl.APPDYNAMICS_PERFORMANCE_PACK_DSL);
+  public void testDataCollection_executeDSL() {
+    createTaskParams(CVNextGenConstants.APPD_PERFORMANCE_PACK_IDENTIFIER, "dsl");
     dataCollector.runOnce(PerpetualTaskId.newBuilder().build(), perpetualTaskParams, Instant.now());
-    verifyDsl(MetricPackServiceImpl.APPDYNAMICS_PERFORMANCE_PACK_DSL);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.RAGHU)
-  @Category(UnitTests.class)
-  public void testDataCollection_AppdQuality() {
-    createTaskParams(
-        CVNextGenConstants.APPD_QUALITY_PACK_IDENTIFIER, MetricPackServiceImpl.APPDYNAMICS_QUALITY_PACK_DSL);
-    dataCollector.runOnce(PerpetualTaskId.newBuilder().build(), perpetualTaskParams, Instant.now());
-    verifyDsl(MetricPackServiceImpl.APPDYNAMICS_QUALITY_PACK_DSL);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.RAGHU)
-  @Category(UnitTests.class)
-  public void testDataCollection_AppdResource() {
-    createTaskParams(
-        CVNextGenConstants.APPD_RESOURCE_PACK_IDENTIFIER, MetricPackServiceImpl.APPDYNAMICS_RESOURCE_PACK_DSL);
-    dataCollector.runOnce(PerpetualTaskId.newBuilder().build(), perpetualTaskParams, Instant.now());
-    verifyDsl(MetricPackServiceImpl.APPDYNAMICS_RESOURCE_PACK_DSL);
+    verifyDsl("dsl");
   }
 
   private void verifyDsl(String dsl) {
