@@ -28,7 +28,7 @@ public class DisconnectedDelegateHandler implements Handler<PerpetualTaskRecord>
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
-            .name("PerpetualTaskRecordProcessor")
+            .name("DisconnectedDelegateProcessor")
             .poolSize(3)
             .interval(ofMinutes(ITERATOR_INTERVAL_MINUTE))
             .build(),

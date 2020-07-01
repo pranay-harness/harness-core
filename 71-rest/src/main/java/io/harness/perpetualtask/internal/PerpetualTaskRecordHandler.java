@@ -49,7 +49,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
     iterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
             .name("PerpetualTaskRecordProcessor")
-            .poolSize(3)
+            .poolSize(5)
             .interval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .build(),
         PerpetualTaskRecordHandler.class,
@@ -58,6 +58,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
             .fieldName(PerpetualTaskRecordKeys.assignerIteration)
             .targetInterval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .acceptableNoAlertDelay(ofSeconds(45))
+            .acceptableExecutionTime(ofSeconds(30))
             .handler(this)
             .filterExpander(query -> query.field(PerpetualTaskRecordKeys.delegateId).equal(""))
             .schedulingType(REGULAR)
