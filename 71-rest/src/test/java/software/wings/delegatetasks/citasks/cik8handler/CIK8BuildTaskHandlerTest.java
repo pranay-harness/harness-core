@@ -10,8 +10,11 @@ import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHand
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildImageSecretErrorTaskParams;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildPodCreateErrorTaskParams;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildTaskParams;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getEncryptedDetails;
 
 import io.fabric8.kubernetes.api.model.PodBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.harness.category.element.UnitTests;
@@ -43,6 +46,7 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
   @InjectMocks private CIK8BuildTaskHandler cik8BuildTaskHandler;
 
   private static final String namespace = "default";
+  private static final String secretName = "secret";
 
   @Test
   @Owner(developers = SHUBHAM)
@@ -155,9 +159,13 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     ImageDetails imageDetails =
         cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetails();
 
+    Secret secret = new SecretBuilder().withNewMetadata().withName(secretName).endMetadata().build();
     when(kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptionDetails)).thenReturn(kubernetesClient);
     doNothing().when(kubeCtlHandler).createGitSecret(kubernetesClient, namespace, gitConfig, encryptionDetails);
     doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetails);
+    when(kubeCtlHandler.createCustomVarSecret(kubernetesClient, namespace, getEncryptedDetails(),
+             cik8BuildTaskParams.getCik8PodParams().getName(), CIK8BuildTaskHandlerTestHelper.containerName2))
+        .thenReturn(secret);
     when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
     when(kubeCtlHandler.waitUntilPodIsReady(

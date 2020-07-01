@@ -25,6 +25,7 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
@@ -46,7 +47,9 @@ public class SecretSpecBuilder {
   public static final String GIT_SECRET_USERNAME_KEY = "username";
   public static final String GIT_SECRET_PWD_KEY = "password";
   public static final String GIT_SECRET_SSH_KEY = "ssh_key";
-  private static final String GIT_SECRETE_TYPE = "opaque";
+  public static final String SECRET_KEY = "secret_key";
+  public static final String SECRET = "secret";
+  private static final String OPAQUE_SECRET_TYPE = "opaque";
   private static final String DOCKER_CONFIG_KEY = ".dockercfg";
 
   @Inject private EncryptionService encryptionService;
@@ -67,6 +70,31 @@ public class SecretSpecBuilder {
         .withNamespace(namespace)
         .endMetadata()
         .withType(DOCKER_REGISTRY_SECRET_TYPE)
+        .withData(data)
+        .build();
+  }
+
+  public Secret convertCustomSecretVariables(
+      Map<String, EncryptedDataDetail> encryptedSecrets, String namespace, String podName, String containerName) {
+    Map<String, String> data = new HashMap<>();
+    if (isNotEmpty(encryptedSecrets)) {
+      for (Map.Entry<String, EncryptedDataDetail> encryptedVariable : encryptedSecrets.entrySet()) {
+        try {
+          String value = String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue()));
+          data.put(SECRET_KEY + encryptedVariable.getKey(), encodeBase64(value));
+        } catch (IOException e) {
+          throw new WingsException("Error occurred while decrypting encrypted variables", e);
+        }
+      }
+    }
+
+    String secretName = podName + "-" + containerName + "-" + SECRET;
+    return new SecretBuilder()
+        .withNewMetadata()
+        .withName(secretName)
+        .withNamespace(namespace)
+        .endMetadata()
+        .withType(OPAQUE_SECRET_TYPE)
         .withData(data)
         .build();
   }
@@ -112,7 +140,7 @@ public class SecretSpecBuilder {
         .withName(secretName)
         .withNamespace(namespace)
         .endMetadata()
-        .withType(GIT_SECRETE_TYPE)
+        .withType(OPAQUE_SECRET_TYPE)
         .withData(data)
         .build();
   }

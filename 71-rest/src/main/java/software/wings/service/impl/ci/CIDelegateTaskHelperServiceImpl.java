@@ -1,5 +1,6 @@
 package software.wings.service.impl.ci;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
 
@@ -22,6 +23,7 @@ import software.wings.beans.ci.CIK8BuildTaskParams;
 import software.wings.beans.ci.CIK8CleanupTaskParams;
 import software.wings.beans.ci.K8ExecCommandParams;
 import software.wings.beans.ci.K8ExecuteCommandTaskParams;
+import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -29,7 +31,9 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,6 +52,8 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
   @Inject private SecretManager secretManager;
   @Inject private DelegateService delegateService;
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+  private static final String REPLACE_USERNAME_HERE = "REPLACE_USERNAME_HERE";
+  private static final String REPLACE_PASSWORD_HERE = "REPLACE_PASSWORD_HERE";
 
   @Override
   public K8sTaskExecutionResponse setBuildEnv(String k8ConnectorName, String gitConnectorName, String branchName,
@@ -73,6 +79,31 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
     }
 
+    List<CIK8ContainerParams> cik8ContainerParamsList = podParams.getContainerParamsList();
+    Map<String, EncryptedDataDetail> secrets = new HashMap<>();
+    cik8ContainerParamsList.forEach(cik8ContainerParams -> {
+      if (isEmpty(cik8ContainerParams.getEncryptedSecrets())
+          && cik8ContainerParams.getContainerType() == (CIContainerType.STEP_EXECUTOR)) {
+        String userName = secretManager.getSecretByName(ACCOUNT_ID, REPLACE_USERNAME_HERE).getUuid();
+
+        EncryptedDataDetail userEncryptedDataDetail =
+            secretManager.encryptedDataDetails(ACCOUNT_ID, REPLACE_USERNAME_HERE, userName)
+                .orElseThrow(() -> new IllegalArgumentException("REPLACE_USERNAME_HERE does not exist"));
+
+        secrets.put(REPLACE_USERNAME_HERE, userEncryptedDataDetail);
+
+        String password = secretManager.getSecretByName(ACCOUNT_ID, REPLACE_PASSWORD_HERE).getUuid();
+
+        EncryptedDataDetail passEncryptedDataDetail =
+            secretManager.encryptedDataDetails(ACCOUNT_ID, REPLACE_PASSWORD_HERE, password)
+                .orElseThrow(() -> new IllegalArgumentException("REPLACE_PASSWORD_HERE does not exist"));
+
+        secrets.put(REPLACE_PASSWORD_HERE, passEncryptedDataDetail);
+
+        cik8ContainerParams.setEncryptedSecrets(secrets);
+      }
+    });
+
     CIK8PodParams<CIK8ContainerParams> podParamsWithGitDetails =
         CIK8PodParams.<CIK8ContainerParams>builder()
             .name(podParams.getName())
@@ -80,7 +111,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
             .stepExecVolumeName(STEP_EXEC)
             .stepExecWorkingDir(podParams.getStepExecWorkingDir())
             .gitFetchFilesConfig(gitFetchFilesConfig)
-            .containerParamsList(podParams.getContainerParamsList())
+            .containerParamsList(cik8ContainerParamsList)
             .initContainerParamsList(podParams.getInitContainerParamsList())
             .build();
 

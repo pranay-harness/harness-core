@@ -9,6 +9,10 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.security.encryption.EncryptionType;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.container.ImageDetails;
@@ -49,6 +53,24 @@ public class CIK8PodSpecBuilderTestHelper {
   public static CIK8ContainerParams basicContainerParamsWithoutImageCred() {
     ImageDetails imageWithoutCred = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     return CIK8ContainerParams.builder().name(containerName1).imageDetails(imageWithoutCred).build();
+  }
+
+  public static CIK8ContainerParams containerParamsWithSecretEnvVar() {
+    Map<String, EncryptedDataDetail> encryptedVariables = new HashMap<>();
+
+    EncryptedDataDetail encryptedDataDetail =
+        EncryptedDataDetail.builder()
+            .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
+            .encryptionConfig(KmsConfig.builder()
+                                  .accessKey("accessKey")
+                                  .region("us-east-1")
+                                  .secretKey("secretKey")
+                                  .kmsArn("kmsArn")
+                                  .build())
+            .build();
+
+    encryptedVariables.put("abc", encryptedDataDetail);
+    return CIK8ContainerParams.builder().encryptedSecrets(encryptedVariables).name(containerName1).build();
   }
 
   public static CIK8ContainerParams basicContainerParamsWithImageCred() {
@@ -101,6 +123,16 @@ public class CIK8PodSpecBuilderTestHelper {
         .stepExecVolumeName(stepExecVolumeName)
         .stepExecWorkingDir(stepExecWorkingDir)
         .containerParamsList(Arrays.asList(basicContainerParamsWithoutImageCred()))
+        .build();
+  }
+
+  public static CIK8PodParams<CIK8ContainerParams> getPodSpecWithEnvSecret() {
+    return CIK8PodParams.<CIK8ContainerParams>builder()
+        .name(podName)
+        .namespace(namespace)
+        .stepExecVolumeName(stepExecVolumeName)
+        .stepExecWorkingDir(stepExecWorkingDir)
+        .containerParamsList(Arrays.asList(containerParamsWithSecretEnvVar()))
         .build();
   }
 

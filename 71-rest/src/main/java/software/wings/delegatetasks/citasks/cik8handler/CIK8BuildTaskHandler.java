@@ -5,6 +5,7 @@ package software.wings.delegatetasks.citasks.cik8handler;
  * git secrets.
  */
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -13,11 +14,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.KubernetesConfig;
@@ -26,6 +29,7 @@ import software.wings.beans.ci.CIK8BuildTaskParams;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.PodParams;
+import software.wings.beans.ci.pod.SecretKeyParams;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.CIBuildTaskHandler;
 import software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilder;
@@ -67,6 +71,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         KubernetesClient kubernetesClient = createKubernetesClient(cik8BuildTaskParams);
         createGitSecret(kubernetesClient, kubernetesConfig, gitFetchFilesConfig);
         createImageSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
+        createEnvVariablesSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
 
         Pod pod = podSpecBuilder.createSpec(podParams).build();
         logger.info("Creating pod with spec: {}", pod);
@@ -122,5 +127,29 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     }
     imageDetailsById.forEach(
         (imageId, imageDetails) -> kubeCtlHandler.createRegistrySecret(kubernetesClient, namespace, imageDetails));
+  }
+
+  private void createEnvVariablesSecrets(
+      KubernetesClient kubernetesClient, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
+    List<CIK8ContainerParams> containerParamsList = podParams.getContainerParamsList();
+    for (CIK8ContainerParams containerParams : containerParamsList) {
+      Map<String, EncryptedDataDetail> encryptedSecrets = containerParams.getEncryptedSecrets();
+      Map<String, SecretKeyParams> secretEnvVars = new HashMap<>();
+
+      if (isNotEmpty(encryptedSecrets)) {
+        Secret secret = kubeCtlHandler.createCustomVarSecret(kubernetesClient, namespace,
+            containerParams.getEncryptedSecrets(), podParams.getName(), containerParams.getName());
+
+        for (Map.Entry<String, EncryptedDataDetail> encryptedVariable : encryptedSecrets.entrySet()) {
+          secretEnvVars.put(encryptedVariable.getKey(),
+              SecretKeyParams.builder()
+                  .key(SecretSpecBuilder.SECRET_KEY + encryptedVariable.getKey())
+                  .secretName(secret.getMetadata().getName())
+                  .build());
+        }
+      }
+
+      containerParams.setSecretEnvVars(secretEnvVars);
+    }
   }
 }

@@ -5,8 +5,8 @@
     <servers>
         <server>
             <id>harness-internal</id>
-            <username>REPLACE_USERNAME_HERE</username>
-            <password>REPLACE_PASSWORD_HERE</password>
+            <username>${REPLACE_USERNAME_HERE}</username>
+            <password>${REPLACE_PASSWORD_HERE}</password>
         </server>
     </servers>
 </settings>

@@ -1,7 +1,9 @@
 package software.wings.beans.ci.pod;
 
 public enum CIContainerType {
-  STEP_EXECUTOR(CIContainerSource.BUILD_JOB);
+  STEP_EXECUTOR(CIContainerSource.BUILD_JOB),
+  ADD_ON(CIContainerSource.HARNESS_WORKER),
+  LITE_ENGINE(CIContainerSource.HARNESS_WORKER);
   CIContainerSource ciContainerSource;
 
   CIContainerType(CIContainerSource ciContainerSource) {
