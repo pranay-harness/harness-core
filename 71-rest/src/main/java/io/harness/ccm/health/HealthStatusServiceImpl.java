@@ -115,7 +115,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     boolean dataTransferJobStatus;
     boolean preAggregatedJobStatus;
     boolean awsFallbackTableJob = true;
-    String s3SyncHealthStatus = null;
+    String s3SyncHealthStatus = WAITING_FOR_SUCCESSFUL_AWS_S3_SYNC_MESSAGE.getMessage();
     long lastS3SyncTimestamp = 0L;
     boolean isAWSConnector = false;
     String billingPipelineRecordSettingId = cloudProvider.getUuid();
@@ -139,12 +139,12 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     BillingDataPipelineRecord billingDataPipelineRecord = billingDataPipelineRecordDao.fetchBillingPipelineRecord(
         cloudProvider.getAccountId(), billingPipelineRecordSettingId);
 
-    if (timeDifference == 0 || billingDataPipelineRecord == null) {
+    if (billingDataPipelineRecord == null) {
       return serialiseHealthStatusToPOJO(
           true, Collections.singletonList(SETTING_ATTRIBUTE_CREATED.getMessage()), lastS3SyncTimestamp);
     }
 
-    if (isAWSConnector) {
+    if (isAWSConnector && billingDataPipelineRecord.getLastSuccessfulS3Sync() != null) {
       s3SyncHealthStatus = getS3SyncHealthStatus(billingDataPipelineRecord);
       lastS3SyncTimestamp = billingDataPipelineRecord.getLastSuccessfulS3Sync().toEpochMilli();
     }
