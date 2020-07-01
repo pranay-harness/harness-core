@@ -52,11 +52,11 @@ public class ProjectResourceTest extends BaseTest {
   public void testList_For_OrgIdFilterOnly() {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
-    assertTrue(projectResource.listProjectsForOrganization(orgIdentifier, 0, 10, null).isEmpty());
+    assertTrue(projectResource.listProjectsForOrganization(orgIdentifier, 0, 10, null).getData().isEmpty());
 
     List<ProjectDTO> createdProjectDTOs = createProjects(orgIdentifier, accountIdentifier, 2);
 
-    Page<ProjectDTO> projectDTOs = projectResource.listProjectsForOrganization(orgIdentifier, 0, 10, null);
+    Page<ProjectDTO> projectDTOs = projectResource.listProjectsForOrganization(orgIdentifier, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOs);
     assertEquals("Count of DTOs should match", createdProjectDTOs.size(), projectDTOs.getTotalElements());
     assertNotNull("Page contents should not be null", projectDTOs.getContent());
@@ -96,7 +96,8 @@ public class ProjectResourceTest extends BaseTest {
 
     List<ProjectDTO> secondOrgProjectDTOs = createProjects(secondOrgIdentifier, accountIdentifier, 2);
 
-    final Page<ProjectDTO> projectDTOS = projectResource.listProjectsForOrganization(firstOrgIdentifier, 0, 10, null);
+    final Page<ProjectDTO> projectDTOS =
+        projectResource.listProjectsForOrganization(firstOrgIdentifier, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOS);
     assertEquals("Count of DTOs should match", firstOrgProjectDTOs.size(), projectDTOS.getTotalElements());
     assertNotNull("Page contents should not be null", projectDTOS.getContent());

@@ -75,12 +75,12 @@ public class ProjectResource {
 
   @GET
   @ApiOperation(value = "Gets Project list for an organization", nickname = "getProjectListForOrganization")
-  public Page<ProjectDTO> listProjectsForOrganization(@PathParam("orgIdentifier") String orgIdentifier,
+  public ResponseDTO<Page<ProjectDTO>> listProjectsForOrganization(@PathParam("orgIdentifier") String orgIdentifier,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
       @QueryParam("sort") List<String> sort) {
     Criteria criteria = Criteria.where(ProjectKeys.orgIdentifier).is(orgIdentifier).and(ProjectKeys.deleted).ne(true);
     Page<Project> projects = projectService.list(criteria, getPageRequest(page, size, sort));
-    return projects.map(ProjectMapper::writeDTO);
+    return ResponseDTO.newResponse(projects.map(ProjectMapper::writeDTO));
   }
 
   @PUT
