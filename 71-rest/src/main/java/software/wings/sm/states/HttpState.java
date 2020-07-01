@@ -270,6 +270,11 @@ public class HttpState extends State implements SweepingOutputStateMixin {
   }
 
   @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
+  }
+
+  @Override
   @SchemaIgnore
   public List<String> getPatternsForRequiredContextElementType() {
     String resolvedUrl = url;
@@ -383,6 +388,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
+            .description("Http Execution")
             .waitId(activityId)
             .tags(renderedTags)
             .setupAbstraction(
@@ -396,9 +402,12 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
 
     String delegateTaskId = scheduleDelegateTask(delegateTask);
+
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)

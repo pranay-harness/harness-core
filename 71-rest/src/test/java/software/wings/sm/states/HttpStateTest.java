@@ -6,12 +6,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,7 +51,9 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.rule.Owner;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,6 +73,7 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -129,6 +134,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private ExecutionContextImpl executionContext;
   @Mock private TemplateUtils templateUtils;
+  @Mock private StateExecutionService stateExecutionService;
 
   private ExecutionResponse asyncExecutionResponse;
 
@@ -205,7 +211,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldExecuteAndEvaluateJsonResponse() {
+  public void shouldExecuteAndEvaluateJsonResponse() throws IllegalAccessException {
     wireMockRule.stubFor(
         get(urlEqualTo("/health/status"))
             .withHeader("Content-Type", equalTo("application/json"))
@@ -229,7 +235,10 @@ public class HttpStateTest extends WingsBaseTest {
             .withHeader("Content-Type: application/json, Accept: */*")
             .withAssertion("${httpResponseCode}==200 && ${jsonpath(\"data.version\")}==${artifact.buildNo}");
 
-    ExecutionResponse response = getHttpState(jsonHttpStateBuilder.but(), context).execute(context);
+    HttpState httpState = getHttpState(jsonHttpStateBuilder.but(), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+
+    ExecutionResponse response = httpState.execute(context);
 
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
@@ -254,7 +263,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldExecuteAndEvaluateJsonResponseWithVariables() {
+  public void shouldExecuteAndEvaluateJsonResponseWithVariables() throws IllegalAccessException {
     wireMockRule.stubFor(
         get(urlEqualTo("/health/status"))
             .withHeader("Content-Type", equalTo("application/json"))
@@ -288,7 +297,10 @@ public class HttpStateTest extends WingsBaseTest {
                 aVariable().name("buildNo").value("2.31.0-MASTER-SNAPSHOT").build(),
                 aVariable().name("contentType").value("application/json").build()));
 
-    ExecutionResponse response = getHttpState(jsonHttpStateBuilder.but(), context).execute(context);
+    HttpState httpState = getHttpState(jsonHttpStateBuilder.but(), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+
+    ExecutionResponse response = httpState.execute(context);
 
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
@@ -315,7 +327,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldExecuteAndEvaluateResponse() {
+  public void shouldExecuteAndEvaluateResponse() throws IllegalAccessException {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
@@ -324,7 +336,9 @@ public class HttpStateTest extends WingsBaseTest {
                                              .withBody("<health><status>Enabled</status></health>")
                                              .withHeader("Content-Type", "text/xml")));
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
+    HttpState httpState = getHttpState(httpStateBuilder.but(), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+    ExecutionResponse response = httpState.execute(context);
 
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
@@ -342,12 +356,20 @@ public class HttpStateTest extends WingsBaseTest {
 
     verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any(DelegateTaskDetails.class));
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testSelectionLogsTrackingForTasksEnabled() {
+    assertThat(httpStateBuilder.build().isSelectionLogsTrackingForTasksEnabled()).isTrue();
   }
 
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
-  public void shouldExecuteAndEvaluateResponseWithProxy() {
+  public void shouldExecuteAndEvaluateResponseWithProxy() throws IllegalAccessException {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
@@ -366,7 +388,10 @@ public class HttpStateTest extends WingsBaseTest {
             .withAssertion(
                 "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
 
-    ExecutionResponse response = getHttpState(proxyHttpBuilder.but(), context).execute(context);
+    HttpState httpState = getHttpState(proxyHttpBuilder.but(), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+
+    ExecutionResponse response = httpState.execute(context);
 
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
@@ -394,7 +419,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldExecuteAndEvaluateResponseWithVariables() {
+  public void shouldExecuteAndEvaluateResponseWithVariables() throws IllegalAccessException {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
@@ -404,7 +429,9 @@ public class HttpStateTest extends WingsBaseTest {
                                              .withHeader("Content-Type", "text/xml")));
 
     httpStateBuilder.withTemplateVariables(asList(aVariable().name("status").value("Enabled").build()));
-    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
+    HttpState httpState = getHttpState(httpStateBuilder.but(), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+    ExecutionResponse response = httpState.execute(context);
 
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
@@ -430,7 +457,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void shouldExecuteAndEvaluateResponseWithInstance() {
+  public void shouldExecuteAndEvaluateResponseWithInstance() throws IllegalAccessException {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
@@ -451,8 +478,10 @@ public class HttpStateTest extends WingsBaseTest {
             .uuid(SERVICE_INSTANCE_ID)
             .build());
 
-    ExecutionResponse response =
-        getHttpState(httpStateBuilder.withUrl("http://localhost:8088/health/status").but(), context).execute(context);
+    HttpState httpState = getHttpState(httpStateBuilder.withUrl("http://localhost:8088/health/status").but(), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+
+    ExecutionResponse response = httpState.execute(context);
 
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
@@ -478,7 +507,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = DINESH)
   @Category(UnitTests.class)
-  public void shouldGetExecutionDataSummaryDetails() {
+  public void shouldGetExecutionDataSummaryDetails() throws IllegalAccessException {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
@@ -487,7 +516,10 @@ public class HttpStateTest extends WingsBaseTest {
                                              .withBody("<health><status>Enabled</status></health>")
                                              .withHeader("Content-Type", "text/xml")));
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
+    HttpState httpState = getHttpState(httpStateBuilder.but(), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+
+    ExecutionResponse response = httpState.execute(context);
 
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
@@ -507,7 +539,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldFailOnSocketTimeout() {
+  public void shouldFailOnSocketTimeout() throws IllegalAccessException {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
@@ -517,8 +549,10 @@ public class HttpStateTest extends WingsBaseTest {
                                              .withHeader("Content-Type", "text/xml")
                                              .withFixedDelay(2000)));
 
-    ExecutionResponse response =
-        getHttpState(httpStateBuilder.but().withSocketTimeoutMillis(1000), context).execute(context);
+    HttpState httpState = getHttpState(httpStateBuilder.but().withSocketTimeoutMillis(1000), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+
+    ExecutionResponse response = httpState.execute(context);
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
@@ -542,13 +576,16 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldFailOnEmptyResponse() {
+  public void shouldFailOnEmptyResponse() throws IllegalAccessException {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.EMPTY_RESPONSE)));
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
+    HttpState httpState = getHttpState(httpStateBuilder.but(), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+
+    ExecutionResponse response = httpState.execute(context);
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
@@ -572,13 +609,16 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldFailOnMalformedResponse() {
+  public void shouldFailOnMalformedResponse() throws IllegalAccessException {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
+    HttpState httpState = getHttpState(httpStateBuilder.but(), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+
+    ExecutionResponse response = httpState.execute(context);
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
@@ -601,13 +641,16 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldFailOnRandomData() {
+  public void shouldFailOnRandomData() throws IllegalAccessException {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/xml"))
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.RANDOM_DATA_THEN_CLOSE)));
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
+    HttpState httpState = getHttpState(httpStateBuilder.but(), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+
+    ExecutionResponse response = httpState.execute(context);
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
@@ -630,12 +673,14 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = DINESH)
   @Category(UnitTests.class)
-  public void shouldFailOnConnectTimeout() {
+  public void shouldFailOnConnectTimeout() throws IllegalAccessException {
     context.pushContextElement(HostElement.builder().hostName("www.google.com").build());
 
-    ExecutionResponse response =
-        getHttpState(httpStateBuilder.but().withUrl("http://${host.hostName}:81/health/status"), context)
-            .execute(context);
+    HttpState httpState =
+        getHttpState(httpStateBuilder.but().withUrl("http://${host.hostName}:81/health/status"), context);
+    FieldUtils.writeField(httpState, "stateExecutionService", stateExecutionService, true);
+
+    ExecutionResponse response = httpState.execute(context);
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
 
     response = asyncExecutionResponse;
