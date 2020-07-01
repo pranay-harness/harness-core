@@ -16,6 +16,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactSelection;
+import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionBuilder;
 import software.wings.beans.trigger.ArtifactSelection.Type;
 import software.wings.beans.trigger.Trigger;
 import software.wings.graphql.datafetcher.execution.PipelineExecutionController;
@@ -192,15 +193,19 @@ public class TriggerActionController {
               throw new InvalidRequestException("Invalid Artifact Selection Type", USER);
           }
 
-          return ArtifactSelection.builder()
-              .type(type)
-              .serviceId(e.getServiceId())
-              .artifactStreamId(e.getArtifactSourceId())
-              .artifactFilter(e.getArtifactFilter())
-              .regex(e.getRegex())
-              .workflowId(e.getWorkflowId())
-              .pipelineId(e.getPipelineId())
-              .build();
+          ArtifactSelectionBuilder artifactSelectionBuilder = ArtifactSelection.builder();
+          artifactSelectionBuilder.type(type);
+          artifactSelectionBuilder.serviceId(e.getServiceId());
+          artifactSelectionBuilder.artifactStreamId(e.getArtifactSourceId());
+          artifactSelectionBuilder.artifactFilter(e.getArtifactFilter());
+          artifactSelectionBuilder.workflowId(e.getWorkflowId());
+          artifactSelectionBuilder.pipelineId(e.getPipelineId());
+
+          if (e.getRegex() != null) {
+            artifactSelectionBuilder.regex(e.getRegex());
+          }
+
+          return artifactSelectionBuilder.build();
         })
         .collect(Collectors.toList());
   }
