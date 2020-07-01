@@ -19,6 +19,7 @@ import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
 import static software.wings.utils.SshHelperUtils.normalizeError;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 
@@ -53,12 +54,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -211,7 +214,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
 
       ((ChannelExec) channel).setPty(true);
 
-      String directoryPath = this.config.getWorkingDirectory() + "/";
+      String directoryPath = resolveEnvVarsInPath(this.config.getWorkingDirectory() + "/");
       String envVariablesFilename = null;
       command = "cd " + directoryPath + "\n" + command;
       if (!envVariablesToCollect.isEmpty()) {
@@ -565,5 +568,29 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
       logger.error(sb.toString());
       return 0;
     }
+  }
+
+  @VisibleForTesting
+  String resolveEnvVarsInPath(String directoryPath) {
+    String regex = "(\\$[A-Za-z_-])\\w+";
+    Pattern pattern = Pattern.compile(regex);
+    Matcher matcher = pattern.matcher(directoryPath);
+    List<String> envVars = new ArrayList<>();
+    while (matcher.find()) {
+      envVars.add(matcher.group());
+    }
+    for (String envVar : envVars) {
+      int index = directoryPath.indexOf(envVar);
+      if (index > 0 && directoryPath.charAt(index - 1) == '/') {
+        directoryPath = directoryPath.replace("/" + envVar, getEnvVarValue(envVar.substring(1)));
+      } else {
+        directoryPath = directoryPath.replace(envVar, getEnvVarValue(envVar.substring(1)));
+      }
+    }
+    return directoryPath;
+  }
+
+  private String getEnvVarValue(String envVar) {
+    return System.getenv(envVar);
   }
 }
