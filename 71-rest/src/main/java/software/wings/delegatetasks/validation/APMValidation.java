@@ -179,6 +179,7 @@ public class APMValidation extends AbstractSecretManagerValidation {
         return false;
       }
     } catch (Exception e) {
+      logger.error("Exception while trying to validate APM task", e);
       return false;
     }
   }
