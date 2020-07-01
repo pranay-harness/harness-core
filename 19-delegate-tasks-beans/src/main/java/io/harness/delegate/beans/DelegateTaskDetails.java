@@ -9,5 +9,9 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "DelegateTaskDetailsKeys")
 public class DelegateTaskDetails {
   private String delegateTaskId;
-  private String taskType;
+  private String taskDescription;
+  /**
+   * @deprecated Use taskDescription instead.
+   */
+  @Deprecated private String taskType;
 }

@@ -355,7 +355,11 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     stateExecutionInstance.setSelectionLogsTrackingForTasksEnabled(true);
 
     List<DelegateTaskDetails> delegateTaskDetailsList = new ArrayList<>();
-    delegateTaskDetailsList.add(DelegateTaskDetails.builder().delegateTaskId(generateUuid()).taskType("type").build());
+    delegateTaskDetailsList.add(DelegateTaskDetails.builder()
+                                    .delegateTaskId(generateUuid())
+                                    .taskDescription("description")
+                                    .taskType("type")
+                                    .build());
     stateExecutionInstance.setDelegateTasksDetails(delegateTaskDetailsList);
 
     return stateExecutionInstance;
@@ -385,8 +389,12 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     StateExecutionInstance instance = createStateExecutionInstance();
     String id = wingsPersistence.save(instance);
 
-    stateExecutionService.appendDelegateTaskDetails(
-        id, DelegateTaskDetails.builder().delegateTaskId(generateUuid()).taskType("type").build());
+    stateExecutionService.appendDelegateTaskDetails(id,
+        DelegateTaskDetails.builder()
+            .delegateTaskId(generateUuid())
+            .taskDescription("description")
+            .taskType("type")
+            .build());
 
     instance = stateExecutionService.getStateExecutionInstance(instance.getAppId(), instance.getExecutionUuid(), id);
 

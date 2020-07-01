@@ -348,7 +348,7 @@ public abstract class State {
       stateExecutionService.appendDelegateTaskDetails(context.getStateExecutionInstanceId(),
           DelegateTaskDetails.builder()
               .delegateTaskId(delegateTask.getUuid())
-              .taskType(delegateTask.getData().getTaskType())
+              .taskDescription(delegateTask.calcDescription())
               .build());
     }
   }
