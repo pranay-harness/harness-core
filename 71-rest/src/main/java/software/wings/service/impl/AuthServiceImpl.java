@@ -12,6 +12,7 @@ import static io.harness.eraro.ErrorCode.TOKEN_ALREADY_REFRESHED_ONCE;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.govern.Switch.noop;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toSet;
@@ -191,7 +192,10 @@ public class AuthServiceImpl implements AuthService {
       if (authToken == null) {
         throw new WingsException(INVALID_TOKEN, USER);
       } else if (authToken.getExpireAt() <= System.currentTimeMillis()) {
-        throw new WingsException(EXPIRED_TOKEN, USER);
+        // TODO: I assume that ECS is not renewing the token on time. Disabling this to see if that's the issue.
+        //       If this is the case we should reenable only after make sure the token is regenerated regularly.
+        //       throw new WingsException(EXPIRED_TOKEN, USER);
+        noop();
       }
       return getAuthTokenWithUser(authToken);
     } else {
