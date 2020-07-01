@@ -14,6 +14,8 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
@@ -61,6 +63,7 @@ import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
+import software.wings.service.impl.GitFileConfigHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -80,6 +83,7 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private GitFileConfigHelperService gitFileConfigHelperService;
 
   @Inject @InjectMocks private ApplicationManifestUtils applicationManifestUtils;
   private ApplicationManifestUtils applicationManifestUtilsSpy = spy(new ApplicationManifestUtils());
@@ -756,5 +760,20 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     return GitFetchFilesConfig.builder()
         .gitFileConfig(GitFileConfig.builder().filePathList(asList(filePaths)).build())
         .build();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderGitConfigForApplicationManifest() {
+    GitFileConfig toBeRendered = GitFileConfig.builder().build();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(ServiceOverride,
+        ApplicationManifest.builder().storeType(Remote).gitFileConfig(toBeRendered).build(), K8sValuesLocation.Service,
+        ApplicationManifest.builder().storeType(Remote).gitFileConfig(toBeRendered).build(), Environment,
+        ApplicationManifest.builder().storeType(Remote).gitFileConfig(toBeRendered).build(), EnvironmentGlobal,
+        ApplicationManifest.builder().storeType(Remote).gitFileConfig(null).build());
+
+    applicationManifestUtils.renderGitConfigForApplicationManifest(context, appManifestMap);
+    verify(gitFileConfigHelperService, times(3)).renderGitFileConfig(context, toBeRendered);
   }
 }
