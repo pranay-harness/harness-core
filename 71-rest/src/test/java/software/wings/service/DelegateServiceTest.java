@@ -120,7 +120,6 @@ import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TaskType;
@@ -187,12 +186,6 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                                   .hostName("localhost")
                                                                   .version(VERSION)
                                                                   .lastHeartBeat(System.currentTimeMillis());
-  private static final JreConfig ORACLE_JRE_CONFIG = JreConfig.builder()
-                                                         .version("1.8.0_191")
-                                                         .jreDirectory("jre1.8.0_191")
-                                                         .jreMacDirectory("jre1.8.0_191.jre")
-                                                         .jreTarPath("jre/8u191/jre-8u191-${OS}-x64.tar.gz")
-                                                         .build();
   private static final JreConfig OPENJDK_JRE_CONFIG = JreConfig.builder()
                                                           .version("1.8.0_242")
                                                           .jreDirectory("jdk8u242-b08-jre")
@@ -244,10 +237,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(mainConfiguration.getOcVersion()).thenReturn("v4.2.16");
     when(mainConfiguration.getCdnConfig()).thenReturn(cdnConfig);
     HashMap<String, JreConfig> jreConfigMap = new HashMap<>();
-    jreConfigMap.put("oracle8u191", ORACLE_JRE_CONFIG);
     jreConfigMap.put("openjdk8u242", OPENJDK_JRE_CONFIG);
-    when(mainConfiguration.getCurrentJre()).thenReturn("oracle8u191");
-    when(mainConfiguration.getMigrateToJre()).thenReturn("openjdk8u242");
+    when(mainConfiguration.getCurrentJre()).thenReturn("openjdk8u242");
     when(mainConfiguration.getJreConfigs()).thenReturn(jreConfigMap);
     when(subdomainUrlHelper.getWatcherMetadataUrl(any())).thenReturn("http://localhost:8888/watcherci.txt");
     FileUploadLimit fileUploadLimit = new FileUploadLimit();
@@ -790,8 +781,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(createDelegateProfileBuilder().build());
     File gzipFile = delegateService.downloadScripts(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID);
-    when(featureFlagService.isEnabled(FeatureName.UPGRADE_JRE, ACCOUNT_ID)).thenReturn(false);
-    verifyDownloadScriptsResult(gzipFile, "/expectedStart.sh", "/expectedDelegate.sh");
+    verifyDownloadScriptsResult(gzipFile, "/expectedStartOpenJdk.sh", "/expectedDelegateOpenJdk.sh");
   }
 
   @Test
@@ -804,15 +794,14 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     File gzipFile = delegateService.downloadScripts(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, null);
-    when(featureFlagService.isEnabled(FeatureName.UPGRADE_JRE, ACCOUNT_ID)).thenReturn(false);
-    verifyDownloadScriptsResult(gzipFile, "/expectedStart.sh", "/expectedDelegate.sh");
+    verifyDownloadScriptsResult(gzipFile, "/expectedStartOpenJdk.sh", "/expectedDelegateOpenJdk.sh");
 
     when(delegateProfileService.get(ACCOUNT_ID, "invalidProfile")).thenReturn(null);
     when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     gzipFile = delegateService.downloadScripts(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, "invalidProfile");
-    verifyDownloadScriptsResult(gzipFile, "/expectedStart.sh", "/expectedDelegate.sh");
+    verifyDownloadScriptsResult(gzipFile, "/expectedStartOpenJdk.sh", "/expectedDelegateOpenJdk.sh");
   }
 
   @Test
@@ -825,7 +814,6 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(createDelegateProfileBuilder().build());
     File gzipFile = delegateService.downloadScripts(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "", DELEGATE_PROFILE_ID);
-    when(featureFlagService.isEnabled(FeatureName.UPGRADE_JRE, ACCOUNT_ID)).thenReturn(false);
     verifyDownloadScriptsResult(
         gzipFile, "/expectedStartWithoutDelegateName.sh", "/expectedDelegateWithoutDelegateName.sh");
   }
@@ -864,7 +852,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStop.sh"))));
+          .isEqualTo(
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStopOpenJdk.sh"))));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
@@ -882,12 +871,11 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = MEHUL)
   @Category(UnitTests.class)
-  public void shouldDownloadScriptsForOpenJdk() throws IOException, TemplateException {
+  public void shouldDownloadScriptsForOpenJdk() throws IOException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
-    when(featureFlagService.isEnabled(FeatureName.UPGRADE_JRE, ACCOUNT_ID)).thenReturn(true);
     File gzipFile = delegateService.downloadScripts(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID);
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");

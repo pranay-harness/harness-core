@@ -45,7 +45,6 @@ import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSeque
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE;
-import static software.wings.beans.FeatureName.UPGRADE_JRE;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
@@ -888,9 +887,8 @@ public class DelegateServiceImpl implements DelegateService {
    */
   private JreConfig getJreConfig(String accountId) {
     boolean useCDN = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, accountId);
-    boolean upgradeJre = featureFlagService.isEnabled(UPGRADE_JRE, accountId);
 
-    String jreVersion = upgradeJre ? mainConfiguration.getMigrateToJre() : mainConfiguration.getCurrentJre();
+    String jreVersion = mainConfiguration.getCurrentJre();
     JreConfig jreConfig = mainConfiguration.getJreConfigs().get(jreVersion);
     CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
 

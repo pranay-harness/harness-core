@@ -26,5 +26,5 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e CF_PLUGIN_HOME= \
 -e USE_CDN=false \
 -e CDN_URL=http://localhost:9500 \
--e JRE_VERSION=1.8.0_191 \
+-e JRE_VERSION=1.8.0_242 \
 harness/delegate:latest

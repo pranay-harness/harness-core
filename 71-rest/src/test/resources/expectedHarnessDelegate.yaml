@@ -137,7 +137,7 @@ spec:
         - name: CDN_URL
           value: http://localhost:9500
         - name: JRE_VERSION
-          value: 1.8.0_191
+          value: 1.8.0_242
         - name: HELM3_PATH
           value: ""
         - name: HELM_PATH
