@@ -186,7 +186,11 @@ public class GraphRendererTest extends WingsBaseTest {
                                                 .status(SUCCESS)
                                                 .build();
     List<DelegateTaskDetails> delegateTaskDetailsList = new ArrayList<>();
-    delegateTaskDetailsList.add(DelegateTaskDetails.builder().delegateTaskId(generateUuid()).taskType("type").build());
+    delegateTaskDetailsList.add(DelegateTaskDetails.builder()
+                                    .delegateTaskId(generateUuid())
+                                    .taskDescription("description")
+                                    .taskType("type")
+                                    .build());
 
     instance.setStateParams(ImmutableMap.of("key", "value"));
     instance.setSelectionLogsTrackingForTasksEnabled(true);

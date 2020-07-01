@@ -394,6 +394,7 @@ public class HelmDeployState extends State {
                                               .timeout(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS * 2)
                                               .build())
                                     .accountId(app.getAccountId())
+                                    .description("Helm Release History")
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
                                     .tags(tags)
                                     .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
@@ -871,6 +872,7 @@ public class HelmDeployState extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
+            .description("Helm Command Execution")
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
             .waitId(activityId)
             .tags(tags)
@@ -976,6 +978,7 @@ public class HelmDeployState extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
+            .description("Fetch Files")
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, k8sStateHelper.getEnvIdFromExecutionContext(context))
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
@@ -1200,6 +1203,7 @@ public class HelmDeployState extends State {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
+            .description("Fetch Helm Values")
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, k8sStateHelper.getEnvIdFromExecutionContext(context))
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
