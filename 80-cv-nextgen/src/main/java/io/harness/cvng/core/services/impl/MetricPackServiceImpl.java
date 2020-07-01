@@ -1,8 +1,8 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.APPD_PERFORMANCE_PACK_IDENTIFIER;
-import static io.harness.cvng.core.services.CVNextGenConstants.APPD_QUALITY_PACK_IDENTIFIER;
-import static io.harness.cvng.core.services.CVNextGenConstants.APPD_RESOURCE_PACK_IDENTIFIER;
+import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
+import static io.harness.cvng.core.services.CVNextGenConstants.QUALITY_PACK_IDENTIFIER;
+import static io.harness.cvng.core.services.CVNextGenConstants.RESOURCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -262,11 +262,11 @@ public class MetricPackServiceImpl implements MetricPackService {
 
   private String getAppdynamicsMetricPackDsl(MetricPack metricPack) {
     switch (metricPack.getIdentifier()) {
-      case APPD_PERFORMANCE_PACK_IDENTIFIER:
+      case PERFORMANCE_PACK_IDENTIFIER:
         return APPDYNAMICS_PERFORMANCE_PACK_DSL;
-      case APPD_QUALITY_PACK_IDENTIFIER:
+      case QUALITY_PACK_IDENTIFIER:
         return APPDYNAMICS_QUALITY_PACK_DSL;
-      case APPD_RESOURCE_PACK_IDENTIFIER:
+      case RESOURCE_PACK_IDENTIFIER:
         return APPDYNAMICS_RESOURCE_PACK_DSL;
 
       default:

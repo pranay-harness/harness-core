@@ -16,11 +16,13 @@ import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.mongo.MongoConfig;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import software.wings.DataStorageMode;
 
 import java.util.Optional;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class VerificationConfiguration extends Configuration {
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();

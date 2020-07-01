@@ -24,6 +24,7 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -248,7 +249,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     cvConfig.setTierId(1234);
     cvConfig.setMetricPack(MetricPack.builder()
                                .dataCollectionDsl("data-collection-dsl")
-                               .identifier("Performance and Availability")
+                               .identifier(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER)
                                .build());
     String taskIdFromApi = dataCollectionTaskService.enqueueFirstTask(cvConfig);
     DataCollectionTask savedTask =

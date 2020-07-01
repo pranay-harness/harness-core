@@ -1,4 +1,4 @@
-identifier: Performance and Availability
+identifier: Performance
 metrics:
   - name: Average Response Time (ms)
     type: RESP_TIME

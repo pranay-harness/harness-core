@@ -10,7 +10,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SortOrder;
-import io.harness.exception.WingsException;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -173,7 +172,7 @@ public class NewRelicMetricAnalysisRecord
                             Double.compare(otherMetricAnalysisValue.getTestValue(), metricAnalysisValue.getTestValue());
                         break;
                       default:
-                        throw new WingsException("Invalid sort order " + sortOrder.getOrderType());
+                        throw new IllegalArgumentException("Invalid sort order " + sortOrder.getOrderType());
                     }
 
                     if (sortCriteriaDiff != 0) {

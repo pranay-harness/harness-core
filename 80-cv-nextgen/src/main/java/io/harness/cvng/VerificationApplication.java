@@ -68,6 +68,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private static String APPLICATION_NAME = "Verification NextGen Application";
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
+  private HPersistence hPersistence;
 
   public static void main(String[] args) throws Exception {
     new VerificationApplication().run(args);
@@ -136,6 +137,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     Injector injector = Guice.createInjector(modules);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
+    autoCreateCollectionsAndIndexes(injector);
     registerAuthFilters(environment, injector);
     registerManagedBeans(environment, injector);
     registerResources(environment, injector);
@@ -150,6 +152,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
     MaintenanceController.forceMaintenance(false);
 
     logger.info("Starting app done");
+  }
+
+  private void autoCreateCollectionsAndIndexes(Injector injector) {
+    hPersistence = injector.getInstance(HPersistence.class);
   }
 
   private void registerOrchestrationIterator(Injector injector,

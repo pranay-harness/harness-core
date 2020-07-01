@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -270,7 +271,7 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
 
   private void fillCommon(CVConfig cvConfig) {
     cvConfig.setConnectorId(connectorId);
-    cvConfig.setCategory("Performance");
+    cvConfig.setCategory(PERFORMANCE_PACK_IDENTIFIER);
     cvConfig.setAccountId(accountId);
     cvConfig.setProductName(productName);
     cvConfig.setEnvIdentifier(generateUuid());

@@ -122,7 +122,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
   @Owner(developers = OwnerRule.RAGHU)
   @Category({UnitTests.class})
   public void testDataCollection_executeDSL() {
-    createTaskParams(CVNextGenConstants.APPD_PERFORMANCE_PACK_IDENTIFIER, "dsl");
+    createTaskParams(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER, "dsl");
     dataCollector.runOnce(PerpetualTaskId.newBuilder().build(), perpetualTaskParams, Instant.now());
     verifyDsl("dsl");
   }

@@ -1,5 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
+import static io.harness.cvng.core.services.CVNextGenConstants.QUALITY_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.TestUserProvider.testUserProvider;
@@ -86,7 +88,7 @@ public class MetricPackServiceImplTest extends CVNextGenBaseTest {
         metricPackService.getMetricPacks(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS);
     List<MetricPack> performancePacks =
         metricPacks.stream()
-            .filter(metricPack -> metricPack.getIdentifier().equals("Performance and Availability"))
+            .filter(metricPack -> metricPack.getIdentifier().equals(PERFORMANCE_PACK_IDENTIFIER))
             .collect(Collectors.toList());
     assertThat(performancePacks.size()).isEqualTo(1);
     MetricPack performancePack = performancePacks.get(0);
@@ -106,7 +108,7 @@ public class MetricPackServiceImplTest extends CVNextGenBaseTest {
     assertThat(metricPacks.size()).isGreaterThan(1);
 
     performancePacks = metricPacks.stream()
-                           .filter(metricPack -> metricPack.getIdentifier().equals("Performance and Availability"))
+                           .filter(metricPack -> metricPack.getIdentifier().equals(PERFORMANCE_PACK_IDENTIFIER))
                            .collect(Collectors.toList());
     assertThat(performancePacks.size()).isEqualTo(1);
     performancePack = performancePacks.get(0);
@@ -125,7 +127,7 @@ public class MetricPackServiceImplTest extends CVNextGenBaseTest {
     Collection<MetricPack> metricPacks =
         metricPackService.getMetricPacks(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS);
     MetricPack qualityPack = metricPacks.stream()
-                                 .filter(metricPack -> metricPack.getIdentifier().equals("Quality"))
+                                 .filter(metricPack -> metricPack.getIdentifier().equals(QUALITY_PACK_IDENTIFIER))
                                  .findFirst()
                                  .orElseThrow(() -> new IllegalArgumentException("invalid pack name"));
 
