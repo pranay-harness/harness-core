@@ -1,0 +1,5 @@
+identifier: restoreCacheResults
+displayName: restore-cache-step-name
+restoreCache:
+  key: test_results
+  failIfNotExist: false
