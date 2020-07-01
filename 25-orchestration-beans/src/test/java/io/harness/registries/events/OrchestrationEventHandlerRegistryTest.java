@@ -27,7 +27,6 @@ public class OrchestrationEventHandlerRegistryTest extends OrchestrationBeansTes
     registry.register(OrchestrationEventType.ORCHESTRATION_START, StartHandler2.class);
     assertThat(registry.obtain(OrchestrationEventType.ORCHESTRATION_START)).isNotNull();
     assertThat(registry.obtain(OrchestrationEventType.ORCHESTRATION_START)).isInstanceOf(OrchestrationSubject.class);
-    assertThat(registry.obtain(OrchestrationEventType.ORCHESTRATION_END)).isNull();
   }
 
   @Test

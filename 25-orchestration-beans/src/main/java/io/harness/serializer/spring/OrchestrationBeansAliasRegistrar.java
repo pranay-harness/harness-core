@@ -46,10 +46,10 @@ public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("failureInfo", FailureInfo.class);
     orchestrationElements.put("interrupt", Interrupt.class);
     orchestrationElements.put("interruptEffect", InterruptEffect.class);
-    orchestrationElements.put("nodeExecutions", NodeExecution.class);
-    orchestrationElements.put("outcomeInstances", OutcomeInstance.class);
+    orchestrationElements.put("nodeExecution", NodeExecution.class);
+    orchestrationElements.put("outcomeInstance", OutcomeInstance.class);
     orchestrationElements.put("outcomeRefObject", OutcomeRefObject.class);
-    orchestrationElements.put("planExecutions", PlanExecution.class);
+    orchestrationElements.put("planExecution", PlanExecution.class);
     orchestrationElements.put("sweepingOutputRefObject", SweepingOutputRefObject.class);
     orchestrationElements.put("taskChainExecutableResponse", TaskChainExecutableResponse.class);
     orchestrationElements.put("taskExecutableResponse", TaskExecutableResponse.class);

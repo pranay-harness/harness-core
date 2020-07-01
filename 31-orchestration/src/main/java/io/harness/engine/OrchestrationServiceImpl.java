@@ -9,11 +9,8 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.events.OrchestrationEventType;
 import io.harness.execution.status.Status;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
@@ -28,7 +25,6 @@ import javax.validation.Valid;
 public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private OrchestrationEngine orchestrationEngine;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Override
   public PlanExecution startExecution(Plan plan, EmbeddedUser createdBy) {
@@ -52,8 +48,6 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     PlanExecution savedPlanExecution = planExecutionService.save(planExecution);
     Ambiance ambiance =
         Ambiance.builder().setupAbstractions(setupAbstractions).planExecutionId(savedPlanExecution.getUuid()).build();
-    eventEmitter.emitEvent(
-        OrchestrationEvent.builder().ambiance(ambiance).eventType(OrchestrationEventType.ORCHESTRATION_START).build());
     orchestrationEngine.triggerExecution(ambiance, planNode);
     return savedPlanExecution;
   }
