@@ -1,6 +1,7 @@
 package io.harness.event.grpc;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.grpc.IdentifierKeys.DELEGATE_ID;
 import static io.harness.grpc.auth.DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY;
@@ -68,12 +69,14 @@ public class EventPublisherServerImpl extends EventPublisherGrpc.EventPublisherI
             }
           });
 
-      try {
-        hPersistence.saveIgnoringDuplicateKeys(withoutCategory);
-      } catch (Exception e) {
-        logger.warn("Encountered error while persisting messages", e);
-        responseObserver.onError(Status.INTERNAL.withCause(e).asException());
-        return;
+      if (isNotEmpty(withoutCategory)) {
+        try {
+          hPersistence.saveIgnoringDuplicateKeys(withoutCategory);
+        } catch (Exception e) {
+          logger.warn("Encountered error while persisting messages", e);
+          responseObserver.onError(Status.INTERNAL.withCause(e).asException());
+          return;
+        }
       }
 
       try {
