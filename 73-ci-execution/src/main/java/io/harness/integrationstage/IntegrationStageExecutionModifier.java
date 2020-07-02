@@ -1,6 +1,6 @@
 package io.harness.integrationstage;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
@@ -46,12 +46,11 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
 
   @Override
   public Execution modifyExecutionPlan(Execution execution, Stage stage) {
-    Execution modifiedExecutionPlan = Execution.builder().steps(execution.getSteps()).build();
     IntegrationStage integrationStage = (IntegrationStage) stage;
-    modifiedExecutionPlan.getSteps().addAll(0, getPreIntegrationExecution(integrationStage).getSteps());
-    modifiedExecutionPlan.getSteps().addAll(
-        execution.getSteps().size(), getPostIntegrationSteps(integrationStage).getSteps());
-    return modifiedExecutionPlan;
+    List<ExecutionSection> steps = execution.getSteps();
+    steps.addAll(0, getPreIntegrationExecution(integrationStage).getSteps());
+    steps.addAll(steps.size(), getPostIntegrationSteps().getSteps());
+    return Execution.builder().steps(steps).build();
   }
 
   private Execution getPreIntegrationExecution(IntegrationStage integrationStage) {
@@ -59,14 +58,14 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
     if (integrationStage.getCi().getGitConnector().getType().equals("git")) {
       GitConnectorYaml gitConnectorYaml = (GitConnectorYaml) integrationStage.getCi().getGitConnector();
       return Execution.builder()
-          .steps(asList(BuildEnvSetupStepInfo.builder()
-                            .identifier(ENV_SETUP_NAME)
-                            .setupEnv(BuildEnvSetupStepInfo.BuildEnvSetup.builder()
-                                          .gitConnectorIdentifier(gitConnectorYaml.getIdentifier())
-                                          .branchName(getBranchName(integrationStage))
-                                          .buildJobEnvInfo(getCIBuildJobEnvInfo(integrationStage))
-                                          .build())
-                            .build()))
+          .steps(singletonList(BuildEnvSetupStepInfo.builder()
+                                   .identifier(ENV_SETUP_NAME)
+                                   .setupEnv(BuildEnvSetupStepInfo.BuildEnvSetup.builder()
+                                                 .gitConnectorIdentifier(gitConnectorYaml.getIdentifier())
+                                                 .branchName(getBranchName(integrationStage))
+                                                 .buildJobEnvInfo(getCIBuildJobEnvInfo(integrationStage))
+                                                 .build())
+                                   .build()))
           .build();
     } else {
       throw new IllegalArgumentException("Input connector type is not of type git");
@@ -88,8 +87,10 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
     }
   }
 
-  private Execution getPostIntegrationSteps(IntegrationStage integrationStage) {
-    return Execution.builder().steps(asList(CleanupStepInfo.builder().identifier(CLEANUP_STEP_NAME).build())).build();
+  private Execution getPostIntegrationSteps() {
+    return Execution.builder()
+        .steps(singletonList(CleanupStepInfo.builder().identifier(CLEANUP_STEP_NAME).build()))
+        .build();
   }
 
   private BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage) {
@@ -105,21 +106,13 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
   }
 
   private K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfo(IntegrationStage integrationStage) {
-    ContainerResourceParams containerResourceParams =
-        ContainerResourceParams.builder()
-            .resourceRequestMilliCpu(integrationStage.getCi().getContainer().getResources().getReserve().getCpu())
-            .resourceRequestMemoryMiB(integrationStage.getCi().getContainer().getResources().getReserve().getMemory())
-            .resourceLimitMilliCpu(integrationStage.getCi().getContainer().getResources().getLimit().getCpu())
-            .resourceLimitMemoryMiB(integrationStage.getCi().getContainer().getResources().getLimit().getMemory())
-            .build();
-
     List<PodSetupInfo> pods = new ArrayList<>();
     pods.add(PodSetupInfo.builder()
                  .podSetupParams(
                      PodSetupInfo.PodSetupParams.builder()
-                         .containerDefinitionInfos(asList(
+                         .containerDefinitionInfos(singletonList(
                              ContainerDefinitionInfo.builder()
-                                 .containerResourceParams(containerResourceParams)
+                                 .containerResourceParams(getContainerResourceParams(integrationStage))
                                  .containerImageDetails(
                                      ContainerImageDetails.builder()
                                          .imageDetails(getImageDetails(integrationStage))
@@ -132,6 +125,15 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
                  .name(podName)
                  .build());
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
+  }
+
+  private ContainerResourceParams getContainerResourceParams(IntegrationStage integrationStage) {
+    return ContainerResourceParams.builder()
+        .resourceRequestMilliCpu(integrationStage.getCi().getContainer().getResources().getReserve().getCpu())
+        .resourceRequestMemoryMiB(integrationStage.getCi().getContainer().getResources().getReserve().getMemory())
+        .resourceLimitMilliCpu(integrationStage.getCi().getContainer().getResources().getLimit().getCpu())
+        .resourceLimitMemoryMiB(integrationStage.getCi().getContainer().getResources().getLimit().getMemory())
+        .build();
   }
 
   private ImageDetails getImageDetails(IntegrationStage integrationStage) {

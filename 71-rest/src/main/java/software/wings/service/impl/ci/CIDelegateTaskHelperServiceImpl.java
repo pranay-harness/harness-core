@@ -30,6 +30,7 @@ import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -62,6 +63,11 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
   private static final String REPLACE_PASSWORD_HERE = "REPLACE_PASSWORD_HERE";
   private static final String HARNESS_GENERATION_PASSPHRASE = "HARNESS_GENERATION_PASSPHRASE";
 
+  private static final String ENDPOINT_MINIO = "ENDPOINT_MINIO";
+  private static final String ACCESS_KEY_MINIO = "ACCESS_KEY_MINIO";
+  private static final String SECRET_KEY_MINIO = "SECRET_KEY_MINIO";
+  private static final String BUCKET_MINIO = "BUCKET_MINIO";
+
   @Override
   public K8sTaskExecutionResponse setBuildEnv(String k8ConnectorName, String gitConnectorName, String branchName,
       CIK8PodParams<CIK8ContainerParams> podParams) {
@@ -88,7 +94,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
 
     addImageRegistryConnectorSecrets(podParams);
 
-    addMVNSecrets(podParams);
+    addSecrets(podParams);
 
     CIK8PodParams<CIK8ContainerParams> podParamsWithGitDetails =
         CIK8PodParams.<CIK8ContainerParams>builder()
@@ -240,39 +246,39 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     return null;
   }
 
-  private void addMVNSecrets(CIK8PodParams<CIK8ContainerParams> podParams) {
+  private void addSecrets(CIK8PodParams<CIK8ContainerParams> podParams) {
     List<CIK8ContainerParams> cik8ContainerParamsList = podParams.getContainerParamsList();
     Map<String, EncryptedDataDetail> secrets = new HashMap<>();
 
     cik8ContainerParamsList.forEach(cik8ContainerParams -> {
       if (isEmpty(cik8ContainerParams.getEncryptedSecrets())
           && cik8ContainerParams.getContainerType() == (CIContainerType.STEP_EXECUTOR)) {
-        String userName = secretManager.getSecretByName(ACCOUNT_ID, REPLACE_USERNAME_HERE).getUuid();
-
-        EncryptedDataDetail userEncryptedDataDetail =
-            secretManager.encryptedDataDetails(ACCOUNT_ID, REPLACE_USERNAME_HERE, userName)
-                .orElseThrow(() -> new IllegalArgumentException("REPLACE_USERNAME_HERE does not exist"));
-
-        secrets.put(REPLACE_USERNAME_HERE, userEncryptedDataDetail);
-
-        String password = secretManager.getSecretByName(ACCOUNT_ID, REPLACE_PASSWORD_HERE).getUuid();
-
-        EncryptedDataDetail passEncryptedDataDetail =
-            secretManager.encryptedDataDetails(ACCOUNT_ID, REPLACE_PASSWORD_HERE, password)
-                .orElseThrow(() -> new IllegalArgumentException("REPLACE_PASSWORD_HERE does not exist"));
-
-        secrets.put(REPLACE_PASSWORD_HERE, passEncryptedDataDetail);
-
-        String passPhrase = secretManager.getSecretByName(ACCOUNT_ID, HARNESS_GENERATION_PASSPHRASE).getUuid();
-
-        EncryptedDataDetail passPhraseEncryptedDataDetail =
-            secretManager.encryptedDataDetails(ACCOUNT_ID, HARNESS_GENERATION_PASSPHRASE, passPhrase)
-                .orElseThrow(() -> new IllegalArgumentException("HARNESS_GENERATION_PASSPHRASE does not exist"));
-
-        secrets.put(HARNESS_GENERATION_PASSPHRASE, passPhraseEncryptedDataDetail);
+        getEncryptedDataDetails(ACCOUNT_ID, REPLACE_USERNAME_HERE)
+            .ifPresent(encryptedDataDetail -> secrets.put(REPLACE_USERNAME_HERE, encryptedDataDetail));
+        getEncryptedDataDetails(ACCOUNT_ID, REPLACE_PASSWORD_HERE)
+            .ifPresent(encryptedDataDetail -> secrets.put(REPLACE_PASSWORD_HERE, encryptedDataDetail));
+        getEncryptedDataDetails(ACCOUNT_ID, HARNESS_GENERATION_PASSPHRASE)
+            .ifPresent(encryptedDataDetail -> secrets.put(HARNESS_GENERATION_PASSPHRASE, encryptedDataDetail));
+        getEncryptedDataDetails(ACCOUNT_ID, ENDPOINT_MINIO)
+            .ifPresent(encryptedDataDetail -> secrets.put(ENDPOINT_MINIO, encryptedDataDetail));
+        getEncryptedDataDetails(ACCOUNT_ID, ACCESS_KEY_MINIO)
+            .ifPresent(encryptedDataDetail -> secrets.put(ACCESS_KEY_MINIO, encryptedDataDetail));
+        getEncryptedDataDetails(ACCOUNT_ID, SECRET_KEY_MINIO)
+            .ifPresent(encryptedDataDetail -> secrets.put(SECRET_KEY_MINIO, encryptedDataDetail));
+        getEncryptedDataDetails(ACCOUNT_ID, BUCKET_MINIO)
+            .ifPresent(encryptedDataDetail -> secrets.put(BUCKET_MINIO, encryptedDataDetail));
 
         cik8ContainerParams.setEncryptedSecrets(secrets);
       }
     });
+  }
+
+  Optional<EncryptedDataDetail> getEncryptedDataDetails(String accountId, String secretName) {
+    EncryptedData secretByName = secretManager.getSecretByName(accountId, secretName);
+    if (secretByName != null) {
+      return secretManager.encryptedDataDetails(accountId, secretName, secretByName.getUuid());
+    } else {
+      return Optional.empty();
+    }
   }
 }
