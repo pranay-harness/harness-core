@@ -52,13 +52,14 @@ public class CustomSecretsManagerEncryptionServiceImpl implements CustomSecretsM
                                                               .build();
     customSecretsManagerConfig.setCustomSecretsManagerShellScript(resolvedShellScript);
 
-    if (!customSecretsManagerConfig.isExecuteOnDelegate() && customSecretsManagerConfig.isConnectorTemplatized()) {
-      customSecretsManagerConnectorHelper.setConnectorInConfig(
-          customSecretsManagerConfig, encryptedData.getParameters());
+    if (!customSecretsManagerConfig.isExecuteOnDelegate()) {
+      if (customSecretsManagerConfig.isConnectorTemplatized()) {
+        customSecretsManagerConnectorHelper.setConnectorInConfig(
+            customSecretsManagerConfig, encryptedData.getParameters());
+      }
+      managerDecryptionService.decrypt(customSecretsManagerConfig.getRemoteHostConnector(),
+          secretManager.getEncryptionDetails(customSecretsManagerConfig.getRemoteHostConnector()));
     }
-
-    managerDecryptionService.decrypt(customSecretsManagerConfig.getRemoteHostConnector(),
-        secretManager.getEncryptionDetails(customSecretsManagerConfig.getRemoteHostConnector()));
     EncryptedRecordData encryptedRecordData = SecretManager.buildRecordData(encryptedData);
 
     return EncryptedDataDetail.builder()

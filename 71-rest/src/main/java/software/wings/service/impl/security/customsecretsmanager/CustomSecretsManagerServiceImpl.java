@@ -182,7 +182,7 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
 
   private void validateConnectivity(
       CustomSecretsManagerConfig customSecretsManagerConfig, Set<EncryptedDataParams> testVariables) {
-    EncryptedData encryptedData = EncryptedData.builder().name("TestSecret").parameters(testVariables).build();
+    EncryptedData encryptedData = EncryptedData.builder().name("Test Variables").parameters(testVariables).build();
     customSecretsManagerEncryptionService.validateSecret(encryptedData, customSecretsManagerConfig);
   }
 
