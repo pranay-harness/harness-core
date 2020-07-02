@@ -40,16 +40,11 @@ import io.harness.grpc.pingpong.PingPongClient;
 import io.harness.grpc.pingpong.PingPongModule;
 import io.harness.managerclient.ManagerClientModule;
 import io.harness.perpetualtask.PerpetualTaskWorkerModule;
-import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.OrchestrationRegistrars;
+import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.YamlUtils;
 import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
-import io.harness.serializer.kryo.DelegateAgentKryoRegister;
-import io.harness.serializer.kryo.ManagerKryoRegistrar;
-import io.harness.serializer.kryo.NGKryoRegistrar;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.utils.ProcessControl;
@@ -143,13 +138,8 @@ public class DelegateApplication {
       @Singleton
       Set<Class<? extends KryoRegistrar> > registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar> >builder()
-            .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
-            .addAll(OrchestrationRegistrars.kryoRegistrars)
+            .addAll(ManagerRegistrars.kryoRegistrars)
             .add(CVNextGenCommonsBeansKryoRegistrar.class)
-            .add(DelegateAgentKryoRegister.class)
-            .add(DelegateAgentBeansKryoRegister.class)
-            .add(ManagerKryoRegistrar.class)
-            .add(NGKryoRegistrar.class)
             .build();
       }
     });

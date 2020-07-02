@@ -31,17 +31,12 @@ import io.harness.persistence.Store;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
-import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.OrchestrationRegistrars;
+import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CIBeansRegistrar;
 import io.harness.serializer.kryo.CIExecutionRegistrar;
 import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
-import io.harness.serializer.kryo.DelegateAgentKryoRegister;
-import io.harness.serializer.kryo.ManagerKryoRegistrar;
-import io.harness.serializer.kryo.NGKryoRegistrar;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -100,15 +95,10 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
-            .addAll(OrchestrationRegistrars.kryoRegistrars)
+            .addAll(ManagerRegistrars.kryoRegistrars)
             .add(CIBeansRegistrar.class)
             .add(CIExecutionRegistrar.class)
             .add(CVNextGenCommonsBeansKryoRegistrar.class)
-            .add(DelegateAgentKryoRegister.class)
-            .add(DelegateAgentBeansKryoRegister.class)
-            .add(ManagerKryoRegistrar.class)
-            .add(NGKryoRegistrar.class)
             .build();
       }
     });

@@ -15,16 +15,11 @@ import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
-import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.OrchestrationRegistrars;
+import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CIBeansRegistrar;
 import io.harness.serializer.kryo.CIExecutionRegistrar;
 import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
-import io.harness.serializer.kryo.DelegateAgentKryoRegister;
-import io.harness.serializer.kryo.ManagerKryoRegistrar;
-import io.harness.serializer.kryo.NGKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -57,15 +52,10 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
-            .addAll(OrchestrationRegistrars.kryoRegistrars)
+            .addAll(ManagerRegistrars.kryoRegistrars)
             .add(CIBeansRegistrar.class)
             .add(CIExecutionRegistrar.class)
             .add(CVNextGenCommonsBeansKryoRegistrar.class)
-            .add(DelegateAgentKryoRegister.class)
-            .add(DelegateAgentBeansKryoRegister.class)
-            .add(ManagerKryoRegistrar.class)
-            .add(NGKryoRegistrar.class)
             .add(TestPersistenceKryoRegistrar.class)
             .build();
       }
