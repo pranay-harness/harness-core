@@ -479,7 +479,9 @@ public class DelegateServiceImpl implements DelegateService {
   private UpdateOperations<Delegate> getDelegateUpdateOperations(Delegate delegate) {
     UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
     setUnset(updateOperations, DelegateKeys.ip, delegate.getIp());
-    setUnset(updateOperations, DelegateKeys.status, delegate.getStatus());
+    if (delegate.getStatus() != null) {
+      updateOperations.set(DelegateKeys.status, delegate.getStatus());
+    }
     setUnset(updateOperations, DelegateKeys.lastHeartBeat, delegate.getLastHeartBeat());
     setUnset(updateOperations, DelegateKeys.version, delegate.getVersion());
     setUnset(updateOperations, DelegateKeys.description, delegate.getDescription());
@@ -1310,6 +1312,8 @@ public class DelegateServiceImpl implements DelegateService {
 
     if (delegateProfile.isApprovalRequired()) {
       delegate.setStatus(Status.WAITING_FOR_APPROVAL);
+    } else {
+      delegate.setStatus(Status.ENABLED);
     }
 
     int maxUsageAllowed = delegatesFeature.getMaxUsageAllowedForAccount(accountId);
