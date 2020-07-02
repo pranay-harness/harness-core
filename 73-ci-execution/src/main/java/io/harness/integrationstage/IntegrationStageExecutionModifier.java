@@ -1,7 +1,5 @@
 package io.harness.integrationstage;
 
-import static io.harness.common.CIExecutionConstants.CI_REGISTRY_URL;
-import static io.harness.common.CIExecutionConstants.DEFAULT_REGISTRY_USERNAME;
 import static java.util.Arrays.asList;
 
 import io.harness.beans.environment.BuildJobEnvInfo;
@@ -151,11 +149,6 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
       }
     }
 
-    return ImageDetails.builder()
-        .name(name)
-        .tag(tag)
-        .registryUrl(CI_REGISTRY_URL)
-        .username(DEFAULT_REGISTRY_USERNAME)
-        .build();
+    return ImageDetails.builder().name(name).tag(tag).build();
   }
 }

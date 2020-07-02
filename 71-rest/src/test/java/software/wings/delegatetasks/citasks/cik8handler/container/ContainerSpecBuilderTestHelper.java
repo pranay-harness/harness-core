@@ -18,6 +18,7 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.SecretKeyParams;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
@@ -68,7 +69,7 @@ public class ContainerSpecBuilderTestHelper {
         ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     return CIK8ContainerParams.builder()
         .name(containerName)
-        .imageDetails(imageDetailsWithoutCred)
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithoutCred).build())
         .commands(commands)
         .args(args)
         .build();
@@ -88,7 +89,7 @@ public class ContainerSpecBuilderTestHelper {
 
     return CIK8ContainerParams.builder()
         .name(containerName)
-        .imageDetails(imageWithoutCred)
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageWithoutCred).build())
         .commands(commands)
         .args(args)
         .envVars(envVars)
@@ -130,7 +131,7 @@ public class ContainerSpecBuilderTestHelper {
     secretEnvVars.put(secretVar, SecretKeyParams.builder().key(secretKey).secretName(secretName).build());
     return CIK8ContainerParams.builder()
         .name(containerName)
-        .imageDetails(imageWithoutCred)
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageWithoutCred).build())
         .commands(commands)
         .args(args)
         .envVars(envVars)
@@ -181,7 +182,7 @@ public class ContainerSpecBuilderTestHelper {
 
     return CIK8ContainerParams.builder()
         .name(containerName)
-        .imageDetails(imageWithoutCred)
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageWithoutCred).build())
         .commands(commands)
         .args(args)
         .envVars(envVars)
@@ -227,7 +228,7 @@ public class ContainerSpecBuilderTestHelper {
 
     return CIK8ContainerParams.builder()
         .name(containerName)
-        .imageDetails(imageDetailsWithCred)
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithCred).build())
         .commands(commands)
         .args(args)
         .envVars(envVars)
@@ -283,7 +284,7 @@ public class ContainerSpecBuilderTestHelper {
 
     return CIK8ContainerParams.builder()
         .name(containerName)
-        .imageDetails(imageDetailsWithCred)
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithCred).build())
         .commands(commands)
         .args(args)
         .envVars(envVars)

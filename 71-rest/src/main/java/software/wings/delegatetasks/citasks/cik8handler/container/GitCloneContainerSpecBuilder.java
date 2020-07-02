@@ -39,6 +39,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.ci.pod.ContainerParams;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIGitConstants;
@@ -99,7 +100,10 @@ public class GitCloneContainerSpecBuilder extends BaseContainerSpecBuilder {
     GitCloneContainerParams updateContainerParam =
         GitCloneContainerParams.builder()
             .name(GIT_CLONE_CONTAINER_NAME)
-            .imageDetails(ImageDetails.builder().name(GIT_CLONE_IMAGE_NAME).tag(GIT_CLONE_IMAGE_TAG).build())
+            .imageDetailsWithConnector(
+                ImageDetailsWithConnector.builder()
+                    .imageDetails(ImageDetails.builder().name(GIT_CLONE_IMAGE_NAME).tag(GIT_CLONE_IMAGE_TAG).build())
+                    .build())
             .volumeToMountPath(volumeToMountPath)
             .commands(CONTAINER_BASH_EXEC_CMD)
             .args(containerArgs)

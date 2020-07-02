@@ -32,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.util.Collections;
@@ -112,7 +113,12 @@ public class K8BuildSetupUtils {
                        .containerType(CIContainerType.STEP_EXECUTOR)
                        .commands(commands)
                        .args(args)
-                       .imageDetails(containerDefinitionInfo.getContainerImageDetails().getImageDetails())
+                       .imageDetailsWithConnector(
+                           ImageDetailsWithConnector.builder()
+                               .imageDetails(containerDefinitionInfo.getContainerImageDetails().getImageDetails())
+                               .connectorName(
+                                   containerDefinitionInfo.getContainerImageDetails().getConnectorIdentifier())
+                               .build())
                        .volumeToMountPath(map)
                        .build())
             .collect(toList());

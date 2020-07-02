@@ -2,6 +2,7 @@ package software.wings.delegatetasks.citasks.cik8handler;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.KubernetesConvention.getKubernetesGitSecretName;
@@ -18,9 +19,12 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.container.ImageDetails;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
@@ -54,15 +58,37 @@ public class SecretSpecBuilder {
 
   @Inject private EncryptionService encryptionService;
 
-  public Secret getRegistrySecretSpec(ImageDetails imageDetails, String namespace) {
-    if (!(isNotBlank(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsername())
-            && isNotBlank(imageDetails.getPassword()))) {
-      return null;
+  public Secret getRegistrySecretSpec(ImageDetailsWithConnector imageDetailsWithConnector, String namespace) {
+    EncryptableSetting encryptableSetting = imageDetailsWithConnector.getEncryptableSetting();
+    String registryUrl = null;
+    String username = null;
+    String password = null;
+    encryptionService.decrypt(
+        imageDetailsWithConnector.getEncryptableSetting(), imageDetailsWithConnector.getEncryptedDataDetails());
+    if (encryptableSetting != null) {
+      SettingValue.SettingVariableTypes settingType = encryptableSetting.getSettingType();
+      switch (settingType) {
+        case DOCKER:
+          DockerConfig dockerConfig = (DockerConfig) encryptableSetting;
+          registryUrl = dockerConfig.getDockerRegistryUrl();
+          username = dockerConfig.getUsername();
+          password = String.valueOf(dockerConfig.getPassword());
+          break;
+        default:
+          unhandled(settingType);
+      }
     }
 
-    String registrySecretName = getKubernetesRegistrySecretName(imageDetails);
-    String credentialData = format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
-        imageDetails.getUsername(), imageDetails.getPassword());
+    if (!(isNotBlank(registryUrl) && isNotBlank(username) && isNotBlank(password))) {
+      return null;
+    }
+    imageDetailsWithConnector.getImageDetails().setUsername(username);
+    imageDetailsWithConnector.getImageDetails().setPassword(password);
+    imageDetailsWithConnector.getImageDetails().setRegistryUrl(registryUrl);
+
+    String registrySecretName =
+        getKubernetesRegistrySecretName(ImageDetails.builder().registryUrl(registryUrl).username(username).build());
+    String credentialData = format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, registryUrl, username, password);
     Map<String, String> data = ImmutableMap.of(DOCKER_CONFIG_KEY, encodeBase64(credentialData));
     return new SecretBuilder()
         .withNewMetadata()

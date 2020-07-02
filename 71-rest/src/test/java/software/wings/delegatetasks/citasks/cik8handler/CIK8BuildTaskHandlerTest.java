@@ -29,8 +29,8 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ci.CIK8BuildTaskParams;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PodParams;
-import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilder;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.KubernetesHelperService;
@@ -77,14 +77,14 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesConfig();
     List<EncryptedDataDetail> encryptionDetails = cik8BuildTaskParams.getEncryptionDetails();
     GitConfig gitConfig = cik8BuildTaskParams.getGitFetchFilesConfig().getGitConfig();
-    ImageDetails imageDetails =
-        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetails();
+    ImageDetailsWithConnector imageDetailsWithConnector =
+        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
 
     when(kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptionDetails)).thenReturn(kubernetesClient);
     doNothing().when(kubeCtlHandler).createGitSecret(kubernetesClient, namespace, gitConfig, encryptionDetails);
     doThrow(KubernetesClientException.class)
         .when(kubeCtlHandler)
-        .createRegistrySecret(kubernetesClient, namespace, imageDetails);
+        .createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
 
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
     assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
@@ -101,12 +101,12 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesConfig();
     List<EncryptedDataDetail> encryptionDetails = cik8BuildTaskParams.getEncryptionDetails();
     GitConfig gitConfig = cik8BuildTaskParams.getGitFetchFilesConfig().getGitConfig();
-    ImageDetails imageDetails =
-        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetails();
+    ImageDetailsWithConnector imageDetailsWithConnector =
+        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
 
     when(kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptionDetails)).thenReturn(kubernetesClient);
     doNothing().when(kubeCtlHandler).createGitSecret(kubernetesClient, namespace, gitConfig, encryptionDetails);
-    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetails);
+    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
     when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     doThrow(KubernetesClientException.class)
         .when(kubeCtlHandler)
@@ -128,12 +128,12 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesConfig();
     List<EncryptedDataDetail> encryptionDetails = cik8BuildTaskParams.getEncryptionDetails();
     GitConfig gitConfig = cik8BuildTaskParams.getGitFetchFilesConfig().getGitConfig();
-    ImageDetails imageDetails =
-        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetails();
+    ImageDetailsWithConnector imageDetailsWithConnector =
+        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
 
     when(kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptionDetails)).thenReturn(kubernetesClient);
     doNothing().when(kubeCtlHandler).createGitSecret(kubernetesClient, namespace, gitConfig, encryptionDetails);
-    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetails);
+    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
     when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
     when(kubeCtlHandler.waitUntilPodIsReady(
@@ -156,13 +156,13 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesConfig();
     List<EncryptedDataDetail> encryptionDetails = cik8BuildTaskParams.getEncryptionDetails();
     GitConfig gitConfig = cik8BuildTaskParams.getGitFetchFilesConfig().getGitConfig();
-    ImageDetails imageDetails =
-        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetails();
+    ImageDetailsWithConnector imageDetailsWithConnector =
+        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
 
     Secret secret = new SecretBuilder().withNewMetadata().withName(secretName).endMetadata().build();
     when(kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptionDetails)).thenReturn(kubernetesClient);
     doNothing().when(kubeCtlHandler).createGitSecret(kubernetesClient, namespace, gitConfig, encryptionDetails);
-    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetails);
+    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
     when(kubeCtlHandler.createCustomVarSecret(kubernetesClient, namespace, getEncryptedDetails(),
              cik8BuildTaskParams.getCik8PodParams().getName(), CIK8BuildTaskHandlerTestHelper.containerName2))
         .thenReturn(secret);

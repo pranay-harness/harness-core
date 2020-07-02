@@ -13,6 +13,7 @@ import software.wings.beans.ci.CIK8BuildTaskParams;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.container.ImageDetails;
 
 import java.util.ArrayList;
@@ -56,8 +57,15 @@ public class CIK8BuildTaskHandlerTestHelper {
     ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
 
     List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
-    containerParamsList.add(CIK8ContainerParams.builder().imageDetails(imageDetails).build());
-    containerParamsList.add(CIK8ContainerParams.builder().imageDetails(imageDetailsWithoutRegistry).build());
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
+            .build());
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .imageDetailsWithConnector(
+                ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithoutRegistry).build())
+            .build());
 
     CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
                                                            .name(podName)
@@ -83,8 +91,15 @@ public class CIK8BuildTaskHandlerTestHelper {
     ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
 
     List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
-    containerParamsList.add(CIK8ContainerParams.builder().imageDetails(imageDetails).build());
-    containerParamsList.add(CIK8ContainerParams.builder().imageDetails(imageDetailsWithoutRegistry).build());
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
+            .build());
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .imageDetailsWithConnector(
+                ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithoutRegistry).build())
+            .build());
 
     CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
                                                            .name(podName)
@@ -110,17 +125,20 @@ public class CIK8BuildTaskHandlerTestHelper {
     ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
 
     List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
-    containerParamsList.add(CIK8ContainerParams.builder()
-                                .name(containerName1)
-                                .containerType(CIContainerType.ADD_ON)
-                                .imageDetails(imageDetails)
-                                .build());
-    containerParamsList.add(CIK8ContainerParams.builder()
-                                .encryptedSecrets(getEncryptedDetails())
-                                .name(containerName2)
-                                .containerType(CIContainerType.STEP_EXECUTOR)
-                                .imageDetails(imageDetailsWithoutRegistry)
-                                .build());
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .name(containerName1)
+            .containerType(CIContainerType.ADD_ON)
+            .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
+            .build());
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .encryptedSecrets(getEncryptedDetails())
+            .name(containerName2)
+            .containerType(CIContainerType.STEP_EXECUTOR)
+            .imageDetailsWithConnector(
+                ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithoutRegistry).build())
+            .build());
 
     CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
                                                            .name(podName)

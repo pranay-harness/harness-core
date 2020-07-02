@@ -30,10 +30,7 @@ public class CIExecutionConstants {
   public static final String LITE_ENGINE_ARGS =
       "mkdir -p /step-exec/workspace; mkdir -p /step-exec/.harness/bin; mkdir -p /step-exec/.harness/logs; cp /usr/local/bin/ci-lite-engine-linux-amd64 /step-exec/.harness/bin/ci-lite-engine; chmod +x /step-exec/.harness/bin/ci-lite-engine;";
 
-  // Registry info
-  public static final String CI_REGISTRY_URL = "https://index.docker.io/v1/";
-  public static final String DEFAULT_REGISTRY_USERNAME = "harshjain12";
-
+  public static final String DEFAULT_INTERNAL_IMAGE_CONNECTOR = "CI Harness Images";
   // Deprecated
   public static final List<String> SH_COMMAND = Collections.unmodifiableList(Arrays.asList("sh", "-c", "--"));
   public static final String SETUP_TASK_ARGS = "trap : TERM INT; (while true; do sleep 1000; done) & wait";
