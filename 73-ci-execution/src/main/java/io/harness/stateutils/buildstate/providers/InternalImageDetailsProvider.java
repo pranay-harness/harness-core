@@ -23,7 +23,7 @@ public class InternalImageDetailsProvider {
     if (kind == null) {
       return null;
     }
-    ImageDetails imageDetails = null;
+    ImageDetails imageDetails;
     switch (kind) {
       case ADDON_IMAGE:
         imageDetails = ImageDetails.builder().name(ADDON_IMAGE_NAME).tag(ADDON_IMAGE_TAG).build();

@@ -85,6 +85,19 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
             stepCase_ = 4;
             break;
           }
+          case 42: {
+            io.harness.product.ci.engine.proto.RestoreCacheStep.Builder subBuilder = null;
+            if (stepCase_ == 5) {
+              subBuilder = ((io.harness.product.ci.engine.proto.RestoreCacheStep) step_).toBuilder();
+            }
+            step_ = input.readMessage(io.harness.product.ci.engine.proto.RestoreCacheStep.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom((io.harness.product.ci.engine.proto.RestoreCacheStep) step_);
+              step_ = subBuilder.buildPartial();
+            }
+            stepCase_ = 5;
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -119,7 +132,7 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
   private java.lang.Object step_;
   public enum StepCase implements com
   .google.protobuf.Internal.EnumLite, com.google.protobuf.AbstractMessage.InternalOneOfEnum {
-    RUN(3), SAVE_CACHE(4), STEP_NOT_SET(0);
+    RUN(3), SAVE_CACHE(4), RESTORE_CACHE(5), STEP_NOT_SET(0);
     private final int value;
     private StepCase(int value) {
       this.value = value;
@@ -140,6 +153,8 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
           return RUN;
         case 4:
           return SAVE_CACHE;
+        case 5:
+          return RESTORE_CACHE;
         case 0:
           return STEP_NOT_SET;
         default:
@@ -275,6 +290,34 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     return io.harness.product.ci.engine.proto.SaveCacheStep.getDefaultInstance();
   }
 
+  public static final int RESTORE_CACHE_FIELD_NUMBER = 5;
+  /**
+   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+   * @return Whether the restoreCache field is set.
+   */
+  public boolean hasRestoreCache() {
+    return stepCase_ == 5;
+  }
+  /**
+   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+   * @return The restoreCache.
+   */
+  public io.harness.product.ci.engine.proto.RestoreCacheStep getRestoreCache() {
+    if (stepCase_ == 5) {
+      return (io.harness.product.ci.engine.proto.RestoreCacheStep) step_;
+    }
+    return io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
+  }
+  /**
+   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+   */
+  public io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder getRestoreCacheOrBuilder() {
+    if (stepCase_ == 5) {
+      return (io.harness.product.ci.engine.proto.RestoreCacheStep) step_;
+    }
+    return io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -302,6 +345,9 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     if (stepCase_ == 4) {
       output.writeMessage(4, (io.harness.product.ci.engine.proto.SaveCacheStep) step_);
     }
+    if (stepCase_ == 5) {
+      output.writeMessage(5, (io.harness.product.ci.engine.proto.RestoreCacheStep) step_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -325,6 +371,10 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     if (stepCase_ == 4) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(
           4, (io.harness.product.ci.engine.proto.SaveCacheStep) step_);
+    }
+    if (stepCase_ == 5) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(
+          5, (io.harness.product.ci.engine.proto.RestoreCacheStep) step_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -356,6 +406,10 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
         if (!getSaveCache().equals(other.getSaveCache()))
           return false;
         break;
+      case 5:
+        if (!getRestoreCache().equals(other.getRestoreCache()))
+          return false;
+        break;
       case 0:
       default:
     }
@@ -383,6 +437,10 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
       case 4:
         hash = (37 * hash) + SAVE_CACHE_FIELD_NUMBER;
         hash = (53 * hash) + getSaveCache().hashCode();
+        break;
+      case 5:
+        hash = (37 * hash) + RESTORE_CACHE_FIELD_NUMBER;
+        hash = (53 * hash) + getRestoreCache().hashCode();
         break;
       case 0:
       default:
@@ -551,6 +609,13 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
           result.step_ = saveCacheBuilder_.build();
         }
       }
+      if (stepCase_ == 5) {
+        if (restoreCacheBuilder_ == null) {
+          result.step_ = step_;
+        } else {
+          result.step_ = restoreCacheBuilder_.build();
+        }
+      }
       result.stepCase_ = stepCase_;
       onBuilt();
       return result;
@@ -609,6 +674,10 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
         }
         case SAVE_CACHE: {
           mergeSaveCache(other.getSaveCache());
+          break;
+        }
+        case RESTORE_CACHE: {
+          mergeRestoreCache(other.getRestoreCache());
           break;
         }
         case STEP_NOT_SET: {
@@ -1069,6 +1138,147 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
       onChanged();
       ;
       return saveCacheBuilder_;
+    }
+
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.RestoreCacheStep,
+        io.harness.product.ci.engine.proto.RestoreCacheStep.Builder,
+        io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder> restoreCacheBuilder_;
+    /**
+     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     * @return Whether the restoreCache field is set.
+     */
+    public boolean hasRestoreCache() {
+      return stepCase_ == 5;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     * @return The restoreCache.
+     */
+    public io.harness.product.ci.engine.proto.RestoreCacheStep getRestoreCache() {
+      if (restoreCacheBuilder_ == null) {
+        if (stepCase_ == 5) {
+          return (io.harness.product.ci.engine.proto.RestoreCacheStep) step_;
+        }
+        return io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
+      } else {
+        if (stepCase_ == 5) {
+          return restoreCacheBuilder_.getMessage();
+        }
+        return io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     */
+    public Builder setRestoreCache(io.harness.product.ci.engine.proto.RestoreCacheStep value) {
+      if (restoreCacheBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        step_ = value;
+        onChanged();
+      } else {
+        restoreCacheBuilder_.setMessage(value);
+      }
+      stepCase_ = 5;
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     */
+    public Builder setRestoreCache(io.harness.product.ci.engine.proto.RestoreCacheStep.Builder builderForValue) {
+      if (restoreCacheBuilder_ == null) {
+        step_ = builderForValue.build();
+        onChanged();
+      } else {
+        restoreCacheBuilder_.setMessage(builderForValue.build());
+      }
+      stepCase_ = 5;
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     */
+    public Builder mergeRestoreCache(io.harness.product.ci.engine.proto.RestoreCacheStep value) {
+      if (restoreCacheBuilder_ == null) {
+        if (stepCase_ == 5 && step_ != io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance()) {
+          step_ = io.harness.product.ci.engine.proto.RestoreCacheStep
+                      .newBuilder((io.harness.product.ci.engine.proto.RestoreCacheStep) step_)
+                      .mergeFrom(value)
+                      .buildPartial();
+        } else {
+          step_ = value;
+        }
+        onChanged();
+      } else {
+        if (stepCase_ == 5) {
+          restoreCacheBuilder_.mergeFrom(value);
+        }
+        restoreCacheBuilder_.setMessage(value);
+      }
+      stepCase_ = 5;
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     */
+    public Builder clearRestoreCache() {
+      if (restoreCacheBuilder_ == null) {
+        if (stepCase_ == 5) {
+          stepCase_ = 0;
+          step_ = null;
+          onChanged();
+        }
+      } else {
+        if (stepCase_ == 5) {
+          stepCase_ = 0;
+          step_ = null;
+        }
+        restoreCacheBuilder_.clear();
+      }
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     */
+    public io.harness.product.ci.engine.proto.RestoreCacheStep.Builder getRestoreCacheBuilder() {
+      return getRestoreCacheFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     */
+    public io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder getRestoreCacheOrBuilder() {
+      if ((stepCase_ == 5) && (restoreCacheBuilder_ != null)) {
+        return restoreCacheBuilder_.getMessageOrBuilder();
+      } else {
+        if (stepCase_ == 5) {
+          return (io.harness.product.ci.engine.proto.RestoreCacheStep) step_;
+        }
+        return io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.RestoreCacheStep,
+        io.harness.product.ci.engine.proto.RestoreCacheStep.Builder,
+        io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder>
+    getRestoreCacheFieldBuilder() {
+      if (restoreCacheBuilder_ == null) {
+        if (!(stepCase_ == 5)) {
+          step_ = io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
+        }
+        restoreCacheBuilder_ =
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.RestoreCacheStep,
+                io.harness.product.ci.engine.proto.RestoreCacheStep.Builder,
+                io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder>(
+                (io.harness.product.ci.engine.proto.RestoreCacheStep) step_, getParentForChildren(), isClean());
+        step_ = null;
+      }
+      stepCase_ = 5;
+      onChanged();
+      ;
+      return restoreCacheBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

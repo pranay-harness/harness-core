@@ -59,5 +59,20 @@ public interface StepOrBuilder extends
    */
   io.harness.product.ci.engine.proto.SaveCacheStepOrBuilder getSaveCacheOrBuilder();
 
+  /**
+   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+   * @return Whether the restoreCache field is set.
+   */
+  boolean hasRestoreCache();
+  /**
+   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+   * @return The restoreCache.
+   */
+  io.harness.product.ci.engine.proto.RestoreCacheStep getRestoreCache();
+  /**
+   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+   */
+  io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder getRestoreCacheOrBuilder();
+
   public io.harness.product.ci.engine.proto.Step.StepCase getStepCase();
 }

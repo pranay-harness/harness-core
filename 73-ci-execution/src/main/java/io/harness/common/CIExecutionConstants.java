@@ -10,9 +10,14 @@ import java.util.List;
 public class CIExecutionConstants {
   // entry point constants
   public static final String STAGE_ARG_PREFIX = "--stage";
+  public static final String INPUT_ARG_PREFIX = "--input";
   public static final String LOGPATH_ARG_PREFIX = "--logpath";
   public static final String LITE_ENGINE_COMMAND = "/step-exec/.harness/bin/ci-lite-engine";
-  public static final String LOG_PATH = "/.harness/logs/";
+  public static final String LOG_PATH = "/step-exec/.harness/logs/";
+  public static final String TMP_PATH = "/step-exec/.harness/tmp/";
+
+  public static final String LITE_ENGINE_STEP_COMMAND_FORMAT =
+      "/step-exec/.harness/bin/ci-lite-engine step --input %s --logpath %s --tmppath %s";
 
   // Image details
   public static final String ADDON_IMAGE_NAME = "harness/ci-addon";
@@ -25,10 +30,10 @@ public class CIExecutionConstants {
   public static final String ADDON_PATH = "/addon";
 
   public static final String LITE_ENGINE_IMAGE_NAME = "harness/ci-lite-engine";
-  public static final String LITE_ENGINE_IMAGE_TAG = "v0.2-alpha";
+  public static final String LITE_ENGINE_IMAGE_TAG = "v0.3.2alpha";
   public static final String LITE_ENGINE_CONTAINER_NAME = "setup-lite-engine";
   public static final String LITE_ENGINE_ARGS =
-      "mkdir -p /step-exec/workspace; mkdir -p /step-exec/.harness/bin; mkdir -p /step-exec/.harness/logs; cp /usr/local/bin/ci-lite-engine-linux-amd64 /step-exec/.harness/bin/ci-lite-engine; chmod +x /step-exec/.harness/bin/ci-lite-engine;";
+      "mkdir -p /step-exec/workspace; mkdir -p /step-exec/.harness/bin; mkdir -p /step-exec/.harness/logs; mkdir -p /step-exec/.harness/tmp; cp /usr/local/bin/ci-lite-engine-linux-amd64 /step-exec/.harness/bin/ci-lite-engine; chmod +x /step-exec/.harness/bin/ci-lite-engine;";
 
   public static final String DEFAULT_INTERNAL_IMAGE_CONNECTOR = "CI Harness Images";
   // Deprecated

@@ -19,7 +19,8 @@ import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
-import io.harness.integrationstage.CILiteEngineStepExecutionModifier;
+import io.harness.integrationstage.IntegrationStageExecutionModifier;
+import io.harness.integrationstage.StageExecutionModifier;
 import io.harness.plan.PlanNode;
 import io.harness.states.IntegrationStageStep;
 import io.harness.yaml.core.Execution;
@@ -34,12 +35,11 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   @Override
   public CreateExecutionPlanResponse createPlan(IntegrationStage integrationStage, CreateExecutionPlanContext context) {
     final String podName = generatePodName(integrationStage);
-    CILiteEngineStepExecutionModifier ciLiteEngineStepExecutionModifier =
-        CILiteEngineStepExecutionModifier.builder().podName(podName).build();
+    StageExecutionModifier stageExecutionModifier =
+        IntegrationStageExecutionModifier.builder().podName(podName).build();
 
     Execution execution = integrationStage.getCi().getExecution();
-    Execution modifiedExecutionPlan =
-        ciLiteEngineStepExecutionModifier.modifyExecutionPlan(execution, integrationStage);
+    Execution modifiedExecutionPlan = stageExecutionModifier.modifyExecutionPlan(execution, integrationStage);
 
     final CreateExecutionPlanResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
 
