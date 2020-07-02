@@ -15,6 +15,8 @@ import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;
@@ -28,6 +30,7 @@ public class ResourceConstraintBackupHandler implements Handler<ResourceConstrai
 
   @Inject private ResourceConstraintService resourceConstraintService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
+  @Inject private MorphiaPersistenceProvider<ResourceConstraintInstance> persistenceProvider;
 
   public void registerIterators() {
     PumpExecutorOptions executorOptions = PumpExecutorOptions.builder()
@@ -37,7 +40,8 @@ public class ResourceConstraintBackupHandler implements Handler<ResourceConstrai
                                               .build();
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(executorOptions,
         ResourceConstraintBackupHandler.class,
-        MongoPersistenceIterator.<ResourceConstraintInstance>builder()
+        MongoPersistenceIterator
+            .<ResourceConstraintInstance, MorphiaFilterExpander<ResourceConstraintInstance>>builder()
             .clazz(ResourceConstraintInstance.class)
             .fieldName(ResourceConstraintInstanceKeys.nextIteration)
             .filterExpander(q -> q.field(ResourceConstraintInstanceKeys.state).in(NOT_FINISHED_STATES))
@@ -46,6 +50,7 @@ public class ResourceConstraintBackupHandler implements Handler<ResourceConstrai
             .acceptableExecutionTime(ofSeconds(30))
             .handler(this)
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

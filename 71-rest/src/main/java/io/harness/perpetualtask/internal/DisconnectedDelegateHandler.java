@@ -11,6 +11,8 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,7 @@ public class DisconnectedDelegateHandler implements Handler<PerpetualTaskRecord>
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private DelegateService delegateService;
+  @Inject private MorphiaPersistenceProvider<PerpetualTaskRecord> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -33,13 +36,14 @@ public class DisconnectedDelegateHandler implements Handler<PerpetualTaskRecord>
             .interval(ofMinutes(ITERATOR_INTERVAL_MINUTE))
             .build(),
         Delegate.class,
-        MongoPersistenceIterator.<PerpetualTaskRecord>builder()
+        MongoPersistenceIterator.<PerpetualTaskRecord, MorphiaFilterExpander<PerpetualTaskRecord>>builder()
             .clazz(PerpetualTaskRecord.class)
             .fieldName(PerpetualTaskRecordKeys.resetterIteration)
             .targetInterval(ofMinutes(ITERATOR_INTERVAL_MINUTE))
             .acceptableNoAlertDelay(ofSeconds(45))
             .handler(this)
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

@@ -9,6 +9,8 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.alerts.AlertStatus;
@@ -27,12 +29,13 @@ public class AlertReconciliationHandler implements Handler<Alert> {
   @Inject private AlertService alertService;
 
   @Inject private HPersistence persistence;
+  @Inject private MorphiaPersistenceProvider<Alert> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder().name("AlertReconciliation").poolSize(3).interval(Duration.ofMinutes(1)).build(),
         AlertReconciliationHandler.class,
-        MongoPersistenceIterator.<Alert>builder()
+        MongoPersistenceIterator.<Alert, MorphiaFilterExpander<Alert>>builder()
             .clazz(Alert.class)
             .fieldName(AlertKeys.alertReconciliation_nextIteration)
             .targetInterval(ofMinutes(10))
@@ -43,6 +46,7 @@ public class AlertReconciliationHandler implements Handler<Alert> {
                        .field(AlertKeys.status)
                        .notEqual(AlertStatus.Closed))
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

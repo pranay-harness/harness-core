@@ -26,6 +26,8 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import software.wings.beans.User;
@@ -64,6 +66,7 @@ public class BudgetHandler implements Handler<Budget> {
   @Inject private UserServiceImpl userService;
   @Inject private SlackNotificationService slackNotificationService;
   @Inject private CESlackWebhookService ceSlackWebhookService;
+  @Inject private MorphiaPersistenceProvider<Budget> persistenceProvider;
 
   private static final String BUDGET_MAIL_ERROR = "Budget alert email couldn't be sent";
   private static final String BUDGET_DETAILS_URL_FORMAT = "/account/%s/continuous-efficiency/budget/%s";
@@ -78,7 +81,7 @@ public class BudgetHandler implements Handler<Budget> {
             .interval(ofMinutes(THRESHOLD_CHECK_INTERVAL_MINUTE))
             .build(),
         BudgetHandler.class,
-        MongoPersistenceIterator.<Budget>builder()
+        MongoPersistenceIterator.<Budget, MorphiaFilterExpander<Budget>>builder()
             .clazz(Budget.class)
             .fieldName(BudgetKeys.alertIteration)
             .targetInterval(ofMinutes(THRESHOLD_CHECK_INTERVAL_MINUTE))
@@ -86,6 +89,7 @@ public class BudgetHandler implements Handler<Budget> {
             .handler(this)
             .filterExpander(q -> q.field(BudgetKeys.alertThresholds).exists())
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

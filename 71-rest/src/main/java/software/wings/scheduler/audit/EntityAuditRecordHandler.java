@@ -13,6 +13,8 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import software.wings.audit.AuditRecord;
 import software.wings.audit.AuditRecord.AuditRecordKeys;
 import software.wings.audit.EntityAuditRecord;
@@ -23,18 +25,20 @@ import java.util.List;
 public class EntityAuditRecordHandler implements Handler<AuditRecord> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private AuditService auditService;
+  @Inject private MorphiaPersistenceProvider<AuditRecord> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder().name("EntityAuditRecordProcessor").poolSize(2).interval(ofSeconds(30)).build(),
         EntityAuditRecordHandler.class,
-        MongoPersistenceIterator.<AuditRecord>builder()
+        MongoPersistenceIterator.<AuditRecord, MorphiaFilterExpander<AuditRecord>>builder()
             .clazz(AuditRecord.class)
             .fieldName(AuditRecordKeys.nextIteration)
             .targetInterval(ofMinutes(30))
             .acceptableNoAlertDelay(ofSeconds(45))
             .handler(this)
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

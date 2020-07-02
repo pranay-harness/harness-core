@@ -20,6 +20,8 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +52,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
   @Inject private ExecutorService executorService;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private MorphiaPersistenceProvider<WorkflowExecution> persistenceProvider;
 
   private static final Duration INACTIVITY_TIMEOUT = Duration.ofSeconds(30);
   private static final Duration EXPIRE_THRESHOLD = Duration.ofMinutes(10);
@@ -61,7 +64,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
                                       .name("WorkflowExecutionMonitor")
                                       .build();
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(options, WorkflowExecution.class,
-        MongoPersistenceIterator.<WorkflowExecution>builder()
+        MongoPersistenceIterator.<WorkflowExecution, MorphiaFilterExpander<WorkflowExecution>>builder()
             .clazz(WorkflowExecution.class)
             .fieldName(WorkflowExecutionKeys.nextIteration)
             .filterExpander(q -> q.field(WorkflowExecutionKeys.status).in(flowingStatuses()))
@@ -69,6 +72,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
             .acceptableNoAlertDelay(Duration.ofSeconds(30))
             .handler(this)
             .schedulingType(SchedulingType.REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

@@ -21,6 +21,8 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
@@ -42,6 +44,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
   @Inject private DelegateService delegateService;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
+  @Inject private MorphiaPersistenceProvider<PerpetualTaskRecord> persistenceProvider;
 
   PersistenceIterator<PerpetualTaskRecord> iterator;
 
@@ -53,7 +56,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
             .interval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .build(),
         PerpetualTaskRecordHandler.class,
-        MongoPersistenceIterator.<PerpetualTaskRecord>builder()
+        MongoPersistenceIterator.<PerpetualTaskRecord, MorphiaFilterExpander<PerpetualTaskRecord>>builder()
             .clazz(PerpetualTaskRecord.class)
             .fieldName(PerpetualTaskRecordKeys.assignerIteration)
             .targetInterval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
@@ -62,6 +65,7 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
             .handler(this)
             .filterExpander(query -> query.field(PerpetualTaskRecordKeys.delegateId).equal(""))
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

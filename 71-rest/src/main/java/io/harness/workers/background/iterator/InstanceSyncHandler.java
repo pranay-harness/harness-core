@@ -13,6 +13,8 @@ import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.InfrastructureMapping;
@@ -28,12 +30,13 @@ import software.wings.service.impl.instance.InstanceHelper;
 public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private InstanceHelper instanceHelper;
+  @Inject private MorphiaPersistenceProvider<InfrastructureMapping> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder().name("InstanceSync").poolSize(10).interval(ofSeconds(30)).build(),
         InstanceSyncHandler.class,
-        MongoPersistenceIterator.<InfrastructureMapping>builder()
+        MongoPersistenceIterator.<InfrastructureMapping, MorphiaFilterExpander<InfrastructureMapping>>builder()
             .clazz(InfrastructureMapping.class)
             .fieldName(InfrastructureMappingKeys.nextIteration)
             .targetInterval(ofMinutes(10))
@@ -41,6 +44,7 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
             .acceptableExecutionTime(ofSeconds(30))
             .handler(this)
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

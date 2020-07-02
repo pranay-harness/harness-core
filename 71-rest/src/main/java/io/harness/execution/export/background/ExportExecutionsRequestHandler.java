@@ -19,6 +19,8 @@ import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
@@ -35,6 +37,7 @@ public class ExportExecutionsRequestHandler implements Handler<ExportExecutionsR
   @Inject private ExportExecutionsService exportExecutionsService;
   @Inject private ExportExecutionsNotificationHelper exportExecutionsNotificationHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private MorphiaPersistenceProvider<ExportExecutionsRequest> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -44,7 +47,7 @@ public class ExportExecutionsRequestHandler implements Handler<ExportExecutionsR
             .interval(ofMinutes(ASSIGNMENT_INTERVAL_MINUTES))
             .build(),
         ExportExecutionsRequestHandler.class,
-        MongoPersistenceIterator.<ExportExecutionsRequest>builder()
+        MongoPersistenceIterator.<ExportExecutionsRequest, MorphiaFilterExpander<ExportExecutionsRequest>>builder()
             .clazz(ExportExecutionsRequest.class)
             .fieldName(ExportExecutionsRequestKeys.nextIteration)
             .targetInterval(ofMinutes(REASSIGNMENT_INTERVAL_MINUTES))
@@ -52,6 +55,7 @@ public class ExportExecutionsRequestHandler implements Handler<ExportExecutionsR
             .handler(this)
             .filterExpander(query -> query.field(ExportExecutionsRequestKeys.status).equal(Status.QUEUED))
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

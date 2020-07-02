@@ -16,6 +16,8 @@ import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.WorkflowExecution;
@@ -36,18 +38,20 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
   @Inject private ShellScriptApprovalService shellScriptApprovalService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ApprovalPolingService approvalPolingService;
+  @Inject private MorphiaPersistenceProvider<ApprovalPollingJobEntity> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder().name("ApprovalPolling").poolSize(5).interval(ofSeconds(10)).build(),
         ApprovalPollingHandler.class,
-        MongoPersistenceIterator.<ApprovalPollingJobEntity>builder()
+        MongoPersistenceIterator.<ApprovalPollingJobEntity, MorphiaFilterExpander<ApprovalPollingJobEntity>>builder()
             .clazz(ApprovalPollingJobEntity.class)
             .fieldName(ApprovalPollingJobEntityKeys.nextIteration)
             .targetInterval(ofMinutes(1))
             .acceptableNoAlertDelay(ofMinutes(1))
             .handler(this)
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

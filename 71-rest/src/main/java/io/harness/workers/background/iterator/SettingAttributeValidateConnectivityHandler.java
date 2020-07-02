@@ -15,6 +15,8 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
@@ -30,6 +32,7 @@ public class SettingAttributeValidateConnectivityHandler implements Handler<Sett
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private SettingsService settingsService;
   @Inject private SettingValidationService settingValidationService;
+  @Inject private MorphiaPersistenceProvider<SettingAttribute> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -39,7 +42,7 @@ public class SettingAttributeValidateConnectivityHandler implements Handler<Sett
             .interval(Duration.ofMinutes(1))
             .build(),
         SettingAttributeValidateConnectivityHandler.class,
-        MongoPersistenceIterator.<SettingAttribute>builder()
+        MongoPersistenceIterator.<SettingAttribute, MorphiaFilterExpander<SettingAttribute>>builder()
             .clazz(SettingAttribute.class)
             .fieldName(SettingAttributeKeys.nextIteration)
             .targetInterval(ofMinutes(15))
@@ -58,6 +61,7 @@ public class SettingAttributeValidateConnectivityHandler implements Handler<Sett
                            SettingVariableTypes.GCS_HELM_REPO.name(), SettingVariableTypes.SMB.name(),
                            SettingVariableTypes.SFTP.name(), SettingVariableTypes.CUSTOM.name())))
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

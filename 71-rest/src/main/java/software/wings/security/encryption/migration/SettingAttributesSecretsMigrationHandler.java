@@ -25,6 +25,8 @@ import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -51,6 +53,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private MorphiaPersistenceProvider<SettingAttribute> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -60,7 +63,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
             .interval(ofSeconds(30))
             .build(),
         SettingAttribute.class,
-        MongoPersistenceIterator.<SettingAttribute>builder()
+        MongoPersistenceIterator.<SettingAttribute, MorphiaFilterExpander<SettingAttribute>>builder()
             .clazz(SettingAttribute.class)
             .fieldName(SettingAttributeKeys.nextSecretMigrationIteration)
             .targetInterval(ofMinutes(30))
@@ -68,6 +71,7 @@ public class SettingAttributesSecretsMigrationHandler implements Handler<Setting
             .handler(this)
             .filterExpander(this ::createQuery)
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

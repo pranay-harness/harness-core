@@ -20,6 +20,8 @@ import io.harness.iterator.TestIrregularIterableEntity.IrregularIterableEntityKe
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.Owner;
@@ -38,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class PersistenceIrregularIteratorTest extends PersistenceTest {
   @Inject private HPersistence persistence;
+  @Inject private MorphiaPersistenceProvider<TestIrregularIterableEntity> persistenceProvider;
   @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
@@ -51,7 +54,8 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
 
   public PersistenceIterator<TestIrregularIterableEntity> iterator(ProcessMode mode) {
     PersistenceIterator<TestIrregularIterableEntity> iterator =
-        MongoPersistenceIterator.<TestIrregularIterableEntity>builder()
+        MongoPersistenceIterator
+            .<TestIrregularIterableEntity, MorphiaFilterExpander<TestIrregularIterableEntity>>builder()
             .mode(mode)
             .clazz(TestIrregularIterableEntity.class)
             .fieldName(IrregularIterableEntityKeys.nextIterations)
@@ -62,9 +66,9 @@ public class PersistenceIrregularIteratorTest extends PersistenceTest {
             .semaphore(new Semaphore(10))
             .handler(new TestHandler())
             .schedulingType(IRREGULAR_SKIP_MISSED)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true)
             .build();
-    on(iterator).set("persistence", persistence);
     on(iterator).set("queueController", queueController);
     return iterator;
   }

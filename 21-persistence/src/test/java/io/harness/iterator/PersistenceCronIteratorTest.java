@@ -19,6 +19,8 @@ import io.harness.iterator.TestCronIterableEntity.CronIterableEntityKeys;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.Owner;
@@ -39,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 public class PersistenceCronIteratorTest extends PersistenceTest {
   @Inject private HPersistence persistence;
   @Inject private QueueController queueController;
+  @Inject private MorphiaPersistenceProvider<TestCronIterableEntity> persistenceProvider;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
   class TestHandler implements Handler<TestCronIterableEntity> {
@@ -119,20 +122,22 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(StressTests.class)
   public void testNextReturnsJustAdded() {
-    PersistenceIterator<TestCronIterableEntity> iterator = MongoPersistenceIterator.<TestCronIterableEntity>builder()
-                                                               .mode(LOOP)
-                                                               .clazz(TestCronIterableEntity.class)
-                                                               .fieldName(CronIterableEntityKeys.nextIterations)
-                                                               .targetInterval(ofSeconds(10))
-                                                               .acceptableNoAlertDelay(ofSeconds(1))
-                                                               .maximumDelayForCheck(ofSeconds(1))
-                                                               .executorService(executorService)
-                                                               .semaphore(new Semaphore(10))
-                                                               .handler(new TestHandler())
-                                                               .schedulingType(IRREGULAR_SKIP_MISSED)
-                                                               .redistribute(true)
-                                                               .build();
-    on(iterator).set("persistence", persistence);
+    PersistenceIterator<TestCronIterableEntity> iterator =
+        MongoPersistenceIterator.<TestCronIterableEntity, MorphiaFilterExpander<TestCronIterableEntity>>builder()
+            .mode(LOOP)
+            .clazz(TestCronIterableEntity.class)
+            .fieldName(CronIterableEntityKeys.nextIterations)
+            .targetInterval(ofSeconds(10))
+            .acceptableNoAlertDelay(ofSeconds(1))
+            .maximumDelayForCheck(ofSeconds(1))
+            .executorService(executorService)
+            .semaphore(new Semaphore(10))
+            .handler(new TestHandler())
+            .schedulingType(IRREGULAR_SKIP_MISSED)
+            .redistribute(true)
+            .persistenceProvider(persistenceProvider)
+
+            .build();
     on(iterator).set("queueController", queueController);
 
     assertThatCode(() -> {
