@@ -5,7 +5,6 @@ import static io.harness.validation.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.Service;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.EcsServiceSpecification.Yaml;
@@ -36,8 +35,8 @@ public class EcsServiceSpecificationYamlHandler
   }
 
   @Override
-  public EcsServiceSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public EcsServiceSpecification upsertFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     EcsServiceSpecification previous =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
 
@@ -52,7 +51,7 @@ public class EcsServiceSpecificationYamlHandler
     }
   }
 
-  private EcsServiceSpecification toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private EcsServiceSpecification toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
 
     String filePath = changeContext.getChange().getFilePath();

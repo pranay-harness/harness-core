@@ -46,7 +46,7 @@ public class VariableYamlHandler extends BaseYamlHandler<VariableYaml, Variable>
   @Inject AppService appService;
   @Inject ArtifactVariableYamlHelper artifactVariableYamlHelper;
 
-  private Variable toBean(ChangeContext<VariableYaml> changeContext) throws HarnessException {
+  private Variable toBean(ChangeContext<VariableYaml> changeContext) {
     VariableYaml yaml = changeContext.getYaml();
     VariableType variableType = Utils.getEnumFromString(VariableType.class, yaml.getType());
     String accountId = changeContext.getChange().getAccountId();
@@ -146,7 +146,7 @@ public class VariableYamlHandler extends BaseYamlHandler<VariableYaml, Variable>
   }
 
   @Override
-  public void delete(ChangeContext<VariableYaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<VariableYaml> changeContext) {
     // Do nothing
   }
 }

@@ -34,7 +34,7 @@ public class FunctionSpecificationYamlHandler extends BaseYamlHandler<Yaml, Func
     return toBean(changeContext);
   }
 
-  private FunctionSpecification toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private FunctionSpecification toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
 
     return FunctionSpecification.builder()
@@ -57,7 +57,7 @@ public class FunctionSpecificationYamlHandler extends BaseYamlHandler<Yaml, Func
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // do nothing
   }
 }

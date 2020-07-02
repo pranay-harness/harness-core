@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.DynaTraceConfig.DynaTraceYaml;
 import software.wings.beans.SettingAttribute;
@@ -27,8 +26,8 @@ public class DynaTraceConfigYamlHandler extends VerificationProviderYamlHandler<
   }
 
   @Override
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<DynaTraceYaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  protected SettingAttribute toBean(
+      SettingAttribute previous, ChangeContext<DynaTraceYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     DynaTraceYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();

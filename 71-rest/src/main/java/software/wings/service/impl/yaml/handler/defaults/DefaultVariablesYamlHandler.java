@@ -29,7 +29,7 @@ public class DefaultVariablesYamlHandler extends BaseYamlHandler<Yaml, List<Sett
   @Inject AppService appService;
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     YamlType yamlType = changeContext.getYamlType();
     String accountId = changeContext.getChange().getAccountId();
     String appId;

@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.handler.setting.loadbalancer;
 import com.google.inject.Singleton;
 
 import com.amazonaws.regions.Regions;
-import io.harness.exception.HarnessException;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig.Yaml;
 import software.wings.beans.SettingAttribute;
@@ -34,8 +33,8 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
   }
 
   @Override
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  protected SettingAttribute toBean(
+      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();

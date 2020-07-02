@@ -6,7 +6,6 @@ import static io.harness.validation.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.exception.HarnessException;
 import software.wings.api.DeploymentType;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.HelmChartSpecification.Yaml;
@@ -37,8 +36,8 @@ public class HelmChartSpecificationYamlHandler
   }
 
   @Override
-  public HelmChartSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public HelmChartSpecification upsertFromYaml(
+      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     HelmChartSpecification previous =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     HelmChartSpecification helmChartSpecification = toBean(changeContext);
@@ -52,7 +51,7 @@ public class HelmChartSpecificationYamlHandler
     }
   }
 
-  private HelmChartSpecification toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private HelmChartSpecification toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
 
     String filePath = changeContext.getChange().getFilePath();

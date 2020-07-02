@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.yaml.Change;
@@ -30,7 +29,7 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
 
   protected abstract C createNewContainerTask();
 
-  protected C toBean(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
+  protected C toBean(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
     Y yaml = changeContext.getYaml();
     Change change = changeContext.getChange();
 
@@ -92,8 +91,7 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
   }
 
   @Override
-  public C upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public C upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
     C previous = get(accountId, changeContext.getChange().getFilePath());
     C containerTask = toBean(changeContext, changeSetContext);

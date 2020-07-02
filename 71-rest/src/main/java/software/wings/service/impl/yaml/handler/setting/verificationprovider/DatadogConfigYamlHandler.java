@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
-import io.harness.exception.HarnessException;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DatadogConfig.DatadogYaml;
 import software.wings.beans.PrometheusConfig;
@@ -28,7 +27,7 @@ public class DatadogConfigYamlHandler
 
   @Override
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<DatadogConfig.DatadogYaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+      List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     DatadogConfig.DatadogYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();

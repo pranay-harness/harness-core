@@ -19,8 +19,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api("cv-nextgen/ds-config/")
-@Path("/cv-nextgen/ds-config")
+@Api("ds-config")
+@Path("ds-config")
 @Produces("application/json")
 public class DSConfigResource {
   @Inject private DSConfigService dsConfigService;
