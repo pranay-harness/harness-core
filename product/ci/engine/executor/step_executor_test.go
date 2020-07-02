@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	pb2 "github.com/wings-software/portal/product/ci/addon/proto"
+
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/steps"
 	msteps "github.com/wings-software/portal/product/ci/engine/steps/mocks"
@@ -204,6 +206,68 @@ func TestStepRestoreCacheSuccess(t *testing.T) {
 	defer func() { restoreCacheStep = oldStep }()
 	restoreCacheStep = func(step *pb.Step, tmpFilePath string, fs filesystem.FileSystem,
 		log *zap.SugaredLogger) steps.RestoreCacheStep {
+		return mockStep
+	}
+
+	mockStep.EXPECT().Run(ctx).Return(nil)
+
+	e := NewStepExecutor(logPath, tmpFilePath, log.Sugar())
+	err := e.Run(ctx, stepProto)
+	assert.Equal(t, err, nil)
+}
+
+func TestPublishArtifactsSuccess(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	tmpFilePath := "/tmp"
+	stepProto := &pb.Step{
+		Id: "test3",
+		Step: &pb.Step_PublishArtifacts{
+			PublishArtifacts: &pb.PublishArtifactsStep{
+				Images: []*pb2.BuildPublishImage{},
+				Files:  []*pb2.UploadFile{},
+			},
+		},
+	}
+	logPath := "/a/b"
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	mockStep := msteps.NewMockPublishArtifactsStep(ctrl)
+
+	oldStep := publishArtifactsStep
+	defer func() { publishArtifactsStep = oldStep }()
+	publishArtifactsStep = func(step *pb.Step, log *zap.SugaredLogger) steps.PublishArtifactsStep {
+		return mockStep
+	}
+
+	mockStep.EXPECT().Run(ctx).Return(errors.New("Could not publish artifacts"))
+
+	e := NewStepExecutor(logPath, tmpFilePath, log.Sugar())
+	err := e.Run(ctx, stepProto)
+	assert.NotEqual(t, err, nil)
+}
+
+func TestPublishArtifactsErr(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	tmpFilePath := "/tmp"
+	stepProto := &pb.Step{
+		Id: "test3",
+		Step: &pb.Step_PublishArtifacts{
+			PublishArtifacts: &pb.PublishArtifactsStep{
+				Images: []*pb2.BuildPublishImage{},
+				Files:  []*pb2.UploadFile{},
+			},
+		},
+	}
+	logPath := "/a/b"
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	mockStep := msteps.NewMockPublishArtifactsStep(ctrl)
+
+	oldStep := publishArtifactsStep
+	defer func() { publishArtifactsStep = oldStep }()
+	publishArtifactsStep = func(step *pb.Step, log *zap.SugaredLogger) steps.PublishArtifactsStep {
 		return mockStep
 	}
 

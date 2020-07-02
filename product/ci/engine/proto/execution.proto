@@ -5,8 +5,17 @@ package io.harness.product.ci.engine.proto;
 option java_multiple_files = true;
 option go_package = "cienginepb";
 
+// Import CI Addon protos since step definitions
+// will closely resemble the protobufs there.
+import "product/ci/addon/proto/addon.proto";
+
 message Execution {
   repeated Step steps = 1;
+}
+
+message PublishArtifactsStep {
+  repeated io.harness.product.ci.addon.proto.UploadFile files = 1;
+  repeated io.harness.product.ci.addon.proto.BuildPublishImage images = 2;
 }
 
 message StepContext {
@@ -36,5 +45,6 @@ message Step {
     RunStep run = 3;
     SaveCacheStep save_cache = 4;
     RestoreCacheStep restore_cache = 5;
+    PublishArtifactsStep publish_artifacts = 6;
   }
 }

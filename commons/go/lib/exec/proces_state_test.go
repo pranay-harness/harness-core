@@ -2,8 +2,8 @@ package exec
 
 import (
 	"github.com/stretchr/testify/assert"
-	"time"
 	"testing"
+	"time"
 )
 
 func TestNullProcessState(t *testing.T) {

@@ -31,7 +31,7 @@ type ciAddonServer struct {
 
 //NewCIAddonServer constructs a new CIAddonServer
 func NewCIAddonServer(port uint, log *zap.SugaredLogger) (CIAddonServer, error) {
-	listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return nil, err
 	}

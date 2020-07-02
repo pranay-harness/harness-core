@@ -1,12 +1,13 @@
 package grpc
 
 import (
-	pb "github.com/wings-software/portal/product/ci/addon/proto"
-	"github.com/wings-software/portal/product/ci/addon/tasks"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	pb "github.com/wings-software/portal/product/ci/addon/proto"
+	"github.com/wings-software/portal/product/ci/addon/tasks"
 )
 
 // handler is used to implement CIAddonServer
@@ -27,7 +28,7 @@ func (h *handler) PublishArtifacts(ctx context.Context, in *pb.PublishArtifactsR
 	}
 
 	l := h.log.With(zap.String("task_id", taskID))
-	t := tasks.NewPublishArtifactTask(l)
+	t := tasks.NewPublishArtifactsTask(l)
 	err := t.Publish(ctx, in)
 	return &pb.PublishArtifactsResponse{}, err
 }

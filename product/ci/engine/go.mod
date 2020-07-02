@@ -15,4 +15,5 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/wings-software/portal/commons/go/lib v0.0.0-00010101000000-000000000000
 	go.uber.org/zap v1.15.0
+	github.com/gofrs/uuid v3.3.0
 )

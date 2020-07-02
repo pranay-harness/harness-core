@@ -44,6 +44,6 @@ compile_proto_module 20-delegate-beans 20-delegate-beans/src/main 20-delegate-be
 compile_proto_module 21-delegate-agent-beans 21-delegate-agent-beans/src/main 21-delegate-agent-beans/src/generated/java
 compile_proto_module 22-delegate-service-beans 22-delegate-service-beans/src/main 22-delegate-service-beans/src/generated/java
 
-compile_proto_module cienginepb product/ci/engine 72-ci-beans/src/generated/java
+#compile_proto_module cienginepb product/ci/engine 72-ci-beans/src/generated/java
 
 rm -f bazel-bin bazel-out bazel-portal bazel-testlogs

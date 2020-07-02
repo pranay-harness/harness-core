@@ -16,6 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// mockgen -source publisher.go -package kaniko_mock -destination mocks/publisher_mock.go
 // /kaniko/executor --dockerfile=/step/harness/Dockerifle_1 --context=dir:///step/harness --destination=vistaarjuneja/kaniko-test:v1.2
 const (
 	// Timeout constants
