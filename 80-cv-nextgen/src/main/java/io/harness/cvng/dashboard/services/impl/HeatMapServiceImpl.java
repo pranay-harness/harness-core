@@ -1,4 +1,4 @@
-package io.harness.cvng.core.dashboard.services.impl;
+package io.harness.cvng.dashboard.services.impl;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -6,12 +6,12 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.model.DBCollectionUpdateOptions;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
-import io.harness.cvng.core.dashboard.entities.HeatMap;
-import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapKeys;
-import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapResolution;
-import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapRisk;
-import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapRisk.HeatMapRiskKeys;
-import io.harness.cvng.core.dashboard.services.api.HeatMapService;
+import io.harness.cvng.dashboard.entities.HeatMap;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapKeys;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk.HeatMapRiskKeys;
+import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;

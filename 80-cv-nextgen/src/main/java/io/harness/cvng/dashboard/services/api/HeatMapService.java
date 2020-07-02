@@ -1,4 +1,4 @@
-package io.harness.cvng.core.dashboard.services.api;
+package io.harness.cvng.dashboard.services.api;
 
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 

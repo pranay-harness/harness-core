@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 
 import io.harness.category.element.UnitTests;
@@ -17,7 +18,7 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +37,7 @@ public class DataCollectionPerpetualTaskServiceClientTest extends WingsBaseTest 
   private DataCollectionPerpetualTaskServiceClient dataCollectionPerpetualTaskServiceClient;
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
+  @Inject private KryoSerializer kryoSerializer;
   private String connectorId;
   @Before
   public void setup() throws IllegalAccessException {
@@ -44,6 +46,7 @@ public class DataCollectionPerpetualTaskServiceClientTest extends WingsBaseTest 
     dataCollectionPerpetualTaskServiceClient = new DataCollectionPerpetualTaskServiceClient();
     FieldUtils.writeField(dataCollectionPerpetualTaskServiceClient, "settingsService", settingsService, true);
     FieldUtils.writeField(dataCollectionPerpetualTaskServiceClient, "secretManager", secretManager, true);
+    FieldUtils.writeField(dataCollectionPerpetualTaskServiceClient, "kryoSerializer", kryoSerializer, true);
   }
 
   @Test
@@ -71,6 +74,6 @@ public class DataCollectionPerpetualTaskServiceClientTest extends WingsBaseTest 
                                                     .encryptedDataDetails(Lists.newArrayList(encryptedDataDetail))
                                                     .build();
     assertThat(dataCollectionInfo.getDataCollectionInfo())
-        .isEqualTo(ByteString.copyFrom(KryoUtils.asBytes(cvDataCollectionInfo)));
+        .isEqualTo(ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo)));
   }
 }

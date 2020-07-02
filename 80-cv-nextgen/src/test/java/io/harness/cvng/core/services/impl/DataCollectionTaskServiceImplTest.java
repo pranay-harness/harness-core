@@ -1,5 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
+import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +26,7 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.entities.MetricPack;
-import io.harness.cvng.core.services.CVNextGenConstants;
+import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -42,8 +44,11 @@ import java.util.Optional;
 public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private HPersistence hPersistence;
+  @Inject private CVConfigService cvConfigService;
+
   private String cvConfigId;
   private String accountId;
+  private Instant now;
 
   @Before
   public void setupTests() {
@@ -51,6 +56,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     accountId = generateUuid();
     cvConfigId = generateUuid();
     dataCollectionTaskService = spy(dataCollectionTaskService);
+    now = Instant.now();
   }
 
   @Test
@@ -211,10 +217,36 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
                                           .status(ExecutionStatus.SUCCESS)
                                           .dataCollectionTaskId(dataCollectionTask.getUuid())
                                           .build();
+    cvConfigService.update(getCVConfig());
     dataCollectionTaskService.updateTaskStatus(result);
     DataCollectionTask updated = dataCollectionTaskService.getDataCollectionTask(dataCollectionTask.getUuid());
     assertThat(updated.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(updated.getException()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_taskStatusSuccessShouldCreateNextTask() {
+    DataCollectionTask dataCollectionTask = createAndSave(ExecutionStatus.QUEUED);
+    DataCollectionTaskResult result = DataCollectionTaskResult.builder()
+                                          .status(ExecutionStatus.SUCCESS)
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .build();
+    cvConfigService.update(getCVConfig());
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask nextTask = hPersistence.createQuery(DataCollectionTask.class)
+                                      .filter(DataCollectionTaskKeys.accountId, accountId)
+                                      .filter(DataCollectionTaskKeys.cvConfigId, cvConfigId)
+                                      .filter(DataCollectionTaskKeys.status, ExecutionStatus.QUEUED)
+                                      .order(DataCollectionTaskKeys.lastUpdatedAt)
+                                      .get();
+
+    assertThat(nextTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    assertThat(nextTask.getStartTime()).isEqualTo(dataCollectionTask.getEndTime().plusMillis(1));
+    assertThat(nextTask.getEndTime()).isEqualTo(dataCollectionTask.getEndTime().plus(5, ChronoUnit.MINUTES));
+    assertThat(nextTask.getValidAfter())
+        .isEqualTo(dataCollectionTask.getEndTime().plusMillis(1).toEpochMilli() + DATA_COLLECTION_DELAY.toMillis());
   }
 
   @Test
@@ -240,23 +272,27 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     String taskId = generateUuid();
     VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
+
     when(verificationManagerService.createDataCollectionTask(eq(accountId), eq(cvConfigId), anyString()))
         .thenReturn(taskId);
-    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
-    cvConfig.setUuid(cvConfigId);
-    cvConfig.setAccountId(accountId);
-    cvConfig.setApplicationId(1234);
-    cvConfig.setTierId(1234);
-    cvConfig.setMetricPack(MetricPack.builder()
-                               .dataCollectionDsl("data-collection-dsl")
-                               .identifier(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER)
-                               .build());
+    AppDynamicsCVConfig cvConfig = getCVConfig();
+
     String taskIdFromApi = dataCollectionTaskService.enqueueFirstTask(cvConfig);
     DataCollectionTask savedTask =
         hPersistence.createQuery(DataCollectionTask.class).filter(DataCollectionTaskKeys.cvConfigId, cvConfigId).get();
     assertThat(savedTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(AppDynamicsDataCollectionInfo.class);
     assertThat(taskIdFromApi).isEqualTo(taskId);
+  }
+
+  private AppDynamicsCVConfig getCVConfig() {
+    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setUuid(cvConfigId);
+    cvConfig.setAccountId(accountId);
+    cvConfig.setApplicationId(1234);
+    cvConfig.setTierId(1234);
+    cvConfig.setMetricPack(MetricPack.builder().identifier(PERFORMANCE_PACK_IDENTIFIER).build());
+    return cvConfig;
   }
 
   private DataCollectionTask getDataCollectionTask(String dataCollectionTaskId) {
@@ -275,6 +311,8 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     return DataCollectionTask.builder()
         .cvConfigId(cvConfigId)
         .accountId(accountId)
+        .startTime(now.minus(5, ChronoUnit.MINUTES))
+        .endTime(now)
         .status(executionStatus)
         .validAfter(System.currentTimeMillis())
         .dataCollectionInfo(createDataCollectionInfo())

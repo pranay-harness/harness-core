@@ -30,7 +30,6 @@ import software.wings.settings.SettingValue;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
@@ -82,8 +81,8 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
                                                       .commonHeaders(connector.collectionHeaders())
                                                       .commonOptions(connector.collectionParams())
                                                       .otherEnvVariables(dataCollectionInfo.getDslEnvVariables())
-                                                      .endTime(Instant.now().minus(2, ChronoUnit.MINUTES))
-                                                      .startTime(Instant.now().minus(7, ChronoUnit.MINUTES))
+                                                      .endTime(dataCollectionTask.getEndTime())
+                                                      .startTime(dataCollectionTask.getStartTime())
                                                       .build();
       switch (dataCollectionInfo.getVerificationType()) {
         case TIME_SERIES:

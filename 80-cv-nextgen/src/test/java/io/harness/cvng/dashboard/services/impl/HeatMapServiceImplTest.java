@@ -1,4 +1,4 @@
-package io.harness.cvng.core.services.impl;
+package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -12,11 +12,11 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
-import io.harness.cvng.core.dashboard.entities.HeatMap;
-import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapKeys;
-import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapResolution;
-import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapRisk;
-import io.harness.cvng.core.dashboard.services.api.HeatMapService;
+import io.harness.cvng.dashboard.entities.HeatMap;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapKeys;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
+import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.junit.Before;

@@ -2,6 +2,7 @@ package io.harness.cvng.beans;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = true)
 public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo {
   private long tierId;
   private long applicationId;
