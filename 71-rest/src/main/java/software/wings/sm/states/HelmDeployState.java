@@ -808,8 +808,9 @@ public class HelmDeployState extends State {
       if ((gitFileConfig == null || gitFileConfig.getConnectorId() == null) && repoConfig == null) {
         validateChartSpecification(helmChartSpecification);
       }
-      evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
     }
+
+    evaluateHelmChartSpecificationExpression(context, helmChartSpecification);
 
     HelmDeployStateExecutionDataBuilder stateExecutionDataBuilder =
         HelmDeployStateExecutionData.builder()

@@ -110,7 +110,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
-  private static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
+  protected static final String WORKING_DIR = "./repository/helm/source/${" + ACTIVITY_ID + "}";
   public static final String FROM = " from ";
   public static final String TIMED_OUT_IN_STEADY_STATE = "Timed out waiting for controller to reach in steady state";
 
@@ -222,7 +222,6 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     Kubectl client = Kubectl.client(k8sGlobalConfigService.getKubectlPath(), commandRequest.getKubeConfigLocation());
 
     String workingDirPath = Paths.get(commandRequest.getWorkingDir()).normalize().toAbsolutePath().toString();
-    k8sTaskHelper.deleteSkippedManifestFiles(workingDirPath, (ExecutionLogCallback) executionLogCallback);
 
     List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplateForHelm(
         helmClient.getHelmPath(commandRequest.getHelmVersion()), workingDirPath, variableOverridesYamlFiles,
@@ -305,9 +304,22 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     String workingDirectory = Paths.get(getWorkingDirectory(commandRequest)).toString();
 
     helmTaskHelper.downloadChartFiles(helmChartSpecification, workingDirectory, commandRequest);
-    commandRequest.setWorkingDir(Paths.get(workingDirectory, helmChartSpecification.getChartName()).toString());
+    String chartName = isBlank(helmChartSpecification.getChartUrl())
+        ? excludeRepoNameFromChartName(helmChartSpecification.getChartName())
+        : helmChartSpecification.getChartName();
+    commandRequest.setWorkingDir(Paths.get(workingDirectory, chartName).toString());
 
     commandRequest.getExecutionLogCallback().saveExecutionLog("Helm Chart Repo checked-out locally");
+  }
+
+  private String excludeRepoNameFromChartName(String chartName) {
+    String[] repoNameAndChartNameSplit = chartName.split("/");
+    if (repoNameAndChartNameSplit.length != 2) {
+      throw new InvalidRequestException(
+          "Bad chart name specified, please specify in the following format: repo/chartName");
+    }
+
+    return repoNameAndChartNameSplit[1];
   }
 
   @VisibleForTesting
