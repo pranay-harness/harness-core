@@ -15,7 +15,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.validator.EntityName;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.Field;
+import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.AllArgsConstructor;
@@ -28,6 +31,7 @@ import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
+import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
@@ -55,6 +59,9 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "PipelineKeys")
 @Entity(value = "pipelines", noClassnameStored = true)
+@CdIndex(name = "accountIdCreatedAt",
+    fields = { @Field(PipelineKeys.accountId)
+               , @Field(value = PipelineKeys.createdAt, type = IndexType.DESC) })
 @HarnessEntity(exportable = true)
 public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static final String NAME_KEY = "name";

@@ -466,6 +466,7 @@ pipelineExecutions {"name": "appId_1", "background": true} {"appId": 1}
 pipelineExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
 pipelineExecutions {"name": "pipelineId_1", "background": true} {"pipelineId": 1}
 pipelineGovernanceConfigs {"name": "accountId_1", "background": true} {"accountId": 1}
+pipelines {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
 pipelines {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "appId_1", "background": true} {"appId": 1}
 pipelines {"name": "createdAt_1", "background": true} {"createdAt": 1}
