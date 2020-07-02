@@ -1,5 +1,7 @@
 package io.harness.cvng.core.services;
 
+import java.time.Duration;
+
 public interface CVNextGenConstants {
   String CV_NEXTGEN_RESOURCE_PREFIX = "cv-nextgen";
   String APPD_TIER_ID_PLACEHOLDER = "__tier_name__";
@@ -10,6 +12,7 @@ public interface CVNextGenConstants {
   String CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX = CV_NEXTGEN_RESOURCE_PREFIX + "/service/";
   long CV_ANALYSIS_WINDOW_MINUTES = 5;
   String CV_DATA_COLLECTION_PATH = CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX + "/cv-data-collection-task";
+  Duration DATA_COLLECTION_DELAY = Duration.ofMinutes(2);
   String PERFORMANCE_PACK_IDENTIFIER = "Performance";
   String QUALITY_PACK_IDENTIFIER = "Quality";
   String RESOURCE_PACK_IDENTIFIER = "Resources";

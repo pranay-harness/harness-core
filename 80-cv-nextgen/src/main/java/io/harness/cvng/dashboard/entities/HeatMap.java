@@ -1,4 +1,4 @@
-package io.harness.cvng.core.dashboard.entities;
+package io.harness.cvng.dashboard.entities;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
 

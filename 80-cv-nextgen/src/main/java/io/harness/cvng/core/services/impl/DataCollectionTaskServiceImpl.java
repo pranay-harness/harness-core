@@ -1,5 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -101,6 +103,23 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     Query<DataCollectionTask> query = hPersistence.createQuery(DataCollectionTask.class)
                                           .filter(DataCollectionTaskKeys.uuid, result.getDataCollectionTaskId());
     hPersistence.update(query, updateOperations);
+    if (result.getStatus() == ExecutionStatus.SUCCESS) {
+      // TODO: make this an atomic operation
+      createNextTask(getDataCollectionTask(result.getDataCollectionTaskId()));
+    }
+    // TODO: add more logic in case of failure etc.
+  }
+
+  private void createNextTask(DataCollectionTask prevTask) {
+    CVConfig cvConfig = cvConfigService.get(prevTask.getCvConfigId());
+    if (cvConfig == null) {
+      // TODO: delete perpetual task. We need a logic to make sure perpetual tasks are always deleted.
+      // Not implementing now because this requires more thought
+      throw new UnsupportedOperationException("Not implemented yet");
+    }
+    DataCollectionTask dataCollectionTask = getDataCollectionTask(
+        cvConfig, prevTask.getEndTime().plusMillis(1), prevTask.getEndTime().plus(5, ChronoUnit.MINUTES));
+    save(dataCollectionTask);
   }
 
   @Override
@@ -112,22 +131,28 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       metricPackService.populateDataCollectionDsl(cvConfig.getType(), ((MetricCVConfig) cvConfig).getMetricPack());
     }
     Instant now = clock.instant();
-    DataCollectionTask dataCollectionTask =
-        DataCollectionTask.builder()
-            .accountId(cvConfig.getAccountId())
-            .cvConfigId(cvConfig.getUuid())
-            .status(ExecutionStatus.QUEUED)
-            .startTime(now.minus(2, ChronoUnit.HOURS)) // setting it to 2 hours for now. This should come from cvConfig
-            .endTime(now)
-            .dataCollectionInfo(
-                injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())))
-                    .toDataCollectionInfo(cvConfig))
-            .build();
+    // setting it to 2 hours for now. This should come from cvConfig
+    DataCollectionTask dataCollectionTask = getDataCollectionTask(cvConfig, now.minus(2, ChronoUnit.HOURS), now);
+
     save(dataCollectionTask);
     String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(
         cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getConnectorId());
     cvConfigService.setCollectionTaskId(cvConfig.getUuid(), dataCollectionTaskId);
     logger.info("Enqueued cvConfigId successfully: {}", cvConfig.getUuid());
     return dataCollectionTaskId;
+  }
+
+  private DataCollectionTask getDataCollectionTask(CVConfig cvConfig, Instant startTime, Instant endTime) {
+    return DataCollectionTask.builder()
+        .accountId(cvConfig.getAccountId())
+        .cvConfigId(cvConfig.getUuid())
+        .status(ExecutionStatus.QUEUED)
+        .validAfter(startTime.toEpochMilli() + DATA_COLLECTION_DELAY.toMillis())
+        .startTime(startTime)
+        .endTime(endTime)
+        .dataCollectionInfo(
+            injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())))
+                .toDataCollectionInfo(cvConfig))
+        .build();
   }
 }

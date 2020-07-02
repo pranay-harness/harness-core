@@ -11,7 +11,7 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskServiceClient {
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
+  @Inject private KryoSerializer kryoSerializer;
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
@@ -44,7 +45,7 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
                                                     .settingValue(settingAttribute.getValue())
                                                     .encryptedDataDetails(encryptedDataDetails)
                                                     .build();
-    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(cvDataCollectionInfo));
+    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo));
     return DataCollectionPerpetualTaskParams.newBuilder()
         .setAccountId(accountId)
         .setCvConfigId(cvConfigId)

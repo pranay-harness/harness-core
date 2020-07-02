@@ -1,15 +1,16 @@
 package io.harness.serializer.morphia;
 
-import io.harness.cvng.core.dashboard.entities.HeatMap;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.LogCVConfig;
+import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
+import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.morphia.MorphiaRegistrar;
@@ -32,6 +33,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(MetricCVConfig.class);
     set.add(MetricPack.class);
     set.add(TimeSeriesThreshold.class);
+    set.add(LogRecord.class);
   }
 
   @Override
