@@ -27,6 +27,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
@@ -143,7 +144,21 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       if (serviceVariable.getValue() == null) {
         throw new InvalidRequestException(
             format("Service Variable [%s] value cannot be empty", serviceVariable.getName()));
+      } else {
+        checkDuplicateNameServiceVariable(serviceVariable);
       }
+    }
+  }
+
+  private void checkDuplicateNameServiceVariable(ServiceVariable serviceVariable) {
+    ServiceVariable savedServiceVariable = wingsPersistence.createQuery(ServiceVariable.class)
+                                               .filter(ServiceVariableKeys.appId, serviceVariable.getAppId())
+                                               .filter(ServiceVariableKeys.entityId, serviceVariable.getEntityId())
+                                               .filter(ServiceVariableKeys.name, serviceVariable.getName())
+                                               .get();
+
+    if (savedServiceVariable != null) {
+      throw new GeneralException("Duplicate name " + serviceVariable.getName(), USER);
     }
   }
 
@@ -161,6 +176,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     ServiceVariable newServiceVariable = duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable), "name", serviceVariable.getName());
+
     entityVersionService.newEntityVersion(serviceVariable.getAppId(), EntityType.CONFIG, serviceVariable.getUuid(),
         serviceVariable.getEntityId(), serviceVariable.getName(), ChangeType.CREATED, null);
 

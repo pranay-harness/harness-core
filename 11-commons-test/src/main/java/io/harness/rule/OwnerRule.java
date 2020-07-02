@@ -146,6 +146,7 @@ public class OwnerRule implements TestRule {
   public static final String SAHIL = "sahil.hindwani";
   public static final String BOJANA = "bojana.milovanovic";
   public static final String LAZAR = "lazar.matovic";
+  public static final String HINGER = "abhinav.hinger";
   @Deprecated public static final String UNKNOWN = "unknown";
 
   private static DevInfoBuilder defaultDevInfo(String user) {
@@ -245,6 +246,7 @@ public class OwnerRule implements TestRule {
           .put(SAHIL, defaultDevInfo(SAHIL).slack("U0141LFMEF8").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(BOJANA, defaultDevInfo(BOJANA).slack("U014GS4NFLM").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(LAZAR, defaultDevInfo(LAZAR).slack("U0150TB4LSK").team(DELEGATE).build())
+          .put(HINGER, defaultDevInfo(HINGER).slack("U015DTMV2A2").team(CONTINUOUS_DEPLOYMENT_CORE).build())
           .put(UNKNOWN, DevInfo.builder().email("n/a").slack("channel").build())
           .build();
 

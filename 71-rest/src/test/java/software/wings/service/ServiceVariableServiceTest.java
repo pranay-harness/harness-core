@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -40,6 +41,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -178,6 +180,47 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     verify(mockEntityVersionService)
         .newEntityVersion(APP_ID, EntityType.CONFIG, SERVICE_VARIABLE.getUuid(), SERVICE_VARIABLE.getEntityId(),
             SERVICE_VARIABLE.getName(), ChangeType.CREATED, null);
+  }
+
+  /**
+   * Should throw exception when saving with same name
+   */
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionForSameName() {
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .name("test")
+                                          .envId(ENV_ID)
+                                          .value("8080".toCharArray())
+                                          .type(TEXT)
+                                          .entityType(EntityType.SERVICE_TEMPLATE)
+                                          .entityId(TEMPLATE_ID)
+                                          .templateId(TEMPLATE_ID)
+                                          .build();
+    serviceVariable.setAppId(APP_ID);
+    serviceVariableService.save(serviceVariable);
+
+    EncryptedData encryptedData =
+        EncryptedData.builder().name("test-encrypted-data").encryptedValue("8080".toCharArray()).build();
+
+    ServiceVariable serviceVariableSameName = ServiceVariable.builder()
+                                                  .name("test")
+                                                  .envId(ENV_ID)
+                                                  .value("8080".toCharArray())
+                                                  .type(ENCRYPTED_TEXT)
+                                                  .entityType(EntityType.SERVICE_TEMPLATE)
+                                                  .entityId(TEMPLATE_ID)
+                                                  .templateId(TEMPLATE_ID)
+                                                  .build();
+
+    serviceVariableSameName.setAppId(APP_ID);
+
+    when(wingsPersistence.get(EncryptedData.class, "8080")).thenReturn(encryptedData);
+    when(query.get()).thenReturn(serviceVariable);
+
+    Assertions.assertThatExceptionOfType(GeneralException.class)
+        .isThrownBy(() -> serviceVariableService.save(serviceVariableSameName));
   }
 
   /**
