@@ -118,9 +118,11 @@ public class HelmTaskHelper {
                                                       .chartName(helmChartSpecification.getChartName())
                                                       .chartVersion(helmChartSpecification.getChartVersion())
                                                       .chartUrl(helmChartSpecification.getChartUrl())
-                                                      .repoName(helmCommandRequest.getRepoName())
                                                       .helmVersion(helmCommandRequest.getHelmVersion())
                                                       .build();
+    if (isNotBlank(helmChartSpecification.getChartUrl())) {
+      helmChartConfigParams.setRepoName(helmCommandRequest.getRepoName());
+    }
 
     fetchChartFiles(helmChartConfigParams, workingDirectory);
   }

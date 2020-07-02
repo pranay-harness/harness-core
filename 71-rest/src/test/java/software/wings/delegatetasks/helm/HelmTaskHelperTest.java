@@ -282,6 +282,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testDownloadChartFilesForEmptyHelmRepoBySpec() throws Exception {
     HelmChartSpecification helmChartSpecification = getHelmChartSpecification(null);
+    helmChartSpecification.setChartName("stable/chartName1");
     Path outputTemporaryDir = Files.createTempDirectory("chartFile");
 
     ProcessResult successfulResult = new ProcessResult(0, null);
@@ -293,17 +294,29 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     // With empty chart Url
     helmTaskHelper.downloadChartFiles(helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest);
     verify(helmTaskHelper, times(1))
-        .createProcessExecutor("v3/helm pull repoName/chartName --untar ", outputTemporaryDir.toString());
+        .createProcessExecutor("v3/helm pull stable/chartName1 --untar ", outputTemporaryDir.toString());
+
+    helmChartSpecification.setChartName("chartName2");
+    helmTaskHelper.downloadChartFiles(helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest);
+    verify(helmTaskHelper, times(1))
+        .createProcessExecutor("v3/helm pull chartName2 --untar ", outputTemporaryDir.toString());
 
     // With not empty chart Url
     helmChartSpecification.setChartUrl("http://127.0.0.1:1234/chart");
+    helmChartSpecification.setChartName("stable/chartName3");
     helmTaskHelper.downloadChartFiles(helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest);
     verify(helmTaskHelper, times(1))
         .createProcessExecutor(
             "v3/helm repo add repoName http://127.0.0.1:1234/chart  ", outputTemporaryDir.toString());
-    verify(helmTaskHelper, times(2))
-        .createProcessExecutor("v3/helm pull repoName/chartName --untar ", outputTemporaryDir.toString());
+    verify(helmTaskHelper, times(1))
+        .createProcessExecutor("v3/helm pull repoName/stable/chartName3 --untar ", outputTemporaryDir.toString());
     verify(helmTaskHelper, times(1)).createProcessExecutor("v3/helm repo remove repoName", null);
+
+    helmChartSpecification.setChartName("chartName4");
+    helmTaskHelper.downloadChartFiles(helmChartSpecification, outputTemporaryDir.toString(), helmCommandRequest);
+    verify(helmTaskHelper, times(1))
+        .createProcessExecutor("v3/helm pull repoName/chartName4 --untar ", outputTemporaryDir.toString());
+
     FileUtils.deleteDirectory(outputTemporaryDir.toFile());
   }
 
