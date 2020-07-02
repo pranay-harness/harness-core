@@ -11,9 +11,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.IndexType;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 import lombok.Data;
@@ -45,6 +47,9 @@ import javax.validation.constraints.NotNull;
 
 @CdUniqueIndex(name = "yaml", fields = { @Field(EnvironmentKeys.appId)
                                          , @Field(EnvironmentKeys.name) })
+@CdIndex(name = "accountIdCreatedAt",
+    fields = { @Field(EnvironmentKeys.accountId)
+               , @Field(value = EnvironmentKeys.createdAt, type = IndexType.DESC) })
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
