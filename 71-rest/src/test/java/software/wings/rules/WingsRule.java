@@ -49,15 +49,10 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.InjectorRuleMixin;
-import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.OrchestrationRegistrars;
+import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
-import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
-import io.harness.serializer.kryo.DelegateAgentKryoRegister;
-import io.harness.serializer.kryo.ManagerKryoRegistrar;
-import io.harness.serializer.kryo.NGKryoRegistrar;
 import io.harness.serializer.kryo.TestManagerRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.testlib.RealMongo;
@@ -173,13 +168,8 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
-            .addAll(OrchestrationRegistrars.kryoRegistrars)
+            .addAll(ManagerRegistrars.kryoRegistrars)
             .add(CVNextGenCommonsBeansKryoRegistrar.class)
-            .add(DelegateAgentKryoRegister.class)
-            .add(DelegateAgentBeansKryoRegister.class)
-            .add(ManagerKryoRegistrar.class)
-            .add(NGKryoRegistrar.class)
             .add(TestManagerRegistrar.class)
             .add(TestPersistenceKryoRegistrar.class)
             .build();
