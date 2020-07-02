@@ -3,7 +3,7 @@ package io.harness.cvng.statemachine.entities;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.harness.cvng.core.services.api.TimeSeriesAnalysisService;
+import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

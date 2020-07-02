@@ -26,6 +26,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.cvng.analysis.resource.LearningEngineResource;
 import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
@@ -231,7 +232,12 @@ public class VerificationApplication extends Application<VerificationConfigurati
   }
 
   private void registerResources(Environment environment, Injector injector) {
-    Reflections reflections = new Reflections(DataCollectionResource.class.getPackage().getName());
+    registerResourcesForPackage(DataCollectionResource.class, environment, injector);
+    registerResourcesForPackage(LearningEngineResource.class, environment, injector);
+  }
+
+  private void registerResourcesForPackage(Class clazz, Environment environment, Injector injector) {
+    Reflections reflections = new Reflections(clazz.getPackage().getName());
 
     Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
     for (Class<?> resource : resourceClasses) {

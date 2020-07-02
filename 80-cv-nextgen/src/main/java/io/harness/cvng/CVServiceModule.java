@@ -4,6 +4,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import io.harness.cvng.analysis.services.api.LearningEngineAnalysisService;
+import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
+import io.harness.cvng.analysis.services.impl.LearningEngineAnalysisServiceImpl;
+import io.harness.cvng.analysis.services.impl.TimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
@@ -16,7 +20,7 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.SplunkService;
-import io.harness.cvng.core.services.api.TimeSeriesAnalysisService;
+
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.services.impl.AppDynamicsCVConfigTransformer;
 import io.harness.cvng.core.services.impl.AppDynamicsDataCollectionInfoMapper;
@@ -28,7 +32,7 @@ import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
-import io.harness.cvng.core.services.impl.TimeSeriesAnalysisServiceImpl;
+
 import io.harness.cvng.core.services.impl.TimeSeriesServiceImpl;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.impl.HeatMapServiceImpl;
@@ -87,6 +91,7 @@ public class CVServiceModule extends AbstractModule {
       bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
       bind(AnalysisStateMachineService.class).to(AnalysisStateMachineServiceImpl.class);
       bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
+      bind(LearningEngineAnalysisService.class).to(LearningEngineAnalysisServiceImpl.class);
       bind(DataCollectionTaskService.class).to(DataCollectionTaskServiceImpl.class);
       bind(VerificationManagerService.class).to(VerificationManagerServiceImpl.class);
       bind(Clock.class).toInstance(Clock.systemUTC());

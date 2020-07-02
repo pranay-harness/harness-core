@@ -1,4 +1,4 @@
-package io.harness.cvng.core.beans;
+package io.harness.cvng.analysis.beans;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
