@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.replace;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,6 +27,7 @@ import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.spy;
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V3;
+import static software.wings.helpers.ext.helm.HelmDeployServiceImpl.WORKING_DIR;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -1001,5 +1003,63 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1))
         .doStatusCheckAllResourcesForHelm(
             any(), any(), any(), anyString(), anyString(), anyString(), any(ExecutionLogCallback.class));
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldExcludeRepoNameFromInlineChartNameIfUrlNotSet() throws Exception {
+    ExecutionLogCallback executionLogCallback = spy(new ExecutionLogCallback());
+    HelmInstallCommandRequest helmInstallCommandRequest =
+        HelmInstallCommandRequest.builder()
+            .chartSpecification(HelmChartSpecification.builder().chartName("repo/chartName").build())
+            .executionLogCallback(executionLogCallback)
+            .activityId("test")
+            .build();
+    helmDeployService.fetchInlineChartUrl(helmInstallCommandRequest);
+    verify(executionLogCallback, times(1)).saveExecutionLog("Helm Chart Repo checked-out locally");
+
+    String workingDir = replace(WORKING_DIR, "${ACTIVITY_ID}", helmInstallCommandRequest.getActivityId());
+    assertThat(helmInstallCommandRequest.getWorkingDir()).isEqualTo(workingDir + "/chartName");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldIncludeRepoNameWIthInlineChartNameIfUrlIsSet() throws Exception {
+    ExecutionLogCallback executionLogCallback = spy(new ExecutionLogCallback());
+    HelmInstallCommandRequest helmInstallCommandRequest =
+        HelmInstallCommandRequest.builder()
+            .chartSpecification(
+                HelmChartSpecification.builder().chartName("repo/chartName").chartUrl("http://helm-repo").build())
+            .executionLogCallback(executionLogCallback)
+            .activityId("test")
+            .build();
+
+    helmDeployService.fetchInlineChartUrl(helmInstallCommandRequest);
+    verify(executionLogCallback, times(1)).saveExecutionLog("Helm Chart Repo checked-out locally");
+
+    String workingDir = replace(WORKING_DIR, "${ACTIVITY_ID}", helmInstallCommandRequest.getActivityId());
+    assertThat(helmInstallCommandRequest.getWorkingDir()).isEqualTo(workingDir + "/repo/chartName");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionIfChartNameIsWrongFormat() throws Exception {
+    ExecutionLogCallback executionLogCallback = spy(new ExecutionLogCallback());
+    HelmInstallCommandRequest helmInstallCommandRequest =
+        HelmInstallCommandRequest.builder()
+            .chartSpecification(HelmChartSpecification.builder().chartName("repo/repo/chartName").build())
+            .executionLogCallback(executionLogCallback)
+            .activityId("test")
+            .build();
+    try {
+      helmDeployService.fetchInlineChartUrl(helmInstallCommandRequest);
+    } catch (InvalidRequestException invalidRequestException) {
+      assertThat(invalidRequestException.getMessage())
+          .isEqualTo("Bad chart name specified, please specify in the following format: repo/chartName");
+    }
+    verify(executionLogCallback, times(0)).saveExecutionLog("Helm Chart Repo checked-out locally");
   }
 }
