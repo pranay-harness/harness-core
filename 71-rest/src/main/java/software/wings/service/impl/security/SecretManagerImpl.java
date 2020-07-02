@@ -982,6 +982,11 @@ public class SecretManagerImpl implements SecretManager {
       }
     }
 
+    if (toEncryptionType == CUSTOM || fromEncryptionType == CUSTOM) {
+      throw new SecretManagementException(
+          UNSUPPORTED_OPERATION_EXCEPTION, "Cannot transfer secret to or from a custom secret manager", USER);
+    }
+
     try (HIterator<EncryptedData> iterator = new HIterator<>(query.fetch())) {
       for (EncryptedData dataToTransition : iterator) {
         transitionKmsQueue.send(KmsTransitionEvent.builder()
