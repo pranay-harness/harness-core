@@ -27,6 +27,7 @@ go_test(
     deps = [
         "//commons/go/lib/filesystem:go_default_library",
         "//commons/go/lib/logs:go_default_library",
+        "//product/ci/addon/proto:go_default_library",
         "//product/ci/engine/proto:go_default_library",
         "//product/ci/engine/steps:go_default_library",
         "//product/ci/engine/steps/mocks:go_default_library",

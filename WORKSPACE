@@ -40,8 +40,8 @@ gazelle_dependencies()
 go_repository(
     name = "com_github_pkg_errors",
     importpath = "github.com/pkg/errors",
-    sum = "h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=",
-    version = "v0.8.1",
+    sum = "h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=",
+    version = "v0.9.1",
 )
 
 http_archive(
@@ -228,8 +228,8 @@ go_repository(
 go_repository(
     name = "org_golang_x_crypto",
     importpath = "golang.org/x/crypto",
-    sum = "h1:iMGN4xG0cnqj3t+zOM8wUB0BiPKHEwSxEZCvzcbZuvk=",
-    version = "v0.0.0-20190510104115-cbcb75029529",
+    sum = "h1:R423Cnkcp5JABoeemiGEPlt9tHXFfw5kvc0yqlxRPWo=",
+    version = "v0.0.0-20190513172903-22d7a77e9e5f",
 )
 
 go_repository(
@@ -249,8 +249,8 @@ go_repository(
 go_repository(
     name = "org_golang_x_sys",
     importpath = "golang.org/x/sys",
-    sum = "h1:+R4KGOnez64A81RvjARKc4UT5/tI9ujCIVX+P5KiHuI=",
-    version = "v0.0.0-20190412213103-97732733099d",
+    sum = "h1:Cz4ceDQGXuKRnVBDTS23GTn/pU5OE2C0WrNTOYK1Uuc=",
+    version = "v0.0.0-20190422165155-953cdadca894",
 )
 
 go_repository(
@@ -846,4 +846,11 @@ go_repository(
     importpath = "github.com/spaolacci/murmur3",
     sum = "h1:qLC7fQah7D6K1B0ujays3HV9gkFtllcxhzImRR7ArPQ=",
     version = "v0.0.0-20180118202830-f09979ecbc72",
+)
+
+go_repository(
+    name = "com_github_gofrs_uuid",
+    importpath = "github.com/gofrs/uuid",
+    sum = "h1:8K4tyRfvU1CYPgJsveYFQMhpFd/wXNM7iK6rR7UHz84=",
+    version = "v3.3.0+incompatible",
 )

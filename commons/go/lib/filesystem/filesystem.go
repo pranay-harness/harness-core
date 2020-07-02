@@ -65,9 +65,9 @@ func (*osFileSystem) Open(name string) (File, error)                   { return 
 func (*osFileSystem) Create(name string) (File, error)                 { return os.Create(name) }
 func (*osFileSystem) Stat(name string) (os.FileInfo, error)            { return os.Stat(name) }
 func (*osFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error) { return io.Copy(dst, src) }
-func (*osFileSystem) Remove(name string) error {return os.Remove(name)}
-func (*osFileSystem) Setenv(name, value string) error {return os.Setenv(name, value)}
-func (*osFileSystem) Unsetenv(name string) error {return os.Unsetenv(name)}
+func (*osFileSystem) Remove(name string) error                         { return os.Remove(name) }
+func (*osFileSystem) Setenv(name, value string) error                  { return os.Setenv(name, value) }
+func (*osFileSystem) Unsetenv(name string) error                       { return os.Unsetenv(name) }
 func (*osFileSystem) ReadFile(filename string, op func(io.Reader) error) error {
 	f, err := os.Open(filename)
 	if err != nil {

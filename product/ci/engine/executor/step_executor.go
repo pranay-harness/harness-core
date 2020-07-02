@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"go.uber.org/zap"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/steps"
+	"go.uber.org/zap"
 )
 
 var (
-	saveCacheStep    = steps.NewSaveCacheStep
-	restoreCacheStep = steps.NewRestoreCacheStep
+	saveCacheStep        = steps.NewSaveCacheStep
+	restoreCacheStep     = steps.NewRestoreCacheStep
+	publishArtifactsStep = steps.NewPublishArtifactsStep
 )
 
 // StepExecutor represents an interface to execute a step
@@ -65,13 +66,18 @@ func (e *stepExecutor) Run(ctx context.Context, step *pb.Step) error {
 			return err
 		}
 	case *pb.Step_SaveCache:
-		e.log.Infow("Save cache step info", "step", x.SaveCache)
+		e.log.Infow("Save cache step info", "step", x.SaveCache.String())
 		if err := saveCacheStep(step, e.tmpFilePath, fs, e.log).Run(ctx); err != nil {
 			return err
 		}
 	case *pb.Step_RestoreCache:
-		e.log.Infow("Restore cache step info", "step", x.RestoreCache)
+		e.log.Infow("Restore cache step info", "step", x.RestoreCache.String())
 		if err := restoreCacheStep(step, e.tmpFilePath, fs, e.log).Run(ctx); err != nil {
+			return err
+		}
+	case *pb.Step_PublishArtifacts:
+		e.log.Infow("Publishing artifact info", "step", x.PublishArtifacts.String())
+		if err := publishArtifactsStep(step, e.log).Run(ctx); err != nil {
 			return err
 		}
 	case nil:

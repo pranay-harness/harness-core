@@ -7,6 +7,7 @@ proto_library(
     name = "cienginepb_proto",
     srcs = ["execution.proto"],
     visibility = ["//visibility:public"],
+    deps = ["//product/ci/addon/proto:ciaddonpb_proto"],
 )
 
 go_proto_library(
@@ -14,6 +15,7 @@ go_proto_library(
     importpath = "github.com/wings-software/portal/product/ci/engine/proto",
     proto = ":cienginepb_proto",
     visibility = ["//visibility:public"],
+    deps = ["//product/ci/addon/proto:go_default_library"],
 )
 
 go_library(
