@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
 import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import org.junit.Test;
@@ -43,7 +44,7 @@ public class ArtifactCleanupHandlerTest extends WingsBaseTest {
   public void testRegisterIterators() {
     // setup mock
     when(persistenceIteratorFactory.createIterator(any(), any()))
-        .thenReturn(MongoPersistenceIterator.<ArtifactStream>builder()
+        .thenReturn(MongoPersistenceIterator.<ArtifactStream, MorphiaFilterExpander<ArtifactStream>>builder()
                         .filterExpander(query
                             -> query.field(ArtifactStreamKeys.artifactStreamType)
                                    .in(asList(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.AMI.name(),

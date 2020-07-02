@@ -16,6 +16,8 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.artifact.ArtifactStream;
@@ -35,10 +37,11 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject @Named("AsyncArtifactCleanupService") private ArtifactCleanupService artifactCleanupServiceAsync;
   @Inject ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private MorphiaPersistenceProvider<ArtifactStream> persistenceProvider;
 
   public void registerIterators(ScheduledThreadPoolExecutor artifactCollectionExecutor) {
     PersistenceIterator iterator = persistenceIteratorFactory.createIterator(ArtifactCleanupHandler.class,
-        MongoPersistenceIterator.<ArtifactStream>builder()
+        MongoPersistenceIterator.<ArtifactStream, MorphiaFilterExpander<ArtifactStream>>builder()
             .mode(ProcessMode.PUMP)
             .clazz(ArtifactStream.class)
             .fieldName(ArtifactStreamKeys.nextCleanupIteration)
@@ -54,6 +57,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
                            ArtifactStreamType.GCR.name(), ArtifactStreamType.ACR.name(),
                            ArtifactStreamType.NEXUS.name())))
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
 
     if (iterator != null) {

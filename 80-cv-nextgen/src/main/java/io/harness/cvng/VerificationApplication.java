@@ -43,6 +43,8 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.JsonSubtypeResolver;
 import lombok.extern.slf4j.Slf4j;
@@ -163,7 +165,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
       Handler<CVConfig> handler, String fieldName) {
     injector.injectMembers(handler);
     PersistenceIterator analysisOrchestrationIterator =
-        MongoPersistenceIterator.<CVConfig>builder()
+        MongoPersistenceIterator.<CVConfig, MorphiaFilterExpander<CVConfig>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(CVConfig.class)
             .fieldName(fieldName)
@@ -175,6 +177,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .schedulingType(REGULAR)
             .filterExpander(query -> query.field(CVConfigKeys.createdAt).lessThanOrEq(Instant.now().toEpochMilli()))
             .redistribute(true)
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .build();
     injector.injectMembers(analysisOrchestrationIterator);
     workflowVerificationExecutor.scheduleAtFixedRate(
@@ -188,7 +191,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         injector.getInstance(CVConfigDataCollectionHandler.class);
     // TODO: setup alert if this goes above acceptable threshold.
     PersistenceIterator dataCollectionIterator =
-        MongoPersistenceIterator.<CVConfig>builder()
+        MongoPersistenceIterator.<CVConfig, MorphiaFilterExpander<CVConfig>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(CVConfig.class)
             .fieldName(CVConfigKeys.dataCollectionTaskIteration)
@@ -199,6 +202,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .handler(cvConfigDataCollectionHandler)
             .schedulingType(REGULAR)
             .filterExpander(query -> query.filter(CVConfigKeys.dataCollectionTaskId, null))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);

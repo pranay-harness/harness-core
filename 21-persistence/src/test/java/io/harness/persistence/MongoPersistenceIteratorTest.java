@@ -9,6 +9,7 @@ import io.harness.PersistenceTest;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistentIterable;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
 import lombok.Builder;
 import org.junit.Test;
@@ -39,8 +40,10 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsTargetInterval() {
-    MongoPersistenceIterator iterator =
-        MongoPersistenceIterator.<TestPersistentIterable>builder().targetInterval(targetInterval).build();
+    MongoPersistenceIterator<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>> iterator =
+        MongoPersistenceIterator.<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>>builder()
+            .targetInterval(targetInterval)
+            .build();
     assertThat(iterator.calculateSleepDuration(null)).isEqualTo(targetInterval);
   }
 
@@ -48,10 +51,11 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsMaximumDelayForCheck() {
-    MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()
-                                            .targetInterval(targetInterval)
-                                            .maximumDelayForCheck(maximumDelayForCheck)
-                                            .build();
+    MongoPersistenceIterator<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>> iterator =
+        MongoPersistenceIterator.<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>>builder()
+            .targetInterval(targetInterval)
+            .maximumDelayForCheck(maximumDelayForCheck)
+            .build();
     assertThat(iterator.calculateSleepDuration(null)).isEqualTo(maximumDelayForCheck);
   }
 
@@ -59,10 +63,11 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsZero() {
-    MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()
-                                            .targetInterval(targetInterval)
-                                            .maximumDelayForCheck(maximumDelayForCheck)
-                                            .build();
+    MongoPersistenceIterator<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>> iterator =
+        MongoPersistenceIterator.<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>>builder()
+            .targetInterval(targetInterval)
+            .maximumDelayForCheck(maximumDelayForCheck)
+            .build();
 
     TestPersistentIterable testPersistentIterable = TestPersistentIterable.builder().build();
     assertThat(iterator.calculateSleepDuration(testPersistentIterable)).isEqualTo(Duration.ZERO);
@@ -72,10 +77,11 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationAsNextIteration() {
-    MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()
-                                            .targetInterval(targetInterval)
-                                            .maximumDelayForCheck(maximumDelayForCheck)
-                                            .build();
+    MongoPersistenceIterator<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>> iterator =
+        MongoPersistenceIterator.<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>>builder()
+            .targetInterval(targetInterval)
+            .maximumDelayForCheck(maximumDelayForCheck)
+            .build();
 
     TestPersistentIterable testPersistentIterable =
         TestPersistentIterable.builder().nextIteration(currentTimeMillis() + 10000).build();
@@ -86,8 +92,10 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationLimitedAsNextIteration() {
-    MongoPersistenceIterator iterator =
-        MongoPersistenceIterator.<TestPersistentIterable>builder().targetInterval(targetInterval).build();
+    MongoPersistenceIterator<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>> iterator =
+        MongoPersistenceIterator.<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>>builder()
+            .targetInterval(targetInterval)
+            .build();
 
     TestPersistentIterable testPersistentIterable =
         TestPersistentIterable.builder().nextIteration(currentTimeMillis() + targetInterval.toMillis()).build();
@@ -99,10 +107,11 @@ public class MongoPersistenceIteratorTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldCalculateSleepDurationLimitedAsMaximumDelayForCheck() {
-    MongoPersistenceIterator iterator = MongoPersistenceIterator.<TestPersistentIterable>builder()
-                                            .targetInterval(targetInterval)
-                                            .maximumDelayForCheck(maximumDelayForCheck)
-                                            .build();
+    MongoPersistenceIterator<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>> iterator =
+        MongoPersistenceIterator.<TestPersistentIterable, MorphiaFilterExpander<TestPersistentIterable>>builder()
+            .targetInterval(targetInterval)
+            .maximumDelayForCheck(maximumDelayForCheck)
+            .build();
 
     TestPersistentIterable testPersistentIterable =
         TestPersistentIterable.builder()

@@ -14,6 +14,8 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -30,18 +32,21 @@ public class SegmentGroupEventJob implements Handler<SegmentGroupEventJobContext
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private AccountChangeHandler accountChangeHandler;
   @Inject private AccountService accountService;
+  @Inject private MorphiaPersistenceProvider<SegmentGroupEventJobContext> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder().name("SegmentGroupEventJob").poolSize(2).interval(ofMinutes(30)).build(),
         SegmentGroupEventJob.class,
-        MongoPersistenceIterator.<SegmentGroupEventJobContext>builder()
+        MongoPersistenceIterator
+            .<SegmentGroupEventJobContext, MorphiaFilterExpander<SegmentGroupEventJobContext>>builder()
             .clazz(SegmentGroupEventJobContext.class)
             .fieldName(SegmentGroupEventJobContextKeys.nextIteration)
             .targetInterval(ofHours(24))
             .acceptableNoAlertDelay(ofMinutes(35))
             .handler(this)
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

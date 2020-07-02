@@ -22,6 +22,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AccessLevel;
@@ -170,8 +171,8 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
     verify(featureFlagService, times(1)).getFeatureFlag(ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS);
     verify(persistenceIteratorFactory, times(1))
         .createPumpIteratorWithDedicatedThreadPool(any(), eq(EncryptedData.class), captor.capture());
-    MongoPersistenceIterator<EncryptedData> persistenceIterator =
-        (MongoPersistenceIterator<EncryptedData>) captor.getValue().build();
+    MongoPersistenceIterator<EncryptedData, MorphiaFilterExpander<EncryptedData>> persistenceIterator =
+        (MongoPersistenceIterator<EncryptedData, MorphiaFilterExpander<EncryptedData>>) captor.getValue().build();
     assertThat(persistenceIterator).isNotNull();
 
     Field f = persistenceIterator.getClass().getDeclaredField("fieldName");
@@ -181,8 +182,8 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
 
     f = persistenceIterator.getClass().getDeclaredField("filterExpander");
     f.setAccessible(true);
-    MongoPersistenceIterator.FilterExpander<EncryptedData> filterExpander =
-        (MongoPersistenceIterator.FilterExpander<EncryptedData>) f.get(persistenceIterator);
+    MorphiaFilterExpander<EncryptedData> filterExpander =
+        (MorphiaFilterExpander<EncryptedData>) f.get(persistenceIterator);
     assertThat(filterExpander).isNotNull();
     final Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).order(Sort.ascending(fieldName));
@@ -208,8 +209,8 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
     verify(gcpSecretsManagerService, times(1)).getGlobalKmsConfig();
     verify(persistenceIteratorFactory, times(1))
         .createPumpIteratorWithDedicatedThreadPool(any(), eq(EncryptedData.class), captor.capture());
-    MongoPersistenceIterator<EncryptedData> persistenceIterator =
-        (MongoPersistenceIterator<EncryptedData>) captor.getValue().build();
+    MongoPersistenceIterator<EncryptedData, MorphiaFilterExpander<EncryptedData>> persistenceIterator =
+        (MongoPersistenceIterator<EncryptedData, MorphiaFilterExpander<EncryptedData>>) captor.getValue().build();
     assertThat(persistenceIterator).isNotNull();
 
     Field f = persistenceIterator.getClass().getDeclaredField("fieldName");
@@ -219,8 +220,8 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
 
     f = persistenceIterator.getClass().getDeclaredField("filterExpander");
     f.setAccessible(true);
-    MongoPersistenceIterator.FilterExpander<EncryptedData> filterExpander =
-        (MongoPersistenceIterator.FilterExpander<EncryptedData>) f.get(persistenceIterator);
+    MorphiaFilterExpander<EncryptedData> filterExpander =
+        (MorphiaFilterExpander<EncryptedData>) f.get(persistenceIterator);
     assertThat(filterExpander).isNotNull();
     final Query<EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class).order(Sort.ascending(fieldName));

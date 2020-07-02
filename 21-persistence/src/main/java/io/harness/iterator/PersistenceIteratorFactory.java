@@ -13,6 +13,7 @@ import io.harness.config.WorkersConfiguration;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
+import io.harness.mongo.iterator.filter.FilterExpander;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -33,15 +34,15 @@ public final class PersistenceIteratorFactory {
   @Inject WorkersConfiguration workersConfiguration;
   @Inject HarnessMetricRegistry harnessMetricRegistry;
 
-  public <T extends PersistentIterable> PersistenceIterator createIterator(
-      Class cls, MongoPersistenceIteratorBuilder<T> builder) {
+  public <T extends PersistentIterable, F extends FilterExpander> PersistenceIterator createIterator(
+      Class<?> cls, MongoPersistenceIteratorBuilder<T, F> builder) {
     if (!workersConfiguration.confirmWorkerIsActive(cls)) {
       logger.info("Worker {} is disabled in this setup", cls.getName());
       return null;
     }
 
     logger.info("Worker {} is enabled in this setup", cls.getName());
-    MongoPersistenceIterator<T> iterator = builder.build();
+    MongoPersistenceIterator<T, F> iterator = builder.build();
     injector.injectMembers(iterator);
     return iterator;
   }
@@ -54,8 +55,9 @@ public final class PersistenceIteratorFactory {
     private Duration interval;
   }
 
-  public <T extends PersistentIterable> PersistenceIterator createPumpIteratorWithDedicatedThreadPool(
-      PumpExecutorOptions options, Class cls, MongoPersistenceIteratorBuilder<T> builder) {
+  public <T extends PersistentIterable, F extends FilterExpander> PersistenceIterator<T>
+  createPumpIteratorWithDedicatedThreadPool(
+      PumpExecutorOptions options, Class<?> cls, MongoPersistenceIteratorBuilder<T, F> builder) {
     if (!workersConfiguration.confirmWorkerIsActive(cls)) {
       logger.info("Worker {} is disabled in this setup", cls.getName());
       return null;
@@ -70,13 +72,13 @@ public final class PersistenceIteratorFactory {
     InstrumentedExecutorService instrumentedExecutorService =
         new InstrumentedExecutorService(executor, metricRegistry, iteratorName);
 
-    MongoPersistenceIterator<T> iterator = builder.mode(PUMP)
-                                               .executorService(instrumentedExecutorService)
-                                               .semaphore(new Semaphore(options.getPoolSize()))
-                                               .build();
+    MongoPersistenceIterator<T, F> iterator = builder.mode(PUMP)
+                                                  .executorService(instrumentedExecutorService)
+                                                  .semaphore(new Semaphore(options.getPoolSize()))
+                                                  .build();
     injector.injectMembers(iterator);
     long millis = options.interval.toMillis();
-    executor.scheduleAtFixedRate(() -> iterator.process(), random.nextInt((int) millis), millis, TimeUnit.MILLISECONDS);
+    executor.scheduleAtFixedRate(iterator::process, random.nextInt((int) millis), millis, TimeUnit.MILLISECONDS);
 
     return iterator;
   }

@@ -14,6 +14,7 @@ import io.harness.config.WorkersConfiguration;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -35,7 +36,7 @@ public class PersistenceIteratorFactoryTest extends PersistenceTest {
 
   @Before
   public void setUp() throws Exception {
-    iteratorBuilder = MongoPersistenceIterator.<DummyClass>builder();
+    iteratorBuilder = MongoPersistenceIterator.<DummyClass, MorphiaFilterExpander<DummyClass>>builder();
     pumpExecutorOptions =
         PumpExecutorOptions.builder().name("test").interval(Duration.ofSeconds(5)).poolSize(1).build();
   }

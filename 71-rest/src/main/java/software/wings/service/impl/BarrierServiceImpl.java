@@ -30,6 +30,8 @@ import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HKeyIterator;
 import io.harness.waiter.WaitNotifyEngine;
@@ -70,12 +72,13 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private MorphiaPersistenceProvider<BarrierInstance> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder().name("BarrierInstanceMonitor").poolSize(2).interval(ofMinutes(1)).build(),
         BarrierService.class,
-        MongoPersistenceIterator.<BarrierInstance>builder()
+        MongoPersistenceIterator.<BarrierInstance, MorphiaFilterExpander<BarrierInstance>>builder()
             .clazz(BarrierInstance.class)
             .fieldName(BarrierInstanceKeys.nextIteration)
             .targetInterval(ofMinutes(1))
@@ -83,6 +86,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             .handler(this ::update)
             .filterExpander(query -> query.filter(BarrierInstanceKeys.state, STANDING.name()))
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

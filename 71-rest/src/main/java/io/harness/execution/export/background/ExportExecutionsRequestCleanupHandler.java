@@ -18,6 +18,8 @@ import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +32,7 @@ public class ExportExecutionsRequestCleanupHandler implements Handler<ExportExec
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private ExportExecutionsService exportExecutionsService;
+  @Inject private MorphiaPersistenceProvider<ExportExecutionsRequest> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -39,7 +42,7 @@ public class ExportExecutionsRequestCleanupHandler implements Handler<ExportExec
             .interval(ofHours(ASSIGNMENT_INTERVAL_HOURS))
             .build(),
         ExportExecutionsRequestCleanupHandler.class,
-        MongoPersistenceIterator.<ExportExecutionsRequest>builder()
+        MongoPersistenceIterator.<ExportExecutionsRequest, MorphiaFilterExpander<ExportExecutionsRequest>>builder()
             .clazz(ExportExecutionsRequest.class)
             .fieldName(ExportExecutionsRequestKeys.nextCleanupIteration)
             .targetInterval(ofMinutes(REASSIGNMENT_INTERVAL_MINUTES))
@@ -53,6 +56,7 @@ public class ExportExecutionsRequestCleanupHandler implements Handler<ExportExec
                        .field(ExportExecutionsRequestKeys.expiresAt)
                        .lessThan(System.currentTimeMillis()))
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

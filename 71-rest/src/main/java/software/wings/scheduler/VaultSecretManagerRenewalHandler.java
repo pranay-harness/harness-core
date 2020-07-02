@@ -11,6 +11,8 @@ import com.google.inject.Inject;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.security.encryption.EncryptionType;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SecretManagerConfig;
@@ -27,6 +29,7 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
   @Inject private VaultService vaultService;
   @Inject private AlertService alertService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
+  @Inject private MorphiaPersistenceProvider<SecretManagerConfig> persistenceProvider;
   private static final long DEFAULT_RENEWAL_INTERVAL = 15;
 
   public void registerIterators() {
@@ -37,7 +40,7 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
             .interval(ofSeconds(5))
             .build(),
         SecretManagerConfig.class,
-        MongoPersistenceIterator.<SecretManagerConfig>builder()
+        MongoPersistenceIterator.<SecretManagerConfig, MorphiaFilterExpander<SecretManagerConfig>>builder()
             .clazz(SecretManagerConfig.class)
             .fieldName(SecretManagerConfigKeys.nextTokenRenewIteration)
             .targetInterval(ofSeconds(31))
@@ -45,6 +48,7 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
             .handler(this)
             .filterExpander(query -> query.field(SecretManagerConfigKeys.encryptionType).equal(EncryptionType.VAULT))
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

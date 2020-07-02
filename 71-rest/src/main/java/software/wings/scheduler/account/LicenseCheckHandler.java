@@ -10,6 +10,8 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
@@ -24,12 +26,13 @@ import software.wings.licensing.LicenseService;
 public class LicenseCheckHandler implements Handler<Account> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private LicenseService licenseService;
+  @Inject private MorphiaPersistenceProvider<Account> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder().name("LicenseExpiryCheck").poolSize(2).interval(ofSeconds(30)).build(),
         LicenseCheckHandler.class,
-        MongoPersistenceIterator.<Account>builder()
+        MongoPersistenceIterator.<Account, MorphiaFilterExpander<Account>>builder()
             .clazz(Account.class)
             .fieldName(AccountKeys.licenseExpiryCheckIteration)
             .targetInterval(ofMinutes(30))
@@ -37,6 +40,7 @@ public class LicenseCheckHandler implements Handler<Account> {
             .acceptableExecutionTime(ofSeconds(15))
             .handler(this)
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

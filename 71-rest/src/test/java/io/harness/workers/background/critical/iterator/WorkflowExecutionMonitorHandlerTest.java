@@ -24,6 +24,7 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -103,8 +104,9 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
     workflowExecutionMonitorHandler.registerIterators();
     Mockito.verify(persistenceIteratorFactory, times(1))
         .createPumpIteratorWithDedicatedThreadPool(any(), eq(WorkflowExecution.class), captor.capture());
-    MongoPersistenceIterator<WorkflowExecution> persistenceIterator =
-        (MongoPersistenceIterator<WorkflowExecution>) captor.getValue().build();
+    MongoPersistenceIterator<WorkflowExecution, MorphiaFilterExpander<WorkflowExecution>> persistenceIterator =
+        (MongoPersistenceIterator<WorkflowExecution, MorphiaFilterExpander<WorkflowExecution>>) captor.getValue()
+            .build();
   }
 
   @Test

@@ -62,6 +62,8 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.ServiceGuardAccountPoller;
@@ -321,7 +323,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
       int maxAllowedThreads) {
     injector.injectMembers(handler);
     PersistenceIterator dataCollectionIterator =
-        MongoPersistenceIterator.<AnalysisContext>builder()
+        MongoPersistenceIterator.<AnalysisContext, MorphiaFilterExpander<AnalysisContext>>builder()
             .mode(ProcessMode.PUMP)
             .clazz(AnalysisContext.class)
             .fieldName(iteratorFieldName)
@@ -336,6 +338,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
                        .field(AnalysisContextKeys.executionStatus)
                        .in(Lists.newArrayList(ExecutionStatus.QUEUED, ExecutionStatus.RUNNING)))
             .redistribute(true)
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .build();
     injector.injectMembers(dataCollectionIterator);
     workflowVerificationExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 5, TimeUnit.SECONDS);
@@ -346,7 +349,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     Handler<Alert> handler = new ServiceGuardCleanUpAlertsJob();
     injector.injectMembers(handler);
     PersistenceIterator alertsCleanupIterator =
-        MongoPersistenceIterator.<Alert>builder()
+        MongoPersistenceIterator.<Alert, MorphiaFilterExpander<Alert>>builder()
             .mode(ProcessMode.PUMP)
             .clazz(Alert.class)
             .fieldName(AlertKeys.cvCleanUpIteration)
@@ -360,6 +363,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
                 -> query.filter(AlertKeys.type, AlertType.CONTINUOUS_VERIFICATION_ALERT)
                        .field(AlertKeys.createdAt)
                        .lessThanOrEq(Instant.now().minus(6, ChronoUnit.HOURS).toEpochMilli()))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();
     injector.injectMembers(alertsCleanupIterator);
@@ -371,7 +375,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     Handler<AnalysisContext> handler = new WorkflowCVTaskCreationHandler();
     injector.injectMembers(handler);
     PersistenceIterator dataCollectionIterator =
-        MongoPersistenceIterator.<AnalysisContext>builder()
+        MongoPersistenceIterator.<AnalysisContext, MorphiaFilterExpander<AnalysisContext>>builder()
             .mode(ProcessMode.PUMP)
             .clazz(AnalysisContext.class)
             .fieldName(AnalysisContextKeys.cvTaskCreationIteration)
@@ -382,6 +386,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
             .handler(handler)
             .schedulingType(REGULAR)
             .filterExpander(query -> query.filter(AnalysisContextKeys.cvTasksCreated, false))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);
@@ -403,7 +408,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
       Handler<Account> handler, String iteratorFieldName, Duration interval, int maxAllowedThreads) {
     injector.injectMembers(handler);
     PersistenceIterator dataCollectionIterator =
-        MongoPersistenceIterator.<Account>builder()
+        MongoPersistenceIterator.<Account, MorphiaFilterExpander<Account>>builder()
             .mode(ProcessMode.PUMP)
             .clazz(Account.class)
             .fieldName(iteratorFieldName)
@@ -419,6 +424,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
                                   .equal(AccountStatus.ACTIVE)),
                     query.criteria(AccountKeys.licenseInfo + "." + LicenseInfoKeys.accountType)
                         .in(Sets.newHashSet(AccountType.TRIAL, AccountType.PAID))))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();
     injector.injectMembers(dataCollectionIterator);

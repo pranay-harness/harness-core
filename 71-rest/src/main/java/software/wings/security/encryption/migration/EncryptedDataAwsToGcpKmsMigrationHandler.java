@@ -20,6 +20,8 @@ import io.harness.filesystem.FileIo;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -62,12 +64,14 @@ public class EncryptedDataAwsToGcpKmsMigrationHandler implements Handler<Encrypt
   KmsConfig awsKmsConfig;
   GcpKmsConfig gcpKmsConfig;
   FileService fileService;
+  MorphiaPersistenceProvider<EncryptedData> persistenceProvider;
 
   @Inject
   public EncryptedDataAwsToGcpKmsMigrationHandler(WingsPersistence wingsPersistence,
       FeatureFlagService featureFlagService, PersistenceIteratorFactory persistenceIteratorFactory,
       KmsService kmsService, GlobalEncryptDecryptClient globalEncryptDecryptClient,
-      GcpSecretsManagerService gcpSecretsManagerService, FileService fileService) {
+      GcpSecretsManagerService gcpSecretsManagerService, FileService fileService,
+      MorphiaPersistenceProvider<EncryptedData> persistenceProvider) {
     this.wingsPersistence = wingsPersistence;
     this.featureFlagService = featureFlagService;
     this.persistenceIteratorFactory = persistenceIteratorFactory;
@@ -75,6 +79,7 @@ public class EncryptedDataAwsToGcpKmsMigrationHandler implements Handler<Encrypt
     this.globalEncryptDecryptClient = globalEncryptDecryptClient;
     this.gcpSecretsManagerService = gcpSecretsManagerService;
     this.fileService = fileService;
+    this.persistenceProvider = persistenceProvider;
   }
 
   public void registerIterators() {
@@ -95,7 +100,7 @@ public class EncryptedDataAwsToGcpKmsMigrationHandler implements Handler<Encrypt
     Optional<FeatureFlag> featureFlagOptional = featureFlagService.getFeatureFlag(ACTIVE_MIGRATION_FROM_AWS_TO_GCP_KMS);
 
     featureFlagOptional.ifPresent(featureFlag -> {
-      MongoPersistenceIterator.FilterExpander<EncryptedData> filterExpander = null;
+      MorphiaFilterExpander<EncryptedData> filterExpander = null;
 
       if (featureFlag.isEnabled()) {
         logger.info(
@@ -119,8 +124,7 @@ public class EncryptedDataAwsToGcpKmsMigrationHandler implements Handler<Encrypt
     });
   }
 
-  private void registerIteratorWithFactory(
-      @NotNull MongoPersistenceIterator.FilterExpander<EncryptedData> filterExpander) {
+  private void registerIteratorWithFactory(@NotNull MorphiaFilterExpander<EncryptedData> filterExpander) {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("EncryptedDataAwsToGcpKmsMigrationHandler")
@@ -128,7 +132,7 @@ public class EncryptedDataAwsToGcpKmsMigrationHandler implements Handler<Encrypt
             .interval(ofSeconds(30))
             .build(),
         EncryptedData.class,
-        MongoPersistenceIterator.<EncryptedData>builder()
+        MongoPersistenceIterator.<EncryptedData, MorphiaFilterExpander<EncryptedData>>builder()
             .clazz(EncryptedData.class)
             .fieldName(EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration)
             .targetInterval(ofHours(20))
@@ -136,10 +140,11 @@ public class EncryptedDataAwsToGcpKmsMigrationHandler implements Handler<Encrypt
             .handler(this)
             .filterExpander(filterExpander)
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 
-  private MongoPersistenceIterator.FilterExpander<EncryptedData> getFilterQuery() {
+  private MorphiaFilterExpander<EncryptedData> getFilterQuery() {
     return query
         -> query.field(EncryptedDataKeys.accountId)
                .exists()
@@ -149,8 +154,7 @@ public class EncryptedDataAwsToGcpKmsMigrationHandler implements Handler<Encrypt
                .equal(KMS);
   }
 
-  private MongoPersistenceIterator.FilterExpander<EncryptedData> getFilterQueryWithAccountIdsFilter(
-      Set<String> accountIds) {
+  private MorphiaFilterExpander<EncryptedData> getFilterQueryWithAccountIdsFilter(Set<String> accountIds) {
     return query
         -> query.field(EncryptedDataKeys.accountId)
                .hasAnyOf(accountIds)

@@ -23,6 +23,8 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.Permit;
@@ -50,12 +52,13 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
   @Inject private HarnessMetricRegistry harnessMetricRegistry;
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private MorphiaPersistenceProvider<ArtifactStream> persistenceProvider;
 
   public void registerIterators(ScheduledThreadPoolExecutor artifactCollectionExecutor) {
     InstrumentedExecutorService instrumentedExecutorService = new InstrumentedExecutorService(
         artifactCollectionExecutor, harnessMetricRegistry.getThreadPoolMetricRegistry(), "Iterator-ArtifactCollection");
     PersistenceIterator iterator = persistenceIteratorFactory.createIterator(ArtifactCollectionHandler.class,
-        MongoPersistenceIterator.<ArtifactStream>builder()
+        MongoPersistenceIterator.<ArtifactStream, MorphiaFilterExpander<ArtifactStream>>builder()
             .mode(ProcessMode.PUMP)
             .clazz(ArtifactStream.class)
             .fieldName(ArtifactStreamKeys.nextIteration)
@@ -65,6 +68,7 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
             .semaphore(new Semaphore(25))
             .handler(this)
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
 
     if (iterator != null) {

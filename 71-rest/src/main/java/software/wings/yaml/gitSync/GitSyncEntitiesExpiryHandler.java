@@ -16,6 +16,8 @@ import io.harness.beans.SearchFilter;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.FindOptions;
@@ -46,6 +48,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
   @Inject private AppService appService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private GitSyncErrorService gitSyncErrorService;
+  @Inject private MorphiaPersistenceProvider<Account> persistenceProvider;
 
   private static long ONE_MONTH_IN_MILLIS = 2592000000L;
   private static long TWELVE_MONTH_IN_MILLIS = 31104000000L;
@@ -58,7 +61,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
             .interval(ofHours(12))
             .build(),
         GitSyncEntitiesExpiryHandler.class,
-        MongoPersistenceIterator.<Account>builder()
+        MongoPersistenceIterator.<Account, MorphiaFilterExpander<Account>>builder()
             .clazz(Account.class)
             .fieldName(AccountKeys.gitSyncExpiryCheckIteration)
             .targetInterval(ofHours(12))
@@ -66,6 +69,7 @@ public class GitSyncEntitiesExpiryHandler implements Handler<Account> {
             .acceptableExecutionTime(ofMinutes(5))
             .handler(this)
             .schedulingType(REGULAR)
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 

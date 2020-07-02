@@ -15,7 +15,6 @@ import static java.time.Duration.ofSeconds;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
-import com.mongodb.BasicDBObject;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistentIrregularIterable;
 import io.harness.iterator.PersistentIterable;
@@ -24,14 +23,12 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.DelayLogContext;
 import io.harness.mongo.EntityLogContext;
 import io.harness.mongo.ProcessTimeLogContext;
-import io.harness.persistence.HPersistence;
+import io.harness.mongo.iterator.filter.FilterExpander;
+import io.harness.mongo.iterator.provider.PersistenceProvider;
 import io.harness.queue.QueueController;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.FilterOperator;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
 
 import java.time.Duration;
 import java.util.List;
@@ -40,18 +37,18 @@ import java.util.concurrent.Semaphore;
 
 @Builder
 @Slf4j
-public class MongoPersistenceIterator<T extends PersistentIterable> implements PersistenceIterator<T> {
+public class MongoPersistenceIterator<T extends PersistentIterable, F extends FilterExpander>
+    implements PersistenceIterator<T> {
   private static final Duration QUERY_TIME = ofMillis(200);
 
-  @Inject private final HPersistence persistence;
   @Inject private final QueueController queueController;
 
   public interface Handler<T> { void handle(T entity); }
 
-  public interface FilterExpander<T> { void filter(Query<T> query); }
-
   public enum SchedulingType { REGULAR, IRREGULAR, IRREGULAR_SKIP_MISSED }
 
+  @Getter private final PersistenceProvider<T, F> persistenceProvider;
+  private F filterExpander;
   private ProcessMode mode;
   private Class<T> clazz;
   private String fieldName;
@@ -61,7 +58,6 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
   private Duration acceptableExecutionTime;
   private Duration throttleInterval;
   private Handler<T> handler;
-  private FilterExpander<T> filterExpander;
   private ExecutorService executorService;
   private Semaphore semaphore;
   private boolean redistribute;
@@ -119,7 +115,8 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
 
         T entity = null;
         try {
-          entity = next(base, throttled);
+          entity = persistenceProvider.obtainNextInstance(
+              base, throttled, clazz, fieldName, schedulingType, targetInterval, filterExpander);
         } finally {
           semaphore.release();
         }
@@ -133,8 +130,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
                 ((PersistentIrregularIterable) entity)
                     .recalculateNextIterations(fieldName, schedulingType == IRREGULAR_SKIP_MISSED, throttled);
             if (isNotEmpty(nextIterations)) {
-              UpdateOperations<T> operations = persistence.createUpdateOperations(clazz).set(fieldName, nextIterations);
-              persistence.update(entity, operations);
+              persistenceProvider.updateEntityField(entity, nextIterations, clazz, fieldName);
             }
 
             if (nextIteration == null) {
@@ -156,9 +152,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
           break;
         }
 
-        Query<T> query = createQuery().project(fieldName, true);
-
-        T next = query.get();
+        T next = persistenceProvider.findInstance(clazz, fieldName, filterExpander);
 
         long sleepMillis = calculateSleepDuration(next).toMillis();
         // Do not sleep with 0, it is actually infinite sleep
@@ -193,47 +187,6 @@ public class MongoPersistenceIterator<T extends PersistentIterable> implements P
     }
 
     return maximumDelayForCheck;
-  }
-
-  public T next(long base, long throttled) {
-    long now = currentTimeMillis();
-
-    Query<T> query = createQuery(now);
-
-    UpdateOperations<T> updateOperations = persistence.createUpdateOperations(clazz);
-    switch (schedulingType) {
-      case REGULAR:
-        updateOperations.set(fieldName, base + targetInterval.toMillis());
-        break;
-      case IRREGULAR:
-        updateOperations.removeFirst(fieldName);
-        break;
-      case IRREGULAR_SKIP_MISSED:
-        updateOperations.removeAll(fieldName, new BasicDBObject(FilterOperator.LESS_THAN_OR_EQUAL.val(), throttled));
-        break;
-      default:
-        unhandled(schedulingType);
-    }
-
-    return persistence.findAndModifySystemData(query, updateOperations, HPersistence.returnOldOptions);
-  }
-
-  public Query<T> createQuery() {
-    Query<T> query = persistence.createQuery(clazz).order(Sort.ascending(fieldName));
-    if (filterExpander != null) {
-      filterExpander.filter(query);
-    }
-    return query;
-  }
-
-  public Query<T> createQuery(long now) {
-    Query<T> query = createQuery();
-    if (filterExpander == null) {
-      query.or(query.criteria(fieldName).lessThan(now), query.criteria(fieldName).doesNotExist());
-    } else {
-      query.and(query.or(query.criteria(fieldName).lessThan(now), query.criteria(fieldName).doesNotExist()));
-    }
-    return query;
   }
 
   // We are aware that the entity will be different object every time the method is

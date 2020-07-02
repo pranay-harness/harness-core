@@ -21,6 +21,8 @@ import io.harness.iterator.TestRegularIterableEntity.RegularIterableEntityKeys;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.Owner;
@@ -39,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class PersistenceRegularIteratorTest extends PersistenceTest {
   @Inject private HPersistence persistence;
+  @Inject private MorphiaPersistenceProvider<TestRegularIterableEntity> persistenceProvider;
   @Inject private QueueController queueController;
   private ExecutorService executorService = ThreadPool.create(4, 15, 1, TimeUnit.SECONDS);
 
@@ -50,9 +53,10 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
     }
   }
 
-  public MongoPersistenceIterator<TestRegularIterableEntity> iterator(PersistenceIterator.ProcessMode mode) {
-    MongoPersistenceIterator<TestRegularIterableEntity> iterator =
-        MongoPersistenceIterator.<TestRegularIterableEntity>builder()
+  public MongoPersistenceIterator<TestRegularIterableEntity, MorphiaFilterExpander<TestRegularIterableEntity>> iterator(
+      PersistenceIterator.ProcessMode mode) {
+    MongoPersistenceIterator<TestRegularIterableEntity, MorphiaFilterExpander<TestRegularIterableEntity>> iterator =
+        MongoPersistenceIterator.<TestRegularIterableEntity, MorphiaFilterExpander<TestRegularIterableEntity>>builder()
             .mode(mode)
             .clazz(TestRegularIterableEntity.class)
             .fieldName(RegularIterableEntityKeys.nextIteration)
@@ -65,8 +69,8 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
             .handler(new TestHandler())
             .schedulingType(REGULAR)
             .redistribute(true)
+            .persistenceProvider(persistenceProvider)
             .build();
-    on(iterator).set("persistence", persistence);
     on(iterator).set("queueController", queueController);
     return iterator;
   }
@@ -83,7 +87,8 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testProcessEntity() {
-    MongoPersistenceIterator<TestRegularIterableEntity> pumpIterator = iterator(PUMP);
+    MongoPersistenceIterator<TestRegularIterableEntity, MorphiaFilterExpander<TestRegularIterableEntity>> pumpIterator =
+        iterator(PUMP);
 
     TestRegularIterableEntity entity =
         TestRegularIterableEntity.builder().uuid(generateUuid()).nextIteration(currentTimeMillis() + 1000).build();

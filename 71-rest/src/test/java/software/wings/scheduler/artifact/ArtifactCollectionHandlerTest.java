@@ -23,6 +23,7 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.logging.ExceptionLogger;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
 import org.junit.Test;
@@ -91,7 +92,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   public void testRegisterIterators() {
     // setup mock
     when(persistenceIteratorFactory.createIterator(any(), any()))
-        .thenReturn(MongoPersistenceIterator.<ArtifactStream>builder().build());
+        .thenReturn(MongoPersistenceIterator.<ArtifactStream, MorphiaFilterExpander<ArtifactStream>>builder().build());
 
     MetricRegistry metricRegistry = mock(MetricRegistry.class);
     when(harnessMetricRegistry.getThreadPoolMetricRegistry()).thenReturn(metricRegistry);
