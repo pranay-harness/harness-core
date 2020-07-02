@@ -269,6 +269,7 @@ import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PodParams;
 import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 import software.wings.beans.command.AbstractCommandUnit;
@@ -1735,5 +1736,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ParameterEntry.class, 7448);
     kryo.register(K8sHelmDeploymentElement.class, 7449);
     kryo.register(SmbConnectionCapability.class, 7450);
+    kryo.register(ImageDetailsWithConnector.class, 7451);
   }
 }

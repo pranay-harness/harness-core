@@ -3,7 +3,6 @@ package software.wings.beans.ci.pod;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import software.wings.beans.container.ImageDetails;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +11,7 @@ import java.util.Map;
 @AllArgsConstructor
 public abstract class ContainerParams {
   private String name;
-  private ImageDetails imageDetails;
+  private ImageDetailsWithConnector imageDetailsWithConnector;
   private List<String> commands;
   private List<String> args;
   private String workingDir;

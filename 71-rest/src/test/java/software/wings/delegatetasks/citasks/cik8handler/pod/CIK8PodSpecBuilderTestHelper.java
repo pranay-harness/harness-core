@@ -15,6 +15,7 @@ import io.harness.security.encryption.EncryptionType;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 
@@ -52,7 +53,10 @@ public class CIK8PodSpecBuilderTestHelper {
 
   public static CIK8ContainerParams basicContainerParamsWithoutImageCred() {
     ImageDetails imageWithoutCred = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
-    return CIK8ContainerParams.builder().name(containerName1).imageDetails(imageWithoutCred).build();
+    return CIK8ContainerParams.builder()
+        .name(containerName1)
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageWithoutCred).build())
+        .build();
   }
 
   public static CIK8ContainerParams containerParamsWithSecretEnvVar() {
@@ -81,7 +85,10 @@ public class CIK8PodSpecBuilderTestHelper {
                                             .username(userName)
                                             .password(password)
                                             .build();
-    return CIK8ContainerParams.builder().name(containerName1).imageDetails(imageDetailsWithCred).build();
+    return CIK8ContainerParams.builder()
+        .name(containerName1)
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithCred).build())
+        .build();
   }
   public static CIK8ContainerParams containerParamsWithVoluemMount() {
     Map<String, String> volumeToMountPath = new HashMap<>();
@@ -96,7 +103,7 @@ public class CIK8PodSpecBuilderTestHelper {
                                             .build();
     return CIK8ContainerParams.builder()
         .name(containerName1)
-        .imageDetails(imageDetailsWithCred)
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithCred).build())
         .volumeToMountPath(volumeToMountPath)
         .build();
   }

@@ -19,7 +19,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.threading.Sleeper;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
-import software.wings.beans.container.ImageDetails;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
@@ -38,7 +38,8 @@ public class CIK8CtlHandler {
   @Inject Provider<ExecCommandListener> execListenerProvider;
   @Inject private Sleeper sleeper;
 
-  public void createRegistrySecret(KubernetesClient kubernetesClient, String namespace, ImageDetails imageDetails) {
+  public void createRegistrySecret(
+      KubernetesClient kubernetesClient, String namespace, ImageDetailsWithConnector imageDetails) {
     Secret secret = secretSpecBuilder.getRegistrySecretSpec(imageDetails, namespace);
     if (secret != null) {
       kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);

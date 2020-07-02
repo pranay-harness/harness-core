@@ -24,10 +24,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.container.ImageDetails;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
@@ -121,24 +123,39 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getRegistrySecretSpecWithEmptyCred() {
     ImageDetails imageDetails1 = ImageDetails.builder().name(imageName).tag(tag).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetails1, namespace));
+    ImageDetailsWithConnector imageDetailsWithConnector1 =
+        ImageDetailsWithConnector.builder().imageDetails(imageDetails1).build();
+    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector1, namespace));
 
     ImageDetails imageDetails2 = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetails2, namespace));
+    ImageDetailsWithConnector imageDetailsWithConnector2 =
+        ImageDetailsWithConnector.builder().imageDetails(imageDetails2).build();
+    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector2, namespace));
 
     ImageDetails imageDetails3 =
         ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).username(userName).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetails3, namespace));
+    ImageDetailsWithConnector imageDetailsWithConnector3 =
+        ImageDetailsWithConnector.builder().imageDetails(imageDetails3).build();
+    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector3, namespace));
 
     ImageDetails imageDetails4 =
         ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).password(password).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetails4, namespace));
+    ImageDetailsWithConnector imageDetailsWithConnector4 =
+        ImageDetailsWithConnector.builder().imageDetails(imageDetails4).build();
+    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector4, namespace));
   }
 
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void getRegistrySecretSpecWithCred() {
+    DockerConfig dockerConfig = DockerConfig.builder()
+                                    .dockerRegistryUrl(registryUrl)
+                                    .username(userName)
+                                    .password(password.toCharArray())
+                                    .build();
+
+    List<EncryptedDataDetail> dockerConfigEncryptedDataDetails = mock(List.class);
     ImageDetails imageDetails1 = ImageDetails.builder()
                                      .name(imageName)
                                      .tag(tag)
@@ -147,7 +164,15 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
                                      .password(password)
                                      .build();
 
-    Secret secret = secretSpecBuilder.getRegistrySecretSpec(imageDetails1, namespace);
+    when(encryptionService.decrypt(dockerConfig, dockerConfigEncryptedDataDetails)).thenReturn(dockerConfig);
+
+    ImageDetailsWithConnector imageDetailsWithConnector1 = ImageDetailsWithConnector.builder()
+                                                               .imageDetails(imageDetails1)
+                                                               .encryptableSetting(dockerConfig)
+                                                               .encryptedDataDetails(dockerConfigEncryptedDataDetails)
+                                                               .build();
+
+    Secret secret = secretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector1, namespace);
     assertEquals(registrySecretName, secret.getMetadata().getName());
     assertEquals(namespace, secret.getMetadata().getNamespace());
   }

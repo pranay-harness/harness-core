@@ -28,6 +28,7 @@ import software.wings.beans.ci.CIBuildSetupTaskParams;
 import software.wings.beans.ci.CIK8BuildTaskParams;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PodParams;
 import software.wings.beans.ci.pod.SecretKeyParams;
 import software.wings.beans.container.ImageDetails;
@@ -37,9 +38,11 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.KubernetesHelperService;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -116,13 +119,16 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private void createImageSecrets(
       KubernetesClient kubernetesClient, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
-    List<CIK8ContainerParams> containerParamsList = podParams.getContainerParamsList();
-    Map<String, ImageDetails> imageDetailsById = new HashMap<>();
+    List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
+    Optional.ofNullable(podParams.getContainerParamsList()).ifPresent(containerParamsList::addAll);
+    Optional.ofNullable(podParams.getInitContainerParamsList()).ifPresent(containerParamsList::addAll);
+
+    Map<String, ImageDetailsWithConnector> imageDetailsById = new HashMap<>();
     for (CIK8ContainerParams containerParams : containerParamsList) {
-      ImageDetails imageDetails = containerParams.getImageDetails();
+      ImageDetails imageDetails = containerParams.getImageDetailsWithConnector().getImageDetails();
       if (isNotBlank(imageDetails.getRegistryUrl())) {
-        imageDetailsById.put(
-            format(imageIdFormat, imageDetails.getName(), imageDetails.getRegistryUrl()), imageDetails);
+        imageDetailsById.put(format(imageIdFormat, imageDetails.getName(), imageDetails.getRegistryUrl()),
+            containerParams.getImageDetailsWithConnector());
       }
     }
     imageDetailsById.forEach(

@@ -23,6 +23,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.container.ImageDetails;
 
 import java.io.IOException;
@@ -68,15 +69,16 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     assertThat(podParams.getContainerParamsList().get(0))
-        .isEqualTo(CIK8ContainerParams.builder()
-                       .name(null)
-                       .containerResourceParams(null)
-                       .containerType(CIContainerType.STEP_EXECUTOR)
-                       .commands(command)
-                       .args(args)
-                       .imageDetails(imageDetails)
-                       .volumeToMountPath(map)
-                       .build());
+        .isEqualTo(
+            CIK8ContainerParams.builder()
+                .name(null)
+                .containerResourceParams(null)
+                .containerType(CIContainerType.STEP_EXECUTOR)
+                .commands(command)
+                .args(args)
+                .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
+                .volumeToMountPath(map)
+                .build());
 
     assertThat(podParams.getContainerParamsList().get(1))
         .isEqualTo(InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER));

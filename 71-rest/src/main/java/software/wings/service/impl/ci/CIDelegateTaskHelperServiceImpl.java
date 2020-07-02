@@ -1,6 +1,7 @@
 package software.wings.service.impl.ci;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
 
@@ -12,6 +13,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFileConfig;
@@ -26,14 +28,18 @@ import software.wings.beans.ci.K8ExecuteCommandTaskParams;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -54,6 +60,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   private static final String REPLACE_USERNAME_HERE = "REPLACE_USERNAME_HERE";
   private static final String REPLACE_PASSWORD_HERE = "REPLACE_PASSWORD_HERE";
+  private static final String HARNESS_GENERATION_PASSPHRASE = "HARNESS_GENERATION_PASSPHRASE";
 
   @Override
   public K8sTaskExecutionResponse setBuildEnv(String k8ConnectorName, String gitConnectorName, String branchName,
@@ -79,30 +86,9 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
     }
 
-    List<CIK8ContainerParams> cik8ContainerParamsList = podParams.getContainerParamsList();
-    Map<String, EncryptedDataDetail> secrets = new HashMap<>();
-    cik8ContainerParamsList.forEach(cik8ContainerParams -> {
-      if (isEmpty(cik8ContainerParams.getEncryptedSecrets())
-          && cik8ContainerParams.getContainerType() == (CIContainerType.STEP_EXECUTOR)) {
-        String userName = secretManager.getSecretByName(ACCOUNT_ID, REPLACE_USERNAME_HERE).getUuid();
+    addImageRegistryConnectorSecrets(podParams);
 
-        EncryptedDataDetail userEncryptedDataDetail =
-            secretManager.encryptedDataDetails(ACCOUNT_ID, REPLACE_USERNAME_HERE, userName)
-                .orElseThrow(() -> new IllegalArgumentException("REPLACE_USERNAME_HERE does not exist"));
-
-        secrets.put(REPLACE_USERNAME_HERE, userEncryptedDataDetail);
-
-        String password = secretManager.getSecretByName(ACCOUNT_ID, REPLACE_PASSWORD_HERE).getUuid();
-
-        EncryptedDataDetail passEncryptedDataDetail =
-            secretManager.encryptedDataDetails(ACCOUNT_ID, REPLACE_PASSWORD_HERE, password)
-                .orElseThrow(() -> new IllegalArgumentException("REPLACE_PASSWORD_HERE does not exist"));
-
-        secrets.put(REPLACE_PASSWORD_HERE, passEncryptedDataDetail);
-
-        cik8ContainerParams.setEncryptedSecrets(secrets);
-      }
-    });
+    addMVNSecrets(podParams);
 
     CIK8PodParams<CIK8ContainerParams> podParamsWithGitDetails =
         CIK8PodParams.<CIK8ContainerParams>builder()
@@ -111,7 +97,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
             .stepExecVolumeName(STEP_EXEC)
             .stepExecWorkingDir(podParams.getStepExecWorkingDir())
             .gitFetchFilesConfig(gitFetchFilesConfig)
-            .containerParamsList(cik8ContainerParamsList)
+            .containerParamsList(podParams.getContainerParamsList())
             .initContainerParamsList(podParams.getInitContainerParamsList())
             .build();
 
@@ -142,6 +128,39 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     }
 
     return null;
+  }
+
+  private void addImageRegistryConnectorSecrets(CIK8PodParams<CIK8ContainerParams> podParams) {
+    List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
+    Optional.ofNullable(podParams.getContainerParamsList()).ifPresent(containerParamsList::addAll);
+    Optional.ofNullable(podParams.getInitContainerParamsList()).ifPresent(containerParamsList::addAll);
+
+    containerParamsList.forEach(cik8ContainerParams -> {
+      ImageDetailsWithConnector imageDetailsWithConnector = cik8ContainerParams.getImageDetailsWithConnector();
+      String connectorName = imageDetailsWithConnector.getConnectorName();
+      String registryUrl = imageDetailsWithConnector.getImageDetails().getRegistryUrl();
+
+      if (connectorName != null) {
+        SettingAttribute customerImageRegistry = settingsService.getSettingAttributeByName(ACCOUNT_ID, connectorName);
+        SettingValue value = customerImageRegistry.getValue();
+        switch (value.getSettingType()) {
+          case DOCKER:
+            DockerConfig dockerConfig = (DockerConfig) value;
+            String connectorRegistryUrl = dockerConfig.getDockerRegistryUrl();
+            if (registryUrl != null && !registryUrl.equals(connectorRegistryUrl)) {
+              throw new IllegalArgumentException("Registry url doesnt match connector registry url");
+            }
+            List<EncryptedDataDetail> imageConnectorEncryptionDetails =
+                secretManager.getEncryptionDetails(dockerConfig);
+            imageDetailsWithConnector.getImageDetails().setRegistryUrl(connectorRegistryUrl);
+            imageDetailsWithConnector.setEncryptableSetting(dockerConfig);
+            imageDetailsWithConnector.setEncryptedDataDetails(imageConnectorEncryptionDetails);
+            break;
+          default:
+            unhandled(value.getSettingType());
+        }
+      }
+    });
   }
 
   @Override
@@ -219,5 +238,41 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
       logger.error("Failed to cleanup pod", e);
     }
     return null;
+  }
+
+  private void addMVNSecrets(CIK8PodParams<CIK8ContainerParams> podParams) {
+    List<CIK8ContainerParams> cik8ContainerParamsList = podParams.getContainerParamsList();
+    Map<String, EncryptedDataDetail> secrets = new HashMap<>();
+
+    cik8ContainerParamsList.forEach(cik8ContainerParams -> {
+      if (isEmpty(cik8ContainerParams.getEncryptedSecrets())
+          && cik8ContainerParams.getContainerType() == (CIContainerType.STEP_EXECUTOR)) {
+        String userName = secretManager.getSecretByName(ACCOUNT_ID, REPLACE_USERNAME_HERE).getUuid();
+
+        EncryptedDataDetail userEncryptedDataDetail =
+            secretManager.encryptedDataDetails(ACCOUNT_ID, REPLACE_USERNAME_HERE, userName)
+                .orElseThrow(() -> new IllegalArgumentException("REPLACE_USERNAME_HERE does not exist"));
+
+        secrets.put(REPLACE_USERNAME_HERE, userEncryptedDataDetail);
+
+        String password = secretManager.getSecretByName(ACCOUNT_ID, REPLACE_PASSWORD_HERE).getUuid();
+
+        EncryptedDataDetail passEncryptedDataDetail =
+            secretManager.encryptedDataDetails(ACCOUNT_ID, REPLACE_PASSWORD_HERE, password)
+                .orElseThrow(() -> new IllegalArgumentException("REPLACE_PASSWORD_HERE does not exist"));
+
+        secrets.put(REPLACE_PASSWORD_HERE, passEncryptedDataDetail);
+
+        String passPhrase = secretManager.getSecretByName(ACCOUNT_ID, HARNESS_GENERATION_PASSPHRASE).getUuid();
+
+        EncryptedDataDetail passPhraseEncryptedDataDetail =
+            secretManager.encryptedDataDetails(ACCOUNT_ID, HARNESS_GENERATION_PASSPHRASE, passPhrase)
+                .orElseThrow(() -> new IllegalArgumentException("HARNESS_GENERATION_PASSPHRASE does not exist"));
+
+        secrets.put(HARNESS_GENERATION_PASSPHRASE, passPhraseEncryptedDataDetail);
+
+        cik8ContainerParams.setEncryptedSecrets(secrets);
+      }
+    });
   }
 }
