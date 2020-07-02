@@ -18,6 +18,8 @@ import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.service.ServiceConfig;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
@@ -26,9 +28,12 @@ import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
+import io.harness.executionplan.stepsdependency.StepDependencyService;
+import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.plan.PlanNode.PlanNodeBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -44,6 +49,7 @@ import java.util.stream.Collectors;
 public class ServiceStepPlanCreator
     extends AbstractPlanCreatorWithChildren<ServiceConfig> implements SupportDefinedExecutorPlanCreator<ServiceConfig> {
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
+  @Inject private StepDependencyService stepDependencyService;
 
   @Override
   public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
@@ -73,7 +79,7 @@ public class ServiceStepPlanCreator
     List<PlanNode> planNodes = getPlanNodes(planForArtifacts);
     planNodes.addAll(planForManifests.getPlanNodes());
 
-    final PlanNode serviceExecutionNode = prepareServiceNode(actualServiceConfig, childNodeIds);
+    final PlanNode serviceExecutionNode = prepareServiceNode(actualServiceConfig, childNodeIds, context);
     return CreateExecutionPlanResponse.builder()
         .planNode(serviceExecutionNode)
         .planNodes(planNodes)
@@ -81,22 +87,33 @@ public class ServiceStepPlanCreator
         .build();
   }
 
-  private PlanNode prepareServiceNode(ServiceConfig serviceConfig, List<String> childNodeIds) {
+  private PlanNode prepareServiceNode(
+      ServiceConfig serviceConfig, List<String> childNodeIds, CreateExecutionPlanContext context) {
     final String serviceNodeUid = generateUuid();
 
     serviceConfig.setDisplayName(
         StringUtils.defaultIfEmpty(serviceConfig.getDisplayName(), serviceConfig.getIdentifier()));
 
-    return PlanNode.builder()
-        .uuid(serviceNodeUid)
-        .name(serviceConfig.getDisplayName())
-        .identifier(serviceConfig.getIdentifier())
-        .stepType(ServiceStep.STEP_TYPE)
-        .stepParameters(ServiceStepParameters.builder().parallelNodeIds(childNodeIds).service(serviceConfig).build())
-        .facilitatorObtainment(FacilitatorObtainment.builder()
-                                   .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
-                                   .build())
-        .build();
+    PlanNodeBuilder planNodeBuilder =
+        PlanNode.builder()
+            .uuid(serviceNodeUid)
+            .name(serviceConfig.getDisplayName())
+            .identifier(serviceConfig.getIdentifier())
+            .stepType(ServiceStep.STEP_TYPE)
+            .stepParameters(
+                ServiceStepParameters.builder().parallelNodeIds(childNodeIds).service(serviceConfig).build())
+            .facilitatorObtainment(FacilitatorObtainment.builder()
+                                       .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
+                                       .build());
+
+    // Adding dependency provider.
+    OutcomeRefStepDependencyInstructor instructor = OutcomeRefStepDependencyInstructor.builder()
+                                                        .key(CDStepDependencyUtils.getServiceKey(context))
+                                                        .providerPlanNodeId(serviceNodeUid)
+                                                        .outcomeExpression(OutcomeExpressionConstants.SERVICE.getName())
+                                                        .build();
+    stepDependencyService.registerStepDependencyInstructor(instructor, context);
+    return planNodeBuilder.build();
   }
 
   @NotNull

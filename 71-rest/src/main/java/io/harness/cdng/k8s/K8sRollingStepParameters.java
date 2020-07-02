@@ -1,12 +1,16 @@
 package io.harness.cdng.k8s;
 
+import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+import java.util.Map;
+
+@Data
 @Builder
 public class K8sRollingStepParameters implements StepParameters {
-  private int timeout;
-  private boolean skipDryRun;
+  int timeout;
+  boolean skipDryRun;
+  Map<String, StepDependencySpec> stepDependencySpecs;
 }

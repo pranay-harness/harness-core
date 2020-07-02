@@ -20,4 +20,5 @@ public class BasicHttpStepParameters implements StepParameters {
   @Attributes(title = "Header") String header;
   @Attributes(title = "Body") String body;
   @Attributes(title = "Assertion") String assertion;
+  int socketTimeoutMillis;
 }

@@ -135,7 +135,6 @@ public class WingsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("pcfConfig", PcfConfig.class);
     orchestrationElements.put("stageVariables", StageVariables.class);
     orchestrationElements.put("k8sManifest", K8sManifest.class);
-    orchestrationElements.put("httpStepInfo_httpSpec", HttpStepInfo.HttpSpec.class);
     orchestrationElements.put("deploymentState_deployment", DeploymentStage.Deployment.class);
     orchestrationElements.put("helmChartInfo", HelmChartInfo.class);
     orchestrationElements.put("infrastructureSpec", InfrastructureSpec.class);

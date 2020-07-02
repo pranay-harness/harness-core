@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.redesign.states.http.BasicHttpStep;
+import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.state.StepType;
+import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Value;
 
@@ -15,7 +17,7 @@ public class HttpStepInfo implements CDStepInfo {
   String displayName;
   String type;
   String identifier;
-  HttpSpec http;
+  BasicHttpStepParameters http;
 
   @Override
   public String getDisplayName() {
@@ -32,13 +34,8 @@ public class HttpStepInfo implements CDStepInfo {
     return FacilitatorType.TASK;
   }
 
-  @Value
-  @Builder
-  public static class HttpSpec {
-    String url;
-    String body;
-    String header;
-    String method;
-    int socketTimeoutMillis;
+  @Override
+  public StepParameters getStepParameters() {
+    return http;
   }
 }

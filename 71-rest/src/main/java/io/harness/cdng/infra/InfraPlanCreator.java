@@ -3,17 +3,24 @@ package io.harness.cdng.infra;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.INFRA_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import com.google.inject.Inject;
+
 import io.harness.cdng.environment.steps.EnvironmentStep;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.stepsdependency.StepDependencyService;
+import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.plan.PlanNode.PlanNodeBuilder;
 import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
 import org.apache.commons.lang3.StringUtils;
@@ -22,10 +29,12 @@ import java.util.Collections;
 import java.util.List;
 
 public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<PipelineInfrastructure> {
+  @Inject private StepDependencyService stepDependencyService;
+
   @Override
   public CreateExecutionPlanResponse createPlan(
       PipelineInfrastructure pipelineInfrastructure, CreateExecutionPlanContext context) {
-    PlanNode infraStepNode = getInfraStepNode(pipelineInfrastructure);
+    PlanNode infraStepNode = getInfraStepNode(pipelineInfrastructure, context);
     PlanNode envStepNode = getEnvStepNode(pipelineInfrastructure);
     PlanNode infraSectionNode = getInfraSectionNode(pipelineInfrastructure, infraStepNode, envStepNode);
     return CreateExecutionPlanResponse.builder()
@@ -52,19 +61,30 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
         .build();
   }
 
-  private PlanNode getInfraStepNode(PipelineInfrastructure pipelineInfrastructure) {
+  private PlanNode getInfraStepNode(PipelineInfrastructure pipelineInfrastructure, CreateExecutionPlanContext context) {
     final String infraNodeId = generateUuid();
     final String infraIdentifier = "infrastructureSpecification";
 
-    return PlanNode.builder()
-        .uuid(infraNodeId)
-        .name(infraIdentifier)
-        .identifier(infraIdentifier)
-        .stepType(InfrastructureStep.STEP_TYPE)
-        .stepParameters(pipelineInfrastructure.getInfrastructureSpec().getInfrastructure())
-        .facilitatorObtainment(
-            FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.SYNC).build()).build())
-        .build();
+    PlanNodeBuilder planNodeBuilder =
+        PlanNode.builder()
+            .uuid(infraNodeId)
+            .name(infraIdentifier)
+            .identifier(infraIdentifier)
+            .stepType(InfrastructureStep.STEP_TYPE)
+            .stepParameters(pipelineInfrastructure.getInfrastructureSpec().getInfrastructure())
+            .facilitatorObtainment(FacilitatorObtainment.builder()
+                                       .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                       .build());
+
+    // Add step dependency provider.
+    OutcomeRefStepDependencyInstructor instructor =
+        OutcomeRefStepDependencyInstructor.builder()
+            .key(CDStepDependencyUtils.getInfraKey(context))
+            .providerPlanNodeId(infraNodeId)
+            .outcomeExpression(OutcomeExpressionConstants.INFRASTRUCTURE.getName())
+            .build();
+    stepDependencyService.registerStepDependencyInstructor(instructor, context);
+    return planNodeBuilder.build();
   }
 
   private PlanNode getInfraSectionNode(

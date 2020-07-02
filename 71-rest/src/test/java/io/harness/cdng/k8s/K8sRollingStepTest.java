@@ -7,13 +7,17 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.service.beans.ServiceOutcome;
-import io.harness.engine.outcomes.OutcomeService;
-import io.harness.exception.InvalidRequestException;
-import io.harness.references.OutcomeRefObject;
+import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
+import io.harness.executionplan.stepsdependency.StepDependencyService;
+import io.harness.executionplan.stepsdependency.StepDependencySpec;
+import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
 import org.junit.Test;
@@ -25,40 +29,49 @@ import software.wings.WingsBaseTest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class K8sRollingStepTest extends WingsBaseTest {
-  private K8sRollingStep k8sRollingStepSpy = new K8sRollingStep();
-  @Mock OutcomeService outcomeService;
+  @Mock StepDependencyService stepDependencyService;
   @InjectMocks private K8sRollingStep k8sRollingStep;
 
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testStartChainLink() {
+    StepDependencySpec serviceSpec = KeyAwareStepDependencySpec.builder().key("SERVICE").build();
+    StepDependencySpec infraSpec = KeyAwareStepDependencySpec.builder().key("INFRA").build();
+    Map<String, StepDependencySpec> stepDependencySpecs = new HashMap<String, StepDependencySpec>() {
+      {
+        put(CDStepDependencyKey.SERVICE.name(), serviceSpec);
+        put(CDStepDependencyKey.INFRASTRUCTURE.name(), infraSpec);
+      }
+    };
     K8sRollingStepInfo k8sRollingStepInfo =
-        K8sRollingStepInfo.builder().k8sRolling(K8sRollingStepParameters.builder().build()).build();
+        K8sRollingStepInfo.builder()
+            .k8sRolling(K8sRollingStepParameters.builder().stepDependencySpecs(stepDependencySpecs).build())
+            .build();
 
     Ambiance ambiance = Ambiance.builder().build();
-    OutcomeRefObject service = OutcomeRefObject.builder().name("service").build();
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    StepDependencyResolverContext resolverContext =
+        CDStepDependencyUtils.getStepDependencyResolverContext(stepInputPackage, k8sRollingStepInfo, ambiance);
 
-    doReturn(null).when(outcomeService).resolve(ambiance, service);
-
-    assertThatThrownBy(
-        () -> k8sRollingStep.startChainLink(ambiance, k8sRollingStepInfo, StepInputPackage.builder().build()))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessageContaining("Services step need to run before k8s rolling step");
+    doReturn(Optional.empty()).when(stepDependencyService).resolve(serviceSpec, resolverContext);
+    assertThatThrownBy(() -> k8sRollingStep.startChainLink(ambiance, k8sRollingStepInfo, stepInputPackage))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("Service Dependency is not available");
 
     ServiceOutcome serviceOutcome = ServiceOutcome.builder().build();
-    doReturn(serviceOutcome).when(outcomeService).resolve(ambiance, service);
+    doReturn(Optional.of(serviceOutcome)).when(stepDependencyService).resolve(serviceSpec, resolverContext);
 
-    OutcomeRefObject infrastructureRefObject = OutcomeRefObject.builder().name("infrastructure").build();
-
-    doReturn(null).when(outcomeService).resolve(ambiance, infrastructureRefObject);
-    assertThatThrownBy(
-        () -> k8sRollingStep.startChainLink(ambiance, k8sRollingStepInfo, StepInputPackage.builder().build()))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessageContaining("Infrastructure step need to run before k8s rolling step");
+    doReturn(Optional.empty()).when(stepDependencyService).resolve(infraSpec, resolverContext);
+    assertThatThrownBy(() -> k8sRollingStep.startChainLink(ambiance, k8sRollingStepInfo, stepInputPackage))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("Infrastructure Dependency is not available");
   }
 
   @Test
