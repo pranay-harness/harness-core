@@ -53,8 +53,7 @@ public class ParentPathInfoUtils {
    */
   public String getParentPath(CreateExecutionPlanContext context) {
     Optional<LinkedList<PlanLevelNode>> parentPathOptional = getConfig(PARENT_PATH_INFO, context);
-    LinkedList<PlanLevelNode> planLevelNodes =
-        parentPathOptional.orElseThrow(() -> new IllegalArgumentException("Parent Path has not been initialised."));
+    LinkedList<PlanLevelNode> planLevelNodes = parentPathOptional.orElse(new LinkedList<>());
     return planLevelNodes.stream().map(PlanLevelNode::getIdentifier).collect(Collectors.joining("."));
   }
 
@@ -79,11 +78,11 @@ public class ParentPathInfoUtils {
         }
       }
       if (!foundNode) {
-        throw new IllegalArgumentException("PlanNode type doesnt exist in parent path.");
+        throw new InvalidArgumentsException("PlanNode type doesn't exist in parent path.");
       }
       return parentPath;
     } else {
-      throw new IllegalArgumentException("Parent Path has not been initialised.");
+      throw new InvalidArgumentsException("Parent Path has not been initialised.");
     }
   }
 }

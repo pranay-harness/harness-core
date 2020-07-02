@@ -6,17 +6,18 @@ import io.harness.Task;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTask;
 import io.harness.cdng.common.AmbianceHelper;
+import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.engine.outcomes.OutcomeService;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.execution.status.Status;
+import io.harness.executionplan.stepsdependency.StepDependencyService;
+import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.facilitator.modes.task.TaskExecutable;
-import io.harness.references.OutcomeRefObject;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
@@ -35,21 +36,22 @@ public class K8sRollingRollbackStep implements Step, TaskExecutable {
 
   @Inject OutcomeService outcomeService;
   @Inject K8sStepHelper k8sStepHelper;
+  @Inject private StepDependencyService stepDependencyService;
 
   @Override
   public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     K8sRollingRollbackStepParameters k8sRollingRollbackStepParameters =
         ((K8sRollingRollbackStepInfo) stepParameters).getK8sRollingRollback();
 
-    K8sRollingOutcome k8sRollingOutcome =
-        (K8sRollingOutcome) outcomeService.resolve(ambiance, OutcomeRefObject.builder().name("rollingOutcome").build());
+    StepDependencySpec k8sRollingSpec =
+        k8sRollingRollbackStepParameters.getStepDependencySpecs().get(CDStepDependencyKey.K8S_ROLL_OUT.name());
+    K8sRollingOutcome k8sRollingOutcome = CDStepDependencyUtils.getK8sRolling(
+        stepDependencyService, k8sRollingSpec, inputPackage, stepParameters, ambiance);
 
-    Infrastructure infrastructure =
-        (Infrastructure) outcomeService.resolve(ambiance, OutcomeRefObject.builder().name("infrastructure").build());
-    if (infrastructure == null) {
-      throw new InvalidRequestException(
-          "Infrastructure step need to run before k8s rolling step", WingsException.ADMIN);
-    }
+    StepDependencySpec infraSpec =
+        k8sRollingRollbackStepParameters.getStepDependencySpecs().get(CDStepDependencyKey.INFRASTRUCTURE.name());
+    Infrastructure infrastructure = CDStepDependencyUtils.getInfrastructure(
+        stepDependencyService, infraSpec, inputPackage, stepParameters, ambiance);
 
     K8sRollingDeployRollbackTaskParameters taskParameters =
         K8sRollingDeployRollbackTaskParameters.builder()

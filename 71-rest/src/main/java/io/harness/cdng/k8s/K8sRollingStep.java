@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTask;
 import io.harness.cdng.common.AmbianceHelper;
+import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
@@ -19,6 +20,8 @@ import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
 import io.harness.data.structure.UUIDGenerator;
@@ -26,14 +29,14 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.engine.expressions.EngineExpressionService;
-import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.execution.status.Status;
+import io.harness.executionplan.stepsdependency.StepDependencyService;
+import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
-import io.harness.references.OutcomeRefObject;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -75,27 +78,25 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
 
   @Inject private SecretManager secretManager;
   @Inject private SettingsService settingsService;
-  @Inject private OutcomeService outcomeService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private K8sStepHelper k8sStepHelper;
+  @Inject private StepDependencyService stepDependencyService;
 
   @Override
   public TaskChainResponse startChainLink(
       Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     K8sRollingStepParameters k8sRollingStepParameters = ((K8sRollingStepInfo) stepParameters).getK8sRolling();
 
+    StepDependencySpec serviceSpec =
+        k8sRollingStepParameters.getStepDependencySpecs().get(CDStepDependencyKey.SERVICE.name());
     ServiceOutcome serviceOutcome =
-        (ServiceOutcome) outcomeService.resolve(ambiance, OutcomeRefObject.builder().name("service").build());
-    if (serviceOutcome == null) {
-      throw new InvalidRequestException("Services step need to run before k8s rolling step", WingsException.ADMIN);
-    }
+        CDStepDependencyUtils.getService(stepDependencyService, serviceSpec, inputPackage, stepParameters, ambiance);
 
-    Infrastructure infrastructure =
-        (Infrastructure) outcomeService.resolve(ambiance, OutcomeRefObject.builder().name("infrastructure").build());
-    if (infrastructure == null) {
-      throw new InvalidRequestException(
-          "Infrastructure step need to run before k8s rolling step", WingsException.ADMIN);
-    }
+    StepDependencySpec infraSpec =
+        k8sRollingStepParameters.getStepDependencySpecs().get(CDStepDependencyKey.INFRASTRUCTURE.name());
+
+    Infrastructure infrastructure = CDStepDependencyUtils.getInfrastructure(
+        stepDependencyService, infraSpec, inputPackage, stepParameters, ambiance);
 
     List<ManifestAttributes> serviceManifests = serviceOutcome.getManifests();
     Validator.notEmptyCheck("Service Level Manifests can't be empty", serviceManifests);
@@ -392,8 +393,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
       return StepResponse.builder()
           .status(Status.SUCCEEDED)
           .stepOutcome(StepResponse.StepOutcome.builder()
-                           .group("PHASES")
-                           .name("rollingOutcome")
+                           .name(OutcomeExpressionConstants.K8S_ROLL_OUT.getName())
                            .outcome(k8sRollingOutcome)
                            .build())
           .build();

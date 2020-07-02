@@ -3,6 +3,8 @@ package io.harness.executionplan.plancreator;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
 
+import com.google.inject.Inject;
+
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
@@ -10,17 +12,23 @@ import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.executionplan.plancreator.beans.StepGroup;
+import io.harness.executionplan.stepsdependency.StepDependencyService;
+import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.plan.PlanNode.PlanNodeBuilder;
 import io.harness.state.StepType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator<GenericStepInfo> {
+  @Inject private StepDependencyService stepDependencyService;
+
   @Override
   public CreateExecutionPlanResponse createPlan(GenericStepInfo genericStepInfo, CreateExecutionPlanContext context) {
     final PlanNode genericStepPlanNode = prepareStepExecutionNode(genericStepInfo, context);
@@ -40,8 +48,18 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
     } else {
       nodeName = genericStepInfo.getDisplayName();
     }
-    return PlanNode.builder()
-        .uuid(nodeId)
+    PlanNodeBuilder planNodeBuilder = PlanNode.builder();
+
+    // Add Step dependencies.
+    Map<String, StepDependencySpec> stepDependencyMap = genericStepInfo.getInputStepDependencyList(context);
+    if (EmptyPredicate.isNotEmpty(stepDependencyMap)) {
+      stepDependencyMap.forEach(
+          (key, value) -> stepDependencyService.attachDependency(value, planNodeBuilder, context));
+    }
+    // Register step dependency instructors.
+    genericStepInfo.registerStepDependencyInstructors(stepDependencyService, context, nodeId);
+
+    planNodeBuilder.uuid(nodeId)
         .name(nodeName)
         .identifier(genericStepInfo.getIdentifier())
         .stepType(StepType.builder().type(genericStepInfo.getStepType().getType()).build())
@@ -49,8 +67,9 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
         .stepParameters(genericStepInfo.getStepParameters())
         .facilitatorObtainment(FacilitatorObtainment.builder()
                                    .type(FacilitatorType.builder().type(genericStepInfo.getFacilitatorType()).build())
-                                   .build())
-        .build();
+                                   .build());
+
+    return planNodeBuilder.build();
   }
 
   @Override

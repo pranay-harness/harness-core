@@ -2,6 +2,8 @@ package io.harness.executionplan;
 
 import static com.google.inject.Scopes.SINGLETON;
 
+import com.google.inject.name.Names;
+
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
 import io.harness.executionplan.core.impl.ExecutionPlanCreatorRegistryImpl;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
@@ -10,6 +12,11 @@ import io.harness.executionplan.plancreator.StagesPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.executionplan.service.impl.ExecutionPlanCreatorServiceImpl;
+import io.harness.executionplan.stepsdependency.StepDependencyResolver;
+import io.harness.executionplan.stepsdependency.StepDependencyService;
+import io.harness.executionplan.stepsdependency.resolvers.ExpressionStepDependencyResolver;
+import io.harness.executionplan.stepsdependency.resolvers.RefObjectStepDependencyResolver;
+import io.harness.executionplan.stepsdependency.service.StepDependencyServiceImpl;
 import io.harness.govern.DependencyModule;
 
 import java.util.Collections;
@@ -33,6 +40,16 @@ public class ExecutionPlanModule extends DependencyModule {
     bind(ExecutionPlanCreatorHelper.class).in(SINGLETON);
     bind(StagesPlanCreator.class).in(SINGLETON);
     bind(GenericStepPlanCreator.class).in(SINGLETON);
+
+    bind(StepDependencyResolver.class)
+        .annotatedWith(Names.named("RefObjectResolver"))
+        .to(RefObjectStepDependencyResolver.class)
+        .in(SINGLETON);
+    bind(StepDependencyResolver.class)
+        .annotatedWith(Names.named("ExpressionResolver"))
+        .to(ExpressionStepDependencyResolver.class)
+        .in(SINGLETON);
+    bind(StepDependencyService.class).to(StepDependencyServiceImpl.class).in(SINGLETON);
   }
 
   @Override

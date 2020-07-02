@@ -17,6 +17,7 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.Artifacts;
 import io.harness.cdng.service.beans.ServiceOutcome.Artifacts.ArtifactsBuilder;
 import io.harness.cdng.service.beans.ServiceOutcome.ServiceOutcomeBuilder;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.Outcome;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.outcomes.OutcomeService;
@@ -86,7 +87,7 @@ public class ServiceStep implements Step, ChildrenExecutable {
           FailureInfo.builder().errorMessage(String.join(",", errorMessages)).failureTypes(failureTypes).build());
     } else {
       responseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
-                                      .name("service")
+                                      .name(OutcomeExpressionConstants.SERVICE.getName())
                                       .outcome(createServiceOutcome(parameters.getService(), responseNotifyDataList))
                                       .group(StepGroup.STAGE.name())
                                       .build());
@@ -129,11 +130,11 @@ public class ServiceStep implements Step, ChildrenExecutable {
   }
 
   private void handleManifestOutcome(ManifestOutcome outcome, ServiceOutcomeBuilder outcomeBuilder) {
-    List<ManifestAttributes> manifestAttributesForSErviceSpec =
+    List<ManifestAttributes> manifestAttributesForServiceSpec =
         isNotEmpty(outcome.getManifestAttributesForServiceSpec()) ? outcome.getManifestAttributesForServiceSpec()
                                                                   : EMPTY_LIST;
 
-    outcomeBuilder.manifests(manifestAttributesForSErviceSpec);
+    outcomeBuilder.manifests(manifestAttributesForServiceSpec);
     outcomeBuilder.overrides(
         ServiceOutcome.Override.builder().manifests(outcome.getManifestAttributesForOverride()).build());
   }

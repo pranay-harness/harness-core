@@ -3,6 +3,7 @@ package io.harness.cdng.infra.steps;
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.facilitator.PassThroughData;
@@ -30,8 +31,11 @@ public class InfrastructureStep implements Step, SyncExecutable {
     // TODO: render variables later
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
-        .stepOutcome(
-            StepOutcome.builder().outcome(infrastructure).name("infrastructure").group(StepGroup.STAGE.name()).build())
+        .stepOutcome(StepOutcome.builder()
+                         .outcome(infrastructure)
+                         .name(OutcomeExpressionConstants.INFRASTRUCTURE.getName())
+                         .group(StepGroup.STAGE.name())
+                         .build())
         .build();
   }
 }
