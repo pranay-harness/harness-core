@@ -1,6 +1,9 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationUtils.OUTPUT_VARIABLE;
 import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationUtils.buildShellScriptParameters;
 
@@ -15,6 +18,7 @@ import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.delegatetasks.ShellScriptTaskHandler;
 import software.wings.delegatetasks.validation.ShellScriptValidationHandler;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
+import software.wings.service.impl.security.SecretManagementDelegateException;
 import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 
 @Singleton
@@ -45,6 +49,11 @@ public class CustomSecretsManagerDelegateServiceImpl implements CustomSecretsMan
     }
     ShellExecutionData shellExecutionData = (ShellExecutionData) commandExecutionResult.getCommandExecutionData();
     String result = shellExecutionData.getSweepingOutputEnvVariables().get(OUTPUT_VARIABLE);
-    return result == null ? null : result.toCharArray();
+    if (isEmpty(result) || result.equals("null")) {
+      String errorMessage =
+          String.format("Empty or null value returned by custom shell script for %s", encryptedData.getName());
+      throw new SecretManagementDelegateException(SECRET_MANAGEMENT_ERROR, errorMessage, USER);
+    }
+    return result.toCharArray();
   }
 }
