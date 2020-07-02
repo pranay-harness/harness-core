@@ -65,6 +65,7 @@ import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.IndexType;
 import io.harness.persistence.NameAccess;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Data;
@@ -76,6 +77,7 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -92,7 +94,13 @@ import javax.validation.Valid;
  * Created by anubhaw on 5/16/16.
  */
 @OwnedBy(CDC)
-
+@CdIndex(name = "accountIdAppIdCategoryCreatedAt",
+    fields =
+    {
+      @Field(SettingAttributeKeys.accountId)
+      , @Field(SettingAttributeKeys.appId), @Field(SettingAttributeKeys.category),
+          @Field(value = SettingAttributeKeys.createdAt, type = IndexType.DESC)
+    })
 @CdUniqueIndex(name = "locate",
     fields = { @Field("accountId")
                , @Field("appId"), @Field("envId"), @Field("name"), @Field("value.type") })
