@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.handler.deploymentspec.lambda;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.DefaultSpecification;
@@ -28,12 +27,11 @@ public class DefaultSpecificationYamlHandler extends BaseYamlHandler<Yaml, Lambd
   }
 
   @Override
-  public DefaultSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public DefaultSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext);
   }
 
-  private LambdaSpecification.DefaultSpecification toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private LambdaSpecification.DefaultSpecification toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
     return LambdaSpecification.DefaultSpecification.builder()
         .memorySize(yaml.getMemorySize())
@@ -53,7 +51,7 @@ public class DefaultSpecificationYamlHandler extends BaseYamlHandler<Yaml, Lambd
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // Do nothing
   }
 }

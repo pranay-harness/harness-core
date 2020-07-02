@@ -53,7 +53,7 @@ public class PcfServiceSpecificationYamlHandler
     }
   }
 
-  private PcfServiceSpecification toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private PcfServiceSpecification toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
 
     String filePath = changeContext.getChange().getFilePath();

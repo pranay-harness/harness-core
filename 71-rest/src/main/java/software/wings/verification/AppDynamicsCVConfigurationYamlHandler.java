@@ -7,7 +7,6 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
-import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -61,8 +60,8 @@ public class AppDynamicsCVConfigurationYamlHandler
   }
 
   @Override
-  public AppDynamicsCVServiceConfiguration upsertFromYaml(ChangeContext<AppDynamicsCVConfigurationYaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  public AppDynamicsCVServiceConfiguration upsertFromYaml(
+      ChangeContext<AppDynamicsCVConfigurationYaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -99,7 +98,7 @@ public class AppDynamicsCVConfigurationYamlHandler
   }
 
   private void toBean(AppDynamicsCVServiceConfiguration bean,
-      ChangeContext<AppDynamicsCVConfigurationYaml> changeContext, String appId) throws HarnessException {
+      ChangeContext<AppDynamicsCVConfigurationYaml> changeContext, String appId) {
     AppDynamicsCVConfigurationYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();

@@ -19,8 +19,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api("cv-nextgen/splunk/")
-@Path("/cv-nextgen/splunk")
+@Api("splunk/")
+@Path("splunk")
 @Produces("application/json")
 @ExposeInternalException(withStackTrace = true)
 public class SplunkResource {

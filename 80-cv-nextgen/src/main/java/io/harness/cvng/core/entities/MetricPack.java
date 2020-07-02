@@ -7,7 +7,6 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
@@ -80,14 +79,13 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
   @Data
   @Builder
   @EqualsAndHashCode(of = {"name"})
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class MetricDefinition {
     @Trimmed @NotEmpty private String name;
     @NotNull private TimeSeriesMetricType type;
     private String path;
     private String validationPath;
     private boolean included;
-    @Builder.Default private List<TimeSeriesThresholdCriteria> ignoreHints = new ArrayList<>();
-    @Builder.Default private List<TimeSeriesThresholdCriteria> failFastHints = new ArrayList<>();
     @Builder.Default private List<TimeSeriesThreshold> thresholds = new ArrayList<>();
     @JsonIgnore
     public String getPath() {

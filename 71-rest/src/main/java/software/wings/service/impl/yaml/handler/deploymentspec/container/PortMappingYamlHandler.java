@@ -45,7 +45,7 @@ public class PortMappingYamlHandler extends BaseYamlHandler<Yaml, PortMapping> {
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // Do nothing
   }
 }

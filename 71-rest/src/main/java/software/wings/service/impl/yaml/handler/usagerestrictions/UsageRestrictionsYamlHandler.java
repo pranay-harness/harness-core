@@ -11,7 +11,6 @@ import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -202,8 +201,8 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   }
 
   @Override
-  public UsageRestrictions upsertFromYaml(ChangeContext<UsageRestrictions.Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  public UsageRestrictions upsertFromYaml(
+      ChangeContext<UsageRestrictions.Yaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext);
   }
 
@@ -218,7 +217,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   }
 
   @Override
-  public void delete(ChangeContext<UsageRestrictions.Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<UsageRestrictions.Yaml> changeContext) {
     // do nothing
   }
 }

@@ -8,6 +8,7 @@ import com.mongodb.client.model.DBCollectionUpdateOptions;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.dashboard.entities.HeatMap;
 import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapKeys;
+import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapRisk;
 import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapRisk.HeatMapRiskKeys;
 import io.harness.cvng.core.dashboard.services.api.HeatMapService;
@@ -25,37 +26,47 @@ public class HeatMapServiceImpl implements HeatMapService {
 
   @Override
   public void updateRiskScore(String accountId, String serviceIdentifier, String envIdentifier,
-      CVMonitoringCategory category, long timeStamp, double riskScore) {
-    long bucketBoundary = timeStamp - Math.floorMod(timeStamp, TimeUnit.HOURS.toMillis(4));
+      CVMonitoringCategory category, Instant timeStamp, double riskScore) {
     UpdateOptions options = new UpdateOptions();
     options.upsert(true);
+    for (HeatMapResolution heatMapResolution : HeatMapResolution.values()) {
+      Instant bucketStartTime = Instant.ofEpochMilli(timeStamp.toEpochMilli()
+          - Math.floorMod(
+                timeStamp.toEpochMilli(), TimeUnit.MINUTES.toMillis(heatMapResolution.getBucketSizeMinutes())));
 
-    Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class)
-                                      .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
-                                      .filter(HeatMapKeys.envIdentifier, envIdentifier)
-                                      .filter(HeatMapKeys.category, category)
-                                      .filter(HeatMapKeys.heatMapBucketStartTime, Instant.ofEpochMilli(bucketBoundary));
-    // first create the heatmap record if it doesn't exists
-    hPersistence.getDatastore(HeatMap.class)
-        .update(heatMapQuery,
-            hPersistence.createUpdateOperations(HeatMap.class)
-                .set(HeatMapKeys.accountId, accountId)
-                .push(HeatMapKeys.heatMapRisks,
-                    Lists.newArrayList(
-                        HeatMapRisk.builder().riskScore(riskScore).timeStamp(Instant.ofEpochMilli(timeStamp)).build())),
-            options);
+      Instant heatMapTimeStamp = Instant.ofEpochMilli(timeStamp.toEpochMilli()
+          - Math.floorMod(
+                timeStamp.toEpochMilli(), TimeUnit.MINUTES.toMillis(heatMapResolution.getResolutionMinutes())));
 
-    DBCollectionUpdateOptions arrayFilterOptions = new DBCollectionUpdateOptions();
-    arrayFilterOptions.upsert(true);
-    arrayFilterOptions.multi(false);
-    Map<String, Object> filterMap = new HashMap<>();
-    filterMap.put("elem." + HeatMapRiskKeys.timeStamp, Instant.ofEpochMilli(timeStamp));
-    filterMap.put("elem." + HeatMapRiskKeys.riskScore, new BasicDBObject("$lt", riskScore));
-    arrayFilterOptions.arrayFilters(Lists.newArrayList(new BasicDBObject(filterMap)));
-    hPersistence.getCollection(HeatMap.class)
-        .update(heatMapQuery.getQueryObject(),
-            new BasicDBObject("$set",
-                new BasicDBObject(HeatMapKeys.heatMapRisks + ".$[elem]." + HeatMapRiskKeys.riskScore, riskScore)),
-            arrayFilterOptions);
+      Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class)
+                                        .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
+                                        .filter(HeatMapKeys.envIdentifier, envIdentifier)
+                                        .filter(HeatMapKeys.category, category)
+                                        .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
+                                        .filter(HeatMapKeys.heatMapBucketStartTime, bucketStartTime);
+
+      // first create the heatmap record if it doesn't exists
+      hPersistence.getDatastore(HeatMap.class)
+          .update(heatMapQuery,
+              hPersistence.createUpdateOperations(HeatMap.class)
+                  .set(HeatMapKeys.accountId, accountId)
+                  .push(HeatMapKeys.heatMapRisks,
+                      Lists.newArrayList(
+                          HeatMapRisk.builder().riskScore(riskScore).timeStamp(heatMapTimeStamp).build())),
+              options);
+
+      DBCollectionUpdateOptions arrayFilterOptions = new DBCollectionUpdateOptions();
+      arrayFilterOptions.upsert(true);
+      arrayFilterOptions.multi(false);
+      Map<String, Object> filterMap = new HashMap<>();
+      filterMap.put("elem." + HeatMapRiskKeys.timeStamp, heatMapTimeStamp);
+      filterMap.put("elem." + HeatMapRiskKeys.riskScore, new BasicDBObject("$lt", riskScore));
+      arrayFilterOptions.arrayFilters(Lists.newArrayList(new BasicDBObject(filterMap)));
+      hPersistence.getCollection(HeatMap.class)
+          .update(heatMapQuery.getQueryObject(),
+              new BasicDBObject("$set",
+                  new BasicDBObject(HeatMapKeys.heatMapRisks + ".$[elem]." + HeatMapRiskKeys.riskScore, riskScore)),
+              arrayFilterOptions);
+    }
   }
 }

@@ -13,6 +13,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.dashboard.entities.HeatMap;
+import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapKeys;
+import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.cvng.core.dashboard.entities.HeatMap.HeatMapRisk;
 import io.harness.cvng.core.dashboard.services.api.HeatMapService;
 import io.harness.persistence.HPersistence;
@@ -27,6 +29,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class HeatMapServiceImplTest extends CVNextGenBaseTest {
@@ -48,10 +51,10 @@ public class HeatMapServiceImplTest extends CVNextGenBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testUpsertAndUpdate() {
-    long currentTimeMillis = System.currentTimeMillis();
+    Instant instant = Instant.now();
     heatMapService.updateRiskScore(
-        accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, currentTimeMillis, 0.6);
-    verifyUpdates(currentTimeMillis, 0.6);
+        accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, instant, 0.6);
+    verifyUpdates(instant, 0.6);
     List<HeatMap> heatMaps;
     HeatMap heatMap;
     Set<HeatMapRisk> heatMapRisks;
@@ -59,103 +62,104 @@ public class HeatMapServiceImplTest extends CVNextGenBaseTest {
 
     // update and test
     heatMapService.updateRiskScore(
-        accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, currentTimeMillis, 0.7);
-    verifyUpdates(currentTimeMillis, 0.7);
+        accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, instant, 0.7);
+    verifyUpdates(instant, 0.7);
 
     // updating with lower risk score shouldn't change anything
     heatMapService.updateRiskScore(
-        accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, currentTimeMillis, 0.5);
-    verifyUpdates(currentTimeMillis, 0.7);
+        accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, instant, 0.5);
+    verifyUpdates(instant, 0.7);
   }
 
-  private void verifyUpdates(long currentTimeMillis, double riskScore) {
+  private void verifyUpdates(Instant instant, double riskScore) {
     List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority).asList();
-    assertThat(heatMaps.size()).isEqualTo(1);
-    HeatMap heatMap = heatMaps.get(0);
-    assertThat(heatMap.getAccountId()).isEqualTo(accountId);
-    assertThat(heatMap.getServiceIdentifier()).isEqualTo(serviceIdentifier);
-    assertThat(heatMap.getEnvIdentifier()).isEqualTo(envIdentifier);
-    assertThat(heatMap.getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
-    assertThat(heatMap.getHeatMapBucketStartTime())
-        .isEqualTo(
-            Instant.ofEpochMilli(currentTimeMillis - Math.floorMod(currentTimeMillis, TimeUnit.HOURS.toMillis(4))));
-    Set<HeatMapRisk> heatMapRisks = heatMap.getHeatMapRisks();
-    assertThat(heatMapRisks.size()).isEqualTo(1);
-    HeatMapRisk heatMapRisk = heatMapRisks.iterator().next();
-    assertThat(heatMapRisk.getTimeStamp()).isEqualTo(Instant.ofEpochMilli(currentTimeMillis));
-    assertThat(heatMapRisk.getRiskScore()).isEqualTo(riskScore, offset(0.001));
+    assertThat(heatMaps.size()).isEqualTo(HeatMapResolution.values().length);
+    for (int i = 0; i < HeatMapResolution.values().length; i++) {
+      HeatMapResolution heatMapResolution = HeatMapResolution.values()[i];
+      HeatMap heatMap = heatMaps.get(i);
+      assertThat(heatMap.getAccountId()).isEqualTo(accountId);
+      assertThat(heatMap.getServiceIdentifier()).isEqualTo(serviceIdentifier);
+      assertThat(heatMap.getEnvIdentifier()).isEqualTo(envIdentifier);
+      assertThat(heatMap.getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
+      assertThat(heatMap.getHeatMapResolution()).isEqualTo(heatMapResolution);
+      assertThat(heatMap.getHeatMapBucketStartTime())
+          .isEqualTo(Instant.ofEpochMilli(instant.toEpochMilli()
+              - Math.floorMod(
+                    instant.toEpochMilli(), TimeUnit.MINUTES.toMillis(heatMapResolution.getBucketSizeMinutes()))));
+      Set<HeatMapRisk> heatMapRisks = heatMap.getHeatMapRisks();
+      assertThat(heatMapRisks.size()).isEqualTo(1);
+      HeatMapRisk heatMapRisk = heatMapRisks.iterator().next();
+      assertThat(heatMapRisk.getTimeStamp())
+          .isEqualTo(Instant.ofEpochMilli(instant.toEpochMilli()
+              - Math.floorMod(
+                    instant.toEpochMilli(), TimeUnit.MINUTES.toMillis(heatMapResolution.getResolutionMinutes()))));
+      assertThat(heatMapRisk.getRiskScore()).isEqualTo(riskScore, offset(0.001));
+    }
   }
 
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testUpsert_whenMultipleBoundaries() {
-    int numOfUnits = 100;
+    double numOfUnits = 3000;
     for (int minuteBoundry = 0; minuteBoundry < numOfUnits * CV_ANALYSIS_WINDOW_MINUTES;
          minuteBoundry += CV_ANALYSIS_WINDOW_MINUTES) {
       heatMapService.updateRiskScore(accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE,
-          TimeUnit.MINUTES.toMillis(minuteBoundry), 0.6);
+          Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.6);
     }
-    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority).asList();
-    assertThat(heatMaps.size()).isEqualTo(3);
+    for (int i = 0; i < HeatMapResolution.values().length; i++) {
+      HeatMapResolution heatMapResolution = HeatMapResolution.values()[i];
+      List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority)
+                                   .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
+                                   .asList();
+      assertThat(heatMaps.size())
+          .isEqualTo(
+              (int) Math.ceil(numOfUnits * CV_ANALYSIS_WINDOW_MINUTES / heatMapResolution.getBucketSizeMinutes()));
+      for (int j = 0; j < heatMaps.size(); j++) {
+        HeatMap heatMap = heatMaps.get(j);
+        assertThat(heatMap.getHeatMapResolution()).isEqualTo(heatMapResolution);
+        assertThat(heatMap.getHeatMapBucketStartTime())
+            .isEqualTo(Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(j * heatMapResolution.getBucketSizeMinutes())));
+        SortedSet<HeatMapRisk> heatMapRisks = new TreeSet<>(heatMap.getHeatMapRisks());
+        AtomicLong timeStamp = new AtomicLong(TimeUnit.MINUTES.toMillis(j * heatMapResolution.getBucketSizeMinutes()));
+        heatMapRisks.forEach(heatMapRisk -> {
+          assertThat(heatMapRisk.getTimeStamp()).isEqualTo(Instant.ofEpochMilli(timeStamp.get()));
+          timeStamp.addAndGet(TimeUnit.MINUTES.toMillis(heatMapResolution.getResolutionMinutes()));
+          assertThat(heatMapRisk.getRiskScore()).isEqualTo(0.6, offset(0.001));
+        });
+      }
+    }
 
-    AtomicLong timeStamp = new AtomicLong(0);
-    HeatMap heatMap = heatMaps.get(0);
-    assertThat(heatMap.getHeatMapBucketStartTime()).isEqualTo(Instant.ofEpochMilli(timeStamp.get()));
-    assertThat(heatMap.getHeatMapRisks().size()).isEqualTo(TimeUnit.HOURS.toMinutes(4) / CV_ANALYSIS_WINDOW_MINUTES);
+    // update a riskscore
+    Instant updateInstant = Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(680));
+    heatMapService.updateRiskScore(
+        accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE, updateInstant, 0.7);
 
-    SortedSet<HeatMapRisk> heatMapRisks = new TreeSet<>(heatMap.getHeatMapRisks());
-    heatMapRisks.forEach(heatMapRisk -> {
-      assertThat(heatMapRisk.getTimeStamp()).isEqualTo(Instant.ofEpochMilli(timeStamp.get()));
-      timeStamp.addAndGet(TimeUnit.MINUTES.toMillis(CV_ANALYSIS_WINDOW_MINUTES));
-    });
-    heatMap = heatMaps.get(1);
-    assertThat(heatMap.getHeatMapBucketStartTime()).isEqualTo(Instant.ofEpochMilli(timeStamp.get()));
-    assertThat(heatMap.getHeatMapRisks().size()).isEqualTo(TimeUnit.HOURS.toMinutes(4) / CV_ANALYSIS_WINDOW_MINUTES);
-    heatMapRisks = new TreeSet<>(heatMap.getHeatMapRisks());
-    heatMapRisks.forEach(heatMapRisk -> {
-      assertThat(heatMapRisk.getTimeStamp()).isEqualTo(Instant.ofEpochMilli(timeStamp.get()));
-      timeStamp.addAndGet(TimeUnit.MINUTES.toMillis(CV_ANALYSIS_WINDOW_MINUTES));
-    });
+    for (int i = 0; i < HeatMapResolution.values().length; i++) {
+      HeatMapResolution heatMapResolution = HeatMapResolution.values()[i];
+      Instant bucketBoundary = Instant.ofEpochMilli(updateInstant.toEpochMilli()
+          - Math.floorMod(
+                updateInstant.toEpochMilli(), TimeUnit.MINUTES.toMillis(heatMapResolution.getBucketSizeMinutes())));
+      List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority)
+                                   .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
+                                   .filter(HeatMapKeys.heatMapBucketStartTime, bucketBoundary)
+                                   .asList();
+      assertThat(heatMaps.size()).isEqualTo(1);
+      HeatMap heatMap = heatMaps.get(0);
+      Instant heatMapTimeStamp = Instant.ofEpochMilli(updateInstant.toEpochMilli()
+          - Math.floorMod(
+                updateInstant.toEpochMilli(), TimeUnit.MINUTES.toMillis(heatMapResolution.getResolutionMinutes())));
 
-    // last bucket should contain 4 risks
-    heatMap = heatMaps.get(2);
-    assertThat(heatMap.getHeatMapBucketStartTime()).isEqualTo(Instant.ofEpochMilli(timeStamp.get()));
-    assertThat(heatMap.getHeatMapRisks().size()).isEqualTo(4);
-    heatMapRisks = new TreeSet<>(heatMap.getHeatMapRisks());
-    heatMapRisks.forEach(heatMapRisk -> {
-      assertThat(heatMapRisk.getTimeStamp()).isEqualTo(Instant.ofEpochMilli(timeStamp.get()));
-      timeStamp.addAndGet(TimeUnit.MINUTES.toMillis(CV_ANALYSIS_WINDOW_MINUTES));
-    });
-
-    // update a few riskscores
-    heatMapService.updateRiskScore(accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE,
-        TimeUnit.MINUTES.toMillis(70), 0.7);
-    heatMapService.updateRiskScore(accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE,
-        TimeUnit.MINUTES.toMillis(90), 0.3);
-    heatMapService.updateRiskScore(accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE,
-        TimeUnit.MINUTES.toMillis(270), 0.8);
-    heatMapService.updateRiskScore(accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE,
-        TimeUnit.MINUTES.toMillis(490), 0.9);
-
-    heatMaps = hPersistence.createQuery(HeatMap.class, excludeAuthority).asList();
-    heatMap = heatMaps.get(0);
-    heatMap.getHeatMapRisks().forEach(heatMapRisk
-        -> assertThat(heatMapRisk.getRiskScore())
-               .isEqualTo(
-                   heatMapRisk.getTimeStamp().equals(Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(70))) ? 0.7 : 0.6,
-                   offset(0.0001)));
-    heatMap = heatMaps.get(1);
-    heatMap.getHeatMapRisks().forEach(heatMapRisk
-        -> assertThat(heatMapRisk.getRiskScore())
-               .isEqualTo(
-                   heatMapRisk.getTimeStamp().equals(Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(270))) ? 0.8 : 0.6,
-                   offset(0.0001)));
-    heatMap = heatMaps.get(2);
-    heatMap.getHeatMapRisks().forEach(heatMapRisk
-        -> assertThat(heatMapRisk.getRiskScore())
-               .isEqualTo(
-                   heatMapRisk.getTimeStamp().equals(Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(490))) ? 0.9 : 0.6,
-                   offset(0.0001)));
+      AtomicBoolean verified = new AtomicBoolean(false);
+      heatMap.getHeatMapRisks().forEach(heatMapRisk -> {
+        if (heatMapRisk.getTimeStamp().equals(heatMapTimeStamp)) {
+          verified.set(true);
+          assertThat(heatMapRisk.getRiskScore()).isEqualTo(0.7, offset(0.0001));
+        } else {
+          assertThat(heatMapRisk.getRiskScore()).isEqualTo(0.6, offset(0.0001));
+        }
+      });
+      assertThat(verified.get()).isTrue();
+    }
   }
 }

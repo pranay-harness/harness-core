@@ -57,7 +57,7 @@ public class VerificationConfiguration extends Configuration {
    */
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    defaultSwaggerBundleConfiguration.setResourcePackage("io.harness.resources");
+    defaultSwaggerBundleConfiguration.setResourcePackage("io.harness.cvng.core.resources");
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost("{{host}}");
     return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);

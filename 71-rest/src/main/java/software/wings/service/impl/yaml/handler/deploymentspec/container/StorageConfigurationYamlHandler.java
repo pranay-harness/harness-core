@@ -32,7 +32,7 @@ public class StorageConfigurationYamlHandler extends BaseYamlHandler<Yaml, Stora
     return toBean(changeContext);
   }
 
-  private StorageConfiguration toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private StorageConfiguration toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
     return StorageConfiguration.builder()
         .containerPath(yaml.getContainerPath())
@@ -52,7 +52,7 @@ public class StorageConfigurationYamlHandler extends BaseYamlHandler<Yaml, Stora
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // Do nothing
   }
 }
