@@ -1,7 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
-import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,14 +19,15 @@ import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.ExecutionStatus;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
-import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
+import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -45,6 +45,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
+  @Inject private MetricPackService metricPackService;
 
   private String cvConfigId;
   private String accountId;
@@ -291,7 +292,8 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     cvConfig.setAccountId(accountId);
     cvConfig.setApplicationId(1234);
     cvConfig.setTierId(1234);
-    cvConfig.setMetricPack(MetricPack.builder().identifier(PERFORMANCE_PACK_IDENTIFIER).build());
+    cvConfig.setMetricPack(
+        metricPackService.getMetricPacks(accountId, "projectId", DataSourceType.APP_DYNAMICS).get(0));
     return cvConfig;
   }
 

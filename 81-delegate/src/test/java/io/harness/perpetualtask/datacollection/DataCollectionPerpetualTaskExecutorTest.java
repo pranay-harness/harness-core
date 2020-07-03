@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
@@ -125,6 +126,18 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
     createTaskParams(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER, "dsl");
     dataCollector.runOnce(PerpetualTaskId.newBuilder().build(), perpetualTaskParams, Instant.now());
     verifyDsl("dsl");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.KAMAL)
+  @Category({UnitTests.class})
+  public void testDataCollection_IfTaskReturnedIsNull() throws IOException {
+    Call<RestResponse<DataCollectionTaskDTO>> nextTaskCall = mock(Call.class);
+    when(nextTaskCall.execute()).thenReturn(Response.success(new RestResponse<>(null)));
+    when(cvNextGenServiceClient.getNextDataCollectionTask(anyString(), anyString())).thenReturn(nextTaskCall);
+    createTaskParams(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER, "dsl");
+    dataCollector.runOnce(PerpetualTaskId.newBuilder().build(), perpetualTaskParams, Instant.now());
+    verifyZeroInteractions(dataCollectionDSLService);
   }
 
   private void verifyDsl(String dsl) {
