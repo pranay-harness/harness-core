@@ -24,5 +24,6 @@ public interface ArtifactConnector {
     }
   }
 
+  String getConnector();
   Type getType();
 }

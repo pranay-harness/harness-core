@@ -15,13 +15,19 @@ bazel ${OUTPUT_BASE} build \
   //22-delegate-service-beans/src/main/proto/... \
   //product/ci/engine/proto/...
 
+cleanup() {
+  for path in "$@"
+  do
+    rm -rf ${path}
+  done
+}
+
 compile_proto_module() {
   module=$1
   modulePath=$2
   generatedModulePath=$3
   bazel_library=`echo ${module} | tr '-' '_'`_proto
 
-  rm -rf ${generatedModulePath}
   mkdir -p ${generatedModulePath}
   if [ -e bazel-bin/${modulePath}/proto/${bazel_library}/java_grpc_compile_aspect_verb0 ]
   then
@@ -36,6 +42,12 @@ compile_proto_module() {
   find ${generatedModulePath} -name '*.pb.meta' -delete
 }
 
+cleanup 13-grpc-api/src/generated/java \
+        19-delegate-tasks-beans/src/generated/java \
+        20-delegate-beans/src/generated/java \
+        21-delegate-agent-beans/src/generated/java \
+        22-delegate-service-beans/src/generated/java \
+        72-ci-beans/src/generated/java
 
 compile_proto_module 13-grpc-api 13-grpc-api/src/main 13-grpc-api/src/generated/java
 
@@ -44,6 +56,7 @@ compile_proto_module 20-delegate-beans 20-delegate-beans/src/main 20-delegate-be
 compile_proto_module 21-delegate-agent-beans 21-delegate-agent-beans/src/main 21-delegate-agent-beans/src/generated/java
 compile_proto_module 22-delegate-service-beans 22-delegate-service-beans/src/main 22-delegate-service-beans/src/generated/java
 
-#compile_proto_module cienginepb product/ci/engine 72-ci-beans/src/generated/java
+compile_proto_module cienginepb product/ci/engine 72-ci-beans/src/generated/java
+compile_proto_module ciaddonpb product/ci/addon 72-ci-beans/src/generated/java
 
 rm -f bazel-bin bazel-out bazel-portal bazel-testlogs

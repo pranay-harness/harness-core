@@ -16,6 +16,10 @@ public final class ExecutionOuterClass {
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_product_ci_engine_proto_Execution_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_engine_proto_PublishArtifactsStep_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_product_ci_engine_proto_PublishArtifactsStep_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_product_ci_engine_proto_StepContext_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_product_ci_engine_proto_StepContext_fieldAccessorTable;
@@ -42,29 +46,38 @@ public final class ExecutionOuterClass {
   private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
     java.lang.String[] descriptorData = {"\n\'product/ci/engine/proto/execution.prot"
-        + "o\022\"io.harness.product.ci.engine.proto\"K\n"
-        + "\tExecution\022>\n\005steps\030\001 \003(\0132(.io.harness.p"
-        + "roduct.ci.engine.proto.StepR\005steps\"d\n\013St"
-        + "epContext\022\037\n\013num_retries\030\001 \001(\005R\nnumRetri"
-        + "es\0224\n\026execution_timeout_secs\030\002 \001(\003R\024exec"
-        + "utionTimeoutSecs\"p\n\007RunStep\022\032\n\010commands\030"
-        + "\001 \003(\tR\010commands\022I\n\007context\030\002 \001(\0132/.io.ha"
-        + "rness.product.ci.engine.proto.StepContex"
-        + "tR\007context\"7\n\rSaveCacheStep\022\020\n\003key\030\001 \001(\t"
-        + "R\003key\022\024\n\005paths\030\002 \003(\tR\005paths\"O\n\020RestoreCa"
-        + "cheStep\022\020\n\003key\030\001 \001(\tR\003key\022)\n\021fail_if_not"
-        + "_exist\030\002 \001(\010R\016failIfNotExist\"\263\002\n\004Step\022\016\n"
-        + "\002id\030\001 \001(\tR\002id\022!\n\014display_name\030\002 \001(\tR\013dis"
-        + "playName\022?\n\003run\030\003 \001(\0132+.io.harness.produ"
-        + "ct.ci.engine.proto.RunStepH\000R\003run\022R\n\nsav"
-        + "e_cache\030\004 \001(\01321.io.harness.product.ci.en"
-        + "gine.proto.SaveCacheStepH\000R\tsaveCache\022[\n"
-        + "\rrestore_cache\030\005 \001(\01324.io.harness.produc"
-        + "t.ci.engine.proto.RestoreCacheStepH\000R\014re"
-        + "storeCacheB\006\n\004stepB\016P\001Z\ncienginepbb\006prot"
-        + "o3"};
-    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-        descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {});
+        + "o\022\"io.harness.product.ci.engine.proto\032\"p"
+        + "roduct/ci/addon/proto/addon.proto\"K\n\tExe"
+        + "cution\022>\n\005steps\030\001 \003(\0132(.io.harness.produ"
+        + "ct.ci.engine.proto.StepR\005steps\"\251\001\n\024Publi"
+        + "shArtifactsStep\022C\n\005files\030\001 \003(\0132-.io.harn"
+        + "ess.product.ci.addon.proto.UploadFileR\005f"
+        + "iles\022L\n\006images\030\002 \003(\01324.io.harness.produc"
+        + "t.ci.addon.proto.BuildPublishImageR\006imag"
+        + "es\"d\n\013StepContext\022\037\n\013num_retries\030\001 \001(\005R\n"
+        + "numRetries\0224\n\026execution_timeout_secs\030\002 \001"
+        + "(\003R\024executionTimeoutSecs\"p\n\007RunStep\022\032\n\010c"
+        + "ommands\030\001 \003(\tR\010commands\022I\n\007context\030\002 \001(\013"
+        + "2/.io.harness.product.ci.engine.proto.St"
+        + "epContextR\007context\"7\n\rSaveCacheStep\022\020\n\003k"
+        + "ey\030\001 \001(\tR\003key\022\024\n\005paths\030\002 \003(\tR\005paths\"O\n\020R"
+        + "estoreCacheStep\022\020\n\003key\030\001 \001(\tR\003key\022)\n\021fai"
+        + "l_if_not_exist\030\002 \001(\010R\016failIfNotExist\"\234\003\n"
+        + "\004Step\022\016\n\002id\030\001 \001(\tR\002id\022!\n\014display_name\030\002 "
+        + "\001(\tR\013displayName\022?\n\003run\030\003 \001(\0132+.io.harne"
+        + "ss.product.ci.engine.proto.RunStepH\000R\003ru"
+        + "n\022R\n\nsave_cache\030\004 \001(\01321.io.harness.produ"
+        + "ct.ci.engine.proto.SaveCacheStepH\000R\tsave"
+        + "Cache\022[\n\rrestore_cache\030\005 \001(\01324.io.harnes"
+        + "s.product.ci.engine.proto.RestoreCacheSt"
+        + "epH\000R\014restoreCache\022g\n\021publish_artifacts\030"
+        + "\006 \001(\01328.io.harness.product.ci.engine.pro"
+        + "to.PublishArtifactsStepH\000R\020publishArtifa"
+        + "ctsB\006\n\004stepB\016P\001Z\ncienginepbb\006proto3"};
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+        new com.google.protobuf.Descriptors.FileDescriptor[] {
+            io.harness.product.ci.addon.proto.Addon.getDescriptor(),
+        });
     internal_static_io_harness_product_ci_engine_proto_Execution_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_product_ci_engine_proto_Execution_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
@@ -72,8 +85,17 @@ public final class ExecutionOuterClass {
             new java.lang.String[] {
                 "Steps",
             });
-    internal_static_io_harness_product_ci_engine_proto_StepContext_descriptor =
+    internal_static_io_harness_product_ci_engine_proto_PublishArtifactsStep_descriptor =
         getDescriptor().getMessageTypes().get(1);
+    internal_static_io_harness_product_ci_engine_proto_PublishArtifactsStep_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_engine_proto_PublishArtifactsStep_descriptor,
+            new java.lang.String[] {
+                "Files",
+                "Images",
+            });
+    internal_static_io_harness_product_ci_engine_proto_StepContext_descriptor =
+        getDescriptor().getMessageTypes().get(2);
     internal_static_io_harness_product_ci_engine_proto_StepContext_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_engine_proto_StepContext_descriptor,
@@ -81,7 +103,7 @@ public final class ExecutionOuterClass {
                 "NumRetries",
                 "ExecutionTimeoutSecs",
             });
-    internal_static_io_harness_product_ci_engine_proto_RunStep_descriptor = getDescriptor().getMessageTypes().get(2);
+    internal_static_io_harness_product_ci_engine_proto_RunStep_descriptor = getDescriptor().getMessageTypes().get(3);
     internal_static_io_harness_product_ci_engine_proto_RunStep_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_engine_proto_RunStep_descriptor,
@@ -90,7 +112,7 @@ public final class ExecutionOuterClass {
                 "Context",
             });
     internal_static_io_harness_product_ci_engine_proto_SaveCacheStep_descriptor =
-        getDescriptor().getMessageTypes().get(3);
+        getDescriptor().getMessageTypes().get(4);
     internal_static_io_harness_product_ci_engine_proto_SaveCacheStep_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_engine_proto_SaveCacheStep_descriptor,
@@ -99,7 +121,7 @@ public final class ExecutionOuterClass {
                 "Paths",
             });
     internal_static_io_harness_product_ci_engine_proto_RestoreCacheStep_descriptor =
-        getDescriptor().getMessageTypes().get(4);
+        getDescriptor().getMessageTypes().get(5);
     internal_static_io_harness_product_ci_engine_proto_RestoreCacheStep_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_engine_proto_RestoreCacheStep_descriptor,
@@ -107,7 +129,7 @@ public final class ExecutionOuterClass {
                 "Key",
                 "FailIfNotExist",
             });
-    internal_static_io_harness_product_ci_engine_proto_Step_descriptor = getDescriptor().getMessageTypes().get(5);
+    internal_static_io_harness_product_ci_engine_proto_Step_descriptor = getDescriptor().getMessageTypes().get(6);
     internal_static_io_harness_product_ci_engine_proto_Step_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_engine_proto_Step_descriptor,
@@ -117,8 +139,10 @@ public final class ExecutionOuterClass {
                 "Run",
                 "SaveCache",
                 "RestoreCache",
+                "PublishArtifacts",
                 "Step",
             });
+    io.harness.product.ci.addon.proto.Addon.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
