@@ -4,7 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.execution.status.Status.ABORTED;
+import static io.harness.execution.status.Status.ERRORED;
+import static io.harness.execution.status.Status.EXPIRED;
+import static io.harness.execution.status.Status.FAILED;
 import static io.harness.execution.status.Status.RUNNING;
+import static io.harness.execution.status.Status.SUCCEEDED;
+import static io.harness.execution.status.Status.positiveStatuses;
 import static io.harness.execution.status.Status.resumableStatuses;
 import static io.harness.ng.SpringDataMongoUtils.setUnset;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
@@ -40,6 +46,7 @@ import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.exception.ExceptionUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorObtainment;
@@ -69,6 +76,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -284,7 +292,33 @@ public class OrchestrationEngine {
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
       logger.info("Ending Execution");
-      planExecutionService.updateStatus(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getStatus());
+      concludePlanExecution(nodeExecution.getAmbiance());
+    }
+  }
+
+  private void concludePlanExecution(Ambiance ambiance) {
+    Status status = calculateEndStatus(ambiance.getPlanExecutionId());
+    planExecutionService.updateStatus(
+        ambiance.getPlanExecutionId(), status, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
+  }
+
+  // TODO (prashant) => Improve this with more clarity.
+  private Status calculateEndStatus(String planExecutionId) {
+    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
+    List<Status> statuses = nodeExecutions.stream().map(NodeExecution::getStatus).collect(Collectors.toList());
+    if (positiveStatuses().containsAll(statuses)) {
+      return SUCCEEDED;
+    } else if (statuses.stream().anyMatch(status -> status == ABORTED)) {
+      return ABORTED;
+    } else if (statuses.stream().anyMatch(status -> status == ERRORED)) {
+      return ERRORED;
+    } else if (statuses.stream().anyMatch(status -> status == FAILED)) {
+      return FAILED;
+    } else if (statuses.stream().anyMatch(status -> status == EXPIRED)) {
+      return EXPIRED;
+    } else {
+      logger.error("This should not Happen. PlanExecutionId : {}", planExecutionId);
+      return ERRORED;
     }
   }
 

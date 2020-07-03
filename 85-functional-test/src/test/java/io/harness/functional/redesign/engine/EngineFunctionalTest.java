@@ -90,11 +90,21 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(FunctionalTests.class)
+  public void shouldExecuteSectionChainRollbackPlan() {
+    PlanExecution httpForkResponse =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "section-chain-rollback");
+
+    assertThat(httpForkResponse.getStatus()).isEqualTo(FAILED);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(FunctionalTests.class)
   public void shouldExecuteHttpRetryIgnorePlan() {
     PlanExecution httpRetryResponse =
         executePlan(bearerToken, application.getAccountId(), application.getAppId(), "http-retry-ignore");
 
-    assertThat(httpRetryResponse.getStatus()).isEqualTo(SUCCEEDED);
+    assertThat(httpRetryResponse.getStatus()).isEqualTo(FAILED);
     List<NodeExecution> nodeExecutions = getNodeExecutions(httpRetryResponse.getUuid());
     assertThat(nodeExecutions).hasSize(4);
 

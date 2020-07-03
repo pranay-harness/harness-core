@@ -17,7 +17,7 @@ public interface PlanExecutionService extends StepStatusUpdate {
 
   PlanExecution updateStatus(@NonNull String planExecutionId, @NonNull Status status);
 
-  PlanExecution updateStatusWithOps(@NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops);
+  PlanExecution updateStatus(@NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops);
 
   PlanExecution get(String planExecutionId);
 
