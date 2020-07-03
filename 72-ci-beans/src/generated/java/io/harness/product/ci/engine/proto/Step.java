@@ -98,6 +98,20 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
             stepCase_ = 5;
             break;
           }
+          case 50: {
+            io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder subBuilder = null;
+            if (stepCase_ == 6) {
+              subBuilder = ((io.harness.product.ci.engine.proto.PublishArtifactsStep) step_).toBuilder();
+            }
+            step_ =
+                input.readMessage(io.harness.product.ci.engine.proto.PublishArtifactsStep.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom((io.harness.product.ci.engine.proto.PublishArtifactsStep) step_);
+              step_ = subBuilder.buildPartial();
+            }
+            stepCase_ = 6;
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -132,7 +146,7 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
   private java.lang.Object step_;
   public enum StepCase implements com
   .google.protobuf.Internal.EnumLite, com.google.protobuf.AbstractMessage.InternalOneOfEnum {
-    RUN(3), SAVE_CACHE(4), RESTORE_CACHE(5), STEP_NOT_SET(0);
+    RUN(3), SAVE_CACHE(4), RESTORE_CACHE(5), PUBLISH_ARTIFACTS(6), STEP_NOT_SET(0);
     private final int value;
     private StepCase(int value) {
       this.value = value;
@@ -155,6 +169,8 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
           return SAVE_CACHE;
         case 5:
           return RESTORE_CACHE;
+        case 6:
+          return PUBLISH_ARTIFACTS;
         case 0:
           return STEP_NOT_SET;
         default:
@@ -318,6 +334,37 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     return io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
   }
 
+  public static final int PUBLISH_ARTIFACTS_FIELD_NUMBER = 6;
+  /**
+   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+   * "publishArtifacts"];</code>
+   * @return Whether the publishArtifacts field is set.
+   */
+  public boolean hasPublishArtifacts() {
+    return stepCase_ == 6;
+  }
+  /**
+   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+   * "publishArtifacts"];</code>
+   * @return The publishArtifacts.
+   */
+  public io.harness.product.ci.engine.proto.PublishArtifactsStep getPublishArtifacts() {
+    if (stepCase_ == 6) {
+      return (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_;
+    }
+    return io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
+  }
+  /**
+   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+   * "publishArtifacts"];</code>
+   */
+  public io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder getPublishArtifactsOrBuilder() {
+    if (stepCase_ == 6) {
+      return (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_;
+    }
+    return io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -348,6 +395,9 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     if (stepCase_ == 5) {
       output.writeMessage(5, (io.harness.product.ci.engine.proto.RestoreCacheStep) step_);
     }
+    if (stepCase_ == 6) {
+      output.writeMessage(6, (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -375,6 +425,10 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     if (stepCase_ == 5) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(
           5, (io.harness.product.ci.engine.proto.RestoreCacheStep) step_);
+    }
+    if (stepCase_ == 6) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(
+          6, (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -410,6 +464,10 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
         if (!getRestoreCache().equals(other.getRestoreCache()))
           return false;
         break;
+      case 6:
+        if (!getPublishArtifacts().equals(other.getPublishArtifacts()))
+          return false;
+        break;
       case 0:
       default:
     }
@@ -441,6 +499,10 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
       case 5:
         hash = (37 * hash) + RESTORE_CACHE_FIELD_NUMBER;
         hash = (53 * hash) + getRestoreCache().hashCode();
+        break;
+      case 6:
+        hash = (37 * hash) + PUBLISH_ARTIFACTS_FIELD_NUMBER;
+        hash = (53 * hash) + getPublishArtifacts().hashCode();
         break;
       case 0:
       default:
@@ -616,6 +678,13 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
           result.step_ = restoreCacheBuilder_.build();
         }
       }
+      if (stepCase_ == 6) {
+        if (publishArtifactsBuilder_ == null) {
+          result.step_ = step_;
+        } else {
+          result.step_ = publishArtifactsBuilder_.build();
+        }
+      }
       result.stepCase_ = stepCase_;
       onBuilt();
       return result;
@@ -678,6 +747,10 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
         }
         case RESTORE_CACHE: {
           mergeRestoreCache(other.getRestoreCache());
+          break;
+        }
+        case PUBLISH_ARTIFACTS: {
+          mergePublishArtifacts(other.getPublishArtifacts());
           break;
         }
         case STEP_NOT_SET: {
@@ -1279,6 +1352,157 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
       onChanged();
       ;
       return restoreCacheBuilder_;
+    }
+
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.PublishArtifactsStep,
+        io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder,
+        io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder> publishArtifactsBuilder_;
+    /**
+     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+     * "publishArtifacts"];</code>
+     * @return Whether the publishArtifacts field is set.
+     */
+    public boolean hasPublishArtifacts() {
+      return stepCase_ == 6;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+     * "publishArtifacts"];</code>
+     * @return The publishArtifacts.
+     */
+    public io.harness.product.ci.engine.proto.PublishArtifactsStep getPublishArtifacts() {
+      if (publishArtifactsBuilder_ == null) {
+        if (stepCase_ == 6) {
+          return (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_;
+        }
+        return io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
+      } else {
+        if (stepCase_ == 6) {
+          return publishArtifactsBuilder_.getMessage();
+        }
+        return io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+     * "publishArtifacts"];</code>
+     */
+    public Builder setPublishArtifacts(io.harness.product.ci.engine.proto.PublishArtifactsStep value) {
+      if (publishArtifactsBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        step_ = value;
+        onChanged();
+      } else {
+        publishArtifactsBuilder_.setMessage(value);
+      }
+      stepCase_ = 6;
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+     * "publishArtifacts"];</code>
+     */
+    public Builder setPublishArtifacts(
+        io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder builderForValue) {
+      if (publishArtifactsBuilder_ == null) {
+        step_ = builderForValue.build();
+        onChanged();
+      } else {
+        publishArtifactsBuilder_.setMessage(builderForValue.build());
+      }
+      stepCase_ = 6;
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+     * "publishArtifacts"];</code>
+     */
+    public Builder mergePublishArtifacts(io.harness.product.ci.engine.proto.PublishArtifactsStep value) {
+      if (publishArtifactsBuilder_ == null) {
+        if (stepCase_ == 6 && step_ != io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance()) {
+          step_ = io.harness.product.ci.engine.proto.PublishArtifactsStep
+                      .newBuilder((io.harness.product.ci.engine.proto.PublishArtifactsStep) step_)
+                      .mergeFrom(value)
+                      .buildPartial();
+        } else {
+          step_ = value;
+        }
+        onChanged();
+      } else {
+        if (stepCase_ == 6) {
+          publishArtifactsBuilder_.mergeFrom(value);
+        }
+        publishArtifactsBuilder_.setMessage(value);
+      }
+      stepCase_ = 6;
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+     * "publishArtifacts"];</code>
+     */
+    public Builder clearPublishArtifacts() {
+      if (publishArtifactsBuilder_ == null) {
+        if (stepCase_ == 6) {
+          stepCase_ = 0;
+          step_ = null;
+          onChanged();
+        }
+      } else {
+        if (stepCase_ == 6) {
+          stepCase_ = 0;
+          step_ = null;
+        }
+        publishArtifactsBuilder_.clear();
+      }
+      return this;
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+     * "publishArtifacts"];</code>
+     */
+    public io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder getPublishArtifactsBuilder() {
+      return getPublishArtifactsFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+     * "publishArtifacts"];</code>
+     */
+    public io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder getPublishArtifactsOrBuilder() {
+      if ((stepCase_ == 6) && (publishArtifactsBuilder_ != null)) {
+        return publishArtifactsBuilder_.getMessageOrBuilder();
+      } else {
+        if (stepCase_ == 6) {
+          return (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_;
+        }
+        return io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+     * "publishArtifacts"];</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.PublishArtifactsStep,
+        io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder,
+        io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder>
+    getPublishArtifactsFieldBuilder() {
+      if (publishArtifactsBuilder_ == null) {
+        if (!(stepCase_ == 6)) {
+          step_ = io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
+        }
+        publishArtifactsBuilder_ =
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.PublishArtifactsStep,
+                io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder,
+                io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder>(
+                (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_, getParentForChildren(), isClean());
+        step_ = null;
+      }
+      stepCase_ = 6;
+      onChanged();
+      ;
+      return publishArtifactsBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

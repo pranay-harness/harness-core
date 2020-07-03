@@ -74,5 +74,23 @@ public interface StepOrBuilder extends
    */
   io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder getRestoreCacheOrBuilder();
 
+  /**
+   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+   * "publishArtifacts"];</code>
+   * @return Whether the publishArtifacts field is set.
+   */
+  boolean hasPublishArtifacts();
+  /**
+   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+   * "publishArtifacts"];</code>
+   * @return The publishArtifacts.
+   */
+  io.harness.product.ci.engine.proto.PublishArtifactsStep getPublishArtifacts();
+  /**
+   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
+   * "publishArtifacts"];</code>
+   */
+  io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder getPublishArtifactsOrBuilder();
+
   public io.harness.product.ci.engine.proto.Step.StepCase getStepCase();
 }

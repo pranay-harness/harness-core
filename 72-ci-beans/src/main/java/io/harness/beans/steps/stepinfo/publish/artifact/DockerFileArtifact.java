@@ -15,6 +15,7 @@ import javax.validation.constraints.NotNull;
 @JsonDeserialize
 public class DockerFileArtifact implements Artifact, WithImageConnector {
   @NotNull private String dockerFile;
+  @NotNull private String context;
   @NotNull private String image;
   @NotNull private String tag;
   private List<BuildArgument> buildArguments;

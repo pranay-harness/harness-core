@@ -6,10 +6,12 @@ import com.google.inject.TypeLiteral;
 import graph.GraphOperations;
 import io.harness.beans.seriazlier.ExecutionProtobufSerializer;
 import io.harness.beans.seriazlier.ProtobufSerializer;
+import io.harness.beans.seriazlier.PublishStepProtobufSerializer;
 import io.harness.beans.seriazlier.RestoreCacheStepProtobufSerializer;
 import io.harness.beans.seriazlier.RunStepProtobufSerializer;
 import io.harness.beans.seriazlier.SaveCacheStepProtobufSerializer;
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
@@ -36,6 +38,7 @@ public class CIBeansModule extends DependencyModule {
     bind(new TypeLiteral<ProtobufSerializer<SaveCacheStepInfo>>() {}).toInstance(new SaveCacheStepProtobufSerializer());
     bind(new TypeLiteral<ProtobufSerializer<RestoreCacheStepInfo>>() {})
         .toInstance(new RestoreCacheStepProtobufSerializer());
+    bind(new TypeLiteral<ProtobufSerializer<PublishStepInfo>>() {}).toInstance(new PublishStepProtobufSerializer());
   }
 
   @Override
