@@ -18,6 +18,8 @@ public class WinRmExecutorFactoryTest extends CategoryTest {
   @Owner(developers = DINESH)
   @Category(UnitTests.class)
   public void shouldGetWinRmExecutor() {
-    assertThat(winRmExecutorFactory.getExecutor(winRmSessionConfig)).isNotNull().isInstanceOf(WinRmExecutor.class);
+    assertThat(winRmExecutorFactory.getExecutor(winRmSessionConfig, false))
+        .isNotNull()
+        .isInstanceOf(WinRmExecutor.class);
   }
 }

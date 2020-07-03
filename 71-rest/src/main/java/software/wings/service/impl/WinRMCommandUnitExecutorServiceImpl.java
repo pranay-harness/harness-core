@@ -69,7 +69,8 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
         (commandUnit instanceof InitPowerShellCommandUnit) ? WINDOWS_HOME_DIR : context.getWindowsRuntimePath();
 
     WinRmSessionConfig winRmSessionConfig = context.winrmSessionConfig(commandUnit.getName(), commandPath);
-    WinRmExecutor winRmExecutor = winRmExecutorFactory.getExecutor(winRmSessionConfig);
+    WinRmExecutor winRmExecutor =
+        winRmExecutorFactory.getExecutor(winRmSessionConfig, context.isDisableWinRMCommandEncodingFFSet());
 
     ShellCommandExecutionContext shellCommandExecutionContext = new ShellCommandExecutionContext(context);
     shellCommandExecutionContext.setExecutor(winRmExecutor);

@@ -72,7 +72,8 @@ public class ShellScriptTaskHandler {
       case WINRM: {
         try {
           WinRmSessionConfig winRmSessionConfig = parameters.winrmSessionConfig(encryptionService);
-          WinRmExecutor executor = winrmExecutorFactory.getExecutor(winRmSessionConfig);
+          WinRmExecutor executor =
+              winrmExecutorFactory.getExecutor(winRmSessionConfig, parameters.isDisableWinRMCommandEncodingFFSet());
           List<String> items = new ArrayList<>();
           if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
             items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
