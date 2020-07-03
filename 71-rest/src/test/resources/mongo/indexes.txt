@@ -573,11 +573,13 @@ stateMachines {"name": "appId_1", "background": true} {"appId": 1}
 stateMachines {"name": "appId_origin", "background": true} {"appId": 1, "originId": 1, "originVersion": 1}
 stateMachines {"name": "createdAt_1", "background": true} {"createdAt": 1}
 stateMachines {"name": "originId_1", "background": true} {"originId": 1}
+sweepingOutput2 {"name": "phaseExecutionIdNamePrefix", "background": true} {"appId": 1, "phaseExecutionId": 1, "name": 1, "createdAt": -1}
 sweepingOutput2 {"name": "uniquePhaseExecution", "unique": true} {"appId": 1, "name": 1, "phaseExecutionId": 1}
 sweepingOutput2 {"name": "uniquePipelineExecution", "unique": true} {"appId": 1, "name": 1, "pipelineExecutionId": 1}
 sweepingOutput2 {"name": "uniqueStateExecution", "unique": true} {"appId": 1, "name": 1, "stateExecutionId": 1}
 sweepingOutput2 {"name": "uniqueWorkflowExecution", "unique": true} {"appId": 1, "name": 1, "workflowExecutionIds": 1}
 sweepingOutput2 {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+sweepingOutput2 {"name": "workflowExecutionIdsNamePrefix", "background": true} {"appId": 1, "workflowExecutionIds": 1, "name": 1, "createdAt": -1}
 syncStatus {"name": "appId_1", "background": true} {"appId": 1}
 syncStatus {"name": "compositeIdx1", "unique": true} {"appId": 1, "serviceId": 1, "envId": 1, "infraMappingId": 1}
 syncStatus {"name": "compositeIdx2", "background": true} {"appId": 1, "infraMappingId": 1}
