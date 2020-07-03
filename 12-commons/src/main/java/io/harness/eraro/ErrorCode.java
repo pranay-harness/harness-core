@@ -436,7 +436,9 @@ public enum ErrorCode {
 
   ENGINE_ENTITY_UPDATE_EXCEPTION,
 
-  SHELL_EXECUTION_EXCEPTION;
+  SHELL_EXECUTION_EXCEPTION,
+
+  TEMPLATE_NOT_FOUND;
 
   private Status status = BAD_REQUEST;
   private String description;
