@@ -9,9 +9,11 @@ import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
 import io.harness.data.SweepingOutput;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.KryoConverter;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.IndexType;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -56,6 +58,20 @@ import javax.validation.constraints.NotNull;
     fields =
     { @Field(SweepingOutputKeys.appId)
       , @Field(SweepingOutputKeys.name), @Field(SweepingOutputKeys.stateExecutionId) })
+@CdIndex(name = "workflowExecutionIdsNamePrefix",
+    fields =
+    {
+      @Field(SweepingOutputKeys.appId)
+      , @Field(SweepingOutputKeys.workflowExecutionIds), @Field(SweepingOutputKeys.name),
+          @Field(value = SweepingOutputKeys.createdAt, type = IndexType.DESC)
+    })
+@CdIndex(name = "phaseExecutionIdNamePrefix",
+    fields =
+    {
+      @Field(SweepingOutputKeys.appId)
+      , @Field(SweepingOutputKeys.phaseExecutionId), @Field(SweepingOutputKeys.name),
+          @Field(value = SweepingOutputKeys.createdAt, type = IndexType.DESC)
+    })
 @Entity(value = "sweepingOutput2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @Converters({SweepingOutputConverter.class})
