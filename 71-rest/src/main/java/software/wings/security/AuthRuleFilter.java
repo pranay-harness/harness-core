@@ -383,7 +383,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return entityId;
   }
 
-  public Set<String> getAllowedAppIds(UserPermissionInfo userPermissionInfo) {
+  public static Set<String> getAllowedAppIds(UserPermissionInfo userPermissionInfo) {
     Set<String> allowedAppIds;
 
     Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();

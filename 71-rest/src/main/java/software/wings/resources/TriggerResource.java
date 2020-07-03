@@ -25,6 +25,7 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.TriggerService;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
@@ -68,6 +69,7 @@ public class TriggerResource {
       @QueryParam("tagFilter") String tagFilter, @QueryParam("withTags") @DefaultValue("false") boolean withTags,
       @BeanParam PageRequest<Trigger> pageRequest) {
     if (isNotEmpty(appIds)) {
+      triggerService.authorizeAppAccess(appIds);
       pageRequest.addFilter("appId", IN, appIds.toArray());
     }
     return new RestResponse<>(triggerService.list(pageRequest, withTags, tagFilter));
@@ -85,6 +87,7 @@ public class TriggerResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Trigger> get(@QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
+    triggerService.authorizeAppAccess(Collections.singletonList(appId));
     return new RestResponse<>(triggerService.get(appId, triggerId));
   }
 
