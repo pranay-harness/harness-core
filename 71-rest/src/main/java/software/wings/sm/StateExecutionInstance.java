@@ -50,7 +50,12 @@ import javax.annotation.Nullable;
 @Data
 @FieldNameConstants(innerTypeName = "StateExecutionInstanceKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-
+@CdIndex(name = "appIdExecutionIdStatus",
+    fields =
+    {
+      @Field(StateExecutionInstanceKeys.appId)
+      , @Field(StateExecutionInstanceKeys.executionUuid), @Field(StateExecutionInstanceKeys.status)
+    })
 @CdIndex(name = "stateTypes2",
     fields =
     {
