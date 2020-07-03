@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>25-orchestration-beans</artifactId>
+    <artifactId>29-orchestration-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>

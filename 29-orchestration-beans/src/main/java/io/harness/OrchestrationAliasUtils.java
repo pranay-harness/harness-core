@@ -26,7 +26,6 @@ import java.util.Set;
 public class OrchestrationAliasUtils {
   public static void validateModule() {
     Map<String, Class<?>> allElements = new HashMap<>();
-    Map<String, Class<?>> allBaseInterfaceElements = new HashMap<>();
     Reflections reflections = new Reflections("io.harness.serializer.spring");
     try {
       for (Class clazz : reflections.getSubTypesOf(AliasRegistrar.class)) {
