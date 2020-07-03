@@ -9,6 +9,9 @@ import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_MAXIMUM_CONFI
 import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_MINIMUM_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_TARGET_CONFIG_ELEMENT;
 import static io.harness.spotinst.model.SpotInstConstants.CAPACITY_UNIT_CONFIG_ELEMENT;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MIN_INSTANCES;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_TARGET_INSTANCES;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_CREATED_AT;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_ID;
@@ -40,6 +43,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.model.ElastiGroup;
+import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.spotinst.model.ElastiGroupInstanceHealth;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
@@ -110,6 +114,7 @@ public abstract class SpotInstTaskHandler {
         "Current state of Elastigroup: [%s], min: [%d], max: [%d], desired: [%d], Id: [%s]", elastiGroupIntial.getId(),
         elastiGroupIntial.getCapacity().getMinimum(), elastiGroupIntial.getCapacity().getMaximum(),
         elastiGroupIntial.getCapacity().getTarget(), elastiGroupIntial.getId()));
+    checkAndUpdateElastiGroup(elastiGroup, logCallback);
     int minInstances = elastiGroup.getCapacity().getMinimum();
     int maxInstances = elastiGroup.getCapacity().getMaximum();
     int targetInstances = elastiGroup.getCapacity().getTarget();
@@ -145,6 +150,39 @@ public abstract class SpotInstTaskHandler {
           format("Timed out while waiting for steady state for Elastigroup: [%s]. Workflow execution: [%s]",
               elastiGroupId, workflowExecutionId),
           e);
+    }
+  }
+
+  /**
+   * Checks if condition 0 <= min <= target <= max is followed.
+   * If it fails:
+   *  if target < 0, we update with default values
+   *  else update min and/or max to target individually.
+   * @param elastiGroup
+   * @param logCallback
+   */
+  private void checkAndUpdateElastiGroup(ElastiGroup elastiGroup, ExecutionLogCallback logCallback) {
+    ElastiGroupCapacity capacity = elastiGroup.getCapacity();
+    if (!(0 <= capacity.getMinimum() && capacity.getMinimum() <= capacity.getTarget()
+            && capacity.getTarget() <= capacity.getMaximum())) {
+      int min = capacity.getMinimum();
+      int target = capacity.getTarget();
+      int max = capacity.getMaximum();
+      if (target < 0) {
+        capacity.setMinimum(DEFAULT_ELASTIGROUP_MIN_INSTANCES);
+        capacity.setTarget(DEFAULT_ELASTIGROUP_TARGET_INSTANCES);
+        capacity.setMaximum(DEFAULT_ELASTIGROUP_MAX_INSTANCES);
+      } else {
+        if (min > target) {
+          capacity.setMinimum(target);
+        }
+        if (max < target) {
+          capacity.setMaximum(target);
+        }
+      }
+      logCallback.saveExecutionLog(format("Modifying invalid request to Spotinst to update Elastigroup:[%s] "
+              + "Original min: [%d], max: [%d] and target: [%d], Modified min: [%d], max: [%d] and target: [%d] ",
+          elastiGroup.getId(), min, max, target, capacity.getMinimum(), capacity.getMaximum(), capacity.getTarget()));
     }
   }
 

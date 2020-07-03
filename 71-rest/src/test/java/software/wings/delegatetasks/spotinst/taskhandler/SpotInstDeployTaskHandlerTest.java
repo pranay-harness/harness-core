@@ -1,6 +1,10 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MIN_INSTANCES;
+import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_TARGET_INSTANCES;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -38,6 +42,8 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
+import java.util.Optional;
+
 public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private SpotInstHelperServiceDelegate mockSpotInstHelperServiceDelegate;
@@ -59,6 +65,84 @@ public class SpotInstDeployTaskHandlerTest extends WingsBaseTest {
         group, "TOKEN", "ACCOUNT_ID", 5, SpotInstDeployTaskParameters.builder().build(), "SCALE", "WAIT");
     verify(deployTaskHandler)
         .updateElastiGroupAndWait(anyString(), anyString(), any(), anyInt(), any(), anyString(), anyString());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testScaleElastiGroupCapacityUpdate() throws Exception {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doReturn(mockCallback).when(deployTaskHandler).getLogCallBack(any(), anyString());
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
+
+    doReturn(Optional.of(ElastiGroup.builder().capacity(ElastiGroupCapacity.builder().build()).build()))
+        .when(mockSpotInstHelperServiceDelegate)
+        .getElastiGroupById(anyString(), anyString(), anyString());
+
+    doNothing()
+        .when(mockSpotInstHelperServiceDelegate)
+        .updateElastiGroupCapacity(anyString(), anyString(), anyString(), any());
+
+    ElastiGroup elastiGroup1 = ElastiGroup.builder()
+                                   .id("Id")
+                                   .name("Name")
+                                   .capacity(ElastiGroupCapacity.builder().minimum(3).maximum(1).target(2).build())
+                                   .build();
+    deployTaskHandler.scaleElastigroup(
+        elastiGroup1, "TOKEN", "ACCOUNT_ID", 5, SpotInstDeployTaskParameters.builder().build(), "SCALE", "WAIT");
+
+    assertThat(elastiGroup1.getCapacity().getMinimum()).isEqualTo(2);
+    assertThat(elastiGroup1.getCapacity().getTarget()).isEqualTo(2);
+    assertThat(elastiGroup1.getCapacity().getMaximum()).isEqualTo(2);
+
+    ElastiGroup elastiGroup2 = ElastiGroup.builder()
+                                   .id("Id")
+                                   .name("Name")
+                                   .capacity(ElastiGroupCapacity.builder().minimum(3).maximum(1).target(-1).build())
+                                   .build();
+    deployTaskHandler.scaleElastigroup(
+        elastiGroup2, "TOKEN", "ACCOUNT_ID", 5, SpotInstDeployTaskParameters.builder().build(), "SCALE", "WAIT");
+
+    assertThat(elastiGroup2.getCapacity().getMinimum()).isEqualTo(DEFAULT_ELASTIGROUP_MIN_INSTANCES);
+    assertThat(elastiGroup2.getCapacity().getTarget()).isEqualTo(DEFAULT_ELASTIGROUP_TARGET_INSTANCES);
+    assertThat(elastiGroup2.getCapacity().getMaximum()).isEqualTo(DEFAULT_ELASTIGROUP_MAX_INSTANCES);
+
+    ElastiGroup elastiGroup3 = ElastiGroup.builder()
+                                   .id("Id")
+                                   .name("Name")
+                                   .capacity(ElastiGroupCapacity.builder().minimum(30).maximum(100).target(20).build())
+                                   .build();
+    deployTaskHandler.scaleElastigroup(
+        elastiGroup3, "TOKEN", "ACCOUNT_ID", 5, SpotInstDeployTaskParameters.builder().build(), "SCALE", "WAIT");
+
+    assertThat(elastiGroup3.getCapacity().getMinimum()).isEqualTo(20);
+    assertThat(elastiGroup3.getCapacity().getTarget()).isEqualTo(20);
+    assertThat(elastiGroup3.getCapacity().getMaximum()).isEqualTo(100);
+
+    ElastiGroup elastiGroup4 = ElastiGroup.builder()
+                                   .id("Id")
+                                   .name("Name")
+                                   .capacity(ElastiGroupCapacity.builder().minimum(5).maximum(10).target(20).build())
+                                   .build();
+    deployTaskHandler.scaleElastigroup(
+        elastiGroup4, "TOKEN", "ACCOUNT_ID", 5, SpotInstDeployTaskParameters.builder().build(), "SCALE", "WAIT");
+
+    assertThat(elastiGroup4.getCapacity().getMinimum()).isEqualTo(5);
+    assertThat(elastiGroup4.getCapacity().getTarget()).isEqualTo(20);
+    assertThat(elastiGroup4.getCapacity().getMaximum()).isEqualTo(20);
+
+    ElastiGroup elastiGroup5 = ElastiGroup.builder()
+                                   .id("Id")
+                                   .name("Name")
+                                   .capacity(ElastiGroupCapacity.builder().minimum(5).maximum(10).target(7).build())
+                                   .build();
+    deployTaskHandler.scaleElastigroup(
+        elastiGroup5, "TOKEN", "ACCOUNT_ID", 5, SpotInstDeployTaskParameters.builder().build(), "SCALE", "WAIT");
+
+    assertThat(elastiGroup5.getCapacity().getMinimum()).isEqualTo(5);
+    assertThat(elastiGroup5.getCapacity().getTarget()).isEqualTo(7);
+    assertThat(elastiGroup5.getCapacity().getMaximum()).isEqualTo(10);
   }
 
   @Test

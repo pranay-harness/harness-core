@@ -37,7 +37,6 @@ import software.wings.sm.State;
 import software.wings.utils.Misc;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,9 +46,9 @@ public class SpotInstServiceSetup extends State {
   public static final String SPOTINST_SERVICE_SETUP_COMMAND = "Spotinst Service Setup";
   public static final int DEFAULT_CURRENT_RUNNING_INSTANCE_COUNT = 2;
 
-  @Getter @Setter private Integer minInstances;
-  @Getter @Setter private Integer maxInstances;
-  @Getter @Setter private Integer targetInstances;
+  @Getter @Setter private String minInstances;
+  @Getter @Setter private String maxInstances;
+  @Getter @Setter private String targetInstances;
 
   @Getter @Setter private Integer currentRunningCount;
   @Getter @Setter private String elastiGroupNamePrefix;
@@ -238,28 +237,5 @@ public class SpotInstServiceSetup extends State {
 
   public void setAwsLoadBalancerConfigs(List<LoadBalancerDetailsForBGDeployment> awsLoadBalancerConfigs) {
     this.awsLoadBalancerConfigs = awsLoadBalancerConfigs;
-  }
-
-  @Override
-  public Map<String, String> validateFields() {
-    Map<String, String> invalidFields = new HashMap<>();
-    if (!useCurrentRunningCount) {
-      if (maxInstances == null || maxInstances <= 0) {
-        invalidFields.put("maxInstances", "Max Instance count must be greater than 0");
-      }
-      if (targetInstances == null || targetInstances <= 0) {
-        invalidFields.put("desiredInstances", "Desired Instance count must be greater than 0");
-      }
-      if (minInstances == null || minInstances < 0) {
-        invalidFields.put("minInstances", "Min Instance count must be greater than 0");
-      }
-      if (targetInstances != null && maxInstances != null && targetInstances > maxInstances) {
-        invalidFields.put("desiredInstances", "Desired Instance count must be <= Max Instance count");
-      }
-      if (minInstances != null && targetInstances != null && minInstances > targetInstances) {
-        invalidFields.put("minInstances", "Min Instance count must be <= Desired Instance count");
-      }
-    }
-    return invalidFields;
   }
 }

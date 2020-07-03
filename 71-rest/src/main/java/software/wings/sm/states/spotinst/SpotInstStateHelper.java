@@ -147,7 +147,8 @@ public class SpotInstStateHelper {
         : Misc.normalizeExpression(context.renderExpression(elastiGroupNamePrefix));
 
     String elastiGroupOriginalJson = context.renderExpression(awsAmiInfrastructureMapping.getSpotinstElastiGroupJson());
-    ElastiGroup elastiGroupOriginalConfig = generateOriginalConfigFromJson(elastiGroupOriginalJson, serviceSetup);
+    ElastiGroup elastiGroupOriginalConfig =
+        generateOriginalConfigFromJson(elastiGroupOriginalJson, serviceSetup, context);
     boolean blueGreen = serviceSetup.isBlueGreen();
     SpotInstTaskParameters spotInstTaskParameters =
         SpotInstSetupTaskParameters.builder()
@@ -180,7 +181,7 @@ public class SpotInstStateHelper {
         .appId(app.getUuid())
         .infraMappingId(awsAmiInfrastructureMapping.getUuid())
         .commandName(SPOTINST_SERVICE_SETUP_COMMAND)
-        .maxInstanceCount(serviceSetup.getTargetInstances())
+        .maxInstanceCount(elastiGroupOriginalConfig.getCapacity().getMaximum())
         .useCurrentRunningInstanceCount(serviceSetup.isUseCurrentRunningCount())
         .currentRunningInstanceCount(fetchCurrentRunningCountForSetupRequest(serviceSetup))
         .serviceId(serviceElement.getUuid())
@@ -239,7 +240,7 @@ public class SpotInstStateHelper {
   }
 
   private ElastiGroup generateOriginalConfigFromJson(
-      String elastiGroupOriginalJson, SpotInstServiceSetup serviceSetup) {
+      String elastiGroupOriginalJson, SpotInstServiceSetup serviceSetup, ExecutionContext context) {
     ElastiGroup elastiGroup = generateConfigFromJson(elastiGroupOriginalJson);
     ElastiGroupCapacity groupCapacity = elastiGroup.getCapacity();
     if (serviceSetup.isUseCurrentRunningCount()) {
@@ -247,9 +248,10 @@ public class SpotInstStateHelper {
       groupCapacity.setMaximum(DEFAULT_ELASTIGROUP_MAX_INSTANCES);
       groupCapacity.setTarget(DEFAULT_ELASTIGROUP_TARGET_INSTANCES);
     } else {
-      groupCapacity.setMinimum(serviceSetup.getMinInstances());
-      groupCapacity.setMaximum(serviceSetup.getMaxInstances());
-      groupCapacity.setTarget(serviceSetup.getTargetInstances());
+      groupCapacity.setMinimum(renderCount(serviceSetup.getMinInstances(), context, DEFAULT_ELASTIGROUP_MIN_INSTANCES));
+      groupCapacity.setMaximum(renderCount(serviceSetup.getMaxInstances(), context, DEFAULT_ELASTIGROUP_MAX_INSTANCES));
+      groupCapacity.setTarget(
+          renderCount(serviceSetup.getTargetInstances(), context, DEFAULT_ELASTIGROUP_TARGET_INSTANCES));
     }
     return elastiGroup;
   }
