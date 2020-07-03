@@ -28,7 +28,9 @@ import io.kubernetes.client.openapi.models.V1StatefulSetList;
 import io.kubernetes.client.openapi.models.V1beta1CronJob;
 import io.kubernetes.client.openapi.models.V1beta1CronJobList;
 import io.kubernetes.client.util.CallGeneratorParams;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Singleton
 public class SharedInformerFactoryFactory {
   private final EventPublisher eventPublisher;
@@ -39,6 +41,7 @@ public class SharedInformerFactoryFactory {
   }
 
   public SharedInformerFactory createSharedInformerFactory(ApiClient apiClient, ClusterDetails clusterDetails) {
+    logger.info("Creating new SharedInformerFactory for cluster: {}", clusterDetails.getClusterId());
     SharedInformerFactory factory = new SharedInformerFactory();
     addHandlerForReplicaSet(factory, apiClient, clusterDetails);
     addHandlerForDeployment(factory, apiClient, clusterDetails);

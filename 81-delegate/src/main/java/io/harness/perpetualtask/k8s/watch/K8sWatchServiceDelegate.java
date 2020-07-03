@@ -22,6 +22,7 @@ import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1StatefulSet;
 import io.kubernetes.client.openapi.models.V1beta1CronJob;
 import lombok.Builder;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.k8s.apiclient.ApiClientFactory;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
@@ -61,19 +62,22 @@ public class K8sWatchServiceDelegate {
     this.watchMap = new ConcurrentHashMap<>();
   }
 
+  @Value
   @Builder
   static class WatcherGroup implements Closeable {
-    private Watcher<Node> nodeWatcher;
-    private Watcher<Pod> podWatcher;
-    private Watcher<Event> clusterEventWatcher;
-    private SharedInformerFactory sharedInformerFactory;
+    String watchId;
+    Watcher<Node> nodeWatcher;
+    Watcher<Pod> podWatcher;
+    Watcher<Event> clusterEventWatcher;
+    SharedInformerFactory sharedInformerFactory;
 
     @Override
     public void close() {
+      logger.info("Closing watcher group for watch {}", watchId);
+      sharedInformerFactory.stopAllRegisteredInformers();
       nodeWatcher.onClose(null);
       podWatcher.onClose(null);
       clusterEventWatcher.onClose(null);
-      sharedInformerFactory.stopAllRegisteredInformers();
     }
   }
 
@@ -84,7 +88,7 @@ public class K8sWatchServiceDelegate {
   public String create(K8sWatchTaskParams params) {
     String watchId = params.getClusterId();
     watchMap.computeIfAbsent(watchId, id -> {
-      logger.info("Creating watch with id: {}", watchId);
+      logger.info("Creating watch with id: {}", id);
       K8sClusterConfig k8sClusterConfig =
           (K8sClusterConfig) KryoUtils.asObject(params.getK8SClusterConfig().toByteArray());
       KubernetesClient client = kubernetesClientFactory.newKubernetesClient(k8sClusterConfig);
@@ -106,6 +110,7 @@ public class K8sWatchServiceDelegate {
       K8sControllerFetcher controllerFetcher = new K8sControllerFetcher(stores);
       Watcher<Pod> podWatcher = watcherFactory.createPodWatcher(client, clusterDetails, controllerFetcher);
       return WatcherGroup.builder()
+          .watchId(id)
           .nodeWatcher(nodeWatcher)
           .podWatcher(podWatcher)
           .clusterEventWatcher(eventWatcher)
