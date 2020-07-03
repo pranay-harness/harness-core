@@ -2,6 +2,8 @@ package io.harness.serializer.spring;
 
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureSpec;
@@ -16,8 +18,12 @@ import io.harness.cdng.k8s.K8sRollingStepParameters;
 import io.harness.cdng.k8s.K8sRollingStepPassThroughData;
 import io.harness.cdng.manifest.state.ManifestListConfig;
 import io.harness.cdng.manifest.state.ManifestStepParameters;
+import io.harness.cdng.manifest.yaml.GitStore;
+import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
+import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
+import io.harness.cdng.pipeline.CDPhase;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
@@ -144,5 +150,11 @@ public class WingsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("pcfAppSetupTimeDetails", PcfAppSetupTimeDetails.class);
     orchestrationElements.put("serviceOutcome_override", ServiceOutcome.Override.class);
     orchestrationElements.put("pcfCommandRequest", PcfCommandRequest.class);
+    orchestrationElements.put("dockerHubArtifactConfig", DockerHubArtifactConfig.class);
+    orchestrationElements.put("gcrArtifactConfig", GcrArtifactConfig.class);
+    orchestrationElements.put("gitStore", GitStore.class);
+    orchestrationElements.put("manifestConfig", ManifestConfig.class);
+    orchestrationElements.put("valuesManifest", ValuesManifest.class);
+    orchestrationElements.put("cdPhase", CDPhase.class);
   }
 }
