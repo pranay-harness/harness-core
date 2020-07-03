@@ -721,6 +721,10 @@ public class WatcherServiceImpl implements WatcherService {
         ()
             -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)),
         1L, TimeUnit.MINUTES, true);
+    if (restResponse == null) {
+      return;
+    }
+
     DelegateScripts delegateScripts = restResponse.getResource();
 
     Path versionDir = Paths.get(directory);
@@ -760,6 +764,10 @@ public class WatcherServiceImpl implements WatcherService {
             -> SafeHttpCall.execute(
                 managerClient.getDelegateDownloadUrl(minorVersion, watcherConfiguration.getAccountId())),
         30L, TimeUnit.SECONDS, true);
+    if (restResponse == null) {
+      return;
+    }
+
     String downloadUrl = restResponse.getResource();
     logger.info("Downloading delegate jar version {}", version);
     File destination = new File(version + "/delegate.jar");
