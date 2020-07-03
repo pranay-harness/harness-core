@@ -254,6 +254,7 @@ func Test_publishToJfrog_WithError(t *testing.T) {
 	connectorID := "jfrogConnector"
 	jfrogUsrName := "admin"
 	jfrogPwd := "admin"
+	jfrogPath := "/bin/jfrog"
 
 	tests := []struct {
 		name             string
@@ -286,6 +287,20 @@ func Test_publishToJfrog_WithError(t *testing.T) {
 			},
 		},
 		{
+			name: "jfrog cli environment var is not set",
+			inputDst: &pb.Destination{
+				Connector: &pb.Connector{
+					Id:   connectorID,
+					Auth: pb.AuthType_BASIC_AUTH,
+				},
+			},
+			expectedErr: true,
+			envVars: map[string]string{
+				"USERNAME_" + connectorID: jfrogUsrName,
+				"PASSWORD_" + connectorID: jfrogPwd,
+			},
+		},
+		{
 			name: "file pattern is not correct",
 			inputDst: &pb.Destination{
 				Connector: &pb.Connector{
@@ -298,6 +313,7 @@ func Test_publishToJfrog_WithError(t *testing.T) {
 			envVars: map[string]string{
 				"USERNAME_" + connectorID: jfrogUsrName,
 				"PASSWORD_" + connectorID: jfrogPwd,
+				"JFROG_PATH":              jfrogPath,
 			},
 		},
 		{
@@ -314,6 +330,7 @@ func Test_publishToJfrog_WithError(t *testing.T) {
 			envVars: map[string]string{
 				"USERNAME_" + connectorID: "",
 				"PASSWORD_" + connectorID: "",
+				"JFROG_PATH":              jfrogPath,
 			},
 		},
 	}

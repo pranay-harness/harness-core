@@ -19,6 +19,7 @@ import (
 const (
 	jfrogDstPattern     = `(.*?)\/artifactory\/(.+)`
 	jfrogRTFormat       = `/artifactory/`
+	jfrogPathEnv        = "JFROG_PATH" // JFROG CLI path
 	userNameEnvFormat   = "USERNAME_"
 	passwordEnvFormat   = "PASSWORD_"
 	accessKeyEnvFormat  = "ACCESS_KEY_"
@@ -31,7 +32,7 @@ var (
 	newRegistryClient = kaniko.NewRegistryClient
 )
 
-// PublishArtifact represents an interface to upload files or build docker images and upload them to artifactory.
+// PublishArtifacts represents an interface to upload files or build docker images and upload them to artifactory.
 type PublishArtifacts interface {
 	Publish(ctx context.Context, in *pb.PublishArtifactsRequest) error
 }
@@ -40,7 +41,7 @@ type publishArtifacts struct {
 	log *zap.SugaredLogger
 }
 
-// NewPublishArtifactTask implements task to publish artifacts
+// NewPublishArtifactsTask implements task to publish artifacts
 func NewPublishArtifactsTask(log *zap.SugaredLogger) PublishArtifacts {
 	return &publishArtifacts{log}
 }
@@ -247,6 +248,11 @@ func (p *publishArtifacts) publishToJfrog(ctx context.Context, filePattern strin
 		return fmt.Errorf(fmt.Sprintf("password not set for environment variable %s", pwdEnv))
 	}
 
+	jfrogPath, ok := os.LookupEnv(jfrogPathEnv)
+	if !ok {
+		return fmt.Errorf(fmt.Sprintf("jfrog cli path not set for environment variable %s", jfrogPathEnv))
+	}
+
 	r, err := regexp.Compile(jfrogDstPattern)
 	if err != nil {
 		return fmt.Errorf(fmt.Sprintf("invalid regex pattern %s", jfrogDstPattern))
@@ -259,7 +265,7 @@ func (p *publishArtifacts) publishToJfrog(ctx context.Context, filePattern strin
 
 	rtURL := fmt.Sprintf("%s%s", matches[1], jfrogRTFormat)
 	repoPath := matches[2]
-	c, err := jfrogutils.NewArtifactoryClient(p.log, jfrogutils.WithArtifactoryClientBasicAuth(userName, pwd))
+	c, err := jfrogutils.NewArtifactoryClient(jfrogPath, p.log, jfrogutils.WithArtifactoryClientBasicAuth(userName, pwd))
 	if err != nil {
 		return err
 	}

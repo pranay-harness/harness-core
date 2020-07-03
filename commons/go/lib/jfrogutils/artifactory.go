@@ -16,9 +16,8 @@ import (
 //go:generate mockgen -source artifactory.go -package=jfrogutils -destination mocks/artifactory_mock.go Artifactory
 
 const (
-	defaultNumRetries   int64  = 3       // default number of retries
-	defaultTimeoutSecs  int64  = 300     // 5 minutes
-	jfrogPath           string = "jfrog" // jfrog cli path
+	defaultNumRetries   int64  = 3   // default number of retries
+	defaultTimeoutSecs  int64  = 300 // 5 minutes
 	failureUploadStatus string = "failure"
 	successUploadStatus string = "success"
 )
@@ -31,6 +30,7 @@ type Artifactory interface {
 }
 
 type artifactory struct {
+	jfrogPath   string // jfrog cli path
 	userName    string
 	password    string
 	apiKey      string
@@ -92,8 +92,9 @@ func WithArtifactoryClientAccessTokenAuth(accessToken string) ArtifactoryClientO
 }
 
 // NewArtifactoryClient creates a new Jfrog artifactory client and returns it.
-func NewArtifactoryClient(log *zap.SugaredLogger, opts ...ArtifactoryClientOption) (Artifactory, error) {
+func NewArtifactoryClient(jfrogPath string, log *zap.SugaredLogger, opts ...ArtifactoryClientOption) (Artifactory, error) {
 	a := &artifactory{
+		jfrogPath:   jfrogPath,
 		log:         log,
 		numRetries:  defaultNumRetries,
 		timeoutSecs: defaultTimeoutSecs,
@@ -130,11 +131,11 @@ func (a *artifactory) Upload(ctx context.Context, srcFilePattern, targetReposito
 	}
 	args = append(args, srcFilePattern)
 	args = append(args, targetRepositoryPath)
-	printableArgs = fmt.Sprintf("%s <auth> %s %s", printableArgs, srcFilePattern, targetRepositoryPath)
+	printableArgs = fmt.Sprintf("%s %s <auth> %s %s", a.jfrogPath, printableArgs, srcFilePattern, targetRepositoryPath)
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
-	cmd := execCommandWithContext(ctx, jfrogPath, args...)
+	cmd := execCommandWithContext(ctx, a.jfrogPath, args...)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	err := cmd.Run()
