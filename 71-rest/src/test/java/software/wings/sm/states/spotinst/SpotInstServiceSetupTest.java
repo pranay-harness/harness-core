@@ -119,21 +119,4 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
     assertThat(spotinstElement.getSpotInstSetupTaskResponse().getNewElastiGroup().getId()).isEqualTo(newId);
     assertThat(spotinstElement.getSpotInstSetupTaskResponse().getGroupToBeDownsized().get(0).getId()).isEqualTo(oldId);
   }
-
-  @Test
-  @Owner(developers = SATYAM)
-  @Category(UnitTests.class)
-  public void testValidateFields() {
-    SpotInstServiceSetup stateLocal = new SpotInstServiceSetup("stateName2");
-    stateLocal.setUseCurrentRunningCount(false);
-    Map<String, String> fieldMap = stateLocal.validateFields();
-    assertThat(fieldMap).isNotNull();
-    assertThat(fieldMap.size()).isEqualTo(3);
-    stateLocal.setMinInstances(5);
-    stateLocal.setTargetInstances(3);
-    stateLocal.setMaxInstances(1);
-    fieldMap = stateLocal.validateFields();
-    assertThat(fieldMap).isNotNull();
-    assertThat(fieldMap.size()).isEqualTo(2);
-  }
 }

@@ -144,7 +144,15 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
   public void testPrepareStateExecutionData() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     SpotInstServiceSetup mockState = mock(SpotInstServiceSetup.class);
+    String minInstances = "3";
+    String maxInstances = "20";
+    String targetInstances = "5";
+
     doReturn(3).when(mockState).getOlderActiveVersionCountToKeep();
+    doReturn(minInstances).when(mockState).getMinInstances();
+    doReturn(targetInstances).when(mockState).getMaxInstances();
+    doReturn(maxInstances).when(mockState).getTargetInstances();
+
     PhaseElement phaseElement =
         PhaseElement.builder()
             .serviceElement(ServiceElement.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build())
@@ -194,12 +202,20 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
     doReturn(elastigroupNamePrefix).when(mockState).getElastiGroupNamePrefix();
     doReturn(elastigroupNamePrefix)
         .doReturn(elastigroupJson)
+        .doReturn(minInstances)
+        .doReturn(maxInstances)
+        .doReturn(targetInstances)
         .doReturn(userData)
         .when(mockContext)
         .renderExpression(anyString());
     SpotInstSetupStateExecutionData executionData =
         spotInstStateHelper.prepareStateExecutionData(mockContext, mockState);
     assertThat(executionData).isNotNull();
+    ElastiGroupCapacity capacity = executionData.getElastiGroupOriginalConfig().getCapacity();
+    assertThat(capacity.getMaximum()).isEqualTo(Integer.valueOf(maxInstances));
+    assertThat(capacity.getMinimum()).isEqualTo(Integer.valueOf(minInstances));
+    assertThat(capacity.getTarget()).isEqualTo(Integer.valueOf(targetInstances));
+
     SpotInstCommandRequest spotinstCommandRequest = executionData.getSpotinstCommandRequest();
     assertThat(spotinstCommandRequest).isNotNull();
     SpotInstTaskParameters spotInstTaskParameters = spotinstCommandRequest.getSpotInstTaskParameters();
