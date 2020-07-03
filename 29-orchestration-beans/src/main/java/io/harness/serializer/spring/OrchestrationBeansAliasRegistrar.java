@@ -4,6 +4,7 @@ import io.harness.adviser.AdviserType;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.barriers.BarrierNode;
+import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -53,5 +54,6 @@ public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("sweepingOutputRefObject", SweepingOutputRefObject.class);
     orchestrationElements.put("taskChainExecutableResponse", TaskChainExecutableResponse.class);
     orchestrationElements.put("taskExecutableResponse", TaskExecutableResponse.class);
+    orchestrationElements.put("executionSweepingOutput", ExecutionSweepingOutputInstance.class);
   }
 }

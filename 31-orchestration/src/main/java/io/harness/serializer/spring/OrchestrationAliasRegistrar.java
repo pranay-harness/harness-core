@@ -4,7 +4,6 @@ import io.harness.advisers.fail.OnFailAdviserParameters;
 import io.harness.advisers.ignore.IgnoreAdviserParameters;
 import io.harness.advisers.retry.RetryAdviserParameters;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
-import io.harness.beans.ExecutionSweepingOutputInstance;
 import io.harness.spring.AliasRegistrar;
 import io.harness.state.core.barrier.BarrierStepParameters;
 import io.harness.state.core.dummy.DummySectionOutcome;
@@ -29,7 +28,6 @@ public class OrchestrationAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("dummySectionStepParameters", DummySectionStepParameters.class);
     orchestrationElements.put("dummySectionStepTransput", DummySectionStepTransput.class);
     orchestrationElements.put("dummyStepParameters", DummyStepParameters.class);
-    orchestrationElements.put("executionSweepingOutput", ExecutionSweepingOutputInstance.class);
     orchestrationElements.put("forkStepParameters", ForkStepParameters.class);
     orchestrationElements.put("ignoreAdviserParameters", IgnoreAdviserParameters.class);
     orchestrationElements.put("onFailAdviserParameters", OnFailAdviserParameters.class);
