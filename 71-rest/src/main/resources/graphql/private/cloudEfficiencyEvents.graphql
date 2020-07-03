@@ -1,5 +1,6 @@
 extend type Query {
-  ceEventStats(filters: [EventsFilter], sortCriteria: [EventsSortCriteria]): EventsData @dataFetcher(name: eventsStats)
+  ceEventStats(limit: Int, offset: Int, filters: [EventsFilter], sortCriteria: [EventsSortCriteria]): EventsData
+    @dataFetcher(name: eventsStats)
   k8sEventYamlDiff(oldYamlRef: String!, newYamlRef: String!): K8sEventYamlDiff @dataFetcher(name: k8sEventYamlDiff)
 }
 
@@ -27,6 +28,7 @@ type EventsDataPoint {
   time: Number
   source: String
   type: String
+  eventPriorityType: String
   details: String
   oldYamlRef: String
   newYamlRef: String
@@ -53,4 +55,5 @@ input EventsSortCriteria {
 
 enum EventsSortType {
   Time
+  Cost
 }

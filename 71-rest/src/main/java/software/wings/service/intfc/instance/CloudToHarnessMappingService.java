@@ -37,6 +37,8 @@ public interface CloudToHarnessMappingService {
 
   List<DeploymentSummary> getDeploymentSummary(String accountId, String offset, Instant startTime, Instant endTime);
 
+  SettingAttribute getFirstSettingAttributeByCategory(String accountId, SettingCategory category);
+
   List<SettingAttribute> listSettingAttributesCreatedInDuration(
       String accountId, SettingCategory category, SettingVariableTypes valueType);
 

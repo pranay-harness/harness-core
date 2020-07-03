@@ -29,6 +29,7 @@ import java.util.Set;
 @Slf4j
 public class EventsDataQueryBuilder {
   private CEEventsTableSchema schema = new CEEventsTableSchema();
+  private static final String absoluteTemplate = "ABS(%s)";
 
   protected CEEventsQueryMetaData formQuery(
       String accountId, List<QLEventsDataFilter> filters, List<QLEventsSortCriteria> sortCriteria) {
@@ -89,6 +90,9 @@ public class EventsDataQueryBuilder {
         sortCriteria.getSortOrder() == QLSortOrder.ASCENDING ? OrderObject.Dir.ASCENDING : OrderObject.Dir.DESCENDING;
     if (sortType == QLEventsSortType.Time) {
       selectQuery.addCustomOrdering(CEEventsMetaDataFields.STARTTIME.getFieldName(), dir);
+    } else if (sortType == QLEventsSortType.Cost) {
+      selectQuery.addCustomOrdering(
+          String.format(absoluteTemplate, CEEventsMetaDataFields.BILLINGAMOUNT.getFieldName()), dir);
     }
   }
 

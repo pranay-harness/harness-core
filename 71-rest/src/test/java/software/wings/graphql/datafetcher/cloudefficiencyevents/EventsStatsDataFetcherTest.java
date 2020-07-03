@@ -79,7 +79,7 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(timeScaleDBService.isValid()).thenReturn(false);
     assertThatThrownBy(()
                            -> eventsStatsDataFetcher.fetch(ACCOUNT1_ID, null, Collections.EMPTY_LIST,
-                               Collections.EMPTY_LIST, Collections.EMPTY_LIST))
+                               Collections.EMPTY_LIST, Collections.EMPTY_LIST, 100, 0))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -95,7 +95,7 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
     when(mockStatement.executeQuery(anyString())).thenThrow(new SQLException());
 
     QLData data = eventsStatsDataFetcher.fetch(
-        ACCOUNT1_ID, null, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        ACCOUNT1_ID, null, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, 100, 0);
     assertThat(data).isNull();
   }
 
@@ -109,8 +109,8 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
     filters.add(makeClusterFilter(clusterValues));
     List<QLEventsSortCriteria> sortCriteria = Arrays.asList(makeAscByTimeSortingCriteria());
 
-    QLEventData data =
-        (QLEventData) eventsStatsDataFetcher.fetch(ACCOUNT1_ID, null, filters, Collections.emptyList(), sortCriteria);
+    QLEventData data = (QLEventData) eventsStatsDataFetcher.fetch(
+        ACCOUNT1_ID, null, filters, Collections.emptyList(), sortCriteria, 100, 0);
 
     List<QLEventsDataPoint> dataPoints = data.getData();
     assertThat(data).isNotNull();
@@ -132,8 +132,8 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
     filters.add(makeEndTimeFilter(currentTime + 3600000 * 30));
     List<QLEventsSortCriteria> sortCriteria = Arrays.asList(makeAscByTimeSortingCriteria());
 
-    QLEventData data =
-        (QLEventData) eventsStatsDataFetcher.fetch(ACCOUNT1_ID, null, filters, Collections.emptyList(), sortCriteria);
+    QLEventData data = (QLEventData) eventsStatsDataFetcher.fetch(
+        ACCOUNT1_ID, null, filters, Collections.emptyList(), sortCriteria, 100, 0);
 
     List<QLEventsDataPoint> dataPoints = data.getData();
     assertThat(data).isNotNull();
