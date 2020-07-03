@@ -12,6 +12,8 @@ import io.grpc.ServerCall.Listener;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
+import io.harness.grpc.InterceptorPriority;
+import io.harness.grpc.utils.GrpcAuthUtils;
 import io.harness.security.TokenAuthenticator;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,11 +25,13 @@ import java.util.Set;
  */
 @Slf4j
 @Singleton
+@InterceptorPriority(10)
 public class DelegateAuthServerInterceptor implements ServerInterceptor {
   public static final Context.Key<String> ACCOUNT_ID_CTX_KEY = Context.key("accountId");
   private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
-  private static final Set<String> EXCLUDED_SERVICES =
-      ImmutableSet.of("grpc.health.v1.Health", "grpc.reflection.v1alpha.ServerReflection");
+  private static final Set<String> INCLUDED_SERVICES =
+      ImmutableSet.of("io.harness.delegate.DelegateService", "io.harness.perpetualtask.PerpetualTaskService",
+          "io.harness.event.PingPongService", "io.harness.event.EventPublisher");
 
   private final TokenAuthenticator tokenAuthenticator;
 
@@ -42,6 +46,7 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
     if (excluded(call)) {
       return Contexts.interceptCall(Context.current(), call, metadata, next);
     }
+
     String accountId = metadata.get(DelegateAuthCallCredentials.ACCOUNT_ID_METADATA_KEY);
     String token = metadata.get(DelegateAuthCallCredentials.TOKEN_METADATA_KEY);
     @SuppressWarnings("unchecked") Listener<ReqT> noopListener = NOOP_LISTENER;
@@ -58,7 +63,7 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
     Context ctx;
     try {
       tokenAuthenticator.validateToken(accountId, token);
-      ctx = Context.current().withValue(ACCOUNT_ID_CTX_KEY, accountId);
+      ctx = GrpcAuthUtils.newAuthenticatedContext().withValue(ACCOUNT_ID_CTX_KEY, accountId);
     } catch (Exception e) {
       logger.warn("Token verification failed. Unauthenticated", e);
       call.close(Status.UNAUTHENTICATED.withDescription(e.getMessage()).withCause(e), metadata);
@@ -68,6 +73,6 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
   }
 
   private <RespT, ReqT> boolean excluded(ServerCall<ReqT, RespT> call) {
-    return EXCLUDED_SERVICES.contains(call.getMethodDescriptor().getServiceName());
+    return !INCLUDED_SERVICES.contains(call.getMethodDescriptor().getServiceName());
   }
 }

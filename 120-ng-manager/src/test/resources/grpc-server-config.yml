@@ -1,0 +1,11 @@
+grpcServer:
+  connectors:
+    - port: 9980
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 9979
+
+nextGen:
+  managerServiceSecret: test_secret
+

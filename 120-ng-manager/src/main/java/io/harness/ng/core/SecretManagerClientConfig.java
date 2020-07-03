@@ -10,7 +10,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SecretManagerClientConfig {
   String baseUrl;
-  String serviceSecret;
   @Builder.Default long connectTimeOutSeconds = 15;
   @Builder.Default long readTimeOutSeconds = 15;
 }

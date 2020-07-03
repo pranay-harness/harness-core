@@ -1,4 +1,4 @@
-package io.harness.ng.core.remote.client.factory;
+package io.harness.ng.core.remote.client.rest.factory;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
@@ -13,7 +13,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.ng.core.SecretManagerClientConfig;
-import io.harness.ng.core.remote.client.SecretManagerClient;
+import io.harness.ng.core.remote.client.rest.SecretManagerClient;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.JsonSubtypeResolver;
 import lombok.AccessLevel;
@@ -34,12 +34,14 @@ import java.util.function.Supplier;
 @Singleton
 public class SecretManagerHttpClientFactory implements Provider<SecretManagerClient> {
   private final SecretManagerClientConfig secretManagerConfig;
+  private final String serviceSecret;
   private final ServiceTokenGenerator tokenGenerator;
   private static final String CLIENT_ID = "NextGenManager";
 
   public SecretManagerHttpClientFactory(
-      SecretManagerClientConfig secretManagerConfig, ServiceTokenGenerator tokenGenerator) {
+      SecretManagerClientConfig secretManagerConfig, String serviceSecret, ServiceTokenGenerator tokenGenerator) {
     this.secretManagerConfig = secretManagerConfig;
+    this.serviceSecret = serviceSecret;
     this.tokenGenerator = tokenGenerator;
   }
 
@@ -91,7 +93,7 @@ public class SecretManagerHttpClientFactory implements Provider<SecretManagerCli
   }
 
   private String getServiceSecret() {
-    String managerServiceSecret = secretManagerConfig.getServiceSecret();
+    String managerServiceSecret = this.serviceSecret;
     if (StringUtils.isNotBlank(managerServiceSecret)) {
       return managerServiceSecret.trim();
     }

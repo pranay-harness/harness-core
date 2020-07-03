@@ -137,8 +137,8 @@ public class DelegateAuthServerInterceptorTest extends CategoryTest {
   }
 
   // A server interceptor to spy on the value of the context of the last call.
-  private static class ContextRecordingInterceptor implements ServerInterceptor {
-    private volatile Context lastContext;
+  static class ContextRecordingInterceptor implements ServerInterceptor {
+    volatile Context lastContext;
 
     @Override
     public <ReqT, RespT> Listener<ReqT> interceptCall(

@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package io.harness.delegate;
+
+option java_multiple_files = true;
+
+import "io/harness/delegate/ng_delegate_task.proto";
+
+service NgDelegateTaskService {
+  rpc SendTask(SendTaskRequest) returns (SendTaskResponse);
+  rpc SendTaskAsync(SendTaskAsyncRequest) returns (SendTaskAsyncResponse);
+  rpc AbortTask(AbortTaskRequest) returns (AbortTaskResponse);
+}

@@ -4,6 +4,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 
+import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -71,6 +72,11 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
+
+    logger.info("Initializing gRPC server...");
+    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+    serviceManager.awaitHealthy();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
   }
 
   private void registerCorsFilter(NextGenConfiguration appConfig, Environment environment) {

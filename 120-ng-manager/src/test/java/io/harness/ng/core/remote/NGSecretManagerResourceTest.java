@@ -36,7 +36,6 @@ public class NGSecretManagerResourceTest extends BaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetSecret() {
-    NGSecretManagerResource ngSecretManagerResource = new NGSecretManagerResource(secretManager);
     EncryptedData encryptedData = EncryptedData.builder().name(SECRET_NAME).build();
     when(secretManager.getSecretById(anyString(), eq(SECRET_ID))).thenReturn(encryptedData);
     SecretDTO getSecretDTO = ngSecretManagerResource.get(SECRET_ID, ACCOUNT_ID);
@@ -48,7 +47,6 @@ public class NGSecretManagerResourceTest extends BaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetSecret_For_Exception() {
-    NGSecretManagerResource ngSecretManagerResource = new NGSecretManagerResource(secretManager);
     when(secretManager.getSecretById(anyString(), eq(SECRET_ID)))
         .thenThrow(new SecretManagementException(
             SECRET_MANAGEMENT_ERROR, "IOException exception occurred while fetching secret", USER));

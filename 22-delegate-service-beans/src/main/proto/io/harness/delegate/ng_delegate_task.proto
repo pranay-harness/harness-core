@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package io.harness.delegate;
+
+option java_multiple_files = true;
+
+import "io/harness/delegate/account.proto";
+import "io/harness/delegate/task.proto";
+import "io/harness/delegate/progress.proto";
+
+message SendTaskRequest {
+  TaskId task_id = 1;
+}
+
+message SendTaskResponse {
+  TaskId task_id = 1;
+}
+
+message SendTaskAsyncRequest {
+  TaskId task_id = 1;
+}
+
+message SendTaskAsyncResponse {
+  TaskId task_id = 1;
+}
+
+message AbortTaskRequest {
+  AccountId account_id = 1;
+  TaskId task_id = 2;
+}
+
+message AbortTaskResponse {
+  TaskExecutionStage canceled_at_stage = 1;
+}
+
+message SendTaskResultRequest {
+  TaskId task_id = 1;
+}
+
+message SendTaskResultResponse {
+  TaskId task_id = 1;
+}

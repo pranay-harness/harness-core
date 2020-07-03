@@ -1,5 +1,6 @@
 package io.harness.event.app;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
@@ -12,12 +13,15 @@ import com.google.inject.multibindings.Multibinder;
 
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
+import io.grpc.health.v1.HealthGrpc;
+import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.harness.event.MessageProcessorType;
 import io.harness.event.grpc.EventPublisherServerImpl;
 import io.harness.event.grpc.MessageProcessor;
 import io.harness.event.service.impl.LastReceivedPublishedMessageRepositoryImpl;
 import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
+import io.harness.grpc.auth.SkippedAuthServerInterceptor;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.persistence.HPersistence;
 import io.harness.security.KeySource;
@@ -51,6 +55,10 @@ public class EventServiceModule extends AbstractModule {
     Multibinder<ServerInterceptor> serverInterceptorMultibinder =
         Multibinder.newSetBinder(binder(), ServerInterceptor.class);
     serverInterceptorMultibinder.addBinding().to(DelegateAuthServerInterceptor.class);
+    serverInterceptorMultibinder.addBinding().toProvider(
+        ()
+            -> new SkippedAuthServerInterceptor(
+                ImmutableSet.of(HealthGrpc.SERVICE_NAME, ServerReflectionGrpc.SERVICE_NAME)));
 
     MapBinder<MessageProcessorType, MessageProcessor> mapBinder =
         MapBinder.newMapBinder(binder(), MessageProcessorType.class, MessageProcessor.class);

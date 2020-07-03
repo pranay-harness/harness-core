@@ -7,7 +7,10 @@ import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.grpc.GrpcClientConfig;
+import io.harness.grpc.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.core.NextGenConfig;
 import io.harness.ng.core.SecretManagerClientConfig;
 import lombok.Getter;
 import org.reflections.Reflections;
@@ -26,6 +29,9 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("secretManagerClient") private SecretManagerClientConfig secretManagerClientConfig;
+  @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
+  @JsonProperty("grpcServer") private GrpcServerConfig grpcServerConfig;
+  @JsonProperty("nextGen") private NextGenConfig nextGenConfig;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

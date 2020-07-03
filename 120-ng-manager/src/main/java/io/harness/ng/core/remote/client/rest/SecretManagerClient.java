@@ -1,4 +1,4 @@
-package io.harness.ng.core.remote.client;
+package io.harness.ng.core.remote.client.rest;
 
 import io.harness.rest.RestResponse;
 import retrofit2.Call;

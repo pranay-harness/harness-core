@@ -71,6 +71,7 @@
         <generated.repo.code>${basedir}/src/generated/java</generated.repo.code>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
+        <grpc-testing.version>1.21.0</grpc-testing.version>
         <grpc.version>1.21.0</grpc.version>
         <guice.version>4.2.3</guice.version>
         <ibatis.core.version>3.0</ibatis.core.version>
@@ -1525,6 +1526,12 @@
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-server-mock</artifactId>
                 <version>3.1.12</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-testing</artifactId>
+                <version>${grpc-testing.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
