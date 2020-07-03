@@ -12,7 +12,7 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ExecutionSweepingOutputInstance;
+import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.SweepingOutput;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
