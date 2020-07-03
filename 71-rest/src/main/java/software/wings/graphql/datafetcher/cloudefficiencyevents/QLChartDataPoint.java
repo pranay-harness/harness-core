@@ -1,9 +1,9 @@
 package software.wings.graphql.datafetcher.cloudefficiencyevents;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 public class QLChartDataPoint {
   long time;

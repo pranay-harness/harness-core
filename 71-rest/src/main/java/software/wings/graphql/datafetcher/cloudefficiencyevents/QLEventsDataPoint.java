@@ -8,6 +8,7 @@ import lombok.Value;
 public class QLEventsDataPoint {
   String source;
   String type;
+  String eventPriorityType;
   String details;
   long time;
   String oldYamlRef;

@@ -194,6 +194,15 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   }
 
   @Override
+  public SettingAttribute getFirstSettingAttributeByCategory(String accountId, SettingCategory category) {
+    return persistence.createQuery(SettingAttribute.class, excludeAuthority)
+        .filter(SettingAttributeKeys.accountId, accountId)
+        .filter(SettingAttributeKeys.category, category)
+        .order(Sort.ascending(SettingAttributeKeys.createdAt))
+        .get();
+  }
+
+  @Override
   public List<SettingAttribute> listSettingAttributesCreatedInDuration(
       String accountId, SettingCategory category, SettingVariableTypes valueType) {
     List<SettingAttribute> settingAttributes = new ArrayList<>();

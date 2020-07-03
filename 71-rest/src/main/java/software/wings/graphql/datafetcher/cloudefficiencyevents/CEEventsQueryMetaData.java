@@ -34,7 +34,8 @@ public class CEEventsQueryMetaData {
     COSTEVENTSOURCE("COSTEVENTSOURCE", DataType.STRING, QLFilterKind.SIMPLE),
     OLDYAMLREF("OLDYAMLREF", DataType.STRING, QLFilterKind.SIMPLE),
     NEWYAMLREF("NEWYAMLREF", DataType.STRING, QLFilterKind.SIMPLE),
-    COST_CHANGE_PERCENT("COST_CHANGE_PERCENT", DataType.DOUBLE, QLFilterKind.SIMPLE);
+    COST_CHANGE_PERCENT("COST_CHANGE_PERCENT", DataType.DOUBLE, QLFilterKind.SIMPLE),
+    BILLINGAMOUNT("BILLINGAMOUNT", DataType.DOUBLE, QLFilterKind.SIMPLE);
 
     private DataType dataType;
     private String fieldName;
