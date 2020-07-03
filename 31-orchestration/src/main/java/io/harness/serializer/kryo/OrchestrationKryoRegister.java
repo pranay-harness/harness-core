@@ -9,7 +9,6 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.beans.OrchestrationWorkflowType;
-import io.harness.beans.SweepingOutput;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delay.DelayEventNotifyData;
@@ -35,7 +34,6 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(DelegateTask.Status.class, 5004);
     kryo.register(DelegateTask.class, 5003);
 
-    kryo.register(SweepingOutput.class, 3101);
     kryo.register(ExecutionStatusResponseData.class, 3102);
     kryo.register(RetryAdviserParameters.class, 3103);
     kryo.register(DummySectionStepTransput.class, 3104);

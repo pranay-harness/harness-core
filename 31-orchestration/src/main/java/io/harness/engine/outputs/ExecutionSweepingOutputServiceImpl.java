@@ -13,7 +13,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionSweepingOutputInstance;
-import io.harness.beans.SweepingOutput;
+import io.harness.data.SweepingOutput;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;

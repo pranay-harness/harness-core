@@ -6,6 +6,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputConverter;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputKeys;
+import io.harness.data.SweepingOutput;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.KryoConverter;
 import io.harness.mongo.index.CdUniqueIndex;

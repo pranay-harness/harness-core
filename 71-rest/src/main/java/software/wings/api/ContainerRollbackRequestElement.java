@@ -1,7 +1,7 @@
 package software.wings.api;
 
-import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
+import io.harness.data.SweepingOutput;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.container.AwsAutoScalarConfig;

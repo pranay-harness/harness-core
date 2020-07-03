@@ -2,7 +2,7 @@ package software.wings.api.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.beans.SweepingOutput;
+import io.harness.data.SweepingOutput;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import lombok.Builder;
 import lombok.Value;

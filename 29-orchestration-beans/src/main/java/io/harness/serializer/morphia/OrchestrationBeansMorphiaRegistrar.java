@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.barriers.BarrierNode;
 import io.harness.data.Outcome;
 import io.harness.data.OutcomeInstance;
+import io.harness.data.SweepingOutput;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.facilitator.DefaultFacilitatorParams;
@@ -45,6 +46,7 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ExecutableResponse.class);
     set.add(PassThroughData.class);
     set.add(BarrierNode.class);
+    set.add(SweepingOutput.class);
   }
 
   @Override
