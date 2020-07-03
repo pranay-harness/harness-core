@@ -1,21 +1,26 @@
 package io.harness.ng;
 
-import com.google.inject.AbstractModule;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 import io.harness.connector.ConnectorModule;
+import io.harness.govern.DependencyModule;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.CoreModule;
+import io.harness.ng.core.NgManagerGrpcClientModule;
+import io.harness.ng.core.NgManagerGrpcServerModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.version.VersionModule;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
 
+import java.util.Set;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
-public class NextGenModule extends AbstractModule {
+public class NextGenModule extends DependencyModule {
   private final NextGenConfiguration appConfig;
 
   public NextGenModule(NextGenConfiguration appConfig) {
@@ -45,11 +50,17 @@ public class NextGenModule extends AbstractModule {
          return appConfig.getSecondaryMongoConfig();
        }
      });*/
+
     install(new ValidationModule(getValidatorFactory()));
     install(new NextGenPersistenceModule());
     install(new CoreModule());
     install(new ConnectorModule());
-    install(new SecretManagementModule(this.appConfig.getSecretManagerClientConfig()));
+    install(new SecretManagementModule(
+        this.appConfig.getSecretManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+    install(new NgManagerGrpcClientModule(
+        this.appConfig.getGrpcClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+    install(new NgManagerGrpcServerModule(
+        this.appConfig.getGrpcServerConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
   }
 
   private ValidatorFactory getValidatorFactory() {
@@ -57,5 +68,10 @@ public class NextGenModule extends AbstractModule {
         .configure()
         .parameterNameProvider(new ReflectionParameterNameProvider())
         .buildValidatorFactory();
+  }
+
+  @Override
+  public Set<DependencyModule> dependencies() {
+    return ImmutableSet.<DependencyModule>of(VersionModule.getInstance());
   }
 }

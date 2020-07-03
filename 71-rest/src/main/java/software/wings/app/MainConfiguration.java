@@ -32,6 +32,7 @@ import io.harness.configuration.DeployMode;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
+import io.harness.grpc.GrpcClientConfig;
 import io.harness.grpc.GrpcServerConfig;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
@@ -136,6 +137,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty("techStacks") private Map<String, UrlInfo> techStackLinks;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
+  @JsonProperty("grpcClientConfig") private GrpcClientConfig grpcClientConfig;
   @JsonProperty("workers") private WorkersConfiguration workers;
   @JsonProperty("publishers") private PublisherConfiguration publisherConfiguration;
   @JsonProperty("pipelineConfig") private PipelineConfig pipelineConfig = new PipelineConfig();

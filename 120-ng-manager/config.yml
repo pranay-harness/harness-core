@@ -23,6 +23,9 @@ xxxxxxxx
     appenders: []
   maxThreads: 1024
 
+nextGen:
+  managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
 allowedOrigins:
   - https://localhost:8181
   - https://127.0.0.1:8181
@@ -64,4 +67,15 @@ secretManagerClient:
   baseUrl: http://localhost:3457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
-  serviceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+grpcClient:
+  target: localhost:9880
+  authority: localhost
+
+grpcServer:
+  connectors:
+    - port: 9980
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 9979

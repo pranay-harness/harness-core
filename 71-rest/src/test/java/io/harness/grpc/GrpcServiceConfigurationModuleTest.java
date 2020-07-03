@@ -55,7 +55,8 @@ public class GrpcServiceConfigurationModuleTest extends BaseIntegrationTest {
       }
     });
     modules.add(new PerpetualTaskServiceModule());
-    modules.add(new GrpcServiceConfigurationModule(configuration.getGrpcServerConfig()));
+    modules.add(new GrpcServiceConfigurationModule(
+        configuration.getGrpcServerConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
     Injector injector = Guice.createInjector(modules);
     injector.getInstance(ServiceManager.class).startAsync().awaitHealthy();
   }

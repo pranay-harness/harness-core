@@ -21,6 +21,10 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ServiceTokenGenerator {
   public static final AtomicReference<String> VERIFICATION_SERVICE_SECRET = new AtomicReference<>();
 
+  public static ServiceTokenGenerator newInstance() {
+    return new ServiceTokenGenerator();
+  }
+
   public String getVerificationServiceToken() {
     Preconditions.checkState(isNotEmpty(VERIFICATION_SERVICE_SECRET.get()),
         "could not read verification secret from system or env properties");

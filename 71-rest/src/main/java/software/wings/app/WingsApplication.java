@@ -71,6 +71,7 @@ import io.harness.exception.WingsException;
 import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
 import io.harness.execution.export.background.ExportExecutionsRequestHandler;
 import io.harness.govern.ProviderModule;
+import io.harness.grpc.GrpcClientModule;
 import io.harness.grpc.GrpcServerConfig;
 import io.harness.grpc.GrpcServiceConfigurationModule;
 import io.harness.health.HealthMonitor;
@@ -370,7 +371,11 @@ public class WingsApplication extends Application<MainConfiguration> {
         return configuration.getGrpcServerConfig();
       }
     });
-    modules.add(new GrpcServiceConfigurationModule(configuration.getGrpcServerConfig()));
+    modules.add(new GrpcServiceConfigurationModule(
+        configuration.getGrpcServerConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
+
+    modules.add(new GrpcClientModule(
+        configuration.getGrpcClientConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
 
     modules.add(new ProviderModule() {
       @Provides

@@ -6,7 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ng.core.remote.client.SecretManagerClient;
+import io.harness.ng.core.remote.client.rest.SecretManagerClient;
 import io.harness.rest.RestResponse;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Response;
