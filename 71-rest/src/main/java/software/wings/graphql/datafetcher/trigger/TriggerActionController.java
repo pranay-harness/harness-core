@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -276,60 +275,21 @@ public class TriggerActionController {
     return workflowType;
   }
 
-  public Map<String, String> resolveWorkflowVariables(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
-    QLTriggerActionInput triggerActionInput = qlCreateOrUpdateTriggerInput.getAction();
-
-    List<QLVariableInput> qlVariables = triggerActionInput.getVariables();
-
+  public Map<String, String> validateAndResolvePipelineVariables(
+      List<QLVariableInput> qlVariables, Pipeline pipeline, String envId) {
     if (qlVariables == null) {
       return new HashMap<>();
     }
-
-    String appId = qlCreateOrUpdateTriggerInput.getApplicationId();
-
-    Map<String, String> workflowVariables = new HashMap<>();
-    switch (triggerActionInput.getExecutionType()) {
-      case PIPELINE:
-        workflowVariables = validateAndResolvePipelineVariables(triggerActionInput, qlVariables, appId);
-        break;
-      case WORKFLOW:
-        workflowVariables = validateAndResolveWorkflowVariables(triggerActionInput, qlVariables, appId);
-        break;
-      default:
-    }
-
-    for (QLVariableInput qlVariableInput : qlVariables) {
-      workflowVariables.put(
-          qlVariableInput.getVariableValue().getType().getStringValue(), qlVariableInput.getVariableValue().getValue());
-    }
-
-    return workflowVariables;
-  }
-
-  private Map<String, String> validateAndResolvePipelineVariables(
-      QLTriggerActionInput qlTriggerActionInput, List<QLVariableInput> qlVariables, String appId) {
-    String pipelineId = qlTriggerActionInput.getEntityId();
-    Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, false);
-    notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
-    deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
-
-    String envId = pipelineExecutionController.resolveEnvId(pipeline, qlVariables);
 
     return pipelineExecutionController.validateAndResolvePipelineVariables(
         pipeline, qlVariables, envId, new ArrayList<>(), true);
   }
 
-  private Map<String, String> validateAndResolveWorkflowVariables(
-      QLTriggerActionInput qlTriggerActionInput, List<QLVariableInput> qlVariables, String appId) {
-    String workflowId = qlTriggerActionInput.getEntityId();
-    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-    notNullCheck("Workflow " + workflowId + " doesn't exist in the specified application " + appId, workflow, USER);
-    notNullCheck(
-        "Error reading workflow " + workflowId + " Might be deleted", workflow.getOrchestrationWorkflow(), USER);
-
-    deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
-    String envId = workflowExecutionController.resolveEnvId(workflow, qlVariables);
-    authHandler.checkIfUserAllowedToDeployToEnv(appId, envId);
+  public Map<String, String> validateAndResolveWorkflowVariables(
+      List<QLVariableInput> qlVariables, Workflow workflow, String envId) {
+    if (qlVariables == null) {
+      return new HashMap<>();
+    }
 
     return workflowExecutionController.validateAndResolveWorkflowVariables(
         workflow, qlVariables, envId, new ArrayList<>(), true);

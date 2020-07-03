@@ -24,9 +24,6 @@ import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactSelection.Type;
 import software.wings.beans.trigger.Trigger;
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
-import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
-import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
-import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
 import software.wings.graphql.schema.type.trigger.QLArtifactSelectionInput;
 import software.wings.graphql.schema.type.trigger.QLArtifactSelectionType;
 import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
@@ -43,7 +40,6 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -805,60 +801,6 @@ public class TriggerActionControllerTest extends CategoryTest {
 
     assertThat(triggerActionController.resolveWorkflowType(qlCreateOrUpdateTriggerInput))
         .isEqualByComparingTo(WorkflowType.PIPELINE);
-  }
-
-  @Test
-  @Owner(developers = MILAN)
-  @Category(UnitTests.class)
-  public void resolveWorkflowVariablesShouldResolvePipelineWorkflowVariables() throws Exception {
-    List<QLVariableInput> qlVariables = Collections.singletonList(
-        QLVariableInput.builder()
-            .name("var")
-            .variableValue(QLVariableValue.builder().type(QLVariableValueType.ID).value("value").build())
-            .build());
-
-    QLTriggerActionInput qlTriggerActionInput =
-        QLTriggerActionInput.builder().executionType(QLExecutionType.PIPELINE).variables(qlVariables).build();
-
-    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
-        QLCreateOrUpdateTriggerInput.builder().applicationId("appId").action(qlTriggerActionInput).build();
-
-    PowerMockito.doReturn(new HashMap<>())
-        .when(triggerActionController, "validateAndResolvePipelineVariables", qlTriggerActionInput, qlVariables,
-            qlCreateOrUpdateTriggerInput.getApplicationId());
-
-    Map<String, String> retrievedVariables =
-        triggerActionController.resolveWorkflowVariables(qlCreateOrUpdateTriggerInput);
-
-    assertThat(retrievedVariables).isNotNull();
-    assertThat(retrievedVariables.get("ID")).isEqualTo("value");
-  }
-
-  @Test
-  @Owner(developers = MILAN)
-  @Category(UnitTests.class)
-  public void resolveWorkflowVariablesShouldResolveOrchestrationWorkflowVariables() throws Exception {
-    List<QLVariableInput> qlVariables = Collections.singletonList(
-        QLVariableInput.builder()
-            .name("var")
-            .variableValue(QLVariableValue.builder().type(QLVariableValueType.ID).value("value").build())
-            .build());
-
-    QLTriggerActionInput qlTriggerActionInput =
-        QLTriggerActionInput.builder().executionType(QLExecutionType.WORKFLOW).variables(qlVariables).build();
-
-    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
-        QLCreateOrUpdateTriggerInput.builder().applicationId("appId").action(qlTriggerActionInput).build();
-
-    PowerMockito.doReturn(new HashMap<>())
-        .when(triggerActionController, "validateAndResolveWorkflowVariables", qlTriggerActionInput, qlVariables,
-            qlCreateOrUpdateTriggerInput.getApplicationId());
-
-    Map<String, String> retrievedVariables =
-        triggerActionController.resolveWorkflowVariables(qlCreateOrUpdateTriggerInput);
-
-    assertThat(retrievedVariables).isNotNull();
-    assertThat(retrievedVariables.get("ID")).isEqualTo("value");
   }
 
   @Test(expected = InvalidRequestException.class)
