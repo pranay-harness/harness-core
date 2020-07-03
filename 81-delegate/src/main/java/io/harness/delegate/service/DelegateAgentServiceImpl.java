@@ -1625,7 +1625,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         // TODO: Remove this once TaskValidation does not use secrets
 
         // applyDelegateSecretFunctor(delegatePackage);
-        DelegateValidateTask delegateValidateTask = getDelegateValidateTask(delegateTaskEvent, delegateTask);
+        DelegateValidateTask delegateValidateTask = getDelegateValidateTask(delegateTaskEvent, delegateTaskPackage);
         injector.injectMembers(delegateValidateTask);
         currentlyValidatingTasks.put(delegateTaskPackage.getDelegateTaskId(), delegateTaskPackage);
         updateCounterIfLessThanCurrent(maxValidatingTasksCount, currentlyValidatingTasks.size());
@@ -1635,13 +1635,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             executorService.submit(() -> delegateValidateTask.validationResults());
         currentlyValidatingFutures.put(delegateTaskPackage.getDelegateTaskId(), future);
 
-        DelegateValidateTask delegateAlternativeValidateTask = getAlternativeDelegateValidateTask(delegateTask);
+        DelegateValidateTask delegateAlternativeValidateTask = getAlternativeDelegateValidateTask(delegateTaskPackage);
         if (delegateAlternativeValidateTask != null) {
           injector.injectMembers(delegateAlternativeValidateTask);
 
           alternativeExecutor.submit(() -> {
             try (TaskLogContext ignore = new TaskLogContext(delegateTaskPackage.getDelegateTaskId(),
-                     delegateTask.getData().getTaskType(), getCapabilityDetails(delegateTask), OVERRIDE_ERROR)) {
+                     delegateTask.getData().getTaskType(), getCapabilityDetails(delegateTaskPackage), OVERRIDE_ERROR)) {
               logger.info("Executing comparison for task type {}", delegateTask.getData().getTaskType());
               try {
                 List<DelegateConnectionResult> alternativeResults = delegateAlternativeValidateTask.validationResults();
@@ -1694,8 +1694,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   @NotNull
-  private List<String> getCapabilityDetails(DelegateTask delegateTask) {
-    return delegateTask.getExecutionCapabilities()
+  private List<String> getCapabilityDetails(DelegateTaskPackage delegateTaskPackage) {
+    return delegateTaskPackage.getExecutionCapabilities()
         .stream()
         .map(executionCapability
             -> executionCapability.getCapabilityType().name() + ":" + executionCapability.fetchCapabilityBasis())
@@ -1718,24 +1718,27 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private DelegateValidateTask getDelegateValidateTask(DelegateTaskEvent delegateTaskEvent, DelegateTask delegateTask) {
+  private DelegateValidateTask getDelegateValidateTask(
+      DelegateTaskEvent delegateTaskEvent, DelegateTaskPackage delegateTaskPackage) {
     Consumer<List<DelegateConnectionResult>> postValidationFunction =
-        getPostValidationFunction(delegateTaskEvent, delegateTask.getUuid());
+        getPostValidationFunction(delegateTaskEvent, delegateTaskPackage.getDelegateTaskId());
 
-    if (delegateTask.isCapabilityFrameworkEnabled()) {
-      return TaskType.valueOf(delegateTask.getData().getTaskType())
-          .getDelegateValidateTaskVersionForCapabilityFramework(delegateId, delegateTask, postValidationFunction);
+    if (delegateTaskPackage.isCapabilityFrameworkEnabled()) {
+      return TaskType.valueOf(delegateTaskPackage.getDelegateTask().getData().getTaskType())
+          .getDelegateValidateTaskVersionForCapabilityFramework(
+              delegateId, delegateTaskPackage, postValidationFunction);
 
     } else {
-      return TaskType.valueOf(delegateTask.getData().getTaskType())
-          .getDelegateValidateTask(delegateId, delegateTask, postValidationFunction);
+      return TaskType.valueOf(delegateTaskPackage.getDelegateTask().getData().getTaskType())
+          .getDelegateValidateTask(delegateId, delegateTaskPackage, postValidationFunction);
     }
   }
 
-  private DelegateValidateTask getAlternativeDelegateValidateTask(DelegateTask delegateTask) {
-    if (isNotEmpty(delegateTask.getExecutionCapabilities()) && !delegateTask.isCapabilityFrameworkEnabled()) {
-      return TaskType.valueOf(delegateTask.getData().getTaskType())
-          .getDelegateValidateTaskVersionForCapabilityFramework(delegateId, delegateTask, null);
+  private DelegateValidateTask getAlternativeDelegateValidateTask(DelegateTaskPackage delegateTaskPackage) {
+    if (isNotEmpty(delegateTaskPackage.getExecutionCapabilities())
+        && !delegateTaskPackage.isCapabilityFrameworkEnabled()) {
+      return TaskType.valueOf(delegateTaskPackage.getDelegateTask().getData().getTaskType())
+          .getDelegateValidateTaskVersionForCapabilityFramework(delegateId, delegateTaskPackage, null);
     }
     return null;
   }

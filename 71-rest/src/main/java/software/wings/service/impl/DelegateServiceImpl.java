@@ -2175,11 +2175,14 @@ public class DelegateServiceImpl implements DelegateService {
               secretManager, delegateTask.getAccountId(), delegateTask.getWorkflowExecutionId(),
               delegateTask.getData().getExpressionFunctorToken());
 
-      DelegateTaskPackageBuilder delegateTaskPackageBuilder = DelegateTaskPackage.builder()
-                                                                  .accountId(delegateTask.getAccountId())
-                                                                  .delegateId(delegateTask.getDelegateId())
-                                                                  .delegateTaskId(delegateTask.getUuid())
-                                                                  .delegateTask(delegateTask);
+      DelegateTaskPackageBuilder delegateTaskPackageBuilder =
+          DelegateTaskPackage.builder()
+              .accountId(delegateTask.getAccountId())
+              .delegateId(delegateTask.getDelegateId())
+              .delegateTaskId(delegateTask.getUuid())
+              .delegateTask(delegateTask)
+              .capabilityFrameworkEnabled(delegateTask.isCapabilityFrameworkEnabled())
+              .executionCapabilities(delegateTask.getExecutionCapabilities());
 
       if (delegateTask.getData().getParameters().length != 1
           || !(delegateTask.getData().getParameters()[0] instanceof TaskParameters)) {
