@@ -60,6 +60,7 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
@@ -122,6 +123,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -142,6 +144,7 @@ public class WatcherServiceImpl implements WatcherService {
   private static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
   private static final String USER_DIR = "user.dir";
   private static final String DELEGATE_RESTART_SCRIPT = "DelegateRestartScript";
+  private static final String NO_SPACE_LEFT_ON_DEVICE_ERROR = "No space left on device";
   private final String watcherJreVersion = System.getProperty("java.version");
   private long delegateRestartedToUpgradeJreAt;
   private boolean watcherRestartedToUpgradeJre;
@@ -172,6 +175,9 @@ public class WatcherServiceImpl implements WatcherService {
   private final Object waiter = new Object();
   private final AtomicBoolean working = new AtomicBoolean(false);
   private final List<String> runningDelegates = synchronizedList(new ArrayList<>());
+
+  private final long DISK_SPACE_IS_OK = -1;
+  private final AtomicLong lastAvailableDiskSpace = new AtomicLong(DISK_SPACE_IS_OK);
 
   private final AtomicInteger minMinorVersion = new AtomicInteger(0);
   private final Set<Integer> illegalVersions = new HashSet<>();
@@ -528,7 +534,7 @@ public class WatcherServiceImpl implements WatcherService {
         }
       }
 
-      if (multiVersion) {
+      if (multiVersion && !isDiskFull()) {
         logger.info("Watching delegate processes: {}",
             runningVersions.keySet()
                 .stream()
@@ -537,17 +543,26 @@ public class WatcherServiceImpl implements WatcherService {
 
         // Make sure at least one of each expected version is acquiring
         for (String version : Lists.reverse(expectedVersions)) {
-          if (shutdownPendingList.containsAll(runningVersions.get(version)) && working.compareAndSet(false, true)) {
+          if (!shutdownPendingList.containsAll(runningVersions.get(version)) || !working.compareAndSet(false, true)) {
+            continue;
+          }
+
+          try {
             logger.info("New delegate process for version {} will be started", version);
-            try {
-              downloadRunScripts(version, version, false);
-              downloadDelegateJar(version);
-              startDelegateProcess(version, version, emptyList(), "DelegateStartScriptVersioned", getProcessId());
-              break;
-            } catch (Exception e) {
-              logger.error("Error downloading or starting delegate version {}", version, e);
-              working.set(false);
+            downloadRunScripts(version, version, false);
+            downloadDelegateJar(version);
+            startDelegateProcess(version, version, emptyList(), "DelegateStartScriptVersioned", getProcessId());
+            break;
+          } catch (IOException ioe) {
+            if (ioe.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
+              lastAvailableDiskSpace.set(getDiskFreeSpace());
+              logger.error("Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
             }
+            logger.error("Error downloading delegate version {}", version, ioe);
+            working.set(false);
+          } catch (Exception e) {
+            logger.error("Error downloading or starting delegate version {}", version, e);
+            working.set(false);
           }
         }
 
@@ -565,6 +580,27 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       logger.error("Error processing delegate stream: {}", e.getMessage(), e);
     }
+  }
+
+  @VisibleForTesting
+  public long getDiskFreeSpace() {
+    return new File(".").getFreeSpace();
+  }
+
+  @VisibleForTesting
+  public boolean isDiskFull() {
+    if (lastAvailableDiskSpace.get() == DISK_SPACE_IS_OK) {
+      return false;
+    }
+
+    long freeSpace = getDiskFreeSpace();
+    if (lastAvailableDiskSpace.get() >= freeSpace) {
+      return true;
+    }
+
+    logger.info("Free disk space increased from {} to {}", lastAvailableDiskSpace.get(), freeSpace);
+    lastAvailableDiskSpace.set(DISK_SPACE_IS_OK);
+    return false;
   }
 
   private void switchStorage() throws Exception {
