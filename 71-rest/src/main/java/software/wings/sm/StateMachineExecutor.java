@@ -1170,8 +1170,13 @@ public class StateMachineExecutor implements StateInspectionListener {
   private boolean updateStartStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
       Collection<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
     stateExecutionInstance.setStartTs(System.currentTimeMillis());
-    return updateStatus(stateExecutionInstance, status, existingExecutionStatus, reason,
-        ops -> { ops.set("startTs", stateExecutionInstance.getStartTs()); });
+    Long timeout = stateExecutionInstance.getStateTimeout() != null && stateExecutionInstance.getStateTimeout() > 0
+        ? System.currentTimeMillis() + stateExecutionInstance.getStateTimeout()
+        : Long.MAX_VALUE;
+    stateExecutionInstance.setExpiryTs(timeout);
+    return updateStatus(stateExecutionInstance, status, existingExecutionStatus, reason, ops -> {
+      ops.set("startTs", stateExecutionInstance.getStartTs()).set("expiryTs", stateExecutionInstance.getExpiryTs());
+    });
   }
 
   private boolean updateEndStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
@@ -1603,7 +1608,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       stateExecutionInstance.setEndTs(null);
       ops.unset("endTs");
     }
-    Long expiryTs = stateExecutionInstance.getStateTimeout() != null
+    Long expiryTs = stateExecutionInstance.getStateTimeout() != null && stateExecutionInstance.getStateTimeout() > 0
         ? System.currentTimeMillis() + stateExecutionInstance.getStateTimeout()
         : Long.MAX_VALUE;
     ops.set(StateExecutionInstanceKeys.expiryTs, expiryTs);
