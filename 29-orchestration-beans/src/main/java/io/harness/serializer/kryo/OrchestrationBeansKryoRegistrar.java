@@ -11,6 +11,7 @@ import io.harness.ambiance.LevelType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.barriers.BarrierNode;
 import io.harness.data.OutcomeInstance;
+import io.harness.data.SweepingOutput;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.DefaultFacilitatorParams;
@@ -82,5 +83,6 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     // Add moved/old classes here
     // Keeping the same id for moved classes
     kryo.register(ExecutionInterruptType.class, 4000);
+    kryo.register(SweepingOutput.class, 3101);
   }
 }

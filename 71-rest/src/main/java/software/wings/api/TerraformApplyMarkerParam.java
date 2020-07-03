@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import io.harness.beans.SweepingOutput;
+import io.harness.data.SweepingOutput;
 import lombok.Builder;
 import lombok.Data;
 

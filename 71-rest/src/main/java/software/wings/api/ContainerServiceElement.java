@@ -3,8 +3,8 @@ package software.wings.api;
 import static io.harness.context.ContextElementType.CONTAINER_SERVICE;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
+import io.harness.data.SweepingOutput;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.api.ecs.EcsBGSetupData;

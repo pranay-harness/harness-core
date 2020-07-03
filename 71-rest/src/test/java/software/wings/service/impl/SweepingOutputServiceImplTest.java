@@ -21,11 +21,11 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
+import io.harness.data.SweepingOutput;
 import io.harness.deployment.InstanceDetails;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;

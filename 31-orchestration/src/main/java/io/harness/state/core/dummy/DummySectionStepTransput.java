@@ -3,7 +3,7 @@ package io.harness.state.core.dummy;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.SweepingOutput;
+import io.harness.data.SweepingOutput;
 import lombok.Builder;
 import lombok.Value;
 

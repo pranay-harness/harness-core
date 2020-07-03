@@ -8,7 +8,6 @@ import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionSweepingOutputInstance;
-import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.delay.DelayEvent;
 import io.harness.delay.DelayEventNotifyData;
@@ -42,7 +41,6 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     set.add(NotifyEvent.class);
     set.add(NotifyResponse.class);
     set.add(StateInspection.class);
-    set.add(SweepingOutput.class);
     set.add(SweepingOutputInstance.class);
     set.add(WaitInstance.class);
     set.add(DelayEvent.class);

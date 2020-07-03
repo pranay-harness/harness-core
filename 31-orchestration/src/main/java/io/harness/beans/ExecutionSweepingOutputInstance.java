@@ -6,6 +6,7 @@ import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
+import io.harness.data.SweepingOutput;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;

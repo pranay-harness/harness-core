@@ -3,7 +3,7 @@ package software.wings.sm;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.SweepingOutput;
+import io.harness.data.SweepingOutput;
 
 import java.util.HashMap;
 import java.util.Map;
