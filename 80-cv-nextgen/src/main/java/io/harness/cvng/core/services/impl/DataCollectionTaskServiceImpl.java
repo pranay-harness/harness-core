@@ -112,6 +112,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
 
   private void createNextTask(DataCollectionTask prevTask) {
     CVConfig cvConfig = cvConfigService.get(prevTask.getCvConfigId());
+    populateMetricPackMissingData(cvConfig);
     if (cvConfig == null) {
       // TODO: delete perpetual task. We need a logic to make sure perpetual tasks are always deleted.
       // Not implementing now because this requires more thought
@@ -122,14 +123,19 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     save(dataCollectionTask);
   }
 
+  private void populateMetricPackMissingData(CVConfig cvConfig) {
+    if (cvConfig instanceof MetricCVConfig) {
+      // TODO: get rid of this. Adding it to unblock. We need to redesign how are we setting DSL.
+      metricPackService.populateDataCollectionDsl(cvConfig.getType(), ((MetricCVConfig) cvConfig).getMetricPack());
+      metricPackService.populatePaths(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(), cvConfig.getType(),
+          ((MetricCVConfig) cvConfig).getMetricPack());
+    }
+  }
+
   @Override
   public String enqueueFirstTask(CVConfig cvConfig) {
     logger.info("Enqueuing cvConfigId for the first time: {}", cvConfig.getUuid());
-    if (cvConfig instanceof MetricCVConfig) {
-      // TODO: get rid of this. Adding it to unblock. We need to redesign how are we setting DSL.
-
-      metricPackService.populateDataCollectionDsl(cvConfig.getType(), ((MetricCVConfig) cvConfig).getMetricPack());
-    }
+    populateMetricPackMissingData(cvConfig);
     Instant now = clock.instant();
     // setting it to 2 hours for now. This should come from cvConfig
     DataCollectionTask dataCollectionTask = getDataCollectionTask(cvConfig, now.minus(2, ChronoUnit.HOURS), now);

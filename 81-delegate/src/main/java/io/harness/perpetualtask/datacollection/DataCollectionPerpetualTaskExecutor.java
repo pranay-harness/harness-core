@@ -67,46 +67,52 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
               .execute()
               .body()
               .getResource();
-      logger.info("Next task to process: ", dataCollectionTask);
-      SettingValue settingValue = cvDataCollectionInfo.getSettingValue();
-      if (settingValue instanceof EncryptableSetting) {
-        encryptionService.decrypt((EncryptableSetting) settingValue, cvDataCollectionInfo.getEncryptedDataDetails());
+      if (dataCollectionTask == null) {
+        logger.info("Nothing to process.");
+      } else {
+        logger.info("Next task to process: ", dataCollectionTask);
+        SettingValue settingValue = cvDataCollectionInfo.getSettingValue();
+        if (settingValue instanceof EncryptableSetting) {
+          encryptionService.decrypt((EncryptableSetting) settingValue, cvDataCollectionInfo.getEncryptedDataDetails());
+        }
+        Connector connector = (Connector) settingValue;
+        final String cvConfigId = dataCollectionTask.getCvConfigId();
+        DataCollectionInfo dataCollectionInfo = dataCollectionTask.getDataCollectionInfo();
+        dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);
+        final RuntimeParameters runtimeParameters = RuntimeParameters.builder()
+                                                        .baseUrl(connector.getBaseUrl())
+                                                        .commonHeaders(connector.collectionHeaders())
+                                                        .commonOptions(connector.collectionParams())
+                                                        .otherEnvVariables(dataCollectionInfo.getDslEnvVariables())
+                                                        .endTime(dataCollectionTask.getEndTime())
+                                                        .startTime(dataCollectionTask.getStartTime())
+                                                        .build();
+        switch (dataCollectionInfo.getVerificationType()) {
+          case TIME_SERIES:
+            List<TimeSeriesRecord> timeSeriesRecords = (List<TimeSeriesRecord>) dataCollectionDSLService.execute(
+                dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
+                new ThirdPartyCallHandler(
+                    connector.getAccountId(), dataCollectionTask.getCvConfigId(), delegateLogService));
+            timeSeriesDataStoreService.saveTimeSeriesDataRecords(
+                connector.getAccountId(), cvConfigId, timeSeriesRecords);
+            break;
+          case LOG:
+            // TODO: implement log
+            break;
+          default:
+            throw new IllegalArgumentException("Invalid type " + dataCollectionInfo.getVerificationType());
+        }
+        DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                              .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                              .status(SUCCESS)
+                                              .build();
+        cvNextGenServiceClient.updateTaskStatus(sampleParams.getAccountId(), result).execute();
+        logger.info("Updated task status to success.");
       }
-      Connector connector = (Connector) settingValue;
-      final String cvConfigId = dataCollectionTask.getCvConfigId();
-      DataCollectionInfo dataCollectionInfo = dataCollectionTask.getDataCollectionInfo();
-      dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);
-      final RuntimeParameters runtimeParameters = RuntimeParameters.builder()
-                                                      .baseUrl(connector.getBaseUrl())
-                                                      .commonHeaders(connector.collectionHeaders())
-                                                      .commonOptions(connector.collectionParams())
-                                                      .otherEnvVariables(dataCollectionInfo.getDslEnvVariables())
-                                                      .endTime(dataCollectionTask.getEndTime())
-                                                      .startTime(dataCollectionTask.getStartTime())
-                                                      .build();
-      switch (dataCollectionInfo.getVerificationType()) {
-        case TIME_SERIES:
-          List<TimeSeriesRecord> timeSeriesRecords = (List<TimeSeriesRecord>) dataCollectionDSLService.execute(
-              dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
-              new ThirdPartyCallHandler(
-                  connector.getAccountId(), dataCollectionTask.getCvConfigId(), delegateLogService));
-          timeSeriesDataStoreService.saveTimeSeriesDataRecords(connector.getAccountId(), cvConfigId, timeSeriesRecords);
-          break;
-        case LOG:
-          // TODO: implement log
-          break;
-        default:
-          throw new IllegalArgumentException("Invalid type " + dataCollectionInfo.getVerificationType());
-      }
-      DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
-                                            .dataCollectionTaskId(dataCollectionTask.getUuid())
-                                            .status(SUCCESS)
-                                            .build();
-      cvNextGenServiceClient.updateTaskStatus(sampleParams.getAccountId(), result).execute();
-      logger.info("Updated task status to success.");
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
+
     return PerpetualTaskResponse.builder()
         .responseCode(200)
         .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
