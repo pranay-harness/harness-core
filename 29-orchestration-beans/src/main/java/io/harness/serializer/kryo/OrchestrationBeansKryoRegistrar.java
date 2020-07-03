@@ -9,7 +9,7 @@ import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.ambiance.LevelType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.barriers.BarrierNode;
+import io.harness.barriers.BarrierExecutionInstance;
 import io.harness.data.OutcomeInstance;
 import io.harness.data.SweepingOutput;
 import io.harness.execution.NodeExecution;
@@ -78,7 +78,7 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(RepairActionCode.class, 2528);
 
     kryo.register(StepOutcomeRef.class, 2529);
-    kryo.register(BarrierNode.class, 2530);
+    kryo.register(BarrierExecutionInstance.class, 2530);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes

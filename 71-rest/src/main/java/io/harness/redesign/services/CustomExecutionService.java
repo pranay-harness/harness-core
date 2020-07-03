@@ -44,6 +44,8 @@ public interface CustomExecutionService {
 
   PlanExecution testArtifactState();
 
+  PlanExecution executeSingleBarrierPlan();
+
   // Interrupts
 
   Interrupt registerInterrupt(String planExecutionId);

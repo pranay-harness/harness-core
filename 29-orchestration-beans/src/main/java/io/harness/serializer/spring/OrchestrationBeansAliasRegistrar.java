@@ -3,7 +3,7 @@ package io.harness.serializer.spring;
 import io.harness.adviser.AdviserType;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
-import io.harness.barriers.BarrierNode;
+import io.harness.barriers.BarrierExecutionInstance;
 import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
@@ -39,7 +39,7 @@ public class OrchestrationBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("facilitatorType", FacilitatorType.class);
     orchestrationElements.put("adviserType", AdviserType.class);
     orchestrationElements.put("asyncExecutableResponse", AsyncExecutableResponse.class);
-    orchestrationElements.put("barrierNode", BarrierNode.class);
+    orchestrationElements.put("barrierExecutionInstance", BarrierExecutionInstance.class);
     orchestrationElements.put("childChainResponse", ChildChainResponse.class);
     orchestrationElements.put("childExecutableResponse", ChildExecutableResponse.class);
     orchestrationElements.put("childrenExecutableResponse", ChildrenExecutableResponse.class);

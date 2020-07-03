@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 import io.fabric8.utils.Lists;
 import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
-import io.harness.barriers.BarrierNode;
+import io.harness.barriers.BarrierExecutionInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.barriers.BarrierService;
 import io.harness.facilitator.DefaultFacilitatorParams;
@@ -36,7 +36,7 @@ public class BarrierFacilitatorTest extends OrchestrationTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestFacilitateForSyncResponse() {
-    when(barrierService.findByIdentifier(any())).thenReturn(Collections.emptyList());
+    when(barrierService.findByIdentifierAndPlanExecutionId(any(), any())).thenReturn(Collections.emptyList());
     Ambiance ambiance = Ambiance.builder().build();
     FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
     BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier("someString").build();
@@ -50,9 +50,18 @@ public class BarrierFacilitatorTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldTestFacilitateForAsyncResponse() {
     String identifier = generateUuid();
-    when(barrierService.findByIdentifier(any()))
-        .thenReturn(Lists.newArrayList(BarrierNode.builder().uuid(generateUuid()).identifier(identifier).build(),
-            BarrierNode.builder().uuid(generateUuid()).identifier(identifier).build()));
+    String planExecutionId = generateUuid();
+    when(barrierService.findByIdentifierAndPlanExecutionId(any(), any()))
+        .thenReturn(Lists.newArrayList(BarrierExecutionInstance.builder()
+                                           .uuid(generateUuid())
+                                           .identifier(identifier)
+                                           .planExecutionId(planExecutionId)
+                                           .build(),
+            BarrierExecutionInstance.builder()
+                .uuid(generateUuid())
+                .identifier(identifier)
+                .planExecutionId(planExecutionId)
+                .build()));
     Ambiance ambiance = Ambiance.builder().build();
     FacilitatorParameters parameters = DefaultFacilitatorParams.builder().build();
     BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(identifier).build();

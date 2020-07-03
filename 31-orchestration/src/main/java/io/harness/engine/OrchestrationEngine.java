@@ -33,6 +33,7 @@ import io.harness.delay.DelayEventHelper;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.advise.AdviseHandler;
 import io.harness.engine.advise.AdviseHandlerFactory;
+import io.harness.engine.barriers.BarrierService;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.ExecutableInvokerFactory;
 import io.harness.engine.executables.InvokerPackage;
@@ -60,6 +61,7 @@ import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.Step;
+import io.harness.state.core.barrier.BarrierStep;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
@@ -102,6 +104,7 @@ public class OrchestrationEngine {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private InterruptService interruptService;
+  @Inject private BarrierService barrierService;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -142,7 +145,13 @@ public class OrchestrationEngine {
   }
 
   public void triggerExecution(Ambiance ambiance, PlanNode node) {
-    String uuid = generateUuid();
+    // if this node is a barrier, we want to set the same id as in the BarrierExecutionInstance
+    String uuid;
+    if (BarrierStep.STEP_TYPE.getType().equals(node.getStepType().getType())) {
+      uuid = barrierService.findByPlanNodeId(node.getUuid()).getUuid();
+    } else {
+      uuid = generateUuid();
+    }
     NodeExecution previousNodeExecution = null;
     if (ambiance.obtainCurrentRuntimeId() != null) {
       previousNodeExecution = nodeExecutionService.update(

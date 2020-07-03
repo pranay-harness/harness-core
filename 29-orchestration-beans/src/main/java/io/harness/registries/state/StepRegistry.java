@@ -27,18 +27,18 @@ public class StepRegistry implements Registry<StepType, Class<? extends Step>> {
 
   Map<StepType, Class<? extends Step>> registry = new ConcurrentHashMap<>();
 
-  public void register(@NonNull StepType stepType, @NonNull Class<? extends Step> state) {
+  public void register(@NonNull StepType stepType, @NonNull Class<? extends Step> step) {
     if (registry.containsKey(stepType)) {
-      throw new DuplicateRegistryException(getType(), "State Already Registered with this type: " + stepType);
+      throw new DuplicateRegistryException(getType(), "Step Already Registered with this type: " + stepType);
     }
-    registry.put(stepType, state);
+    registry.put(stepType, step);
   }
 
   public Step obtain(@NonNull StepType stepType) {
     if (registry.containsKey(stepType)) {
       return injector.getInstance(registry.get(stepType));
     }
-    throw new UnregisteredKeyAccessException(getType(), "No State registered for type: " + stepType);
+    throw new UnregisteredKeyAccessException(getType(), "No Step registered for type: " + stepType);
   }
 
   @Override

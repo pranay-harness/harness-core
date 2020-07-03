@@ -123,6 +123,12 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
+  public PlanExecution executeSingleBarrierPlan() {
+    return orchestrationService.startExecution(
+        CustomExecutionUtils.providePlanWithSingleBarrier(), getAbstractions(), getEmbeddedUser());
+  }
+
+  @Override
   public PlanExecution testServiceState() {
     return orchestrationService.startExecution(
         CustomExecutionUtils.provideServiceStateTestPlan(), getAbstractions(), getEmbeddedUser());

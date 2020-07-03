@@ -135,4 +135,10 @@ public class CustomExecutionResource {
   public RestResponse<PlanExecution> testServiceStep() {
     return new RestResponse<>(customExecutionService.testServiceState());
   }
+
+  @GET
+  @Path("/single-barrier")
+  public RestResponse<PlanExecution> executeSingleBarrierPlan() {
+    return new RestResponse<>(customExecutionService.executeSingleBarrierPlan());
+  }
 }

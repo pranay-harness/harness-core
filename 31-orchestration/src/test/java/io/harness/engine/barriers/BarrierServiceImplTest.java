@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
-import io.harness.barriers.BarrierNode;
+import io.harness.barriers.BarrierExecutionInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.barrier.BarrierNodeRepository;
 import io.harness.exception.InvalidRequestException;
@@ -30,14 +30,16 @@ public class BarrierServiceImplTest extends OrchestrationTest {
   @RealMongo
   public void shouldSaveBarrierNode() {
     String uuid = generateUuid();
-    BarrierNode barrierNode = BarrierNode.builder().uuid(uuid).identifier("identifier").build();
-    BarrierNode savedBarrierNode = barrierService.save(barrierNode);
+    String planExecutionId = generateUuid();
+    BarrierExecutionInstance barrierExecutionInstance =
+        BarrierExecutionInstance.builder().uuid(uuid).identifier("identifier").planExecutionId(planExecutionId).build();
+    BarrierExecutionInstance savedBarrierExecutionInstance = barrierService.save(barrierExecutionInstance);
 
-    assertThat(savedBarrierNode).isNotNull();
-    assertThat(savedBarrierNode.getUuid()).isEqualTo(uuid);
-    assertThat(savedBarrierNode.getCreatedAt()).isNotNull();
-    assertThat(savedBarrierNode.getLastUpdatedAt()).isNotNull();
-    assertThat(savedBarrierNode.getVersion()).isNotNull();
+    assertThat(savedBarrierExecutionInstance).isNotNull();
+    assertThat(savedBarrierExecutionInstance.getUuid()).isEqualTo(uuid);
+    assertThat(savedBarrierExecutionInstance.getCreatedAt()).isNotNull();
+    assertThat(savedBarrierExecutionInstance.getLastUpdatedAt()).isNotNull();
+    assertThat(savedBarrierExecutionInstance.getVersion()).isNotNull();
   }
 
   @Test
@@ -46,16 +48,18 @@ public class BarrierServiceImplTest extends OrchestrationTest {
   @RealMongo
   public void shouldGetSavedBarrierNode() {
     String uuid = generateUuid();
-    BarrierNode barrierNode = BarrierNode.builder().uuid(uuid).identifier("identifier").build();
-    barrierService.save(barrierNode);
+    String planExecutionId = generateUuid();
+    BarrierExecutionInstance barrierExecutionInstance =
+        BarrierExecutionInstance.builder().uuid(uuid).identifier("identifier").planExecutionId(planExecutionId).build();
+    barrierService.save(barrierExecutionInstance);
 
-    BarrierNode savedBarrierNode = barrierService.get(barrierNode.getUuid());
+    BarrierExecutionInstance savedBarrierExecutionInstance = barrierService.get(barrierExecutionInstance.getUuid());
 
-    assertThat(savedBarrierNode).isNotNull();
-    assertThat(savedBarrierNode.getUuid()).isEqualTo(uuid);
-    assertThat(savedBarrierNode.getCreatedAt()).isNotNull();
-    assertThat(savedBarrierNode.getLastUpdatedAt()).isNotNull();
-    assertThat(savedBarrierNode.getVersion()).isNotNull();
+    assertThat(savedBarrierExecutionInstance).isNotNull();
+    assertThat(savedBarrierExecutionInstance.getUuid()).isEqualTo(uuid);
+    assertThat(savedBarrierExecutionInstance.getCreatedAt()).isNotNull();
+    assertThat(savedBarrierExecutionInstance.getLastUpdatedAt()).isNotNull();
+    assertThat(savedBarrierExecutionInstance.getVersion()).isNotNull();
   }
 
   @Test
@@ -75,15 +79,28 @@ public class BarrierServiceImplTest extends OrchestrationTest {
   @RealMongo
   public void shouldFindAllByIdentifier() {
     String identifier = generateUuid();
-    List<BarrierNode> barrierNodes =
-        Lists.newArrayList(BarrierNode.builder().uuid(generateUuid()).identifier(identifier).build(),
-            BarrierNode.builder().uuid(generateUuid()).identifier(identifier).build(),
-            BarrierNode.builder().uuid(generateUuid()).identifier(identifier).build());
-    barrierNodeRepository.saveAll(barrierNodes);
+    String planExecutionId = generateUuid();
+    List<BarrierExecutionInstance> barrierExecutionInstances = Lists.newArrayList(BarrierExecutionInstance.builder()
+                                                                                      .uuid(generateUuid())
+                                                                                      .identifier(identifier)
+                                                                                      .planExecutionId(planExecutionId)
+                                                                                      .build(),
+        BarrierExecutionInstance.builder()
+            .uuid(generateUuid())
+            .identifier(identifier)
+            .planExecutionId(planExecutionId)
+            .build(),
+        BarrierExecutionInstance.builder()
+            .uuid(generateUuid())
+            .identifier(identifier)
+            .planExecutionId(planExecutionId)
+            .build());
+    barrierNodeRepository.saveAll(barrierExecutionInstances);
 
-    List<BarrierNode> barrierNodeList = barrierService.findByIdentifier(barrierNodes.get(0));
+    List<BarrierExecutionInstance> barrierExecutionInstanceList =
+        barrierService.findByIdentifierAndPlanExecutionId(identifier, planExecutionId);
 
-    assertThat(barrierNodeList).isNotNull();
-    assertThat(barrierNodeList).containsExactlyInAnyOrderElementsOf(barrierNodes);
+    assertThat(barrierExecutionInstanceList).isNotNull();
+    assertThat(barrierExecutionInstanceList).containsExactlyInAnyOrderElementsOf(barrierExecutionInstances);
   }
 }
