@@ -45,7 +45,7 @@ func fakeExecCommandWithContext(ctx context.Context, command string, args ...str
 func TestNewArtifactoryClientWithNoAuth(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
-	_, err := NewArtifactoryClient(nil)
+	_, err := NewArtifactoryClient("jfrog", nil)
 	assert.NotEqual(t, err, nil)
 }
 
@@ -55,7 +55,7 @@ func TestNewArtifactoryClientWithBasicAuth(t *testing.T) {
 
 	usrName := "admin"
 	password := "password"
-	_, err := NewArtifactoryClient(nil, WithArtifactoryClientBasicAuth(usrName, password), WithArtifactoryClientRetries(3))
+	_, err := NewArtifactoryClient("jfrog", nil, WithArtifactoryClientBasicAuth(usrName, password), WithArtifactoryClientRetries(3))
 	assert.Equal(t, err, nil)
 }
 
@@ -64,7 +64,7 @@ func TestNewArtifactoryClientWithAccessToken(t *testing.T) {
 	defer ctrl.Finish()
 
 	accessToken := "token"
-	_, err := NewArtifactoryClient(nil, WithArtifactoryClientAccessTokenAuth(accessToken), WithArtifactoryClientTimeout(1))
+	_, err := NewArtifactoryClient("jfrog", nil, WithArtifactoryClientAccessTokenAuth(accessToken), WithArtifactoryClientTimeout(1))
 	assert.Equal(t, err, nil)
 }
 
@@ -73,7 +73,7 @@ func TestNewArtifactoryClientWithAPIKey(t *testing.T) {
 	defer ctrl.Finish()
 
 	apiKey := "apiKey"
-	_, err := NewArtifactoryClient(nil, WithArtifactoryClientAPIKeyAuth(apiKey))
+	_, err := NewArtifactoryClient("jfrog", nil, WithArtifactoryClientAPIKeyAuth(apiKey))
 	assert.Equal(t, err, nil)
 }
 
@@ -94,7 +94,7 @@ func Test_artifactory_Upload_BasicAuthRunErr(t *testing.T) {
 	targetRepoPath := "tmp"
 	artifactoryURL := "mock-url"
 	log, _ := logs.GetObservedLogger(zap.ErrorLevel)
-	rt := &artifactory{usrName, password, "", "", defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
+	rt := &artifactory{"jfrog", usrName, password, "", "", defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
 
 	err := rt.Upload(ctx, srcFilePattern, targetRepoPath, artifactoryURL)
 	assert.Equal(t, err, err.(*exec.ExitError))
@@ -117,7 +117,7 @@ func Test_artifactory_Upload_BasicAuthJsonParseErr(t *testing.T) {
 	targetRepoPath := "tmp"
 	artifactoryURL := "mock-url"
 	log, _ := logs.GetObservedLogger(zap.ErrorLevel)
-	rt := &artifactory{usrName, password, "", "", defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
+	rt := &artifactory{"jfrog", usrName, password, "", "", defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
 
 	err := rt.Upload(ctx, srcFilePattern, targetRepoPath, artifactoryURL)
 	assert.Equal(t, err, err.(*json.SyntaxError))
@@ -140,7 +140,7 @@ func Test_artifactory_Upload_BasicAuthUploadFailErr(t *testing.T) {
 	targetRepoPath := "tmp"
 	artifactoryURL := "mock-url"
 	log, _ := logs.GetObservedLogger(zap.ErrorLevel)
-	rt := &artifactory{usrName, password, "", "", defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
+	rt := &artifactory{"jfrog", usrName, password, "", "", defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
 
 	err := rt.Upload(ctx, srcFilePattern, targetRepoPath, artifactoryURL)
 	assert.Equal(t, err.Error(), "failed to upload files to jfrog")
@@ -163,7 +163,7 @@ func Test_artifactory_Upload_BasicAuthUploadSuccess(t *testing.T) {
 	targetRepoPath := "tmp"
 	artifactoryURL := "mock-url"
 	log, _ := logs.GetObservedLogger(zap.ErrorLevel)
-	rt := &artifactory{usrName, password, "", "", defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
+	rt := &artifactory{"jfrog", usrName, password, "", "", defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
 
 	err := rt.Upload(ctx, srcFilePattern, targetRepoPath, artifactoryURL)
 	assert.Equal(t, err, nil)
@@ -185,7 +185,7 @@ func Test_artifactory_Upload_ApiKeyUploadSuccess(t *testing.T) {
 	targetRepoPath := "tmp"
 	artifactoryURL := "mock-url"
 	log, _ := logs.GetObservedLogger(zap.ErrorLevel)
-	rt := &artifactory{"", "", apiKey, "", defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
+	rt := &artifactory{"jfrog", "", "", apiKey, "", defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
 
 	err := rt.Upload(ctx, srcFilePattern, targetRepoPath, artifactoryURL)
 	assert.Equal(t, err, nil)
@@ -207,7 +207,7 @@ func Test_artifactory_Upload_AccessToeknUploadSuccess(t *testing.T) {
 	targetRepoPath := "tmp"
 	artifactoryURL := "mock-url"
 	log, _ := logs.GetObservedLogger(zap.ErrorLevel)
-	rt := &artifactory{"", "", "", accessToken, defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
+	rt := &artifactory{"jfrog", "", "", "", accessToken, defaultNumRetries, log.Sugar(), defaultTimeoutSecs}
 
 	err := rt.Upload(ctx, srcFilePattern, targetRepoPath, artifactoryURL)
 	assert.Equal(t, err, nil)

@@ -4,9 +4,9 @@ package steps
 
 import (
 	"context"
-	"time"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"time"
 
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
