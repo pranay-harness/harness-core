@@ -46,6 +46,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentResult;
@@ -1660,6 +1661,19 @@ public class TriggerServiceImpl implements TriggerService {
     }
 
     return true;
+  }
+
+  @Override
+  public void authorizeAppAccess(List<String> appIds) {
+    if (isEmpty(appIds)) {
+      return;
+    }
+    String appId = appIds.stream().filter(EmptyPredicate::isNotEmpty).findAny().orElse(null);
+    if (appId == null) {
+      return;
+    }
+    String accountId = appService.getAccountIdByAppId(appId);
+    triggerAuthHandler.authorizeAppAccess(appIds, accountId);
   }
 
   @Override

@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import static software.wings.graphql.utils.GraphQLConstants.APP_ID_ARG;
 import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_API;
 import static software.wings.graphql.utils.GraphQLConstants.DELETE_APPLICATION_API;
+import static software.wings.security.AuthRuleFilter.getAllowedAppIds;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -336,7 +337,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     userRequestContextBuilder.userRestrictionInfo(userRestrictionInfo);
 
     if (isScopedToApp) {
-      Set<String> allowedAppIds = authRuleFilter.getAllowedAppIds(userPermissionInfo);
+      Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
       if (emptyAppIdsInReq) {
         userRequestContextBuilder.appIdFilterRequired(true);
         userRequestContextBuilder.appIds(allowedAppIds);

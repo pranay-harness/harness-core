@@ -15,12 +15,16 @@ import software.wings.graphql.schema.type.trigger.QLTrigger;
 import software.wings.graphql.schema.type.trigger.QLTrigger.QLTriggerBuilder;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.impl.trigger.TriggerAuthHandler;
 import software.wings.service.intfc.AppService;
+
+import java.util.Collections;
 
 @OwnedBy(CDC)
 public class TriggerDataFetcher extends AbstractObjectDataFetcher<QLTrigger, QLTriggerQueryParameters> {
   @Inject HPersistence persistence;
   @Inject AppService appService;
+  @Inject TriggerAuthHandler triggerAuthHandler;
   @Inject TriggerController triggerController;
 
   @Override
@@ -34,6 +38,7 @@ public class TriggerDataFetcher extends AbstractObjectDataFetcher<QLTrigger, QLT
     if (!accountId.equals(appService.getAccountIdByAppId(trigger.getAppId()))) {
       throw new InvalidRequestException("Trigger doesn't exist", USER);
     }
+    triggerAuthHandler.authorizeAppAccess(Collections.singletonList(trigger.getAppId()), accountId);
 
     QLTriggerBuilder qlTriggerBuilder = QLTrigger.builder();
     triggerController.populateTrigger(trigger, qlTriggerBuilder, accountId);
