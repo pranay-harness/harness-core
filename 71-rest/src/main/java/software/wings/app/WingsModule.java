@@ -90,6 +90,10 @@ import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
+import io.harness.registrars.WingsAdviserRegistrar;
+import io.harness.registrars.WingsStepRegistrar;
+import io.harness.registries.registrar.AdviserRegistrar;
+import io.harness.registries.registrar.StepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.serializer.YamlUtils;
@@ -1112,12 +1116,22 @@ public class WingsModule extends DependencyModule implements ServersModule {
     install(new PerpetualTaskServiceModule());
     install(new CESetupServiceModule());
     install(new CVNextGenCommonsServiceModule());
+
     // Custom Workflow Dependencies
     install(new CVNextGenCommonsServiceModule());
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
     taskExecutorMap.addBinding(DelegateTask.TASK_IDENTIFIER).to(DelegateService.class);
+
+    MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
+    stepRegistrarMapBinder.addBinding(WingsStepRegistrar.class.getName()).to(WingsStepRegistrar.class);
+
+    MapBinder<String, AdviserRegistrar> adviserRegistrarMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, AdviserRegistrar.class);
+    adviserRegistrarMapBinder.addBinding(WingsAdviserRegistrar.class.getName()).to(WingsAdviserRegistrar.class);
+
     bind(CVDataCollectionTaskService.class).to(CVDataCollectionTaskServiceImpl.class);
   }
 
