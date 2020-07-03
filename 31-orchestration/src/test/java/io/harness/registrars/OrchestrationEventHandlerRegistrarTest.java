@@ -1,14 +1,13 @@
 package io.harness.registrars;
 
 import static io.harness.rule.OwnerRule.BRIJESH;
-import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
 import io.harness.category.element.UnitTests;
-import io.harness.registries.registrar.AdviserRegistrar;
+import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -19,27 +18,20 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class OrchestrationAdviserRegistrarTest extends OrchestrationTest {
-  @Inject Map<String, AdviserRegistrar> adviserRegistrars;
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void shouldTestRegister() {
-    new OrchestrationAdviserRegistrar().testClassesModule();
-  }
+public class OrchestrationEventHandlerRegistrarTest extends OrchestrationTest {
+  @Inject Map<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrars;
 
   @Test
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
   public void testAllRegistrarsAreRegistered()
       throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-    Set<String> adviserRegistrarClasses = new HashSet<>();
+    Set<String> orchestrationEventHandlerRegistrarsClasses = new HashSet<>();
 
     Reflections reflections = new Reflections("io.harness.registrars");
-    for (Class clazz : reflections.getSubTypesOf(AdviserRegistrar.class)) {
-      adviserRegistrarClasses.add(clazz.getName());
+    for (Class clazz : reflections.getSubTypesOf(OrchestrationEventHandlerRegistrar.class)) {
+      orchestrationEventHandlerRegistrarsClasses.add(clazz.getName());
     }
-    assertThat(adviserRegistrars.keySet()).isEqualTo(adviserRegistrarClasses);
+    assertThat(orchestrationEventHandlerRegistrars.keySet()).isEqualTo(orchestrationEventHandlerRegistrarsClasses);
   }
 }
