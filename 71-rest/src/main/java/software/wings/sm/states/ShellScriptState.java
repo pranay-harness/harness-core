@@ -10,6 +10,7 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static software.wings.beans.FeatureName.DISABLE_WINRM_COMMAND_ENCODING;
 import static software.wings.beans.FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE;
 import static software.wings.beans.delegation.ShellScriptParameters.CommandUnit;
 
@@ -396,7 +397,9 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .kerberosConfig(kerberosConfig)
             .localOverrideFeatureFlag(
                 featureFlagService.isEnabled(LOCAL_DELEGATE_CONFIG_OVERRIDE, executionContext.getApp().getAccountId()))
-            .keyName(keyName);
+            .keyName(keyName)
+            .disableWinRMCommandEncodingFFSet(
+                featureFlagService.isEnabled(DISABLE_WINRM_COMMAND_ENCODING, executionContext.getApp().getAccountId()));
     // TODO: This has to be enabled once CS team gives go ahead
     //    if (featureFlagService.isEnabled(FeatureName.SHELL_SCRIPT_ENV,
     //    workflowStandardParams.getApp().getAccountId())) {

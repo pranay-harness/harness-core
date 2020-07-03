@@ -15,6 +15,10 @@ import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+
+import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
@@ -24,6 +28,7 @@ import io.harness.eraro.ResponseMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
@@ -34,26 +39,36 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.utils.ExecutionLogWriter;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class DefaultWinRmExecutor implements WinRmExecutor {
+  public static final String HARNESS_FILENAME_PREFIX = "\\harness-";
+  public static final String WINDOWS_TEMPFILE_LOCATION = "%TEMP%";
+  public static final String NOT_IMPLEMENTED = "Not implemented";
+  private static final String ERROR_WHILE_EXECUTING_COMMAND = "Error while executing command";
   protected DelegateLogService logService;
   private final WinRmSessionConfig config;
   protected DelegateFileManager delegateFileManager;
+  private boolean disableCommandEncoding;
+  private static final int SPLITLISTOFCOMMANDSBY = 20;
 
-  DefaultWinRmExecutor(
-      DelegateLogService logService, DelegateFileManager delegateFileManager, WinRmSessionConfig config) {
+  DefaultWinRmExecutor(DelegateLogService logService, DelegateFileManager delegateFileManager,
+      WinRmSessionConfig config, boolean disableCommandEncoding) {
     this.logService = logService;
     this.delegateFileManager = delegateFileManager;
     this.config = config;
+    this.disableCommandEncoding = disableCommandEncoding;
   }
 
   @Override
@@ -85,19 +100,41 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         saveExecutionLog(format("Executing command ...%n"), INFO);
       }
 
-      int exitCode = session.executeCommandString(psWrappedCommand(command), outputWriter, errorWriter);
+      int exitCode;
+      String psScriptFile = null;
+      if (disableCommandEncoding) {
+        psScriptFile = getPSScriptFile();
+        WinRmToolResponse winRmToolResponse =
+            session.executeCommandsList(constructPSScriptWithCommands(command, psScriptFile));
+        exitCode = winRmToolResponse.getStatusCode();
+        buildStdOutputAndErrorFromWinRmToolResponse(winRmToolResponse, outputWriter, errorWriter);
+      } else {
+        exitCode = session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter);
+      }
       commandExecutionStatus = (exitCode == 0) ? SUCCESS : FAILURE;
       saveExecutionLog(format("%nCommand completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
+      cleanupFiles(session, psScriptFile);
     } catch (RuntimeException re) {
       throw re;
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;
-      logger.error("Error while executing command", e);
+      logger.error(ERROR_WHILE_EXECUTING_COMMAND, e);
       ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
     }
     return commandExecutionStatus;
+  }
+
+  private void buildStdOutputAndErrorFromWinRmToolResponse(WinRmToolResponse winRmToolResponse,
+      ExecutionLogWriter outputWriter, ExecutionLogWriter errorWriter) throws IOException {
+    if (!winRmToolResponse.getStdOut().isEmpty()) {
+      outputWriter.write(winRmToolResponse.getStdOut());
+    }
+
+    if (!winRmToolResponse.getStdErr().isEmpty()) {
+      errorWriter.write(winRmToolResponse.getStdErr());
+    }
   }
 
   private String addEnvVariablesCollector(
@@ -116,6 +153,16 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     return wrapperCommand.toString();
   }
 
+  /*
+  Keep the temp script in working directory or in Temp is working directory is not set.
+   */
+  @NotNull
+  private String getPSScriptFile() {
+    return config.getWorkingDirectory() == null
+        ? WINDOWS_TEMPFILE_LOCATION
+        : config.getWorkingDirectory() + HARNESS_FILENAME_PREFIX + this.config.getExecutionId() + ".ps1";
+  }
+
   @Override
   public CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
@@ -123,21 +170,35 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     CommandExecutionStatus commandExecutionStatus;
     saveExecutionLog(format("Initializing WinRM connection to %s ...", config.getHostname()), INFO);
     String envVariablesOutputFile = null;
+    String psScriptFile = null;
 
     if (!envVariablesToCollect.isEmpty()) {
       envVariablesOutputFile = this.config.getWorkingDirectory() + "\\"
           + "harness-" + this.config.getExecutionId() + ".out";
     }
+
     try (WinRmSession session = new WinRmSession(config); ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
          ExecutionLogWriter errorWriter = getExecutionLogWriter(ERROR)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
       saveExecutionLog(format("Executing command ...%n"), INFO);
 
       command = addEnvVariablesCollector(command, envVariablesToCollect, envVariablesOutputFile);
-      int exitCode = session.executeCommandString(psWrappedCommand(command), outputWriter, errorWriter);
+      int exitCode;
+      if (disableCommandEncoding) {
+        psScriptFile = getPSScriptFile();
+        WinRmToolResponse winRmToolResponse =
+            session.executeCommandsList(constructPSScriptWithCommands(command, psScriptFile));
+        exitCode = winRmToolResponse.getStatusCode();
+        buildStdOutputAndErrorFromWinRmToolResponse(winRmToolResponse, outputWriter, errorWriter);
+      } else {
+        exitCode = session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter);
+      }
       commandExecutionStatus = (exitCode == 0) ? SUCCESS : FAILURE;
 
       if (commandExecutionStatus == SUCCESS && envVariablesOutputFile != null) {
+        // If we are here, we will run another command to get the output variables. Make sure we delete the previous
+        // script
+        cleanupFiles(session, psScriptFile);
         executionDataBuilder.sweepingOutputEnvVariables(
             collectOutputEnvironmentVariables(session, envVariablesOutputFile));
       }
@@ -145,12 +206,13 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       saveExecutionLog(format("%nCommand completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
       commandExecutionResult.status(commandExecutionStatus);
       commandExecutionResult.commandExecutionData(executionDataBuilder.build());
+      cleanupFiles(session, psScriptFile);
       return commandExecutionResult.build();
     } catch (RuntimeException re) {
       throw re;
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;
-      logger.error("Error while executing command", e);
+      logger.error(ERROR_WHILE_EXECUTING_COMMAND, e);
       ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
@@ -166,18 +228,42 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         + "'))\n"
         + "Write-Host $base64string -NoNewline";
 
+    // Note we are already receving file contents in UTF-8
+    String commandWithoutEncoding = "$envVarString = Get-Content -Path \"" + envVariablesOutputFile
+        + "\" -Encoding UTF8 -Raw; Write-Host $envVarString -NoNewline ";
+
+    String psScriptFile = null;
     try (StringWriter outputAccumulator = new StringWriter(1024);
          StringWriter errorAccumulator = new StringWriter(1024)) {
-      int exitCode = session.executeCommandString(psWrappedCommand(command), outputAccumulator, errorAccumulator);
+      int exitCode;
+      if (disableCommandEncoding) {
+        psScriptFile = getPSScriptFile();
+        WinRmToolResponse winRmToolResponse =
+            session.executeCommandsList(constructPSScriptWithCommands(commandWithoutEncoding, psScriptFile));
+        exitCode = winRmToolResponse.getStatusCode();
+        if (winRmToolResponse.getStdOut() != null) {
+          outputAccumulator.write(winRmToolResponse.getStdOut());
+        }
+        if (!winRmToolResponse.getStdErr().isEmpty()) {
+          errorAccumulator.write(winRmToolResponse.getStdErr());
+        }
+      } else {
+        exitCode =
+            session.executeCommandString(psWrappedCommandWithEncoding(command), outputAccumulator, errorAccumulator);
+      }
       if (exitCode != 0) {
         logger.error("Powershell script collecting output environment Variables failed with exitCode {}", exitCode);
         return envVariablesMap;
       }
 
-      byte[] decodedBytes = Base64.getDecoder().decode(outputAccumulator.getBuffer().toString());
-      // removing UTF-8 and UTF-16 BOMs if any
-      String fileContents =
-          new String(decodedBytes, Charset.forName("UTF-8")).replace("\uFEFF", "").replace("\uEFBBBF", "");
+      String fileContents;
+      if (disableCommandEncoding) {
+        fileContents = outputAccumulator.toString();
+      } else {
+        byte[] decodedBytes = Base64.getDecoder().decode(outputAccumulator.getBuffer().toString());
+        // removing UTF-8 and UTF-16 BOMs if any
+        fileContents = new String(decodedBytes, StandardCharsets.UTF_8).replace("\uFEFF", "").replace("\uEFBBBF", "");
+      }
       String[] lines = fileContents.split("\n");
       saveExecutionLog(color("\n\nScript Output: ", White, Bold), INFO);
       for (String line : lines) {
@@ -190,7 +276,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         }
       }
 
-      cleanupEnvironmentOutputFile(session, envVariablesOutputFile);
+      cleanupFiles(session, envVariablesOutputFile);
+      cleanupFiles(session, psScriptFile);
     } catch (RuntimeException re) {
       throw re;
     } catch (Exception e) {
@@ -199,18 +286,71 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     return envVariablesMap;
   }
 
-  private void cleanupEnvironmentOutputFile(WinRmSession session, String envVariablesOutputFile) {
-    String command = "Remove-Item -Path " + envVariablesOutputFile;
+  @VisibleForTesting
+  protected void cleanupFiles(WinRmSession session, String file) {
+    String command = "Remove-Item -Path " + file;
     try (StringWriter outputAccumulator = new StringWriter(1024)) {
-      session.executeCommandString(psWrappedCommand(command), outputAccumulator, outputAccumulator);
+      if (disableCommandEncoding) {
+        command = format(
+            "Powershell Invoke-Command -command {$FILE_PATH=[System.Environment]::ExpandEnvironmentVariables(\\\"%s\\\") ;  Remove-Item -Path $FILE_PATH}",
+            file);
+        session.executeCommandString(command, outputAccumulator, outputAccumulator);
+      } else {
+        session.executeCommandString(psWrappedCommandWithEncoding(command), outputAccumulator, outputAccumulator);
+      }
     } catch (RuntimeException re) {
       throw re;
     } catch (Exception e) {
-      logger.error("Exception while trying to remove envVariablesOutputFile {}", envVariablesOutputFile, e);
+      logger.error("Exception while trying to remove file {} {}", file, e);
     }
   }
 
-  private String psWrappedCommand(String command) {
+  /**
+   * To construct the powershell script for running on target windows host.
+   * @param command  Command String
+   * @return Parsed command after escaping special characters. Command will write a powershell script file and then
+   * execute it. Due to character limit for single powershell command, the command is split at a new line character and
+   * writes one line at a time.
+   */
+  protected List<List<String>> constructPSScriptWithCommands(String command, String psScriptFile) {
+    command = "$ErrorActionPreference=\"Stop\"\n" + command;
+
+    // Yes, replace() is intentional. We are replacing only character and not a regex pattern.
+    command = command.replace("$", "`$");
+    // This is to escape quotes
+    command = command.replaceAll("\"", "`\\\\\"");
+
+    // write commands to a file and then execute the file
+    String appendPSInvokeCommandtoCommandString =
+        "Powershell Invoke-Command -command {[IO.File]::AppendAllText(\\\"%s\\\", \\\"%s\\\" ) }";
+
+    // Split the command at newline character
+    List<String> listofCommands = Arrays.asList(command.split("\n"));
+
+    // Replace pipe only if part of a string, else skip
+    Pattern patternForPipeWithinAString = Pattern.compile("[a-zA-Z]+\\|");
+    List<String> commandList = new ArrayList<>();
+    for (String commandString : listofCommands) {
+      if (patternForPipeWithinAString.matcher(commandString).find()) {
+        commandString = commandString.replaceAll("\\|", "`\\\"|`\\\"");
+      }
+      // Append each command with PS Invoke command which is write command to file and also add the PS newline character
+      // for correct escaping
+      commandList.add(format(appendPSInvokeCommandtoCommandString, psScriptFile, commandString + "`r`n"));
+    }
+    // last command to run the script we just built - This will execute our command.
+    commandList.add(format("Powershell -f \"%s\" ", psScriptFile));
+
+    return Lists.partition(commandList, SPLITLISTOFCOMMANDSBY);
+  }
+
+  /**
+   * Constructs powershell command by encoding the command string to base64 command.
+   * @param command Command String
+   * @return powershell command string that will convert that command from base64 to UTF8 string on windows host and
+   * then run it on cmd.
+   */
+  private String psWrappedCommandWithEncoding(String command) {
     command = "$ErrorActionPreference=\"Stop\"\n" + command;
     String base64Command = encodeBase64String(command.getBytes(StandardCharsets.UTF_8));
     String wrappedCommand = format(
@@ -263,24 +403,42 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         logger.error("Error while downloading config file.", e);
       }
 
-      String encodedFile = EncodingUtils.encodeBase64(fileBytes);
-      String command = "#### Convert Base64 string back to config file ####\n"
-          + "\n"
-          + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\""
-          + encodedFile + "\"))\n"
-          + "Write-Host \"Decoding config file on the host.\"\n"
-          + "$decodedFile = \'" + configFileMetaData.getDestinationDirectoryPath() + "\\"
-          + configFileMetaData.getFilename() + "\'\n"
-          + "[IO.File]::WriteAllText($decodedFile, $DecodedString) \n"
-          + "Write-Host \"Copied config file to the host.\"\n";
+      int exitCode;
+      String command;
+      String psScriptFile = null;
+      if (disableCommandEncoding) {
+        // Keep the temp script in working directory or in Temp is working directory is not set.
+        psScriptFile = config.getWorkingDirectory() == null
+            ? WINDOWS_TEMPFILE_LOCATION
+            : config.getWorkingDirectory() + "harness-" + this.config.getExecutionId() + ".ps1";
+        command = "$fileName = \"" + configFileMetaData.getFilename() + "\"\n"
+            + "$commandString = {" + new String(fileBytes) + "}"
+            + "\n[IO.File]::WriteAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
+            + "Write-Host \"Copied config file to the host.\"\n";
+        WinRmToolResponse winRmToolResponse =
+            session.executeCommandsList(constructPSScriptWithCommands(command, psScriptFile));
+        exitCode = winRmToolResponse.getStatusCode();
+        buildStdOutputAndErrorFromWinRmToolResponse(winRmToolResponse, outputWriter, errorWriter);
+      } else {
+        String encodedFile = EncodingUtils.encodeBase64(fileBytes);
+        command = "#### Convert Base64 string back to config file ####\n"
+            + "\n"
+            + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\""
+            + encodedFile + "\"))\n"
+            + "Write-Host \"Decoding config file on the host.\"\n"
+            + "$decodedFile = \'" + configFileMetaData.getFilename() + "\'\n"
+            + "[IO.File]::WriteAllText($decodedFile, $DecodedString) \n"
+            + "Write-Host \"Copied config file to the host.\"\n";
 
-      int exitCode = session.executeCommandString(psWrappedCommand(command), outputWriter, errorWriter);
+        exitCode = session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter);
+      }
       logger.info("Execute Command String returned exit code.", exitCode);
       commandExecutionStatus = SUCCESS;
+      cleanupFiles(session, psScriptFile);
     } catch (RuntimeException re) {
       throw re;
     } catch (Exception e) {
-      logger.error("Error while executing command", e);
+      logger.error(ERROR_WHILE_EXECUTING_COMMAND, e);
       ResponseMessage details = buildErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
@@ -302,20 +460,20 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
   @Override
   public CommandExecutionStatus copyFiles(String destinationDirectoryPath, List<String> files) {
-    throw new NotImplementedException("Not implemented");
+    throw new NotImplementedException(NOT_IMPLEMENTED);
   }
 
   @Override
   public CommandExecutionStatus copyFiles(String destinationDirectoryPath,
       ArtifactStreamAttributes artifactStreamAttributes, String accountId, String appId, String activityId,
       String commandUnitName, String hostName) {
-    throw new NotImplementedException("Not implemented");
+    throw new NotImplementedException(NOT_IMPLEMENTED);
   }
 
   @Override
   public CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
-    throw new NotImplementedException("Not implemented");
+    throw new NotImplementedException(NOT_IMPLEMENTED);
   }
 
   private ExecutionLogWriter getExecutionLogWriter(LogLevel logLevel) {

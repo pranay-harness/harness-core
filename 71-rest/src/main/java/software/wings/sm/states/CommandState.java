@@ -978,6 +978,9 @@ public class CommandState extends State {
     if (featureFlagService.isEnabled(FeatureName.INLINE_SSH_COMMAND, accountId)) {
       commandExecutionContextBuilder.inlineSshCommand(true);
     }
+    if (featureFlagService.isEnabled(FeatureName.DISABLE_WINRM_COMMAND_ENCODING, accountId)) {
+      commandExecutionContextBuilder.disableWinRMCommandEncodingFFSet(true);
+    }
     commandExecutionContextBuilder.multiArtifact(
         featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId));
   }

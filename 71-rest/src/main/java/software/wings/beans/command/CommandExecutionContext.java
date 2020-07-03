@@ -79,6 +79,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
   private boolean inlineSshCommand;
   private boolean executeOnDelegate;
+  private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
 
   // new fields for multi artifact
   private Map<String, Artifact> multiArtifactMap;
@@ -286,6 +287,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
     private boolean inlineSshCommand;
     private boolean executeOnDelegate;
+    private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
 
     // new fields for multi artifact
     private Map<String, Artifact> multiArtifactMap;
@@ -475,6 +477,11 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       return this;
     }
 
+    public Builder disableWinRMCommandEncodingFFSet(boolean disableWinRMCommandEncodingFFSet) {
+      this.disableWinRMCommandEncodingFFSet = disableWinRMCommandEncodingFFSet;
+      return this;
+    }
+
     public Builder executeOnDelegate(boolean executeOnDelegate) {
       this.executeOnDelegate = executeOnDelegate;
       return this;
@@ -548,7 +555,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
           .multiArtifactMap(multiArtifactMap)
           .multiArtifact(multiArtifact)
           .artifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap)
-          .artifactFileName(artifactFileName);
+          .artifactFileName(artifactFileName)
+          .disableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet);
     }
 
     public CommandExecutionContext build() {
@@ -594,6 +602,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       commandExecutionContext.setMultiArtifact(multiArtifact);
       commandExecutionContext.setArtifactServerEncryptedDataDetailsMap(artifactServerEncryptedDataDetailsMap);
       commandExecutionContext.setArtifactFileName(artifactFileName);
+      commandExecutionContext.setDisableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet);
       return commandExecutionContext;
     }
   }

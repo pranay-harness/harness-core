@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -302,13 +303,14 @@ public class ShellScriptTaskTest extends WingsBaseTest {
                                        .build();
     ArgumentCaptor<WinRmSessionConfig> winRmSessionConfigArgumentCaptor =
         ArgumentCaptor.forClass(WinRmSessionConfig.class);
-    when(winrmExecutorFactory.getExecutor(any(WinRmSessionConfig.class))).thenReturn(defaultWinRmExecutor);
+    when(winrmExecutorFactory.getExecutor(any(WinRmSessionConfig.class), anyBoolean()))
+        .thenReturn(defaultWinRmExecutor);
     when(defaultWinRmExecutor.executeCommandString(anyString(), anyList()))
         .thenReturn(CommandExecutionResult.builder().status(CommandExecutionStatus.SUCCESS).build());
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
     assertThat(commandExecutionResult).isNotNull();
     assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    verify(winrmExecutorFactory).getExecutor(winRmSessionConfigArgumentCaptor.capture());
+    verify(winrmExecutorFactory).getExecutor(winRmSessionConfigArgumentCaptor.capture(), anyBoolean());
     WinRmSessionConfig winRmSessionConfig = winRmSessionConfigArgumentCaptor.getValue();
     assertThat(winRmSessionConfig).isNotNull();
     assertThat(winRmSessionConfig.getAccountId()).isEqualTo(ACCOUNT_ID);
