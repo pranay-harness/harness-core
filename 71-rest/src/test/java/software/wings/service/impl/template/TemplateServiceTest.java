@@ -2,10 +2,12 @@ package software.wings.service.impl.template;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.delegate.task.shell.ScriptType.BASH;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.EMPTY_LIST;
 import static java.util.Collections.singletonList;
@@ -53,6 +55,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -77,17 +80,23 @@ import software.wings.beans.template.TemplateGalleryHelper;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.VersionedTemplate;
 import software.wings.beans.template.command.HttpTemplate;
+import software.wings.beans.template.command.ShellScriptTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedCommand;
 import software.wings.beans.template.dto.ImportedCommandVersion;
+import software.wings.exception.TemplateException;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
 import software.wings.service.intfc.template.ImportedTemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
 import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import javax.validation.ConstraintViolationException;
 
@@ -358,6 +367,47 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Category(UnitTests.class)
   public void shouldDeleteTemplate() {
     deleteTemplate(GLOBAL_APP_ID);
+  }
+
+  @Test(expected = TemplateException.class)
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void shouldFailDeleteTemplateUsedInSecretManager() {
+    ShellScriptTemplate shellScriptTemplate = ShellScriptTemplate.builder()
+                                                  .scriptType(BASH.toString())
+                                                  .scriptString("echo ${var1}\n"
+                                                      + "export A=\"aaa\"\n"
+                                                      + "export B=\"bbb\"")
+                                                  .outputVars("A,B")
+                                                  .build();
+    Template template =
+        Template.builder()
+            .templateObject(shellScriptTemplate)
+            .folderPath("Harness/Tomcat Commands")
+            .gallery(HARNESS_GALLERY)
+            .appId(GLOBAL_APP_ID)
+            .accountId(GLOBAL_ACCOUNT_ID)
+            .name("Sample Script")
+            .variables(Collections.singletonList(aVariable().type(TEXT).name("var1").mandatory(true).build()))
+            .build();
+
+    Template savedTemplate = templateService.save(template);
+
+    CustomSecretsManagerShellScript script = CustomSecretsManagerShellScript.builder()
+                                                 .scriptType(CustomSecretsManagerShellScript.ScriptType.BASH)
+                                                 .scriptString(UUIDGenerator.generateUuid())
+                                                 .variables(new ArrayList<>())
+                                                 .build();
+    CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
+                                            .name("CustomSecretsManager")
+                                            .templateId(savedTemplate.getUuid())
+                                            .delegateSelectors(new ArrayList<>())
+                                            .executeOnDelegate(true)
+                                            .customSecretsManagerShellScript(script)
+                                            .testVariables(new HashSet<>())
+                                            .build();
+    wingsPersistence.save(config);
+    templateService.delete(savedTemplate.getAccountId(), savedTemplate.getUuid());
   }
 
   @Test

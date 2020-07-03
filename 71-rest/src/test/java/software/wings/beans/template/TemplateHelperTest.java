@@ -22,13 +22,13 @@ public class TemplateHelperTest extends TemplateBaseTestHelper {
     final List<TemplateType> supportedTemplateTypes = Arrays.asList(TemplateType.HTTP, TemplateType.SHELL_SCRIPT,
         TemplateType.ARTIFACT_SOURCE, TemplateType.SSH, TemplateType.PCF_PLUGIN);
     for (TemplateType supportedTemplateType : supportedTemplateTypes) {
-      assertThat(TemplateHelper.mappedEntity(supportedTemplateType)).isNotNull();
+      assertThat(TemplateHelper.mappedEntities(supportedTemplateType)).isNotNull();
     }
 
     Arrays.stream(TemplateType.values())
         .filter(templateType -> !supportedTemplateTypes.contains(templateType))
         .forEach(templateType
             -> assertThatExceptionOfType(InvalidArgumentsException.class)
-                   .isThrownBy(() -> TemplateHelper.mappedEntity(templateType)));
+                   .isThrownBy(() -> TemplateHelper.mappedEntities(templateType)));
   }
 }

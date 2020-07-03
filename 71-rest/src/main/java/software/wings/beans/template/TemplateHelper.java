@@ -8,6 +8,7 @@ import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeValidate;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ARTIFACT_STREAM;
+import static software.wings.beans.EntityType.SECRETS_MANAGER;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -44,6 +45,8 @@ import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.common.TemplateConstants;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
+import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig.CustomSecretsManagerConfigKeys;
 import software.wings.service.impl.command.CommandHelper;
 
 import java.util.ArrayList;
@@ -65,6 +68,7 @@ public class TemplateHelper {
         return Arrays.asList(ServiceCommand.class, Workflow.class);
       case HTTP:
       case SHELL_SCRIPT:
+        return Arrays.asList(Workflow.class, CustomSecretsManagerConfig.class);
       case PCF_PLUGIN:
         return Collections.singletonList(Workflow.class);
       case ARTIFACT_SOURCE:
@@ -75,16 +79,17 @@ public class TemplateHelper {
     return null;
   }
 
-  public static EntityType mappedEntity(TemplateType templateType) {
+  public static List<EntityType> mappedEntities(TemplateType templateType) {
     switch (templateType) {
       case SSH:
-        return SERVICE;
-      case HTTP:
+        return Collections.singletonList(SERVICE);
       case SHELL_SCRIPT:
+        return Arrays.asList(WORKFLOW, SECRETS_MANAGER);
+      case HTTP:
       case PCF_PLUGIN:
-        return WORKFLOW;
+        return Collections.singletonList(WORKFLOW);
       case ARTIFACT_SOURCE:
-        return ARTIFACT_STREAM;
+        return Collections.singletonList(ARTIFACT_STREAM);
       default:
         throw new InvalidArgumentsException(String.format("TemplateType [%s] is not supported", templateType), null);
     }
@@ -134,6 +139,8 @@ public class TemplateHelper {
       return ServiceCommand.TEMPLATE_UUID_KEY;
     } else if (ArtifactStream.class.equals(lookUpClass)) {
       return ArtifactStreamKeys.templateUuid;
+    } else if (CustomSecretsManagerConfig.class.equals(lookUpClass)) {
+      return CustomSecretsManagerConfigKeys.templateId;
     } else {
       unhandled(lookUpClass);
     }

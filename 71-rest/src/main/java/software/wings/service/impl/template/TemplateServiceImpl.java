@@ -5,16 +5,13 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.TEMPLATES_LINKED;
+import static io.harness.eraro.ErrorCode.TEMPLATE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.EntityType.ARTIFACT_STREAM;
-import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
 import static software.wings.beans.template.Template.REFERENCED_TEMPLATE_ID_KEY;
@@ -22,7 +19,7 @@ import static software.wings.beans.template.Template.VERSION_KEY;
 import static software.wings.beans.template.TemplateGallery.GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY;
 import static software.wings.beans.template.TemplateHelper.addUserKeyWords;
 import static software.wings.beans.template.TemplateHelper.isAppLevelImportedCommand;
-import static software.wings.beans.template.TemplateHelper.mappedEntity;
+import static software.wings.beans.template.TemplateHelper.mappedEntities;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateNameForImportedCommands;
@@ -41,6 +38,7 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.IMPORTED_TEMPLATE_PREFIX;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
+import static software.wings.exception.TemplateException.templateLinkedException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -94,6 +92,7 @@ import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.TemplateException;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -698,10 +697,8 @@ public class TemplateServiceImpl implements TemplateService {
 
     TemplateType templateType = TemplateType.valueOf(template.getType());
     if (templateHelper.templatesLinked(templateType, Collections.singletonList(templateUuid))) {
-      throw new WingsException(TEMPLATES_LINKED, USER)
-          .addParam("message", String.format("Template : [%s] couldn't be deleted", template.getName()))
-          .addParam("templateType", templateType.name())
-          .addParam("entityType", mappedEntity(templateType));
+      throw templateLinkedException(String.format("Template : [%s] couldn't be deleted", template.getName()),
+          templateType, mappedEntities(templateType));
     }
     boolean templateDeleted = wingsPersistence.delete(template);
     if (templateDeleted) {
@@ -780,20 +777,22 @@ public class TemplateServiceImpl implements TemplateService {
     logger.info("To be deleted linked template uuids {}", templateUuids);
     // Since the template folder will be deleted only if all the folder inside it are deleted. Hence validating linkage
     // beforehand. Verify if Service Commands contains the given ids
+    String errorMessage = String.format("Template Folder : [%s] couldn't be deleted", templateFolder.getName());
+
     if (templateHelper.templatesLinked(SSH, templateUuids)) {
-      throwException(templateFolder, SSH, SERVICE);
+      throw templateLinkedException(errorMessage, SSH, mappedEntities(SSH));
     }
     if (templateHelper.templatesLinked(HTTP, templateUuids)) {
-      throwException(templateFolder, HTTP, WORKFLOW);
+      throw templateLinkedException(errorMessage, HTTP, mappedEntities(HTTP));
     }
     if (templateHelper.templatesLinked(SHELL_SCRIPT, templateUuids)) {
-      throwException(templateFolder, SHELL_SCRIPT, WORKFLOW);
+      throw templateLinkedException(errorMessage, SHELL_SCRIPT, mappedEntities(SHELL_SCRIPT));
     }
     if (templateHelper.templatesLinked(ARTIFACT_SOURCE, templateUuids)) {
-      throwException(templateFolder, ARTIFACT_SOURCE, ARTIFACT_STREAM);
+      throw templateLinkedException(errorMessage, ARTIFACT_SOURCE, mappedEntities(ARTIFACT_SOURCE));
     }
     if (templateHelper.templatesLinked(PCF_PLUGIN, templateUuids)) {
-      throwException(templateFolder, PCF_PLUGIN, WORKFLOW);
+      throw templateLinkedException(errorMessage, PCF_PLUGIN, mappedEntities(PCF_PLUGIN));
     }
     // Delete templates
     boolean templateDeleted =
@@ -1101,16 +1100,9 @@ public class TemplateServiceImpl implements TemplateService {
                             .filter(Template.GALLERY_ID_KEY, galleryId)
                             .get();
     if (template == null) {
-      throw new WingsException("No template found with name [" + name + "]");
+      throw new TemplateException("No template found with name [" + name + "]", TEMPLATE_NOT_FOUND, null, USER);
     }
     return template.getUuid();
-  }
-
-  private void throwException(TemplateFolder templateFolder, TemplateType templateType, EntityType entityType) {
-    throw new WingsException(TEMPLATES_LINKED, USER)
-        .addParam("message", String.format("Template Folder : [%s] couldn't be deleted", templateFolder.getName()))
-        .addParam("templateType", templateType.name())
-        .addParam("entityType", entityType.name());
   }
 
   private AbstractTemplateProcessor getAbstractTemplateProcessor(Template template) {
