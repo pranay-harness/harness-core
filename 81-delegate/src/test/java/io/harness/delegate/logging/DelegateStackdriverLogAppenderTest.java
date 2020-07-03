@@ -92,7 +92,7 @@ public class DelegateStackdriverLogAppenderTest extends CategoryTest {
     }
     waitForMessage(INFO, message);
     BlockingQueue<LogEntry> logQueue = appender.getLogQueue();
-    await().atMost(15L, TimeUnit.SECONDS).until(logQueue::isEmpty);
+    await().atMost(30L, TimeUnit.SECONDS).until(logQueue::isEmpty);
   }
 
   private void log(Level level, String message) {
