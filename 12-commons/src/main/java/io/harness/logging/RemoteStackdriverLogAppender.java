@@ -12,10 +12,12 @@ import com.google.cloud.MonitoredResource;
 import com.google.cloud.logging.LogEntry;
 import com.google.cloud.logging.Logging;
 import com.google.cloud.logging.Logging.WriteOption;
+import com.google.cloud.logging.LoggingException;
 import com.google.cloud.logging.LoggingOptions;
 import com.google.cloud.logging.LoggingOptions.Builder;
 import com.google.cloud.logging.Payload.JsonPayload;
 import com.google.cloud.logging.Severity;
+import com.google.cloud.logging.Synchronicity;
 import com.google.cloud.logging.v2.LoggingSettings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
@@ -32,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -66,10 +69,8 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
       Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
   private final AtomicInteger failedAttempts = new AtomicInteger(0);
   private final AtomicLong nextAttempt = new AtomicLong(0);
-
-  static boolean loggingInitialized() {
-    return logging != null;
-  }
+  private final AtomicBoolean stackDriverReachable = new AtomicBoolean();
+  private final AtomicLong nextConnectivityTestAttempt = new AtomicLong(0);
 
   @Override
   public void start() {
@@ -150,6 +151,11 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
 
   private void submitLogs(int minimum) {
     synchronized (this) {
+      if (!isStackDriverReachable() && System.currentTimeMillis() < nextConnectivityTestAttempt.get()) {
+        logQueue.clear();
+        return;
+      }
+
       if (logQueue.size() < minimum) {
         return;
       }
@@ -175,17 +181,23 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
       nextAttempt.set(0);
 
       try {
-        if (logQueue.size() > MAX_BATCH_SIZE) {
-          logLines.add(LogEntry
-                           .newBuilder(JsonPayload.of(ImmutableMap.of("message",
-                               "Log queue exceeds max batch size (" + MAX_BATCH_SIZE
-                                   + "). Current queue size: " + logQueue.size())))
-                           .setSeverity(Severity.WARNING)
-                           .build());
+        if (isStackDriverReachable()) {
+          if (logQueue.size() > MAX_BATCH_SIZE) {
+            logLines.add(LogEntry
+                             .newBuilder(JsonPayload.of(ImmutableMap.of("message",
+                                 "Log queue exceeds max batch size (" + MAX_BATCH_SIZE
+                                     + "). Current queue size: " + logQueue.size())))
+                             .setSeverity(Severity.WARNING)
+                             .build());
+          }
+          logQueue.drainTo(logLines.getLines(), MAX_BATCH_SIZE);
+          logging.write(logLines.getLines(), WriteOption.logName(LOG_NAME),
+              WriteOption.resource(MonitoredResource.newBuilder("global").build()), WriteOption.labels(getLogLabels()));
         }
-        logQueue.drainTo(logLines.getLines(), MAX_BATCH_SIZE);
-        logging.write(logLines.getLines(), WriteOption.logName(LOG_NAME),
-            WriteOption.resource(MonitoredResource.newBuilder("global").build()), WriteOption.labels(getLogLabels()));
+      } catch (LoggingException ex) {
+        logger.error("Failed to submit logs. Stack driver logging will be temporarily disabled.", ex);
+        markStackDriverUnreachable();
+        logQueue.clear();
       } catch (Exception ex) {
         logger.error("Failed to submit logs.", ex);
       } finally {
@@ -208,6 +220,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
         }
         logging = null;
       } else {
+        testStackDriverConnectivity();
         return;
       }
     }
@@ -244,6 +257,47 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
     } catch (Exception e) {
       logger.error("Failed to build Logging client for StackdriverLogging", e);
     }
+
+    testStackDriverConnectivity();
+  }
+
+  private void testStackDriverConnectivity() {
+    if (logging != null && !stackDriverReachable.get()) {
+      logging.setWriteSynchronicity(Synchronicity.SYNC);
+
+      try {
+        logging.write(Arrays.asList(LogEntry
+                                        .newBuilder(JsonPayload.of(
+                                            ImmutableMap.of("message", "Stack Driver connectivity test successful")))
+                                        .setSeverity(Severity.INFO)
+                                        .build()),
+            WriteOption.logName(LOG_NAME), WriteOption.resource(MonitoredResource.newBuilder("global").build()),
+            WriteOption.labels(getLogLabels()));
+
+        logging.setWriteSynchronicity(Synchronicity.ASYNC);
+        markStackDriverReachable();
+      } catch (LoggingException ex) {
+        logger.warn(
+            "Connectivity test for Stack Driver failed. Stack driver logging will be temporarily disabled.", ex);
+        markStackDriverUnreachable();
+        logQueue.clear();
+      } catch (Exception ex) {
+        logger.warn("Connectivity test for Stack Driver failed.", ex);
+      }
+    }
+  }
+
+  private boolean isStackDriverReachable() {
+    return stackDriverReachable.get();
+  }
+
+  private void markStackDriverReachable() {
+    stackDriverReachable.set(true);
+  }
+
+  private void markStackDriverUnreachable() {
+    stackDriverReachable.set(false);
+    nextConnectivityTestAttempt.set(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(60L));
   }
 
   private Map<String, String> getLogLabels() {
