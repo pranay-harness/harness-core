@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.distribution.barrier.Barrier;
+import io.harness.distribution.barrier.Barrier.State;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
@@ -27,15 +27,17 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @Redesign
-@FieldNameConstants(innerTypeName = "BarrierNodeKeys")
-@Entity(value = "barrierNodes")
-@Document("barrierNodes")
-@TypeAlias("barrierNodes")
-public final class BarrierNode implements PersistentEntity, UuidAware, PersistentRegularIterable {
+@FieldNameConstants(innerTypeName = "BarrierExecutionInstanceKeys")
+@Entity(value = "barrierExecutionInstances")
+@Document("barrierExecutionInstances")
+@TypeAlias("barrierExecutionInstances")
+public final class BarrierExecutionInstance implements PersistentEntity, UuidAware, PersistentRegularIterable {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
 
+  @NotNull private String planNodeId;
   @NotNull private String identifier;
-  private Barrier.State barrierState;
+  @NotNull private String planExecutionId;
+  private State barrierState;
 
   private Long nextIteration;
 

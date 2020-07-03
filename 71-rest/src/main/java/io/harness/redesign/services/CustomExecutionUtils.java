@@ -70,6 +70,8 @@ import io.harness.redesign.states.wait.WaitStep;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.references.OutcomeRefObject;
 import io.harness.state.StepType;
+import io.harness.state.core.barrier.BarrierStep;
+import io.harness.state.core.barrier.BarrierStepParameters;
 import io.harness.state.core.dummy.DummySectionStep;
 import io.harness.state.core.dummy.DummySectionStepParameters;
 import io.harness.state.core.fork.ForkStep;
@@ -1485,6 +1487,61 @@ public class CustomExecutionUtils {
                                     .build())
             .build();
     return ManifestListConfig.builder().manifests(Arrays.asList(manifestConfigOverride)).build();
+  }
+
+  public Plan providePlanWithSingleBarrier() {
+    String forkNodeId = generateUuid();
+    String dummyNode1Id = generateUuid();
+    String dummyNode2Id = generateUuid();
+    String barrierNodeId = generateUuid();
+    return Plan.builder()
+        .uuid(generateUuid())
+        .startingNodeId(forkNodeId)
+        .node(PlanNode.builder()
+                  .uuid(forkNodeId)
+                  .name("Fork Node")
+                  .stepType(ForkStep.STEP_TYPE)
+                  .identifier("fork1")
+                  .stepParameters(
+                      ForkStepParameters.builder().parallelNodeId(dummyNode1Id).parallelNodeId(dummyNode2Id).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNode1Id)
+                  .name("Dummy Node 1")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy1")
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(barrierNodeId).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNode2Id)
+                  .name("Dummy Node 2")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy2")
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(barrierNodeId)
+                  .identifier("barrier1")
+                  .name("barrier1")
+                  .stepType(BarrierStep.STEP_TYPE)
+                  .stepParameters(BarrierStepParameters.builder().identifier("BAR1").timeoutInMillis(100000).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
+                                             .build())
+                  .build())
+        .build();
   }
 
   private static CDPipeline getCdPipeline(ServiceConfig serviceConfig) {

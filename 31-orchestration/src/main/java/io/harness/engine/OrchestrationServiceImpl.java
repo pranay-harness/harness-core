@@ -8,15 +8,21 @@ import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.barriers.BarrierExecutionInstance;
 import io.harness.beans.EmbeddedUser;
+import io.harness.distribution.barrier.Barrier.State;
+import io.harness.engine.barriers.BarrierService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
+import io.harness.state.core.barrier.BarrierStep;
+import io.harness.state.core.barrier.BarrierStepParameters;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 @Redesign
@@ -25,6 +31,7 @@ import javax.validation.Valid;
 public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private OrchestrationEngine orchestrationEngine;
   @Inject private PlanExecutionService planExecutionService;
+  @Inject private BarrierService barrierService;
 
   @Override
   public PlanExecution startExecution(Plan plan, EmbeddedUser createdBy) {
@@ -46,9 +53,27 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       return null;
     }
     PlanExecution savedPlanExecution = planExecutionService.save(planExecution);
+    constructBarriers(savedPlanExecution);
     Ambiance ambiance =
         Ambiance.builder().setupAbstractions(setupAbstractions).planExecutionId(savedPlanExecution.getUuid()).build();
     orchestrationEngine.triggerExecution(ambiance, planNode);
     return savedPlanExecution;
+  }
+
+  private void constructBarriers(PlanExecution planExecution) {
+    barrierService.saveAll(
+        planExecution.getPlan()
+            .getNodes()
+            .stream()
+            .filter(planNode -> planNode.getStepType() == BarrierStep.STEP_TYPE)
+            .map(planNode
+                -> BarrierExecutionInstance.builder()
+                       .uuid(generateUuid())
+                       .planNodeId(planNode.getUuid())
+                       .identifier(((BarrierStepParameters) planNode.getStepParameters()).getIdentifier())
+                       .planExecutionId(planExecution.getUuid())
+                       .barrierState(State.STANDING)
+                       .build())
+            .collect(Collectors.toList()));
   }
 }

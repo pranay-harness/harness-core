@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.barriers.BarrierNode;
+import io.harness.barriers.BarrierExecutionInstance;
 import io.harness.engine.barriers.BarrierService;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorParameters;
@@ -29,7 +29,7 @@ public class BarrierFacilitator implements Facilitator {
       FacilitatorParameters parameters, StepInputPackage inputPackage) {
     FacilitatorResponseBuilder responseBuilder =
         FacilitatorResponse.builder().initialWait(parameters.getWaitDurationSeconds());
-    if (isSingleBarrier(ambiance.obtainCurrentRuntimeId())) {
+    if (isSingleBarrier(ambiance.obtainCurrentRuntimeId(), ambiance.getPlanExecutionId())) {
       responseBuilder.executionMode(ExecutionMode.SYNC);
     } else {
       responseBuilder.executionMode(ExecutionMode.ASYNC);
@@ -37,9 +37,9 @@ public class BarrierFacilitator implements Facilitator {
     return responseBuilder.build();
   }
 
-  private boolean isSingleBarrier(String barrierUuid) {
-    BarrierNode barrierNode = barrierService.get(barrierUuid);
-    List<BarrierNode> barrierNodes = barrierService.findByIdentifier(barrierNode);
-    return isEmpty(barrierNodes) || barrierNodes.size() == 1;
+  private boolean isSingleBarrier(String identifier, String planExecutionId) {
+    List<BarrierExecutionInstance> barrierExecutionInstances =
+        barrierService.findByIdentifierAndPlanExecutionId(identifier, planExecutionId);
+    return isEmpty(barrierExecutionInstances) || barrierExecutionInstances.size() == 1;
   }
 }
