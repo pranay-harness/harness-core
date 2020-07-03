@@ -339,7 +339,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
           artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
           logger.info("Got filename: " + artifactFileName);
         }
-        command = "curl --progress-bar \"" + url + "\""
+        command = "curl --fail --progress-bar \"" + url + "\""
             + " \\\n"
             + "-H \"Authorization: " + authorizationHeader + "\" \\\n"
             + "-H \"x-amz-content-sha256: " + EMPTY_BODY_SHA256 + "\" \\\n"
@@ -469,11 +469,11 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     switch (this.getScriptType()) {
       case BASH:
         if (!artifactoryConfig.hasCredentials()) {
-          command = "curl --progress-bar -X GET \""
+          command = "curl --fail --progress-bar -X GET \""
               + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.artifactPath)) + "\" -o \""
               + getCommandPath() + "/" + artifactFileName + "\"";
         } else {
-          command = "curl --progress-bar -H \"Authorization: " + authHeader + "\" -X GET \""
+          command = "curl --fail --progress-bar -H \"Authorization: " + authHeader + "\" -X GET \""
               + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.artifactPath)) + "\" -o \""
               + getCommandPath() + "/" + artifactFileName + "\"";
         }
@@ -520,7 +520,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       case BASH:
         for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
           if (!nexusConfig.hasCredentials()) {
-            command.append("curl --progress-bar -X GET \"")
+            command.append("curl --fail --progress-bar -X GET \"")
                 .append(downloadMetadata.getUrl())
                 .append("\" -o \"")
                 .append(getCommandPath().trim())
@@ -528,7 +528,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
                 .append(downloadMetadata.getFileName())
                 .append("\"\n");
           } else {
-            command.append("curl --progress-bar -H \"Authorization: ")
+            command.append("curl --fail --progress-bar -H \"Authorization: ")
                 .append(authHeader)
                 .append("\" -X GET \"")
                 .append(downloadMetadata.getUrl())
@@ -594,7 +594,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     switch (this.getScriptType()) {
       case BASH:
         for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
-          command.append("curl --progress-bar -H \"Authorization: ")
+          command.append("curl --fail --progress-bar -H \"Authorization: ")
               .append(authHeader)
               .append("\" -X GET \"")
               .append(downloadMetadata.getUrl())
@@ -646,7 +646,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     switch (this.getScriptType()) {
       case BASH:
         for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
-          command.append("curl --progress-bar -H \"Authorization: ")
+          command.append("curl --fail --progress-bar -H \"Authorization: ")
               .append(authHeader)
               .append("\" -X GET \"")
               .append(downloadMetadata.getUrl())
@@ -681,7 +681,11 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   }
 
   private String getArtifactoryUrl(ArtifactoryConfig config, String artifactPath) {
-    return config.fetchRegistryUrl() + "/" + artifactPath;
+    String url = config.fetchRegistryUrl().trim();
+    if (!url.endsWith("/")) {
+      url += "/";
+    }
+    return url + artifactPath;
   }
 
   private String constructCommandStringForAzureArtifacts(ArtifactStreamAttributes artifactStreamAttributes,
@@ -711,7 +715,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     String command;
     switch (this.getScriptType()) {
       case BASH:
-        command = "curl -L --progress-bar -H \"Authorization: " + authHeader + "\" -X GET \"" + url + "\" -o \""
+        command = "curl --fail -L --progress-bar -H \"Authorization: " + authHeader + "\" -X GET \"" + url + "\" -o \""
             + getCommandPath() + "/" + artifactFileName + "\"";
         break;
       case POWERSHELL:
