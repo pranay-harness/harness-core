@@ -10,7 +10,7 @@
     <dependencies>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>25-orchestration-beans</artifactId>
+            <artifactId>29-orchestration-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

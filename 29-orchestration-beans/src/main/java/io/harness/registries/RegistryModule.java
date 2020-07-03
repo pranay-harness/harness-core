@@ -151,5 +151,7 @@ public class RegistryModule extends DependencyModule {
   }
 
   @Override
-  protected void configure() {}
+  protected void configure() {
+    // Nothing to configure
+  }
 }

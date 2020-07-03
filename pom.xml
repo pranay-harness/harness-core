@@ -19,7 +19,7 @@
         <module>22-delegate-service-beans</module>
         <module>23-delegate-service-driver</module>
         <module>24-common-entities</module>
-        <module>25-orchestration-beans</module>
+        <module>29-orchestration-beans</module>
         <module>31-orchestration</module>
         <module>35-yaml-beans</module>
         <module>38-execution-plan</module>
