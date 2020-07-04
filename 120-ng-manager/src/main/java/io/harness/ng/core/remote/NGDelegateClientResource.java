@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskId;
-import io.harness.ng.core.remote.client.grpc.NgDelegateTaskGrpcClient;
+import io.harness.grpc.ng.NgDelegateTaskGrpcClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 

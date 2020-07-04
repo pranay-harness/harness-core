@@ -35,7 +35,7 @@ import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.appender.AppenderModule;
 import io.harness.event.client.impl.appender.AppenderModule.Config;
 import io.harness.govern.ProviderModule;
-import io.harness.grpc.ManagerGrpcClientModule;
+import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.grpc.pingpong.PingPongClient;
 import io.harness.grpc.pingpong.PingPongModule;
 import io.harness.managerclient.ManagerClientModule;

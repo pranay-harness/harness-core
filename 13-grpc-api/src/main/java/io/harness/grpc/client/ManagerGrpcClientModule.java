@@ -1,4 +1,4 @@
-package io.harness.grpc;
+package io.harness.grpc.client;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -76,6 +76,7 @@ public class ManagerGrpcClientModule extends ProviderModule {
     try {
       GrpcUtil.checkAuthority(authority);
     } catch (Exception ignore) {
+      logger.error("Exception occurred when checking for valid authority", ignore);
       return false;
     }
     return true;
