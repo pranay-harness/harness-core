@@ -36,7 +36,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CIBeansRegistrar;
 import io.harness.serializer.kryo.CIExecutionRegistrar;
-import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
+import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -98,7 +98,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
             .addAll(ManagerRegistrars.kryoRegistrars)
             .add(CIBeansRegistrar.class)
             .add(CIExecutionRegistrar.class)
-            .add(CVNextGenCommonsBeansKryoRegistrar.class)
+            .add(CvNextGenCommonsBeansKryoRegistrar.class)
             .build();
       }
     });

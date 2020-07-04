@@ -19,7 +19,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CIBeansRegistrar;
 import io.harness.serializer.kryo.CIExecutionRegistrar;
-import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
+import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -55,7 +55,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
             .addAll(ManagerRegistrars.kryoRegistrars)
             .add(CIBeansRegistrar.class)
             .add(CIExecutionRegistrar.class)
-            .add(CVNextGenCommonsBeansKryoRegistrar.class)
+            .add(CvNextGenCommonsBeansKryoRegistrar.class)
             .add(TestPersistenceKryoRegistrar.class)
             .build();
       }

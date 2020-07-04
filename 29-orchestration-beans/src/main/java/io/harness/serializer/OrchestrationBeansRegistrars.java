@@ -9,6 +9,7 @@ import lombok.experimental.UtilityClass;
 public class OrchestrationBeansRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
           .add(OrchestrationBeansKryoRegistrar.class)
           .build();

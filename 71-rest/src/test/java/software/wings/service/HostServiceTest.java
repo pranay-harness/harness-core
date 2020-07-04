@@ -259,7 +259,7 @@ public class HostServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetInfrastructureHostUsageByApplication() {
-    /*
+    /*å
         List<Application> applications =
             asList(anApplication().uuid("ID1").name("NAME1").build(),
        anApplication().uuid("ID2").name("NAME2").build()); PageResponse pageResponse = new PageResponse();

@@ -9,11 +9,8 @@ import io.harness.managerclient.KryoConverterFactory;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.managerclient.ManagerClientFactory;
 import io.harness.security.ServiceTokenGenerator;
+import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.ManagerRegistrars;
-import io.harness.serializer.kryo.CIBeansRegistrar;
-import io.harness.serializer.kryo.CIExecutionRegistrar;
-import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 
 import java.util.Set;
@@ -23,10 +20,7 @@ public class CIExecutionTestRule extends AbstractModule {
   @Singleton
   Set<Class<? extends KryoRegistrar>> registrars() {
     return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-        .addAll(ManagerRegistrars.kryoRegistrars)
-        .add(CIBeansRegistrar.class)
-        .add(CIExecutionRegistrar.class)
-        .add(CVNextGenCommonsBeansKryoRegistrar.class)
+        .addAll(CiExecutionRegistrars.kryoRegistrars)
         .add(TestPersistenceKryoRegistrar.class)
         .build();
   }

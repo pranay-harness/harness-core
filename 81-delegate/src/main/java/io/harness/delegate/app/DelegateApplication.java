@@ -44,7 +44,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.YamlUtils;
-import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
+import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.utils.ProcessControl;
@@ -139,7 +139,7 @@ public class DelegateApplication {
       Set<Class<? extends KryoRegistrar> > registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar> >builder()
             .addAll(ManagerRegistrars.kryoRegistrars)
-            .add(CVNextGenCommonsBeansKryoRegistrar.class)
+            .add(CvNextGenCommonsBeansKryoRegistrar.class)
             .build();
       }
     });

@@ -108,10 +108,8 @@ import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonSubtypeResolver;
-import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
-import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.stream.GuiceObjectFactory;
@@ -308,15 +306,11 @@ public class WingsApplication extends Application<MainConfiguration> {
         20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
 
     List<Module> modules = new ArrayList<>();
-    modules.add(new KryoModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(ManagerRegistrars.kryoRegistrars)
-            .add(CVNextGenCommonsBeansKryoRegistrar.class)
-            .build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(ManagerRegistrars.kryoRegistrars).build();
       }
     });
 

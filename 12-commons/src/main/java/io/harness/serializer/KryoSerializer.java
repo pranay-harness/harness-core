@@ -1,6 +1,5 @@
 package io.harness.serializer;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
 import com.google.api.client.util.Base64;
@@ -14,12 +13,12 @@ import com.esotericsoftware.kryo.pool.KryoPool;
 import com.esotericsoftware.kryo.util.IntMap;
 import io.harness.reflection.CodeUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.reflections.Reflections;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.Set;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -45,29 +44,14 @@ public class KryoSerializer {
     }
   }
 
-  static Set<Class<? extends KryoRegistrar>> reflectionRegistrars() {
-    Reflections reflections = new Reflections("io.harness.serializer.kryo");
-    return reflections.getSubTypesOf(KryoRegistrar.class);
-  }
-
   private final KryoPool pool;
 
   @Inject
   public KryoSerializer(Set<Class<? extends KryoRegistrar>> registrars) {
-    kryo(registrars, true);
-    pool = new KryoPool.Builder(() -> kryo(registrars, false)).softReferences().build();
+    pool = new KryoPool.Builder(() -> kryo(registrars)).softReferences().build();
   }
 
-  private HKryo kryo(Set<Class<? extends KryoRegistrar>> registrars, boolean check) {
-    if (check) {
-      // Reflections have race issue and rarely but form time to time returns less.
-      // We are checking here only if we missed something, not exact match on purpose
-      Set<Class<? extends KryoRegistrar>> reflectionRegistrars = reflectionRegistrars();
-      reflectionRegistrars.removeAll(registrars);
-      if (isNotEmpty(reflectionRegistrars)) {
-        throw new IllegalStateException(String.format("You are missing %s", reflectionRegistrars));
-      }
-    }
+  private HKryo kryo(Collection<Class<? extends KryoRegistrar>> registrars) {
     final ClassResolver classResolver = new ClassResolver();
     HKryo kryo = new HKryo(classResolver);
     try {
@@ -78,9 +62,7 @@ public class KryoSerializer {
         Constructor<?> constructor = kryoRegistrarClass.getConstructor();
         final KryoRegistrar kryoRegistrar = (KryoRegistrar) constructor.newInstance();
         kryoRegistrar.register(kryo);
-        if (check) {
-          check(previousState, classResolver.getRegistrations());
-        }
+        check(previousState, classResolver.getRegistrations());
       }
 
     } catch (

@@ -2,6 +2,7 @@ package io.harness.serializer;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateAgentKryoRegister;
 import io.harness.serializer.kryo.ManagerKryoRegistrar;
@@ -16,6 +17,7 @@ public class ManagerRegistrars {
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(ManagerKryoRegistrar.class)
           .add(NGKryoRegistrar.class)
+          .add(CvNextGenCommonsBeansKryoRegistrar.class)
           // temporary:
           .add(DelegateAgentKryoRegister.class)
           .add(DelegateAgentBeansKryoRegister.class)

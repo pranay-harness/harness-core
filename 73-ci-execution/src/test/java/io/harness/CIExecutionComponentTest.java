@@ -23,7 +23,7 @@ public class CIExecutionComponentTest extends CIExecutionTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void componentEventServerTests() {
+  public void componentCIExecutionTests() {
     for (Entry<String, TestExecution> test : tests.entrySet()) {
       assertThatCode(() -> test.getValue().run()).as(test.getKey()).doesNotThrowAnyException();
       logger.info("{} passed", test.getKey());
