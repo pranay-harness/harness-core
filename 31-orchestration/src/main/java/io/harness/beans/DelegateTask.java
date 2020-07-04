@@ -51,7 +51,6 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = false)
 @Converters({ParametersConverter.class, ResponseDataConverter.class})
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
-
 @CdIndex(name = "index", fields = { @Field(DelegateTaskKeys.status)
                                     , @Field(DelegateTaskKeys.expiry) })
 @CdIndex(name = "pulling",
@@ -60,7 +59,6 @@ import javax.validation.constraints.NotNull;
       @Field(DelegateTaskKeys.accountId)
       , @Field(DelegateTaskKeys.status), @Field("data.async"), @Field(DelegateTaskKeys.expiry),
     })
-@CdIndex(name = "data_async", fields = { @Field("data.async") })
 public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, Task {
   public static final String TASK_IDENTIFIER = "DELEGATE_TASK";
 
