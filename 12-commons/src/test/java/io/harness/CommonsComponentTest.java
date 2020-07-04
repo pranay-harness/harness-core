@@ -16,13 +16,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
-public class CommonComponentTest extends CommonTest {
+public class CommonsComponentTest extends CommonsTest {
   @Inject private Map<String, TestExecution> tests;
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void componentApiServiceTests() {
+  public void componentCommonsTests() {
     for (Entry<String, TestExecution> test : tests.entrySet()) {
       assertThatCode(() -> test.getValue().run()).as(test.getKey()).doesNotThrowAnyException();
       logger.info("{} passed", test.getKey());

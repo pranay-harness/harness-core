@@ -5,6 +5,7 @@ import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -30,6 +31,11 @@ import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.serializer.KryoModule;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.OrchestrationRegistrars;
+import io.harness.serializer.kryo.OrchestrationTestKryoRegistrar;
+import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.tasks.TaskExecutor;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -55,6 +61,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -71,6 +78,19 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
+    modules.add(KryoModule.getInstance());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(OrchestrationRegistrars.kryoRegistrars)
+            .add(TestPersistenceKryoRegistrar.class)
+            .add(OrchestrationTestKryoRegistrar.class)
+            .build();
+      }
+    });
+
     modules.add(mongoTypeModule(annotations));
 
     modules.add(new AbstractModule() {

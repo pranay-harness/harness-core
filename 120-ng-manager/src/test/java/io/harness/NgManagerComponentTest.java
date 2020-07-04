@@ -22,7 +22,7 @@ public class NgManagerComponentTest extends NgManagerTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void componentCvNextGenCommonsTests() {
+  public void componentNgManagerTests() {
     for (Entry<String, TestExecution> test : tests.entrySet()) {
       assertThatCode(() -> test.getValue().run()).as(test.getKey()).doesNotThrowAnyException();
       logger.info("{} passed", test.getKey());

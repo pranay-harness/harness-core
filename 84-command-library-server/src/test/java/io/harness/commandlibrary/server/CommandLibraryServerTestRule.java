@@ -36,7 +36,6 @@ public class CommandLibraryServerTestRule extends WingsRule {
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
-
     modules.addAll(new TestMongoModule().cumulativeDependencies());
     modules.add(new CommandLibraryServerModule((CommandLibraryServerConfig) configuration));
     modules.add(new CommandLibrarySharedModule(false));

@@ -2,15 +2,14 @@ package io.harness.serializer;
 
 import com.google.common.collect.ImmutableSet;
 
-import io.harness.serializer.kryo.CommonsKryoRegistrar;
-import io.harness.serializer.kryo.PersistenceRegistrar;
+import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class PersistenceRegistrars {
+public class CvNextGenCommonsRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .add(CommonsKryoRegistrar.class)
-          .add(PersistenceRegistrar.class)
+          .addAll(PersistenceRegistrars.kryoRegistrars)
+          .add(CvNextGenCommonsBeansKryoRegistrar.class)
           .build();
 }

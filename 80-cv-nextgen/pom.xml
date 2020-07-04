@@ -26,6 +26,10 @@
             <version>2.2.0</version>
         </dependency>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
             <groupId>ru.vyarus</groupId>
             <artifactId>guice-validator</artifactId>
         </dependency>

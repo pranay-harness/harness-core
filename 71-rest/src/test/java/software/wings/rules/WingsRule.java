@@ -52,7 +52,6 @@ import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
-import io.harness.serializer.kryo.CVNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.TestManagerRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.testlib.RealMongo;
@@ -169,7 +168,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(ManagerRegistrars.kryoRegistrars)
-            .add(CVNextGenCommonsBeansKryoRegistrar.class)
             .add(TestManagerRegistrar.class)
             .add(TestPersistenceKryoRegistrar.class)
             .build();

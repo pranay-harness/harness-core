@@ -8,8 +8,8 @@ import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
 import io.dropwizard.testing.ResourceHelpers;
-import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.commandlibrary.server.CommandLibraryServerBaseTest;
 import io.harness.network.Http;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -25,7 +25,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-public class CommandLibraryServerApplicationTest extends CategoryTest {
+public class CommandLibraryServerApplicationTest extends CommandLibraryServerBaseTest {
   public static DropwizardTestSupport<CommandLibraryServerConfig> SUPPORT;
   public static MongoServer MONGO_SERVER;
 

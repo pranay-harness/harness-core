@@ -4,6 +4,7 @@ import static com.google.inject.matcher.Matchers.not;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -35,7 +36,9 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.CommonsRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
+import io.harness.serializer.KryoRegistrar;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
@@ -135,6 +138,14 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
     modules.add(new CommandLibraryServerModule(configuration));
     modules.add(new CommandLibrarySharedModule(false));
     modules.add(new MetricRegistryModule(metricRegistry));
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(CommonsRegistrars.kryoRegistrars).build();
+      }
+    });
 
     Injector injector = Guice.createInjector(modules);
 

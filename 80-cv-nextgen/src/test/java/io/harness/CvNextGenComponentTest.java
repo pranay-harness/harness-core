@@ -22,7 +22,7 @@ public class CvNextGenComponentTest extends CvNextGenTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
-  public void componentCvNextGenCommonsTests() {
+  public void componentCvNextGenTests() {
     for (Entry<String, TestExecution> test : tests.entrySet()) {
       assertThatCode(() -> test.getValue().run()).as(test.getKey()).doesNotThrowAnyException();
       logger.info("{} passed", test.getKey());

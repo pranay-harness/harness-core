@@ -27,6 +27,7 @@
         <module>64-events-framework</module>
         <module>66-cv-nextgen-commons</module>
         <module>68-cd-nextgen</module>
+        <module>69-connector-nextgen</module>
         <module>70-delegate-agent</module>
         <module>70-delegate-service</module>
         <module>71-rest</module>
@@ -44,7 +45,6 @@
         <module>84-command-library-server</module>
         <module>85-functional-test</module>
         <module>91-model-gen-tool</module>
-        <module>69-connector-nextgen</module>
         <module>106-git-sync-manager</module>
         <module>120-ng-manager</module>
     </modules>

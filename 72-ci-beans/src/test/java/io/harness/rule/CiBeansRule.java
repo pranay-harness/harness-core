@@ -1,5 +1,6 @@
 package io.harness.rule;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -9,6 +10,10 @@ import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaModule;
+import io.harness.serializer.CiBeansRegistrars;
+import io.harness.serializer.KryoModule;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.testing.ComponentTestsModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -23,6 +28,7 @@ import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 public class CiBeansRule implements MethodRule, InjectorRuleMixin {
@@ -49,6 +55,18 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin {
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ComponentTestsModule());
+    modules.add(new KryoModule());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(CiBeansRegistrars.kryoRegistrars)
+            .add(TestPersistenceKryoRegistrar.class)
+            .build();
+      }
+    });
+
     modules.add(new MorphiaModule());
     modules.add(new ProviderModule() {
       @Provides

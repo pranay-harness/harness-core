@@ -5,6 +5,7 @@ import static io.harness.rule.TestUserProvider.testUserProvider;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -32,6 +33,10 @@ import io.harness.queue.TestNoTopicQueuableObjectListener;
 import io.harness.queue.TestTopicQueuableObject;
 import io.harness.queue.TestTopicQueuableObjectListener;
 import io.harness.redis.RedisConfig;
+import io.harness.serializer.KryoModule;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.PersistenceRegistrars;
+import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.testing.ComponentTestsModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -48,6 +53,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
@@ -91,6 +97,18 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ComponentTestsModule());
+    modules.add(new KryoModule());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(PersistenceRegistrars.kryoRegistrars)
+            .add(TestPersistenceKryoRegistrar.class)
+            .build();
+      }
+    });
+
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
 

@@ -18,7 +18,7 @@ import io.harness.cvng.models.VerificationType;
 import io.harness.serializer.KryoRegistrar;
 
 @OwnedBy(CV)
-public class CVNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
+public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(MetricDefinitionDTO.class, 9001);

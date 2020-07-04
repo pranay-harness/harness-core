@@ -1,12 +1,12 @@
 package io.harness;
 
-import io.harness.rule.CommonRule;
+import io.harness.rule.CommonsRule;
 import io.harness.rule.LifecycleRule;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Rule;
 
 @Slf4j
-public abstract class CommonTest extends CategoryTest {
+public abstract class CommonsTest extends CategoryTest {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
-  @Rule public CommonRule apiServiceRule = new CommonRule(lifecycleRule.getClosingFactory());
+  @Rule public CommonsRule commonsRule = new CommonsRule(lifecycleRule.getClosingFactory());
 }
