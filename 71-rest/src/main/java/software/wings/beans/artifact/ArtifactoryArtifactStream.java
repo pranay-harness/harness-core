@@ -100,19 +100,22 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
 
   @Override
   public boolean artifactSourceChanged(ArtifactStream artifactStream) {
-    boolean changed = super.artifactSourceChanged(artifactStream);
-    if (this.repositoryType.equals(RepositoryType.docker.name())) {
-      return changed || repositoryServerChanged(((ArtifactoryArtifactStream) artifactStream).dockerRepositoryServer);
+    if (super.artifactSourceChanged(artifactStream)) {
+      return true;
     }
-    return changed;
+
+    // NOTE: UI is not passing repository type for docker artifact type. So we have to check for the default value "any"
+    // also here.
+    if (this.repositoryType.equals(RepositoryType.docker.name())
+        || this.repositoryType.equals(RepositoryType.any.name())) {
+      return repositoryServerChanged(((ArtifactoryArtifactStream) artifactStream).dockerRepositoryServer);
+    }
+    return false;
   }
 
   private boolean repositoryServerChanged(String dockerRepositoryServer) {
-    if (isEmpty(this.dockerRepositoryServer) && isEmpty(dockerRepositoryServer)) {
-      return false;
-    } else if ((isEmpty(this.dockerRepositoryServer) && isNotEmpty(dockerRepositoryServer))
-        || (isNotEmpty(this.dockerRepositoryServer) && isEmpty(dockerRepositoryServer))) {
-      return true;
+    if (isEmpty(this.dockerRepositoryServer) || isEmpty(dockerRepositoryServer)) {
+      return isNotEmpty(this.dockerRepositoryServer) || isNotEmpty(dockerRepositoryServer);
     }
     return !this.dockerRepositoryServer.equals(dockerRepositoryServer);
   }
