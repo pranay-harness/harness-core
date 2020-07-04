@@ -9,6 +9,8 @@ import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc;
 import io.harness.grpc.auth.ServiceAuthCallCredentials;
+import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.security.ServiceTokenGenerator;
 
 public class GrpcClientModule extends AbstractModule {

@@ -1,4 +1,4 @@
-package io.harness.ng.core;
+package io.harness.grpc.ng;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;
@@ -10,9 +10,9 @@ import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
 import io.harness.delegate.NgDelegateTaskServiceGrpc.NgDelegateTaskServiceBlockingStub;
-import io.harness.grpc.GrpcClientConfig;
-import io.harness.grpc.ManagerGrpcClientModule;
 import io.harness.grpc.auth.ServiceAuthCallCredentials;
+import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.security.ServiceTokenGenerator;
 
 public class NgManagerGrpcClientModule extends AbstractModule {

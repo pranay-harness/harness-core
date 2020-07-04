@@ -1,4 +1,4 @@
-package io.harness.ng.core.remote.client.grpc;
+package io.harness.grpc.client;
 
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +22,7 @@ import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
+import io.harness.grpc.ng.NgDelegateTaskGrpcClient;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;

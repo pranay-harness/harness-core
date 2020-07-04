@@ -1,4 +1,4 @@
-package io.harness.grpc;
+package io.harness.grpc.client;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.grpc.ManagerGrpcClientModule.Config;
+import io.harness.grpc.client.ManagerGrpcClientModule.Config;
 import io.harness.rule.Owner;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;

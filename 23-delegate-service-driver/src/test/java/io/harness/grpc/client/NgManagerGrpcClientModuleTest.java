@@ -1,4 +1,4 @@
-package io.harness.ng.core;
+package io.harness.grpc.client;
 
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,7 +10,7 @@ import com.google.inject.Module;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
-import io.harness.grpc.GrpcClientConfig;
+import io.harness.grpc.ng.NgManagerGrpcClientModule;
 import io.harness.rule.Owner;
 import io.harness.version.VersionInfoManager;
 import org.junit.Test;

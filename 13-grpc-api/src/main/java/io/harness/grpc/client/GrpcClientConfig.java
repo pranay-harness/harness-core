@@ -1,4 +1,4 @@
-package io.harness.grpc;
+package io.harness.grpc.client;
 
 import lombok.AccessLevel;
 import lombok.Builder;
