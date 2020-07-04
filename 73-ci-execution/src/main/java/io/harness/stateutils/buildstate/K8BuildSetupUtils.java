@@ -2,6 +2,7 @@ package io.harness.stateutils.buildstate;
 
 import static io.harness.common.CIExecutionConstants.SETUP_TASK_ARGS;
 import static io.harness.common.CIExecutionConstants.SH_COMMAND;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider.ContainerKind.ADDON_CONTAINER;
 import static io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider.ContainerKind.LITE_ENGINE_CONTAINER;
 import static java.util.stream.Collectors.toList;
@@ -26,6 +27,7 @@ import io.harness.managerclient.ManagerCIResource;
 import io.harness.network.SafeHttpCall;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.rest.RestResponse;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Singleton
 @Slf4j
@@ -63,7 +66,9 @@ public class K8BuildSetupUtils {
       return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
           buildEnvSetupStepInfo.getSetupEnv().getGitConnectorIdentifier(),
           buildEnvSetupStepInfo.getSetupEnv().getBranchName(),
-          getPodParams(podSetupInfo, namespace, SH_COMMAND, Collections.singletonList(SETUP_TASK_ARGS))));
+          getPodParams(podSetupInfo, namespace, SH_COMMAND, Collections.singletonList(SETUP_TASK_ARGS),
+              ((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getSetupEnv().getBuildJobEnvInfo())
+                  .getPublishStepConnectorIdentifier())));
 
     } catch (Exception e) {
       logger.error("build state execution failed", e);
@@ -89,15 +94,15 @@ public class K8BuildSetupUtils {
       return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
           liteEngineTaskStepInfo.getEnvSetup().getGitConnectorIdentifier(),
           liteEngineTaskStepInfo.getEnvSetup().getBranchName(),
-          getPodParams(podSetupInfo, namespace, command, arguments)));
+          getPodParams(podSetupInfo, namespace, command, arguments, Collections.emptySet())));
     } catch (Exception e) {
       logger.error("lite engine task state execution failed", e);
     }
     return null;
   }
 
-  public CIK8PodParams<CIK8ContainerParams> getPodParams(
-      PodSetupInfo podSetupInfo, String namespace, List<String> commands, List<String> args) {
+  public CIK8PodParams<CIK8ContainerParams> getPodParams(PodSetupInfo podSetupInfo, String namespace,
+      List<String> commands, List<String> args, Set<String> publishStepConnectorIdentifier) {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
 
@@ -123,8 +128,20 @@ public class K8BuildSetupUtils {
                        .build())
             .collect(toList());
 
+    CIK8ContainerParams addOnCik8ContainerParams = InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER);
+    Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues = null;
+
+    if (isNotEmpty(publishStepConnectorIdentifier)) {
+      publishArtifactEncryptedValues = new HashMap<>();
+      // TODO Harsh Fetch connector encrypted values once connector APIs will be ready
+      for (String connectorIdentifier : publishStepConnectorIdentifier) {
+        publishArtifactEncryptedValues.put(connectorIdentifier, null);
+      }
+    }
+
+    addOnCik8ContainerParams.setPublishArtifactEncryptedValues(publishArtifactEncryptedValues);
     // include addon container
-    containerParams.add(InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER));
+    containerParams.add(addOnCik8ContainerParams);
 
     return CIK8PodParams.<CIK8ContainerParams>builder()
         .name(podSetupInfo.getName())

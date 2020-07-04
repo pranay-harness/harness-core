@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.citasks.cik8handler.params;
 
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -25,9 +26,10 @@ public class GitCloneContainerParams extends ContainerParams {
       String stepExecWorkingDir, String name, ImageDetailsWithConnector imageDetailsWithConnector,
       List<String> commands, List<String> args, String workingDir, List<Integer> ports, Map<String, String> envVars,
       Map<String, EncryptedDataDetail> encryptedSecrets, Map<String, SecretKeyParams> secretEnvVars,
+      Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues,
       Map<String, String> volumeToMountPath, ContainerResourceParams containerResourceParams) {
     super(name, imageDetailsWithConnector, commands, args, workingDir, ports, envVars, encryptedSecrets, secretEnvVars,
-        volumeToMountPath, containerResourceParams);
+        publishArtifactEncryptedValues, volumeToMountPath, containerResourceParams);
     this.gitFetchFilesConfig = gitFetchFilesConfig;
     this.stepExecVolumeName = stepExecVolumeName;
     this.stepExecWorkingDir = stepExecWorkingDir;

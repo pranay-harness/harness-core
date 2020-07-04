@@ -1,5 +1,6 @@
 package io.harness.integrationstage;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.singletonList;
 
 import io.harness.beans.environment.BuildJobEnvInfo;
@@ -11,6 +12,7 @@ import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
+import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.core.Execution;
@@ -25,8 +27,12 @@ import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.container.ImageDetails;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Modifies saved integration stage execution plan by appending pre and post execution steps for setting up pod and
@@ -99,10 +105,25 @@ public class IntegrationStageExecutionModifier implements StageExecutionModifier
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(integrationStage))
           .workDir(integrationStage.getCi().getWorkingDirectory())
+          .publishStepConnectorIdentifier(getPublishStepConnectorIdentifier(integrationStage))
           .build();
     } else {
       throw new IllegalArgumentException("Input infrastructure type is not of type kubernetes");
     }
+  }
+
+  private Set<String> getPublishStepConnectorIdentifier(IntegrationStage integrationStage) {
+    List<ExecutionSection> executionSections = integrationStage.getCi().getExecution().getSteps();
+    if (isEmpty(executionSections)) {
+      return Collections.emptySet();
+    }
+
+    return executionSections.stream()
+        .filter(executionSection -> { return executionSection instanceof PublishStepInfo; })
+        .map(step -> ((PublishStepInfo) step).getPublishArtifacts())
+        .flatMap(Collection::stream)
+        .map(artifact -> artifact.getConnector().getConnector())
+        .collect(Collectors.toSet());
   }
 
   private K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfo(IntegrationStage integrationStage) {

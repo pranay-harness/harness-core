@@ -1,5 +1,6 @@
 package software.wings.beans.ci.pod;
 
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,7 @@ public abstract class ContainerParams {
   private Map<String, String> envVars;
   private Map<String, EncryptedDataDetail> encryptedSecrets;
   private Map<String, SecretKeyParams> secretEnvVars;
+  private Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues;
   private Map<String, String> volumeToMountPath;
   private ContainerResourceParams containerResourceParams;
 

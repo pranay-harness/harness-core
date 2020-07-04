@@ -64,7 +64,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
 
     // when(k8BuildSetupUtils.getPodParams(any(), any())).thenReturn(executionNode);buildSetupUtils.executeCISetupTask()
     CIK8PodParams<CIK8ContainerParams> podParams =
-        k8BuildSetupUtils.getPodParams(podsSetupInfo.getPodSetupInfoList().get(0), "default", command, args);
+        k8BuildSetupUtils.getPodParams(podsSetupInfo.getPodSetupInfoList().get(0), "default", command, args, null);
 
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);

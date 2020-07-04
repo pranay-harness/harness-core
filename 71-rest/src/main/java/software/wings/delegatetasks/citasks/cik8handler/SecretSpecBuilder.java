@@ -17,14 +17,17 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.container.ImageDetails;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
@@ -32,6 +35,7 @@ import software.wings.settings.SettingValue;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +59,11 @@ public class SecretSpecBuilder {
   public static final String SECRET = "secret";
   private static final String OPAQUE_SECRET_TYPE = "opaque";
   private static final String DOCKER_CONFIG_KEY = ".dockercfg";
+  private static final String USERNAME_PREFIX = "USERNAME_";
+  private static final String PASSWORD_PREFIX = "PASSWORD_";
+  private static final String ENDPOINT_PREFIX = "ENDPOINT_";
+  private static final String ACCESS_KEY_PREFIX = "ACCESS_KEY_";
+  private static final String SECRET_KEY_PREFIX = "SECRET_KEY_";
 
   @Inject private EncryptionService encryptionService;
 
@@ -100,8 +109,7 @@ public class SecretSpecBuilder {
         .build();
   }
 
-  public Secret convertCustomSecretVariables(
-      Map<String, EncryptedDataDetail> encryptedSecrets, String namespace, String podName, String containerName) {
+  public Map<String, String> decryptCustomSecretVariables(Map<String, EncryptedDataDetail> encryptedSecrets) {
     Map<String, String> data = new HashMap<>();
     if (isNotEmpty(encryptedSecrets)) {
       for (Map.Entry<String, EncryptedDataDetail> encryptedVariable : encryptedSecrets.entrySet()) {
@@ -114,7 +122,65 @@ public class SecretSpecBuilder {
       }
     }
 
-    String secretName = podName + "-" + containerName + "-" + SECRET;
+    return data;
+  }
+
+  public Map<String, String> decryptPublishArtifactSecretVariables(
+      Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues) {
+    Map<String, String> data = new HashMap<>();
+    if (isNotEmpty(publishArtifactEncryptedValues)) {
+      for (Map.Entry<String, EncryptableSettingWithEncryptionDetails> encryptedVariable :
+          publishArtifactEncryptedValues.entrySet()) {
+        List<EncryptableSettingWithEncryptionDetails> detailsList =
+            encryptionService.decrypt(Collections.singletonList(encryptedVariable.getValue()));
+
+        EncryptableSettingWithEncryptionDetails encryptableSettingWithEncryptionDetails =
+            detailsList.stream().findFirst().orElse(null);
+
+        if (encryptableSettingWithEncryptionDetails != null) {
+          EncryptableSetting encryptableSetting = encryptableSettingWithEncryptionDetails.getEncryptableSetting();
+
+          if (encryptableSetting != null) {
+            SettingValue.SettingVariableTypes settingType = encryptableSetting.getSettingType();
+            switch (settingType) {
+              case DOCKER:
+                DockerConfig dockerConfig = (DockerConfig) encryptableSetting;
+                String registryUrl = dockerConfig.getDockerRegistryUrl();
+                String username = dockerConfig.getUsername();
+                String password = String.valueOf(dockerConfig.getPassword());
+
+                data.put(USERNAME_PREFIX + encryptedVariable.getKey(), encodeBase64(username));
+                data.put(PASSWORD_PREFIX + encryptedVariable.getKey(), encodeBase64(password));
+                data.put(ENDPOINT_PREFIX + encryptedVariable.getKey(), encodeBase64(registryUrl));
+                break;
+              case AWS:
+                AwsConfig awsConfig = (AwsConfig) encryptableSetting;
+                String accessKey = awsConfig.getAccessKey();
+                String secretKey = String.valueOf(awsConfig.getSecretKey());
+
+                data.put(ACCESS_KEY_PREFIX + encryptedVariable.getKey(), encodeBase64(accessKey));
+                data.put(SECRET_KEY_PREFIX + encryptedVariable.getKey(), encodeBase64(secretKey));
+                break;
+              case ARTIFACTORY:
+                ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) encryptableSetting;
+                String artifactoryConfigUsername = artifactoryConfig.getUsername();
+                String artifactoryConfigPassword = String.valueOf(artifactoryConfig.getPassword());
+
+                data.put(USERNAME_PREFIX + encryptedVariable.getKey(), encodeBase64(artifactoryConfigUsername));
+                data.put(PASSWORD_PREFIX + encryptedVariable.getKey(), encodeBase64(artifactoryConfigPassword));
+                break;
+              default:
+                unhandled(settingType);
+            }
+          }
+        }
+      }
+    }
+
+    return data;
+  }
+
+  public Secret createSecret(String secretName, String namespace, Map<String, String> data) {
     return new SecretBuilder()
         .withNewMetadata()
         .withName(secretName)

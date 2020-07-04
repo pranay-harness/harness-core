@@ -1,6 +1,7 @@
 package software.wings.service.impl.ci;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
@@ -10,9 +11,11 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
@@ -270,10 +273,40 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
 
         cik8ContainerParams.setEncryptedSecrets(secrets);
       }
+
+      else if (cik8ContainerParams.getContainerType() == (CIContainerType.ADD_ON)) {
+        if (isNotEmpty(cik8ContainerParams.getPublishArtifactEncryptedValues())) {
+          setPublishImageEncryptedInfo(cik8ContainerParams);
+        }
+      }
     });
   }
 
-  Optional<EncryptedDataDetail> getEncryptedDataDetails(String accountId, String secretName) {
+  private void setPublishImageEncryptedInfo(CIK8ContainerParams cik8ContainerParams) {
+    Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues = new HashMap<>();
+    for (Map.Entry<String, EncryptableSettingWithEncryptionDetails> entry :
+        cik8ContainerParams.getPublishArtifactEncryptedValues().entrySet()) {
+      String connectorIdentifier = entry.getKey();
+
+      SettingAttribute publishImageSettingsAttribute =
+          settingsService.getSettingAttributeByName(ACCOUNT_ID, connectorIdentifier);
+
+      if (publishImageSettingsAttribute != null && publishImageSettingsAttribute.getValue() != null) {
+        List<EncryptedDataDetail> encryptionDetails =
+            secretManager.getEncryptionDetails((EncryptableSetting) publishImageSettingsAttribute.getValue());
+        EncryptableSettingWithEncryptionDetails encryptableSettingWithEncryptionDetails =
+            EncryptableSettingWithEncryptionDetails.builder()
+                .encryptableSetting((EncryptableSetting) publishImageSettingsAttribute.getValue())
+                .encryptedDataDetails(encryptionDetails)
+                .build();
+
+        publishArtifactEncryptedValues.put(connectorIdentifier, encryptableSettingWithEncryptionDetails);
+      }
+    }
+    cik8ContainerParams.setPublishArtifactEncryptedValues(publishArtifactEncryptedValues);
+  }
+
+  private Optional<EncryptedDataDetail> getEncryptedDataDetails(String accountId, String secretName) {
     EncryptedData secretByName = secretManager.getSecretByName(accountId, secretName);
     if (secretByName != null) {
       return secretManager.encryptedDataDetails(accountId, secretName, secretByName.getUuid());

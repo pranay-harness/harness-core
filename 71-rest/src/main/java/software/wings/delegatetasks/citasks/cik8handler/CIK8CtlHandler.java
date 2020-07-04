@@ -15,6 +15,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.harness.exception.PodNotFoundException;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.threading.Sleeper;
 import lombok.extern.slf4j.Slf4j;
@@ -46,9 +47,18 @@ public class CIK8CtlHandler {
     }
   }
 
-  public Secret createCustomVarSecret(KubernetesClient kubernetesClient, String namespace,
-      Map<String, EncryptedDataDetail> encryptedSecrets, String podName, String containerName) {
-    Secret secret = secretSpecBuilder.convertCustomSecretVariables(encryptedSecrets, namespace, podName, containerName);
+  public Map<String, String> fetchCustomVariableSecretKeyMap(Map<String, EncryptedDataDetail> encryptedSecrets) {
+    return secretSpecBuilder.decryptCustomSecretVariables(encryptedSecrets);
+  }
+
+  public Map<String, String> fetchPublishArtifactSecretKeyMap(
+      Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues) {
+    return secretSpecBuilder.decryptPublishArtifactSecretVariables(publishArtifactEncryptedValues);
+  }
+
+  public Secret createSecret(
+      KubernetesClient kubernetesClient, String secretName, String namespace, Map<String, String> data) {
+    Secret secret = secretSpecBuilder.createSecret(secretName, namespace, data);
 
     if (secret != null) {
       kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);

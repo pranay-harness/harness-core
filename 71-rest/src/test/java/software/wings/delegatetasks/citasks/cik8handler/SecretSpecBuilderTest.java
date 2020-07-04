@@ -1,13 +1,18 @@
 package software.wings.delegatetasks.citasks.cik8handler;
 
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.SHUBHAM;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
+import static software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder.SECRET_KEY;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import io.harness.category.element.UnitTests;
@@ -15,6 +20,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
@@ -30,6 +36,7 @@ import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.container.ImageDetails;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
@@ -37,6 +44,7 @@ import software.wings.settings.SettingValue;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,12 +118,10 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
                                   .build())
             .build();
 
-    String secretName = podName + "-" + containerName + "-secret";
     encryptedVariables.put("abc", encryptedDataDetail);
     when(encryptionService.getDecryptedValue(encryptedDataDetail)).thenReturn("pass".toCharArray());
-    Secret secret =
-        secretSpecBuilder.convertCustomSecretVariables(encryptedVariables, namespace, podName, containerName);
-    assertEquals(secretName, secret.getMetadata().getName());
+    Map<String, String> decryptedSecrets = secretSpecBuilder.decryptCustomSecretVariables(encryptedVariables);
+    assertThat(decryptedSecrets.get(SECRET_KEY + "abc")).isEqualTo(encodeBase64("pass"));
   }
 
   @Test
@@ -242,5 +248,75 @@ public class SecretSpecBuilderTest extends WingsBaseTest {
     gitConfig.setPassword(password.toCharArray());
 
     secretSpecBuilder.getGitSecretSpec(gitConfig, gitEncryptedDataDetails, namespace);
+  }
+
+  @Test()
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldDecryptDockerConfig() {
+    Map<String, EncryptableSettingWithEncryptionDetails> map = new HashMap<>();
+    EncryptableSettingWithEncryptionDetails setting =
+        EncryptableSettingWithEncryptionDetails.builder()
+            .encryptableSetting(DockerConfig.builder()
+                                    .username("username")
+                                    .password("password".toCharArray())
+                                    .dockerRegistryUrl("https://index.docker.io/v1/")
+                                    .build())
+            .build();
+    map.put("docker", setting);
+    when(encryptionService.decrypt(any())).thenReturn(Collections.singletonList(setting));
+    Map<String, String> data = secretSpecBuilder.decryptPublishArtifactSecretVariables(map);
+    assertThat(data).containsKeys("USERNAME_docker", "PASSWORD_docker", "ENDPOINT_docker");
+    assertThat(data.get("USERNAME_docker")).isEqualTo(encodeBase64("username"));
+    assertThat(data.get("PASSWORD_docker")).isEqualTo(encodeBase64("password"));
+    assertThat(data.get("ENDPOINT_docker")).isEqualTo(encodeBase64("https://index.docker.io/v1/"));
+  }
+
+  @Test()
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldDecryptAWSConfig() {
+    Map<String, EncryptableSettingWithEncryptionDetails> map = new HashMap<>();
+    EncryptableSettingWithEncryptionDetails setting =
+        EncryptableSettingWithEncryptionDetails.builder()
+            .encryptableSetting(
+                AwsConfig.builder().accessKey("access-key").secretKey("secret-key".toCharArray()).build())
+            .build();
+    map.put("aws", setting);
+    when(encryptionService.decrypt(any())).thenReturn(Collections.singletonList(setting));
+    Map<String, String> data = secretSpecBuilder.decryptPublishArtifactSecretVariables(map);
+    assertThat(data).containsKeys("ACCESS_KEY_aws", "SECRET_KEY_aws");
+    assertThat(data.get("ACCESS_KEY_aws")).isEqualTo(encodeBase64("access-key"));
+    assertThat(data.get("SECRET_KEY_aws")).isEqualTo(encodeBase64("secret-key"));
+  }
+
+  @Test()
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldDecryptArtifactoryConfig() {
+    Map<String, EncryptableSettingWithEncryptionDetails> map = new HashMap<>();
+    EncryptableSettingWithEncryptionDetails setting =
+        EncryptableSettingWithEncryptionDetails.builder()
+            .encryptableSetting(
+                ArtifactoryConfig.builder().username("username").password("password".toCharArray()).build())
+            .build();
+    map.put("artifactory", setting);
+    when(encryptionService.decrypt(any())).thenReturn(Collections.singletonList(setting));
+    Map<String, String> data = secretSpecBuilder.decryptPublishArtifactSecretVariables(map);
+    assertThat(data).containsKeys("USERNAME_artifactory", "PASSWORD_artifactory");
+    assertThat(data.get("USERNAME_artifactory")).isEqualTo(encodeBase64("username"));
+    assertThat(data.get("PASSWORD_artifactory")).isEqualTo(encodeBase64("password"));
+  }
+
+  @Test()
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldCreateSecret() {
+    Map<String, String> map = new HashMap<>();
+    map.put("secret", "secret");
+    Secret secret = secretSpecBuilder.createSecret("name", "namespace", map);
+    assertThat(secret.getData()).isEqualTo(map);
+    assertThat(secret.getMetadata().getName()).isEqualTo("name");
+    assertThat(secret.getMetadata().getNamespace()).isEqualTo("namespace");
   }
 }

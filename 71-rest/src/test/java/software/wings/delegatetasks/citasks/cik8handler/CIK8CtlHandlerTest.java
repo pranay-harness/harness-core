@@ -1,14 +1,19 @@
 package software.wings.delegatetasks.citasks.cik8handler;
 
+import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.SHUBHAM;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getDecryptedSecret;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getEncryptableSettingWithEncryptionDetails;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getEncryptedDetails;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_PENDING_PHASE;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_RUNNING_PHASE;
@@ -39,6 +44,7 @@ import io.fabric8.kubernetes.client.dsl.TtyExecOutputErrorable;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.PodNotFoundException;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.threading.Sleeper;
 import org.junit.Test;
@@ -57,6 +63,7 @@ import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 public class CIK8CtlHandlerTest extends WingsBaseTest {
@@ -398,5 +405,49 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     }
 
     cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace);
+  }
+
+  @Test()
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldFetchCustomVariableSecretKeyMap() {
+    Map<String, EncryptedDataDetail> encryptedDetails = getEncryptedDetails();
+    when(mockSecretSpecBuilder.decryptCustomSecretVariables(encryptedDetails)).thenReturn(getDecryptedSecret());
+    Map<String, String> secretKeyMap = cik8CtlHandler.fetchCustomVariableSecretKeyMap(encryptedDetails);
+    assertThat(secretKeyMap).isEqualTo(getDecryptedSecret());
+  }
+
+  @Test()
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldFetchPublishArtifactSecretKeyMap() {
+    Map<String, EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetails =
+        getEncryptableSettingWithEncryptionDetails();
+    when(mockSecretSpecBuilder.decryptPublishArtifactSecretVariables(encryptableSettingWithEncryptionDetails))
+        .thenReturn(getDecryptedSecret());
+    Map<String, String> secretKeyMap =
+        cik8CtlHandler.fetchPublishArtifactSecretKeyMap(encryptableSettingWithEncryptionDetails);
+    assertThat(secretKeyMap).isEqualTo(getDecryptedSecret());
+  }
+
+  @Test()
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldCreateSecret() {
+    Map<String, String> decryptedSecret = getDecryptedSecret();
+    Secret secret = new SecretBuilder()
+                        .withNewMetadata()
+                        .withName("secret-name")
+                        .withNamespace(namespace)
+                        .endMetadata()
+                        .withType("opaque")
+                        .withData(decryptedSecret)
+                        .build();
+    when(mockSecretSpecBuilder.createSecret("secret-name", namespace, decryptedSecret)).thenReturn(secret);
+    when(mockKubernetesClient.secrets()).thenReturn(mockKubeSecret);
+    when(mockKubeSecret.inNamespace(namespace)).thenReturn(mockSecretNonNamespacedOp);
+    when(mockSecretNonNamespacedOp.createOrReplace(secret)).thenReturn(secret);
+    Secret secret1 = cik8CtlHandler.createSecret(mockKubernetesClient, "secret-name", namespace, decryptedSecret);
+    assertThat(secret1).isEqualTo(secret);
   }
 }
