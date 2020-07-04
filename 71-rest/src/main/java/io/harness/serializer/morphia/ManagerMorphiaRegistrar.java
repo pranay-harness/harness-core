@@ -658,6 +658,7 @@ import software.wings.sm.states.EnvState;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
+import software.wings.sm.states.GcbState;
 import software.wings.sm.states.GcpClusterSetup;
 import software.wings.sm.states.HelmDeployState;
 import software.wings.sm.states.HelmRollbackState;
@@ -1492,6 +1493,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.EnvState$EnvExecutionResponseData", EnvExecutionResponseData.class);
     w.put("sm.states.ForkState", ForkState.class);
     w.put("sm.states.ForkState$ForkStateExecutionData", ForkStateExecutionData.class);
+    w.put("sm.states.GcbState", GcbState.class);
     w.put("sm.states.GcpClusterSetup", GcpClusterSetup.class);
     w.put("sm.states.HelmDeployState", HelmDeployState.class);
     w.put("sm.states.HelmRollbackState", HelmRollbackState.class);
