@@ -37,7 +37,6 @@ import software.wings.sm.StateMachineExecutionCallbackMock;
 import software.wings.sm.StateMachineTest.StateAsync;
 import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StepExecutionSummary;
-import software.wings.sm.states.GcbState;
 import software.wings.verification.CVConfiguration;
 
 import java.util.Map;
@@ -57,7 +56,6 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
     classes.put("software.wings.sm.StateMachineTest$StateAsync", StateAsync.class);
     classes.put("software.wings.sm.StateMachineExecutionCallbackMock", StateMachineExecutionCallbackMock.class);
     classes.put("software.wings.service.impl.WorkflowExecutionUpdateFake", WorkflowExecutionUpdateFake.class);
-    classes.put(GcbState.class.getName(), GcbState.class);
 
     final Set<Class> unwanted = checkRegisteredClasses(ImmutableSet.<Class>builder()
                                                            .add(AlertData.class)
