@@ -1,10 +1,14 @@
 package software.wings.delegatetasks.citasks.cik8handler;
 
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static org.mockito.Mockito.mock;
+import static software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder.SECRET_KEY;
 
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.KmsConfig;
@@ -17,6 +21,7 @@ import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.container.ImageDetails;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,6 +135,7 @@ public class CIK8BuildTaskHandlerTestHelper {
             .name(containerName1)
             .containerType(CIContainerType.ADD_ON)
             .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
+            .publishArtifactEncryptedValues(getEncryptableSettingWithEncryptionDetails())
             .build());
     containerParamsList.add(
         CIK8ContainerParams.builder()
@@ -154,6 +160,62 @@ public class CIK8BuildTaskHandlerTestHelper {
         .build();
   }
 
+  public static Map<String, EncryptableSettingWithEncryptionDetails> getEncryptableSettingWithEncryptionDetails() {
+    Map<String, EncryptableSettingWithEncryptionDetails> encryptedSettings = new HashMap<>();
+
+    EncryptableSettingWithEncryptionDetails encryptedDataDetail =
+        EncryptableSettingWithEncryptionDetails.builder()
+            .encryptedDataDetails(Collections.singletonList(
+                EncryptedDataDetail.builder()
+                    .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
+                    .encryptionConfig(KmsConfig.builder()
+                                          .accessKey("accessKey")
+                                          .region("us-east-1")
+                                          .secretKey("secretKey")
+                                          .kmsArn("kmsArn")
+                                          .build())
+                    .build()))
+            .encryptableSetting(DockerConfig.builder()
+                                    .dockerRegistryUrl("https://index.docker.io/v1/")
+                                    .username("uName")
+                                    .password("pWord".toCharArray())
+                                    .encryptedPassword("*****")
+                                    .accountId("acctId")
+                                    .build())
+            .build();
+
+    encryptedSettings.put("abc", encryptedDataDetail);
+    return encryptedSettings;
+  }
+
+  public static Map<String, EncryptableSettingWithEncryptionDetails> getDockerSettingWithEncryptionDetails() {
+    Map<String, EncryptableSettingWithEncryptionDetails> encryptedSettings = new HashMap<>();
+
+    EncryptableSettingWithEncryptionDetails encryptedDataDetail =
+        EncryptableSettingWithEncryptionDetails.builder()
+            .encryptedDataDetails(Collections.singletonList(
+                EncryptedDataDetail.builder()
+                    .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
+                    .encryptionConfig(KmsConfig.builder()
+                                          .accessKey("accessKey")
+                                          .region("us-east-1")
+                                          .secretKey("secretKey")
+                                          .kmsArn("kmsArn")
+                                          .build())
+                    .build()))
+            .encryptableSetting(DockerConfig.builder()
+                                    .dockerRegistryUrl("https://index.docker.io/v1/")
+                                    .username("uName")
+                                    .password("pWord".toCharArray())
+                                    .encryptedPassword("*****")
+                                    .accountId("acctId")
+                                    .build())
+            .build();
+
+    encryptedSettings.put("abc", encryptedDataDetail);
+    return encryptedSettings;
+  }
+
   public static Map<String, EncryptedDataDetail> getEncryptedDetails() {
     Map<String, EncryptedDataDetail> encryptedVariables = new HashMap<>();
 
@@ -170,5 +232,11 @@ public class CIK8BuildTaskHandlerTestHelper {
 
     encryptedVariables.put("abc", encryptedDataDetail);
     return encryptedVariables;
+  }
+
+  public static Map<String, String> getDecryptedSecret() {
+    Map<String, String> decryptedSecrets = new HashMap<>();
+    decryptedSecrets.put(SECRET_KEY + "abc", encodeBase64("pass"));
+    return decryptedSecrets;
   }
 }

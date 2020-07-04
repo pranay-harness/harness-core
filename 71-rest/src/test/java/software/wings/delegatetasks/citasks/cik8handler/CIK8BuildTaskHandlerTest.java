@@ -10,6 +10,7 @@ import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHand
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildImageSecretErrorTaskParams;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildPodCreateErrorTaskParams;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildTaskParams;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getDecryptedSecret;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getEncryptedDetails;
 
 import io.fabric8.kubernetes.api.model.PodBuilder;
@@ -20,6 +21,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -37,6 +39,7 @@ import software.wings.service.impl.KubernetesHelperService;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
@@ -153,6 +156,8 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     PodBuilder podBuilder = new PodBuilder();
 
     CIK8BuildTaskParams cik8BuildTaskParams = buildTaskParams();
+    Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues =
+        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getPublishArtifactEncryptedValues();
     KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesConfig();
     List<EncryptedDataDetail> encryptionDetails = cik8BuildTaskParams.getEncryptionDetails();
     GitConfig gitConfig = cik8BuildTaskParams.getGitFetchFilesConfig().getGitConfig();
@@ -163,9 +168,9 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     when(kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptionDetails)).thenReturn(kubernetesClient);
     doNothing().when(kubeCtlHandler).createGitSecret(kubernetesClient, namespace, gitConfig, encryptionDetails);
     doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
-    when(kubeCtlHandler.createCustomVarSecret(kubernetesClient, namespace, getEncryptedDetails(),
-             cik8BuildTaskParams.getCik8PodParams().getName(), CIK8BuildTaskHandlerTestHelper.containerName2))
-        .thenReturn(secret);
+    when(kubeCtlHandler.fetchCustomVariableSecretKeyMap(getEncryptedDetails())).thenReturn(getDecryptedSecret());
+    when(kubeCtlHandler.fetchPublishArtifactSecretKeyMap(publishArtifactEncryptedValues))
+        .thenReturn(getDecryptedSecret());
     when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
     when(kubeCtlHandler.waitUntilPodIsReady(

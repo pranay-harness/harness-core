@@ -9,23 +9,26 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder.SECRET;
+import static software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder.SECRET_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ci.CIBuildSetupTaskParams;
 import software.wings.beans.ci.CIK8BuildTaskParams;
+import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
@@ -74,7 +77,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         KubernetesClient kubernetesClient = createKubernetesClient(cik8BuildTaskParams);
         createGitSecret(kubernetesClient, kubernetesConfig, gitFetchFilesConfig);
         createImageSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
-        createEnvVariablesSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
+        createEnvVariablesSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams, podName);
 
         Pod pod = podSpecBuilder.createSpec(podParams).build();
         logger.info("Creating pod with spec: {}", pod);
@@ -135,27 +138,63 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         (imageId, imageDetails) -> kubeCtlHandler.createRegistrySecret(kubernetesClient, namespace, imageDetails));
   }
 
-  private void createEnvVariablesSecrets(
-      KubernetesClient kubernetesClient, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
+  private void createEnvVariablesSecrets(KubernetesClient kubernetesClient, String namespace,
+      CIK8PodParams<CIK8ContainerParams> podParams, String podName) {
     List<CIK8ContainerParams> containerParamsList = podParams.getContainerParamsList();
+    String secretName = podName + "-" + SECRET;
+
+    Map<String, String> secretData = new HashMap<>();
     for (CIK8ContainerParams containerParams : containerParamsList) {
       Map<String, EncryptedDataDetail> encryptedSecrets = containerParams.getEncryptedSecrets();
-      Map<String, SecretKeyParams> secretEnvVars = new HashMap<>();
+      Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues =
+          containerParams.getPublishArtifactEncryptedValues();
 
       if (isNotEmpty(encryptedSecrets)) {
-        Secret secret = kubeCtlHandler.createCustomVarSecret(kubernetesClient, namespace,
-            containerParams.getEncryptedSecrets(), podParams.getName(), containerParams.getName());
-
-        for (Map.Entry<String, EncryptedDataDetail> encryptedVariable : encryptedSecrets.entrySet()) {
-          secretEnvVars.put(encryptedVariable.getKey(),
-              SecretKeyParams.builder()
-                  .key(SecretSpecBuilder.SECRET_KEY + encryptedVariable.getKey())
-                  .secretName(secret.getMetadata().getName())
-                  .build());
-        }
+        Map<String, String> customVarSecretData =
+            getAndUpdateCustomVariableSecretData(encryptedSecrets, containerParams, secretName);
+        secretData.putAll(customVarSecretData);
       }
 
-      containerParams.setSecretEnvVars(secretEnvVars);
+      if (isNotEmpty(containerParams.getPublishArtifactEncryptedValues())
+          && containerParams.getContainerType() == CIContainerType.ADD_ON) {
+        Map<String, String> publishArtifactSecretData =
+            getAndUpdatePublishArtifactSecretData(publishArtifactEncryptedValues, containerParams, secretName);
+        secretData.putAll(publishArtifactSecretData);
+      }
     }
+
+    kubeCtlHandler.createSecret(kubernetesClient, secretName, namespace, secretData);
+  }
+
+  private Map<String, String> getAndUpdateCustomVariableSecretData(
+      Map<String, EncryptedDataDetail> encryptedSecrets, CIK8ContainerParams containerParams, String secretName) {
+    Map<String, SecretKeyParams> secretEnvVars = new HashMap<>();
+
+    Map<String, String> customVarSecretData = kubeCtlHandler.fetchCustomVariableSecretKeyMap(encryptedSecrets);
+
+    for (Map.Entry<String, EncryptedDataDetail> encryptedVariable : encryptedSecrets.entrySet()) {
+      secretEnvVars.put(encryptedVariable.getKey(),
+          SecretKeyParams.builder().key(SECRET_KEY + encryptedVariable.getKey()).secretName(secretName).build());
+    }
+    containerParams.setSecretEnvVars(secretEnvVars);
+
+    return customVarSecretData;
+  }
+
+  private Map<String, String> getAndUpdatePublishArtifactSecretData(
+      Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues,
+      CIK8ContainerParams containerParams, String secretName) {
+    Map<String, SecretKeyParams> secretEnvVars = new HashMap<>();
+
+    Map<String, String> publishArtifactSecretData =
+        kubeCtlHandler.fetchPublishArtifactSecretKeyMap(publishArtifactEncryptedValues);
+
+    for (Map.Entry<String, String> publishArtifactEnvVar : publishArtifactSecretData.entrySet()) {
+      secretEnvVars.put(publishArtifactEnvVar.getKey(),
+          SecretKeyParams.builder().key(publishArtifactEnvVar.getKey()).secretName(secretName).build());
+    }
+    containerParams.setSecretEnvVars(secretEnvVars);
+
+    return publishArtifactSecretData;
   }
 }

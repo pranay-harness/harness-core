@@ -8,6 +8,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Stores K8 specific data to setup Pod for running CI job
@@ -19,6 +20,7 @@ import java.util.List;
 public class K8BuildJobEnvInfo implements BuildJobEnvInfo {
   @NotEmpty private PodsSetupInfo podsSetupInfo;
   @NotEmpty private String workDir;
+  private Set<String> publishStepConnectorIdentifier;
 
   @Override
   public Type getType() {
