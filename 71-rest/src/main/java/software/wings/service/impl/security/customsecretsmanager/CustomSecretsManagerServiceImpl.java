@@ -13,10 +13,10 @@ import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY
 
 import com.google.inject.Inject;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.NoResultFoundException;
-import io.harness.exception.UnexpectedException;
 import io.harness.security.encryption.EncryptedDataParams;
 import lombok.NonNull;
 import org.mongodb.morphia.query.Query;
@@ -130,13 +130,15 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
     }
     setCommandPathInConfig(secretsManagerConfig);
     validateInternal(secretsManagerConfig, testVariables);
-    String configId =
-        Optional.ofNullable(secretManagerConfigService.save(secretsManagerConfig)).<UnexpectedException>orElseThrow(() -> {
-          String errorMessage =
-              "Could not save the custom secrets manager to the db for account %s with name %s. There might be already a secret manager with this name.";
-          throw new UnexpectedException(errorMessage);
-        });
-    secretsManagerConfig.setUuid(configId);
+    try {
+      String configId = secretManagerConfigService.save(secretsManagerConfig);
+      secretsManagerConfig.setUuid(configId);
+    } catch (DuplicateKeyException e) {
+      String errorMessage = String.format(
+          "Could not save the custom secrets manager with name \"%s\". There might be already a secret manager with this name.",
+          secretsManagerConfig.getName());
+      throw new InvalidArgumentsException(errorMessage, e, USER);
+    }
   }
 
   private void setCommandPathInConfig(CustomSecretsManagerConfig secretsManagerConfig) {
