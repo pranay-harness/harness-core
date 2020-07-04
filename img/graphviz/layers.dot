@@ -1,93 +1,76 @@
 digraph G {
   compound=true;
-  subgraph cluster_service_api_beans {
-   color=green
-   service_api_beans [label="service api beans" color=white];
+
+  service_api_beans [shape=rect color=green label="service api beans"];
+
+  service_api [shape=rect label="service api"];
+
+  subgraph {
+    rank=same
+    delegate_tasks_beans [shape=rect color=green label="delegate tasks beans"];
+    tasks_add_on_beans [shape=rect color=green label="tasks add-on beans"];
   }
 
-  subgraph cluster_service_api {
-    service_api [label="service api" color=white];
+  subgraph {
+    rank=same
+    delegate_tasks [shape=rect label="delegate tasks"];
+    tasks_add_on [shape=rect label="tasks add-on"];
   }
 
-  subgraph cluster_delegate_tasks_beans {
-    color=green
-    delegate_tasks_beans [label="delegate tasks beans" color=white];
+  delegate_beans [shape=rect color=green label="delegate beans"];
+
+  orchestration_beans [shape=rect color=green label="orchestration beans"];
+
+  orchestration [shape=rect label="orchestration"];
+
+  delegate_service_driver [shape=rect label="delegate service driver"];
+
+  subgraph {
+    rank=same
+    delegate_agent_beans [shape=rect color=green label="delegate agent beans"];
+    delegate_service_beans [shape=rect color=green label="delegate service beans"];
   }
 
-  subgraph cluster_delegate_tasks {
-    delegate_tasks [label="delegate tasks" color=white];
-  }
-
-  subgraph cluster_delegate_beans {
-    color=green
-    delegate_beans [label="delegate beans" color=white];
-  }
-
-  subgraph cluster_orchestration_beans {
-    color=green
-    orchestration_beans [label="orchestration beans" color=white];
-  }
-
-  subgraph cluster_orchestration {
-    orchestration [label="orchestration" color=white];
-  }
-
-  subgraph cluster_delegate_agent_beans {
-    color=green
-    delegate_agent_beans [label="delegate agent beans" color=white];
-  }
-
-  subgraph cluster_delegate_agent {
-    delegate_agent [label="delegate agent" color=white];
-  }
-
-  subgraph cluster_delegate_service_beans {
-    color=green
-    delegate_service_beans [label="delegate service beans" color=white];
-  }
-
-  subgraph cluster_delegate_service {
-    delegate_service [label="delegate service" color=white];
-  }
-
-  subgraph cluster_manager_cx {
-    manager_cx [label="manager Cx" color=white];
+  subgraph {
+    rank=same
+    delegate_agent [shape=rect label="delegate agent"];
+    delegate_service [shape=rect label="delegate service"];
+    manager_cx [shape=rect label="manager Cx"];
   }
 
 
-  service_api -> service_api_beans [ltail=cluster_service_api,lhead=cluster_service_api_beans];
-  delegate_tasks_beans -> service_api [style=invis];
+  service_api -> service_api_beans;
 
-  delegate_tasks_beans -> service_api_beans [ltail=cluster_delegate_tasks_beans,lhead=cluster_service_api_beans];
+  delegate_tasks -> tasks_add_on;
 
-  delegate_tasks -> delegate_tasks_beans [ltail=cluster_delegate_tasks,lhead=cluster_delegate_tasks_beans];
+  delegate_tasks_beans -> service_api_beans;
 
-  delegate_tasks -> service_api [ltail=cluster_delegate_tasks,lhead=cluster_service_api];
+  delegate_tasks -> delegate_tasks_beans;
+  tasks_add_on -> tasks_add_on_beans;
 
-  delegate_agent_beans-> delegate_beans [ltail=cluster_delegate_agent_beans,lhead=cluster_delegate_beans];
+  delegate_tasks -> service_api [minlen=2];
 
-  delegate_service_beans-> delegate_beans [ltail=cluster_delegate_service_beans,lhead=cluster_delegate_beans];
+  delegate_agent_beans-> delegate_beans;
 
-  delegate_beans -> delegate_tasks [style=invis];
+  delegate_service_beans-> delegate_beans;
 
-  orchestration_beans -> delegate_tasks_beans [ltail=cluster_orchestration_beans,lhead=cluster_delegate_tasks_beans];
+  orchestration_beans -> delegate_tasks_beans;
 
-  orchestration -> delegate_service_beans [ltail=cluster_orchestration,lhead=cluster_delegate_service_beans];
-  #orchestration_beans-> delegate_agent_beans [style=invis];
+  orchestration -> delegate_service_driver;
 
-  orchestration -> orchestration_beans [ltail=cluster_orchestration,lhead=cluster_orchestration_beans];
+  orchestration -> orchestration_beans;
 
-  delegate_agent -> delegate_agent_beans [ltail=cluster_delegate_agent,lhead=cluster_delegate_agent_beans];
-  delegate_agent -> delegate_tasks [ltail=cluster_delegate_agent,lhead=cluster_delegate_tasks];
-  delegate_agent -> delegate_service_beans [ltail=cluster_delegate_agent,lhead=cluster_delegate_service_beans];
-  #delegate_agent-> orchestration [style=invis];
+  delegate_agent -> delegate_agent_beans;
+  delegate_agent -> delegate_tasks [minlen=4];
 
-  delegate_service -> delegate_service_beans [ltail=cluster_delegate_service,lhead=cluster_delegate_service_beans];
-  delegate_service -> delegate_agent_beans [ltail=cluster_delegate_service,lhead=cluster_delegate_agent_beans];
-  delegate_service -> orchestration [style=invis];
+  delegate_service_driver -> delegate_service_beans;
 
-  manager_cx -> delegate_service_beans [ltail=cluster_manager_cx,lhead=cluster_delegate_service_beans];
-  manager_cx -> delegate_tasks_beans [ltail=cluster_manager_cx,lhead=cluster_delegate_tasks_beans];
+  delegate_service -> delegate_service_beans;
+  delegate_service -> delegate_agent_beans;
 
-  manager_cx -> orchestration [ltail=cluster_manager_cx,lhead=cluster_orchestration];
+  manager_cx -> delegate_service_driver;
+  manager_cx -> delegate_tasks_beans;
+  manager_cx -> tasks_add_on_beans;
+
+  manager_cx -> orchestration;
 }
