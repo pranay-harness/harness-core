@@ -56,7 +56,6 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
@@ -98,7 +97,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private TimeLimiter mockTimeLimiter;
   @Mock private EncryptionService encryptionService;
   @Mock private HelmCommandHelper helmCommandHelper;
-  @Mock private LogCallback logCallback;
+  @Mock private ExecutionLogCallback logCallback;
   @Mock private HelmTaskHelper helmTaskHelper;
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;

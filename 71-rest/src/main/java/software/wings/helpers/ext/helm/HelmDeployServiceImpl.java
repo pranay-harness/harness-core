@@ -277,8 +277,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         commandRequest.getExecutionLogCallback().saveExecutionLog(msg);
         throw new InvalidRequestException(msg, USER);
       }
-
-      fetchInlineChartUrl(commandRequest);
+      boolean isK8sV116OrAbove = containerDeploymentDelegateHelper.isK8sVersion116OrAbove(
+          commandRequest.getContainerServiceParams(), (ExecutionLogCallback) commandRequest.getExecutionLogCallback());
+      if (isK8sV116OrAbove) {
+        fetchInlineChartUrl(commandRequest);
+      }
     } else {
       fetchRepo(commandRequest);
     }
