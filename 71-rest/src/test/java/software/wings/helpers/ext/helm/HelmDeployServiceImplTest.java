@@ -42,7 +42,6 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
@@ -887,7 +886,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
             .sourceRepoConfig(K8sDelegateManifestConfig.builder().manifestStoreTypes(StoreType.Local).build())
             .build();
 
-    Assertions.assertThatThrownBy(() -> spyHelmDeployService.fetchRepo(helmInstallCommandRequest))
+    assertThatThrownBy(() -> spyHelmDeployService.fetchRepo(helmInstallCommandRequest))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Unsupported store type");
   }

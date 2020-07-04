@@ -1,6 +1,7 @@
 package io.harness.ng.core.exceptionmappers;
 
 import static io.harness.rule.OwnerRule.PHOENIKX;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
@@ -10,7 +11,6 @@ import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.ErrorDTO;
 import io.harness.ng.core.Status;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -25,10 +25,10 @@ public class GenericExceptionMapperV2Test extends BaseTest {
   public void testToResponse() {
     NullPointerException nullPointerException = new NullPointerException("Null");
     Response response = genericExceptionMapperV2.toResponse(nullPointerException);
-    Assertions.assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-    Assertions.assertThat(response.getEntity()).isInstanceOf(ErrorDTO.class);
+    assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    assertThat(response.getEntity()).isInstanceOf(ErrorDTO.class);
     ErrorDTO errorDTO = (ErrorDTO) response.getEntity();
-    Assertions.assertThat(errorDTO.getCode()).isEqualTo(ErrorCode.UNKNOWN_ERROR);
-    Assertions.assertThat(errorDTO.getStatus()).isEqualTo(Status.ERROR);
+    assertThat(errorDTO.getCode()).isEqualTo(ErrorCode.UNKNOWN_ERROR);
+    assertThat(errorDTO.getStatus()).isEqualTo(Status.ERROR);
   }
 }

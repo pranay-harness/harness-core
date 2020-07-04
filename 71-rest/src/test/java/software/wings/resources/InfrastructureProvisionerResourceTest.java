@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
@@ -8,7 +9,6 @@ import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,10 +54,10 @@ public class InfrastructureProvisionerResourceTest extends WingsBaseTest {
         .request()
         .get(new GenericType<RestResponse<TerraformInfrastructureProvisioner>>() {});
 
-    Assertions.assertThatThrownBy(()
-                                      -> RESOURCES.client()
-                                             .target("/infrastructure-provisioners/" + PROVISIONER_ID)
-                                             .request()
-                                             .get(new GenericType<RestResponse<InfrastructureProvisioner>>() {}));
+    assertThatThrownBy(()
+                           -> RESOURCES.client()
+                                  .target("/infrastructure-provisioners/" + PROVISIONER_ID)
+                                  .request()
+                                  .get(new GenericType<RestResponse<InfrastructureProvisioner>>() {}));
   }
 }

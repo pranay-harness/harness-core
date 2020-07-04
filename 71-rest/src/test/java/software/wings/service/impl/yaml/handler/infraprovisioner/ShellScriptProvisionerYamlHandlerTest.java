@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.infraprovisioner;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -16,7 +17,6 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -162,7 +162,7 @@ public class ShellScriptProvisionerYamlHandlerTest extends BaseYamlHandlerTest {
       yamlFile = new File(
           getClass().getClassLoader().getResource(resourcePath + YamlConstants.PATH_DELIMITER + yamlFilePath).toURI());
     } catch (URISyntaxException e) {
-      Assertions.fail("Unable to find yaml file " + resourcePath);
+      fail("Unable to find yaml file " + resourcePath);
     }
     assertThat(yamlFile).isNotNull();
     yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");

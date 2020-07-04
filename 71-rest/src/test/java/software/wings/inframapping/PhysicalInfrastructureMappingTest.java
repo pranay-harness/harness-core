@@ -2,6 +2,7 @@ package software.wings.inframapping;
 
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -9,7 +10,6 @@ import com.google.common.collect.Maps;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
@@ -49,17 +49,17 @@ public class PhysicalInfrastructureMappingTest extends WingsBaseTest {
     assertThat(infrastructureMapping.hosts().get(1).getPublicDns()).isEqualTo("abcd.com");
     assertThat(infrastructureMapping.hosts().get(1).getProperties().get("amiId")).isEqualTo(1234);
 
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(null, null, false));
 
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(Collections.EMPTY_MAP, null, false));
 
     Map<String, Object> host3 = Maps.newLinkedHashMap();
     host2.put("amiId", 1234);
     hosts.add(host3);
 
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> infrastructureMapping.applyProvisionerVariables(new HashMap<>(), null, false));
   }
 }

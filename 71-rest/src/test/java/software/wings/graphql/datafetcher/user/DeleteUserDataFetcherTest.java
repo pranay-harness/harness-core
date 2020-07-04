@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.user;
 
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -11,7 +12,6 @@ import graphql.schema.DataFetchingEnvironment;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,6 +50,6 @@ public class DeleteUserDataFetcherTest extends CategoryTest {
 
     QLDeleteUserPayload qlDeleteUserPayload = deleteUserDataFetcher.mutateAndFetch(qlDeleteUserInput, mutationContext);
     verify(userService, times(1)).delete(eq("accountId"), eq("userId"));
-    Assertions.assertThat(qlDeleteUserPayload.getClientMutationId()).isEqualTo("request1");
+    assertThat(qlDeleteUserPayload.getClientMutationId()).isEqualTo("request1");
   }
 }

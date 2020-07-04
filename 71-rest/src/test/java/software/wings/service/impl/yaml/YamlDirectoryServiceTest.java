@@ -66,7 +66,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -401,25 +400,25 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
         .thenReturn(Arrays.asList(configFile, configFileGlobal));
     when(serviceTemplateService.get(application.getUuid(), SERVICE_ID)).thenReturn(serviceTemplate);
     final FolderNode envNode = yamlDirectoryService.doEnvironments(application, directoryPath, false, null);
-    Assertions.assertThat(envNode).isNotNull();
+    assertThat(envNode).isNotNull();
     List<DirectoryNode> envChildren = envNode.getChildren();
-    Assertions.assertThat(envChildren).hasSize(2);
+    assertThat(envChildren).hasSize(2);
     FolderNode envFolderNode_1 = (FolderNode) envChildren.get(0);
     FolderNode envFolderNode_2 = (FolderNode) envChildren.get(1);
 
     // Verify returned folder node
     List<DirectoryNode> infraDefEnv_1 = getNodesOfClass(envFolderNode_1, InfrastructureDefinition.class);
-    Assertions.assertThat(infraDefEnv_1).hasSize(1);
+    assertThat(infraDefEnv_1).hasSize(1);
     String nodeName = infraDefEnv_1.get(0).getName();
     assertThat(nodeName).isEqualTo(infraDefinition_1.getName() + YAML_EXTENSION);
 
     List<DirectoryNode> infraDefEnv_2 = getNodesOfClass(envFolderNode_2, InfrastructureDefinition.class);
-    Assertions.assertThat(infraDefEnv_2).hasSize(1);
+    assertThat(infraDefEnv_2).hasSize(1);
     nodeName = infraDefEnv_2.get(0).getName();
     assertThat(nodeName).isEqualTo(infraDefinition_2.getName() + YAML_EXTENSION);
 
     List<DirectoryNode> configFileFolder = getNodesOfClass(envFolderNode_1, ConfigFile.class);
-    Assertions.assertThat(configFileFolder).hasSize(2);
+    assertThat(configFileFolder).hasSize(2);
     nodeName = configFileFolder.get(0).getName();
     assertThat(nodeName).isEqualTo(SERVICE_NAME);
     assertThat(((FolderNode) configFileFolder.get(0)).getChildren()).hasSize(1);

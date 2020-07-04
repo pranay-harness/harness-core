@@ -2,6 +2,7 @@ package software.wings.delegatetasks.terraform;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -11,7 +12,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -94,10 +94,10 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
         .thenReturn(Arrays.asList("var_1", "var_2"));
 
     TerraformInputVariablesTaskResponse inputVariables = delegateRunnableTask.run(new Object[] {parameters});
-    Assertions.assertThat(inputVariables.getVariablesList().isEmpty()).isFalse();
+    assertThat(inputVariables.getVariablesList().isEmpty()).isFalse();
     List<String> variableNames =
         inputVariables.getVariablesList().stream().map(NameValuePair::getName).collect(Collectors.toList());
-    Assertions.assertThat(variableNames).containsExactlyInAnyOrder("var_1", "var_2");
+    assertThat(variableNames).containsExactlyInAnyOrder("var_1", "var_2");
   }
 
   @Test
@@ -108,7 +108,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
     when(gitUtilsDelegate.resolveAbsoluteFilePath(any(), any())).thenReturn("some-path");
     when(FileUtils.listFiles(any(), any(), any())).thenReturn(Collections.EMPTY_LIST);
     TerraformInputVariablesTaskResponse response = delegateRunnableTask.run(new Object[] {parameters});
-    Assertions.assertThat(response.getTerraformExecutionData().getErrorMessage())
+    assertThat(response.getTerraformExecutionData().getErrorMessage())
         .contains("No "
             + "Terraform Files Found");
   }

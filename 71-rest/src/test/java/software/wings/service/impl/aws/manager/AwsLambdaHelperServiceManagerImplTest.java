@@ -1,6 +1,7 @@
 package software.wings.service.impl.aws.manager;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -12,7 +13,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,8 +49,7 @@ public class AwsLambdaHelperServiceManagerImplTest extends CategoryTest {
         AwsLambdaDetailsResponse.builder().executionStatus(ExecutionStatus.SUCCESS).details(lambdaDetails).build();
     doReturn(awsLambdaDetailsResponse).when(delegateService).executeTask(any(DelegateTask.class));
 
-    Assertions.assertThat(awsLambdaHelperServiceManager.getFunctionDetails(awsLambdaDetailsRequest))
-        .isEqualTo(lambdaDetails);
+    assertThat(awsLambdaHelperServiceManager.getFunctionDetails(awsLambdaDetailsRequest)).isEqualTo(lambdaDetails);
   }
 
   @Test

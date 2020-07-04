@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -31,7 +32,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -527,7 +527,7 @@ public class TriggerYamlHandlerTest extends BaseYamlHandlerTest {
       yamlFile =
           new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + yamlFileName).toURI());
     } catch (URISyntaxException e) {
-      Assertions.fail("Unable to find yaml file " + yamlFileName);
+      fail("Unable to find yaml file " + yamlFileName);
     }
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");

@@ -16,6 +16,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -101,7 +102,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.validator.routines.UrlValidator;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -1273,14 +1273,14 @@ public class UserServiceTest extends WingsBaseTest {
     try {
       userService.verifyJWTToken(userService.generateJWTToken(claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH) + "fakeData",
           JWT_CATEGORY.MULTIFACTOR_AUTH);
-      Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
+      failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       // Ignore
     }
 
     try {
       userService.verifyJWTToken("fakeData", JWT_CATEGORY.MULTIFACTOR_AUTH);
-      Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
+      failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       // Ignore
     }

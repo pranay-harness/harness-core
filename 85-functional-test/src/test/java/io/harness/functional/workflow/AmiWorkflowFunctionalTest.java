@@ -2,6 +2,7 @@ package io.harness.functional.workflow;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -19,7 +20,6 @@ import io.harness.generator.WorkflowGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -87,7 +87,7 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
     AwsAsgGetRunningCountData runningCountData = InfrastructureDefinitionRestUtils.amiRunningInstances(
         bearerToken, accountId, appId, service.getUuid(), amiInfrastructureDefinition.getUuid());
 
-    Assertions.assertThat(runningCountData).isNotNull();
+    assertThat(runningCountData).isNotNull();
 
     final WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, appId, envId, bgWorkflow.getUuid(), ImmutableList.of(artifact));
@@ -96,27 +96,22 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
         infrastructureMappingService.getInfraMappingLinkedToInfraDefinition(
             appId, amiInfrastructureDefinition.getUuid());
 
-    Assertions.assertThat(infrastructureMappings).hasSize(1);
+    assertThat(infrastructureMappings).hasSize(1);
     AwsAmiInfrastructureMapping amiInfraMapping = (AwsAmiInfrastructureMapping) infrastructureMappings.get(0);
     AwsAmiInfrastructure amiInfrastructure = (AwsAmiInfrastructure) amiInfrastructureDefinition.getInfrastructure();
-    Assertions.assertThat(amiInfraMapping.getRegion()).isEqualTo(amiInfrastructure.getRegion());
-    Assertions.assertThat(amiInfraMapping.getAutoScalingGroupName())
-        .isEqualTo(amiInfrastructure.getAutoScalingGroupName());
-    Assertions.assertThat(amiInfraMapping.getClassicLoadBalancers())
-        .isEqualTo(amiInfrastructure.getClassicLoadBalancers());
-    Assertions.assertThat(amiInfraMapping.getTargetGroupArns()).isEqualTo(amiInfrastructure.getTargetGroupArns());
-    Assertions.assertThat(amiInfraMapping.getHostNameConvention()).isEqualTo(amiInfrastructure.getHostNameConvention());
-    Assertions.assertThat(amiInfraMapping.getStageClassicLoadBalancers())
+    assertThat(amiInfraMapping.getRegion()).isEqualTo(amiInfrastructure.getRegion());
+    assertThat(amiInfraMapping.getAutoScalingGroupName()).isEqualTo(amiInfrastructure.getAutoScalingGroupName());
+    assertThat(amiInfraMapping.getClassicLoadBalancers()).isEqualTo(amiInfrastructure.getClassicLoadBalancers());
+    assertThat(amiInfraMapping.getTargetGroupArns()).isEqualTo(amiInfrastructure.getTargetGroupArns());
+    assertThat(amiInfraMapping.getHostNameConvention()).isEqualTo(amiInfrastructure.getHostNameConvention());
+    assertThat(amiInfraMapping.getStageClassicLoadBalancers())
         .isEqualTo(amiInfrastructure.getStageClassicLoadBalancers());
-    Assertions.assertThat(amiInfraMapping.getStageTargetGroupArns())
-        .isEqualTo(amiInfrastructure.getStageTargetGroupArns());
-    Assertions.assertThat(amiInfraMapping.getAmiDeploymentType()).isEqualTo(amiInfrastructure.getAmiDeploymentType());
-    Assertions.assertThat(amiInfraMapping.getSpotinstCloudProvider())
-        .isEqualTo(amiInfrastructure.getSpotinstCloudProvider());
-    Assertions.assertThat(amiInfraMapping.getSpotinstElastiGroupJson())
-        .isEqualTo(amiInfrastructure.getSpotinstElastiGroupJson());
+    assertThat(amiInfraMapping.getStageTargetGroupArns()).isEqualTo(amiInfrastructure.getStageTargetGroupArns());
+    assertThat(amiInfraMapping.getAmiDeploymentType()).isEqualTo(amiInfrastructure.getAmiDeploymentType());
+    assertThat(amiInfraMapping.getSpotinstCloudProvider()).isEqualTo(amiInfrastructure.getSpotinstCloudProvider());
+    assertThat(amiInfraMapping.getSpotinstElastiGroupJson()).isEqualTo(amiInfrastructure.getSpotinstElastiGroupJson());
 
-    Assertions.assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     // TODO: delete ASG
   }
 
@@ -148,7 +143,7 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     final WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, appId, envId, bgWorkflow.getUuid(), ImmutableList.of(artifact));
-    Assertions.assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     //  todo delete ASG
   }
 

@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.user;
 
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -11,7 +12,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -57,15 +57,15 @@ public class UpdateUserDataFetcherTest extends CategoryTest {
 
     final QLUpdateUserPayload qlUpdateUserPayload =
         updateUserDataFetcher.mutateAndFetch(updateUserInput, mutationContext);
-    Assertions.assertThat(qlUpdateUserPayload.getClientMutationId()).isEqualTo("clientMutationId1");
+    assertThat(qlUpdateUserPayload.getClientMutationId()).isEqualTo("clientMutationId1");
 
     verify(userService, times(1)).get("userId");
     final ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
     verify(userService, times(1)).update(userArgumentCaptor.capture());
 
     final User userArgument = userArgumentCaptor.getValue();
-    Assertions.assertThat(userArgument.getName()).isEqualTo("newUserName");
-    Assertions.assertThat(userArgument.getUuid()).isEqualTo("userId");
+    assertThat(userArgument.getName()).isEqualTo("newUserName");
+    assertThat(userArgument.getUuid()).isEqualTo("userId");
   }
 
   private void configureAppService() {

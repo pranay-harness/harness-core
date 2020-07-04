@@ -21,6 +21,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.tuple;
@@ -119,7 +120,6 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.persistence.HQuery;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -2718,10 +2718,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     doReturn(command_2).when(commandService).getCommand(APP_ID, sc_2.getUuid(), sc_2.getVersionForEnv(ENV_ID));
     List<CommandUnit> commandUnits =
         spyServiceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, sc_1.getName());
-    Assertions.assertThat(commandUnits).hasSize(2);
+    assertThat(commandUnits).hasSize(2);
 
     sc_2.setName(sc_1.getName());
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(
             () -> spyServiceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, sc_1.getName()))
         .withMessageContaining(sc_1.getName());

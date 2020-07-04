@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.HelmTestConstants.INVALID_VALUES_YAML;
 import static software.wings.utils.HelmTestConstants.VALID_VALUES_YAML;
@@ -14,7 +15,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -178,8 +178,7 @@ public class HelmHelperTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testValidateEmptyHelmValueYamlFile() {
-    Assertions.assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> helmHelper.validateHelmValueYamlFile(""));
+    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> helmHelper.validateHelmValueYamlFile(""));
   }
 
   @Test
@@ -187,7 +186,7 @@ public class HelmHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateHelmValueYamlFile() {
     helmHelper.validateHelmValueYamlFile(VALID_VALUES_YAML);
-    Assertions.assertThatExceptionOfType(WingsException.class)
+    assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> helmHelper.validateHelmValueYamlFile(INVALID_VALUES_YAML));
   }
 

@@ -19,7 +19,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.experimental.FieldNameConstants;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -312,7 +311,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
       }
 
     } catch (Exception e) {
-      Assertions.fail(e.getMessage());
+      fail(e.getMessage());
     }
   }
 
@@ -548,10 +547,10 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   }
 
   private void validateSingleDataPoint(QLSinglePointData singlePointData, Number l) {
-    Assertions.assertThat(singlePointData.getDataPoint().getKey().getId()).isEqualTo(dataFetcher.getEntityType());
-    Assertions.assertThat(singlePointData.getDataPoint().getKey().getName()).isEqualTo(dataFetcher.getEntityType());
-    Assertions.assertThat(singlePointData.getDataPoint().getKey().getType()).isEqualTo(dataFetcher.getEntityType());
-    Assertions.assertThat(singlePointData.getDataPoint().getValue()).isEqualTo(l);
+    assertThat(singlePointData.getDataPoint().getKey().getId()).isEqualTo(dataFetcher.getEntityType());
+    assertThat(singlePointData.getDataPoint().getKey().getName()).isEqualTo(dataFetcher.getEntityType());
+    assertThat(singlePointData.getDataPoint().getKey().getType()).isEqualTo(dataFetcher.getEntityType());
+    assertThat(singlePointData.getDataPoint().getValue()).isEqualTo(l);
   }
 
   @Test
@@ -753,7 +752,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
       }
 
     } catch (Exception e) {
-      Assertions.fail(e.getMessage());
+      fail(e.getMessage());
     }
   }
 

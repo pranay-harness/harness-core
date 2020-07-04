@@ -17,7 +17,6 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -161,7 +160,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
 
     handler.upsertFromYaml(changeContext, null);
     TerraformInfrastructureProvisioner provisioner1 = captor.getValue();
-    Assertions.assertThat(provisioner)
+    assertThat(provisioner)
         .isEqualToIgnoringGivenFields(provisioner1, "uuid", "mappingBlueprints", "name", "description");
   }
 

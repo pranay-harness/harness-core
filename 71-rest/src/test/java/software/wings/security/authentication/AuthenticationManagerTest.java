@@ -36,7 +36,6 @@ import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -293,7 +292,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
   public void extractToken() {
     try {
       authenticationManager.extractToken("fakeData", "Basic");
-      Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
+      failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_TOKEN.name());
     }

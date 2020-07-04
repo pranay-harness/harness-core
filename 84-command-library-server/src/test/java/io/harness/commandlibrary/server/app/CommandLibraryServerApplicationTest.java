@@ -1,5 +1,7 @@
 package io.harness.commandlibrary.server.app;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
@@ -12,7 +14,6 @@ import io.harness.network.Http;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.assertj.core.api.Assertions;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -79,7 +80,7 @@ public class CommandLibraryServerApplicationTest extends CategoryTest {
             .request()
             .get();
     final RestResponse<String> restResponse = response.readEntity(new GenericType<RestResponse<String>>() {});
-    Assertions.assertThat(response.getStatus()).isEqualTo(200);
-    Assertions.assertThat(restResponse.getResource()).isEqualTo("hello world");
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(restResponse.getResource()).isEqualTo("hello world");
   }
 }

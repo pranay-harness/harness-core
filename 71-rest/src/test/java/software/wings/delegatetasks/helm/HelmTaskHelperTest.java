@@ -24,7 +24,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -83,22 +82,22 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     helmTaskHelper.executeCommand("", ".", "");
 
     doThrow(new IOException()).when(processExecutor).execute();
-    Assertions.assertThatExceptionOfType(HelmClientException.class)
+    assertThatExceptionOfType(HelmClientException.class)
         .isThrownBy(() -> helmTaskHelper.executeCommand("", ".", ""))
         .withMessageContaining("[IO exception]");
 
     doThrow(new InterruptedException()).when(processExecutor).execute();
-    Assertions.assertThatExceptionOfType(HelmClientException.class)
+    assertThatExceptionOfType(HelmClientException.class)
         .isThrownBy(() -> helmTaskHelper.executeCommand("", ".", "foo"))
         .withMessageContaining("[Interrupted] foo");
 
     doThrow(new TimeoutException()).when(processExecutor).execute();
-    Assertions.assertThatExceptionOfType(HelmClientException.class)
+    assertThatExceptionOfType(HelmClientException.class)
         .isThrownBy(() -> helmTaskHelper.executeCommand("", ".", null))
         .withMessageContaining("[Timed out]");
 
     doThrow(new RuntimeException("test")).when(processExecutor).execute();
-    Assertions.assertThatExceptionOfType(RuntimeException.class)
+    assertThatExceptionOfType(RuntimeException.class)
         .isThrownBy(() -> helmTaskHelper.executeCommand("", ".", ""))
         .withMessageContaining("test");
   }

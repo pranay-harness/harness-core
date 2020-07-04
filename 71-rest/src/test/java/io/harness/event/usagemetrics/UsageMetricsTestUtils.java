@@ -1,12 +1,13 @@
 package io.harness.event.usagemetrics;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.google.common.collect.Lists;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.event.timeseries.processor.EventProcessor;
 import lombok.experimental.FieldNameConstants;
-import org.assertj.core.api.Assertions;
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment.EnvironmentType;
@@ -38,33 +39,30 @@ public class UsageMetricsTestUtils {
 
   public static void validateTimeSeriesEventInfo(DeploymentTimeSeriesEvent timeSeriesEvent, int number) {
     TimeSeriesEventInfo timeSeriesEventInfo = timeSeriesEvent.getTimeSeriesEventInfo();
-    Assertions.assertThat(timeSeriesEventInfo).isNotNull();
-    Assertions.assertThat(timeSeriesEventInfo.getAccountId()).isEqualTo(UsageMetricsTestKeys.ACCOUNTID);
-    Assertions.assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.EXECUTIONID))
+    assertThat(timeSeriesEventInfo).isNotNull();
+    assertThat(timeSeriesEventInfo.getAccountId()).isEqualTo(UsageMetricsTestKeys.ACCOUNTID);
+    assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.EXECUTIONID))
         .isEqualTo(UsageMetricsTestKeys.EXECUTIONID + number);
-    Assertions.assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.STARTTIME)).isEqualTo(100L);
-    Assertions.assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.ENDTIME)).isEqualTo(200L);
-    Assertions.assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.DURATION)).isEqualTo(100L);
-    Assertions.assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.ROLLBACK_DURATION)).isEqualTo(100L);
-    Assertions.assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.APPID))
-        .isEqualTo(UsageMetricsTestKeys.APPID);
-    Assertions.assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.STATUS))
+    assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.STARTTIME)).isEqualTo(100L);
+    assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.ENDTIME)).isEqualTo(200L);
+    assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.DURATION)).isEqualTo(100L);
+    assertThat(timeSeriesEventInfo.getLongData().get(EventProcessor.ROLLBACK_DURATION)).isEqualTo(100L);
+    assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.APPID)).isEqualTo(UsageMetricsTestKeys.APPID);
+    assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.STATUS))
         .isEqualTo(ExecutionStatus.SUCCESS.name());
-    Assertions.assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.PARENT_EXECUTION))
+    assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.PARENT_EXECUTION))
         .contains(UsageMetricsTestKeys.PIPELINEEXECUTIONID);
-    Assertions.assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.PIPELINE))
+    assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.PIPELINE))
         .contains(UsageMetricsTestKeys.PIPELINEID);
-    Assertions.assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.CLOUD_PROVIDER_LIST))
+    assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.CLOUD_PROVIDER_LIST))
         .contains(UsageMetricsTestKeys.CLOUDPROVIDER1);
-    Assertions.assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.TRIGGER_ID))
+    assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.TRIGGER_ID))
         .contains(UsageMetricsTestKeys.TRIGGER1);
-    Assertions.assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.TRIGGERED_BY))
+    assertThat(timeSeriesEventInfo.getStringData().get(EventProcessor.TRIGGERED_BY))
         .contains(UsageMetricsTestKeys.USER1);
-    Assertions.assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.ENV_LIST))
-        .contains(UsageMetricsTestKeys.ENV1);
-    Assertions.assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.ENVTYPES))
-        .contains(EnvironmentType.PROD.name());
-    Assertions.assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.SERVICE_LIST))
+    assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.ENV_LIST)).contains(UsageMetricsTestKeys.ENV1);
+    assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.ENVTYPES)).contains(EnvironmentType.PROD.name());
+    assertThat(timeSeriesEventInfo.getListData().get(EventProcessor.SERVICE_LIST))
         .contains(UsageMetricsTestKeys.SERVICE1);
   }
 

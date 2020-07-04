@@ -17,6 +17,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -83,7 +84,6 @@ import io.harness.persistence.HQuery;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -1160,7 +1160,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     infrastructureMappingService.validateProvisionerConfig(infrastructureMapping);
 
     infrastructureMapping.setProvisionerId("p123");
-    Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateProvisionerConfig(infrastructureMapping));
+    assertThatThrownBy(() -> infrastructureMappingService.validateProvisionerConfig(infrastructureMapping));
   }
 
   @Test
@@ -1179,15 +1179,12 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping);
 
     infrastructureMapping.setRegion(null);
-    Assertions
-        .assertThatThrownBy(
-            () -> infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping))
+    assertThatThrownBy(() -> infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping))
         .isInstanceOf(InvalidRequestException.class);
 
     infrastructureMapping.setRegion("region");
     infrastructureMapping.setAutoScalingGroupName(null);
-    Assertions.assertThatThrownBy(
-        () -> infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping));
+    assertThatThrownBy(() -> infrastructureMappingService.validateAwsAmiInfrastructureMapping(infrastructureMapping));
   }
 
   @Test
@@ -1219,9 +1216,9 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     try {
       infrastructureMappingService.validateGcpInfraMapping(gcpKubernetesInfrastructureMapping);
-      Assertions.fail("Should throw exception");
+      fail("Should throw exception");
     } catch (InvalidRequestException ex) {
-      Assertions.assertThat(ExceptionUtils.getMessage(ex)).contains("Namespace");
+      assertThat(ExceptionUtils.getMessage(ex)).contains("Namespace");
     }
   }
 
@@ -1235,7 +1232,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                             .withAwsInstanceFilter(AwsInstanceFilter.builder().build())
                                                             .build();
 
-    Assertions.assertThatThrownBy(() -> infrastructureMappingService.validateAwsInfraMapping(awsInfrastructureMapping))
+    assertThatThrownBy(() -> infrastructureMappingService.validateAwsInfraMapping(awsInfrastructureMapping))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Host Connection Type can't be empty");
 

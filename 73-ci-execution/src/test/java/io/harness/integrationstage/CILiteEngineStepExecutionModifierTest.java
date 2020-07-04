@@ -2,6 +2,7 @@ package io.harness.integrationstage;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import com.google.inject.Inject;
 
@@ -15,7 +16,6 @@ import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.Execution;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -55,7 +55,7 @@ public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
                                          .build())
                                  .build();
 
-    Assertions.assertThatExceptionOfType(IllegalArgumentException.class)
+    assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage));
   }
 
@@ -74,7 +74,7 @@ public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
                     .build())
             .build();
 
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage));
   }
 

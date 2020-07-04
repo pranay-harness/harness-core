@@ -1,10 +1,11 @@
 package software.wings.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -26,12 +27,12 @@ public class GcpHelperServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetGoogleCredentialWithEmptyFile() throws IOException {
     GcpConfig gcpConfig = GcpConfig.builder().build();
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> gcpHelperService.getGoogleCredential(gcpConfig, new ArrayList<>()))
         .withMessageContaining("Empty service key");
 
     gcpConfig.setServiceAccountKeyFileContent(new char[] {});
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> gcpHelperService.getGoogleCredential(gcpConfig, new ArrayList<>()))
         .withMessageContaining("Empty service key");
   }

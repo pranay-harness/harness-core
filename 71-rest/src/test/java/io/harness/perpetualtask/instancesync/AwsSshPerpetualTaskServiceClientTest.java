@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.instancesync;
 
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -23,7 +24,6 @@ import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.tasks.Cd1SetupFields;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -87,10 +87,10 @@ public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
             new PerpetualTaskClientContext(ImmutableMap.of(InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
                 InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID)));
 
-    Assertions.assertThat(taskParams.getRegion()).isEqualTo("us-east-1");
-    Assertions.assertThat(taskParams.getAwsConfig()).isNotNull();
-    Assertions.assertThat(taskParams.getFilter()).isNotNull();
-    Assertions.assertThat(taskParams.getEncryptedData()).isNotNull();
+    assertThat(taskParams.getRegion()).isEqualTo("us-east-1");
+    assertThat(taskParams.getAwsConfig()).isNotNull();
+    assertThat(taskParams.getFilter()).isNotNull();
+    assertThat(taskParams.getEncryptedData()).isNotNull();
   }
 
   @Test
@@ -105,7 +105,7 @@ public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
             InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID)),
         InstanceSyncTestConstants.ACCOUNT_ID);
 
-    Assertions.assertThat(validationTask)
+    assertThat(validationTask)
         .isEqualTo(DelegateTask.builder()
                        .accountId(InstanceSyncTestConstants.ACCOUNT_ID)
                        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)

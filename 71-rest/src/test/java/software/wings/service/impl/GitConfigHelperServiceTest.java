@@ -1,13 +1,13 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.YOGESH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -36,8 +36,8 @@ public class GitConfigHelperServiceTest extends WingsBaseTest {
 
     gitConfigHelperService.renderGitConfig(context, gitConfig);
 
-    Assertions.assertThat(gitConfig.getBranch()).isEqualTo("master");
-    Assertions.assertThat(gitConfig.getRepoUrl()).isEqualTo("github.com");
-    Assertions.assertThat(gitConfig.getReference()).isEqualTo("tag-1");
+    assertThat(gitConfig.getBranch()).isEqualTo("master");
+    assertThat(gitConfig.getRepoUrl()).isEqualTo("github.com");
+    assertThat(gitConfig.getReference()).isEqualTo("tag-1");
   }
 }

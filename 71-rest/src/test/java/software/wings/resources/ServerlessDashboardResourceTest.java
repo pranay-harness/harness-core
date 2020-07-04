@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyListOf;
@@ -21,7 +22,6 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -139,7 +139,7 @@ public class ServerlessDashboardResourceTest extends CategoryTest {
     doReturn(now_minus_1_month).when(serverlessInstanceStatService).getFirstSnapshotTime(anyString());
     final RestResponse<List<TimeRange>> timeRanges = serverlessDashboardResource.getTimeRanges(ACCOUNTID);
 
-    Assertions.assertThat(timeRanges.getResource().size()).isEqualTo(2);
+    assertThat(timeRanges.getResource().size()).isEqualTo(2);
   }
 
   @Test

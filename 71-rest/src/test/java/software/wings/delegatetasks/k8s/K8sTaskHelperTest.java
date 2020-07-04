@@ -87,7 +87,6 @@ import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.rule.Owner;
 import me.snowdrop.istio.api.networking.v1alpha3.Subset;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -357,7 +356,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   public void testGetHelmV2CommandForRender() {
     String command = helper.getHelmCommandForRender(
         "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V2);
-    Assertions.assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
   }
 
   @Test
@@ -366,7 +365,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   public void testGetHelmV2CommandForRenderOneChartFile() {
     String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
         " -f values-0.yaml", "template/service.yaml", HelmVersion.V2);
-    Assertions.assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
   }
 
   @Test
@@ -375,7 +374,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   public void testGetHelmV3CommandForRender() {
     String command = helper.getHelmCommandForRender(
         "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V3);
-    Assertions.assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
   }
 
   @Test
@@ -384,7 +383,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   public void testGetHelmV3CommandForRenderOneChartFile() {
     String command = helper.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
         " -f values-0.yaml", "template/service.yaml", HelmVersion.V3);
-    Assertions.assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
   }
 
   @Owner(developers = ANSHUL)

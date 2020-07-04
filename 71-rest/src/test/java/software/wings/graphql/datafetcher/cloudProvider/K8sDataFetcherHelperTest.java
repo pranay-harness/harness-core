@@ -1,12 +1,12 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -54,13 +54,13 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
-    Assertions.assertThat(setting.getName()).isEqualTo(NAME);
-    Assertions.assertThat(setting.getValue()).isInstanceOf(KubernetesClusterConfig.class);
+    assertThat(setting).isNotNull();
+    assertThat(setting.getName()).isEqualTo(NAME);
+    assertThat(setting.getValue()).isInstanceOf(KubernetesClusterConfig.class);
     KubernetesClusterConfig config = (KubernetesClusterConfig) setting.getValue();
-    Assertions.assertThat(config.isSkipValidation()).isEqualTo(Boolean.TRUE);
-    Assertions.assertThat(config.isUseKubernetesDelegate()).isTrue();
-    Assertions.assertThat(config.getDelegateName()).isEqualTo(DELEGATE);
+    assertThat(config.isSkipValidation()).isEqualTo(Boolean.TRUE);
+    assertThat(config.isUseKubernetesDelegate()).isTrue();
+    assertThat(config.getDelegateName()).isEqualTo(DELEGATE);
   }
 
   @Test
@@ -77,7 +77,7 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -94,7 +94,7 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 
   @Test
@@ -114,13 +114,13 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withValue(KubernetesClusterConfig.builder().build()).build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
-    Assertions.assertThat(setting.getName()).isEqualTo(NAME);
-    Assertions.assertThat(setting.getValue()).isInstanceOf(KubernetesClusterConfig.class);
+    assertThat(setting).isNotNull();
+    assertThat(setting.getName()).isEqualTo(NAME);
+    assertThat(setting.getValue()).isInstanceOf(KubernetesClusterConfig.class);
     KubernetesClusterConfig config = (KubernetesClusterConfig) setting.getValue();
-    Assertions.assertThat(config.isSkipValidation()).isTrue();
-    Assertions.assertThat(config.isUseKubernetesDelegate()).isTrue();
-    Assertions.assertThat(config.getDelegateName()).isEqualTo(DELEGATE);
+    assertThat(config.isSkipValidation()).isTrue();
+    assertThat(config.isUseKubernetesDelegate()).isTrue();
+    assertThat(config.getDelegateName()).isEqualTo(DELEGATE);
   }
 
   @Test
@@ -139,7 +139,7 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withValue(KubernetesClusterConfig.builder().build()).build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -158,6 +158,6 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withValue(KubernetesClusterConfig.builder().build()).build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 }

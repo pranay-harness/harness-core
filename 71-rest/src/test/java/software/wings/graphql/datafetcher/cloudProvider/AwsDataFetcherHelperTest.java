@@ -1,12 +1,12 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -67,15 +67,15 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
-    Assertions.assertThat(setting.getName()).isEqualTo(NAME);
-    Assertions.assertThat(setting.getValue()).isInstanceOf(AwsConfig.class);
+    assertThat(setting).isNotNull();
+    assertThat(setting.getName()).isEqualTo(NAME);
+    assertThat(setting.getValue()).isInstanceOf(AwsConfig.class);
     AwsConfig config = (AwsConfig) setting.getValue();
-    Assertions.assertThat(config.getAccessKey()).isEqualTo(ACCESS_KEY);
-    Assertions.assertThat(config.getEncryptedSecretKey()).isEqualTo(SECRET_KEY);
-    Assertions.assertThat(config.getCrossAccountAttributes()).isNotNull();
-    Assertions.assertThat(config.getCrossAccountAttributes().getCrossAccountRoleArn()).isEqualTo(ARN);
-    Assertions.assertThat(config.getCrossAccountAttributes().getExternalId()).isEqualTo(EXTERN_ID);
+    assertThat(config.getAccessKey()).isEqualTo(ACCESS_KEY);
+    assertThat(config.getEncryptedSecretKey()).isEqualTo(SECRET_KEY);
+    assertThat(config.getCrossAccountAttributes()).isNotNull();
+    assertThat(config.getCrossAccountAttributes().getCrossAccountRoleArn()).isEqualTo(ARN);
+    assertThat(config.getCrossAccountAttributes().getExternalId()).isEqualTo(EXTERN_ID);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -91,7 +91,7 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -107,7 +107,7 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -122,7 +122,7 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 
   @Test
@@ -149,15 +149,15 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
-    Assertions.assertThat(setting.getName()).isEqualTo(NAME);
-    Assertions.assertThat(setting.getValue()).isInstanceOf(AwsConfig.class);
+    assertThat(setting).isNotNull();
+    assertThat(setting.getName()).isEqualTo(NAME);
+    assertThat(setting.getValue()).isInstanceOf(AwsConfig.class);
     AwsConfig config = (AwsConfig) setting.getValue();
-    Assertions.assertThat(config.getAccessKey()).isEqualTo(ACCESS_KEY);
-    Assertions.assertThat(config.getEncryptedSecretKey()).isEqualTo(SECRET_KEY);
-    Assertions.assertThat(config.getCrossAccountAttributes()).isNotNull();
-    Assertions.assertThat(config.getCrossAccountAttributes().getCrossAccountRoleArn()).isEqualTo(ARN);
-    Assertions.assertThat(config.getCrossAccountAttributes().getExternalId()).isEqualTo(EXTERN_ID);
+    assertThat(config.getAccessKey()).isEqualTo(ACCESS_KEY);
+    assertThat(config.getEncryptedSecretKey()).isEqualTo(SECRET_KEY);
+    assertThat(config.getCrossAccountAttributes()).isNotNull();
+    assertThat(config.getCrossAccountAttributes().getCrossAccountRoleArn()).isEqualTo(ARN);
+    assertThat(config.getCrossAccountAttributes().getExternalId()).isEqualTo(EXTERN_ID);
   }
 
   @Test
@@ -176,6 +176,6 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 }
