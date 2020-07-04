@@ -26,7 +26,6 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -119,8 +118,7 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
     workflowExecutionMonitorHandler.handle(workflowExecution);
     verify(executionInterruptManager, times(1)).registerExecutionInterrupt(executionInterruptArgumentCaptor.capture());
     ExecutionInterrupt executionInterrupt = executionInterruptArgumentCaptor.getValue();
-    Assertions.assertThat(executionInterrupt.getExecutionInterruptType())
-        .isEqualTo(ExecutionInterruptType.MARK_EXPIRED);
+    assertThat(executionInterrupt.getExecutionInterruptType()).isEqualTo(ExecutionInterruptType.MARK_EXPIRED);
     wingsPersistence.delete(expiredStateExecutionInstance);
   }
 

@@ -48,7 +48,6 @@ import io.harness.rule.Owner;
 import io.harness.security.TokenGenerator;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -380,7 +379,7 @@ public class AuthServiceTest extends WingsBaseTest {
       authService.validateToken(tokenString + "FakeToken");
       fail("WingsException should have been thrown");
     } catch (WingsException e) {
-      Assertions.assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_CREDENTIAL.name());
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_CREDENTIAL.name());
     }
   }
 

@@ -1,6 +1,7 @@
 package io.harness.functional.infrastructureDefinitions;
 
 import static io.harness.rule.OwnerRule.YOGESH;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -24,7 +25,6 @@ import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -100,7 +100,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
     AwsInstanceInfrastructure awsInfra = (AwsInstanceInfrastructure) infrastructureDefinition.getInfrastructure();
     List<String> classicLbs = InfrastructureDefinitionRestUtils.listAwsClassicLoadBalancers(
         bearerToken, appId, awsInfra.getCloudProviderId(), awsInfra.getRegion());
-    Assertions.assertThat(classicLbs).isNotEmpty();
+    assertThat(classicLbs).isNotEmpty();
 
     resetCache(service.getAccountId());
 
@@ -129,7 +129,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
     AwsEcsInfrastructure awsEcsInfrastructure = (AwsEcsInfrastructure) infrastructureDefinition.getInfrastructure();
     List<String> elbTargetGroups = InfrastructureDefinitionRestUtils.listAwsAlbTargetGroups(
         bearerToken, appId, awsEcsInfrastructure.getCloudProviderId(), awsEcsInfrastructure.getRegion());
-    Assertions.assertThat(elbTargetGroups).isNotEmpty();
+    assertThat(elbTargetGroups).isNotEmpty();
 
     Workflow workflow = workflowUtils.getEcsEc2TypeCanaryWorkflow("ecs-ec2-", service, infrastructureDefinition);
     workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
@@ -243,7 +243,7 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
         infrastructureMappingService.getInfraMappingLinkedToInfraDefinition(
             infrastructureDefinition.getAppId(), infrastructureDefinition.getUuid());
 
-    Assertions.assertThat(infrastructureMappings).hasSize(1);
+    assertThat(infrastructureMappings).hasSize(1);
   }
 
   @Test
@@ -272,9 +272,9 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
         bearerToken, appId, azureInfrastructure.getSubscriptionId(), azureInfrastructure.getCloudProviderId());
     Set<String> azureResources = InfrastructureDefinitionRestUtils.listAzureResources(
         bearerToken, appId, azureInfrastructure.getSubscriptionId(), azureInfrastructure.getCloudProviderId());
-    Assertions.assertThat(azureSubscriptions).isNotEmpty();
-    Assertions.assertThat(azureTags).isNotEmpty();
-    Assertions.assertThat(azureResources).isNotEmpty();
+    assertThat(azureSubscriptions).isNotEmpty();
+    assertThat(azureTags).isNotEmpty();
+    assertThat(azureResources).isNotEmpty();
 
     resetCache(service.getAccountId());
 
@@ -323,19 +323,19 @@ public class InfrastructureDefinitionFunctionalTest extends AbstractFunctionalTe
                                       .map(Service::getUuid)
                                       .collect(Collectors.toList());
 
-    Assertions.assertThat(scopedServices).contains(knownService.getUuid());
+    assertThat(scopedServices).contains(knownService.getUuid());
   }
 
   private void checkListInfraDefinitionByService(Service service, InfrastructureDefinition expected) {
     List<String> definitions = InfrastructureDefinitionRestUtils.listInfraDefinitionByService(
         bearerToken, service.getAccountId(), service.getAppId(), service.getUuid(), expected.getEnvId());
-    Assertions.assertThat(definitions).contains(expected.getUuid());
+    assertThat(definitions).contains(expected.getUuid());
   }
 
   private void checkListHosts(InfrastructureDefinition infrastructureDefinition) {
     List<String> hosts = InfrastructureDefinitionRestUtils.listHosts(bearerToken, infrastructureDefinition.getAppId(),
         infrastructureDefinition.getEnvId(), infrastructureDefinition.getUuid());
-    Assertions.assertThat(hosts).isNotEmpty();
+    assertThat(hosts).isNotEmpty();
   }
 
   private ExecutionArgs prepareExecutionArgs(

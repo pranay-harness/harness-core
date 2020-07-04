@@ -15,7 +15,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -67,18 +66,18 @@ public class UpdateApplicationDataFetcherTest extends CategoryTest {
 
     final QLUpdateApplicationPayload qlUpdateApplicationPayload =
         updateApplicationDataFetcher.mutateAndFetch(applicationParameters, mutationContext);
-    Assertions.assertThat(qlUpdateApplicationPayload.getClientMutationId()).isEqualTo("req1");
+    assertThat(qlUpdateApplicationPayload.getClientMutationId()).isEqualTo("req1");
 
     verify(appService, times(1)).get("appid");
     final ArgumentCaptor<Application> applicationArgumentCaptor = ArgumentCaptor.forClass(Application.class);
     verify(appService, times(1)).update(applicationArgumentCaptor.capture());
 
     final Application applicationArgument = applicationArgumentCaptor.getValue();
-    Assertions.assertThat(applicationArgument.getAccountId()).isEqualTo("accountid");
-    Assertions.assertThat(applicationArgument.getName()).isEqualTo("new app name");
-    Assertions.assertThat(applicationArgument.getDescription()).isEqualTo("new app description");
-    Assertions.assertThat(applicationArgument.getUuid()).isEqualTo("appid");
-    Assertions.assertThat(applicationArgument.getAppId()).isEqualTo("appid");
+    assertThat(applicationArgument.getAccountId()).isEqualTo("accountid");
+    assertThat(applicationArgument.getName()).isEqualTo("new app name");
+    assertThat(applicationArgument.getDescription()).isEqualTo("new app description");
+    assertThat(applicationArgument.getUuid()).isEqualTo("appid");
+    assertThat(applicationArgument.getAppId()).isEqualTo("appid");
   }
 
   private void configureAppService() {

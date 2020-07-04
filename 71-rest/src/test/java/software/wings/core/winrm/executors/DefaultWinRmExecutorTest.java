@@ -2,6 +2,7 @@ package software.wings.core.winrm.executors;
 
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -11,7 +12,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -73,11 +73,11 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   public void testConstructPSScriptWithCommands() {
     List<List<String>> result1 =
         spyDefaultWinRmExecutor.constructPSScriptWithCommands(simpleCommand, "tempPSScript.ps1");
-    Assertions.assertThat(result1.size()).isEqualTo(1);
+    assertThat(result1.size()).isEqualTo(1);
 
     List<List<String>> result2 =
         spyDefaultWinRmExecutor.constructPSScriptWithCommands(reallyLongCommand, "tempPSScript.ps1");
-    Assertions.assertThat(result2.size()).isEqualTo(2);
+    assertThat(result2.size()).isEqualTo(2);
   }
 
   @Test

@@ -1,11 +1,11 @@
 package io.harness;
 
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import graphql.schema.CoercingParseLiteralException;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,31 +32,31 @@ public class NumberScalarTest extends WingsBaseTest {
   public void testParseLiteralWithValidInput() {
     String validInput = "2";
     Object number = NumberScalar.type.getCoercing().parseLiteral(validInput);
-    Assertions.assertThat(number).isInstanceOf(Integer.class);
+    assertThat(number).isInstanceOf(Integer.class);
 
     Integer validInputInteger = 2;
     number = NumberScalar.type.getCoercing().parseLiteral(validInput);
-    Assertions.assertThat(number).isInstanceOf(Integer.class);
+    assertThat(number).isInstanceOf(Integer.class);
 
     Long validInputLong = 2L;
     number = NumberScalar.type.getCoercing().parseLiteral(validInputLong);
-    Assertions.assertThat(number).isInstanceOf(Long.class);
+    assertThat(number).isInstanceOf(Long.class);
 
     String validInputLongString = Long.toString(2L);
     number = NumberScalar.type.getCoercing().parseLiteral(validInputLong);
-    Assertions.assertThat(number).isInstanceOf(Long.class);
+    assertThat(number).isInstanceOf(Long.class);
 
     validInputLongString = Long.toString(System.currentTimeMillis());
     number = NumberScalar.type.getCoercing().parseLiteral(validInputLongString);
-    Assertions.assertThat(number).isInstanceOf(Long.class);
+    assertThat(number).isInstanceOf(Long.class);
 
     String validInputDoubleString = Double.toString(1.3345);
     number = NumberScalar.type.getCoercing().parseLiteral(validInputDoubleString);
-    Assertions.assertThat(number).isInstanceOf(Double.class);
+    assertThat(number).isInstanceOf(Double.class);
 
     Double validInputDouble = -1.3345;
     number = NumberScalar.type.getCoercing().parseLiteral(validInputDouble);
-    Assertions.assertThat(number).isInstanceOf(Double.class);
+    assertThat(number).isInstanceOf(Double.class);
   }
 
   @Test
@@ -65,30 +65,30 @@ public class NumberScalarTest extends WingsBaseTest {
   public void testParseValueWithValidInput() {
     String validInput = "2";
     Object number = NumberScalar.type.getCoercing().parseValue(validInput);
-    Assertions.assertThat(number).isInstanceOf(Integer.class);
+    assertThat(number).isInstanceOf(Integer.class);
 
     Integer validInputInteger = 2;
     number = NumberScalar.type.getCoercing().parseValue(validInput);
-    Assertions.assertThat(number).isInstanceOf(Integer.class);
+    assertThat(number).isInstanceOf(Integer.class);
 
     Long validInputLong = 2L;
     number = NumberScalar.type.getCoercing().parseValue(validInputLong);
-    Assertions.assertThat(number).isInstanceOf(Long.class);
+    assertThat(number).isInstanceOf(Long.class);
 
     String validInputLongString = Long.toString(2L);
     number = NumberScalar.type.getCoercing().parseValue(validInputLong);
-    Assertions.assertThat(number).isInstanceOf(Long.class);
+    assertThat(number).isInstanceOf(Long.class);
 
     validInputLongString = Long.toString(System.currentTimeMillis());
     number = NumberScalar.type.getCoercing().parseValue(validInputLongString);
-    Assertions.assertThat(number).isInstanceOf(Long.class);
+    assertThat(number).isInstanceOf(Long.class);
 
     String validInputDoubleString = Double.toString(1.3345);
     number = NumberScalar.type.getCoercing().parseValue(validInputDoubleString);
-    Assertions.assertThat(number).isInstanceOf(Double.class);
+    assertThat(number).isInstanceOf(Double.class);
 
     Double validInputDouble = -1.3345;
     number = NumberScalar.type.getCoercing().parseValue(validInputDouble);
-    Assertions.assertThat(number).isInstanceOf(Double.class);
+    assertThat(number).isInstanceOf(Double.class);
   }
 }

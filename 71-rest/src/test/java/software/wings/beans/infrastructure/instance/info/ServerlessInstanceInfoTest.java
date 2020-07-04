@@ -1,11 +1,11 @@
 package software.wings.beans.infrastructure.instance.info;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.infrastructure.instance.InvocationCount;
@@ -31,10 +31,10 @@ public class ServerlessInstanceInfoTest extends CategoryTest {
                                                                .to(Instant.now())
                                                                .build()))
             .build();
-    Assertions.assertThat(awsLambdaInstanceInfo1).isEqualTo(awsLambdaInstanceInfo2);
-    Assertions.assertThat(awsLambdaInstanceInfo1).isNotEqualTo(awsLambdaInstanceInfo3);
-    Assertions.assertThat(awsLambdaInstanceInfo1).isEqualTo(awsLambdaInstanceInfo1);
-    Assertions.assertThat(awsLambdaInstanceInfo1).isNotEqualTo(null);
+    assertThat(awsLambdaInstanceInfo1).isEqualTo(awsLambdaInstanceInfo2);
+    assertThat(awsLambdaInstanceInfo1).isNotEqualTo(awsLambdaInstanceInfo3);
+    assertThat(awsLambdaInstanceInfo1).isEqualTo(awsLambdaInstanceInfo1);
+    assertThat(awsLambdaInstanceInfo1).isNotEqualTo(null);
   }
 
   private AwsLambdaInstanceInfo getAwsLambdaInstanceInfo1() {
@@ -66,7 +66,7 @@ public class ServerlessInstanceInfoTest extends CategoryTest {
     final AwsLambdaInstanceInfo awsLambdaInstanceInfo1 = getAwsLambdaInstanceInfo1();
     final AwsLambdaInstanceInfo awsLambdaInstanceInfo2 = getAwsLambdaInstanceInfo2();
 
-    Assertions.assertThat(awsLambdaInstanceInfo1.hashCode()).isEqualTo(awsLambdaInstanceInfo2.hashCode());
-    Assertions.assertThat(awsLambdaInstanceInfo1.hashCode()).isEqualTo(awsLambdaInstanceInfo1.hashCode());
+    assertThat(awsLambdaInstanceInfo1.hashCode()).isEqualTo(awsLambdaInstanceInfo2.hashCode());
+    assertThat(awsLambdaInstanceInfo1.hashCode()).isEqualTo(awsLambdaInstanceInfo1.hashCode());
   }
 }

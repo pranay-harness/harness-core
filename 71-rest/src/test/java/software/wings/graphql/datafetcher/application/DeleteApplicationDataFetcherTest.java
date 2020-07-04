@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.application;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
@@ -10,7 +11,6 @@ import graphql.schema.DataFetchingEnvironment;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -52,6 +52,6 @@ public class DeleteApplicationDataFetcherTest extends CategoryTest {
     final QLDeleteApplicationPayload qlDeleteApplicationPayload =
         deleteApplicationDataFetcher.mutateAndFetch(applicationParameters, mutationContext);
     verify(appService, times(1)).delete("appid");
-    Assertions.assertThat(qlDeleteApplicationPayload.getClientMutationId()).isEqualTo("req1");
+    assertThat(qlDeleteApplicationPayload.getClientMutationId()).isEqualTo("req1");
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -16,7 +17,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -85,8 +85,8 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
     verify(pcfClient).runPcfPluginScript(argumentCaptor.capture(), eq(executionLogCallback));
 
     final PcfRunPluginScriptRequestData pcfRunPluginScriptRequestData = argumentCaptor.getValue();
-    Assertions.assertThat(pcfRunPluginScriptRequestData.getWorkingDirectory()).isNotNull();
-    Assertions.assertThat(pcfRunPluginScriptRequestData.getFinalScriptString())
+    assertThat(pcfRunPluginScriptRequestData.getWorkingDirectory()).isNotNull();
+    assertThat(pcfRunPluginScriptRequestData.getFinalScriptString())
         .isEqualTo("cf create-service " + pcfRunPluginScriptRequestData.getWorkingDirectory() + "/manifest.yml");
 
     verify(pcfRunPluginCommandTaskHandler, times(1))
@@ -118,7 +118,6 @@ public class PcfRunPluginCommandTaskHandlerTest extends WingsBaseTest {
   public void test_handleError() {
     final PcfCommandExecutionResponse commandExecutionResponse = pcfRunPluginCommandTaskHandler.handleError(
         executionLogCallback, getPcfRunPluginCommandRequest(), new PivotalClientApiException(""));
-    Assertions.assertThat(commandExecutionResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(commandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 }

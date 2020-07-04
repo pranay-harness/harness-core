@@ -1,11 +1,11 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -48,12 +48,12 @@ public class SpotInstDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
-    Assertions.assertThat(setting.getName()).isEqualTo(NAME);
-    Assertions.assertThat(setting.getValue()).isInstanceOf(SpotInstConfig.class);
+    assertThat(setting).isNotNull();
+    assertThat(setting.getName()).isEqualTo(NAME);
+    assertThat(setting.getValue()).isInstanceOf(SpotInstConfig.class);
     SpotInstConfig config = (SpotInstConfig) setting.getValue();
-    Assertions.assertThat(config.getSpotInstAccountId()).isEqualTo(SPOT_INST_ACCOUNT_ID);
-    Assertions.assertThat(config.getEncryptedSpotInstToken()).isEqualTo(SPOT_INST_TOKEN);
+    assertThat(config.getSpotInstAccountId()).isEqualTo(SPOT_INST_ACCOUNT_ID);
+    assertThat(config.getEncryptedSpotInstToken()).isEqualTo(SPOT_INST_TOKEN);
   }
 
   @Test
@@ -68,7 +68,7 @@ public class SpotInstDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 
   @Test
@@ -85,12 +85,12 @@ public class SpotInstDataFetcherHelperTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withValue(SpotInstConfig.builder().build()).build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
-    Assertions.assertThat(setting.getName()).isEqualTo(NAME);
-    Assertions.assertThat(setting.getValue()).isInstanceOf(SpotInstConfig.class);
+    assertThat(setting).isNotNull();
+    assertThat(setting.getName()).isEqualTo(NAME);
+    assertThat(setting.getValue()).isInstanceOf(SpotInstConfig.class);
     SpotInstConfig config = (SpotInstConfig) setting.getValue();
-    Assertions.assertThat(config.getSpotInstAccountId()).isEqualTo(SPOT_INST_ACCOUNT_ID);
-    Assertions.assertThat(config.getEncryptedSpotInstToken()).isEqualTo(SPOT_INST_TOKEN);
+    assertThat(config.getSpotInstAccountId()).isEqualTo(SPOT_INST_ACCOUNT_ID);
+    assertThat(config.getEncryptedSpotInstToken()).isEqualTo(SPOT_INST_TOKEN);
   }
 
   @Test
@@ -107,6 +107,6 @@ public class SpotInstDataFetcherHelperTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withValue(SpotInstConfig.builder().build()).build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 }

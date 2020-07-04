@@ -32,7 +32,6 @@ import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -172,7 +171,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     configFile.setAppId(APP_ID);
     configFile.setName(FILE_NAME);
     configFile.setFileName(FILE_NAME);
-    Assertions.assertThatExceptionOfType(WingsException.class)
+    assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> configService.save(configFile, new BoundedInputStream(inputStream)));
   }
 

@@ -2,6 +2,7 @@ package io.harness.functional.provisioners.terraform;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -34,7 +35,6 @@ import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.restutils.InfraProvisionerRestUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -105,7 +105,7 @@ public class TerraformTest extends AbstractFunctionalTest {
     ExecutionArgs executionArgs = prepareExecutionArgs(workflow);
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), executionArgs);
-    Assertions.assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @Test
@@ -117,7 +117,7 @@ public class TerraformTest extends AbstractFunctionalTest {
     final String provisonerId = terraformInfrastructureProvisioner.getUuid();
     final List<String> terraformVariables =
         InfraProvisionerRestUtils.getTerraformTargets(accountId, appId, bearerToken, provisonerId);
-    Assertions.assertThat(terraformVariables).containsExactlyInAnyOrder("local_file.foo");
+    assertThat(terraformVariables).containsExactlyInAnyOrder("local_file.foo");
   }
 
   @Test
@@ -134,7 +134,7 @@ public class TerraformTest extends AbstractFunctionalTest {
 
     final List<NameValuePair> terraformVariables =
         InfraProvisionerRestUtils.getTerraformVariables(accountId, appId, bearerToken, scmSettingId, branch, path);
-    Assertions.assertThat(terraformVariables).isNotEmpty();
+    assertThat(terraformVariables).isNotEmpty();
   }
 
   private void ensurePredefinedStuff() {

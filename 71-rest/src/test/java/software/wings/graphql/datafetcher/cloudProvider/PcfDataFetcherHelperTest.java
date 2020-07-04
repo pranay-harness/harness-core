@@ -1,11 +1,11 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,13 +50,13 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
-    Assertions.assertThat(setting.getName()).isEqualTo(NAME);
-    Assertions.assertThat(setting.getValue()).isInstanceOf(PcfConfig.class);
+    assertThat(setting).isNotNull();
+    assertThat(setting.getName()).isEqualTo(NAME);
+    assertThat(setting.getValue()).isInstanceOf(PcfConfig.class);
     PcfConfig config = (PcfConfig) setting.getValue();
-    Assertions.assertThat(config.getEndpointUrl()).isEqualTo(URL);
-    Assertions.assertThat(config.getUsername()).isEqualTo(USERNAME);
-    Assertions.assertThat(config.getEncryptedPassword()).isEqualTo(PASSWORD);
+    assertThat(config.getEndpointUrl()).isEqualTo(URL);
+    assertThat(config.getUsername()).isEqualTo(USERNAME);
+    assertThat(config.getEncryptedPassword()).isEqualTo(PASSWORD);
   }
 
   @Test
@@ -72,7 +72,7 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 
   @Test
@@ -90,13 +90,13 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withValue(PcfConfig.builder().build()).build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
-    Assertions.assertThat(setting.getName()).isEqualTo(NAME);
-    Assertions.assertThat(setting.getValue()).isInstanceOf(PcfConfig.class);
+    assertThat(setting).isNotNull();
+    assertThat(setting.getName()).isEqualTo(NAME);
+    assertThat(setting.getValue()).isInstanceOf(PcfConfig.class);
     PcfConfig config = (PcfConfig) setting.getValue();
-    Assertions.assertThat(config.getEndpointUrl()).isEqualTo(URL);
-    Assertions.assertThat(config.getUsername()).isEqualTo(USERNAME);
-    Assertions.assertThat(config.getEncryptedPassword()).isEqualTo(PASSWORD);
+    assertThat(config.getEndpointUrl()).isEqualTo(URL);
+    assertThat(config.getUsername()).isEqualTo(USERNAME);
+    assertThat(config.getEncryptedPassword()).isEqualTo(PASSWORD);
   }
 
   @Test
@@ -114,6 +114,6 @@ public class PcfDataFetcherHelperTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withValue(PcfConfig.builder().build()).build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 }

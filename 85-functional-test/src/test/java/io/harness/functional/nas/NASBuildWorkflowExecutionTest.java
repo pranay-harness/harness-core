@@ -28,7 +28,6 @@ import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
-import org.assertj.core.api.Assertions;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.junit.After;
 import org.junit.Before;
@@ -168,7 +167,7 @@ public class NASBuildWorkflowExecutionTest extends AbstractFunctionalTest {
     // Test running the workflow
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, appId, null, workflow.getUuid(), Collections.emptyList());
-    Assertions.assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @After

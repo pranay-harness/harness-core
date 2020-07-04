@@ -13,6 +13,7 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -45,7 +46,6 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -219,7 +219,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(EncryptedData.class, "8080")).thenReturn(encryptedData);
     when(query.get()).thenReturn(serviceVariable);
 
-    Assertions.assertThatExceptionOfType(GeneralException.class)
+    assertThatExceptionOfType(GeneralException.class)
         .isThrownBy(() -> serviceVariableService.save(serviceVariableSameName));
   }
 
@@ -242,8 +242,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     serviceVariable.setAppId(APP_ID);
     serviceVariable.setUuid(SERVICE_VARIABLE_ID);
 
-    Assertions.assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> serviceVariableService.save(serviceVariable));
+    assertThatExceptionOfType(WingsException.class).isThrownBy(() -> serviceVariableService.save(serviceVariable));
   }
 
   /**

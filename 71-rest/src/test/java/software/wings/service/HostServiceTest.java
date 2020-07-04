@@ -274,7 +274,7 @@ public class HostServiceTest extends WingsBaseTest {
 
         List<HostUsage> usageByApplication = hostService.getInfrastructureHostUsageByApplication(INFRA_ID);
 
-        Assertions.assertThat(usageByApplication).hasSize(2)
+        assertThat(usageByApplication).hasSize(2)
             .containsExactlyInAnyOrder(aHostUsage().appId("ID1").appName("NAME1").withCount(1).build(),
                 aHostUsage().appId("ID2").appName("NAME2").withCount(2).build());
                 */

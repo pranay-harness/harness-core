@@ -12,6 +12,7 @@ import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTO
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.SSH_DEPLOY_HOST;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.InfrastructureType.AWS_AMI;
 import static software.wings.beans.InfrastructureType.AWS_AMI_LT;
 import static software.wings.beans.InfrastructureType.AWS_ECS;
@@ -38,7 +39,6 @@ import io.harness.generator.constants.InfraDefinitionGeneratorConstants;
 import io.harness.testframework.restutils.InfrastructureDefinitionRestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.api.Assertions;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AmiDeploymentType;
@@ -717,7 +717,7 @@ public class InfrastructureDefinitionGenerator {
     List<String> autoScalingGroups = InfrastructureDefinitionRestUtils.listAutoScalingGroups(
         bearerToken, accountId, appId, awsCloudProvider.getUuid(), region);
 
-    Assertions.assertThat(autoScalingGroups).isNotEmpty();
+    assertThat(autoScalingGroups).isNotEmpty();
 
     return ensureAwsAmi(seed, owners, autoScalingGroups.get(0), "aws-ami-infradef");
   }

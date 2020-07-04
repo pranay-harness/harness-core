@@ -4,6 +4,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -32,7 +33,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -173,13 +173,13 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     compareEnv(environment, savedEnv);
 
     Yaml yaml = yamlHandler.toYaml(this.environment, WingsTestConstants.APP_ID);
-    Assertions.assertThat(yaml).isNotNull();
-    Assertions.assertThat(yaml.getType()).isNotNull();
+    assertThat(yaml).isNotNull();
+    assertThat(yaml.getType()).isNotNull();
 
     String yamlContent = getYamlContent(yaml);
-    Assertions.assertThat(yamlContent).isNotNull();
+    assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    Assertions.assertThat(yamlContent).isEqualTo(validYamlContent);
+    assertThat(yamlContent).isEqualTo(validYamlContent);
 
     when(yamlHelper.getEnvironment(APP_ID, validYamlFilePath)).thenReturn(environment);
     Environment envFromGet = yamlHandler.get(WingsTestConstants.ACCOUNT_ID, validYamlFilePath);
@@ -209,10 +209,10 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   private void compareEnv(Environment lhs, Environment rhs) {
-    Assertions.assertThat(rhs.getName()).isEqualTo(lhs.getName());
-    Assertions.assertThat(rhs.getAppId()).isEqualTo(lhs.getAppId());
-    Assertions.assertThat(rhs.getEnvironmentType()).isEqualTo(lhs.getEnvironmentType());
-    Assertions.assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
+    assertThat(rhs.getName()).isEqualTo(lhs.getName());
+    assertThat(rhs.getAppId()).isEqualTo(lhs.getAppId());
+    assertThat(rhs.getEnvironmentType()).isEqualTo(lhs.getEnvironmentType());
+    assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
   }
 
   @Test
@@ -232,7 +232,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
             aPageResponse().withResponse(serviceTemplates.subList(pageSize, pageSize * 2)).build(),
             aPageResponse().withResponse(serviceTemplates.subList(pageSize * 2, serviceTemplates.size())).build());
     List<ServiceTemplate> response = yamlHandler.getRequiredServiceTemplates(pageSize, pageRequest);
-    Assertions.assertThat(response).hasSize(serviceTemplates.size());
+    assertThat(response).hasSize(serviceTemplates.size());
   }
 
   @Test
@@ -261,7 +261,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     verify(mockServiceVariableService, times(3)).save(captor.capture(), anyBoolean());
     List<String> varNames =
         captor.getAllValues().stream().map(ServiceVariable::getValue).map(String::valueOf).collect(Collectors.toList());
-    Assertions.assertThat(varNames).containsExactlyInAnyOrder(
+    assertThat(varNames).containsExactlyInAnyOrder(
         newVariableOverride_1.getValue(), newVariableOverride_2.getValue(), expected_value_for_encrypted_var);
   }
 
@@ -326,7 +326,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     verify(mockServiceVariableService, times(1)).delete(anyString(), anyString(), anyBoolean());
     verify(mockServiceVariableService, times(1)).update(captor.capture(), anyBoolean());
     String encrypted_serviceVariableValue = String.valueOf(captor.getValue().getValue());
-    Assertions.assertThat(encrypted_serviceVariableValue).isEqualTo(expected_value_for_encrypted_var);
+    assertThat(encrypted_serviceVariableValue).isEqualTo(expected_value_for_encrypted_var);
   }
 
   @Test

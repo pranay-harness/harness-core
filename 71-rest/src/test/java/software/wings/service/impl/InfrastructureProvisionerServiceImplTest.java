@@ -45,7 +45,6 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.api.Assertions;
 import org.joor.Reflect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -273,13 +272,13 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     terraformProvisioner.setBackendConfigs(
         asList(NameValuePair.builder().name("access.key").valueType(Type.TEXT.toString()).build(),
             NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
 
     terraformProvisioner.setBackendConfigs(
         asList(NameValuePair.builder().name("$access_key").valueType(Type.TEXT.toString()).build(),
             NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
 
     terraformProvisioner.setBackendConfigs(null);
@@ -299,13 +298,13 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     terraformProvisioner.setVariables(
         asList(NameValuePair.builder().name("access.key").valueType(Type.TEXT.toString()).build(),
             NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
 
     terraformProvisioner.setVariables(
         asList(NameValuePair.builder().name("$access_key").valueType(Type.TEXT.toString()).build(),
             NameValuePair.builder().name("secret_key").valueType(Type.TEXT.toString()).build()));
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
 
     terraformProvisioner.setVariables(null);
@@ -323,10 +322,10 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   private void shouldValidateSourceRepo(TerraformInfrastructureProvisioner terraformProvisioner,
       InfrastructureProvisionerServiceImpl provisionerService) {
     terraformProvisioner.setSourceRepoSettingId("");
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
     terraformProvisioner.setSourceRepoSettingId(null);
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
     terraformProvisioner.setSourceRepoSettingId("settingId");
   }
@@ -334,7 +333,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   private void shouldValidatePath(TerraformInfrastructureProvisioner terraformProvisioner,
       InfrastructureProvisionerServiceImpl provisionerService) {
     terraformProvisioner.setPath(null);
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
     terraformProvisioner.setPath("module/main.tf");
   }
@@ -342,10 +341,10 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   private void shouldValidateRepoBranch(TerraformInfrastructureProvisioner terraformProvisioner,
       InfrastructureProvisionerServiceImpl provisionerService) {
     terraformProvisioner.setSourceRepoBranch("");
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
     terraformProvisioner.setSourceRepoBranch(null);
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
     terraformProvisioner.setSourceRepoBranch("master");
   }
@@ -577,13 +576,13 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     // all variable are same
     provisioner.setVariables(Arrays.asList(var1, duplicateVar1, duplicateVar2));
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> infrastructureProvisionerServiceImpl.restrictDuplicateVariables(provisioner))
         .withMessage("variable names should be unique, duplicate variable(s) found: [var1]");
 
     // some variable are same
     provisioner.setVariables(Arrays.asList(var1, duplicateVar1, var2, var3, var2));
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> infrastructureProvisionerServiceImpl.restrictDuplicateVariables(provisioner))
         .withMessage("variable names should be unique, duplicate variable(s) found: [var2, var1]");
 

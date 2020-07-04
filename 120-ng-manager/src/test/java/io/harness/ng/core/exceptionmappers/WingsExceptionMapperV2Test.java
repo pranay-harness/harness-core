@@ -1,6 +1,7 @@
 package io.harness.ng.core.exceptionmappers;
 
 import static io.harness.rule.OwnerRule.PHOENIKX;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -13,7 +14,6 @@ import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.ErrorDTO;
 import io.harness.ng.core.Status;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -31,10 +31,10 @@ public class WingsExceptionMapperV2Test extends BaseTest {
     EnumSet<WingsException.ReportTarget> enumSet = Sets.newEnumSet(reportTargetSet, WingsException.ReportTarget.class);
     UnauthorizedException unauthorizedException = new UnauthorizedException("Unauthorized", enumSet);
     Response response = wingsExceptionMapperV2.toResponse(unauthorizedException);
-    Assertions.assertThat(response.getStatus()).isEqualTo(Response.Status.UNAUTHORIZED.getStatusCode());
-    Assertions.assertThat(response.getEntity()).isInstanceOf(ErrorDTO.class);
+    assertThat(response.getStatus()).isEqualTo(Response.Status.UNAUTHORIZED.getStatusCode());
+    assertThat(response.getEntity()).isInstanceOf(ErrorDTO.class);
     ErrorDTO errorDTO = (ErrorDTO) response.getEntity();
-    Assertions.assertThat(errorDTO.getStatus()).isEqualTo(Status.ERROR);
-    Assertions.assertThat(errorDTO.getCode()).isEqualTo(ErrorCode.INVALID_TOKEN);
+    assertThat(errorDTO.getStatus()).isEqualTo(Status.ERROR);
+    assertThat(errorDTO.getCode()).isEqualTo(ErrorCode.INVALID_TOKEN);
   }
 }

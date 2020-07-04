@@ -26,7 +26,6 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Rule;
@@ -315,7 +314,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
   private void testEmptyConnectorInRemoteAppManifest(ApplicationManifest applicationManifest) {
     applicationManifest.getGitFileConfig().setConnectorId(null);
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest))
         .withMessageContaining("Connector");
   }
@@ -323,7 +322,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   private void testEmptyCommitInRemoteAppManifest(ApplicationManifest applicationManifest) {
     applicationManifest.getGitFileConfig().setCommitId(null);
     applicationManifest.getGitFileConfig().setUseBranch(false);
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest))
         .withMessageContaining("CommitId");
   }
@@ -331,7 +330,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   private void testEmptyBranchInRemoteAppManifest(ApplicationManifest applicationManifest) {
     applicationManifest.getGitFileConfig().setBranch(null);
     applicationManifest.getGitFileConfig().setUseBranch(true);
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest))
         .withMessageContaining("Branch");
   }
@@ -339,7 +338,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   private void testNonEmptyFilePathInGitFileConfig(ApplicationManifest applicationManifest) {
     applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
     applicationManifest.getGitFileConfig().setFilePath("foo");
-    Assertions.assertThatExceptionOfType(InvalidRequestException.class)
+    assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest))
         .withMessageContaining("File Path");
   }

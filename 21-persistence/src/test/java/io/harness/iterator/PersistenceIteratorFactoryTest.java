@@ -2,6 +2,7 @@ package io.harness.iterator;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,7 +17,6 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.rule.Owner;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,11 +47,11 @@ public class PersistenceIteratorFactoryTest extends PersistenceTest {
   public void testCreateIterator() {
     // disable setup
     when(workersConfiguration.confirmWorkerIsActive(DummyClass.class)).thenReturn(false);
-    Assertions.assertThat(persistenceIteratorFactory.createIterator(DummyClass.class, iteratorBuilder)).isNull();
+    assertThat(persistenceIteratorFactory.createIterator(DummyClass.class, iteratorBuilder)).isNull();
 
     // enable setup
     when(workersConfiguration.confirmWorkerIsActive(DummyClass.class)).thenReturn(true);
-    Assertions.assertThat(persistenceIteratorFactory.createIterator(DummyClass.class, iteratorBuilder)).isNotNull();
+    assertThat(persistenceIteratorFactory.createIterator(DummyClass.class, iteratorBuilder)).isNotNull();
     // enable setup
   }
 
@@ -64,16 +64,14 @@ public class PersistenceIteratorFactoryTest extends PersistenceTest {
 
     // disable setup
     when(workersConfiguration.confirmWorkerIsActive(DummyClass.class)).thenReturn(false);
-    Assertions
-        .assertThat(persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-            pumpExecutorOptions, DummyClass.class, iteratorBuilder))
+    assertThat(persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
+                   pumpExecutorOptions, DummyClass.class, iteratorBuilder))
         .isNull();
 
     // enable setup
     when(workersConfiguration.confirmWorkerIsActive(DummyClass.class)).thenReturn(true);
-    Assertions
-        .assertThat(persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-            pumpExecutorOptions, DummyClass.class, iteratorBuilder))
+    assertThat(persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
+                   pumpExecutorOptions, DummyClass.class, iteratorBuilder))
         .isNotNull();
     // TODO: check if we can verify scheduleAtFixedRate is called
   }

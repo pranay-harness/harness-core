@@ -1,12 +1,12 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.IGOR;
+import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.graphql.datafetcher.cloudProvider.CreateCloudProviderDataFetcherTest.usageScope;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.utils.RequestField;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,11 +47,11 @@ public class PhysicalDataCenterDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
-    Assertions.assertThat(setting.getName()).isEqualTo(NAME);
-    Assertions.assertThat(setting.getValue()).isInstanceOf(PhysicalDataCenterConfig.class);
+    assertThat(setting).isNotNull();
+    assertThat(setting.getName()).isEqualTo(NAME);
+    assertThat(setting.getValue()).isInstanceOf(PhysicalDataCenterConfig.class);
     PhysicalDataCenterConfig config = (PhysicalDataCenterConfig) setting.getValue();
-    Assertions.assertThat(config.getSettingType()).isEqualTo(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER);
+    assertThat(config.getSettingType()).isEqualTo(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER);
   }
 
   @Test
@@ -65,7 +65,7 @@ public class PhysicalDataCenterDataFetcherHelperTest extends WingsBaseTest {
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 
   @Test
@@ -85,11 +85,11 @@ public class PhysicalDataCenterDataFetcherHelperTest extends WingsBaseTest {
             .build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
-    Assertions.assertThat(setting.getName()).isEqualTo(NAME);
-    Assertions.assertThat(setting.getValue()).isInstanceOf(PhysicalDataCenterConfig.class);
+    assertThat(setting).isNotNull();
+    assertThat(setting.getName()).isEqualTo(NAME);
+    assertThat(setting.getValue()).isInstanceOf(PhysicalDataCenterConfig.class);
     PhysicalDataCenterConfig config = (PhysicalDataCenterConfig) setting.getValue();
-    Assertions.assertThat(config.getSettingType()).isEqualTo(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER);
+    assertThat(config.getSettingType()).isEqualTo(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER);
   }
 
   @Test
@@ -109,6 +109,6 @@ public class PhysicalDataCenterDataFetcherHelperTest extends WingsBaseTest {
             .build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
-    Assertions.assertThat(setting).isNotNull();
+    assertThat(setting).isNotNull();
   }
 }

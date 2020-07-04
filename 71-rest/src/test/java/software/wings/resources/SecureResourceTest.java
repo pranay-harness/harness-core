@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -56,7 +57,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.jexl3.JxltEngine.Exception;
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -306,7 +306,7 @@ public class SecureResourceTest extends CategoryTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldDenyAccessForNonPublicResourceWithoutValidToken() {
-    Assertions.assertThatThrownBy(() -> resources.client().target("/secure-resources/NonPublicApi").request().get())
+    assertThatThrownBy(() -> resources.client().target("/secure-resources/NonPublicApi").request().get())
         .hasCauseInstanceOf(WingsException.class)
         .hasStackTraceContaining("User not authorized");
   }
