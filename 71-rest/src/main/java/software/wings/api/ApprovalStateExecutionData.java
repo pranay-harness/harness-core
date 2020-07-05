@@ -70,6 +70,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
   private ServiceNowTicketType ticketType;
   private Criteria snowApproval;
   private Criteria snowRejection;
+  private boolean waitingForChangeWindow;
 
   /** Slack approval */
   private boolean approvalFromSlack;
@@ -129,7 +130,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
           ExecutionDataValue.builder().displayName(USER_GROUPS_DISPLAY_NAME).value(userGroupList).build());
     }
 
-    if (timeoutMillis != null) {
+    if (timeoutMillis != null && !waitingForChangeWindow) {
       putNotNull(executionDetails, "timeoutMillis",
           ExecutionDataValue.builder().displayName("Timeout").value(timeoutMillis).build());
       if (getStatus() == ExecutionStatus.PAUSED) {

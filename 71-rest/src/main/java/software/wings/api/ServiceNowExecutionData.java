@@ -36,6 +36,7 @@ public class ServiceNowExecutionData extends StateExecutionData implements Deleg
   // approvalField
   private String currentState;
   private Map<String, String> currentStatus;
+  private boolean waitingForChangeWindow;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {

@@ -1,6 +1,7 @@
 package software.wings.beans.approval;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static software.wings.beans.approval.ServiceNowApprovalParams.validateTimeWindow;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
@@ -13,13 +14,13 @@ import lombok.Data;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
 
 @OwnedBy(CDC)
 @FieldNameConstants(innerTypeName = "ApprovalPollingJobEntityKeys")
@@ -29,6 +30,7 @@ import java.util.Set;
 @ToString(exclude = "scriptString")
 @Entity(value = "approvalPollingJob")
 @HarnessEntity(exportable = false)
+@Slf4j
 public class ApprovalPollingJobEntity implements PersistentRegularIterable, AccountAccess {
   String appId;
   String accountId;
@@ -50,6 +52,9 @@ public class ApprovalPollingJobEntity implements PersistentRegularIterable, Acco
   ServiceNowTicketType issueType;
   Criteria approval;
   Criteria rejection;
+  boolean changeWindowPresent;
+  String changeWindowStartField;
+  String changeWindowEndField;
 
   // shell script approval fields
   String scriptString;
@@ -57,15 +62,11 @@ public class ApprovalPollingJobEntity implements PersistentRegularIterable, Acco
 
   ApprovalStateType approvalType;
 
-  public Set<String> getAllServiceNowFields() {
-    Set<String> fields = new HashSet<>();
-    if (approval != null) {
-      approval.fetchConditions().keySet().forEach(field -> fields.add(field));
+  public boolean withinChangeWindow(Map<String, String> currentStatus) {
+    if (changeWindowPresent) {
+      return validateTimeWindow(changeWindowEndField, changeWindowStartField, currentStatus);
     }
-    if (rejection != null) {
-      rejection.fetchConditions().keySet().forEach(field -> fields.add(field));
-    }
-    return fields;
+    return true;
   }
 
   @FdIndex private Long nextIteration;

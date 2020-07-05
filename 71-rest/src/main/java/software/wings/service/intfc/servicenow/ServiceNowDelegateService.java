@@ -2,6 +2,7 @@ package software.wings.service.intfc.servicenow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.annotations.dev.OwnedBy;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.TaskType;
@@ -30,5 +31,8 @@ public interface ServiceNowDelegateService {
   @DelegateTaskType(TaskType.SERVICENOW_SYNC)
   String getIssueFieldStatus(ServiceNowTaskParameters taskParameters, String field);
   @DelegateTaskType(TaskType.SERVICENOW_SYNC)
-  Map<String, String> getIssueStatus(ServiceNowTaskParameters taskParameters, Set<String> criteriaFields);
+  Map<String, String> getIssueStatus(
+      ServiceNowTaskParameters taskParameters, Set<String> criteriaFields, Set<String> timeFields);
+  // For fields we need values instead of display values
+  Map<String, String> getIssueValues(JsonNode issueObj, Set<String> timeFields);
 }

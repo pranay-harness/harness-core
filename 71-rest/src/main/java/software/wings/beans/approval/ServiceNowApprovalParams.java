@@ -1,18 +1,36 @@
 package software.wings.beans.approval;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
+import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.ServiceNowException;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
 
 @OwnedBy(CDC)
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Slf4j
 public class ServiceNowApprovalParams {
   private String snowConnectorId;
   private String approvalField;
@@ -23,6 +41,9 @@ public class ServiceNowApprovalParams {
   private ServiceNowTicketType ticketType;
   private Criteria approval;
   private Criteria rejection;
+  private boolean changeWindowPresent;
+  private String changeWindowStartField;
+  private String changeWindowEndField;
 
   public Set<String> getAllCriteriaFields() {
     Set<String> fields = new HashSet<>();
@@ -33,5 +54,52 @@ public class ServiceNowApprovalParams {
       rejection.fetchConditions().keySet().forEach(field -> fields.add(field));
     }
     return fields;
+  }
+
+  public Set<String> getChangeWindowTimeFields() {
+    if (changeWindowPresent) {
+      return new HashSet<>(Arrays.asList(changeWindowStartField, changeWindowEndField));
+    }
+    return new HashSet<>();
+  }
+
+  public boolean withinChangeWindow(Map<String, String> currentStatus) {
+    if (changeWindowPresent) {
+      return validateTimeWindow(changeWindowEndField, changeWindowStartField, currentStatus);
+    }
+    return true;
+  }
+
+  public static boolean validateTimeWindow(
+      String endTimeField, String startTimeField, Map<String, String> currentStatus) {
+    Instant nowInstant = Instant.now();
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+    try {
+      Objects.requireNonNull(currentStatus.get(startTimeField), "Change window start time value in ticket is invalid");
+      Objects.requireNonNull(currentStatus.get(endTimeField), "Change window end time value in ticket is invalid");
+      Instant startTime = dateFormat.parse(addTimeIfNeeded(currentStatus.get(startTimeField))).toInstant();
+      Instant endTime = dateFormat.parse(addTimeIfNeeded(currentStatus.get(endTimeField))).toInstant();
+      logger.info(
+          "[CHANGE_WINDOW_TIME_LOG]: Start time: {}, End time: {}, Current time: {}", startTime, endTime, nowInstant);
+      if (endTime.compareTo(startTime) <= 0) {
+        throw new IllegalArgumentException("Start window time must be lesser than end window time");
+      }
+      if (endTime.compareTo(nowInstant) < 0) {
+        throw new IllegalArgumentException("End window time must be greater than current time");
+      }
+      return startTime.compareTo(nowInstant) < 0 && endTime.compareTo(nowInstant) > 0;
+    } catch (ParseException pe) {
+      throw new ServiceNowException("Invalid approval change window values in servicenow", SERVICENOW_ERROR, USER, pe);
+    } catch (NullPointerException | IllegalArgumentException ex) {
+      throw new ServiceNowException(ex.getMessage(), SERVICENOW_ERROR, USER, ex);
+    }
+  }
+
+  private static String addTimeIfNeeded(String date) {
+    if (date == null || date.contains(" ")) {
+      return date;
+    }
+    return date + " 00:00:00";
   }
 }

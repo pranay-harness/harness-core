@@ -197,11 +197,22 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       if (responseObj.isArray()) {
         for (JsonNode fieldObj : responseObj) {
           if (!alreadySupportedFieldNames.contains(fieldObj.get("name").textValue())) {
-            ServiceNowMetaDTO field = ServiceNowMetaDTO.builder()
-                                          .displayName(WordUtils.capitalizeFully(fieldObj.get("label").textValue()))
-                                          .id(fieldObj.get("name").textValue())
-                                          .build();
-            fields.add(field);
+            if (taskParameters.getTypeFilter() == null) {
+              ServiceNowMetaDTO field = ServiceNowMetaDTO.builder()
+                                            .displayName(WordUtils.capitalizeFully(fieldObj.get("label").textValue()))
+                                            .id(fieldObj.get("name").textValue())
+                                            .build();
+              fields.add(field);
+            } else {
+              if (taskParameters.getTypeFilter().getSnowInternalTypes().contains(
+                      fieldObj.get("internalType").textValue())) {
+                ServiceNowMetaDTO field = ServiceNowMetaDTO.builder()
+                                              .displayName(WordUtils.capitalizeFully(fieldObj.get("label").textValue()))
+                                              .id(fieldObj.get("name").textValue())
+                                              .build();
+                fields.add(field);
+              }
+            }
           }
         }
         return fields;
@@ -338,11 +349,20 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     Set<String> serviceNowFields = approvalParams.getAllCriteriaFields();
 
     if (EmptyPredicate.isNotEmpty(serviceNowFields)) {
+      Map<String, String> issueStatus = serviceNowFields.stream().collect(
+          Collectors.toMap(field -> field, field -> issueObj.get(field).get("display_value").asText()));
+      try {
+        issueStatus.putAll(getIssueValues(issueObj, approvalParams.getChangeWindowTimeFields()));
+      } catch (NullPointerException npe) {
+        throw new InvalidRequestException("Time window fields given are invalid", npe, SERVICENOW_ERROR, USER);
+      }
       return ServiceNowExecutionData.builder()
           .issueUrl(issueUrl)
           .currentState(extractCurrentStatusFromIssue(issueObj, approvalParams))
-          .currentStatus(serviceNowFields.stream().collect(
-              Collectors.toMap(field -> field, field -> issueObj.get(field).get("display_value").asText())))
+          .message(approvalParams.isChangeWindowPresent() ? "Start time: "
+                      + issueObj.get(approvalParams.getChangeWindowStartField()).get("display_value").asText()
+                                                          : "")
+          .currentStatus(issueStatus)
           .build();
     }
 
@@ -359,18 +379,27 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
   }
 
   @Override
-  public Map<String, String> getIssueStatus(ServiceNowTaskParameters taskParameters, Set<String> criteriaFields) {
+  public Map<String, String> getIssueStatus(
+      ServiceNowTaskParameters taskParameters, Set<String> criteriaFields, Set<String> timeFields) {
     JsonNode issueObj = getIssue(taskParameters);
-    return criteriaFields.stream().collect(
-        Collectors.toMap(field -> field, field -> issueObj.get(field).get("display_value").asText()));
+    Map<String, String> issueStatus = getIssueValues(issueObj, timeFields);
+    issueStatus.putAll(criteriaFields.stream().collect(
+        Collectors.toMap(field -> field, field -> issueObj.get(field).get("display_value").asText())));
+    return issueStatus;
+  }
+
+  // For fields we need values instead of display values
+  @Override
+  public Map<String, String> getIssueValues(JsonNode issueObj, Set<String> timeFields) {
+    return timeFields.stream().collect(
+        Collectors.toMap(field -> field, field -> issueObj.get(field).get("value").asText()));
   }
 
   private String extractCurrentStatusFromIssue(JsonNode issueObj, ServiceNowApprovalParams approvalParams) {
     Set<String> criteriaFields = approvalParams.getAllCriteriaFields();
     if (EmptyPredicate.isNotEmpty(criteriaFields)) {
       return criteriaFields.stream()
-          .map(field
-              -> StringUtils.capitalize(field) + " is equal to " + issueObj.get(field).get("display_value").asText())
+          .map(field -> StringUtils.capitalize(field) + " is " + issueObj.get(field).get("display_value").asText())
           .collect(Collectors.joining(",\n"));
     }
     return issueObj.get("state").get("display_value").asText();

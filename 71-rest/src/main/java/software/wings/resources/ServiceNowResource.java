@@ -9,6 +9,7 @@ import io.swagger.annotations.Api;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowFieldType;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 
@@ -82,7 +83,8 @@ public class ServiceNowResource {
   @ExceptionMetered
   public RestResponse getAdditionalFields(@QueryParam("appId") String appId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("ticketType") ServiceNowTicketType ticketType,
-      @PathParam("connectorId") String connectorId) {
-    return new RestResponse<>(serviceNowService.getAdditionalFields(ticketType, accountId, connectorId, appId));
+      @PathParam("connectorId") String connectorId, @QueryParam("typeFilter") ServiceNowFieldType typeFilter) {
+    return new RestResponse<>(
+        serviceNowService.getAdditionalFields(ticketType, accountId, connectorId, appId, typeFilter));
   }
 }
