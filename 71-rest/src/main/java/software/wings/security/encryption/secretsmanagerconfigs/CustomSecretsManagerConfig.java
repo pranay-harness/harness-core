@@ -14,7 +14,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
@@ -39,8 +38,8 @@ public class CustomSecretsManagerConfig extends SecretManagerConfig implements E
   @Attributes(title = "Target Host") private String host;
   @Attributes(title = "Command Path") private String commandPath;
   @Attributes(title = "Connection Attributes Reference Id") private String connectorId;
-  @Transient private CustomSecretsManagerShellScript customSecretsManagerShellScript;
-  @Transient private EncryptableSetting remoteHostConnector;
+  private CustomSecretsManagerShellScript customSecretsManagerShellScript;
+  private EncryptableSetting remoteHostConnector;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
