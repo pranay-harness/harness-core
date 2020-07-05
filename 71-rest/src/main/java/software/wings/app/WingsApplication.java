@@ -72,8 +72,8 @@ import io.harness.execution.export.background.ExportExecutionsRequestCleanupHand
 import io.harness.execution.export.background.ExportExecutionsRequestHandler;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.GrpcClientModule;
-import io.harness.grpc.GrpcServerConfig;
 import io.harness.grpc.GrpcServiceConfigurationModule;
+import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.lock.AcquiredLock;

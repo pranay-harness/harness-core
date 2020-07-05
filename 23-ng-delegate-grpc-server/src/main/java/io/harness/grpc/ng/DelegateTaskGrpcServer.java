@@ -1,4 +1,4 @@
-package io.harness.grpc.ng.manager;
+package io.harness.grpc.ng;
 
 import io.harness.delegate.AbortTaskResponse;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;

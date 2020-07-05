@@ -751,6 +751,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>23-ng-delegate-grpc-server</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>24-common-entities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

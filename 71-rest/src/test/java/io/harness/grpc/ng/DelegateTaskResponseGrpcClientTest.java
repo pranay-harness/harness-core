@@ -1,4 +1,4 @@
-package io.harness.grpc.ng.manager;
+package io.harness.grpc.ng;
 
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
