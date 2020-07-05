@@ -2,11 +2,15 @@ package software.wings.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 
+import com.google.inject.Inject;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+import io.harness.exception.ServiceNowException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.waiter.WaitNotifyEngine;
@@ -17,6 +21,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.WorkflowExecution;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.StateExecutionInstance;
@@ -26,6 +31,7 @@ import software.wings.sm.states.ApprovalState;
 @UtilityClass
 @Slf4j
 public class ApprovalUtils {
+  @Inject private WingsPersistence wingsPersistence;
   private static void approveWorkflow(WorkflowExecutionService workflowExecutionService,
       StateExecutionService stateExecutionService, WaitNotifyEngine waitNotifyEngine, Action action, String approvalId,
       String appId, String workflowExecutionId, ExecutionStatus approvalStatus, String currentStatus,
@@ -63,25 +69,68 @@ public class ApprovalUtils {
     waitNotifyEngine.doneWith(approvalId, executionData);
   }
 
-  private static void continuePauseWorkflow(StateExecutionService stateExecutionService, String approvalId,
-      String appId, String workflowExecutionId, String currentStatus, String stateExecutionInstanceId) {
+  private static void failWorkflow(StateExecutionService stateExecutionService, WaitNotifyEngine waitNotifyEngine,
+      String workflowExecutionId, String stateExecutionInstanceId, String errorMesage,
+      ApprovalStateExecutionData approvalData) {
+    String approvalId = approvalData.getApprovalId();
+    String appId = approvalData.getAppId();
+    ApprovalStateExecutionData executionData;
+    if (stateExecutionInstanceId == null) {
+      ApprovalDetails approvalDetails = new ApprovalDetails();
+      approvalDetails.setApprovalId(approvalId);
+      executionData = approvalData.getWorkflowExecutionService().fetchApprovalStateExecutionDataFromWorkflowExecution(
+          appId, workflowExecutionId, null, approvalDetails);
+    } else {
+      StateExecutionInstance stateExecutionInstance =
+          stateExecutionService.getStateExecutionData(appId, stateExecutionInstanceId);
+      if (stateExecutionInstance == null) {
+        throw new ServiceNowException(
+            "State execution instance " + stateExecutionInstanceId + " not found for service now approval",
+            SERVICENOW_ERROR, USER);
+      }
+      executionData = (ApprovalStateExecutionData) stateExecutionInstance.getStateExecutionMap().get(
+          stateExecutionInstance.getDisplayName());
+    }
+
+    executionData.setStatus(ExecutionStatus.FAILED);
+    executionData.setApprovedOn(System.currentTimeMillis());
+    executionData.setCurrentStatus(approvalData.getCurrentStatus());
+    executionData.setErrorMsg("Servicenow approval failed: " + errorMesage + " ticket: ");
+
+    logger.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
+    waitNotifyEngine.doneWith(approvalId, executionData);
+  }
+
+  private static void continuePauseWorkflow(StateExecutionService stateExecutionService, String workflowExecutionId,
+      String stateExecutionInstanceId, String message, ApprovalStateExecutionData approvalData) {
     if (stateExecutionInstanceId == null) {
       return;
     }
+    String approvalId = approvalData.getApprovalId();
+    String appId = approvalData.getAppId();
+    String currentStatus = approvalData.getCurrentStatus();
     StateExecutionInstance stateExecutionInstance =
         stateExecutionService.getStateExecutionData(appId, stateExecutionInstanceId);
     if (stateExecutionInstance == null) {
-      throw new WingsException(INVALID_ARGUMENT, USER)
-          .addParam("args", "No stateExecutionInstace found for id " + stateExecutionInstanceId);
+      throw new ServiceNowException(
+          "State execution instance " + stateExecutionInstanceId + " not found for service now approval",
+          SERVICENOW_ERROR, USER);
     }
 
     ApprovalStateExecutionData executionData =
         (ApprovalStateExecutionData) stateExecutionInstance.getStateExecutionMap().get(
             stateExecutionInstance.getDisplayName());
-
+    if (approvalData.isWaitingForChangeWindow()) {
+      executionData.setWaitingForChangeWindow(true);
+      stateExecutionInstance.setExpiryTs(Long.MAX_VALUE);
+      executionData.setTimeoutMillis(Integer.MAX_VALUE);
+      executionData.setErrorMsg("Approved but waiting for Change window ( " + message + " )");
+      stateExecutionService.updateStateExecutionInstance(stateExecutionInstance);
+    }
     if (executionData.getCurrentStatus() != null && executionData.getCurrentStatus().equalsIgnoreCase(currentStatus)) {
       return;
     }
+
     executionData.setApprovedOn(System.currentTimeMillis());
     executionData.setCurrentStatus(currentStatus);
 
@@ -89,24 +138,29 @@ public class ApprovalUtils {
     stateExecutionService.updateStateExecutionData(appId, stateExecutionInstanceId, executionData);
   }
 
-  public static void checkApproval(WorkflowExecutionService workflowExecutionService,
-      StateExecutionService stateExecutionService, WaitNotifyEngine waitNotifyEngine, String appId, String approvalId,
-      String issueId, String workflowExecutionId, String stateExecutionInstanceId, String currentStatus,
-      String errorMsg, ExecutionStatus issueStatus) {
+  public static void checkApproval(StateExecutionService stateExecutionService, WaitNotifyEngine waitNotifyEngine,
+      String workflowExecutionId, String stateExecutionInstanceId, String errorMsg, ExecutionStatus issueStatus,
+      ApprovalStateExecutionData approvalStateExecutionData) {
+    String approvalId = approvalStateExecutionData.getApprovalId();
+    String appId = approvalStateExecutionData.getAppId();
     try {
+      String currentStatus = approvalStateExecutionData.getCurrentStatus();
       if (issueStatus == ExecutionStatus.SUCCESS || issueStatus == ExecutionStatus.REJECTED) {
         ApprovalDetails.Action action =
             issueStatus == ExecutionStatus.SUCCESS ? ApprovalDetails.Action.APPROVE : ApprovalDetails.Action.REJECT;
 
-        approveWorkflow(workflowExecutionService, stateExecutionService, waitNotifyEngine, action, approvalId, appId,
-            workflowExecutionId, issueStatus, currentStatus, stateExecutionInstanceId);
+        approveWorkflow(approvalStateExecutionData.getWorkflowExecutionService(), stateExecutionService,
+            waitNotifyEngine, action, approvalId, appId, workflowExecutionId, issueStatus, currentStatus,
+            stateExecutionInstanceId);
       } else if (issueStatus == ExecutionStatus.PAUSED) {
         logger.info("Still waiting for approval or rejected for issueId {}. Issue Status {} and Current Status {}",
-            issueId, issueStatus, currentStatus);
+            approvalStateExecutionData.getIssueKey(), issueStatus, currentStatus);
         continuePauseWorkflow(
-            stateExecutionService, approvalId, appId, workflowExecutionId, currentStatus, stateExecutionInstanceId);
+            stateExecutionService, workflowExecutionId, stateExecutionInstanceId, errorMsg, approvalStateExecutionData);
       } else if (issueStatus == ExecutionStatus.FAILED) {
         logger.info("Jira delegate task failed with error: " + errorMsg);
+        failWorkflow(stateExecutionService, waitNotifyEngine, workflowExecutionId, stateExecutionInstanceId, errorMsg,
+            approvalStateExecutionData);
       }
     } catch (WingsException exception) {
       exception.addContext(Application.class, appId);
@@ -115,7 +169,7 @@ public class ApprovalUtils {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.warn("Error while getting execution data, approvalId: {}, workflowExecutionId: {} , issueId: {}",
-          approvalId, workflowExecutionId, issueId, exception);
+          approvalId, workflowExecutionId, approvalStateExecutionData.getIssueKey(), exception);
     }
   }
 }

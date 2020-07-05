@@ -756,6 +756,7 @@ import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
+import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowFieldType;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.service.impl.splunk.SplunkDataCollectionInfoV2;
@@ -1737,5 +1738,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sHelmDeploymentElement.class, 7449);
     kryo.register(SmbConnectionCapability.class, 7450);
     kryo.register(ImageDetailsWithConnector.class, 7451);
+    kryo.register(ServiceNowFieldType.class, 7452);
   }
 }

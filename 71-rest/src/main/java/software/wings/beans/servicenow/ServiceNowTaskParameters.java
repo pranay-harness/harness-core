@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.ToString;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
+import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowFieldType;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class ServiceNowTaskParameters implements TaskParameters, ExecutionCapabi
   private Map<ServiceNowFields, String> fields;
   private Map<String, String> additionalFields;
   private boolean updateMultiple;
+  private ServiceNowFieldType typeFilter;
   // import set fields
   private String importSetTableName;
   private String jsonBody;

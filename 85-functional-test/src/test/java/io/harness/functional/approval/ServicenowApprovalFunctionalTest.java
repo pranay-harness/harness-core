@@ -41,6 +41,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.api.ExecutionDataValue;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
@@ -61,8 +62,10 @@ import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.service.impl.servicenow.ServiceNowDelegateServiceImpl;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -114,15 +117,309 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
             .workflowType(WorkflowType.ORCHESTRATION)
             .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode()).build())
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT)
-                                                 .addStep(getSnowApprovalNode(approvalCriteria, rejectionCriteria))
-                                                 .addStep(getSnowUpdateNode(ImmutableMap.of("approval", "Approved")))
-                                                 .withStepsInParallel(true)
-                                                 .build())
+                    .withPreDeploymentSteps(
+                        aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode("CHANGE_REQUEST")).build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT)
+                            .addStep(getSnowApprovalNode(
+                                approvalCriteria, rejectionCriteria, 1800000, null, null, "CHANGE_REQUEST"))
+                            .addStep(getSnowUpdateNode(ImmutableMap.of("approval", "Approved"), "CHANGE_REQUEST"))
+                            .withStepsInParallel(true)
+                            .build())
                     .build())
             .build();
     workflowExecuteAndAssert(snowApprovalWorkflow, ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category({FunctionalTests.class})
+  public void ExecuteServiceNowApprovalWithChangeWindowTimeout() {
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Cancelled"), "approval", Arrays.asList("Approved", "Rejected")));
+
+    Criteria approvalCriteria = new Criteria();
+    approvalCriteria.setConditions(ImmutableMap.of(
+        "state", Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    approvalCriteria.setOperator(ConditionalOperator.OR);
+
+    Date startDate = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1));
+    Date endDate = new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1));
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+    Workflow snowApprovalWorkflow =
+        aWorkflow()
+            .name("ServiceNow Approval Functional Test" + System.currentTimeMillis())
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(
+                        aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode("CHANGE_REQUEST")).build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT)
+                            .addStep(getSnowUpdateNode(
+                                ImmutableMap.of("approval", "Approved", "start_date", dateFormat.format(startDate),
+                                    "end_date", dateFormat.format(endDate)),
+                                "CHANGE_REQUEST"))
+                            .addStep(getSnowApprovalNode(
+                                approvalCriteria, rejectionCriteria, 10000, "start_date", "end_date", "CHANGE_REQUEST"))
+                            .build())
+                    .build())
+            .build();
+    WorkflowExecution completedExecution = workflowExecuteAndAssert(snowApprovalWorkflow, ExecutionStatus.SUCCESS);
+    GraphNode snowApprovalNode =
+        completedExecution.getExecutionNode().getNext().getGroup().getElements().get(0).getNext();
+    Map<String, Object> executionDetails = (Map<String, Object>) snowApprovalNode.getExecutionDetails();
+    assertThat(executionDetails.get("currentStatus"))
+        .isEqualTo(ExecutionDataValue.builder()
+                       .displayName("Current value")
+                       .value("Approval is Approved,\nState is New")
+                       .build());
+    assertThat(executionDetails.get("approvalCriteria"))
+        .isEqualTo(
+            ExecutionDataValue.builder()
+                .displayName("Approval Criteria")
+                .value("State should be any of Closed/Cancelled or\nApproval should be any of Approved/Requested")
+                .build());
+    assertThat(executionDetails.get("rejectionCriteria"))
+        .isEqualTo(ExecutionDataValue.builder()
+                       .displayName("Rejection Criteria")
+                       .value("State should be Cancelled and\nApproval should be any of Approved/Rejected")
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category({FunctionalTests.class})
+  public void ExecuteServiceNowApprovalWithChangingTimeWindowValuesForChange() {
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Cancelled"), "approval", Arrays.asList("Approved", "Rejected")));
+
+    Criteria approvalCriteria = new Criteria();
+    approvalCriteria.setConditions(ImmutableMap.of(
+        "state", Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    approvalCriteria.setOperator(ConditionalOperator.OR);
+
+    Date startDate = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1));
+    Date endDate = new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1));
+    Date endDate2 = new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(2));
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+    Workflow snowApprovalWorkflow =
+        aWorkflow()
+            .name("ServiceNow Approval Functional Test" + System.currentTimeMillis())
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT)
+                                                .addStep(getSnowCreateNode("CHANGE_REQUEST"))
+                                                .addStep(getSnowUpdateNode(ImmutableMap.of("approval", "Approved",
+                                                                               "start_date", dateFormat.format(endDate),
+                                                                               "end_date", dateFormat.format(endDate2)),
+                                                    "CHANGE_REQUEST"))
+                                                .build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT)
+                            .addStep(getSnowUpdateNode(
+                                ImmutableMap.of("approval", "Approved", "start_date", dateFormat.format(startDate),
+                                    "end_date", dateFormat.format(endDate)),
+                                "CHANGE_REQUEST"))
+                            .addStep(getSnowApprovalNode(approvalCriteria, rejectionCriteria, 6000000, "start_date",
+                                "end_date", "CHANGE_REQUEST"))
+                            .withStepsInParallel(true)
+                            .build())
+                    .build())
+            .build();
+    workflowExecuteAndAssert(snowApprovalWorkflow, ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category({FunctionalTests.class})
+  public void ThrowExceptionForInvalidChangeWindowValues() {
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Cancelled"), "approval", Arrays.asList("Approved", "Rejected")));
+
+    Criteria approvalCriteria = new Criteria();
+    approvalCriteria.setConditions(ImmutableMap.of(
+        "state", Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    approvalCriteria.setOperator(ConditionalOperator.OR);
+
+    Date startDate = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1));
+    Date endDate = new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1));
+    Date endDate2 = new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(2));
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+    Workflow snowApprovalWorkflow =
+        aWorkflow()
+            .name("ServiceNow Approval Functional Test" + System.currentTimeMillis())
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT)
+                                                .addStep(getSnowCreateNode("CHANGE_REQUEST"))
+                                                .addStep(getSnowUpdateNode(ImmutableMap.of("approval", "Approved",
+                                                                               "start_date", dateFormat.format(endDate),
+                                                                               "end_date", dateFormat.format(endDate2)),
+                                                    "CHANGE_REQUEST"))
+                                                .build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT)
+                            .addStep(getSnowUpdateNode(
+                                ImmutableMap.of("approval", "Approved", "start_date", dateFormat.format(startDate),
+                                    "end_date", dateFormat.format(endDate)),
+                                "CHANGE_REQUEST"))
+                            .addStep(getSnowApprovalNode(
+                                approvalCriteria, rejectionCriteria, 10000, "start_day", "end_date", "CHANGE_REQUEST"))
+                            .withStepsInParallel(true)
+                            .build())
+                    .build())
+            .build();
+
+    WorkflowExecution completedExecution = workflowExecuteAndAssert(snowApprovalWorkflow, ExecutionStatus.FAILED);
+    GraphNode snowApprovalNode =
+        completedExecution.getExecutionNode().getNext().getGroup().getElements().get(0).getGroup().getElements().get(1);
+    Map<String, Object> executionDetails = (Map<String, Object>) snowApprovalNode.getExecutionDetails();
+    assertThat(executionDetails.get("errorMsg"))
+        .isEqualTo(
+            ExecutionDataValue.builder().displayName("Message").value("Time window fields given are invalid").build());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category({FunctionalTests.class})
+  public void ExecuteServiceNowApprovalForExpiredButWaitingForTimeWindow() {
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Cancelled"), "approval", Arrays.asList("Approved", "Rejected")));
+
+    Criteria approvalCriteria = new Criteria();
+    approvalCriteria.setConditions(ImmutableMap.of(
+        "state", Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    approvalCriteria.setOperator(ConditionalOperator.OR);
+
+    Date startDate = new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1));
+    Date endDate = new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(2));
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+    Workflow snowApprovalWorkflow =
+        aWorkflow()
+            .name("ServiceNow Approval Functional Test" + System.currentTimeMillis())
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(
+                        aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode("CHANGE_REQUEST")).build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT)
+                            .addStep(getSnowUpdateNode(
+                                ImmutableMap.of("approval", "Approved", "start_date", dateFormat.format(startDate),
+                                    "end_date", dateFormat.format(endDate)),
+                                "CHANGE_REQUEST"))
+                            .addStep(getSnowApprovalNode(
+                                approvalCriteria, rejectionCriteria, 10000, "start_date", "end_date", "CHANGE_REQUEST"))
+                            .build())
+                    .build())
+            .build();
+
+    ExecutionArgs executionArgs = saveWorkflowAndGetExecutionArgs(snowApprovalWorkflow);
+
+    WorkflowExecution workflowExecution =
+        WorkflowRestUtils.startWorkflow(bearerToken, environment.getAppId(), environment.getUuid(), executionArgs);
+
+    logger.info("Workflow Execution started");
+
+    Awaitility.await().atMost(600, TimeUnit.SECONDS).pollInterval(60, TimeUnit.SECONDS).until(() -> {
+      ExecutionStatus executionStatus =
+          workflowExecutionService.getWorkflowExecution(environment.getAppId(), workflowExecution.getUuid())
+              .getStatus();
+      logger.info("Current workflow execution status: {}", executionStatus.name());
+      return executionStatus == ExecutionStatus.PAUSED;
+    });
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category({FunctionalTests.class})
+  public void ExecuteServiceNowApprovalWithChangingTimeWindowValuesOtherTicketTypes() {
+    Criteria rejectionCriteria = new Criteria();
+    rejectionCriteria.setConditions(
+        ImmutableMap.of("state", Arrays.asList("Cancelled"), "approval", Arrays.asList("Approved", "Rejected")));
+
+    Criteria approvalCriteria = new Criteria();
+    approvalCriteria.setConditions(ImmutableMap.of(
+        "state", Arrays.asList("Closed", "Cancelled"), "approval", Arrays.asList("Approved", "Requested")));
+    approvalCriteria.setOperator(ConditionalOperator.OR);
+
+    Date startDate = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1));
+    Date endDate = new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1));
+    Date endDate2 = new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(2));
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+    String ticketType = "INCIDENT";
+    Workflow snowApprovalWorkflow =
+        aWorkflow()
+            .name("ServiceNow Approval Functional Test" + System.currentTimeMillis())
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT)
+                                                .addStep(getSnowCreateNode(ticketType))
+                                                .addStep(getSnowUpdateNode(ImmutableMap.of("approval", "Approved",
+                                                                               "work_start", dateFormat.format(endDate),
+                                                                               "work_end", dateFormat.format(endDate2)),
+                                                    ticketType))
+                                                .build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT)
+                            .addStep(getSnowUpdateNode(
+                                ImmutableMap.of("approval", "Approved", "work_start", dateFormat.format(startDate),
+                                    "work_end", dateFormat.format(endDate)),
+                                ticketType))
+                            .addStep(getSnowApprovalNode(
+                                approvalCriteria, rejectionCriteria, 10000, "work_start", "work_end", ticketType))
+                            .withStepsInParallel(true)
+                            .build())
+                    .build())
+            .build();
+    workflowExecuteAndAssert(snowApprovalWorkflow, ExecutionStatus.SUCCESS);
+
+    ticketType = "PROBLEM";
+    Workflow snowApprovalWorkflow2 =
+        aWorkflow()
+            .name("ServiceNow Approval Functional Test" + System.currentTimeMillis())
+            .envId(environment.getUuid())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT)
+                                                .addStep(getSnowCreateNode(ticketType))
+                                                .addStep(getSnowUpdateNode(ImmutableMap.of("approval", "Approved",
+                                                                               "work_start", dateFormat.format(endDate),
+                                                                               "work_end", dateFormat.format(endDate2)),
+                                                    ticketType))
+                                                .build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT)
+                            .addStep(getSnowUpdateNode(
+                                ImmutableMap.of("approval", "Approved", "work_start", dateFormat.format(startDate),
+                                    "work_end", dateFormat.format(endDate)),
+                                ticketType))
+                            .addStep(getSnowApprovalNode(
+                                approvalCriteria, rejectionCriteria, 10000, "work_start", "work_end", ticketType))
+                            .withStepsInParallel(true)
+                            .build())
+                    .build())
+            .build();
+    workflowExecuteAndAssert(snowApprovalWorkflow2, ExecutionStatus.SUCCESS);
   }
 
   @Test
@@ -144,11 +441,14 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
             .workflowType(WorkflowType.ORCHESTRATION)
             .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode()).build())
+                    .withPreDeploymentSteps(
+                        aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode("CHANGE_REQUEST")).build())
                     .withPostDeploymentSteps(
                         aPhaseStep(POST_DEPLOYMENT)
-                            .addStep(getSnowApprovalNode(approvalCriteria, rejectionCriteria))
-                            .addStep(getSnowUpdateNode(ImmutableMap.of("state", "Canceled", "approval", "Rejected")))
+                            .addStep(getSnowApprovalNode(
+                                approvalCriteria, rejectionCriteria, 1800000, null, null, "CHANGE_REQUEST"))
+                            .addStep(getSnowUpdateNode(
+                                ImmutableMap.of("state", "Canceled", "approval", "Rejected"), "CHANGE_REQUEST"))
                             .withStepsInParallel(true)
                             .build())
                     .build())
@@ -176,7 +476,8 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
             .workflowType(WorkflowType.ORCHESTRATION)
             .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode()).build())
+                    .withPreDeploymentSteps(
+                        aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode("CHANGE_REQUEST")).build())
                     .build())
             .build();
 
@@ -190,7 +491,8 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
                 aCanaryOrchestrationWorkflow()
                     .withPostDeploymentSteps(
                         aPhaseStep(POST_DEPLOYMENT)
-                            .addStep(getSnowUpdateNode(ImmutableMap.of("state", "Canceled", "approval", "Approved")))
+                            .addStep(getSnowUpdateNode(
+                                ImmutableMap.of("state", "Canceled", "approval", "Approved"), "CHANGE_REQUEST"))
                             .build())
                     .build())
             .build();
@@ -212,14 +514,14 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
                             .build()))
                     .build(),
                 PipelineStage.builder()
-                    .pipelineStageElements(
-                        Collections.singletonList(PipelineStageElement.builder()
-                                                      .type("APPROVAL")
-                                                      .name("STAGE 2")
-                                                      .properties(ImmutableMap.of("approvalStateParams",
-                                                          getApprovalParams(approvalCriteria, rejectionCriteria),
-                                                          "approvalStateType", "SERVICENOW"))
-                                                      .build()))
+                    .pipelineStageElements(Collections.singletonList(
+                        PipelineStageElement.builder()
+                            .type("APPROVAL")
+                            .name("STAGE 2")
+                            .properties(ImmutableMap.of("approvalStateParams",
+                                getApprovalParams(approvalCriteria, rejectionCriteria, "CHANGE_REQUEST", null, null),
+                                "approvalStateType", "SERVICENOW"))
+                            .build()))
                     .build(),
                 PipelineStage.builder()
                     .parallel(true)
@@ -265,7 +567,8 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
             .workflowType(WorkflowType.ORCHESTRATION)
             .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode()).build())
+                    .withPreDeploymentSteps(
+                        aPhaseStep(PRE_DEPLOYMENT).addStep(getSnowCreateNode("CHANGE_REQUEST")).build())
                     .build())
             .build();
 
@@ -277,9 +580,10 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
             .workflowType(WorkflowType.ORCHESTRATION)
             .orchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
-                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT)
-                                                 .addStep(getSnowUpdateNode(ImmutableMap.of("state", "Canceled")))
-                                                 .build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT)
+                            .addStep(getSnowUpdateNode(ImmutableMap.of("state", "Canceled"), "CHANGE_REQUEST"))
+                            .build())
                     .build())
             .build();
 
@@ -300,14 +604,14 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
                             .build()))
                     .build(),
                 PipelineStage.builder()
-                    .pipelineStageElements(
-                        Collections.singletonList(PipelineStageElement.builder()
-                                                      .type("APPROVAL")
-                                                      .name("STAGE 2")
-                                                      .properties(ImmutableMap.of("approvalStateParams",
-                                                          getApprovalParams(approvalCriteria, rejectionCriteria),
-                                                          "approvalStateType", "SERVICENOW"))
-                                                      .build()))
+                    .pipelineStageElements(Collections.singletonList(
+                        PipelineStageElement.builder()
+                            .type("APPROVAL")
+                            .name("STAGE 2")
+                            .properties(ImmutableMap.of("approvalStateParams",
+                                getApprovalParams(approvalCriteria, rejectionCriteria, "CHANGE_REQUEST", null, null),
+                                "approvalStateType", "SERVICENOW"))
+                            .build()))
                     .build(),
                 PipelineStage.builder()
                     .parallel(true)
@@ -332,40 +636,49 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.REJECTED);
   }
 
-  private GraphNode getSnowApprovalNode(Criteria approval, Criteria rejection) {
-    HashMap<String, Object> approvalStateParams = getApprovalParams(approval, rejection);
+  private GraphNode getSnowApprovalNode(
+      Criteria approval, Criteria rejection, int timeoutMillis, String start, String end, String ticketType) {
+    HashMap<String, Object> approvalStateParams = getApprovalParams(approval, rejection, ticketType, start, end);
+
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("approvalStateParams", approvalStateParams);
+    properties.put("approvalStateType", "SERVICENOW");
+    properties.put("timeoutMillis", timeoutMillis);
 
     return GraphNode.builder()
         .id(generateUuid())
         .type(APPROVAL.name())
         .name("Approval Snow")
-        .properties(ImmutableMap.<String, Object>builder()
-                        .put("approvalStateParams", approvalStateParams)
-                        .put("approvalStateType", "SERVICENOW")
-                        .put("timeoutMillis", 1800000)
-                        .build())
+        .properties(properties)
         .build();
   }
 
   @NotNull
-  private HashMap<String, Object> getApprovalParams(Criteria approval, Criteria rejection) {
+  private HashMap<String, Object> getApprovalParams(
+      Criteria approval, Criteria rejection, String ticketType, String start, String end) {
     HashMap<String, Object> serviceNowApprovalParams = new HashMap<>();
     serviceNowApprovalParams.put("approval", approval);
     serviceNowApprovalParams.put("issueNumber", "${snowIssue.issueNumber}");
     serviceNowApprovalParams.put("rejection", rejection);
-    serviceNowApprovalParams.put("ticketType", "CHANGE_REQUEST");
+    serviceNowApprovalParams.put("ticketType", ticketType);
     serviceNowApprovalParams.put("snowConnectorId", snowSetting.getUuid());
+
+    if (start != null) {
+      serviceNowApprovalParams.put("changeWindowPresent", true);
+      serviceNowApprovalParams.put("changeWindowStartField", start);
+      serviceNowApprovalParams.put("changeWindowEndField", end);
+    }
 
     HashMap<String, Object> approvalStateParams = new HashMap<>();
     approvalStateParams.put("serviceNowApprovalParams", serviceNowApprovalParams);
     return approvalStateParams;
   }
 
-  private GraphNode getSnowUpdateNode(Map<String, String> updateValues) {
+  private GraphNode getSnowUpdateNode(Map<String, String> updateValues, String ticketType) {
     ServiceNowCreateUpdateParams params = new ServiceNowCreateUpdateParams();
     params.setAction(ServiceNowAction.UPDATE);
     params.setSnowConnectorId(snowSetting.getUuid());
-    params.setTicketType("CHANGE_REQUEST");
+    params.setTicketType(ticketType);
     params.setIssueNumber("${snowIssue.issueNumber}");
     Map<ServiceNowFields, String> fields = new HashMap<>();
     Map<String, String> additionalFields = new HashMap<>();
@@ -387,11 +700,11 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
         .build();
   }
 
-  private GraphNode getSnowCreateNode() {
+  private GraphNode getSnowCreateNode(String ticketType) {
     ServiceNowCreateUpdateParams params = new ServiceNowCreateUpdateParams();
     params.setAction(ServiceNowAction.CREATE);
     params.setSnowConnectorId(snowSetting.getUuid());
-    params.setTicketType("CHANGE_REQUEST");
+    params.setTicketType(ticketType);
     Map<ServiceNowFields, String> fields = new HashMap<>();
     fields.put(URGENCY, "3");
     fields.put(IMPACT, "1");
@@ -411,7 +724,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
         .build();
   }
 
-  private void workflowExecuteAndAssert(Workflow workflow, ExecutionStatus status) {
+  private WorkflowExecution workflowExecuteAndAssert(Workflow workflow, ExecutionStatus status) {
     ExecutionArgs executionArgs = saveWorkflowAndGetExecutionArgs(workflow);
 
     WorkflowExecution workflowExecution =
@@ -432,6 +745,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
         workflowExecutionService.getExecutionDetails(environment.getAppId(), workflowExecution.getUuid(), false);
 
     assertThat(completedExecution).isNotNull();
+    return completedExecution;
   }
 
   @NotNull

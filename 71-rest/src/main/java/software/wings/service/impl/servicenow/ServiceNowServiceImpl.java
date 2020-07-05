@@ -18,9 +18,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
@@ -29,6 +29,7 @@ import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.servicenow.ServiceNowTaskParameters;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
@@ -37,9 +38,10 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.servicenow.ServiceNowDelegateService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -49,6 +51,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   @Inject WaitNotifyEngine waitNotifyEngine;
   @Inject StateExecutionService stateExecutionService;
   @Inject FeatureFlagService featureFlagService;
+  @Inject WingsPersistence wingsPersistence;
 
   private static final String WORKFLOW_EXECUTION_ID = "workflow-execution-id";
   private static final String APP_ID = "app-id";
@@ -64,6 +67,17 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     @Getter private String displayName;
     ServiceNowTicketType(String s) {
       displayName = s;
+    }
+  }
+
+  public enum ServiceNowFieldType {
+    DATE_TIME(Arrays.asList("glide_date_time", "due_date", "glide_date", "glide_time")),
+    INTEGER(Collections.singletonList("integer")),
+    BOOLEAN(Collections.singletonList("boolean")),
+    STRING(Collections.singletonList("string"));
+    @Getter private List<String> snowInternalTypes;
+    ServiceNowFieldType(List<String> types) {
+      snowInternalTypes = types;
     }
   }
 
@@ -155,8 +169,8 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   }
 
   @Override
-  public List<ServiceNowMetaDTO> getAdditionalFields(
-      ServiceNowTicketType ticketType, String accountId, String connectorId, String appId) {
+  public List<ServiceNowMetaDTO> getAdditionalFields(ServiceNowTicketType ticketType, String accountId,
+      String connectorId, String appId, ServiceNowFieldType typeFilter) {
     ServiceNowConfig serviceNowConfig;
     try {
       serviceNowConfig = (ServiceNowConfig) settingService.get(connectorId).getValue();
@@ -169,6 +183,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
             .accountId(accountId)
             .ticketType(ticketType)
             .serviceNowConfig(serviceNowConfig)
+            .typeFilter(typeFilter)
             .encryptionDetails(secretManager.getEncryptionDetails(serviceNowConfig, appId, WORKFLOW_EXECUTION_ID))
             .build();
     SyncTaskContext snowTaskContext =
@@ -234,7 +249,8 @@ public class ServiceNowServiceImpl implements ServiceNowService {
     // Considering only approval field on the assumption that both approval and rejection fields are equal.
     // Would need to pass rejection field too if we decide to support different fields in the future.
     return delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext)
-        .getIssueStatus(taskParameters, approvalParams.getAllCriteriaFields());
+        .getIssueStatus(
+            taskParameters, approvalParams.getAllCriteriaFields(), approvalParams.getChangeWindowTimeFields());
   }
 
   @Override
@@ -268,35 +284,39 @@ public class ServiceNowServiceImpl implements ServiceNowService {
       ServiceNowDelegateService serviceNowDelegateService =
           delegateProxyFactory.get(ServiceNowDelegateService.class, snowTaskContext);
 
-      Map<String, String> currentStatus =
-          serviceNowDelegateService.getIssueStatus(taskParameters, approvalPollingJobEntity.getAllServiceNowFields());
+      ServiceNowExecutionData executionData = serviceNowDelegateService.getIssueUrl(taskParameters,
+          ServiceNowApprovalParams.builder()
+              .approval(approvalPollingJobEntity.getApproval())
+              .rejection(approvalPollingJobEntity.getRejection())
+              .changeWindowPresent(approvalPollingJobEntity.isChangeWindowPresent())
+              .changeWindowStartField(approvalPollingJobEntity.getChangeWindowStartField())
+              .changeWindowEndField(approvalPollingJobEntity.getChangeWindowEndField())
+              .build());
 
-      String issueStatus =
-          currentStatus.entrySet()
-              .stream()
-              .map(status -> StringUtils.capitalize(status.getKey()) + " is equal to " + status.getValue())
-              .collect(Collectors.joining(",\n"));
+      Map<String, String> currentStatus = executionData.getCurrentStatus();
+
+      String issueStatus = executionData.getCurrentState();
 
       if (approvalPollingJobEntity.getApproval() != null
           && approvalPollingJobEntity.getApproval().satisfied(currentStatus)) {
-        return ServiceNowExecutionData.builder()
-            .executionStatus(ExecutionStatus.SUCCESS)
-            .currentState(issueStatus)
-            .build();
+        if (approvalPollingJobEntity.withinChangeWindow(currentStatus)) {
+          executionData.setWaitingForChangeWindow(false);
+          executionData.setExecutionStatus(ExecutionStatus.SUCCESS);
+          return executionData;
+        }
+        executionData.setWaitingForChangeWindow(true);
+        executionData.setExecutionStatus(ExecutionStatus.PAUSED);
+        return executionData;
       }
       if (approvalPollingJobEntity.getRejection() != null
           && approvalPollingJobEntity.getRejection().satisfied(currentStatus)) {
-        return ServiceNowExecutionData.builder()
-            .executionStatus(ExecutionStatus.REJECTED)
-            .currentState(issueStatus)
-            .build();
+        executionData.setExecutionStatus(ExecutionStatus.REJECTED);
+        return executionData;
       }
 
       if (EmptyPredicate.isNotEmpty(issueStatus)) {
-        return ServiceNowExecutionData.builder()
-            .executionStatus(ExecutionStatus.PAUSED)
-            .currentState(issueStatus)
-            .build();
+        executionData.setExecutionStatus(ExecutionStatus.PAUSED);
+        return executionData;
       }
 
       issueStatus = serviceNowDelegateService.getIssueFieldStatus(taskParameters, "state");
@@ -320,7 +340,10 @@ public class ServiceNowServiceImpl implements ServiceNowService {
           .currentState(issueStatus)
           .build();
     } catch (WingsException we) {
-      return ServiceNowExecutionData.builder().executionStatus(ExecutionStatus.FAILED).build();
+      ServiceNowExecutionData serviceNowExecutionData =
+          ServiceNowExecutionData.builder().executionStatus(ExecutionStatus.FAILED).build();
+      serviceNowExecutionData.setErrorMsg(we.getMessage());
+      return serviceNowExecutionData;
     }
   }
 
@@ -345,8 +368,19 @@ public class ServiceNowServiceImpl implements ServiceNowService {
         entity.getIssueNumber(), issueStatus, serviceNowExecutionData.getCurrentState(), approvalId,
         workflowExecutionId);
 
-    checkApproval(workflowExecutionService, stateExecutionService, waitNotifyEngine, appId, approvalId, issueNumber,
-        workflowExecutionId, stateExecutionInstanceId, serviceNowExecutionData.getCurrentState(),
-        serviceNowExecutionData.getErrorMsg(), issueStatus);
+    ApprovalStateExecutionData approvalStateExecutionData =
+        ApprovalStateExecutionData.builder()
+            .appId(appId)
+            .approvalId(approvalId)
+            .workflowExecutionService(workflowExecutionService)
+            .issueKey(issueNumber)
+            .currentStatus(serviceNowExecutionData.getCurrentState())
+            .waitingForChangeWindow(serviceNowExecutionData.isWaitingForChangeWindow())
+            .build();
+
+    checkApproval(stateExecutionService, waitNotifyEngine, workflowExecutionId, stateExecutionInstanceId,
+        issueStatus == ExecutionStatus.FAILED ? serviceNowExecutionData.getErrorMsg()
+                                              : serviceNowExecutionData.getMessage(),
+        issueStatus, approvalStateExecutionData);
   }
 }

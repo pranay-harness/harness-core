@@ -19,6 +19,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.json.JSONArray;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.jira.JiraCreateMetaResponse;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.app.MainConfiguration;
@@ -133,9 +134,17 @@ public class JiraHelperService {
     logger.info("Issue: {} Status from JIRA: {} Current Status {} for approvalId: {}, workflowExecutionId: {} ",
         issueId, issueStatus, jiraExecutionData.getCurrentStatus(), approvalId, workflowExecutionId);
 
-    checkApproval(workflowExecutionService, stateExecutionService, waitNotifyEngine, appId, approvalId, issueId,
-        workflowExecutionId, stateExecutionInstanceId, jiraExecutionData.getCurrentStatus(),
-        jiraExecutionData.getErrorMessage(), issueStatus);
+    ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder()
+                                                                .appId(appId)
+                                                                .approvalId(approvalId)
+                                                                .workflowExecutionService(workflowExecutionService)
+                                                                .issueKey(issueId)
+                                                                .currentStatus(jiraExecutionData.getCurrentStatus())
+                                                                .waitingForChangeWindow(false)
+                                                                .build();
+
+    checkApproval(stateExecutionService, waitNotifyEngine, workflowExecutionId, stateExecutionInstanceId,
+        jiraExecutionData.getErrorMessage(), issueStatus, approvalStateExecutionData);
   }
 
   public JSONArray getProjects(String connectorId, String accountId, String appId) {

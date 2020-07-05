@@ -46,7 +46,7 @@ public class Criteria {
   }
 
   public boolean satisfied(Map<String, String> currentStatus) {
-    if (isNotEmpty(conditions)) {
+    if (isNotEmpty(conditions) && operator != null) {
       List<Boolean> truthValues =
           conditions.entrySet()
               .stream()

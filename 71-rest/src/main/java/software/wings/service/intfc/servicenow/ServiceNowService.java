@@ -7,6 +7,7 @@ import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.ServiceNowApprovalParams;
+import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowFieldType;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowMetaDTO;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 
@@ -22,9 +23,10 @@ public interface ServiceNowService {
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
   Map<String, List<ServiceNowMetaDTO>> getCreateMeta(
       ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
-  List<ServiceNowMetaDTO> getAdditionalFields(
-      ServiceNowTicketType ticketType, String accountId, String connectorId, String appId);
+  List<ServiceNowMetaDTO> getAdditionalFields(ServiceNowTicketType ticketType, String accountId, String connectorId,
+      String appId, ServiceNowFieldType typeFilter);
   ServiceNowExecutionData getIssueUrl(String appId, String accountId, ServiceNowApprovalParams approvalParams);
+
   Map<String, String> getIssueStatus(ServiceNowApprovalParams approvalParams, String accountId, String appId);
   ServiceNowExecutionData getApprovalStatus(ApprovalPollingJobEntity entity);
 

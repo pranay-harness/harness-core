@@ -128,7 +128,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -498,20 +497,19 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       executionData.setTicketType(servicenowApprovalParams.getTicketType());
 
       Map<String, String> currentStatus = serviceNowExecutionData.getCurrentStatus();
-      if (isNotEmpty(currentStatus)) {
-        executionData.setCurrentStatus(
-            currentStatus.entrySet()
-                .stream()
-                .map(status -> StringUtils.capitalize(status.getKey()) + " is " + status.getValue())
-                .collect(Collectors.joining(" and\n")));
-      }
 
       if (executionData.getSnowApproval() != null && executionData.getSnowApproval().satisfied(currentStatus)) {
-        return respondWithStatus(context, executionData, null,
-            ExecutionResponse.builder()
-                .executionStatus(SUCCESS)
-                .errorMessage("Approval provided on ticket: " + servicenowApprovalParams.getIssueNumber())
-                .stateExecutionData(executionData));
+        if (servicenowApprovalParams.withinChangeWindow(currentStatus)) {
+          return respondWithStatus(context, executionData, null,
+              ExecutionResponse.builder()
+                  .executionStatus(SUCCESS)
+                  .errorMessage("Approval provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+                  .stateExecutionData(executionData));
+        }
+        executionData.setTimeoutMillis(Integer.MAX_VALUE);
+        executionData.setWaitingForChangeWindow(true);
+        executionData.setErrorMsg(
+            "Approved but waiting for Change window (" + serviceNowExecutionData.getMessage() + " )");
       }
 
       if (executionData.getSnowRejection() != null && executionData.getSnowRejection().satisfied(currentStatus)) {
@@ -565,6 +563,9 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .rejectionField(servicenowApprovalParams.getRejectionField())
             .approvalValue(servicenowApprovalParams.getApprovalValue())
             .rejectionValue(servicenowApprovalParams.getRejectionValue())
+            .changeWindowPresent(servicenowApprovalParams.isChangeWindowPresent())
+            .changeWindowStartField(servicenowApprovalParams.getChangeWindowStartField())
+            .changeWindowEndField(servicenowApprovalParams.getChangeWindowEndField())
             .approvalId(approvalId)
             .approvalType(approvalStateType)
             .connectorId(servicenowApprovalParams.getSnowConnectorId())
@@ -580,7 +581,9 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
           ExecutionResponse.builder()
               .async(true)
               .executionStatus(PAUSED)
-              .errorMessage("Waiting for approval on Ticket " + servicenowApprovalParams.getIssueNumber())
+              .errorMessage(servicenowApprovalParams.isChangeWindowPresent()
+                      ? executionData.getErrorMsg()
+                      : ("Waiting for approval on Ticket " + servicenowApprovalParams.getIssueNumber()))
               .correlationIds(asList(approvalId))
               .stateExecutionData(executionData));
     } catch (WingsException e) {

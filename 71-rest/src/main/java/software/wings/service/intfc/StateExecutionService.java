@@ -30,6 +30,8 @@ public interface StateExecutionService {
 
   void updateStateExecutionData(String appId, String stateExecutionId, StateExecutionData stateExecutionData);
 
+  void updateStateExecutionInstance(@NotNull StateExecutionInstance stateExecutionInstance);
+
   StateExecutionInstance getStateExecutionData(String appId, String stateExecutionId);
 
   PageResponse<StateExecutionInstance> list(PageRequest<StateExecutionInstance> pageRequest);
