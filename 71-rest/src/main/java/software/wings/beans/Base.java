@@ -105,18 +105,14 @@ public class Base implements PersistentEntity, UuidAware, CreatedAtAware, Create
     if (uuid == null) {
       uuid = generateUuid();
     }
-
     if (this instanceof Application) {
       this.appId = uuid;
     }
-
     EmbeddedUser embeddedUser = ThreadLocalUserProvider.threadLocalUser();
     if (createdBy == null && !(this instanceof Account)) {
       createdBy = embeddedUser;
     }
-
     final long currentTime = currentTimeMillis();
-
     if (createdAt == 0) {
       createdAt = currentTime;
     }
