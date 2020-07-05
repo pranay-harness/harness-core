@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.SendTaskResultRequest;
 import io.harness.delegate.SendTaskResultResponse;
 import io.harness.delegate.TaskId;
-import io.harness.grpc.ng.DelegateTaskResponseGrpcClient;
+import io.harness.grpc.ng.manager.DelegateTaskResponseGrpcClient;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.security.annotations.NextGenManagerAuth;
