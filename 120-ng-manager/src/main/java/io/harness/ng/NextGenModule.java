@@ -12,6 +12,8 @@ import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.NgManagerGrpcServerModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.NextGenRegistrars;
 import io.harness.version.VersionModule;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -61,6 +63,13 @@ public class NextGenModule extends DependencyModule {
         this.appConfig.getGrpcClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new NgManagerGrpcServerModule(
         this.appConfig.getGrpcServerConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+    install(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(NextGenRegistrars.kryoRegistrars).build();
+      }
+    });
   }
 
   private ValidatorFactory getValidatorFactory() {
