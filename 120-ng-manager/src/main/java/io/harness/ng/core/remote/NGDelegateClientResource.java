@@ -2,10 +2,10 @@ package io.harness.ng.core.remote;
 
 import com.google.inject.Inject;
 
+import io.harness.NgDelegateTaskGrpcClient;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskId;
-import io.harness.grpc.ng.NgDelegateTaskGrpcClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 

@@ -1,4 +1,4 @@
-package io.harness.grpc.ng;
+package io.harness;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;

@@ -4,6 +4,7 @@ build:
     - 20-delegate-beans/src/main/proto
     - 21-delegate-agent-beans/src/main/proto
     - 22-delegate-service-beans/src/main/proto
+    - 24-ng-delegate-service-beans/src/main/proto
 lint:
   use:
     - DEFAULT
