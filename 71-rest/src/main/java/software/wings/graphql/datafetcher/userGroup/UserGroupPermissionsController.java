@@ -27,6 +27,20 @@ import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMI
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONFIG_AS_CODE;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATE_PROFILES;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELIST;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
@@ -34,6 +48,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.TAG_MAN
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
+import static software.wings.security.PermissionAttribute.PermissionType.VIEW_USER_AND_USER_GROUPS_AND_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 
 import com.google.inject.Inject;
@@ -142,6 +157,36 @@ public class UserGroupPermissionsController {
         return CE_ADMIN;
       case VIEW_CE:
         return CE_VIEWER;
+      case MANAGE_CLOUD_PROVIDERS:
+        return MANAGE_CLOUD_PROVIDERS;
+      case MANAGE_CONNECTORS:
+        return MANAGE_CONNECTORS;
+      case MANAGE_APPLICATION_STACKS:
+        return MANAGE_APPLICATION_STACKS;
+      case MANAGE_DELEGATES:
+        return MANAGE_DELEGATES;
+      case MANAGE_ALERT_NOTIFICATION_RULES:
+        return MANAGE_ALERT_NOTIFICATION_RULES;
+      case MANAGE_DELEGATE_PROFILES:
+        return MANAGE_DELEGATE_PROFILES;
+      case MANAGE_CONFIG_AS_CODE:
+        return MANAGE_CONFIG_AS_CODE;
+      case MANAGE_SECRETS:
+        return MANAGE_SECRETS;
+      case MANAGE_SECRET_MANAGERS:
+        return MANAGE_SECRET_MANAGERS;
+      case MANAGE_AUTHENTICATION_SETTINGS:
+        return MANAGE_AUTHENTICATION_SETTINGS;
+      case MANAGE_IP_WHITELIST:
+        return MANAGE_IP_WHITELIST;
+      case MANAGE_DEPLOYMENT_FREEZES:
+        return MANAGE_DEPLOYMENT_FREEZES;
+      case MANAGE_PIPELINE_GOVERNANCE_STANDARDS:
+        return MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
+      case VIEW_USER_AND_USER_GROUPS_AND_API_KEYS:
+        return VIEW_USER_AND_USER_GROUPS_AND_API_KEYS;
+      case MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS:
+        return MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS;
       default:
         logger.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }
@@ -403,6 +448,36 @@ public class UserGroupPermissionsController {
         return ADMINISTER_CE;
       case CE_VIEWER:
         return VIEW_CE;
+      case MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS:
+        return QLAccountPermissionType.MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS;
+      case VIEW_USER_AND_USER_GROUPS_AND_API_KEYS:
+        return QLAccountPermissionType.VIEW_USER_AND_USER_GROUPS_AND_API_KEYS;
+      case MANAGE_PIPELINE_GOVERNANCE_STANDARDS:
+        return QLAccountPermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
+      case MANAGE_DEPLOYMENT_FREEZES:
+        return QLAccountPermissionType.MANAGE_DEPLOYMENT_FREEZES;
+      case MANAGE_IP_WHITELIST:
+        return QLAccountPermissionType.MANAGE_IP_WHITELIST;
+      case MANAGE_AUTHENTICATION_SETTINGS:
+        return QLAccountPermissionType.MANAGE_AUTHENTICATION_SETTINGS;
+      case MANAGE_SECRET_MANAGERS:
+        return QLAccountPermissionType.MANAGE_SECRET_MANAGERS;
+      case MANAGE_CONFIG_AS_CODE:
+        return QLAccountPermissionType.MANAGE_CONFIG_AS_CODE;
+      case MANAGE_DELEGATE_PROFILES:
+        return QLAccountPermissionType.MANAGE_DELEGATE_PROFILES;
+      case MANAGE_ALERT_NOTIFICATION_RULES:
+        return QLAccountPermissionType.MANAGE_ALERT_NOTIFICATION_RULES;
+      case MANAGE_DELEGATES:
+        return QLAccountPermissionType.MANAGE_DELEGATES;
+      case MANAGE_APPLICATION_STACKS:
+        return QLAccountPermissionType.MANAGE_APPLICATION_STACKS;
+      case MANAGE_CONNECTORS:
+        return QLAccountPermissionType.MANAGE_CONNECTORS;
+      case MANAGE_CLOUD_PROVIDERS:
+        return QLAccountPermissionType.MANAGE_CLOUD_PROVIDERS;
+      case MANAGE_SECRETS:
+        return QLAccountPermissionType.MANAGE_SECRETS;
       default:
         logger.error("Invalid Account Permission Type {} given by the user", permissionType.toString());
     }
