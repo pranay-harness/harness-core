@@ -17,9 +17,9 @@ import io.grpc.ServerInterceptor;
 import io.grpc.health.v1.HealthGrpc;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc;
-import io.harness.grpc.GrpcServerConfig;
 import io.harness.grpc.auth.ServiceAuthServerInterceptor;
 import io.harness.grpc.auth.SkippedAuthServerInterceptor;
+import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.ng.core.remote.server.grpc.NgDelegateTaskResponseGrpcServer;
 
