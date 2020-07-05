@@ -130,6 +130,8 @@ public class CustomSecretsManagerServiceImpl extends AbstractSecretServiceImpl i
     }
     setCommandPathInConfig(secretsManagerConfig);
     validateInternal(secretsManagerConfig, testVariables);
+    secretsManagerConfig.setRemoteHostConnector(null);
+    secretsManagerConfig.setCustomSecretsManagerShellScript(null);
     try {
       String configId = secretManagerConfigService.save(secretsManagerConfig);
       secretsManagerConfig.setUuid(configId);
