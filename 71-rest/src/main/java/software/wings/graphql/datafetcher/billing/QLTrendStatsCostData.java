@@ -9,4 +9,5 @@ public class QLTrendStatsCostData {
   QLBillingAmountData totalCostData;
   QLBillingAmountData idleCostData;
   QLBillingAmountData unallocatedCostData;
+  QLBillingAmountData systemCostData;
 }

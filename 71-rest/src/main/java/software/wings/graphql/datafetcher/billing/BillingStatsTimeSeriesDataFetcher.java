@@ -160,12 +160,14 @@ public class BillingStatsTimeSeriesDataFetcher
       QLBillingTimeDataPointBuilder memoryAvgUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
       QLBillingTimeDataPointBuilder memoryAvgRequestPointBuilder = QLBillingTimeDataPoint.builder();
       QLBillingTimeDataPointBuilder memoryAvgLimitPointBuilder = QLBillingTimeDataPoint.builder();
+      QLBillingTimeDataPointBuilder memoryMaxUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
 
       QLBillingTimeDataPointBuilder cpuAvgUtilsPointBuilder = QLBillingTimeDataPoint.builder();
       QLBillingTimeDataPointBuilder cpuMaxUtilsPointBuilder = QLBillingTimeDataPoint.builder();
       QLBillingTimeDataPointBuilder cpuAvgUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
       QLBillingTimeDataPointBuilder cpuAvgRequestPointBuilder = QLBillingTimeDataPoint.builder();
       QLBillingTimeDataPointBuilder cpuAvgLimitPointBuilder = QLBillingTimeDataPoint.builder();
+      QLBillingTimeDataPointBuilder cpuMaxUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
 
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field.getDataType()) {
@@ -185,15 +187,15 @@ public class BillingStatsTimeSeriesDataFetcher
                 break;
               case AGGREGATEDCPUUTILIZATIONVALUE:
                 cpuAvgUtilValuePointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
                 break;
               case AGGREGATEDCPUREQUEST:
                 cpuAvgRequestPointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
                 break;
               case AGGREGATEDCPULIMIT:
                 cpuAvgLimitPointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
                 break;
               case MAXMEMORYUTILIZATION:
                 memoryMaxUtilsPointBuilder.value(roundingDoubleFieldPercentageValue(field, resultSet));
@@ -203,15 +205,33 @@ public class BillingStatsTimeSeriesDataFetcher
                 break;
               case AGGREGATEDMEMORYUTILIZATIONVALUE:
                 memoryAvgUtilValuePointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
                 break;
               case AGGREGATEDMEMORYREQUEST:
                 memoryAvgRequestPointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
                 break;
               case AGGREGATEDMEMORYLIMIT:
                 memoryAvgLimitPointBuilder.value(
-                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / timePeriod));
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
+                break;
+              case AVGCPUUTILIZATIONVALUE:
+                cpuAvgUtilValuePointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
+                break;
+              case AVGMEMORYUTILIZATIONVALUE:
+                memoryAvgUtilValuePointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
+                break;
+              case MAXCPUUTILIZATIONVALUE:
+                cpuMaxUtilValuePointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
+                break;
+              case MAXMEMORYUTILIZATIONVALUE:
+                memoryMaxUtilValuePointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
+                break;
+              case CPUREQUEST:
+                cpuAvgRequestPointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
+                break;
+              case MEMORYREQUEST:
+                memoryAvgRequestPointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
                 break;
               default:
                 dataPointBuilder.value(roundingDoubleFieldValue(field, resultSet));
@@ -235,12 +255,14 @@ public class BillingStatsTimeSeriesDataFetcher
             cpuAvgUtilValuePointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
             cpuAvgRequestPointBuilder.key(buildQLReferenceForUtilization("REQUEST", idWithInfo));
             cpuAvgLimitPointBuilder.key(buildQLReferenceForUtilization("LIMIT", idWithInfo));
+            cpuMaxUtilValuePointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
 
             memoryMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
             memoryAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
             memoryAvgUtilValuePointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
             memoryAvgRequestPointBuilder.key(buildQLReferenceForUtilization("REQUEST", idWithInfo));
             memoryAvgLimitPointBuilder.key(buildQLReferenceForUtilization("LIMIT", idWithInfo));
+            memoryMaxUtilValuePointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
             break;
           case TIMESTAMP:
             long time = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
@@ -252,11 +274,13 @@ public class BillingStatsTimeSeriesDataFetcher
             cpuAvgUtilValuePointBuilder.time(time);
             cpuAvgRequestPointBuilder.time(time);
             cpuAvgLimitPointBuilder.time(time);
+            cpuMaxUtilValuePointBuilder.time(time);
             memoryMaxUtilsPointBuilder.time(time);
             memoryAvgUtilsPointBuilder.time(time);
             memoryAvgUtilValuePointBuilder.time(time);
             memoryAvgRequestPointBuilder.time(time);
             memoryAvgLimitPointBuilder.time(time);
+            memoryMaxUtilValuePointBuilder.time(time);
             break;
           default:
             throw new InvalidRequestException("UnsupportedType " + field.getDataType());
@@ -276,6 +300,8 @@ public class BillingStatsTimeSeriesDataFetcher
       checkDataPointIsValidAndInsert(memoryAvgLimitPointBuilder.build(), qlTimeMemoryLimitPointMap);
       checkDataPointIsValidAndInsert(cpuAvgUtilValuePointBuilder.build(), qlTimeCpuUtilValuesPointMap);
       checkDataPointIsValidAndInsert(memoryAvgUtilValuePointBuilder.build(), qlTimeMemoryUtilValuesMap);
+      checkDataPointIsValidAndInsert(cpuMaxUtilValuePointBuilder.build(), qlTimeCpuUtilValuesPointMap);
+      checkDataPointIsValidAndInsert(memoryMaxUtilValuePointBuilder.build(), qlTimeMemoryUtilValuesMap);
     } while (resultSet != null && resultSet.next());
 
     QLBillingStackedTimeSeriesDataBuilder timeSeriesDataBuilder = QLBillingStackedTimeSeriesData.builder();

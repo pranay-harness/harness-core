@@ -388,6 +388,16 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getEffectiveMemoryUtilizationValue()),
                 BillingDataMetaDataFields.AGGREGATEDMEMORYUTILIZATIONVALUE.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.AGGREGATEDMEMORYUTILIZATIONVALUE);
+      } else if (aggregationFunction.getColumnName().equals(schema.getCpuRequest().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getCpuRequest()),
+                BillingDataMetaDataFields.CPUREQUEST.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.CPUREQUEST);
+      } else if (aggregationFunction.getColumnName().equals(schema.getMemoryRequest().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getMemoryRequest()),
+                BillingDataMetaDataFields.MEMORYREQUEST.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.MEMORYREQUEST);
       }
     } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.MAX) {
       if (aggregationFunction.getColumnName().equals(schema.getMaxCpuUtilization().getColumnNameSQL())) {
@@ -400,6 +410,16 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.max().addColumnParams(schema.getMaxMemoryUtilization()),
                 BillingDataMetaDataFields.MAXMEMORYUTILIZATION.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.MAXMEMORYUTILIZATION);
+      } else if (aggregationFunction.getColumnName().equals(schema.getMaxCpuUtilizationValue().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.max().addColumnParams(schema.getMaxCpuUtilizationValue()),
+                BillingDataMetaDataFields.MAXCPUUTILIZATIONVALUE.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.MAXCPUUTILIZATIONVALUE);
+      } else if (aggregationFunction.getColumnName().equals(schema.getMaxMemoryUtilizationValue().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.max().addColumnParams(schema.getMaxMemoryUtilizationValue()),
+                BillingDataMetaDataFields.MAXMEMORYUTILIZATIONVALUE.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.MAXMEMORYUTILIZATIONVALUE);
       }
     } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.AVG) {
       if (aggregationFunction.getColumnName().equals(schema.getAvgCpuUtilization().getColumnNameSQL())) {
@@ -412,6 +432,16 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.avg().addColumnParams(schema.getAvgMemoryUtilization()),
                 BillingDataMetaDataFields.AVGMEMORYUTILIZATION.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.AVGMEMORYUTILIZATION);
+      } else if (aggregationFunction.getColumnName().equals(schema.getAvgCpuUtilizationValue().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.avg().addColumnParams(schema.getAvgCpuUtilizationValue()),
+                BillingDataMetaDataFields.AVGCPUUTILIZATIONVALUE.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.AVGCPUUTILIZATIONVALUE);
+      } else if (aggregationFunction.getColumnName().equals(schema.getAvgMemoryUtilizationValue().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.avg().addColumnParams(schema.getAvgMemoryUtilizationValue()),
+                BillingDataMetaDataFields.AVGMEMORYUTILIZATIONVALUE.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.AVGMEMORYUTILIZATIONVALUE);
       }
     } else if (aggregationFunction != null && aggregationFunction.getOperationType() == QLCCMAggregateOperation.COUNT) {
       selectQuery.addCustomColumns(
