@@ -4,10 +4,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
+import io.harness.NgManagerGrpcClientModule;
 import io.harness.connector.ConnectorModule;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ProviderModule;
-import io.harness.grpc.ng.NgManagerGrpcClientModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.NgManagerGrpcServerModule;

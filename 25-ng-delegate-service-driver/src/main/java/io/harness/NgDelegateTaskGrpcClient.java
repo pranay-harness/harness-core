@@ -1,4 +1,4 @@
-package io.harness.grpc.ng;
+package io.harness;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

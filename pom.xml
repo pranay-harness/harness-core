@@ -19,6 +19,7 @@
         <module>22-delegate-service-beans</module>
         <module>23-delegate-service-driver</module>
         <module>24-common-entities</module>
+        <module>24-ng-delegate-service-beans</module>
         <module>29-orchestration-beans</module>
         <module>31-orchestration</module>
         <module>35-yaml-beans</module>
@@ -47,6 +48,7 @@
         <module>91-model-gen-tool</module>
         <module>106-git-sync-manager</module>
         <module>120-ng-manager</module>
+        <module>25-ng-delegate-service-driver</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>

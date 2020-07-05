@@ -1,4 +1,4 @@
-package io.harness.grpc.client;
+package io.harness;
 
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,7 +9,6 @@ import io.grpc.ManagedChannel;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
-import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AbortTaskRequest;
 import io.harness.delegate.AbortTaskResponse;
@@ -22,7 +21,6 @@ import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
-import io.harness.grpc.ng.NgDelegateTaskGrpcClient;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;

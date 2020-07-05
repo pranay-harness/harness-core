@@ -5,11 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.NgDelegateTaskGrpcClient;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskId;
-import io.harness.grpc.ng.NgDelegateTaskGrpcClient;
 import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.remote.NGDelegateClientResource;
 import io.harness.rule.Owner;
