@@ -15,7 +15,6 @@ import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.validation.Validators;
 import io.harness.category.element.E2ETests;
 import io.harness.govern.ProviderModule;
-import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;

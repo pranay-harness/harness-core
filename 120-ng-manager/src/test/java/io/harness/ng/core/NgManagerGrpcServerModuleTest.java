@@ -16,7 +16,7 @@ import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.validation.Validators;
 import io.harness.category.element.UnitTests;
 import io.harness.govern.ProviderModule;
-import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.grpc.GrpcServerConfig;
 import io.harness.ng.NextGenConfiguration;
 import io.harness.ng.core.remote.server.grpc.NgDelegateTaskResponseGrpcServer;
 import io.harness.rule.Owner;

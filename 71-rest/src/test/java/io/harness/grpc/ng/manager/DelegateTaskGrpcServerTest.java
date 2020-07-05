@@ -1,5 +1,6 @@
-package io.harness.grpc.ng;
+package io.harness.grpc.ng.manager;
 
+import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -18,7 +19,6 @@ import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
 import io.harness.rule.Owner;
-import io.harness.rule.OwnerRule;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,7 +46,7 @@ public class DelegateTaskGrpcServerTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.VIKAS)
+  @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testAllMethods() {
     String taskId = "task_task_Id";
