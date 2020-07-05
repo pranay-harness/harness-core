@@ -19,4 +19,5 @@ public class QLBillingTrendStats implements QLData {
   QLBillingStatsInfo idleCost;
   QLBillingStatsInfo utilizedCost;
   QLBillingStatsInfo unallocatedCost;
+  QLBillingStatsInfo systemCost;
 }

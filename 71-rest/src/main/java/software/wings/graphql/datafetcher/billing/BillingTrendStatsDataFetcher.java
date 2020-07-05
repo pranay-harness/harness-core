@@ -51,6 +51,8 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
   private static final String UNALLOCATED_COST_LABEL = "Unallocated Cost";
   private static final String UTILIZED_COST_DESCRIPTION = "%s of total";
   private static final String UTILIZED_COST_LABEL = "Utilized Cost";
+  private static final String SYSTEM_COST_DESCRIPTION = "%s of total";
+  private static final String SYSTEM_COST_LABEL = "System Cost";
   private static final String COST_VALUE = "$%s";
   private static final String EMPTY_VALUE = "-";
   private static final String NA_VALUE = "NA";
@@ -93,6 +95,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
           .unallocatedCost(getUnallocatedCostStats(unallocatedCost, billingAmountData.getTotalCostData()))
           .utilizedCost(getUtilizedCostStats(billingAmountData.getIdleCostData(), billingAmountData.getTotalCostData(),
               billingAmountData.getUnallocatedCostData()))
+          .systemCost(getSystemCostStats(billingAmountData.getSystemCostData(), billingAmountData.getTotalCostData()))
           .build();
     } else {
       return QLBillingTrendStats.builder().build();
@@ -152,6 +155,26 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
         .statsLabel(IDLE_COST_LABEL)
         .statsDescription(idleCostDescription)
         .statsValue(idleCostValue)
+        .build();
+  }
+
+  private QLBillingStatsInfo getSystemCostStats(QLBillingAmountData systemCostData, QLBillingAmountData totalCostData) {
+    String systemCostDescription = EMPTY_VALUE;
+    String systemCostValue = EMPTY_VALUE;
+    if (systemCostData != null) {
+      systemCostValue = String.format(COST_VALUE,
+          billingDataHelper.formatNumber(billingDataHelper.getRoundedDoubleValue(systemCostData.getCost())));
+      if (totalCostData != null && totalCostData.getCost().doubleValue() != 0) {
+        double percentageOfTotalCost = billingDataHelper.getRoundedDoublePercentageValue(
+            BigDecimal.valueOf(systemCostData.getCost().doubleValue() / totalCostData.getCost().doubleValue()));
+        systemCostDescription = String.format(SYSTEM_COST_DESCRIPTION, percentageOfTotalCost + "%",
+            billingDataHelper.getRoundedDoubleValue(totalCostData.getCost()));
+      }
+    }
+    return QLBillingStatsInfo.builder()
+        .statsLabel(SYSTEM_COST_LABEL)
+        .statsDescription(systemCostDescription)
+        .statsValue(systemCostValue)
         .build();
   }
 
@@ -278,6 +301,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
     QLBillingAmountData totalCostData = null;
     QLBillingAmountData idleCostData = null;
     QLBillingAmountData unallocatedCostData = null;
+    QLBillingAmountData systemCostData = null;
     while (null != resultSet && resultSet.next()) {
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field) {
@@ -328,6 +352,22 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
                       .build();
             }
             break;
+          case SYSTEMCOST:
+            if (resultSet.getBigDecimal(field.getFieldName()) != null) {
+              systemCostData =
+                  QLBillingAmountData.builder()
+                      .cost(resultSet.getBigDecimal(BillingDataMetaDataFields.SYSTEMCOST.getFieldName()))
+                      .minStartTime(resultSet
+                                        .getTimestamp(BillingDataMetaDataFields.MIN_STARTTIME.getFieldName(),
+                                            utils.getDefaultCalendar())
+                                        .getTime())
+                      .maxStartTime(resultSet
+                                        .getTimestamp(BillingDataMetaDataFields.MAX_STARTTIME.getFieldName(),
+                                            utils.getDefaultCalendar())
+                                        .getTime())
+                      .build();
+            }
+            break;
           default:
         }
       }
@@ -336,6 +376,7 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
         .totalCostData(totalCostData)
         .idleCostData(idleCostData)
         .unallocatedCostData(unallocatedCostData)
+        .systemCostData(systemCostData)
         .build();
   }
 

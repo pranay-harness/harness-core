@@ -265,6 +265,7 @@ type BillingStatsData {
   idleCost: BillingStatsInfo
   utilizedCost: BillingStatsInfo
   unallocatedCost: BillingStatsInfo
+  systemCost: BillingStatsInfo
 }
 
 type EfficiencyStatsData {
@@ -404,6 +405,7 @@ type NodeAndPodDataPoint {
   name: String
   namespace: String
   workload: String
+  clusterName: String
   node: String
   totalCost: Number
   idleCost: Number

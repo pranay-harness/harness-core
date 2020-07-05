@@ -98,12 +98,12 @@ public class BillingTimeSeriesDataFetcherTest extends AbstractDataFetcherTest {
   private static double MAXMEMORYUTILIZATION_VALUE = 0.5;
   private static double AVGCPUUTILIZATION_VALUE = 0.5;
   private static double AVGMEMORYTILIZATION_VALUE = 0.5;
-  private static double AGGREGATEDMEMORYTILIZATION = 86400;
-  private static double AGGREGATED_CPU_UTILIZATION = 86400;
-  private static double AGGREGATED_CPU_LIMIT_VALUE = 172800;
-  private static double AGGREGATED_MEMORY_LIMIT_VALUE = 172800;
-  private static double AGGREGATED_MEMORY_REQUEST_VALUE = 86400;
-  private static double AGGREGATED_CPU_REQUEST_VALUE = 86400;
+  private static double AGGREGATEDMEMORYTILIZATION = 86400 * 1024;
+  private static double AGGREGATED_CPU_UTILIZATION = 86400 * 1024;
+  private static double AGGREGATED_CPU_LIMIT_VALUE = 172800 * 1024;
+  private static double AGGREGATED_MEMORY_LIMIT_VALUE = 172800 * 1024;
+  private static double AGGREGATED_MEMORY_REQUEST_VALUE = 86400 * 1024;
+  private static double AGGREGATED_CPU_REQUEST_VALUE = 86400 * 1024;
 
   private static Integer LIMIT = Integer.MAX_VALUE - 1;
   private static Integer OFFSET = 0;

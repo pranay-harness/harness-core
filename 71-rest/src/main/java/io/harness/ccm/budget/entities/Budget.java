@@ -35,6 +35,7 @@ public class Budget
   AlertThreshold[] alertThresholds;
   String[] emailAddresses;
   String[] userGroupIds; // reference
+  boolean notifyOnSlack;
   @SchemaIgnore long createdAt;
   @SchemaIgnore long lastUpdatedAt;
 

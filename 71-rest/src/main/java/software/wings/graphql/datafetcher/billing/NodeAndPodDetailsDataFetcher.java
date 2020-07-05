@@ -194,6 +194,7 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
       QLNodeAndPodDetailsTableRowBuilder builder = QLNodeAndPodDetailsTableRow.builder();
       builder.name(entry.getInstanceName())
           .id(entry.getInstanceId())
+          .clusterName(entry.getClusterName())
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())
           .systemCost(costDataEntry.getSystemCost())
@@ -227,6 +228,7 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
           .id(entry.getInstanceId())
           .namespace(entry.getMetaData().get(NAMESPACE))
           .workload(entry.getMetaData().get(WORKLOAD))
+          .clusterName(entry.getClusterName())
           .node(entry.getMetaData().get(PARENT_RESOURCE_ID))
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())
