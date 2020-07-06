@@ -63,6 +63,7 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
     INSTANCE_SYNC,
     DELETE,
     TRAFFIC_SPLIT,
-    APPLY
+    APPLY,
+    VERSION
   }
 }

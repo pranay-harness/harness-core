@@ -123,6 +123,7 @@ public class OwnerRule implements TestRule {
   public static final String SATYAM = "satyam.shanker";
   public static final String UJJAWAL = "ujjawal.prasad";
   public static final String UTKARSH = "utkarsh.gupta";
+  public static final String UTSAV = "utsav.krishnan";
   public static final String VAIBHAV_SI = "vaibhav.si";
   public static final String VENKATESH = "venkatesh.kotrike";
   public static final String VIKAS = "vikas.naiyar";
@@ -221,6 +222,7 @@ public class OwnerRule implements TestRule {
           .put(SRIRAM, defaultDevInfo(SRIRAM).slack("U5L475PK5").team(CONTINUOUS_VERIFICATION).build())
           .put(UJJAWAL, defaultDevInfo(UJJAWAL).slack("UKLSV01DW").team(PLATFORM).build())
           .put(UTKARSH, defaultDevInfo(UTKARSH).slack("UKGF0UL58").team(PLATFORM).build())
+          .put(UTSAV, defaultDevInfo(UTSAV).slack("U015DTMQRV4").team(CONTINUOUS_EFFICIENCY).build())
           .put(VAIBHAV_SI, defaultDevInfo(VAIBHAV_SI).slack("UCK76T36U").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(VENKATESH, DevInfo.builder().email("venkatesh.kotrike@harness.io").slack("UGF55UEHF").build())
           .put(VIKAS, defaultDevInfo(VIKAS).slack("UE7M4CNMA").team(PLATFORM).build())
