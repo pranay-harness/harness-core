@@ -46,6 +46,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.morphia.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.JsonSubtypeResolver;
 import lombok.extern.slf4j.Slf4j;
@@ -132,7 +133,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
         return configuration.getMongoConnectionFactory();
       }
     });
-    modules.addAll(new MongoModule().cumulativeDependencies());
+    modules.add(new MongoModule());
+    modules.add(new MorphiaModule());
     modules.add(new CVServiceModule());
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));
