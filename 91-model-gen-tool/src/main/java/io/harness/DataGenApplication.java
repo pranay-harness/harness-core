@@ -5,11 +5,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.stream.AtmosphereBroadcaster.MEMORY;
 import static org.mockito.Mockito.mock;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
@@ -20,9 +23,12 @@ import io.harness.configuration.DeployMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
+import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.ManagerRegistrars;
 import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -52,6 +58,7 @@ import software.wings.service.intfc.DelegateProfileService;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -81,6 +88,13 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     List<Module> modules = new ArrayList<>();
     modules.add(new DataGenPersistenceModule());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(ManagerRegistrars.kryoRegistrars).build();
+      }
+    });
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
