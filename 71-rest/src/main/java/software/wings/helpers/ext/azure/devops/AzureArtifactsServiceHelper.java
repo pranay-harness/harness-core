@@ -106,6 +106,8 @@ public class AzureArtifactsServiceHelper {
       if (!uri.toString().startsWith(AZURE_DEVOPS_SERVICES_URL)) {
         throw new InvalidArtifactServerException(
             format("Azure DevOps URL should start with %s", AZURE_DEVOPS_SERVICES_URL));
+      } else if (uri.toString().equals(AZURE_DEVOPS_SERVICES_URL)) {
+        throw new InvalidArtifactServerException("Azure DevOps URL is incomplete");
       }
     } catch (URISyntaxException e) {
       throw new InvalidArtifactServerException("Azure DevOps URL is invalid");
