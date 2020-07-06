@@ -23,12 +23,12 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class NgDelegateServiceGrpcClient {
+public class ManagerDelegateServiceDriver {
   private final NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub;
   private final KryoSerializer kryoSerializer;
 
   @Inject
-  public NgDelegateServiceGrpcClient(
+  public ManagerDelegateServiceDriver(
       NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub, KryoSerializer kryoSerializer) {
     this.ngDelegateTaskServiceBlockingStub = ngDelegateTaskServiceBlockingStub;
     this.kryoSerializer = kryoSerializer;

@@ -54,7 +54,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>25-ng-delegate-service-driver</artifactId>
+            <artifactId>25-manager-delegate-service-driver</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

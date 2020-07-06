@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import io.harness.NgDelegateServiceGrpcClient;
+import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskId;
@@ -19,12 +19,12 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 public class NGDelegateClientResourceTest extends BaseTest {
-  @Mock NgDelegateServiceGrpcClient ngDelegateServiceGrpcClient;
+  @Mock ManagerDelegateServiceDriver managerDelegateServiceDriver;
   private NGDelegateClientResource ngDelegateClientResource;
 
   @Before
   public void doSetup() {
-    ngDelegateClientResource = new NGDelegateClientResource(ngDelegateServiceGrpcClient);
+    ngDelegateClientResource = new NGDelegateClientResource(managerDelegateServiceDriver);
   }
 
   @Test
@@ -35,7 +35,7 @@ public class NGDelegateClientResourceTest extends BaseTest {
     SendTaskResponse sendTaskResponse =
         SendTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build();
 
-    when(ngDelegateServiceGrpcClient.sendTask(any(String.class), any(), any())).thenReturn(sendTaskResponse);
+    when(managerDelegateServiceDriver.sendTask(any(String.class), any(), any())).thenReturn(sendTaskResponse);
     String returnedTaskId = ngDelegateClientResource.create(generateUuid());
     assertThat(returnedTaskId).isNotNull();
   }

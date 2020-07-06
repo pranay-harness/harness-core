@@ -21,7 +21,7 @@
         <module>24-common-entities</module>
         <module>24-manager-delegate-service-beans</module>
         <module>24-ng-manager-service-beans</module>
-        <module>25-ng-delegate-service-driver</module>
+        <module>25-manager-delegate-service-driver</module>
         <module>25-ng-manager-service-driver</module>
         <module>29-orchestration-beans</module>
         <module>31-orchestration</module>

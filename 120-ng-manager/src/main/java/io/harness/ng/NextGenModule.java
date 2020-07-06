@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-import io.harness.NgManagerGrpcClientModule;
+import io.harness.ManagerDelegateServiceDriverModule;
 import io.harness.connector.ConnectorModule;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ProviderModule;
@@ -59,7 +59,7 @@ public class NextGenModule extends DependencyModule {
     install(new ConnectorModule());
     install(new SecretManagementModule(
         this.appConfig.getSecretManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
-    install(new NgManagerGrpcClientModule(
+    install(new ManagerDelegateServiceDriverModule(
         this.appConfig.getGrpcClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new NgManagerGrpcServerModule(
         this.appConfig.getGrpcServerConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
