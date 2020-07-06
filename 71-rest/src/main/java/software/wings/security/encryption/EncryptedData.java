@@ -76,7 +76,7 @@ public class EncryptedData
   // path.
   @FdIndex private String path;
 
-  private Set<EncryptedDataParams> parameters;
+  @Default private Set<EncryptedDataParams> parameters = new HashSet<>();
 
   @NotEmpty private SettingVariableTypes type;
 
