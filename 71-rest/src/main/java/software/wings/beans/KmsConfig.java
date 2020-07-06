@@ -29,7 +29,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"secretKey", "kmsArn"})
+@ToString(exclude = {"accessKey", "secretKey", "kmsArn"})
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "KmsConfigKeys")
 public class KmsConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
