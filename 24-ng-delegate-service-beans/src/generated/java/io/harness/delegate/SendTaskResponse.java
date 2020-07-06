@@ -15,7 +15,9 @@ public final class SendTaskResponse extends com.google.protobuf.GeneratedMessage
   private SendTaskResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private SendTaskResponse() {}
+  private SendTaskResponse() {
+    responseData_ = com.google.protobuf.ByteString.EMPTY;
+  }
 
   @java.
   lang.Override
@@ -56,6 +58,10 @@ public final class SendTaskResponse extends com.google.protobuf.GeneratedMessage
               taskId_ = subBuilder.buildPartial();
             }
 
+            break;
+          }
+          case 18: {
+            responseData_ = input.readBytes();
             break;
           }
           default: {
@@ -110,6 +116,16 @@ public final class SendTaskResponse extends com.google.protobuf.GeneratedMessage
     return getTaskId();
   }
 
+  public static final int RESPONSE_DATA_FIELD_NUMBER = 2;
+  private com.google.protobuf.ByteString responseData_;
+  /**
+   * <code>bytes response_data = 2[json_name = "responseData"];</code>
+   * @return The responseData.
+   */
+  public com.google.protobuf.ByteString getResponseData() {
+    return responseData_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -128,6 +144,9 @@ public final class SendTaskResponse extends com.google.protobuf.GeneratedMessage
     if (taskId_ != null) {
       output.writeMessage(1, getTaskId());
     }
+    if (!responseData_.isEmpty()) {
+      output.writeBytes(2, responseData_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -140,6 +159,9 @@ public final class SendTaskResponse extends com.google.protobuf.GeneratedMessage
     size = 0;
     if (taskId_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getTaskId());
+    }
+    if (!responseData_.isEmpty()) {
+      size += com.google.protobuf.CodedOutputStream.computeBytesSize(2, responseData_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -162,6 +184,8 @@ public final class SendTaskResponse extends com.google.protobuf.GeneratedMessage
       if (!getTaskId().equals(other.getTaskId()))
         return false;
     }
+    if (!getResponseData().equals(other.getResponseData()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -178,6 +202,8 @@ public final class SendTaskResponse extends com.google.protobuf.GeneratedMessage
       hash = (37 * hash) + TASK_ID_FIELD_NUMBER;
       hash = (53 * hash) + getTaskId().hashCode();
     }
+    hash = (37 * hash) + RESPONSE_DATA_FIELD_NUMBER;
+    hash = (53 * hash) + getResponseData().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -294,6 +320,8 @@ public final class SendTaskResponse extends com.google.protobuf.GeneratedMessage
         taskId_ = null;
         taskIdBuilder_ = null;
       }
+      responseData_ = com.google.protobuf.ByteString.EMPTY;
+
       return this;
     }
 
@@ -328,6 +356,7 @@ public final class SendTaskResponse extends com.google.protobuf.GeneratedMessage
       } else {
         result.taskId_ = taskIdBuilder_.build();
       }
+      result.responseData_ = responseData_;
       onBuilt();
       return result;
     }
@@ -372,6 +401,9 @@ public final class SendTaskResponse extends com.google.protobuf.GeneratedMessage
         return this;
       if (other.hasTaskId()) {
         mergeTaskId(other.getTaskId());
+      }
+      if (other.getResponseData() != com.google.protobuf.ByteString.EMPTY) {
+        setResponseData(other.getResponseData());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -511,6 +543,38 @@ public final class SendTaskResponse extends com.google.protobuf.GeneratedMessage
         taskId_ = null;
       }
       return taskIdBuilder_;
+    }
+
+    private com.google.protobuf.ByteString responseData_ = com.google.protobuf.ByteString.EMPTY;
+    /**
+     * <code>bytes response_data = 2[json_name = "responseData"];</code>
+     * @return The responseData.
+     */
+    public com.google.protobuf.ByteString getResponseData() {
+      return responseData_;
+    }
+    /**
+     * <code>bytes response_data = 2[json_name = "responseData"];</code>
+     * @param value The responseData to set.
+     * @return This builder for chaining.
+     */
+    public Builder setResponseData(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      responseData_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>bytes response_data = 2[json_name = "responseData"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearResponseData() {
+      responseData_ = getDefaultInstance().getResponseData();
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

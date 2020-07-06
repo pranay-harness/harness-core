@@ -4,16 +4,21 @@ package io.harness.delegate;
 
 option java_multiple_files = true;
 
+import "google/protobuf/any.proto";
 import "io/harness/delegate/account.proto";
 import "io/harness/delegate/task.proto";
 import "io/harness/delegate/progress.proto";
 
 message SendTaskRequest {
-  TaskId task_id = 1;
+  reserved 1;
+  AccountId account_id = 2;
+  TaskSetupAbstractions setup_abstractions = 3;
+  TaskDetails details = 4;
 }
 
 message SendTaskResponse {
   TaskId task_id = 1;
+  bytes response_data = 2;
 }
 
 message SendTaskAsyncRequest {
