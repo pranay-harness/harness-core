@@ -64,7 +64,13 @@ public interface PipelineService extends OwnedByApplication {
    *
    * @return
    */
+
+  Pipeline readPipelineResolvedVariablesLoopedInfo(
+      String appId, String pipelineId, Map<String, String> workflowVariables);
   Pipeline readPipelineWithResolvedVariables(String appId, String pipelineId, Map<String, String> workflowVariables);
+
+  Pipeline readPipelineResolvedVariablesLoopedInfo(
+      String appId, String pipelineId, Map<String, String> pipelineVariables, boolean preExecutionChecks);
 
   Pipeline readPipelineWithResolvedVariables(
       String appId, String pipelineId, Map<String, String> pipelineVariables, boolean preExecutionChecks);

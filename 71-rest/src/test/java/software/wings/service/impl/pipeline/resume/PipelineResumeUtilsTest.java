@@ -160,7 +160,8 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
             .withPipelineStageExecutions(asList(stageExecution1, stageExecution2, stageExecution3, stageExecution4))
             .build());
 
-    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
+    when(pipelineService.readPipelineResolvedVariablesLoopedInfo(any(), any(), any(), anyBoolean()))
+        .thenReturn(pipeline);
     Pipeline resumePipeline =
         pipelineResumeUtils.getPipelineForResume(APP_ID, 3, workflowExecution, stateExecutionInstanceMap);
     assertThat(resumePipeline).isNotNull();
@@ -597,19 +598,15 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCheckStageAndStageExecution() {
-    PipelineStage stage = PipelineStage.builder().build();
-    PipelineStageExecution stageExecution = PipelineStageExecution.builder().build();
-    pipelineResumeUtils.checkStageAndStageExecution(stage, stageExecution);
-
-    stage = PipelineStage.builder()
-                .pipelineStageElements(asList(prepareEnvStatePipelineStageElement(1),
-                    prepareApprovalPipelineStageElement(), prepareEnvStatePipelineStageElement(2)))
-                .build();
-    stageExecution =
+    PipelineStage stage = PipelineStage.builder()
+                              .pipelineStageElements(asList(prepareEnvStatePipelineStageElement(1),
+                                  prepareApprovalPipelineStageElement(), prepareEnvStatePipelineStageElement(2)))
+                              .build();
+    PipelineStageExecution stageExecution =
         PipelineStageExecution.builder()
             .workflowExecutions(asList(prepareSimpleWorkflowExecution(1), prepareSimpleWorkflowExecution(2)))
             .build();
-    pipelineResumeUtils.checkStageAndStageExecution(stage, stageExecution);
+    pipelineResumeUtils.checkStageAndStageExecutions(stage, Collections.singletonList(stageExecution));
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -623,7 +620,7 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
         PipelineStageExecution.builder()
             .workflowExecutions(Collections.singletonList(prepareSimpleWorkflowExecution(2)))
             .build();
-    pipelineResumeUtils.checkStageAndStageExecution(stage, stageExecution);
+    pipelineResumeUtils.checkStageAndStageExecutions(stage, Collections.singletonList(stageExecution));
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -633,26 +630,28 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     PipelineStage stage = PipelineStage.builder()
                               .pipelineStageElements(Collections.singletonList(prepareEnvStatePipelineStageElement(1)))
                               .build();
-    PipelineStageExecution stageExecution =
-        PipelineStageExecution.builder()
-            .workflowExecutions(asList(prepareSimpleWorkflowExecution(1), prepareSimpleWorkflowExecution(2)))
-            .build();
-    pipelineResumeUtils.checkStageAndStageExecution(stage, stageExecution);
+    PipelineStageExecution stageExecution = PipelineStageExecution.builder()
+                                                .workflowExecutions(asList(prepareSimpleWorkflowExecution(1)))
+                                                .looped(true)
+                                                .build();
+    PipelineStageExecution stageExecution1 = PipelineStageExecution.builder()
+                                                 .workflowExecutions(asList(prepareSimpleWorkflowExecution(1)))
+                                                 .looped(false)
+                                                 .build();
+    pipelineResumeUtils.checkStageAndStageExecutions(stage, asList(stageExecution, stageExecution1));
   }
 
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCheckStageAndStageExecutionInsufficientWorkflowExecutions() {
-    PipelineStage stage = PipelineStage.builder()
-                              .pipelineStageElements(asList(
-                                  prepareEnvStatePipelineStageElement(1), prepareEnvStatePipelineStageElement(2)))
-                              .build();
+    PipelineStage stage =
+        PipelineStage.builder().pipelineStageElements(asList(prepareEnvStatePipelineStageElement(1))).build();
     PipelineStageExecution stageExecution =
         PipelineStageExecution.builder()
-            .workflowExecutions(Collections.singletonList(prepareSimpleWorkflowExecution(1)))
+            .workflowExecutions(Collections.singletonList(prepareSimpleWorkflowExecution(2)))
             .build();
-    pipelineResumeUtils.checkStageAndStageExecution(stage, stageExecution);
+    pipelineResumeUtils.checkStageAndStageExecutions(stage, Collections.singletonList(stageExecution));
   }
 
   @Test

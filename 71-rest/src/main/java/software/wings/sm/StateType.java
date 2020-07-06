@@ -139,6 +139,7 @@ import software.wings.sm.states.EcsSteadyStateCheck;
 import software.wings.sm.states.ElasticLoadBalancerState;
 import software.wings.sm.states.ElkAnalysisState;
 import software.wings.sm.states.EmailState;
+import software.wings.sm.states.EnvLoopResumeState;
 import software.wings.sm.states.EnvLoopState;
 import software.wings.sm.states.EnvResumeState;
 import software.wings.sm.states.EnvState;
@@ -394,6 +395,7 @@ public enum StateType implements StateTypeDescriptor {
    * Env state state type.
    */
   ENV_RESUME_STATE(EnvResumeState.class, ENVIRONMENTS, emptyList(), NONE),
+  ENV_LOOP_RESUME_STATE(EnvLoopResumeState.class, ENVIRONMENTS, emptyList(), NONE),
 
   /**
    * Command state type.

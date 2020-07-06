@@ -41,6 +41,12 @@ public class ResumeStateUtils {
   @Transient @Inject private SweepingOutputService sweepingOutputService;
 
   public ExecutionResponse prepareExecutionResponse(ExecutionContext context, String prevStateExecutionId) {
+    ExecutionResponseBuilder executionResponseBuilder = prepareExecutionResponseBuilder(context, prevStateExecutionId);
+    return executionResponseBuilder.build();
+  }
+
+  public ExecutionResponseBuilder prepareExecutionResponseBuilder(
+      ExecutionContext context, String prevStateExecutionId) {
     StateExecutionInstance stateExecutionInstance =
         stateExecutionService.getStateExecutionData(context.getAppId(), prevStateExecutionId);
     notNullCheck("stateExecutionInstance is null", stateExecutionInstance);
@@ -61,7 +67,7 @@ public class ResumeStateUtils {
         executionResponseBuilder.contextElements(contextElements);
       }
     }
-    return executionResponseBuilder.build();
+    return executionResponseBuilder;
   }
 
   public String fetchPipelineExecutionId(ExecutionContext context) {
