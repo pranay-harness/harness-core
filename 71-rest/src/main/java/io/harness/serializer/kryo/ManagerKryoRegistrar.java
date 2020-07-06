@@ -1611,7 +1611,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
 
     kryo.register(KubernetesClusterAuthType.class, 7317);
     kryo.register(OidcGrantType.class, 7318);
-
     kryo.register(AwsVPC.class, 7319);
     kryo.register(AwsSubnet.class, 7320);
     kryo.register(AwsSecurityGroup.class, 7321);
@@ -1739,5 +1738,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SmbConnectionCapability.class, 7450);
     kryo.register(ImageDetailsWithConnector.class, 7451);
     kryo.register(ServiceNowFieldType.class, 7452);
+    kryo.register(io.harness.dashboard.Action.class, 7453);
   }
 }
