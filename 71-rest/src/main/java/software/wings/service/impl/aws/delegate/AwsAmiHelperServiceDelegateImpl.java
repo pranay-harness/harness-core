@@ -427,39 +427,30 @@ public class AwsAmiHelperServiceDelegateImpl
   @Override
   public AwsAmiSwitchRoutesResponse rollbackSwitchAmiRoutesTrafficShift(
       AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
-    ExecutionLogCallback logCallback =
-        getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), request.getCommandName());
-    logCallback.saveExecutionLog("Starting rollback of ASG AMI Traffic Shift");
     try {
       upScaleOldAsg(request);
-      assignMinTrafficWeightToNewAsg(request, logCallback);
+      assignMinTrafficWeightToNewAsg(request);
       downScaleNewAsg(request);
     } catch (Exception exception) {
-      return trafficShiftFailureResponse(exception, logCallback);
+      return trafficShiftFailureResponse(request, exception);
     }
-    logCallback.saveExecutionLog(
-        "Rollback of ASG AMI traffic shift completed successfully", INFO, CommandExecutionStatus.SUCCESS);
     return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
   }
 
   @Override
   public AwsAmiSwitchRoutesResponse switchAmiRoutesTrafficShift(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
-    ExecutionLogCallback logCallback =
-        getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), request.getCommandName());
-    logCallback.saveExecutionLog("Starting to switch routes in AMI ASG traffic shift deploy", INFO);
-
     try {
       if (isEmpty(request.getNewAsgName())) {
-        return skipAwsAmiTrafficShifting(request, logCallback);
+        return skipAwsAmiTrafficShifting(request);
       }
-      performTrafficShiftingBetweenTargetGroups(request, logCallback);
+      performTrafficShiftingBetweenTargetGroups(request);
 
       if (!downSizeOldAsg(request)) {
         return skipDownScalingOfAsg(request);
       }
       downScaleAsg(request, request.getOldAsgName(), false);
     } catch (Exception exception) {
-      return trafficShiftFailureResponse(exception, logCallback);
+      return trafficShiftFailureResponse(request, exception);
     }
     return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
   }
@@ -537,27 +528,29 @@ public class AwsAmiHelperServiceDelegateImpl
     downScaleAsg(request, newAsgName, true);
   }
 
-  private void assignMinTrafficWeightToNewAsg(
-      AwsAmiTrafficShiftAlbSwitchRouteRequest request, ExecutionLogCallback logCallback) {
+  private void assignMinTrafficWeightToNewAsg(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
+    ExecutionLogCallback logCallback =
+        getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), request.getCommandName());
     awsElbHelperServiceDelegate.updateRulesForAlbTrafficShift(request.getAwsConfig(), request.getRegion(),
         request.getEncryptionDetails(), request.getLbDetails(), logCallback, MIN_TRAFFIC_SHIFT_WEIGHT,
         AwsConstants.AUTOSCALING_GROUP);
     logCallback.saveExecutionLog(
-        format("New Auto Scaling Group has been assigned [%d] traffic weight.", MIN_TRAFFIC_SHIFT_WEIGHT));
+        format("New Auto Scaling Group has been assigned [%d] traffic weight.", MIN_TRAFFIC_SHIFT_WEIGHT), INFO,
+        CommandExecutionStatus.SUCCESS);
   }
 
-  private AwsAmiSwitchRoutesResponse skipAwsAmiTrafficShifting(
-      AwsAmiTrafficShiftAlbSwitchRouteRequest request, ExecutionLogCallback logCallback) {
+  private AwsAmiSwitchRoutesResponse skipAwsAmiTrafficShifting(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
     String message =
         "Skipping traffic shifting as either new Auto Scaling Group name or traffic weight is not specified";
-    logCallback.saveExecutionLog(message, INFO, CommandExecutionStatus.SUCCESS);
+    createAndFinishEmptyExecutionLog(request, request.getCommandName(), message);
     createAndFinishEmptyExecutionLog(request, DOWN_SCALE_ASG_COMMAND_UNIT, message);
     createAndFinishEmptyExecutionLog(request, DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT, message);
     return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
   }
 
-  private void performTrafficShiftingBetweenTargetGroups(
-      AwsAmiTrafficShiftAlbSwitchRouteRequest request, ExecutionLogCallback logCallback) {
+  private void performTrafficShiftingBetweenTargetGroups(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
+    ExecutionLogCallback logCallback =
+        getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), request.getCommandName());
     logCallback.saveExecutionLog("Starting traffic shift between routes", INFO);
     awsElbHelperServiceDelegate.updateRulesForAlbTrafficShift(request.getAwsConfig(), request.getRegion(),
         request.getEncryptionDetails(), request.getLbDetails(), logCallback, request.getNewAutoscalingGroupWeight(),
@@ -619,7 +612,9 @@ public class AwsAmiHelperServiceDelegateImpl
   }
 
   private AwsAmiSwitchRoutesResponse trafficShiftFailureResponse(
-      Exception exception, ExecutionLogCallback logCallback) {
+      AwsAmiTrafficShiftAlbSwitchRouteRequest request, Exception exception) {
+    ExecutionLogCallback logCallback =
+        getLogCallBack(request.getAccountId(), request.getAppId(), request.getActivityId(), request.getCommandName());
     logCallback.saveExecutionLog(
         format("Exception: [%s].", exception.getMessage()), ERROR, CommandExecutionStatus.FAILURE);
     logger.error(exception.getMessage());
