@@ -5,7 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Singleton;
 
-import io.harness.connector.apis.dtos.ConnectorFilter;
+import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import org.springframework.data.mongodb.core.query.Criteria;
 

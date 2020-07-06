@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 
 import io.harness.cdng.connectornextgen.KubernetesValidationHelper;
 import io.harness.cdng.connectornextgen.service.KubernetesConnectorService;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

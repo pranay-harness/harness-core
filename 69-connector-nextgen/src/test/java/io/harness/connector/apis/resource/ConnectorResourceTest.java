@@ -1,6 +1,6 @@
 package io.harness.connector.apis.resource;
 
-import static io.harness.connector.common.kubernetes.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -11,13 +11,13 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorsBaseTest;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterConfigDTO;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesDelegateDetailsDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorRequestDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorSummaryDTO;
-import io.harness.connector.common.ConnectorType;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;

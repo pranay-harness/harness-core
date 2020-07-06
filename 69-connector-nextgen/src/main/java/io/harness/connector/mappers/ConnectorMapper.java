@@ -3,13 +3,13 @@ package io.harness.connector.mappers;
 import com.google.inject.Inject;
 
 import io.harness.connector.FullyQualitifedIdentifierHelper;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterConfigDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorConfigDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.exception.UnsupportedOperationException;
 
 public class ConnectorMapper {

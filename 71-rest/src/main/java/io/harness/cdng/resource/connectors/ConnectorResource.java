@@ -5,9 +5,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import com.google.inject.Inject;
 
 import io.harness.cdng.connectornextgen.service.ConnectorValidationService;
-import io.harness.connector.apis.dtos.connector.ConnectorDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorRequestDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorSummaryDTO;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
@@ -55,7 +55,8 @@ public class ConnectorResource {
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
       @PathParam("connectorIdentifier") String connectorIdentifier) {
     // todo @deepak: Make the account connector Identifier compulsary
-    return connectorService.get(accountId, orgIdentifier, projectIdentifier, connectorIdentifier);
+    // todo @deepak: Add the support for account,org,project level scoping
+    return connectorService.get(null, orgIdentifier, projectIdentifier, connectorIdentifier);
   }
 
   @GET

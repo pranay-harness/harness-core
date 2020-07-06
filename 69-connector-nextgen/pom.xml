@@ -39,6 +39,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>19-delegate-tasks-beans</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

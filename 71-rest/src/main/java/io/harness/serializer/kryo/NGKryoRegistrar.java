@@ -14,7 +14,6 @@ import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.common.beans.Tag;
-import io.harness.cdng.connectornextgen.tasks.KubernetesConnectionResponse;
 import io.harness.cdng.environment.beans.EnvironmentType;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
@@ -71,6 +70,5 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(Tag.class, 8032);
     kryo.register(EnvironmentType.class, 8033);
     kryo.register(K8sRollingOutcome.class, 8034);
-    kryo.register(KubernetesConnectionResponse.class, 8035);
   }
 }

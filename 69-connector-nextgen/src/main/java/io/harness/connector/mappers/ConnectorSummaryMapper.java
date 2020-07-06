@@ -3,10 +3,10 @@ package io.harness.connector.mappers;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.connector.apis.dtos.connector.ConnectorConfigSummaryDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorSummaryDTO;
+import io.harness.connector.apis.dto.ConnectorConfigSummaryDTO;
+import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.entities.Connector;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.KubernetesClusterConfig;
+import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
 import io.harness.exception.UnsupportedOperationException;
 
@@ -19,7 +19,6 @@ public class ConnectorSummaryMapper {
         .description(connector.getDescription())
         .identifier(connector.getIdentifier())
         .categories(connector.getCategories())
-        .scope(connector.getScope())
         .type(connector.getType())
         .connectorDetials(createConnectorDetailsDTO(connector))
         .tags(connector.getTags())

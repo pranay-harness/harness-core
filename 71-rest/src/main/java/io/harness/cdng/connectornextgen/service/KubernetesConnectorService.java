@@ -1,6 +1,6 @@
 package io.harness.cdng.connectornextgen.service;
 
-import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 

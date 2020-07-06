@@ -1,9 +1,9 @@
 package io.harness.connector.services;
 
-import io.harness.connector.apis.dtos.ConnectorFilter;
-import io.harness.connector.apis.dtos.connector.ConnectorDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorRequestDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorSummaryDTO;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorFilter;
+import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import org.springframework.data.domain.Page;
 
 import java.util.Optional;

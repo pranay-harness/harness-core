@@ -1,20 +1,20 @@
 package io.harness.connector.mappers;
 
-import static io.harness.connector.common.ConnectorCategory.CLOUD_PROVIDER;
-import static io.harness.connector.common.ConnectorType.KUBERNETES_CLUSTER;
-import static io.harness.connector.common.kubernetes.KubernetesCredentialType.MANUAL_CREDENTIALS;
+import static io.harness.delegate.beans.connector.ConnectorCategory.CLOUD_PROVIDER;
+import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorsBaseTest;
-import io.harness.connector.apis.dtos.connector.ConnectorSummaryDTO;
-import io.harness.connector.common.kubernetes.KubernetesAuthType;
+import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.entities.Connector;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.KubernetesClusterConfig;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.KubernetesClusterDetails;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.UserNamePasswordK8;
+import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
+import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
+import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Test;
