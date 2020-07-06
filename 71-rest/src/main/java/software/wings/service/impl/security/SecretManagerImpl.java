@@ -1488,7 +1488,9 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     char[] secretValue = isEmpty(secretText.getValue()) ? null : secretText.getValue().toCharArray();
-
+    if (secretText.getParameters() == null) {
+      secretText.setParameters(new HashSet<>());
+    }
     // PL-3160: Make sure update/edit of existing secret to stick with the currently associated secret manager
     // Not switching to the current default secret manager.
     EncryptionType encryptionType = savedData.getEncryptionType();

@@ -8,10 +8,12 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.security.encryption.EncryptedDataParams;
+import io.harness.security.encryption.EncryptionType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
@@ -26,6 +28,7 @@ import java.util.Set;
 
 @Data
 @Builder
+@ToString(exclude = {"customSecretsManagerShellScript", "remoteHostConnector"})
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "CustomSecretsManagerConfigKeys")
 public class CustomSecretsManagerConfig extends SecretManagerConfig implements ExecutionCapabilityDemander {
@@ -72,5 +75,10 @@ public class CustomSecretsManagerConfig extends SecretManagerConfig implements E
     } else {
       return host;
     }
+  }
+
+  @Override
+  public EncryptionType getEncryptionType() {
+    return EncryptionType.CUSTOM;
   }
 }
