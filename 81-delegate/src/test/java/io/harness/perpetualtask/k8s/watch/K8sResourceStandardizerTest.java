@@ -79,4 +79,14 @@ public class K8sResourceStandardizerTest extends CategoryTest {
   public void testMemByteFractionalByte() throws Exception {
     assertThat(K8sResourceStandardizer.getMemoryByte("1123m")).isEqualTo(1);
   }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testNullOrEmptyValues() throws Exception {
+    assertThat(K8sResourceStandardizer.getCpuNano("")).isEqualTo(0);
+    assertThat(K8sResourceStandardizer.getCpuNano(null)).isEqualTo(0);
+    assertThat(K8sResourceStandardizer.getMemoryByte("")).isEqualTo(0);
+    assertThat(K8sResourceStandardizer.getMemoryByte(null)).isEqualTo(0);
+  }
 }
