@@ -217,7 +217,7 @@ RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION:
 USER_LOCKED_NOTIFICATION:
   email:
     subject: User ${lockedUser} has been locked
-    body: The user ${lockedUser} has been locked out to multiple incorrect password attempts. To unlock them, log in and go to <b>Continuous Security → Access Management → Users </b>
+    body: The user ${lockedUser} has been locked out due to multiple incorrect password attempts. To unlock them, log in and go to <b>Continuous Security > Access Management > Users </b>
 
 
 SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION:
