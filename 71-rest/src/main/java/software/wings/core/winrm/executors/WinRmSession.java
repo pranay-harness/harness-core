@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import io.cloudsoft.winrm4j.client.ShellCommand;
 import io.cloudsoft.winrm4j.client.WinRmClient;
+import io.cloudsoft.winrm4j.client.WinRmClientBuilder;
 import io.cloudsoft.winrm4j.client.WinRmClientContext;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
@@ -29,28 +30,50 @@ public class WinRmSession implements AutoCloseable {
         processedEnvironmentMap.put(entry.getKey(), escapeEnvValueSpecialChars(entry.getValue()));
       }
     }
+    WinRmClientBuilder clientBuilder =
+        WinRmClient.builder(getEndpoint(config.getHostname(), config.getPort(), config.isUseSSL()))
+            .disableCertificateChecks(config.isSkipCertChecks())
+            .authenticationScheme(getAuthSchemeString(config.getAuthenticationScheme()))
+            .credentials(config.getDomain(), config.getUsername(), config.getPassword())
+            .workingDirectory(config.getWorkingDirectory())
+            .environment(processedEnvironmentMap)
+            .retriesForConnectionFailures(retryCount)
+            .operationTimeout(config.getTimeout());
+    if (config.getAuthenticationScheme() == AuthenticationScheme.KERBEROS) {
+      clientBuilder.requestNewKerberosTicket(true);
+      if (config.isUseKeyTab()) {
+        clientBuilder.useKeyTab(config.isUseKeyTab()).keyTabFilePath(config.getKeyTabFilePath());
+      }
+    }
 
-    WinRmClient client = WinRmClient.builder(getEndpoint(config.getHostname(), config.getPort(), config.isUseSSL()))
-                             .disableCertificateChecks(config.isSkipCertChecks())
-                             .authenticationScheme(getAuthSchemeString(config.getAuthenticationScheme()))
-                             .credentials(config.getDomain(), config.getUsername(), config.getPassword())
-                             .workingDirectory(config.getWorkingDirectory())
-                             .environment(processedEnvironmentMap)
-                             .retriesForConnectionFailures(retryCount)
-                             .operationTimeout(config.getTimeout())
-                             .build();
+    WinRmClient client = clientBuilder.build();
 
     WinRmClientContext context = WinRmClientContext.newInstance();
 
-    winRmTool = WinRmTool.Builder.builder(config.getHostname(), config.getUsername(), config.getPassword())
-                    .disableCertificateChecks(config.isSkipCertChecks())
-                    .authenticationScheme(getAuthSchemeString(config.getAuthenticationScheme()))
-                    .workingDirectory(config.getWorkingDirectory())
-                    .environment(processedEnvironmentMap)
-                    .port(config.getPort())
-                    .useHttps(config.isUseSSL())
-                    .context(context)
-                    .build();
+    if (config.getAuthenticationScheme() == AuthenticationScheme.KERBEROS) {
+      winRmTool = WinRmTool.Builder.builder(config.getHostname(), config.getUsername(), config.getPassword())
+                      .disableCertificateChecks(config.isSkipCertChecks())
+                      .authenticationScheme(getAuthSchemeString(config.getAuthenticationScheme()))
+                      .workingDirectory(config.getWorkingDirectory())
+                      .environment(processedEnvironmentMap)
+                      .port(config.getPort())
+                      .useHttps(config.isUseSSL())
+                      .context(context)
+                      .requestNewKerberosTicket(true)
+                      .useKeyTab(config.isUseKeyTab())
+                      .useKeyTab(config.getKeyTabFilePath())
+                      .build();
+    } else {
+      winRmTool = WinRmTool.Builder.builder(config.getHostname(), config.getUsername(), config.getPassword())
+                      .disableCertificateChecks(config.isSkipCertChecks())
+                      .authenticationScheme(getAuthSchemeString(config.getAuthenticationScheme()))
+                      .workingDirectory(config.getWorkingDirectory())
+                      .environment(processedEnvironmentMap)
+                      .port(config.getPort())
+                      .useHttps(config.isUseSSL())
+                      .context(context)
+                      .build();
+    }
 
     shell = client.createShell();
   }
@@ -80,6 +103,8 @@ public class WinRmSession implements AutoCloseable {
         return "Basic";
       case NTLM:
         return "NTLM";
+      case KERBEROS:
+        return "Kerberos";
       default:
         return "Unknown";
     }

@@ -183,6 +183,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())
         .workingDirectory(commandPath)
         .environment(envVariables == null ? Collections.emptyMap() : envVariables)
+        .useKeyTab(winrmConnectionAttributes.isUseKeyTab())
+        .keyTabFilePath(winrmConnectionAttributes.getKeyTabFilePath())
         .build();
   }
 

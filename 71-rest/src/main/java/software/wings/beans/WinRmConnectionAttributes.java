@@ -36,6 +36,8 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
   @Attributes(required = true) private boolean useSSL;
   @Attributes(required = true) private int port;
   @Attributes(required = true) private boolean skipCertChecks;
+  @Attributes(required = true) private boolean useKeyTab;
+  @Attributes private String keyTabFilePath;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
@@ -48,14 +50,15 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
     return new ArrayList<>();
   }
 
-  public enum AuthenticationScheme { BASIC, NTLM }
+  public enum AuthenticationScheme { BASIC, NTLM, KERBEROS }
 
   public WinRmConnectionAttributes() {
     super(SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES.name());
   }
 
   public WinRmConnectionAttributes(AuthenticationScheme authenticationScheme, String domain, String username,
-      char[] password, boolean useSSL, int port, boolean skipCertChecks, String accountId, String encryptedPassword) {
+      char[] password, boolean useSSL, int port, boolean skipCertChecks, boolean useKeyTab, String keyTabFilePath,
+      String accountId, String encryptedPassword) {
     super(SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES.name());
     this.authenticationScheme = authenticationScheme;
     this.domain = domain;
@@ -66,6 +69,8 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
     this.skipCertChecks = skipCertChecks;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+    this.useKeyTab = useKeyTab;
+    this.keyTabFilePath = keyTabFilePath;
   }
 
   @Override

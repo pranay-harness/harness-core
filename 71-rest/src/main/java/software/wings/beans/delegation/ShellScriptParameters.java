@@ -124,6 +124,8 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
         .domain(winrmConnectionAttributes.getDomain())
         .username(winrmConnectionAttributes.getUsername())
         .password(String.valueOf(winrmConnectionAttributes.getPassword()))
+        .useKeyTab(winrmConnectionAttributes.isUseKeyTab())
+        .keyTabFilePath(winrmConnectionAttributes.getKeyTabFilePath())
         .port(winrmConnectionAttributes.getPort())
         .useSSL(winrmConnectionAttributes.isUseSSL())
         .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())
