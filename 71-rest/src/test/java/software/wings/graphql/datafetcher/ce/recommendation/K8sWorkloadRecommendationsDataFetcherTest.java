@@ -128,33 +128,52 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
     QLK8SWorkloadRecommendationConnection qlk8SWorkloadRecommendationConnection =
         k8sWorkloadRecommendationsDataFetcher.fetchConnection(filters, DUMMY_PAGE_QUERY_PARAMS, null);
     List<QLK8sWorkloadRecommendation> nodes = qlk8SWorkloadRecommendationConnection.getNodes();
-    assertThat(nodes).hasSize(1).containsExactly(
-        QLK8sWorkloadRecommendation.builder()
-            .namespace("default")
-            .workloadType("Deployment")
-            .workloadName("my-nginx")
-            .containerRecommendation(QLContainerRecommendation.builder()
-                                         .containerName("nginx")
-                                         .current(QLResourceRequirement.builder()
-                                                      .request(QLResourceEntry.of("cpu", "1"))
-                                                      .request(QLResourceEntry.of("memory", "1Gi"))
-                                                      .limit(QLResourceEntry.of("cpu", "1"))
-                                                      .limit(QLResourceEntry.of("memory", "1Gi"))
-                                                      .build())
-                                         .burstable(QLResourceRequirement.builder()
-                                                        .request(QLResourceEntry.of("cpu", "50m"))
-                                                        .request(QLResourceEntry.of("memory", "10Mi"))
-                                                        .limit(QLResourceEntry.of("cpu", "200m"))
-                                                        .limit(QLResourceEntry.of("memory", "40Mi"))
-                                                        .build())
-                                         .guaranteed(QLResourceRequirement.builder()
-                                                         .request(QLResourceEntry.of("cpu", "200m"))
-                                                         .request(QLResourceEntry.of("memory", "40Mi"))
-                                                         .limit(QLResourceEntry.of("cpu", "200m"))
-                                                         .limit(QLResourceEntry.of("memory", "40Mi"))
-                                                         .build())
-                                         .build())
-            .estimatedSavings(100.0)
-            .build());
+    assertThat(nodes.get(0))
+        .isEqualTo(QLK8sWorkloadRecommendation.builder()
+                       .namespace("default")
+                       .workloadType("Deployment")
+                       .workloadName("my-nginx")
+                       .containerRecommendation(QLContainerRecommendation.builder()
+                                                    .containerName("nginx")
+                                                    .current(QLResourceRequirement.builder()
+                                                                 .request(QLResourceEntry.of("cpu", "1"))
+                                                                 .request(QLResourceEntry.of("memory", "1Gi"))
+                                                                 .limit(QLResourceEntry.of("cpu", "1"))
+                                                                 .limit(QLResourceEntry.of("memory", "1Gi"))
+                                                                 .yaml("limits:\n"
+                                                                     + "  memory: 1Gi\n"
+                                                                     + "  cpu: '1'\n"
+                                                                     + "requests"
+                                                                     + ":\n"
+                                                                     + "  memory: 1Gi\n"
+                                                                     + "  cpu: '1'\n")
+                                                                 .build())
+                                                    .burstable(QLResourceRequirement.builder()
+                                                                   .request(QLResourceEntry.of("cpu", "50m"))
+                                                                   .request(QLResourceEntry.of("memory", "10Mi"))
+                                                                   .limit(QLResourceEntry.of("cpu", "200m"))
+                                                                   .limit(QLResourceEntry.of("memory", "40Mi"))
+                                                                   .yaml("limits:\n"
+                                                                       + "  memory: 40Mi\n"
+                                                                       + "  cpu: 200m\n"
+                                                                       + "requests:\n"
+                                                                       + "  memory: 10Mi\n"
+                                                                       + "  cpu: 50m\n")
+                                                                   .build())
+                                                    .guaranteed(QLResourceRequirement.builder()
+                                                                    .request(QLResourceEntry.of("cpu", "200m"))
+                                                                    .request(QLResourceEntry.of("memory", "40Mi"))
+                                                                    .limit(QLResourceEntry.of("cpu", "200m"))
+                                                                    .limit(QLResourceEntry.of("memory", "40Mi"))
+                                                                    .yaml("limits:\n"
+                                                                        + "  memory: 40Mi\n"
+                                                                        + "  cpu: 200m\n"
+                                                                        + "requests:\n"
+                                                                        + "  memory: 40Mi\n"
+                                                                        + "  cpu: 200m\n")
+                                                                    .build())
+                                                    .build())
+                       .estimatedSavings(100.0)
+                       .build());
   }
 }

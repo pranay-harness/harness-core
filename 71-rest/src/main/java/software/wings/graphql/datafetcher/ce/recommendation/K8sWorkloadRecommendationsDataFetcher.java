@@ -3,10 +3,15 @@ package software.wings.graphql.datafetcher.ce.recommendation;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import graphql.schema.DataFetchingEnvironment;
+import io.kubernetes.client.custom.Quantity;
+import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1ResourceRequirementsBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLContainerRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8SWorkloadRecommendationConnection;
@@ -73,7 +78,25 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
     return QLResourceRequirement.builder()
         .requests(entityToDto(resourceRequirement.getRequests()))
         .limits(entityToDto(resourceRequirement.getLimits()))
+        .yaml(resourceRequirementToYaml(resourceRequirement))
         .build();
+  }
+
+  private String resourceRequirementToYaml(ResourceRequirement resourceRequirement) {
+    V1ResourceRequirementsBuilder builder = new V1ResourceRequirementsBuilder();
+    resourceRequirement.getRequests().forEach((k, v) -> builder.addToRequests(k, Quantity.fromString(v)));
+    resourceRequirement.getLimits().forEach((k, v) -> builder.addToLimits(k, Quantity.fromString(v)));
+    V1ResourceRequirements resourceRequirements = builder.build();
+    return getYaml().dump(resourceRequirements);
+  }
+
+  private Yaml getYaml() {
+    DumperOptions options = new DumperOptions();
+    options.setIndent(2);
+    options.setPrettyFlow(false);
+    options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+    return new Yaml(new io.kubernetes.client.util.Yaml.CustomConstructor(),
+        new io.kubernetes.client.util.Yaml.CustomRepresenter(), options);
   }
 
   private List<QLResourceEntry> entityToDto(Map<String, String> resourceEntryMap) {

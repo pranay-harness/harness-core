@@ -10,6 +10,7 @@ import java.util.List;
 @Value
 @Builder
 public class QLResourceRequirement implements QLObject {
+  String yaml;
   @Singular List<QLResourceEntry> requests;
   @Singular List<QLResourceEntry> limits;
 }
