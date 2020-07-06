@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.VUK;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -57,6 +58,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
+import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -345,15 +347,23 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                                             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                                             .build());
 
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("testProfileName").build();
+
     DelegateBuilder delegateBuilder = Delegate.builder()
                                           .accountId(ACCOUNT_ID)
                                           .uuid(DELEGATE_ID)
+                                          .hostName("a.b.c.")
+                                          .delegateName("testDelegateName")
+                                          .delegateProfileId(delegateProfile.getUuid())
                                           .includeScopes(emptyList())
                                           .excludeScopes(emptyList());
 
     for (TagTestData test : tests) {
       Delegate delegate = delegateBuilder.tags(test.getDelegateTags()).build();
       when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+      when(delegateService.retrieveDelegateSelectors(delegate))
+          .thenReturn(delegate.getTags() == null ? new HashSet<>() : new HashSet<>(test.getDelegateTags()));
 
       DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
@@ -372,6 +382,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     for (TagTestData test : tests) {
       Delegate delegate = delegateBuilder.tags(test.getDelegateTags()).build();
       when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+      when(delegateService.retrieveDelegateSelectors(delegate))
+          .thenReturn(delegate.getTags() == null ? new HashSet<>() : new HashSet<>(test.getDelegateTags()));
 
       DelegateTask delegateTask = delegateTaskBuilder.tags(test.getTaskTags()).build();
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
@@ -393,6 +405,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void assignByNames() {
     when(featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
+    when(delegateService.retrieveDelegateSelectors(any(Delegate.class)))
+        .thenReturn(emptySet())
+        .thenReturn(new HashSet<>(Arrays.asList("A")))
+        .thenReturn(new HashSet<>(Arrays.asList("a", "b")));
 
     List<NameTestData> tests =
         ImmutableList.<NameTestData>builder()

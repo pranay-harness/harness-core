@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.FeatureName.DELEGATE_TAGS_EXTENDED;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -49,7 +48,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -184,16 +182,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       return true;
     }
 
-    Set<String> selectors = delegate.getTags() == null ? new HashSet<>() : trimmedLowercaseSet(delegate.getTags());
-    if (featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, delegate.getAccountId())) {
-      if (delegate.getHostName() != null) {
-        selectors.add(delegate.getHostName().trim().toLowerCase());
-      }
-
-      if (delegate.getDelegateName() != null) {
-        selectors.add(delegate.getDelegateName().trim().toLowerCase());
-      }
-    }
+    Set<String> selectors = trimmedLowercaseSet(delegateService.retrieveDelegateSelectors(delegate));
 
     if (isEmpty(selectors)) {
       delegateSelectionLogsService.logMissingAllSelectors(batch, delegate.getAccountId(), delegate.getUuid());

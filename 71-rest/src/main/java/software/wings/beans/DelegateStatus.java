@@ -8,6 +8,7 @@ import lombok.Value;
 import software.wings.beans.Delegate.Status;
 
 import java.util.List;
+import java.util.Map;
 
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -34,6 +35,7 @@ public class DelegateStatus {
     private List<DelegateScope> includeScopes;
     private List<DelegateScope> excludeScopes;
     private List<String> tags;
+    private Map<String, SelectorType> implicitSelectors;
     private long profileExecutedAt;
     private boolean profileError;
     private boolean sampleDelegate;

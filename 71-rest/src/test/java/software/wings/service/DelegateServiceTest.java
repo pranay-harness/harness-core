@@ -23,6 +23,7 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.VUK;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -74,7 +75,6 @@ import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateParams;
-import io.harness.delegate.beans.DelegateParams.DelegateParamsBuilder;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
@@ -120,6 +120,7 @@ import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TaskType;
@@ -173,25 +174,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   private static final String VERSION = "1.0.0";
   private static final String DELEGATE_NAME = "harness-delegate";
   private static final String DELEGATE_PROFILE_ID = "QFWin33JRlKWKBzpzE5A9A";
-  private static final DelegateBuilder BUILDER = Delegate.builder()
-                                                     .accountId(ACCOUNT_ID)
-                                                     .ip("127.0.0.1")
-                                                     .hostName("localhost")
-                                                     .version(VERSION)
-                                                     .status(Status.ENABLED)
-                                                     .lastHeartBeat(System.currentTimeMillis());
-  private static final DelegateParamsBuilder PARAMS_BUILDER = DelegateParams.builder()
-                                                                  .accountId(ACCOUNT_ID)
-                                                                  .ip("127.0.0.1")
-                                                                  .hostName("localhost")
-                                                                  .version(VERSION)
-                                                                  .lastHeartBeat(System.currentTimeMillis());
-  private static final JreConfig OPENJDK_JRE_CONFIG = JreConfig.builder()
-                                                          .version("1.8.0_242")
-                                                          .jreDirectory("jdk8u242-b08-jre")
-                                                          .jreMacDirectory("jdk8u242-b08-jre")
-                                                          .jreTarPath("jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz")
-                                                          .build();
+
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
   @Mock private LicenseService licenseService;
@@ -237,7 +220,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(mainConfiguration.getOcVersion()).thenReturn("v4.2.16");
     when(mainConfiguration.getCdnConfig()).thenReturn(cdnConfig);
     HashMap<String, JreConfig> jreConfigMap = new HashMap<>();
-    jreConfigMap.put("openjdk8u242", OPENJDK_JRE_CONFIG);
+    jreConfigMap.put("openjdk8u242", getOpenjdkJreConfig());
     when(mainConfiguration.getCurrentJre()).thenReturn("openjdk8u242");
     when(mainConfiguration.getJreConfigs()).thenReturn(jreConfigMap);
     when(subdomainUrlHelper.getWatcherMetadataUrl(any())).thenReturn("http://localhost:8888/watcherci.txt");
@@ -274,7 +257,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldList() {
     String accountId = generateUuid();
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     wingsPersistence.save(delegate);
     assertThat(delegateService.list(aPageRequest().addFilter(DelegateKeys.accountId, Operator.EQ, accountId).build()))
@@ -287,7 +270,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGet() {
     String accountId = generateUuid();
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     wingsPersistence.save(delegate);
     assertThat(delegateService.get(accountId, delegate.getUuid(), true)).isEqualTo(delegate);
@@ -300,10 +283,10 @@ public class DelegateServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     when(accountService.getDelegateConfiguration(anyString()))
         .thenReturn(DelegateConfiguration.builder().watcherVersion(VERSION).delegateVersions(asList(VERSION)).build());
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
 
-    Delegate deletedDelegate = BUILDER.build();
+    Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
     deletedDelegate.setStatus(Status.DELETED);
 
@@ -324,7 +307,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdate() {
     String accountId = generateUuid();
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     wingsPersistence.save(delegate);
     delegate.setLastHeartBeat(System.currentTimeMillis());
@@ -344,7 +327,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     String delegateId = generateUuid();
 
-    Delegate existingDelegate = BUILDER.build();
+    Delegate existingDelegate = createDelegateBuilder().build();
     existingDelegate.setUuid(delegateId);
     existingDelegate.setAccountId(accountId);
     existingDelegate.setStatus(Status.WAITING_FOR_APPROVAL);
@@ -365,7 +348,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     String delegateId = generateUuid();
 
-    Delegate existingDelegate = BUILDER.build();
+    Delegate existingDelegate = createDelegateBuilder().build();
     existingDelegate.setUuid(delegateId);
     existingDelegate.setAccountId(accountId);
     existingDelegate.setStatus(Status.WAITING_FOR_APPROVAL);
@@ -385,7 +368,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdateEcs() {
     String accountId = generateUuid();
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     delegate.setDelegateType(ECS);
     wingsPersistence.save(delegate);
@@ -404,7 +387,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAdd() {
     String accountId = generateUuid();
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     delegate.setUuid(generateUuid());
 
@@ -429,7 +412,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAddWithWaitingForApprovalStatus() {
     String accountId = generateUuid();
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     delegate.setUuid(generateUuid());
 
@@ -458,7 +441,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldAddWithPrimaryProfile() {
     String accountId = generateUuid();
-    Delegate delegateWithoutProfile = BUILDER.build();
+    Delegate delegateWithoutProfile = createDelegateBuilder().build();
     delegateWithoutProfile.setAccountId(accountId);
     delegateWithoutProfile.setUuid(generateUuid());
 
@@ -478,7 +461,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .send(Channel.DELEGATES,
             anEvent().withOrgId(accountId).withUuid(delegateWithoutProfile.getUuid()).withType(Type.CREATE).build());
 
-    Delegate delegateWithNonExistingProfile = BUILDER.build();
+    Delegate delegateWithNonExistingProfile = createDelegateBuilder().build();
     delegateWithNonExistingProfile.setAccountId(accountId);
     delegateWithNonExistingProfile.setUuid(generateUuid());
     delegateWithNonExistingProfile.setDelegateProfileId("nonExistingProfile");
@@ -502,7 +485,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     int maxDelegatesAllowed = 1;
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(maxDelegatesAllowed);
 
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     DelegateProfile primaryDelegateProfile =
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
@@ -512,7 +495,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     IntStream.range(0, maxDelegatesAllowed).forEach(i -> delegateService.add(delegate));
     try {
-      Delegate maxUsageDelegate = BUILDER.build();
+      Delegate maxUsageDelegate = createDelegateBuilder().build();
       maxUsageDelegate.setAccountId(accountId);
       delegateService.add(delegate);
       fail("");
@@ -524,7 +507,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDelete() {
-    String id = wingsPersistence.save(BUILDER.build());
+    String id = wingsPersistence.save(createDelegateBuilder().build());
     delegateService.delete(ACCOUNT_ID, id);
     assertThat(wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, ACCOUNT_ID).asList())
         .hasSize(0);
@@ -535,7 +518,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldRegister() {
     String accountId = generateUuid();
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     DelegateProfile primaryDelegateProfile =
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
@@ -554,7 +537,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldRegisterExistingDelegate() {
     String accountId = generateUuid();
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     DelegateProfile primaryDelegateProfile =
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
@@ -1040,7 +1023,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldSignalForDelegateUpgradeWhenUpdateIsPresent() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
     DelegateScripts delegateScripts =
@@ -1055,7 +1038,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.AWS);
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
     DelegateScripts delegateScripts =
@@ -1072,7 +1055,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(assignDelegateService.canAssign(
              any(BatchDelegateSelectionLog.class), any(String.class), any(DelegateTask.class)))
         .thenReturn(true);
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
@@ -1094,7 +1077,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(assignDelegateService.canAssign(
              any(BatchDelegateSelectionLog.class), any(String.class), any(DelegateTask.class)))
         .thenReturn(true);
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
@@ -1109,7 +1092,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(assignDelegateService.canAssign(
              any(BatchDelegateSelectionLog.class), any(String.class), any(DelegateTask.class)))
         .thenReturn(false);
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
@@ -1126,7 +1109,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(assignDelegateService.canAssign(
              any(BatchDelegateSelectionLog.class), any(String.class), any(DelegateTask.class)))
         .thenReturn(true);
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
@@ -1138,7 +1121,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldNotAcquireTaskWhenAlreadyAcquired() {
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID + "1");
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
@@ -1152,7 +1135,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
     String delegateId = generateUuid();
 
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     delegate.setUuid(delegateId);
     delegate.setStatus(Status.WAITING_FOR_APPROVAL);
@@ -1182,7 +1165,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldFilterTaskForAccount() {
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(ACCOUNT_ID + "1");
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
@@ -1193,7 +1176,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldFilterTaskForAccountOnAbort() {
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(ACCOUNT_ID + "1");
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
@@ -1211,7 +1194,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldNotFilterTaskWhenItMatchesDelegateCriteria() {
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
     wingsPersistence.save(delegate);
     assertThat(delegateService.filter(delegate.getAccountId(), DELEGATE_ID)).isTrue();
@@ -1265,7 +1248,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(configurationController.isNotPrimary()).thenReturn(Boolean.FALSE);
     String accountId = generateUuid();
 
-    Delegate deletedDelegate = BUILDER.build();
+    Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setStatus(Status.DELETED);
     deletedDelegate.setAccountId(accountId);
     deletedDelegate.setUuid(generateUuid());
@@ -1275,7 +1258,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         delegateService.checkForProfile(accountId, deletedDelegate.getUuid(), "", 0);
     assertThat(delegateProfileParams).isNull();
 
-    Delegate wapprDelegate = BUILDER.build();
+    Delegate wapprDelegate = createDelegateBuilder().build();
     wapprDelegate.setStatus(Status.WAITING_FOR_APPROVAL);
     wapprDelegate.setAccountId(accountId);
     wapprDelegate.setUuid(generateUuid());
@@ -1494,6 +1477,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetAllDelegateSelectors() {
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("profile-name").build();
+
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .ip("127.0.0.1")
@@ -1501,6 +1487,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .version(VERSION)
                             .status(Status.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
+                            .delegateProfileId(delegateProfile.getUuid())
                             .tags(ImmutableList.of("abc"))
                             .build();
     wingsPersistence.save(delegate);
@@ -1511,12 +1498,125 @@ public class DelegateServiceTest extends WingsBaseTest {
                    .version(VERSION)
                    .status(Status.ENABLED)
                    .lastHeartBeat(System.currentTimeMillis())
+                   .delegateProfileId(delegateProfile.getUuid())
                    .tags(ImmutableList.of("def"))
                    .build();
+
     wingsPersistence.save(delegate);
+
+    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
     Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
     assertThat(tags.size()).isEqualTo(2);
     assertThat(tags).containsExactlyInAnyOrder("abc", "def");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldRetrieveDelegateSelectors() {
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .version(VERSION)
+                            .status(Status.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .tags(ImmutableList.of("abc", "qwe", "xde"))
+                            .build();
+    wingsPersistence.save(delegate);
+
+    Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
+    assertThat(tags.size()).isEqualTo(3);
+    assertThat(tags).containsExactlyInAnyOrder("abc", "qwe", "xde");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldRetrieveDelegatesImplicitSelectors() {
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("primary").build();
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .hostName("host")
+                            .delegateName("test")
+                            .version(VERSION)
+                            .status(Status.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .delegateProfileId(delegateProfile.getUuid())
+                            .tags(ImmutableList.of("abc", "bbb", "abc"))
+                            .build();
+    wingsPersistence.save(delegate);
+
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
+    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
+
+    Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
+    assertThat(tags.size()).isEqualTo(5);
+    assertThat(tags).containsExactlyInAnyOrder("abc", "bbb", "host", "primary", "test");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldRetrieveDelegateSelectors_Empty() {
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .hostName("a.b.c")
+                            .version(VERSION)
+                            .status(Status.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .build();
+    wingsPersistence.save(delegate);
+
+    Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
+    assertThat(tags.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldRetrieveDelegateImplicitSelectorsWithHostName() {
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .hostName("a.b.c")
+                            .version(VERSION)
+                            .status(Status.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .build();
+    wingsPersistence.save(delegate);
+
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
+    Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
+    assertThat(tags.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldRetrieveDelegateImplicitSelectorsWithProfileNameAndTags() {
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("profile-name").build();
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .delegateProfileId(delegateProfile.getUuid())
+                            .version(VERSION)
+                            .status(Status.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .tags(ImmutableList.of("abc", "qwe"))
+                            .build();
+    wingsPersistence.save(delegate);
+
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
+    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
+    Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
+    assertThat(tags.size()).isEqualTo(3);
+    assertThat(tags).containsExactlyInAnyOrder("abc", "qwe", "profile-name");
   }
 
   @Test
@@ -1683,7 +1783,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGetCountOfDelegatesForAccounts() {
     String accountId1 = generateUuid();
     String accountId2 = generateUuid();
-    Delegate delegate = BUILDER.build();
+    Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId1);
     delegate.setUuid(generateUuid());
 
@@ -1732,5 +1832,24 @@ public class DelegateServiceTest extends WingsBaseTest {
     }
 
     return delegateTask;
+  }
+
+  private DelegateBuilder createDelegateBuilder() {
+    return Delegate.builder()
+        .accountId(ACCOUNT_ID)
+        .ip("127.0.0.1")
+        .hostName("localhost")
+        .version(VERSION)
+        .status(Status.ENABLED)
+        .lastHeartBeat(System.currentTimeMillis());
+  }
+
+  private static JreConfig getOpenjdkJreConfig() {
+    return JreConfig.builder()
+        .version("1.8.0_242")
+        .jreDirectory("jdk8u242-b08-jre")
+        .jreMacDirectory("jdk8u242-b08-jre")
+        .jreTarPath("jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz")
+        .build();
   }
 }
