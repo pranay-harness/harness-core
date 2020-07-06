@@ -1,6 +1,8 @@
 package software.wings.service.impl.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static software.wings.sm.StateType.ENV_LOOP_STATE;
+import static software.wings.sm.StateType.ENV_STATE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -12,7 +14,6 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
-import software.wings.sm.StateType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -55,16 +56,19 @@ public class PipelineServiceHelper {
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       if (pipelineStage.isLooped()) {
         PipelineStageElement pse = pipelineStage.getPipelineStageElements().get(0);
-        String varLooped = pipelineStage.getLoopedVarName();
-        Map<String, String> pipelineStageVariableValues = pse.getWorkflowVariables();
-        if (EmptyPredicate.isEmpty(pipelineStageVariableValues) || !pipelineStageVariableValues.containsKey(varLooped)
-            || !pipelineStageVariableValues.get(varLooped).contains(",")) {
-          throw new InvalidRequestException("Pipeline stage marked as loop, but doesnt have looping config");
+        if (ENV_STATE.getType().equals(pse.getType())) {
+          String varLooped = pipelineStage.getLoopedVarName();
+          Map<String, String> pipelineStageVariableValues = pse.getWorkflowVariables();
+          if (EmptyPredicate.isEmpty(pipelineStageVariableValues) || !pipelineStageVariableValues.containsKey(varLooped)
+              || !pipelineStageVariableValues.get(varLooped).contains(",")) {
+            throw new InvalidRequestException("Pipeline stage marked as loop, but doesnt have looping config");
+          }
+          List<String> loopedValues = Arrays.asList(pipelineStageVariableValues.get(varLooped).split(","));
+
+          pse.setType(ENV_LOOP_STATE.getType());
+          pse.getProperties().put("loopedValues", loopedValues);
+          pse.getProperties().put("loopedVarName", varLooped);
         }
-        List<String> loopedValues = Arrays.asList(pipelineStageVariableValues.get(varLooped).split(","));
-        pse.setType(StateType.ENV_LOOP_STATE.getType());
-        pse.getProperties().put("loopedValues", loopedValues);
-        pse.getProperties().put("loopedVarName", varLooped);
       }
     }
   }

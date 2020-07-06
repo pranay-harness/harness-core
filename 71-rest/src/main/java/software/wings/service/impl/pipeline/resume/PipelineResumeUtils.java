@@ -9,12 +9,14 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.beans.WorkflowType.PIPELINE;
-import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
+import static software.wings.sm.StateType.ENV_LOOP_RESUME_STATE;
+import static software.wings.sm.StateType.ENV_LOOP_STATE;
 import static software.wings.sm.StateType.ENV_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
 
@@ -28,6 +30,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
@@ -47,19 +50,19 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateType;
+import software.wings.sm.states.EnvLoopResumeState.EnvLoopResumeStateKeys;
 import software.wings.sm.states.EnvResumeState.EnvResumeStateKeys;
 import software.wings.sm.states.EnvState.EnvStateKeys;
+import software.wings.sm.states.ForkState.ForkStateExecutionData;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
@@ -79,7 +82,7 @@ public class PipelineResumeUtils {
     deploymentAuthHandler.authorize(appId, prevWorkflowExecution);
     String pipelineId = prevWorkflowExecution.getWorkflowId();
     ExecutionArgs executionArgs = prevWorkflowExecution.getExecutionArgs();
-    Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(
+    Pipeline pipeline = pipelineService.readPipelineResolvedVariablesLoopedInfo(
         appId, pipelineId, executionArgs.getWorkflowVariables(), true);
     if (pipeline == null) {
       throw new InvalidRequestException("Pipeline does not exist");
@@ -108,71 +111,145 @@ public class PipelineResumeUtils {
         // Previous pipeline execution did not have enough stages.
         throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
       }
-
       List<PipelineStageElement> pipelineStageElements = pipelineStage.getPipelineStageElements();
       if (isEmpty(pipelineStageElements)) {
         continue;
       }
 
-      PipelineStageExecution stageExecution = pipelineStageExecutions.get(i);
+      List<PipelineStageExecution> stageExecutions;
+      stageExecutions = getPipelineStageExecutions(pipeline.getAccountId(), pipelineStageExecutions, i, pipelineStage);
       // Check for compatibility.
-      checkStageAndStageExecution(pipelineStage, stageExecution);
+      checkStageAndStageExecutions(pipelineStage, stageExecutions);
 
-      int workflowExecutionIndex = -1;
-      boolean foundResumeStage = false;
-      for (PipelineStageElement pse : pipelineStageElements) {
-        if (pse.getParallelIndex() >= parallelIndexToResume) {
-          foundResumeStage = true;
-          break;
-        }
-        if (ENV_STATE.name().equals(pse.getType())) {
-          // This variable tracks which execution to pick from stageExecution.getWorkflowExecutions().
-          workflowExecutionIndex++;
-        }
-        if (!ENV_STATE.name().equals(pse.getType()) && !APPROVAL.name().equals(pse.getType())) {
-          // Return if the state is not EnvState or ApprovalState.
-          continue;
-        }
-
-        StateExecutionInstance stateExecutionInstance = stateExecutionInstanceMap.get(pse.getName());
-        StateExecutionData stateExecutionData = null;
-        if (stateExecutionInstance != null) {
-          stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
-        }
-        if (stateExecutionInstance == null
-            || (ENV_STATE.name().equals(pse.getType()) && !(stateExecutionData instanceof EnvStateExecutionData))
-            || (APPROVAL.name().equals(pse.getType()) && !(stateExecutionData instanceof ApprovalStateExecutionData))) {
-          throw new InvalidRequestException(
-              format("You cannot resume a pipeline which has been modified. New stage [%s] introduced in the pipeline",
-                  pse.getName()));
-        }
-
-        Map<String, Object> properties = new HashMap<>();
-        properties.put(EnvResumeStateKeys.prevStateExecutionId, stateExecutionInstance.getUuid());
-        properties.put(EnvResumeStateKeys.prevPipelineExecutionId, prevWorkflowExecution.getUuid());
-        if (ENV_STATE.name().equals(pse.getType())) {
-          pse.setType(ENV_RESUME_STATE.name());
-          List<WorkflowExecution> workflowExecutions = stageExecution.getWorkflowExecutions();
-          List<String> workflowExecutionIds;
-          if (isEmpty(workflowExecutions) || workflowExecutionIndex < 0
-              || workflowExecutions.size() <= workflowExecutionIndex) {
-            // This might happen in case a pipeline stage is skipped.
-            workflowExecutionIds = new ArrayList<>();
-          } else {
-            workflowExecutionIds = Collections.singletonList(workflowExecutions.get(workflowExecutionIndex).getUuid());
-          }
-          properties.put(EnvResumeStateKeys.prevWorkflowExecutionIds, workflowExecutionIds);
-        } else {
-          pse.setType(APPROVAL_RESUME.name());
-        }
-
-        pse.setProperties(properties);
-      }
-
-      if (foundResumeStage) {
+      PipelineStageElement pse = pipelineStageElements.get(0);
+      if (pse.getParallelIndex() >= parallelIndexToResume) {
+        // Resume stages done
         break;
       }
+
+      if (isNotValidState(pse.getType())) {
+        // Return if the state is not EnvState or ApprovalState or loop state
+        continue;
+      }
+      replaceWithResumeStage(pipeline, prevWorkflowExecution, stateExecutionInstanceMap, stageExecutions, pse);
     }
+  }
+
+  private void replaceWithResumeStage(Pipeline pipeline, WorkflowExecution prevWorkflowExecution,
+      ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap,
+      List<PipelineStageExecution> stageExecutions, PipelineStageElement pse) {
+    StateExecutionInstance stateExecutionInstance = stateExecutionInstanceMap.get(pse.getName());
+    StateExecutionData stateExecutionData = null;
+    if (stateExecutionInstance != null) {
+      stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
+    }
+
+    checkValidStateAndExecutionData(pse, stateExecutionInstance, stateExecutionData);
+
+    Map<String, Object> properties = new HashMap<>();
+    properties.put(EnvResumeStateKeys.prevStateExecutionId, stateExecutionInstance.getUuid());
+    properties.put(EnvResumeStateKeys.prevPipelineExecutionId, prevWorkflowExecution.getUuid());
+
+    StateType type = StateType.valueOf(pse.getType());
+    switch (type) {
+      case ENV_STATE:
+        setResumePropertiesEnvState(stageExecutions, pse, properties);
+        break;
+      case APPROVAL:
+        pse.setType(APPROVAL_RESUME.name());
+        break;
+      case ENV_LOOP_STATE:
+        setResumePropertiesEnvLoopState(
+            pipeline, stateExecutionInstanceMap, pse, (ForkStateExecutionData) stateExecutionData, properties);
+        break;
+      default:
+        throw new UnsupportedOperationException(
+            "Unknown state type: " + type.name() + " found in pipeline: " + pipeline.getUuid());
+    }
+    pse.setProperties(properties);
+  }
+
+  private void setResumePropertiesEnvLoopState(Pipeline pipeline,
+      ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap, PipelineStageElement pse,
+      ForkStateExecutionData stateExecutionData, Map<String, Object> properties) {
+    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
+      pse.setType(ENV_LOOP_RESUME_STATE.name());
+      ForkStateExecutionData forkStateExecutionData = stateExecutionData;
+      Map<String, String> prevWorkflowExecutionIdStateInstanceId = new HashMap<>();
+      if (isNotEmpty(forkStateExecutionData.getForkStateNames())) {
+        for (String element : forkStateExecutionData.getForkStateNames()) {
+          StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
+          if (executionInstanceLooped == null) {
+            continue;
+          }
+          String executionInstanceLoppedId = executionInstanceLooped.getUuid();
+          StateExecutionData stateExecutionDataLooped = executionInstanceLooped.fetchStateExecutionData();
+          if (stateExecutionDataLooped instanceof EnvStateExecutionData) {
+            EnvStateExecutionData envStateExecutionDataLooped = (EnvStateExecutionData) stateExecutionDataLooped;
+            String workflowExecutionId = envStateExecutionDataLooped.getWorkflowExecutionId();
+            prevWorkflowExecutionIdStateInstanceId.put(workflowExecutionId, executionInstanceLoppedId);
+          }
+        }
+        properties.put(
+            EnvLoopResumeStateKeys.workflowExecutionIdWithStateExecutionIds, prevWorkflowExecutionIdStateInstanceId);
+      }
+    }
+  }
+
+  private void setResumePropertiesEnvState(
+      List<PipelineStageExecution> stageExecutions, PipelineStageElement pse, Map<String, Object> properties) {
+    pse.setType(ENV_RESUME_STATE.name());
+    List<WorkflowExecution> workflowExecutions = stageExecutions.stream()
+                                                     .filter(t -> isNotEmpty(t.getWorkflowExecutions()))
+                                                     .map(t -> t.getWorkflowExecutions().get(0))
+                                                     .collect(Collectors.toList());
+    List<String> workflowExecutionIds;
+    if (isEmpty(workflowExecutions)) {
+      // This might happen in case a pipeline stage is skipped.
+      workflowExecutionIds = new ArrayList<>();
+    } else {
+      workflowExecutionIds = workflowExecutions.stream().map(WorkflowExecution::getUuid).collect(Collectors.toList());
+    }
+    properties.put(EnvResumeStateKeys.prevWorkflowExecutionIds, workflowExecutionIds);
+  }
+
+  private void checkValidStateAndExecutionData(
+      PipelineStageElement pse, StateExecutionInstance stateExecutionInstance, StateExecutionData stateExecutionData) {
+    if (stateExecutionInstance == null
+        || (ENV_STATE.name().equals(pse.getType()) && !(stateExecutionData instanceof EnvStateExecutionData))
+        || (APPROVAL.name().equals(pse.getType()) && !(stateExecutionData instanceof ApprovalStateExecutionData))
+        || (ENV_LOOP_STATE.name().equals(pse.getType()) && !(stateExecutionData instanceof ForkStateExecutionData))) {
+      throw new InvalidRequestException(
+          format("You cannot resume a pipeline which has been modified. New stage [%s] introduced in the pipeline",
+              pse.getName()));
+    }
+  }
+
+  private boolean isNotValidState(String type) {
+    return !ENV_STATE.name().equals(type) && !APPROVAL.name().equals(type) && !ENV_LOOP_STATE.name().equals(type);
+  }
+
+  @NotNull
+  private List<PipelineStageExecution> getPipelineStageExecutions(
+      String accountId, List<PipelineStageExecution> pipelineStageExecutions, int i, PipelineStage pipelineStage) {
+    List<PipelineStageExecution> stageExecutions;
+    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, accountId)) {
+      stageExecutions =
+          pipelineStageExecutions.stream()
+              .filter(
+                  t -> t.getPipelineStageElementId().equals(pipelineStage.getPipelineStageElements().get(0).getUuid()))
+              .collect(Collectors.toList());
+      if (isEmpty(stageExecutions)) {
+        // older flow when we didnt add pipeline stage element Id. Can be cleaned up after 6 months. Date:
+        // 30-June-2020
+        PipelineStageExecution stageExecution = pipelineStageExecutions.get(i);
+        stageExecutions = Collections.singletonList(stageExecution);
+      }
+    } else {
+      PipelineStageExecution stageExecution = pipelineStageExecutions.get(i);
+      stageExecutions = Collections.singletonList(stageExecution);
+    }
+    return stageExecutions;
   }
 
   public void updatePipelineExecutionsAfterResume(
@@ -241,42 +318,9 @@ public class PipelineResumeUtils {
         break;
       }
 
-      boolean isNegativeStatus = false;
-      PipelineStageExecution stageExecution;
-      if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-        List<PipelineStageExecution> stageExecutions =
-            pipelineStageExecutions.stream()
-                .filter(t
-                    -> t.getPipelineStageElementId().equals(pipelineStage.getPipelineStageElements().get(0).getUuid()))
-                .collect(Collectors.toList());
-        if (isEmpty(stageExecutions)) {
-          // older flow when we didnt add pipeline stage element Id. Can be cleaned up after 6 months. Date:
-          // 30-June-2020
-          stageExecution = pipelineStageExecutions.get(i);
-          checkStageAndStageExecution(pipelineStage, stageExecution);
-          if (isNegativeStatus(stageExecution.getStatus())) {
-            isNegativeStatus = true;
-          }
-        } else {
-          if (stageExecutions.size() > 1 && stageExecutions.stream().anyMatch(t -> !t.isLooped())) {
-            throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
-          }
-          for (PipelineStageExecution t : stageExecutions) {
-            checkStageAndStageExecution(pipelineStage, t);
-            if (isNegativeStatus(t.getStatus())) {
-              isNegativeStatus = true;
-              break;
-            }
-          }
-        }
-      } else {
-        stageExecution = pipelineStageExecutions.get(i);
-        // Check for compatibility.
-        checkStageAndStageExecution(pipelineStage, stageExecution);
-        if (isNegativeStatus(stageExecution.getStatus())) {
-          isNegativeStatus = true;
-        }
-      }
+      List<PipelineStageExecution> stageExecutions =
+          getPipelineStageExecutions(pipeline.getAccountId(), pipelineStageExecutions, i, pipelineStage);
+      checkStageAndStageExecutions(pipelineStage, stageExecutions);
 
       List<String> newPipelineStageElementNames = pipelineStage.getPipelineStageElements() == null
           ? Collections.emptyList()
@@ -304,6 +348,7 @@ public class PipelineResumeUtils {
         groupedInfoBuilders.add(builder);
       }
 
+      boolean isNegativeStatus = stageExecutions.stream().anyMatch(t -> isNegativeStatus(t.getStatus()));
       if (isNegativeStatus) {
         // Found a non-successful stage in a FAILED pipeline. We will now continue only till we find a stages which are
         // parallel with the current one.
@@ -385,43 +430,60 @@ public class PipelineResumeUtils {
    * differ.
    */
   @VisibleForTesting
-  void checkStageAndStageExecution(PipelineStage stage, PipelineStageExecution stageExecution) {
-    if (stageExecution.getStatus() == SKIPPED) {
-      // Don't check for skipped stage executions as they have no workflow executions attached to them.
+  void checkStageAndStageExecutions(PipelineStage stage, List<PipelineStageExecution> stageExecutions)
+      throws InvalidRequestException {
+    if (isEmpty(stageExecutions)) {
+      throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
+    }
+
+    if (stageExecutions.size() > 1 && stageExecutions.stream().anyMatch(t -> !t.isLooped())) {
+      throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
+    }
+
+    notNullCheck("Pipeline stage " + stage.getName() + "seems to be invalid", stage.getPipelineStageElements());
+
+    boolean anySkipped = stageExecutions.stream().anyMatch(t -> t.getStatus() == SKIPPED);
+    if (anySkipped) {
+      // Don't check for skipped stage executions as they have no workflow executions attached to them. In case of
+      // looped, either all should be skipped or none.
       return;
     }
+    PipelineStageElement stageElement = stage.getPipelineStageElements().get(0);
+    List<WorkflowExecution> workflowExecutions = stageExecutions.stream()
+                                                     .filter(t -> isNotEmpty(t.getWorkflowExecutions()))
+                                                     .map(t -> t.getWorkflowExecutions().get(0))
+                                                     .collect(Collectors.toList());
 
-    List<PipelineStageElement> stageElements = emptyIfNull(stage.getPipelineStageElements())
-                                                   .stream()
-                                                   .filter(pse -> ENV_STATE.name().equals(pse.getType()))
-                                                   .collect(Collectors.toList());
-    List<WorkflowExecution> workflowExecutions = emptyIfNull(stageExecution.getWorkflowExecutions());
+    String newWorkflowId = isEmpty(stageElement.getProperties())
+        ? null
+        : (String) stageElement.getProperties().get(EnvStateKeys.workflowId);
 
-    Set<String> newWorkflowIds = stageElements.stream()
-                                     .map(pse -> (String) pse.getProperties().get(EnvStateKeys.workflowId))
-                                     .filter(Objects::nonNull)
-                                     .collect(Collectors.toSet());
-    Map<String, WorkflowExecution> oldWorkflowIdMap =
-        workflowExecutions.stream()
-            .filter(execution -> execution != null && execution.getWorkflowId() != null)
-            .collect(Collectors.toMap(WorkflowExecution::getWorkflowId, Function.identity()));
+    Set<String> oldWorkflowIdSet = workflowExecutions.stream()
+                                       .filter(execution -> execution != null && execution.getWorkflowId() != null)
+                                       .map(WorkflowExecution::getWorkflowId)
+                                       .collect(Collectors.toSet());
 
-    Set<String> diff = new HashSet<>(oldWorkflowIdMap.keySet());
-    diff.removeAll(newWorkflowIds);
-    if (isNotEmpty(diff)) {
-      String workflowId = diff.iterator().next();
-      String workflowName = oldWorkflowIdMap.get(workflowId).getName();
-      throw new InvalidRequestException(format(
-          "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been removed.",
-          stage.getName(), isEmpty(workflowName) ? workflowId : workflowName));
+    if (isEmpty(oldWorkflowIdSet)) {
+      if (isNotEmpty(newWorkflowId)) {
+        throw new InvalidRequestException(format(
+            "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been added.",
+            stage.getName(), newWorkflowId));
+      } else {
+        return;
+      }
     }
 
-    diff = new HashSet<>(newWorkflowIds);
-    diff.removeAll(oldWorkflowIdMap.keySet());
-    if (isNotEmpty(diff)) {
+    if (isEmpty(newWorkflowId) && isNotEmpty(oldWorkflowIdSet)) {
+      String workflowName = workflowExecutions.get(0).getName();
       throw new InvalidRequestException(format(
-          "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been added.",
-          stage.getName(), diff.iterator().next()));
+          "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been removed.",
+          stage.getName(), isEmpty(workflowName) ? oldWorkflowIdSet.iterator().next() : workflowName));
+    }
+
+    if (!newWorkflowId.equals(oldWorkflowIdSet.iterator().next())) {
+      throw new InvalidRequestException(format(
+          "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been changed.",
+          stage.getName(), newWorkflowId));
     }
   }
 

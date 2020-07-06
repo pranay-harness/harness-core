@@ -28,7 +28,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.simpleframework.xml.Transient;
 import software.wings.api.PhaseElement;
-import software.wings.beans.LoopEnvStateParams;
+import software.wings.beans.LoopParams;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 
@@ -98,7 +98,7 @@ public class StateExecutionInstance
 
   private String rollbackPhaseName;
   private boolean parentLoopedState;
-  private LoopEnvStateParams loopedStateParams;
+  private LoopParams loopedStateParams;
 
   private LinkedList<ContextElement> contextElements = new LinkedList<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();

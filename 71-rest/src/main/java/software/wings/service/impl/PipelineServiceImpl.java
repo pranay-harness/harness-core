@@ -545,6 +545,18 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
+  public Pipeline readPipelineResolvedVariablesLoopedInfo(
+      String appId, String pipelineId, Map<String, String> pipelineVariables) {
+    Pipeline pipeline = readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, false, null);
+
+    // checking pipeline for loops and replacing looped states with multiple parallel states.
+    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
+      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline);
+    }
+    return pipeline;
+  }
+
+  @Override
   public Pipeline readPipelineWithResolvedVariables(
       String appId, String pipelineId, Map<String, String> pipelineVariables) {
     return readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, false, null);
@@ -554,6 +566,18 @@ public class PipelineServiceImpl implements PipelineService {
   public Pipeline readPipelineWithResolvedVariables(
       String appId, String pipelineId, Map<String, String> pipelineVariables, boolean preExecutionChecks) {
     return readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, preExecutionChecks, null);
+  }
+
+  @Override
+  public Pipeline readPipelineResolvedVariablesLoopedInfo(
+      String appId, String pipelineId, Map<String, String> pipelineVariables, boolean preExecutionChecks) {
+    Pipeline pipeline =
+        readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, preExecutionChecks, null);
+    // checking pipeline for loops and replacing looped states with multiple parallel states.
+    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
+      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline);
+    }
+    return pipeline;
   }
 
   private Pipeline readPipelineWithResolvedVariables(String appId, String pipelineId,

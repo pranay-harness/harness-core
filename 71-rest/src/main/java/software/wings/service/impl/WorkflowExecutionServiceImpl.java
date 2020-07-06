@@ -70,6 +70,7 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.ENV_LOOP_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_LOOP_STATE;
 import static software.wings.sm.StateType.ENV_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -220,7 +221,6 @@ import software.wings.service.impl.WorkflowTree.WorkflowTreeBuilder;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.deployment.checks.DeploymentCtx;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeChecker;
-import software.wings.service.impl.pipeline.PipelineServiceHelper;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
@@ -724,7 +724,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             }
             stageExecutionDataList.add(stageExecution);
 
-          } else if (ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
+          } else if ((ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
+                         || ENV_LOOP_RESUME_STATE.name().equals(stateExecutionInstance.getStateType()))
               && featureFlagService.isEnabled(
                      FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())) {
             handleEnvLoopStateExecutionData(workflowExecution.getAppId(), stateExecutionInstanceMap,
@@ -803,7 +804,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               stageExecution.setWorkflowExecutions(asList(workflowExecution2));
               stageExecution.setStatus(workflowExecution2.getStatus());
             }
-            stageExecution.setMessage(envStateExecutionData.getErrorMsg());
+            stageExecution.setMessage(envStateExecutionDataLooped.getErrorMsg());
           }
           stageExecutionDataList.add(stageExecution);
         }
@@ -1082,8 +1083,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @VisibleForTesting
   WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
-    Pipeline pipeline =
-        pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
+    Pipeline pipeline = pipelineService.readPipelineResolvedVariablesLoopedInfo(
+        appId, pipelineId, executionArgs.getWorkflowVariables());
     return triggerPipelineExecution(appId, pipeline, executionArgs, workflowExecutionUpdate, trigger, null);
   }
 
@@ -1116,11 +1117,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         // TODO: if (workflowExecution.getStatus() == RUNNING)
         // Analyze if pipeline is in initial stage
       }
-    }
-
-    // checking pipeline for loops and replacing looped states with multiple parallel states.
-    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, accountId)) {
-      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline);
     }
 
     StateMachine stateMachine = new StateMachine(pipeline, workflowService.stencilMap(pipeline.getAppId()));

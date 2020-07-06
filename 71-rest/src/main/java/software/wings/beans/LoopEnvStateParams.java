@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Value
 @Builder
-public class LoopEnvStateParams {
+public class LoopEnvStateParams implements LoopParams {
   String pipelineId;
   String pipelineStageElementId;
   int pipelineStageParallelIndex;
