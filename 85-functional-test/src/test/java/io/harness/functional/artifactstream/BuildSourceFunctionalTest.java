@@ -1,5 +1,6 @@
 package io.harness.functional.artifactstream;
 
+import static io.harness.generator.SettingGenerator.Settings.HARNESS_JENKINS_DEV_CONNECTOR;
 import static io.harness.rule.OwnerRule.AADITI;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,11 +55,11 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = AADITI, intermittent = true)
+  @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
   public void getJobsForJenkinsAtConnectorLevel() {
     final SettingAttribute settingAttribute =
-        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR);
+        settingGenerator.ensurePredefined(seed, owners, HARNESS_JENKINS_DEV_CONNECTOR);
     List<String> response = Setup.portal()
                                 .auth()
                                 .oauth2(bearerToken)
@@ -95,20 +96,20 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = AADITI, intermittent = true)
+  @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
   public void getArtifactPathsForJenkinsAtConnectorLevel() {
     GenericType<RestResponse<Set<String>>> artifactStreamType = new GenericType<RestResponse<Set<String>>>() {
 
     };
     final SettingAttribute settingAttribute =
-        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR);
+        settingGenerator.ensurePredefined(seed, owners, HARNESS_JENKINS_DEV_CONNECTOR);
     RestResponse<Set<String>> restResponse = Setup.portal()
                                                  .auth()
                                                  .oauth2(bearerToken)
                                                  .queryParam("accountId", application.getAccountId())
                                                  .queryParam("settingId", settingAttribute.getUuid())
-                                                 .pathParam("jobName", "todolist-war")
+                                                 .pathParam("jobName", "todolist_war_copy2-do-not-delete")
                                                  .contentType(ContentType.JSON)
                                                  .get("/settings/build-sources/jobs/{jobName}/paths")
                                                  .as(artifactStreamType.getType());
@@ -165,6 +166,7 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = AADITI, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Enable this when we are able to create Docker Repository type on jfrog.dev.harness.io")
   public void getRepositoriesForArtifactoryDockerAtConnectorLevel() {
     GenericType<RestResponse<Map<String, String>>> artifactStreamType =
         new GenericType<RestResponse<Map<String, String>>>() {
@@ -212,14 +214,14 @@ public class BuildSourceFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = AADITI, intermittent = true)
+  @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
   public void getGroupIdsForNexus() {
     GenericType<RestResponse<Set<String>>> artifactStreamType = new GenericType<RestResponse<Set<String>>>() {
 
     };
     final SettingAttribute settingAttribute =
-        settingGenerator.ensurePredefined(seed, owners, SettingGenerator.Settings.HARNESS_NEXUS_CONNECTOR);
+        settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_NEXUS2_CONNECTOR);
     RestResponse<Set<String>> restResponse = Setup.portal()
                                                  .auth()
                                                  .oauth2(bearerToken)

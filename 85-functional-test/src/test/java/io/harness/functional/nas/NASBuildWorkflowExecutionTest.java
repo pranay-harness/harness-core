@@ -1,5 +1,7 @@
 package io.harness.functional.nas;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.test.FeatureName.NAS_SUPPORT;
 import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +15,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.annotations.test.TestInfo;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -136,6 +139,7 @@ public class NASBuildWorkflowExecutionTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = AADITI)
   @Category({FunctionalTests.class})
+  @TestInfo(testCaseIds = {"CDC-7401"}, featureName = NAS_SUPPORT, category = {FunctionalTests.class}, ownedBy = CDC)
   @Ignore("enable this when NAS_SUPPORT FF is removed")
   // CDC-7401
   public void executeBuildWorkflowWithParameterizedArtifactStream() {
