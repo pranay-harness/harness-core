@@ -68,9 +68,9 @@ public class AwsAmiRollbackTrafficShiftAlbSwitchRoutesState extends AwsAmiTraffi
 
   @Override
   protected List<CommandUnit> getCommandUnits() {
-    return ImmutableList.of(new SpotinstDummyCommandUnit(SWAP_AUTO_SCALING_ROUTES),
-        new SpotinstDummyCommandUnit(AwsConstants.UP_SCALE_ASG_COMMAND_UNIT),
+    return ImmutableList.of(new SpotinstDummyCommandUnit(AwsConstants.UP_SCALE_ASG_COMMAND_UNIT),
         new SpotinstDummyCommandUnit(UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT),
+        new SpotinstDummyCommandUnit(SWAP_AUTO_SCALING_ROUTES),
         new SpotinstDummyCommandUnit(AwsConstants.DOWN_SCALE_ASG_COMMAND_UNIT),
         new SpotinstDummyCommandUnit(DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT));
   }
