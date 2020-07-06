@@ -686,11 +686,14 @@ public class WatcherServiceImpl implements WatcherService {
             ()
                 -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())),
             15L, TimeUnit.SECONDS, true);
+
         DelegateConfiguration config = restResponse.getResource();
+
         return config.getDelegateVersions();
       } else {
         String delegateMetadata =
             Http.getResponseStringFromUrl(watcherConfiguration.getDelegateCheckLocation(), 10, 10);
+
         return singletonList(substringBefore(delegateMetadata, " ").trim());
       }
     } catch (UncheckedTimeoutException e) {
