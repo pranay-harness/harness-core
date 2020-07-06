@@ -169,7 +169,7 @@ public class TriggerConditionController {
     return triggerCondition;
   }
 
-  private TriggerCondition validateAndResolveOnNewArtifactConditionType(
+  TriggerCondition validateAndResolveOnNewArtifactConditionType(
       QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     QLTriggerConditionInput triggerConditionInput = qlCreateOrUpdateTriggerInput.getCondition();
 
@@ -187,7 +187,7 @@ public class TriggerConditionController {
     return artifactTriggerConditionBuilder.build();
   }
 
-  private TriggerCondition validateAndResolveOnPipelineCompletionConditionType(
+  TriggerCondition validateAndResolveOnPipelineCompletionConditionType(
       QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     QLTriggerConditionInput triggerConditionInput = qlCreateOrUpdateTriggerInput.getCondition();
 
@@ -202,7 +202,7 @@ public class TriggerConditionController {
         .build();
   }
 
-  private TriggerCondition validateAndResolveOnScheduleConditionType(
+  TriggerCondition validateAndResolveOnScheduleConditionType(
       QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     QLTriggerConditionInput triggerConditionInput = qlCreateOrUpdateTriggerInput.getCondition();
 
@@ -221,8 +221,7 @@ public class TriggerConditionController {
     return scheduledTriggerConditionBuilder.build();
   }
 
-  private TriggerCondition validateAndResolveOnWebhookConditionType(
-      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+  TriggerCondition validateAndResolveOnWebhookConditionType(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     QLTriggerConditionInput triggerConditionInput = qlCreateOrUpdateTriggerInput.getCondition();
 
     if (null == triggerConditionInput.getWebhookConditionInput()) {
@@ -231,7 +230,7 @@ public class TriggerConditionController {
     return resolveWebhookTriggerCondition(triggerConditionInput);
   }
 
-  private void validateArtifactConditionArtifactStream(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+  void validateArtifactConditionArtifactStream(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     QLTriggerConditionInput triggerConditionInput = qlCreateOrUpdateTriggerInput.getCondition();
 
     if (null == triggerConditionInput.getArtifactConditionInput()) {
@@ -253,7 +252,7 @@ public class TriggerConditionController {
     }
   }
 
-  private TriggerCondition resolveWebhookTriggerCondition(QLTriggerConditionInput qlTriggerConditionInput) {
+  TriggerCondition resolveWebhookTriggerCondition(QLTriggerConditionInput qlTriggerConditionInput) {
     WebHookTriggerConditionBuilder builder = WebHookTriggerCondition.builder();
 
     switch (qlTriggerConditionInput.getWebhookConditionInput().getWebhookSourceType()) {

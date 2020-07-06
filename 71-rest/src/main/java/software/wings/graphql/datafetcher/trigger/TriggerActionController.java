@@ -38,8 +38,6 @@ import software.wings.graphql.schema.type.trigger.QLTriggerActionInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerVariableValue;
 import software.wings.graphql.schema.type.trigger.QLWebhookSource;
 import software.wings.graphql.schema.type.trigger.QLWorkflowAction;
-import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -55,8 +53,6 @@ import java.util.stream.Collectors;
 @Singleton
 @Slf4j
 public class TriggerActionController {
-  @Inject AuthHandler authHandler;
-  @Inject DeploymentAuthHandler deploymentAuthHandler;
   @Inject WorkflowService workflowService;
   @Inject PipelineService pipelineService;
   @Inject ServiceResourceService serviceResourceService;
@@ -209,7 +205,7 @@ public class TriggerActionController {
         .collect(Collectors.toList());
   }
 
-  private Type validateAndResolveFromTriggeringArtifactArtifactSelectionType(
+  Type validateAndResolveFromTriggeringArtifactArtifactSelectionType(
       QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     if (QLConditionType.ON_NEW_ARTIFACT != qlCreateOrUpdateTriggerInput.getCondition().getConditionType()) {
       throw new InvalidRequestException(
@@ -218,7 +214,7 @@ public class TriggerActionController {
     return ArtifactSelection.Type.ARTIFACT_SOURCE;
   }
 
-  private Type validateAndResolveFromTriggeringPipelineArtifactSelectionType(
+  Type validateAndResolveFromTriggeringPipelineArtifactSelectionType(
       QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     if (QLConditionType.ON_PIPELINE_COMPLETION != qlCreateOrUpdateTriggerInput.getCondition().getConditionType()) {
       throw new InvalidRequestException(
@@ -227,12 +223,12 @@ public class TriggerActionController {
     return Type.PIPELINE_SOURCE;
   }
 
-  private Type validateAndResolveLastCollectedArtifactSelectionType(QLArtifactSelectionInput qlArtifactSelectionInput) {
+  Type validateAndResolveLastCollectedArtifactSelectionType(QLArtifactSelectionInput qlArtifactSelectionInput) {
     validateArtifactSource(qlArtifactSelectionInput);
     return Type.LAST_COLLECTED;
   }
 
-  private Type validateAndResolveFromPayloadSourceArtifactSelectionType(
+  Type validateAndResolveFromPayloadSourceArtifactSelectionType(
       QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, QLArtifactSelectionInput qlArtifactSelectionInput) {
     if (QLConditionType.ON_WEBHOOK != qlCreateOrUpdateTriggerInput.getCondition().getConditionType()) {
       throw new InvalidRequestException("FROM_PAYLOAD_SOURCE can be used only with ON_WEBHOOK Condition Type", USER);
@@ -245,7 +241,7 @@ public class TriggerActionController {
     return ArtifactSelection.Type.WEBHOOK_VARIABLE;
   }
 
-  private Type validateAndResolveLastDeployedPipelineArtifactSelectionType(
+  Type validateAndResolveLastDeployedPipelineArtifactSelectionType(
       QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     WorkflowType workflowType = resolveWorkflowType(qlCreateOrUpdateTriggerInput);
     if (workflowType != WorkflowType.PIPELINE) {
@@ -255,7 +251,7 @@ public class TriggerActionController {
     return ArtifactSelection.Type.LAST_DEPLOYED;
   }
 
-  private Type validateAndResolveLastDeployedWorkflowArtifactSelectionType(
+  Type validateAndResolveLastDeployedWorkflowArtifactSelectionType(
       QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     WorkflowType workflowType = resolveWorkflowType(qlCreateOrUpdateTriggerInput);
     if (workflowType != WorkflowType.ORCHESTRATION) {

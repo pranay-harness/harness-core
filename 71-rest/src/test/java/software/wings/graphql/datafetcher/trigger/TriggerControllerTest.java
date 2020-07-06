@@ -60,7 +60,7 @@ public class TriggerControllerTest extends CategoryTest {
   @InjectMocks TriggerController triggerController = Mockito.spy(new TriggerController());
 
   @Before
-  public void init() {
+  public void initMocks() {
     MockitoAnnotations.initMocks(this);
   }
 
@@ -401,6 +401,10 @@ public class TriggerControllerTest extends CategoryTest {
         .thenReturn(artifactSelections);
     Mockito.when(triggerConditionController.resolveTriggerCondition(Matchers.any(QLCreateOrUpdateTriggerInput.class)))
         .thenReturn(artifactTriggerCondition);
+
+    Mockito.doNothing()
+        .when(triggerController)
+        .validateTrigger(Matchers.any(QLCreateOrUpdateTriggerInput.class), Matchers.anyString());
 
     Trigger trigger = triggerController.prepareTrigger(qlCreateOrUpdateTriggerInput, "accountId");
 

@@ -6,15 +6,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockitoAnnotations;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.WebHookToken;
@@ -39,13 +38,15 @@ import software.wings.graphql.schema.type.trigger.QLTriggerConditionInput;
 import java.util.Arrays;
 import java.util.Collections;
 
-@PrepareForTest(TriggerConditionController.class)
-@RunWith(PowerMockRunner.class)
 public class TriggerConditionControllerTest extends CategoryTest {
   @Mock MainConfiguration mainConfiguration;
 
-  @InjectMocks
-  TriggerConditionController triggerConditionController = PowerMockito.spy(new TriggerConditionController());
+  @InjectMocks TriggerConditionController triggerConditionController = Mockito.spy(new TriggerConditionController());
+
+  @Before
+  public void initMocks() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = MILAN)
@@ -337,8 +338,9 @@ public class TriggerConditionControllerTest extends CategoryTest {
                                                             .regex(true)
                                                             .build();
 
-    PowerMockito.doReturn(artifactTriggerCondition)
-        .when(triggerConditionController, "validateAndResolveOnNewArtifactConditionType", qlCreateOrUpdateTriggerInput);
+    Mockito.doReturn(artifactTriggerCondition)
+        .when(triggerConditionController)
+        .validateAndResolveOnNewArtifactConditionType(Matchers.any(QLCreateOrUpdateTriggerInput.class));
 
     ArtifactTriggerCondition retrievedArtifactTriggerCondition =
         (ArtifactTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateOrUpdateTriggerInput);
@@ -364,9 +366,9 @@ public class TriggerConditionControllerTest extends CategoryTest {
     PipelineTriggerCondition pipelineTriggerCondition =
         PipelineTriggerCondition.builder().pipelineId("id").pipelineName("name").build();
 
-    PowerMockito.doReturn(pipelineTriggerCondition)
-        .when(triggerConditionController, "validateAndResolveOnPipelineCompletionConditionType",
-            qlCreateOrUpdateTriggerInput);
+    Mockito.doReturn(pipelineTriggerCondition)
+        .when(triggerConditionController)
+        .validateAndResolveOnPipelineCompletionConditionType(Matchers.any(QLCreateOrUpdateTriggerInput.class));
 
     PipelineTriggerCondition retrievedPipelineTriggerCondition =
         (PipelineTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateOrUpdateTriggerInput);
@@ -391,8 +393,9 @@ public class TriggerConditionControllerTest extends CategoryTest {
                                                               .onNewArtifactOnly(true)
                                                               .build();
 
-    PowerMockito.doReturn(scheduledTriggerCondition)
-        .when(triggerConditionController, "validateAndResolveOnScheduleConditionType", qlCreateTriggerInput);
+    Mockito.doReturn(scheduledTriggerCondition)
+        .when(triggerConditionController)
+        .validateAndResolveOnScheduleConditionType(Matchers.any(QLCreateOrUpdateTriggerInput.class));
 
     ScheduledTriggerCondition retrievedScheduledTriggerCondition =
         (ScheduledTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput);
@@ -426,8 +429,9 @@ public class TriggerConditionControllerTest extends CategoryTest {
             .branchRegex("regex")
             .build();
 
-    PowerMockito.doReturn(webHookTriggerCondition)
-        .when(triggerConditionController, "validateAndResolveOnWebhookConditionType", qlCreateTriggerInput);
+    Mockito.doReturn(webHookTriggerCondition)
+        .when(triggerConditionController)
+        .validateAndResolveOnWebhookConditionType(Matchers.any(QLCreateOrUpdateTriggerInput.class));
 
     WebHookTriggerCondition retrievedWebHookTriggerCondition =
         (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput);
