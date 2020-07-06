@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -20,6 +21,7 @@ import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.persistence.HPersistence;
+import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -31,6 +33,7 @@ import java.util.Optional;
 
 @Slf4j
 public class DataCollectionTaskServiceImpl implements DataCollectionTaskService {
+  @VisibleForTesting static int MAX_RETRY_COUNT = 10;
   @Inject private HPersistence hPersistence;
   @Inject private Injector injector;
   @Inject private Clock clock;
@@ -97,33 +100,52 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     UpdateOperations<DataCollectionTask> updateOperations =
         hPersistence.createUpdateOperations(DataCollectionTask.class)
             .set(DataCollectionTaskKeys.status, result.getStatus());
-    if (result.getException() != null) {
+    if (result.getStacktrace() != null) {
       updateOperations.set(DataCollectionTaskKeys.exception, result.getException());
+      updateOperations.set(DataCollectionTaskKeys.stacktrace, result.getStacktrace());
     }
     Query<DataCollectionTask> query = hPersistence.createQuery(DataCollectionTask.class)
                                           .filter(DataCollectionTaskKeys.uuid, result.getDataCollectionTaskId());
     hPersistence.update(query, updateOperations);
+    DataCollectionTask dataCollectionTask = getDataCollectionTask(result.getDataCollectionTaskId());
     if (result.getStatus() == ExecutionStatus.SUCCESS) {
       // TODO: make this an atomic operation
-      createNextTask(getDataCollectionTask(result.getDataCollectionTaskId()));
+      createNextTask(dataCollectionTask);
+    } else {
+      retry(dataCollectionTask);
     }
-    // TODO: add more logic in case of failure etc.
+  }
+
+  private void retry(DataCollectionTask dataCollectionTask) {
+    if (dataCollectionTask.getRetryCount() < MAX_RETRY_COUNT) {
+      UpdateOperations<DataCollectionTask> updateOperations =
+          hPersistence.createUpdateOperations(DataCollectionTask.class)
+              .set(DataCollectionTaskKeys.status, ExecutionStatus.QUEUED)
+              .inc(DataCollectionTaskKeys.retryCount);
+      Query<DataCollectionTask> query = hPersistence.createQuery(DataCollectionTask.class)
+                                            .filter(DataCollectionTaskKeys.uuid, dataCollectionTask.getUuid());
+      hPersistence.update(query, updateOperations);
+    } else {
+      // TODO: handle this logic in a better way and setup alert.
+      logger.error("Task retry count exceeded max limit. Not retrying anymore... {}, {}, {}",
+          dataCollectionTask.getUuid(), dataCollectionTask.getException(), dataCollectionTask.getStacktrace());
+    }
   }
 
   private void createNextTask(DataCollectionTask prevTask) {
     CVConfig cvConfig = cvConfigService.get(prevTask.getCvConfigId());
-    populateMetricPackMissingData(cvConfig);
+    populateMetricPack(cvConfig);
     if (cvConfig == null) {
       // TODO: delete perpetual task. We need a logic to make sure perpetual tasks are always deleted.
       // Not implementing now because this requires more thought
       throw new UnsupportedOperationException("Not implemented yet");
     }
-    DataCollectionTask dataCollectionTask = getDataCollectionTask(
-        cvConfig, prevTask.getEndTime().plusMillis(1), prevTask.getEndTime().plus(5, ChronoUnit.MINUTES));
+    DataCollectionTask dataCollectionTask = getDataCollectionTask(cvConfig, prevTask.getEndTime().plusMillis(1),
+        prevTask.getEndTime().plus(5, ChronoUnit.MINUTES).minusMillis(1));
     save(dataCollectionTask);
   }
 
-  private void populateMetricPackMissingData(CVConfig cvConfig) {
+  private void populateMetricPack(CVConfig cvConfig) {
     if (cvConfig instanceof MetricCVConfig) {
       // TODO: get rid of this. Adding it to unblock. We need to redesign how are we setting DSL.
       metricPackService.populateDataCollectionDsl(cvConfig.getType(), ((MetricCVConfig) cvConfig).getMetricPack());
@@ -135,10 +157,11 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   @Override
   public String enqueueFirstTask(CVConfig cvConfig) {
     logger.info("Enqueuing cvConfigId for the first time: {}", cvConfig.getUuid());
-    populateMetricPackMissingData(cvConfig);
-    Instant now = clock.instant();
+    populateMetricPack(cvConfig);
+    Instant now = Instant.ofEpochMilli(Timestamp.minuteBoundary(clock.instant().toEpochMilli()));
     // setting it to 2 hours for now. This should come from cvConfig
-    DataCollectionTask dataCollectionTask = getDataCollectionTask(cvConfig, now.minus(2, ChronoUnit.HOURS), now);
+    DataCollectionTask dataCollectionTask =
+        getDataCollectionTask(cvConfig, now.minus(2, ChronoUnit.HOURS), now.minusMillis(1));
 
     save(dataCollectionTask);
     String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(
@@ -153,7 +176,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
         .accountId(cvConfig.getAccountId())
         .cvConfigId(cvConfig.getUuid())
         .status(ExecutionStatus.QUEUED)
-        .validAfter(startTime.toEpochMilli() + DATA_COLLECTION_DELAY.toMillis())
+        .validAfter(endTime.toEpochMilli() + DATA_COLLECTION_DELAY.toMillis())
         .startTime(startTime)
         .endTime(endTime)
         .dataCollectionInfo(

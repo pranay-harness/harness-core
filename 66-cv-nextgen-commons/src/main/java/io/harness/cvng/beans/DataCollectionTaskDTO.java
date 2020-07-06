@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.time.Instant;
+
 @Value
 @Builder
 public class DataCollectionTaskDTO {
@@ -20,5 +21,6 @@ public class DataCollectionTaskDTO {
     String dataCollectionTaskId;
     ExecutionStatus status;
     String exception;
+    String stacktrace;
   }
 }
