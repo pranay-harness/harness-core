@@ -2,7 +2,7 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_proto_grpc//java:defs.bzl", "java_grpc_compile")
 
 proto_library(
-    name = "24_ng_delegate_service_beans_proto",
+    name = "24_manager_delegate_service_beans_proto",
     srcs = glob(["**/*.proto"]),
     strip_import_prefix = "",
     deps = [
@@ -18,7 +18,7 @@ proto_library(
 java_grpc_compile(
     name = "24_ng_delegate_service_beans_java_proto",
     deps = [
-        ":24_ng_delegate_service_beans_proto",
+        ":24_manager_delegate_service_beans_proto",
     ],
     visibility = ["//visibility:public"],
 )

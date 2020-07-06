@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>24-ng-delegate-service-beans</artifactId>
+    <artifactId>24-manager-delegate-service-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>

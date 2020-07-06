@@ -39,7 +39,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>24-ng-delegate-service-beans</artifactId>
+            <artifactId>24-manager-delegate-service-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
