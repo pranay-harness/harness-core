@@ -1,12 +1,15 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.INDER;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -20,6 +23,8 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -31,6 +36,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.AmiArtifactStream;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Action;
@@ -114,5 +120,22 @@ public class ArtifactServiceImplTest extends WingsBaseTest {
     verify(mockWingsPersistence).delete(any(Query.class));
     artifactService.deleteArtifactsByUniqueKey(jenkinsArtifactStream, null, asList("0.1", "0.2"));
     verify(mockWingsPersistence, times(2)).delete(any(Query.class));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testListSortByBuildNo() {
+    Artifact artifact =
+        Artifact.Builder.anArtifact().withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    ArtifactStream artifactStream1 = CustomArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).name("test").build();
+    PageResponse<Artifact> pageResponse = new PageResponse<>();
+    pageResponse.add(artifact);
+    doReturn(pageResponse).when(mockWingsPersistence).query(any(), any());
+    doReturn(artifactStream1).when(mockWingsPersistence).get(any(), eq(ARTIFACT_STREAM_ID));
+    PageRequest<Artifact> pageRequest = aPageRequest().build();
+    PageResponse<Artifact> out = artifactService.listSortByBuildNo(pageRequest);
+    assertThat(out).isNotNull();
+    assertThat(out.get(0).getArtifactStreamName()).isEqualTo("test");
   }
 }

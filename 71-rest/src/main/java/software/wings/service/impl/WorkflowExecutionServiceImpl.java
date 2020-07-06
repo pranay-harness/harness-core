@@ -77,6 +77,7 @@ import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -973,7 +974,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecution getWorkflowExecution(String appId, String workflowExecutionId) {
     logger.debug("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
-    return wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
+    WorkflowExecution workflowExecution =
+        wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
+    if (workflowExecution != null && workflowExecution.getArtifacts() != null) {
+      for (Artifact artifact : workflowExecution.getArtifacts()) {
+        ArtifactStream artifactStream =
+            Preconditions.checkNotNull(wingsPersistence.get(ArtifactStream.class, artifact.getArtifactStreamId()),
+                "Artifact stream has been deleted");
+        artifact.setArtifactStreamName(artifactStream.getName());
+      }
+    }
+    return workflowExecution;
   }
 
   private void populateNodeHierarchy(

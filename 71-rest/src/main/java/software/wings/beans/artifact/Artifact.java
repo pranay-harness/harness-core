@@ -82,6 +82,7 @@ public class Artifact extends Base {
 
   private String artifactStreamId;
   private String artifactSourceName;
+  @Transient private String artifactStreamName;
   private Map<String, String> metadata = new HashMap<>();
   private Map<String, String> labels = new HashMap<>();
   @Transient @JsonIgnore public ArtifactLabelEvaluator label;

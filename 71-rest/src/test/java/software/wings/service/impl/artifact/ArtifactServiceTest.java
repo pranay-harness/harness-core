@@ -35,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -146,6 +147,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     wingsPersistence.save(Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
+    wingsPersistence.save(CustomArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).name(ARTIFACT_STREAM_NAME).build());
     when(appQuery.filter(anyString(), anyObject())).thenReturn(appQuery);
 
     when(appService.exist(APP_ID)).thenReturn(true);
@@ -400,6 +402,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldListSortByBuildNo() {
     constructArtifacts();
+
+    wingsPersistence.save(CustomArtifactStream.builder().uuid(SERVICE_ID).name("test").build());
 
     when(artifactStreamServiceBindingService.listArtifactStreamIds(APP_ID, SERVICE_ID))
         .thenReturn(asList(ARTIFACT_STREAM_ID));
