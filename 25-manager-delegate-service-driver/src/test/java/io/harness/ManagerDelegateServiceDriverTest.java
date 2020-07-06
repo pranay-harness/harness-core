@@ -37,7 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class NgDelegateServiceGrpcClientTest extends NgDelegateServiceDriverTest {
+public class ManagerDelegateServiceDriverTest extends NgDelegateServiceDriverTest {
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();
 
   private static final String ACCOUNT_ID = generateUuid();
@@ -73,7 +73,7 @@ public class NgDelegateServiceGrpcClientTest extends NgDelegateServiceDriverTest
       }));
 
   private NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub;
-  private NgDelegateServiceGrpcClient ngDelegateServiceGrpcClient;
+  private ManagerDelegateServiceDriver managerDelegateServiceDriver;
   @Inject private KryoSerializer kryoSerializer;
 
   @Before
@@ -94,7 +94,7 @@ public class NgDelegateServiceGrpcClientTest extends NgDelegateServiceDriverTest
 
     ngDelegateTaskServiceBlockingStub = NgDelegateTaskServiceGrpc.newBlockingStub(channel);
 
-    ngDelegateServiceGrpcClient = new NgDelegateServiceGrpcClient(ngDelegateTaskServiceBlockingStub, kryoSerializer);
+    managerDelegateServiceDriver = new ManagerDelegateServiceDriver(ngDelegateTaskServiceBlockingStub, kryoSerializer);
   }
 
   @Test
@@ -111,7 +111,7 @@ public class NgDelegateServiceGrpcClientTest extends NgDelegateServiceDriverTest
                             .parameters(new Object[] {HttpTaskParameters.builder().url("criteria").build()})
                             .build();
 
-    SendTaskResponse taskResponse = ngDelegateServiceGrpcClient.sendTask(ACCOUNT_ID, setupAbstractions, taskData);
+    SendTaskResponse taskResponse = managerDelegateServiceDriver.sendTask(ACCOUNT_ID, setupAbstractions, taskData);
     assertThat(taskResponse).isNotNull();
     assertThat(taskResponse).isEqualTo(sendTaskResponse);
   }
@@ -121,7 +121,7 @@ public class NgDelegateServiceGrpcClientTest extends NgDelegateServiceDriverTest
   @Category(UnitTests.class)
   public void testSendTaskAsync() {
     SendTaskAsyncRequest sendTaskAsyncRequest = SendTaskAsyncRequest.newBuilder().build();
-    SendTaskAsyncResponse taskResponse = ngDelegateServiceGrpcClient.sendTaskAsync(sendTaskAsyncRequest);
+    SendTaskAsyncResponse taskResponse = managerDelegateServiceDriver.sendTaskAsync(sendTaskAsyncRequest);
     assertThat(taskResponse).isNotNull();
     assertThat(taskResponse).isEqualTo(sendTaskAsyncResponse);
   }
@@ -131,7 +131,7 @@ public class NgDelegateServiceGrpcClientTest extends NgDelegateServiceDriverTest
   @Category(UnitTests.class)
   public void testAbortTask() {
     AbortTaskRequest abortTaskRequest = AbortTaskRequest.newBuilder().build();
-    AbortTaskResponse taskResponse = ngDelegateServiceGrpcClient.abortTask(abortTaskRequest);
+    AbortTaskResponse taskResponse = managerDelegateServiceDriver.abortTask(abortTaskRequest);
     assertThat(taskResponse).isNotNull();
     assertThat(taskResponse).isEqualTo(abortTaskResponse);
   }

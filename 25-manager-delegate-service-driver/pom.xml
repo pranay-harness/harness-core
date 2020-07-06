@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>25-ng-delegate-service-driver</artifactId>
+    <artifactId>25-manager-delegate-service-driver</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>

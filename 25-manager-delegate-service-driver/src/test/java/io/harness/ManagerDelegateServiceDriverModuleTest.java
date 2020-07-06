@@ -21,12 +21,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NgManagerGrpcClientModuleTest extends CategoryTest {
-  private NgManagerGrpcClientModule ngManagerGrpcClientModule;
+public class ManagerDelegateServiceDriverModuleTest extends CategoryTest {
+  private ManagerDelegateServiceDriverModule managerDelegateServiceDriverModule;
   private final String DEV_HARNESS_AUTHORITY = "dev.harness.io";
 
-  public static class NgManagerGrpcClientTestModule extends NgManagerGrpcClientModule {
-    public NgManagerGrpcClientTestModule(GrpcClientConfig grpcClientConfig, String serviceSecret) {
+  public static class ManagerDelegateServiceDriverTestModule extends ManagerDelegateServiceDriverModule {
+    public ManagerDelegateServiceDriverTestModule(GrpcClientConfig grpcClientConfig, String serviceSecret) {
       super(grpcClientConfig, serviceSecret);
     }
 
@@ -50,12 +50,12 @@ public class NgManagerGrpcClientModuleTest extends CategoryTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void shouldConstructManagerChannelForIpAddressAuthority() {
-    ngManagerGrpcClientModule = new NgManagerGrpcClientTestModule(
+    managerDelegateServiceDriverModule = new ManagerDelegateServiceDriverTestModule(
         GrpcClientConfig.builder().authority(DEV_HARNESS_AUTHORITY).target("122.171.30.255:7143").build(),
         "service_secret");
 
     List<Module> modules = new ArrayList<>();
-    modules.add(ngManagerGrpcClientModule);
+    modules.add(managerDelegateServiceDriverModule);
     Injector injector = Guice.createInjector(modules);
 
     NgDelegateTaskServiceGrpc.NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub =

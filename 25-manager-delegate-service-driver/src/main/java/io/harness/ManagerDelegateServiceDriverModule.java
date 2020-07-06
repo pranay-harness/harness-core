@@ -15,11 +15,11 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.security.ServiceTokenGenerator;
 
-public class NgManagerGrpcClientModule extends AbstractModule {
+public class ManagerDelegateServiceDriverModule extends AbstractModule {
   private final GrpcClientConfig grpcClientConfig;
   private final String serviceSecret;
 
-  public NgManagerGrpcClientModule(GrpcClientConfig grpcClientConfig, String serviceSecret) {
+  public ManagerDelegateServiceDriverModule(GrpcClientConfig grpcClientConfig, String serviceSecret) {
     this.grpcClientConfig = grpcClientConfig;
     this.serviceSecret = serviceSecret;
   }

@@ -3,7 +3,7 @@ package io.harness.ng.core.remote;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.NgDelegateServiceGrpcClient;
+import io.harness.ManagerDelegateServiceDriver;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -25,11 +25,11 @@ import javax.ws.rs.QueryParam;
 @Consumes({"application/json", "text/yaml", "text/html"})
 public class NGDelegateClientResource {
   private static final String HTTP_URL_200 = "http://httpstat.us/200";
-  private final NgDelegateServiceGrpcClient ngDelegateServiceGrpcClient;
+  private final ManagerDelegateServiceDriver managerDelegateServiceDriver;
 
   @Inject
-  public NGDelegateClientResource(NgDelegateServiceGrpcClient ngDelegateServiceGrpcClient) {
-    this.ngDelegateServiceGrpcClient = ngDelegateServiceGrpcClient;
+  public NGDelegateClientResource(ManagerDelegateServiceDriver managerDelegateServiceDriver) {
+    this.managerDelegateServiceDriver = managerDelegateServiceDriver;
   }
 
   @GET
@@ -44,7 +44,7 @@ public class NGDelegateClientResource {
             .parameters(new Object[] {HttpTaskParameters.builder().method("GET").url(HTTP_URL_200).build()})
             .build();
     SendTaskResponse sendTaskResponse =
-        this.ngDelegateServiceGrpcClient.sendTask(accountId, setupAbstractions, taskData);
+        this.managerDelegateServiceDriver.sendTask(accountId, setupAbstractions, taskData);
     return sendTaskResponse.getTaskId().getId();
   }
 }
