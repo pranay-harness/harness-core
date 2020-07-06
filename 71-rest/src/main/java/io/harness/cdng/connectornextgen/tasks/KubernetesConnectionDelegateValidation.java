@@ -4,10 +4,12 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;
 
 import io.harness.beans.DelegateTask;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterConfigDTO;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterDetailsDTO;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesDelegateDetailsDTO;
-import io.harness.connector.common.kubernetes.KubernetesCredentialType;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
+import io.harness.exception.UnexpectedException;
 import software.wings.delegatetasks.validation.AbstractDelegateValidateTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
@@ -23,7 +25,14 @@ public class KubernetesConnectionDelegateValidation extends AbstractDelegateVali
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) getParameters()[2];
+    KubernetesClusterConfigDTO kubernetesClusterConfig;
+    if (getParameters()[0] instanceof KubernetesConnectionTaskParams) {
+      KubernetesConnectionTaskParams kubernetesConnectionTaskParams =
+          (KubernetesConnectionTaskParams) getParameters()[0];
+      kubernetesClusterConfig = kubernetesConnectionTaskParams.getKubernetesClusterConfig();
+    } else {
+      throw new UnexpectedException("INVALID PARAMETER: Expecting the input of type KubernetesConnectionTaskParams");
+    }
     boolean validated = false;
     if (kubernetesClusterConfig.getKubernetesCredentialType() == KubernetesCredentialType.INHERIT_FROM_DELEGATE) {
       validated = ((KubernetesDelegateDetailsDTO) kubernetesClusterConfig.getConfig())
@@ -41,7 +50,14 @@ public class KubernetesConnectionDelegateValidation extends AbstractDelegateVali
 
   @Override
   public List<String> getCriteria() {
-    KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) getParameters()[2];
+    KubernetesClusterConfigDTO kubernetesClusterConfig;
+    if (getParameters()[0] instanceof KubernetesConnectionTaskParams) {
+      KubernetesConnectionTaskParams kubernetesConnectionTaskParams =
+          (KubernetesConnectionTaskParams) getParameters()[0];
+      kubernetesClusterConfig = kubernetesConnectionTaskParams.getKubernetesClusterConfig();
+    } else {
+      throw new UnexpectedException("INVALID PARAMETER: Expecting the input of type KubernetesConnectionTaskParams");
+    }
     if (kubernetesClusterConfig.getKubernetesCredentialType() == KubernetesCredentialType.INHERIT_FROM_DELEGATE) {
       String delegateName = ((KubernetesDelegateDetailsDTO) kubernetesClusterConfig.getConfig()).getDelegateName();
       return Collections.singletonList(delegateName);

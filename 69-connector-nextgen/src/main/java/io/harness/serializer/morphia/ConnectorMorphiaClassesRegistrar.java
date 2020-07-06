@@ -1,13 +1,13 @@
 package io.harness.serializer.morphia;
 
 import io.harness.connector.entities.Connector;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.ClientKeyCertK8;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.KubernetesClusterConfig;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.KubernetesClusterDetails;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.KubernetesDelegateDetails;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.OpenIdConnectK8;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.ServiceAccountK8;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.UserNamePasswordK8;
+import io.harness.connector.entities.embedded.kubernetescluster.ClientKeyCertK8;
+import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
+import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
+import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
+import io.harness.connector.entities.embedded.kubernetescluster.OpenIdConnectK8;
+import io.harness.connector.entities.embedded.kubernetescluster.ServiceAccountK8;
+import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
@@ -21,13 +21,11 @@ public class ConnectorMorphiaClassesRegistrar implements io.harness.morphia.Morp
 
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
-    h.put("connector.entities.connectorTypes.kubernetesCluster.KubernetesDelegateDetails",
-        KubernetesDelegateDetails.class);
-    h.put(
-        "connector.entities.connectorTypes.kubernetesCluster.KubernetesClusterDetails", KubernetesClusterDetails.class);
-    h.put("connector.entities.connectorTypes.kubernetesCluster.ClientKeyCertK8", ClientKeyCertK8.class);
-    h.put("connector.entities.connectorTypes.kubernetesCluster.OpenIdConnectK8", OpenIdConnectK8.class);
-    h.put("connector.entities.connectorTypes.kubernetesCluster.ServiceAccountK8", ServiceAccountK8.class);
-    h.put("connector.entities.connectorTypes.kubernetesCluster.UserNamePasswordK8", UserNamePasswordK8.class);
+    h.put("connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails", KubernetesDelegateDetails.class);
+    h.put("connector.entities.embedded.kubernetescluster.KubernetesClusterDetails", KubernetesClusterDetails.class);
+    h.put("connector.entities.embedded.kubernetescluster.ClientKeyCertK8", ClientKeyCertK8.class);
+    h.put("connector.entities.embedded.kubernetescluster.OpenIdConnectK8", OpenIdConnectK8.class);
+    h.put("connector.entities.embedded.kubernetescluster.ServiceAccountK8", ServiceAccountK8.class);
+    h.put("connector.entities.embedded.kubernetescluster.UserNamePasswordK8", UserNamePasswordK8.class);
   }
 }

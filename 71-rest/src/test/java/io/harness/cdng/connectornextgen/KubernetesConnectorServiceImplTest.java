@@ -1,6 +1,6 @@
 package io.harness.cdng.connectornextgen;
 
-import static io.harness.connector.common.kubernetes.KubernetesCredentialType.MANUAL_CREDENTIALS;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
@@ -10,11 +10,11 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.connectornextgen.impl.KubernetesConnectorServiceImpl;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesAuthDTO;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterConfigDTO;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterDetailsDTO;
-import io.harness.connector.apis.dtos.K8Connector.UserNamePasswordDTO;
-import io.harness.connector.common.kubernetes.KubernetesAuthType;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

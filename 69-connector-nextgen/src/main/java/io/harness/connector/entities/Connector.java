@@ -1,12 +1,12 @@
 package io.harness.connector.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.connector.common.ConnectorCategory;
-import io.harness.connector.common.ConnectorType;
-import io.harness.connector.entities.connectivityStatus.ConnectivityStatus;
+import io.harness.connector.entities.embedded.ConnectivityStatus;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.delegate.beans.connector.ConnectorCategory;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.persistence.PersistentEntity;
 import lombok.Data;
 import lombok.Singular;

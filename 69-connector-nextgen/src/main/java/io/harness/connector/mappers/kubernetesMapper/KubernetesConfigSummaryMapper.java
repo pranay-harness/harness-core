@@ -3,10 +3,10 @@ package io.harness.connector.mappers.kubernetesMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.connector.apis.dtos.K8Connector.KubernetesConfigSummaryDTO;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesConfigSummaryDTO.KubernetesConfigSummaryDTOBuilder;
-import io.harness.connector.common.kubernetes.KubernetesCredentialType;
-import io.harness.connector.entities.connectorTypes.kubernetesCluster.KubernetesClusterConfig;
+import io.harness.connector.apis.dto.k8connector.KubernetesConfigSummaryDTO;
+import io.harness.connector.apis.dto.k8connector.KubernetesConfigSummaryDTO.KubernetesConfigSummaryDTOBuilder;
+import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 
 @Singleton
 public class KubernetesConfigSummaryMapper {

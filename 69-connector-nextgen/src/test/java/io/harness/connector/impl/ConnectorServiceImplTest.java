@@ -1,22 +1,22 @@
 package io.harness.connector.impl;
 
-import static io.harness.connector.common.ConnectorType.KUBERNETES_CLUSTER;
-import static io.harness.connector.common.kubernetes.KubernetesCredentialType.MANUAL_CREDENTIALS;
+import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorsBaseTest;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesAuthDTO;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterConfigDTO;
-import io.harness.connector.apis.dtos.K8Connector.KubernetesClusterDetailsDTO;
-import io.harness.connector.apis.dtos.K8Connector.UserNamePasswordDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorRequestDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorSummaryDTO;
-import io.harness.connector.common.kubernetes.KubernetesAuthType;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.extern.slf4j.Slf4j;
@@ -108,7 +108,7 @@ public class ConnectorServiceImplTest extends ConnectorsBaseTest {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category({UnitTests.class})
-  @Ignore(" The test is intermittent will fix it soon")
+  @Ignore("This test is failing intermittently will fix this ASAP")
   public void testList() {
     createConnector();
     createConnector();

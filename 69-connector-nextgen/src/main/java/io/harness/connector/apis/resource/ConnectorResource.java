@@ -4,9 +4,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import com.google.inject.Inject;
 
-import io.harness.connector.apis.dtos.connector.ConnectorDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorRequestDTO;
-import io.harness.connector.apis.dtos.connector.ConnectorSummaryDTO;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorRequestDTO;
+import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.services.ConnectorService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
