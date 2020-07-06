@@ -45,6 +45,7 @@ import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSeque
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK;
 import static software.wings.beans.FeatureName.DELEGATE_CAPABILITY_FRAMEWORK_PHASE_ENABLE;
+import static software.wings.beans.FeatureName.DELEGATE_TAGS_EXTENDED;
 import static software.wings.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
@@ -153,6 +154,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitValidationParameters;
 import software.wings.beans.HostValidationTaskParameters;
+import software.wings.beans.SelectorType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
@@ -217,6 +219,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -367,18 +371,52 @@ public class DelegateServiceImpl implements DelegateService {
                                         .filter(DelegateKeys.accountId, accountId)
                                         .field(DelegateKeys.tags)
                                         .notEqual(null)
-                                        .project(DelegateKeys.tags, true);
+                                        .project(DelegateKeys.tags, true)
+                                        .project(DelegateKeys.delegateName, true)
+                                        .project(DelegateKeys.hostName, true);
 
     try (HIterator<Delegate> delegates = new HIterator<>(delegateQuery.fetch())) {
       if (delegates.hasNext()) {
         Set<String> selectors = new HashSet<>();
+
         for (Delegate delegate : delegates) {
-          selectors.addAll(delegate.getTags());
+          selectors.addAll(retrieveDelegateSelectors(delegate));
         }
         return selectors;
       }
     }
     return emptySet();
+  }
+
+  @Override
+  public Set<String> retrieveDelegateSelectors(Delegate delegate) {
+    Set<String> selectors = delegate.getTags() == null ? new HashSet<>() : new HashSet<>(delegate.getTags());
+
+    selectors.addAll(retrieveDelegateImplicitSelectors(delegate).keySet());
+
+    return selectors;
+  }
+
+  private Map<String, SelectorType> retrieveDelegateImplicitSelectors(Delegate delegate) {
+    SortedMap<String, SelectorType> selectorTypeMap = new TreeMap<>();
+
+    if (featureFlagService.isEnabled(DELEGATE_TAGS_EXTENDED, delegate.getAccountId())) {
+      DelegateProfile delegateProfile =
+          delegateProfileService.get(delegate.getAccountId(), delegate.getDelegateProfileId());
+
+      if (isNotBlank(delegate.getHostName())) {
+        selectorTypeMap.put(delegate.getHostName().toLowerCase(), SelectorType.HOST_NAME);
+      }
+
+      if (isNotBlank(delegate.getDelegateName())) {
+        selectorTypeMap.put(delegate.getDelegateName().toLowerCase(), SelectorType.DELEGATE_NAME);
+      }
+
+      if (delegateProfile != null && isNotBlank(delegateProfile.getName())) {
+        selectorTypeMap.put(delegateProfile.getName().toLowerCase(), SelectorType.PROFILE_NAME);
+      }
+    }
+    return selectorTypeMap;
   }
 
   @Override
@@ -420,6 +458,7 @@ public class DelegateServiceImpl implements DelegateService {
                            .tags(delegate.getTags())
                            .profileExecutedAt(delegate.getProfileExecutedAt())
                            .profileError(delegate.isProfileError())
+                           .implicitSelectors(retrieveDelegateImplicitSelectors(delegate))
                            .sampleDelegate(delegate.isSampleDelegate())
                            .connections(perDelegateConnections.computeIfAbsent(delegate.getUuid(), uuid -> emptyList()))
                            .build())

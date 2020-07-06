@@ -42,6 +42,8 @@ public interface DelegateService extends OwnedByAccount, TaskExecutor {
 
   DelegateStatus getDelegateStatus(String accountId);
 
+  Set<String> retrieveDelegateSelectors(Delegate delegate);
+
   List<String> getAvailableVersions(String accountId);
 
   Delegate get(String accountId, String delegateId, boolean forceRefresh);
