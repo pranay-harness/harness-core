@@ -49,7 +49,6 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
   private Map<String, String> metadata = new HashMap<>();
   private List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
-  private boolean copyArtifactEnabled;
   private String artifactoryDockerRepositoryServer;
   private String nexusDockerPort;
   private String nexusDockerRegistryUrl;

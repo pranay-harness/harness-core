@@ -154,7 +154,6 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
           .serverSetting(artifactorySetting)
           .artifactServerEncryptedDataDetails(Collections.emptyList())
-          .copyArtifactEnabled(true)
           .artifactType(ArtifactType.WAR)
           .build();
 
@@ -165,19 +164,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
           .serverSetting(artifactorySetting)
           .artifactServerEncryptedDataDetails(Collections.emptyList())
-          .copyArtifactEnabled(true)
           .artifactType(ArtifactType.RPM)
-          .build();
-
-  private ArtifactStreamAttributes artifactStreamAttributesForArtifactoryFeatureFlagDisabled =
-      ArtifactStreamAttributes.builder()
-          .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
-          .metadataOnly(true)
-          .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
-          .serverSetting(artifactorySetting)
-          .artifactServerEncryptedDataDetails(Collections.emptyList())
-          .copyArtifactEnabled(false)
-          .artifactType(ArtifactType.TAR)
           .build();
 
   private ArtifactStreamAttributes artifactStreamAttributesForAzureArtifacts =
@@ -208,7 +195,6 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .artifactPaths(asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar",
               "build/libs/docker-scheduler-1.0-SNAPSHOT-sources.jar"))
           .artifactServerEncryptedDataDetails(Collections.emptyList())
-          .copyArtifactEnabled(true)
           .build();
 
   private ArtifactStreamAttributes artifactStreamAttributesForJenkinsOld =
@@ -222,21 +208,6 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .artifactPaths(asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar",
               "build/libs/docker-scheduler-1.0-SNAPSHOT-sources.jar"))
           .artifactServerEncryptedDataDetails(Collections.emptyList())
-          .copyArtifactEnabled(true)
-          .build();
-
-  private ArtifactStreamAttributes artifactStreamAttributesForNexusFFOff =
-      ArtifactStreamAttributes.builder()
-          .artifactStreamType(ArtifactStreamType.NEXUS.name())
-          .metadataOnly(true)
-          .copyArtifactEnabled(false)
-          .build();
-
-  private ArtifactStreamAttributes artifactStreamAttributesForJenkinsFFOff =
-      ArtifactStreamAttributes.builder()
-          .artifactStreamType(ArtifactStreamType.JENKINS.name())
-          .metadataOnly(true)
-          .copyArtifactEnabled(false)
           .build();
 
   private ArtifactStreamAttributes bambooStreamAttributes =
@@ -258,16 +229,6 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .serverSetting(bambooSetting)
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .artifactStreamId(ARTIFACT_STREAM_ID)
-          .copyArtifactEnabled(true)
-          .build();
-
-  private ArtifactStreamAttributes bambooStreamAttributesFFOff =
-      ArtifactStreamAttributes.builder()
-          .metadataOnly(true)
-          .artifactStreamType(ArtifactStreamType.BAMBOO.name())
-          .jobName("TOD-TOD")
-          .artifactPaths(Arrays.asList("artifacts/todolist.tar"))
-          .copyArtifactEnabled(false)
           .build();
 
   private ArtifactStreamAttributes artifactStreamAttributesForNexus =
@@ -281,7 +242,6 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .jobName("releases")
           .groupId("io.harness.test")
           .artifactName("todolist")
-          .copyArtifactEnabled(true)
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
@@ -298,12 +258,6 @@ public class ScpCommandUnitTest extends WingsBaseTest {
       aCommandExecutionContext().artifactStreamAttributes(artifactStreamAttributesForArtifactoryRpmType).build());
 
   @InjectMocks
-  private ShellCommandExecutionContext contextForArtifactoryFeatureFlagDisabled = new ShellCommandExecutionContext(
-      aCommandExecutionContext()
-          .artifactStreamAttributes(artifactStreamAttributesForArtifactoryFeatureFlagDisabled)
-          .build());
-
-  @InjectMocks
   ShellCommandExecutionContext contextForAzureArtifacts =
       new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(artifactStreamAttributesForAzureArtifacts)
@@ -315,13 +269,6 @@ public class ScpCommandUnitTest extends WingsBaseTest {
                                            .artifactStreamAttributes(bambooStreamAttributes)
                                            .metadata(mockMetadata(ArtifactStreamType.BAMBOO))
                                            .build());
-  @InjectMocks
-  ShellCommandExecutionContext contextForBambooFFOff =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .artifactStreamAttributes(bambooStreamAttributesFFOff)
-                                           .metadata(mockMetadata(ArtifactStreamType.BAMBOO))
-                                           .build());
-
   @InjectMocks
   ShellCommandExecutionContext contextForJenkins =
       new ShellCommandExecutionContext(aCommandExecutionContext()
@@ -339,26 +286,12 @@ public class ScpCommandUnitTest extends WingsBaseTest {
                                            .host(Host.Builder.aHost().withHostName(HOST_NAME).build())
                                            .build());
 
-  @InjectMocks
-  ShellCommandExecutionContext contextForJenkinsFFOff =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .artifactStreamAttributes(artifactStreamAttributesForJenkinsFFOff)
-                                           .metadata(mockMetadata(ArtifactStreamType.JENKINS))
-                                           .build());
-
   public ScpCommandUnitTest() throws URISyntaxException {}
 
   @InjectMocks
   ShellCommandExecutionContext contextForNexusArtifacts =
       new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(artifactStreamAttributesForNexus)
-                                           .metadata(mockMetadata(ArtifactStreamType.NEXUS))
-                                           .build());
-
-  @InjectMocks
-  ShellCommandExecutionContext contextForNexusFFOff =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
-                                           .artifactStreamAttributes(artifactStreamAttributesForNexusFFOff)
                                            .metadata(mockMetadata(ArtifactStreamType.NEXUS))
                                            .build());
 
@@ -407,14 +340,6 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldNotDownloadArtifactFromArtifactoryIfFeatureFlagDisabled() {
-    CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForArtifactoryFeatureFlagDisabled);
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-  }
-
-  @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldDownloadArtifactFromAzureArtifactsIfMetadataOnly() {
@@ -457,17 +382,6 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  public void shouldlNotDownloadArtifactFromJenkinsIfFeatureFlagDisabled() {
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
-        .thenReturn(CommandExecutionStatus.SUCCESS);
-    CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForJenkinsFFOff);
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
   public void shouldDownloadArtifactFromBambooIfMetadataOnly() {
     when(bambooService.getFileSize(any(), any(), eq("todolist.tar"),
              eq("http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar")))
@@ -488,28 +402,12 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
-  public void shouldNotDownloadArtifactFromBambooIfFeatureFlagDisabled() {
-    CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForBambooFFOff);
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
   public void shouldDownloadArtifactFromNexusIfMetadataOnly() {
     when(nexusService.getFileSize(any(), any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
     when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
              anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForNexusArtifacts);
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldNotDownloadArtifactFromNexusIfFeatureFlagDisabled() {
-    CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForNexusFFOff);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 
