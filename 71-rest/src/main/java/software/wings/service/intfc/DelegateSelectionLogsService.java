@@ -22,6 +22,8 @@ public interface DelegateSelectionLogsService {
 
   void logMissingAllSelectors(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
+  void logTaskAssigned(BatchDelegateSelectionLog batch, String accountId, String delegateId);
+
   void logNoIncludeScopeMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
   List<DelegateSelectionLogParams> fetchTaskSelectionLogs(String accountId, String taskId);
