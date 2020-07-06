@@ -125,14 +125,9 @@ public class ScpCommandUnit extends SshCommandUnit {
                 context.getHost() == null ? null : context.getHost().getPublicDns());
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.ARTIFACTORY.name())) {
             if (isArtifactTypeAllowedForArtifactory(artifactStreamAttributes.getArtifactType())) {
-              if (artifactStreamAttributes.isCopyArtifactEnabled()) {
-                return context.copyFiles(destinationDirectoryPath, artifactStreamAttributes, context.getAccountId(),
-                    context.getAppId(), context.getActivityId(), getName(),
-                    context.getHost() == null ? null : context.getHost().getPublicDns());
-              } else {
-                logger.info("Feature flag for copy artifact for artifactory not enabled.");
-                return CommandExecutionStatus.SUCCESS;
-              }
+              return context.copyFiles(destinationDirectoryPath, artifactStreamAttributes, context.getAccountId(),
+                  context.getAppId(), context.getActivityId(), getName(),
+                  context.getHost() == null ? null : context.getHost().getPublicDns());
             } else {
               logger.info("Copy Artifact is not supported for artifact stream type: " + artifactStreamType
                   + " and artifact type: " + artifactStreamAttributes.getArtifactType());
@@ -165,107 +160,94 @@ public class ScpCommandUnit extends SshCommandUnit {
             }
             return SUCCESS;
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.JENKINS.name())) {
-            if (artifactStreamAttributes.isCopyArtifactEnabled()) {
-              if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
-                saveExecutionLog(context, WARN, "There are no artifacts to copy");
-                return SUCCESS;
-              }
-              Map<String, String> metadata = artifactStreamAttributes.getMetadata();
-              if (metadata == null) {
-                throw new InvalidRequestException(
-                    "No metadata found for artifact stream. Cannot proceed with copy artifact");
-              }
-              JenkinsConfig jenkinsConfig = (JenkinsConfig) artifactStreamAttributes.getServerSetting().getValue();
-              encryptionService.decrypt(
-                  jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails());
-              Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
+            if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
+              saveExecutionLog(context, WARN, "There are no artifacts to copy");
+              return SUCCESS;
+            }
+            Map<String, String> metadata = artifactStreamAttributes.getMetadata();
+            if (metadata == null) {
+              throw new InvalidRequestException(
+                  "No metadata found for artifact stream. Cannot proceed with copy artifact");
+            }
+            JenkinsConfig jenkinsConfig = (JenkinsConfig) artifactStreamAttributes.getServerSetting().getValue();
+            encryptionService.decrypt(jenkinsConfig, artifactStreamAttributes.getArtifactServerEncryptedDataDetails());
+            Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
 
-              for (ArtifactFileMetadata artifactFileMetadata : artifactStreamAttributes.getArtifactFileMetadata()) {
-                metadata.put(ArtifactMetadataKeys.artifactFileName, artifactFileMetadata.getFileName());
-                metadata.put(ArtifactMetadataKeys.artifactPath, artifactFileMetadata.getUrl());
-                String artifactPathRegex = artifactFileMetadata.getUrl().substring(
-                    artifactFileMetadata.getUrl().lastIndexOf(ARTIFACT_STRING) + ARTIFACT_STRING.length());
-                metadata.put(ArtifactMetadataKeys.artifactFileSize,
-                    String.valueOf(jenkins.getFileSize(artifactStreamAttributes.getJobName(),
-                        metadata.get(ArtifactMetadataKeys.buildNo), artifactPathRegex)));
-                artifactStreamAttributes.setMetadata(metadata);
-                CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,
-                    artifactStreamAttributes, context.getAccountId(), context.getAppId(), context.getActivityId(),
-                    getName(), context.getHost() == null ? null : context.getHost().getPublicDns());
-                if (FAILURE == executionStatus) {
-                  saveExecutionLog(context, ERROR,
-                      format("Copy Artifact failed for artifact %s", artifactFileMetadata.getFileName()));
-                  return executionStatus;
-                }
+            for (ArtifactFileMetadata artifactFileMetadata : artifactStreamAttributes.getArtifactFileMetadata()) {
+              metadata.put(ArtifactMetadataKeys.artifactFileName, artifactFileMetadata.getFileName());
+              metadata.put(ArtifactMetadataKeys.artifactPath, artifactFileMetadata.getUrl());
+              String artifactPathRegex = artifactFileMetadata.getUrl().substring(
+                  artifactFileMetadata.getUrl().lastIndexOf(ARTIFACT_STRING) + ARTIFACT_STRING.length());
+              metadata.put(ArtifactMetadataKeys.artifactFileSize,
+                  String.valueOf(jenkins.getFileSize(artifactStreamAttributes.getJobName(),
+                      metadata.get(ArtifactMetadataKeys.buildNo), artifactPathRegex)));
+              artifactStreamAttributes.setMetadata(metadata);
+              CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,
+                  artifactStreamAttributes, context.getAccountId(), context.getAppId(), context.getActivityId(),
+                  getName(), context.getHost() == null ? null : context.getHost().getPublicDns());
+              if (FAILURE == executionStatus) {
+                saveExecutionLog(
+                    context, ERROR, format("Copy Artifact failed for artifact %s", artifactFileMetadata.getFileName()));
+                return executionStatus;
               }
-            } else {
-              logger.info("Feature flag for copy artifact for Jenkins not enabled.");
             }
             return SUCCESS;
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.BAMBOO.name())) {
-            if (artifactStreamAttributes.isCopyArtifactEnabled()) {
-              if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
-                saveExecutionLog(context, WARN, "There are no artifacts to copy");
-                return SUCCESS;
+            if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
+              saveExecutionLog(context, WARN, "There are no artifacts to copy");
+              return SUCCESS;
+            }
+            Map<String, String> metadata = artifactStreamAttributes.getMetadata();
+            if (metadata == null) {
+              throw new InvalidRequestException(
+                  "No metadata found for artifact stream. Cannot proceed with copy artifact");
+            }
+            BambooConfig bambooConfig = (BambooConfig) artifactStreamAttributes.getServerSetting().getValue();
+            for (ArtifactFileMetadata artifactFileMetadata : artifactStreamAttributes.getArtifactFileMetadata()) {
+              metadata.put(ArtifactMetadataKeys.artifactFileName, artifactFileMetadata.getFileName());
+              metadata.put(ArtifactMetadataKeys.artifactPath, artifactFileMetadata.getUrl());
+              metadata.put(ArtifactMetadataKeys.artifactFileSize,
+                  String.valueOf(bambooService.getFileSize(bambooConfig,
+                      artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+                      artifactFileMetadata.getFileName(), artifactFileMetadata.getUrl())));
+              artifactStreamAttributes.setMetadata(metadata);
+              CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,
+                  artifactStreamAttributes, context.getAccountId(), context.getAppId(), context.getActivityId(),
+                  getName(), context.getHost() == null ? null : context.getHost().getPublicDns());
+              if (FAILURE == executionStatus) {
+                saveExecutionLog(
+                    context, ERROR, format("Copy Artifact failed for artifact %s", artifactFileMetadata.getFileName()));
+                return executionStatus;
               }
-              Map<String, String> metadata = artifactStreamAttributes.getMetadata();
-              if (metadata == null) {
-                throw new InvalidRequestException(
-                    "No metadata found for artifact stream. Cannot proceed with copy artifact");
-              }
-              BambooConfig bambooConfig = (BambooConfig) artifactStreamAttributes.getServerSetting().getValue();
-              for (ArtifactFileMetadata artifactFileMetadata : artifactStreamAttributes.getArtifactFileMetadata()) {
-                metadata.put(ArtifactMetadataKeys.artifactFileName, artifactFileMetadata.getFileName());
-                metadata.put(ArtifactMetadataKeys.artifactPath, artifactFileMetadata.getUrl());
-                metadata.put(ArtifactMetadataKeys.artifactFileSize,
-                    String.valueOf(bambooService.getFileSize(bambooConfig,
-                        artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
-                        artifactFileMetadata.getFileName(), artifactFileMetadata.getUrl())));
-                artifactStreamAttributes.setMetadata(metadata);
-                CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,
-                    artifactStreamAttributes, context.getAccountId(), context.getAppId(), context.getActivityId(),
-                    getName(), context.getHost() == null ? null : context.getHost().getPublicDns());
-                if (FAILURE == executionStatus) {
-                  saveExecutionLog(context, ERROR,
-                      format("Copy Artifact failed for artifact %s", artifactFileMetadata.getFileName()));
-                  return executionStatus;
-                }
-              }
-            } else {
-              logger.info("Feature flag for copy artifact for Bamboo not enabled.");
             }
             return SUCCESS;
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.NEXUS.name())) {
-            if (artifactStreamAttributes.isCopyArtifactEnabled()) {
-              if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
-                saveExecutionLog(context, WARN, "There are no artifacts to copy");
-                return SUCCESS;
+            if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
+              saveExecutionLog(context, WARN, "There are no artifacts to copy");
+              return SUCCESS;
+            }
+            Map<String, String> metadata = artifactStreamAttributes.getMetadata();
+            if (metadata == null) {
+              throw new InvalidRequestException(
+                  "No metadata found for artifact stream. Cannot proceed with copy artifact");
+            }
+            NexusConfig nexusConfig = (NexusConfig) artifactStreamAttributes.getServerSetting().getValue();
+            for (ArtifactFileMetadata artifactFileMetadata : artifactStreamAttributes.getArtifactFileMetadata()) {
+              metadata.put(ArtifactMetadataKeys.artifactFileName, artifactFileMetadata.getFileName());
+              metadata.put(ArtifactMetadataKeys.artifactPath, artifactFileMetadata.getUrl());
+              metadata.put(ArtifactMetadataKeys.artifactFileSize,
+                  String.valueOf(nexusService.getFileSize(nexusConfig,
+                      artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+                      artifactFileMetadata.getFileName(), artifactFileMetadata.getUrl())));
+              artifactStreamAttributes.setMetadata(metadata);
+              CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,
+                  artifactStreamAttributes, context.getAccountId(), context.getAppId(), context.getActivityId(),
+                  getName(), context.getHost() == null ? null : context.getHost().getPublicDns());
+              if (FAILURE == executionStatus) {
+                saveExecutionLog(
+                    context, ERROR, format("Copy Artifact failed for artifact %s", artifactFileMetadata.getFileName()));
+                return executionStatus;
               }
-              Map<String, String> metadata = artifactStreamAttributes.getMetadata();
-              if (metadata == null) {
-                throw new InvalidRequestException(
-                    "No metadata found for artifact stream. Cannot proceed with copy artifact");
-              }
-              NexusConfig nexusConfig = (NexusConfig) artifactStreamAttributes.getServerSetting().getValue();
-              for (ArtifactFileMetadata artifactFileMetadata : artifactStreamAttributes.getArtifactFileMetadata()) {
-                metadata.put(ArtifactMetadataKeys.artifactFileName, artifactFileMetadata.getFileName());
-                metadata.put(ArtifactMetadataKeys.artifactPath, artifactFileMetadata.getUrl());
-                metadata.put(ArtifactMetadataKeys.artifactFileSize,
-                    String.valueOf(nexusService.getFileSize(nexusConfig,
-                        artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
-                        artifactFileMetadata.getFileName(), artifactFileMetadata.getUrl())));
-                artifactStreamAttributes.setMetadata(metadata);
-                CommandExecutionStatus executionStatus = context.copyFiles(destinationDirectoryPath,
-                    artifactStreamAttributes, context.getAccountId(), context.getAppId(), context.getActivityId(),
-                    getName(), context.getHost() == null ? null : context.getHost().getPublicDns());
-                if (FAILURE == executionStatus) {
-                  saveExecutionLog(context, ERROR,
-                      format("Copy Artifact failed for artifact %s", artifactFileMetadata.getFileName()));
-                  return executionStatus;
-                }
-              }
-            } else {
-              logger.info("Feature flag for copy artifact for Nexus not enabled.");
             }
             return SUCCESS;
           } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.CUSTOM.name())) {
