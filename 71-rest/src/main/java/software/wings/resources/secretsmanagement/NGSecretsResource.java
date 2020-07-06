@@ -2,10 +2,10 @@ package software.wings.resources.secretsmanagement;
 
 import com.google.inject.Inject;
 
+import io.harness.NgManagerServiceDriver;
 import io.harness.delegate.SendTaskResultRequest;
 import io.harness.delegate.SendTaskResultResponse;
 import io.harness.delegate.TaskId;
-import io.harness.grpc.ng.manager.DelegateTaskResponseGrpcClient;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.security.annotations.NextGenManagerAuth;
@@ -26,12 +26,12 @@ import javax.ws.rs.QueryParam;
 @NextGenManagerAuth
 public class NGSecretsResource {
   private final SecretManager secretManager;
-  private final DelegateTaskResponseGrpcClient delegateTaskResponseGrpcClient;
+  private final NgManagerServiceDriver ngManagerServiceDriver;
 
   @Inject
-  public NGSecretsResource(SecretManager secretManager, DelegateTaskResponseGrpcClient delegateTaskResponseGrpcClient) {
+  public NGSecretsResource(SecretManager secretManager, NgManagerServiceDriver ngManagerServiceDriver) {
     this.secretManager = secretManager;
-    this.delegateTaskResponseGrpcClient = delegateTaskResponseGrpcClient;
+    this.ngManagerServiceDriver = ngManagerServiceDriver;
   }
 
   @GET
@@ -43,9 +43,9 @@ public class NGSecretsResource {
 
   @GET
   @Path("task")
-  public RestResponse<String> sendTaskResponse() {
-    SendTaskResultResponse sendTaskResultResponse = delegateTaskResponseGrpcClient.sendTaskResult(
+  public RestResponse<Boolean> sendTaskResponse() {
+    SendTaskResultResponse sendTaskResultResponse = ngManagerServiceDriver.sendTaskResult(
         SendTaskResultRequest.newBuilder().setTaskId(TaskId.newBuilder().setId("MangerId").build()).build());
-    return new RestResponse<>(sendTaskResultResponse.getTaskId().getId());
+    return new RestResponse<>(sendTaskResultResponse.getAcknowledgement());
   }
 }

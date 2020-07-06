@@ -1,6 +1,6 @@
-package io.harness.grpc;
+package io.harness;
 
-import static io.harness.rule.OwnerRule.VIKAS;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Guice;
@@ -10,9 +10,8 @@ import com.google.inject.Module;
 import com.google.inject.name.Names;
 
 import io.grpc.CallCredentials;
-import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.NgDelegateTaskResponseServiceGrpc.NgDelegateTaskResponseServiceBlockingStub;
+import io.harness.delegate.NgDelegateTaskResponseServiceGrpc;
 import io.harness.grpc.auth.ServiceAuthCallCredentials;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.rule.Owner;
@@ -22,9 +21,9 @@ import org.junit.experimental.categories.Category;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GrpcClientModuleTest extends CategoryTest {
+public class NgManagerServiceDriverModuleTest extends CategoryTest {
   @Test
-  @Owner(developers = VIKAS)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testConfigure() {
     String serviceSecret = "service_secret";
@@ -32,14 +31,15 @@ public class GrpcClientModuleTest extends CategoryTest {
     String target = "localhost:9980";
 
     GrpcClientConfig grpcClientConfig = GrpcClientConfig.builder().target(target).authority(authority).build();
-    GrpcClientModule grpcClientModule = new GrpcClientModule(grpcClientConfig, serviceSecret);
+    NgManagerServiceDriverModule driverModule = new NgManagerServiceDriverModule(grpcClientConfig, serviceSecret);
 
     List<Module> modules = new ArrayList<>();
-    modules.add(grpcClientModule);
+    modules.add(driverModule);
     Injector injector = Guice.createInjector(modules);
 
-    NgDelegateTaskResponseServiceBlockingStub ngDelegateTaskResponseServiceBlockingStub =
-        injector.getInstance(NgDelegateTaskResponseServiceBlockingStub.class);
+    NgDelegateTaskResponseServiceGrpc
+        .NgDelegateTaskResponseServiceBlockingStub ngDelegateTaskResponseServiceBlockingStub =
+        injector.getInstance(NgDelegateTaskResponseServiceGrpc.NgDelegateTaskResponseServiceBlockingStub.class);
     assertThat(ngDelegateTaskResponseServiceBlockingStub).isNotNull();
     assertThat(ngDelegateTaskResponseServiceBlockingStub.getChannel()).isNotNull();
 

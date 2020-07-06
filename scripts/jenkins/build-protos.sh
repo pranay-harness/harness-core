@@ -14,6 +14,7 @@ bazel ${OUTPUT_BASE} build \
   //21-delegate-agent-beans/src/main/proto/... \
   //22-delegate-service-beans/src/main/proto/... \
   //24-manager-delegate-service-beans/src/main/proto/... \
+  //24-ng-manager-service-beans/src/main/proto/... \
   //product/ci/engine/proto/...
 
 cleanup() {
@@ -49,6 +50,7 @@ cleanup 13-grpc-api/src/generated/java \
         21-delegate-agent-beans/src/generated/java \
         22-delegate-service-beans/src/generated/java \
         24-manager-delegate-service-beans/src/generated/java \
+        24-ng-manager-service-beans/src/generated/java \
         72-ci-beans/src/generated/java
 
 compile_proto_module 13-grpc-api 13-grpc-api/src/main 13-grpc-api/src/generated/java
@@ -58,6 +60,7 @@ compile_proto_module 20-delegate-beans 20-delegate-beans/src/main 20-delegate-be
 compile_proto_module 21-delegate-agent-beans 21-delegate-agent-beans/src/main 21-delegate-agent-beans/src/generated/java
 compile_proto_module 22-delegate-service-beans 22-delegate-service-beans/src/main 22-delegate-service-beans/src/generated/java
 compile_proto_module 24-manager-delegate-service-beans 24-manager-delegate-service-beans/src/main 24-manager-delegate-service-beans/src/generated/java
+compile_proto_module 24-ng-manager-service-beans 24-ng-manager-service-beans/src/main 24-ng-manager-service-beans/src/generated/java
 
 compile_proto_module cienginepb product/ci/engine 72-ci-beans/src/generated/java
 compile_proto_module ciaddonpb product/ci/addon 72-ci-beans/src/generated/java

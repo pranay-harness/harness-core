@@ -6,11 +6,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.NgManagerServiceDriver;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.SendTaskResultRequest;
 import io.harness.delegate.SendTaskResultResponse;
-import io.harness.delegate.TaskId;
-import io.harness.grpc.ng.manager.DelegateTaskResponseGrpcClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -26,10 +25,9 @@ public class NGSecretsResourceTest extends WingsBaseTest {
   private final String SECRET_ID = "SECRET_ID";
   private final String ACCOUNT_ID = "ACCOUNT_ID";
   private final String USER_ID = "USER_ID";
-  private final String TASK_ID = "TASK_ID";
 
   @Mock SecretManager secretManager;
-  @Mock DelegateTaskResponseGrpcClient delegateTaskResponseGrpcClient;
+  @Mock NgManagerServiceDriver ngManagerServiceDriver;
 
   @Test
   @Owner(developers = VIKAS)
@@ -37,7 +35,7 @@ public class NGSecretsResourceTest extends WingsBaseTest {
   public void testGet() {
     EncryptedData encryptedData = EncryptedData.builder().name(SECRET_NAME).build();
     when(secretManager.getSecretById(anyString(), anyString())).thenReturn(encryptedData);
-    NGSecretsResource ngSecretsResource = new NGSecretsResource(secretManager, delegateTaskResponseGrpcClient);
+    NGSecretsResource ngSecretsResource = new NGSecretsResource(secretManager, ngManagerServiceDriver);
     RestResponse<EncryptedData> encryptedDataRestResponse = ngSecretsResource.get(SECRET_ID, ACCOUNT_ID, USER_ID);
     assertThat(encryptedDataRestResponse).isNotNull();
     assertThat(encryptedDataRestResponse.getResource()).isNotNull();
@@ -49,13 +47,12 @@ public class NGSecretsResourceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSendTaskResponse() {
     SendTaskResultResponse sendTaskResultResponse =
-        SendTaskResultResponse.newBuilder().setTaskId(TaskId.newBuilder().setId(TASK_ID).build()).build();
-    when(delegateTaskResponseGrpcClient.sendTaskResult(any(SendTaskResultRequest.class)))
-        .thenReturn(sendTaskResultResponse);
-    NGSecretsResource ngSecretsResource = new NGSecretsResource(secretManager, delegateTaskResponseGrpcClient);
-    RestResponse<String> restResponse = ngSecretsResource.sendTaskResponse();
+        SendTaskResultResponse.newBuilder().setAcknowledgement(true).build();
+    when(ngManagerServiceDriver.sendTaskResult(any(SendTaskResultRequest.class))).thenReturn(sendTaskResultResponse);
+    NGSecretsResource ngSecretsResource = new NGSecretsResource(secretManager, ngManagerServiceDriver);
+    RestResponse<Boolean> restResponse = ngSecretsResource.sendTaskResponse();
     assertThat(restResponse).isNotNull();
     assertThat(restResponse.getResource()).isNotNull();
-    assertThat(restResponse.getResource()).isEqualTo(TASK_ID);
+    assertThat(restResponse.getResource()).isEqualTo(true);
   }
 }

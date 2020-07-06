@@ -50,7 +50,6 @@ public class NgDelegateTaskResponseGrpcServerTest extends CategoryTest {
         SendTaskResultRequest.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build());
 
     assertThat(sendTaskResultResponse).isNotNull();
-    assertThat(sendTaskResultResponse.getTaskId()).isNotNull();
-    assertThat(sendTaskResultResponse.getTaskId().getId()).isEqualTo(taskId);
+    assertThat(sendTaskResultResponse.getAcknowledgement()).isTrue();
   }
 }
