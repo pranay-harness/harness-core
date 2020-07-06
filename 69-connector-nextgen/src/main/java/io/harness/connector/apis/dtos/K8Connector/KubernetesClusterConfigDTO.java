@@ -8,20 +8,26 @@ import io.harness.connector.apis.dtos.connector.ConnectorConfigDTO;
 import io.harness.connector.common.kubernetes.KubernetesCredentialType;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesClusterConfigDTO implements ConnectorConfigDTO {
-  @JsonProperty("type1") KubernetesCredentialType kubernetesCredentialType1;
   @JsonProperty("type") KubernetesCredentialType kubernetesCredentialType;
 
   @JsonProperty("spec")
   @JsonTypeInfo(
-      use = JsonTypeInfo.Id.NAME, property = "type1", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+      use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @JsonSubTypes({
     @JsonSubTypes.Type(value = KubernetesDelegateDetailsDTO.class, name = "InheritFromDelegate")
     , @JsonSubTypes.Type(value = KubernetesClusterDetailsDTO.class, name = "ManualConfig")
   })
   KubernetesCredentialDTO config;
+
+  @Builder
+  public KubernetesClusterConfigDTO(KubernetesCredentialType kubernetesCredentialType, KubernetesCredentialDTO config) {
+    this.kubernetesCredentialType = kubernetesCredentialType;
+    this.config = config;
+  }
 }

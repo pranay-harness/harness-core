@@ -796,6 +796,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>69-connector-nextgen</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>70-delegate-agent</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

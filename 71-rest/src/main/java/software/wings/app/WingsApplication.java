@@ -55,6 +55,7 @@ import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
+import io.harness.cdng.resource.connectors.ConnectorResource;
 import io.harness.commandlibrary.client.CommandLibraryServiceClientModule;
 import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
@@ -143,6 +144,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
+import software.wings.beans.FeatureName;
 import software.wings.beans.User;
 import software.wings.beans.alert.AlertReconciliationHandler;
 import software.wings.collect.ArtifactCollectEventListener;
@@ -611,6 +613,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    registerCDNextGenResources(environment, injector);
   }
 
   private void registerManagedBeans(MainConfiguration configuration, Environment environment, Injector injector) {
@@ -841,5 +844,18 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerExecutionPlanCreators(Injector injector) {
     injector.getInstance(ExecutionPlanCreatorRegistrar.class).register();
+  }
+
+  private void registerCDNextGenResources(Environment environment, Injector injector) {
+    final FeatureFlagService featureFlagService = injector.getInstance(FeatureFlagService.class);
+    if (featureFlagService.isGlobalEnabled(FeatureName.ENABLE_CDNG_RESOURCES)) {
+      Reflections reflections = new Reflections(ConnectorResource.class.getPackage().getName());
+      Set<Class<?>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
+      for (Class<?> resource : resourceClasses) {
+        if (Resource.isAcceptable(resource)) {
+          environment.jersey().register(injector.getInstance(resource));
+        }
+      }
+    }
   }
 }

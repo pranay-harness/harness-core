@@ -7,22 +7,28 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.connector.common.kubernetes.KubernetesAuthType;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesAuthDTO {
   @JsonProperty("type") KubernetesAuthType authType;
-  @JsonProperty("type1") KubernetesAuthType authType1;
+
+  @Builder
+  public KubernetesAuthDTO(KubernetesAuthType authType, KubernetesAuthCredentialDTO credentials) {
+    this.authType = authType;
+    this.credentials = credentials;
+  }
 
   @JsonProperty("spec")
   @JsonTypeInfo(
-      use = JsonTypeInfo.Id.NAME, property = "type1", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+      use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @JsonSubTypes({
     @JsonSubTypes.Type(value = UserNamePasswordDTO.class, name = "UsernamePassword")
     , @JsonSubTypes.Type(value = ClientKeyCertDTO.class, name = "ClientKeyCert"),
         @JsonSubTypes.Type(value = ServiceAccountDTO.class, name = "ServiceAccount"),
-        @JsonSubTypes.Type(value = ClientKeyCertDTO.class, name = "OpenIdConnect")
+        @JsonSubTypes.Type(value = OpenIdConnectDTO.class, name = "OpenIdConnect")
   })
   KubernetesAuthCredentialDTO credentials;
 }

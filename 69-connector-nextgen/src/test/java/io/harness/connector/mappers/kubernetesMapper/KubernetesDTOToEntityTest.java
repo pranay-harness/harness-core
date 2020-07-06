@@ -69,12 +69,12 @@ public class KubernetesDTOToEntityTest extends ConnectorsBaseTest {
             .authType(KubernetesAuthType.USER_PASSWORD)
             .credentials(UserNamePasswordDTO.builder().username(userName).password(password).cacert(cacert).build())
             .build();
-    KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
+    KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithDelegateCreds);
+    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithUserNamePasswordCreds);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -105,12 +105,12 @@ public class KubernetesDTOToEntityTest extends ConnectorsBaseTest {
                                                                .clientKeyAlgo(clientKeyAlgo)
                                                                .build())
                                               .build();
-    KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
+    KubernetesClusterConfigDTO connectorDTOWithClientKeyCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithDelegateCreds);
+    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithClientKeyCreds);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -146,12 +146,12 @@ public class KubernetesDTOToEntityTest extends ConnectorsBaseTest {
                                                                .oidcUsername(oidcUsername)
                                                                .build())
                                               .build();
-    KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
+    KubernetesClusterConfigDTO connectorDTOWithOpenIdConnectCred =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithDelegateCreds);
+    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithOpenIdConnectCred);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -178,12 +178,12 @@ public class KubernetesDTOToEntityTest extends ConnectorsBaseTest {
             .authType(SERVICE_ACCOUNT)
             .credentials(ServiceAccountDTO.builder().serviceAccountToken(serviceAccountKey).build())
             .build();
-    KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
+    KubernetesClusterConfigDTO connectorDTOWithServiceAccountCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithDelegateCreds);
+    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithServiceAccountCreds);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);

@@ -19,12 +19,15 @@ import io.harness.connector.common.kubernetes.KubernetesAuthType;
 import io.harness.connector.services.ConnectorService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.data.domain.Page;
 
 import java.util.Optional;
 
+@Slf4j
 public class ConnectorServiceImplTest extends ConnectorsBaseTest {
   @Inject ConnectorService connectorService;
   String userName = "userName";
@@ -103,8 +106,9 @@ public class ConnectorServiceImplTest extends ConnectorsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.DEEPAK, intermittent = true)
+  @Owner(developers = OwnerRule.DEEPAK)
   @Category({UnitTests.class})
+  @Ignore(" The test is intermittent will fix it soon")
   public void testList() {
     createConnector();
     createConnector();
