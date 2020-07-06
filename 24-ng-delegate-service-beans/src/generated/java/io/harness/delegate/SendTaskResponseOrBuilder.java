@@ -21,4 +21,10 @@ public interface SendTaskResponseOrBuilder extends
    * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
    */
   io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder();
+
+  /**
+   * <code>bytes response_data = 2[json_name = "responseData"];</code>
+   * @return The responseData.
+   */
+  com.google.protobuf.ByteString getResponseData();
 }

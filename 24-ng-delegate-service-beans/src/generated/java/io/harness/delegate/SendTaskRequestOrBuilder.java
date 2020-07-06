@@ -8,17 +8,47 @@ public interface SendTaskRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.SendTaskRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-   * @return Whether the taskId field is set.
+   * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
+   * @return Whether the accountId field is set.
    */
-  boolean hasTaskId();
+  boolean hasAccountId();
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-   * @return The taskId.
+   * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
+   * @return The accountId.
    */
-  io.harness.delegate.TaskId getTaskId();
+  io.harness.delegate.AccountId getAccountId();
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
    */
-  io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder();
+  io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder();
+
+  /**
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+   * @return Whether the setupAbstractions field is set.
+   */
+  boolean hasSetupAbstractions();
+  /**
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+   * @return The setupAbstractions.
+   */
+  io.harness.delegate.TaskSetupAbstractions getSetupAbstractions();
+  /**
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+   */
+  io.harness.delegate.TaskSetupAbstractionsOrBuilder getSetupAbstractionsOrBuilder();
+
+  /**
+   * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+   * @return Whether the details field is set.
+   */
+  boolean hasDetails();
+  /**
+   * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+   * @return The details.
+   */
+  io.harness.delegate.TaskDetails getDetails();
+  /**
+   * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+   */
+  io.harness.delegate.TaskDetailsOrBuilder getDetailsOrBuilder();
 }

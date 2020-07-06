@@ -1,9 +1,12 @@
 package io.harness;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.delegatesTo;
 import static org.mockito.Mockito.mock;
+
+import com.google.inject.Inject;
 
 import io.grpc.ManagedChannel;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -17,20 +20,28 @@ import io.harness.delegate.NgDelegateTaskServiceGrpc.NgDelegateTaskServiceBlocki
 import io.harness.delegate.NgDelegateTaskServiceGrpc.NgDelegateTaskServiceImplBase;
 import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
-import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
+import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-public class NgDelegateTaskGrpcClientTest extends CategoryTest {
+public class NgDelegateServiceGrpcClientTest extends NgDelegateServiceDriverTest {
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();
+
+  private static final String ACCOUNT_ID = generateUuid();
+  private static final String APP_ID = generateUuid();
 
   private final SendTaskResponse sendTaskResponse =
       SendTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
@@ -62,7 +73,8 @@ public class NgDelegateTaskGrpcClientTest extends CategoryTest {
       }));
 
   private NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub;
-  private NgDelegateTaskGrpcClient ngDelegateServiceGrpcClient;
+  private NgDelegateServiceGrpcClient ngDelegateServiceGrpcClient;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Before
   public void doSetup() throws IOException {
@@ -82,15 +94,24 @@ public class NgDelegateTaskGrpcClientTest extends CategoryTest {
 
     ngDelegateTaskServiceBlockingStub = NgDelegateTaskServiceGrpc.newBlockingStub(channel);
 
-    ngDelegateServiceGrpcClient = new NgDelegateTaskGrpcClient(ngDelegateTaskServiceBlockingStub);
+    ngDelegateServiceGrpcClient = new NgDelegateServiceGrpcClient(ngDelegateTaskServiceBlockingStub, kryoSerializer);
   }
 
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testSendTask() {
-    SendTaskRequest sendTaskRequest = SendTaskRequest.newBuilder().build();
-    SendTaskResponse taskResponse = ngDelegateServiceGrpcClient.sendTask(sendTaskRequest);
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put("appId", APP_ID);
+    setupAbstractions.put("accountId", ACCOUNT_ID);
+    TaskData taskData = TaskData.builder()
+                            .async(true)
+                            .taskType("HTTP")
+                            .timeout(TimeUnit.MINUTES.toMillis(1))
+                            .parameters(new Object[] {HttpTaskParameters.builder().url("criteria").build()})
+                            .build();
+
+    SendTaskResponse taskResponse = ngDelegateServiceGrpcClient.sendTask(ACCOUNT_ID, setupAbstractions, taskData);
     assertThat(taskResponse).isNotNull();
     assertThat(taskResponse).isEqualTo(sendTaskResponse);
   }
