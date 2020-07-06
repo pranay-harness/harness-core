@@ -1,0 +1,6 @@
+FROM ubuntu:18.04
+
+# Any future release patches or updated source lists needs to be added here.
+
+RUN apt-get update && apt-get -y upgrade
+
