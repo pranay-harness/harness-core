@@ -1,5 +1,7 @@
 package io.harness.functional.nas;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.test.FeatureName.NAS_SUPPORT;
 import static io.harness.generator.EnvironmentGenerator.Environments.FUNCTIONAL_TEST;
 import static io.harness.rule.OwnerRule.AADITI;
 import static java.util.Arrays.asList;
@@ -9,6 +11,7 @@ import static software.wings.sm.StateType.ENV_STATE;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.annotations.test.TestInfo;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -154,6 +157,7 @@ public class NASGraphQLTests extends AbstractFunctionalTest {
   @Test
   @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
+  @TestInfo(testCaseIds = {"CDC-8074"}, featureName = NAS_SUPPORT, category = {FunctionalTests.class}, ownedBy = CDC)
   @Ignore("enable this when NAS_SUPPORT FF is removed")
   public void shouldTriggerPipeline() {
     String mutation = getGraphqlQueryForWorkflowExecution("123", pipeline.getUuid(), application.getAppId(),
@@ -226,6 +230,7 @@ execution {
   @Test
   @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
+  @TestInfo(testCaseIds = {"CDC-8057"}, featureName = NAS_SUPPORT, category = {FunctionalTests.class}, ownedBy = CDC)
   @Ignore("enable this when NAS_SUPPORT FF is removed")
   public void getExecutionInputsPipeline() {
     String query = getGraphqlQueryForExecutionInputs(pipeline.getUuid(), application.getAppId());

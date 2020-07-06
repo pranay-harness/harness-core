@@ -1,5 +1,7 @@
 package io.harness.functional.nas;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.test.FeatureName.NAS_SUPPORT;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.generator.EnvironmentGenerator.Environments.FUNCTIONAL_TEST;
@@ -11,6 +13,7 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIAB
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 
+import io.harness.annotations.test.TestInfo;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -150,6 +153,7 @@ public class NASWorkflowExecutionTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = AADITI)
   @Category({FunctionalTests.class})
+  @TestInfo(testCaseIds = {"CDC-7412"}, featureName = NAS_SUPPORT, category = {FunctionalTests.class}, ownedBy = CDC)
   @Ignore("enable this when NAS_SUPPORT FF is removed")
   // CDC-7412
   public void executeBasicWorkflowWithParameterizedArtifactStream() {
@@ -163,6 +167,7 @@ public class NASWorkflowExecutionTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = AADITI)
   @Category({FunctionalTests.class})
+  @TestInfo(testCaseIds = {"CDC-7416"}, featureName = NAS_SUPPORT, category = {FunctionalTests.class}, ownedBy = CDC)
   @Ignore("enable this when NAS_SUPPORT FF is removed")
   // CDC-7416
   public void executeBasicWorkflowWithIncorrectParameters() {

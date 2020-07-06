@@ -38,7 +38,7 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
     Service service = owners.obtainService();
     Application application = owners.obtainApplication();
     final SettingAttribute settingAttribute =
-        settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_JENKINS_CONNECTOR_CD_TEAM);
+        settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_JENKINS_DEV_CONNECTOR);
     return ensureArtifactStream(seed,
         JenkinsArtifactStream.builder()
             .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())

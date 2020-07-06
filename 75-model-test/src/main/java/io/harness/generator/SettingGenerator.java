@@ -72,7 +72,7 @@ public class SettingGenerator {
   private static final String HARNESS_NEXUS = "Harness Nexus";
   private static final String HARNESS_NEXUS_2 = "Harness Nexus 2";
   private static final String HARNESS_JENKINS = "Harness Jenkins";
-  private static final String HARNESS_JENKINS_CD_TEAM = "Harness Jenkins CD Team";
+  private static final String HARNESS_JENKINS_DEV = "Harness Jenkins Dev";
   public static final String HARNESS_JIRA = "Harness Jira";
   private static final String SNOW_CONNECTOR = "Service Now Connector";
   private static final String HARNESS_NEXUS_THREE = "Harness Nexus 3";
@@ -107,7 +107,7 @@ public class SettingGenerator {
     DEV_TEST_CONNECTOR,
     WINRM_DEV_TEST_CONNECTOR,
     HARNESS_JENKINS_CONNECTOR,
-    HARNESS_JENKINS_CONNECTOR_CD_TEAM,
+    HARNESS_JENKINS_DEV_CONNECTOR,
     GITHUB_TEST_CONNECTOR,
     TERRAFORM_CITY_GIT_REPO,
     TERRAFORM_MAIN_GIT_REPO,
@@ -152,8 +152,8 @@ public class SettingGenerator {
         return ensureWinrmDevTest(seed, owners);
       case HARNESS_JENKINS_CONNECTOR:
         return ensureHarnessJenkins(seed, owners);
-      case HARNESS_JENKINS_CONNECTOR_CD_TEAM:
-        return ensureHarnessJenkinsCdTeam(seed, owners);
+      case HARNESS_JENKINS_DEV_CONNECTOR:
+        return ensureHarnessJenkinsDev(seed, owners);
       case GITHUB_TEST_CONNECTOR:
         return ensureGithubTest(seed, owners);
       case TERRAFORM_CITY_GIT_REPO:
@@ -494,19 +494,19 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
-  private SettingAttribute ensureHarnessJenkinsCdTeam(Randomizer.Seed seed, Owners owners) {
+  private SettingAttribute ensureHarnessJenkinsDev(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
 
     SettingAttribute settingAttribute =
         aSettingAttribute()
-            .withName(HARNESS_JENKINS_CD_TEAM)
+            .withName(HARNESS_JENKINS_DEV)
             .withCategory(CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(JenkinsConfig.builder()
                            .accountId(account.getUuid())
-                           .jenkinsUrl("https://cdteam-jenkins.harness.io")
-                           .username("wingsbuild")
-                           .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
+                           .jenkinsUrl("https://jenkins.dev.harness.io")
+                           .username("harnessadmin")
+                           .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins_dev")))
                            .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
