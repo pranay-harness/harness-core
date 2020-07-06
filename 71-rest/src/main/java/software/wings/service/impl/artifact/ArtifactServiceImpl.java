@@ -42,6 +42,7 @@ import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.service.impl.artifact.ArtifactCollectionUtils.getArtifactKeyFn;
 import static software.wings.utils.ArtifactType.DOCKER;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -147,7 +148,13 @@ public class ArtifactServiceImpl implements ArtifactService {
         pageResponse.getResponse().stream().collect(Collectors.groupingBy(Artifact::getArtifactStreamId));
     List<Artifact> artifacts = new ArrayList<>();
     for (Entry<String, List<Artifact>> artifactStreamEntry : groupByArtifactStream.entrySet()) {
-      artifacts.addAll(artifactStreamEntry.getValue().stream().sorted(new ArtifactComparator()).collect(toList()));
+      if (artifactStreamEntry.getKey() != null) {
+        ArtifactStream artifactStream =
+            Preconditions.checkNotNull(wingsPersistence.get(ArtifactStream.class, artifactStreamEntry.getKey()),
+                "Artifact stream has been deleted");
+        artifactStreamEntry.getValue().forEach(artifact -> artifact.setArtifactStreamName(artifactStream.getName()));
+        artifacts.addAll(artifactStreamEntry.getValue().stream().sorted(new ArtifactComparator()).collect(toList()));
+      }
     }
     pageResponse.setResponse(artifacts);
     return pageResponse;

@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -157,6 +158,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
@@ -2741,5 +2744,25 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         wingsPersistence.getWithAppId(WorkflowExecution.class, app.getUuid(), WORKFLOW_EXECUTION_ID);
     assertThat(workflowExecution.getStatus()).isEqualTo(ABORTED);
     assertThat(workflowExecution.getMessage()).isNull();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetWorkflowExecution() {
+    Artifact artifact =
+        Artifact.Builder.anArtifact().withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    ArtifactStream artifactStream = CustomArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).name("test").build();
+    List<Artifact> artifacts = new ArrayList<>();
+    artifacts.add(artifact);
+    String uuid = "_" + System.currentTimeMillis() + "_";
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().uuid(uuid).appId(APP_ID).artifacts(artifacts).build();
+    wingsPersistence.save(workflowExecution);
+    wingsPersistence.save(artifactStream);
+
+    WorkflowExecution workflowExecution1 = workflowExecutionService.getWorkflowExecution(APP_ID, uuid);
+    assertThat(workflowExecution1).isNotNull();
+    assertThat(workflowExecution1.getArtifacts().get(0).getArtifactStreamName()).isEqualTo("test");
   }
 }
