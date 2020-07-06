@@ -91,6 +91,8 @@ public class K8sTask extends AbstractDelegateRunnableTask {
                 .kustomizeBinaryPath(k8sGlobalConfigService.getKustomizePath())
                 .build();
 
+        logK8sVersion(k8sTaskParameters, k8SDelegateTaskParams);
+
         return k8sCommandTaskTypeToTaskHandlerMap.get(k8sTaskParameters.getCommandType().name())
             .executeTask(k8sTaskParameters, k8SDelegateTaskParams);
       } catch (Exception ex) {
@@ -102,6 +104,15 @@ public class K8sTask extends AbstractDelegateRunnableTask {
       } finally {
         cleanup(workingDirectory);
       }
+    }
+  }
+
+  private void logK8sVersion(K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) {
+    try {
+      k8sCommandTaskTypeToTaskHandlerMap.get(K8sTaskType.VERSION.name())
+          .executeTask(k8sTaskParameters, k8sDelegateTaskParams);
+    } catch (Exception ex) {
+      logger.error("Error fetching K8s Server Version: ", ex);
     }
   }
 

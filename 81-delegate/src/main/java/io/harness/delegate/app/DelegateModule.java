@@ -81,6 +81,7 @@ import software.wings.delegatetasks.k8s.taskhandler.K8sRollingDeployTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sScaleTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sTrafficSplitTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sVersionTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfApplicationDetailsCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCreatePcfResourceCommandTaskHandler;
@@ -645,6 +646,7 @@ public class DelegateModule extends DependencyModule {
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.TRAFFIC_SPLIT.name())
         .to(K8sTrafficSplitTaskHandler.class);
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.APPLY.name()).to(K8sApplyTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.VERSION.name()).to(K8sVersionTaskHandler.class);
     bind(TerraformConfigInspectClient.class).toInstance(new TerraformConfigInspectClientImpl());
     bind(TerraformConfigInspectService.class).toInstance(new TerraformConfigInspectServiceImpl());
     bind(DataCollectionDSLService.class).to(DataCollectionServiceImpl.class);
