@@ -46,6 +46,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.NgManagerServiceDriverModule;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.cache.CacheModule;
 import io.harness.ccm.CEPerpetualTaskHandler;
@@ -71,7 +72,6 @@ import io.harness.exception.WingsException;
 import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
 import io.harness.execution.export.background.ExportExecutionsRequestHandler;
 import io.harness.govern.ProviderModule;
-import io.harness.grpc.GrpcClientModule;
 import io.harness.grpc.GrpcServerConfig;
 import io.harness.grpc.GrpcServiceConfigurationModule;
 import io.harness.health.HealthMonitor;
@@ -368,7 +368,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new GrpcServiceConfigurationModule(
         configuration.getGrpcServerConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
 
-    modules.add(new GrpcClientModule(
+    modules.add(new NgManagerServiceDriverModule(
         configuration.getGrpcClientConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
 
     modules.add(new ProviderModule() {

@@ -761,6 +761,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>25-ng-manager-service-driver</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>31-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

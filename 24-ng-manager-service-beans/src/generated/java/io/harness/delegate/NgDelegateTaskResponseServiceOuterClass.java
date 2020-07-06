@@ -20,16 +20,17 @@ public final class NgDelegateTaskResponseServiceOuterClass {
   static {
     java.lang.String[] descriptorData = {"\n;io/harness/delegate/ng_delegate_task_r"
         + "esponse_service.proto\022\023io.harness.delega"
-        + "te\032*io/harness/delegate/ng_delegate_task"
-        + ".proto2\212\001\n\035NgDelegateTaskResponseService"
-        + "\022i\n\016SendTaskResult\022*.io.harness.delegate"
-        + ".SendTaskResultRequest\032+.io.harness.dele"
-        + "gate.SendTaskResultResponseB\002P\001b\006proto3"};
+        + "te\0320io/harness/delegate/delegate_task_re"
+        + "sponse.proto2\212\001\n\035NgDelegateTaskResponseS"
+        + "ervice\022i\n\016SendTaskResult\022*.io.harness.de"
+        + "legate.SendTaskResultRequest\032+.io.harnes"
+        + "s.delegate.SendTaskResultResponseB\002P\001b\006p"
+        + "roto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-            io.harness.delegate.NgDelegateTask.getDescriptor(),
+            io.harness.delegate.DelegateTaskResponse.getDescriptor(),
         });
-    io.harness.delegate.NgDelegateTask.getDescriptor();
+    io.harness.delegate.DelegateTaskResponse.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

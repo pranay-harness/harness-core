@@ -1,0 +1,24 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc//java:defs.bzl", "java_grpc_compile")
+
+proto_library(
+    name = "24_ng_manager_service_beans_proto",
+    srcs = glob(["**/*.proto"]),
+    strip_import_prefix = "",
+    deps = [
+        "@com_google_protobuf//:any_proto",
+        "@com_google_protobuf//:duration_proto",
+        "@com_google_protobuf//:timestamp_proto",
+        "//20-delegate-beans/src/main/proto:20_delegate_beans_proto",
+        "//22-delegate-service-beans/src/main/proto:22_delegate_service_beans_proto",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+java_grpc_compile(
+    name = "24_ng_manager_service_beans_java_proto",
+    deps = [
+        ":24_ng_manager_service_beans_proto",
+    ],
+    visibility = ["//visibility:public"],
+)

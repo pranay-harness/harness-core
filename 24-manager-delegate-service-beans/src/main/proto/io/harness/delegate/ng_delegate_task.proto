@@ -4,7 +4,6 @@ package io.harness.delegate;
 
 option java_multiple_files = true;
 
-import "google/protobuf/any.proto";
 import "io/harness/delegate/account.proto";
 import "io/harness/delegate/task.proto";
 import "io/harness/delegate/progress.proto";
@@ -36,12 +35,4 @@ message AbortTaskRequest {
 
 message AbortTaskResponse {
   TaskExecutionStage canceled_at_stage = 1;
-}
-
-message SendTaskResultRequest {
-  TaskId task_id = 1;
-}
-
-message SendTaskResultResponse {
-  TaskId task_id = 1;
 }
