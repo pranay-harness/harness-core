@@ -45,6 +45,7 @@ public class DataCollectionTask implements PersistentEntity, UuidAware, CreatedA
   private int retryCount;
 
   private String exception;
+  private String stacktrace;
   private long validAfter;
   private DataCollectionInfo dataCollectionInfo;
   private Instant startTime;
