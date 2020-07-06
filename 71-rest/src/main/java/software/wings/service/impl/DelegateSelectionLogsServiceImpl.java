@@ -37,6 +37,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String DISCONNECTED = "Disconnected";
   private static final String REJECTED = "Rejected";
   private static final String SELECTED = "Selected";
+  private static final String ACCEPTED = "Accepted";
 
   private static final String CAN_ASSIGN_GROUP_ID = "CAN_ASSIGN_GROUP_ID";
   private static final String NO_INCLUDE_SCOPE_MATCHED_GROUP_ID = "NO_INCLUDE_SCOPE_MATCHED_GROUP_ID";
@@ -45,6 +46,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String MISSING_ALL_SELECTORS_GROUP_ID = "MISSING_ALL_SELECTORS_GROUP_ID";
   private static final String DISCONNECTED_GROUP_ID = "DISCONNECTED_GROUP_ID";
   private static final String WAITING_ON_APPROVAL_GROUP_ID = "WAITING_ON_APPROVAL_GROUP_ID";
+  private static final String TASK_ASSIGNED_GROUP_ID = "TASK_ASSIGNED_GROUP_ID";
 
   @Override
   public void save(BatchDelegateSelectionLog batch) {
@@ -86,10 +88,28 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     DelegateSelectionLogBuilder delegateSelectionLogBuilder =
         retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
 
-    batch.append(delegateSelectionLogBuilder.conclusion(SELECTED)
+    batch.append(delegateSelectionLogBuilder.conclusion(ACCEPTED)
                      .message("Successfully matched required delegate capabilities")
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(CAN_ASSIGN_GROUP_ID)
+                     .build());
+  }
+
+  @Override
+  public void logTaskAssigned(BatchDelegateSelectionLog batch, String accountId, String delegateId) {
+    if (batch == null) {
+      return;
+    }
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(delegateId);
+    DelegateSelectionLogBuilder delegateSelectionLogBuilder =
+        retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
+
+    batch.append(delegateSelectionLogBuilder.conclusion(SELECTED)
+                     .message("Delegate assigned for task execution")
+                     .eventTimestamp(System.currentTimeMillis())
+                     .groupId(TASK_ASSIGNED_GROUP_ID)
                      .build());
   }
 

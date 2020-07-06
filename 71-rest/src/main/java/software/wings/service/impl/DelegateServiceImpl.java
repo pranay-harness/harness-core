@@ -2302,6 +2302,11 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("Task assigned to delegate");
       }
       task.getData().setParameters(delegateTask.getData().getParameters());
+
+      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(delegateTask);
+      delegateSelectionLogsService.logTaskAssigned(batch, task.getAccountId(), delegateId);
+      delegateSelectionLogsService.save(batch);
+
       return resolvePreAssignmentExpressions(task, SecretManagerFunctor.Mode.APPLY);
     }
     task = wingsPersistence.createQuery(DelegateTask.class)
