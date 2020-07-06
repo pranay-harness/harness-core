@@ -299,10 +299,12 @@ public class ScpCommandUnit extends SshCommandUnit {
   }
 
   private boolean isArtifactTypeAllowedForArtifactory(ArtifactType artifactType) {
-    return ArtifactType.JAR == artifactType || ArtifactType.TAR == artifactType || ArtifactType.WAR == artifactType
+    if (ArtifactType.JAR == artifactType || ArtifactType.TAR == artifactType || ArtifactType.WAR == artifactType
         || ArtifactType.ZIP == artifactType || ArtifactType.IIS == artifactType || ArtifactType.IIS_APP == artifactType
-        || ArtifactType.IIS_VirtualDirectory == artifactType || ArtifactType.RPM == artifactType
-        || ArtifactType.OTHER == artifactType;
+        || ArtifactType.IIS_VirtualDirectory == artifactType || ArtifactType.OTHER == artifactType) {
+      return true;
+    }
+    return false;
   }
 
   private void saveExecutionLog(ShellCommandExecutionContext context, LogLevel logLevel, String line) {
