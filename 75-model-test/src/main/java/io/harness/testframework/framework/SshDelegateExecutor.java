@@ -101,10 +101,24 @@ public class SshDelegateExecutor {
           + "\"";
       logger.info("Curl command = " + curlCommand);
 
-      final String[] commands = {"apt-get update", "apt-get install -y curl", curlCommand,
-          "tar -xvf harness-delegate.tar.gz", "ulimit -n 10000", "cd harness-delegate && ./start.sh"};
+      String[] commands = {
+          "apt-get update",
+          "apt-get install -y curl",
+          curlCommand,
+          "tar -xvf harness-delegate.tar.gz",
+      };
 
-      // Exec command inside running container with attached STDOUT and STDERR
+      executeDockerCommands(docker, containerId, commands);
+
+      if (isMac()) {
+        String version = getVersion();
+        commands = new String[] {"sed -i 's/localhost/docker.for.mac.localhost/g' harness-delegate/start.sh",
+            "sed -i 's/localhost/docker.for.mac.localhost/g' harness-delegate/delegate.sh",
+            "mkdir harness-delegate/" + version, "cp harness-delegate/delegate.sh harness-delegate/" + version + "/"};
+        executeDockerCommands(docker, containerId, commands);
+      }
+
+      commands = new String[] {"ulimit -n 10000", "cd harness-delegate && ./start.sh"};
       executeDockerCommands(docker, containerId, commands);
 
       Poller.pollFor(ofMinutes(2), ofSeconds(20), () -> isHealthy(account.getUuid(), bearerToken));
@@ -129,13 +143,17 @@ public class SshDelegateExecutor {
   }
 
   private String getDownloadURL(String accountId, String bearerToken) {
-    return Setup.portal()
-        .auth()
-        .oauth2(bearerToken)
-        .queryParam("accountId", accountId)
-        .get("/setup/delegates/downloadUrl")
-        .jsonPath()
-        .getString("resource.downloadUrl");
+    String downLoadUrl = Setup.portal()
+                             .auth()
+                             .oauth2(bearerToken)
+                             .queryParam("accountId", accountId)
+                             .get("/setup/delegates/downloadUrl")
+                             .jsonPath()
+                             .getString("resource.downloadUrl");
+    if (isMac()) {
+      downLoadUrl = downLoadUrl.replace("localhost", "docker.for.mac.localhost");
+    }
+    return downLoadUrl;
   }
 
   private boolean isHealthy(String accountId, String bearerToken) {
@@ -273,5 +291,10 @@ public class SshDelegateExecutor {
     } catch (DockerException | InterruptedException | DockerCertificateException e) {
       logger.error("unable to cleanup docker container", e);
     }
+  }
+
+  public static boolean isMac() {
+    String OS = System.getProperty("os.name").toLowerCase();
+    return OS.indexOf("mac") >= 0;
   }
 }
