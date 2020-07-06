@@ -25,6 +25,8 @@ public class WinRmSessionConfig implements EncryptableSetting {
   private String domain;
   @NotEmpty private String username;
   @Encrypted(fieldName = "password") private String password;
+  private boolean useKeyTab;
+  private String keyTabFilePath;
   private int port;
   private boolean useSSL;
   private boolean skipCertChecks;

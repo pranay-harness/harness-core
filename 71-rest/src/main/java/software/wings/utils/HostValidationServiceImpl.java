@@ -131,6 +131,8 @@ public class HostValidationServiceImpl implements HostValidationService {
                                     .port(connectionAttributes.getPort())
                                     .skipCertChecks(connectionAttributes.isSkipCertChecks())
                                     .useSSL(connectionAttributes.isUseSSL())
+                                    .useKeyTab(connectionAttributes.isUseKeyTab())
+                                    .keyTabFilePath(connectionAttributes.getKeyTabFilePath())
                                     .workingDirectory(WINDOWS_HOME_DIR)
                                     .environment(Collections.emptyMap())
                                     .build();

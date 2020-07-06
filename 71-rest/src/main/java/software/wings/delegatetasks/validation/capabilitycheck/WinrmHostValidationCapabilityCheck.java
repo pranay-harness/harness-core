@@ -63,6 +63,8 @@ public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
         .port(winrmConnectionAttributes.getPort())
         .useSSL(winrmConnectionAttributes.isUseSSL())
         .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())
+        .useKeyTab(winrmConnectionAttributes.isUseKeyTab())
+        .keyTabFilePath(winrmConnectionAttributes.getKeyTabFilePath())
         .workingDirectory(WINDOWS_HOME_DIR)
         .environment(envVariables == null ? Collections.emptyMap() : envVariables)
         .build();
