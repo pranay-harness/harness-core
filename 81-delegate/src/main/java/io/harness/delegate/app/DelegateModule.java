@@ -11,6 +11,8 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import io.harness.cdng.connectornextgen.impl.KubernetesConnectorServiceImpl;
+import io.harness.cdng.connectornextgen.service.KubernetesConnectorService;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.message.MessageService;
@@ -650,6 +652,7 @@ public class DelegateModule extends DependencyModule {
     bind(TerraformConfigInspectClient.class).toInstance(new TerraformConfigInspectClientImpl());
     bind(TerraformConfigInspectService.class).toInstance(new TerraformConfigInspectServiceImpl());
     bind(DataCollectionDSLService.class).to(DataCollectionServiceImpl.class);
+    bind(KubernetesConnectorService.class).to(KubernetesConnectorServiceImpl.class);
   }
 
   @Override

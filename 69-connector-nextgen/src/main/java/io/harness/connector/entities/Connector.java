@@ -28,7 +28,7 @@ import javax.validation.constraints.Size;
 @FieldNameConstants(innerTypeName = "ConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @Document("connectors")
-@TypeAlias("connectors")
+@TypeAlias("connector")
 // todo deepak: Add index after adding the queries
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Connector implements PersistentEntity {

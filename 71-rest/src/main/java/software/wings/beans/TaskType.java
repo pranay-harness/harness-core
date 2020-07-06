@@ -6,6 +6,8 @@ import com.google.inject.Injector;
 
 import io.harness.beans.DelegateTask;
 import io.harness.cdng.artifact.delegate.task.ArtifactCollectTask;
+import io.harness.cdng.connectornextgen.tasks.KubernetesConnectionDelegateValidation;
+import io.harness.cdng.connectornextgen.tasks.KubernetesTestConnectionTask;
 import io.harness.cdng.tasks.manifestFetch.GitFetchTaskNG;
 import io.harness.cdng.tasks.manifestFetch.GitFetchValidationNG;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -419,7 +421,10 @@ public enum TaskType {
   CI_BUILD(TaskGroup.CI, CIBuildCommandTask.class, AlwaysTrueValidation.class),
   EXECUTE_COMMAND(TaskGroup.CI, ExecuteCommandTask.class, AlwaysTrueValidation.class),
   CI_CLEANUP(TaskGroup.CI, CICleanupTask.class, AlwaysTrueValidation.class),
-  AWS_S3_TASK(TaskGroup.AWS, AwsS3Task.class, AwsConnectionValidation.class);
+  AWS_S3_TASK(TaskGroup.AWS, AwsS3Task.class, AwsConnectionValidation.class),
+  // This task if only for  next gen experience
+  VALIDATE_KUBERNETES_CONFIG(
+      TaskGroup.CONTAINER, KubernetesTestConnectionTask.class, KubernetesConnectionDelegateValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
