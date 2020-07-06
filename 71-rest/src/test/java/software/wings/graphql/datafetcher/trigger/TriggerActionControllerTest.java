@@ -8,16 +8,14 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockitoAnnotations;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.trigger.ArtifactSelection;
@@ -44,13 +42,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@PrepareForTest(TriggerActionController.class)
-@RunWith(PowerMockRunner.class)
 public class TriggerActionControllerTest extends CategoryTest {
   @Mock PipelineService pipelineService;
   @Mock ServiceResourceService serviceResourceService;
 
-  @InjectMocks TriggerActionController triggerActionController = PowerMockito.spy(new TriggerActionController());
+  @InjectMocks TriggerActionController triggerActionController = Mockito.spy(new TriggerActionController());
+
+  @Before
+  public void initMocks() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = MILAN)
@@ -557,9 +558,10 @@ public class TriggerActionControllerTest extends CategoryTest {
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.doReturn(ArtifactSelection.Type.ARTIFACT_SOURCE)
-        .when(triggerActionController, "validateAndResolveFromTriggeringArtifactArtifactSelectionType",
-            qlCreateOrUpdateTriggerInput);
+    Mockito.doReturn(Type.ARTIFACT_SOURCE)
+        .when(triggerActionController)
+        .validateAndResolveFromTriggeringArtifactArtifactSelectionType(
+            Matchers.any(QLCreateOrUpdateTriggerInput.class));
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
@@ -597,9 +599,10 @@ public class TriggerActionControllerTest extends CategoryTest {
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.doReturn(ArtifactSelection.Type.PIPELINE_SOURCE)
-        .when(triggerActionController, "validateAndResolveFromTriggeringPipelineArtifactSelectionType",
-            qlCreateOrUpdateTriggerInput);
+    Mockito.doReturn(Type.PIPELINE_SOURCE)
+        .when(triggerActionController)
+        .validateAndResolveFromTriggeringPipelineArtifactSelectionType(
+            Matchers.any(QLCreateOrUpdateTriggerInput.class));
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
@@ -637,9 +640,9 @@ public class TriggerActionControllerTest extends CategoryTest {
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.doReturn(Type.LAST_COLLECTED)
-        .when(
-            triggerActionController, "validateAndResolveLastCollectedArtifactSelectionType", qlArtifactSelectionInput);
+    Mockito.doReturn(Type.LAST_COLLECTED)
+        .when(triggerActionController)
+        .validateAndResolveLastCollectedArtifactSelectionType(Matchers.any(QLArtifactSelectionInput.class));
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
@@ -677,9 +680,10 @@ public class TriggerActionControllerTest extends CategoryTest {
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.doReturn(Type.WEBHOOK_VARIABLE)
-        .when(triggerActionController, "validateAndResolveFromPayloadSourceArtifactSelectionType",
-            qlCreateOrUpdateTriggerInput, qlArtifactSelectionInput);
+    Mockito.doReturn(Type.WEBHOOK_VARIABLE)
+        .when(triggerActionController)
+        .validateAndResolveFromPayloadSourceArtifactSelectionType(
+            Matchers.any(QLCreateOrUpdateTriggerInput.class), Matchers.any(QLArtifactSelectionInput.class));
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
@@ -717,9 +721,9 @@ public class TriggerActionControllerTest extends CategoryTest {
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.doReturn(Type.LAST_DEPLOYED)
-        .when(triggerActionController, "validateAndResolveLastDeployedPipelineArtifactSelectionType",
-            qlCreateOrUpdateTriggerInput);
+    Mockito.doReturn(Type.LAST_DEPLOYED)
+        .when(triggerActionController)
+        .validateAndResolveLastDeployedPipelineArtifactSelectionType(Matchers.any(QLCreateOrUpdateTriggerInput.class));
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
@@ -757,9 +761,9 @@ public class TriggerActionControllerTest extends CategoryTest {
             .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
             .build();
 
-    PowerMockito.doReturn(Type.LAST_DEPLOYED)
-        .when(triggerActionController, "validateAndResolveLastDeployedWorkflowArtifactSelectionType",
-            qlCreateOrUpdateTriggerInput);
+    Mockito.doReturn(Type.LAST_DEPLOYED)
+        .when(triggerActionController)
+        .validateAndResolveLastDeployedWorkflowArtifactSelectionType(Matchers.any(QLCreateOrUpdateTriggerInput.class));
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
 
