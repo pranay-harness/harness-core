@@ -912,17 +912,40 @@ public class TriggerServiceImpl implements TriggerService {
             "Service Infrastructure [" + infraMappingIdOrName + "] does not exist", infrastructureMapping, USER);
         triggerWorkflowVariableValues.put(infraDefVarName, infrastructureMapping.getInfrastructureDefinitionId());
       } else {
-        InfrastructureDefinition infrastructureDefinition =
-            getInfrastructureDefinition(appId, infraEnvId, infraDefIdOrName);
-        if (infrastructureDefinition == null) {
-          InfrastructureMapping infrastructureMapping = getInfrastructureMapping(appId, infraEnvId, infraDefIdOrName);
-          notNullCheck("Service Infrastructure [" + infraDefIdOrName + "] does not exist", infrastructureMapping, USER);
-          triggerWorkflowVariableValues.put(infraDefVarName, infrastructureMapping.getInfrastructureDefinitionId());
+        if (infraDefIdOrName.contains(",")
+            && featureFlagService.isEnabled(
+                   FeatureName.MULTISELECT_INFRA_PIPELINE, appService.getAccountIdByAppId(appId))) {
+          if (!variable.isAllowMultipleValues()) {
+            throw new InvalidRequestException(
+                "Multiple values provided for infra var { " + infraDefVarName + " }, but variable only allows one");
+          }
+          String finalInfraValue = handleMultiInfra(appId, infraEnvId, infraDefIdOrName);
+          triggerWorkflowVariableValues.put(infraDefVarName, finalInfraValue);
         } else {
-          triggerWorkflowVariableValues.put(infraDefVarName, infrastructureDefinition.getUuid());
+          InfrastructureDefinition infrastructureDefinition =
+              getInfrastructureDefinition(appId, infraEnvId, infraDefIdOrName);
+          if (infrastructureDefinition == null) {
+            InfrastructureMapping infrastructureMapping = getInfrastructureMapping(appId, infraEnvId, infraDefIdOrName);
+            notNullCheck("Service Infrastrfeature-update-jira.shucture [" + infraDefIdOrName + "] does not exist",
+                infrastructureMapping, USER);
+            triggerWorkflowVariableValues.put(infraDefVarName, infrastructureMapping.getInfrastructureDefinitionId());
+          } else {
+            triggerWorkflowVariableValues.put(infraDefVarName, infrastructureDefinition.getUuid());
+          }
         }
       }
     }
+  }
+
+  private String handleMultiInfra(String appId, String infraEnvId, String infraDefIdOrName) {
+    String[] variableValues = infraDefIdOrName.split(",");
+    List<String> finalValues = new ArrayList<>();
+    for (String variableValue : variableValues) {
+      InfrastructureDefinition infrastructureDefinition = getInfrastructureDefinition(appId, infraEnvId, variableValue);
+
+      finalValues.add(infrastructureDefinition.getUuid());
+    }
+    return String.join(",", finalValues);
   }
 
   InfrastructureDefinition getInfrastructureDefinition(String appId, String envId, String infraDefIdOrName) {

@@ -30,7 +30,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
@@ -70,6 +69,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PipelineResumeUtils {
   private static final String PIPELINE_RESUME_PIPELINE_CHANGED = "You cannot resume a pipeline which has been modified";
+  private static final String PIPELINE_INVALID = "You cannot resume pipeline, seems to be invalid";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PipelineService pipelineService;
@@ -113,7 +113,8 @@ public class PipelineResumeUtils {
       }
       List<PipelineStageElement> pipelineStageElements = pipelineStage.getPipelineStageElements();
       if (isEmpty(pipelineStageElements)) {
-        continue;
+        throw new InvalidRequestException(
+            PIPELINE_INVALID + ". Stage { " + pipelineStage.getName() + " } is incomplete/invalid");
       }
 
       List<PipelineStageExecution> stageExecutions;
@@ -229,8 +230,8 @@ public class PipelineResumeUtils {
     return !ENV_STATE.name().equals(type) && !APPROVAL.name().equals(type) && !ENV_LOOP_STATE.name().equals(type);
   }
 
-  @NotNull
-  private List<PipelineStageExecution> getPipelineStageExecutions(
+  @VisibleForTesting
+  List<PipelineStageExecution> getPipelineStageExecutions(
       String accountId, List<PipelineStageExecution> pipelineStageExecutions, int i, PipelineStage pipelineStage) {
     List<PipelineStageExecution> stageExecutions;
     if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, accountId)) {
