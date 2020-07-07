@@ -227,7 +227,7 @@ public class ArtifactResourceTest extends CategoryTest {
     PageRequest<Artifact> expectedPageRequest = new PageRequest<>();
     expectedPageRequest.addFilter("appId", Operator.EQ, APP_ID);
     expectedPageRequest.setOffset("0");
-    verify(ARTIFACT_SERVICE).listSortByBuildNo(APP_ID, null, expectedPageRequest);
+    verify(ARTIFACT_SERVICE).listArtifactsForService(APP_ID, null, expectedPageRequest);
   }
 
   @Test
@@ -241,7 +241,7 @@ public class ArtifactResourceTest extends CategoryTest {
     PageRequest<Artifact> expectedPageRequest = new PageRequest<>();
     expectedPageRequest.addFilter("appId", Operator.EQ, APP_ID);
     expectedPageRequest.setOffset("0");
-    verify(ARTIFACT_SERVICE).listSortByBuildNo(APP_ID, SERVICE_ID, expectedPageRequest);
+    verify(ARTIFACT_SERVICE).listArtifactsForService(APP_ID, SERVICE_ID, expectedPageRequest);
   }
   /**
    * Should delete artifact.

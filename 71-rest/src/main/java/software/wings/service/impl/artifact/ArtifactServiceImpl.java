@@ -142,7 +142,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest) {
+  public PageResponse<Artifact> listArtifactsForService(PageRequest<Artifact> pageRequest) {
     PageResponse<Artifact> pageResponse = wingsPersistence.query(Artifact.class, pageRequest);
     Map<String, List<Artifact>> groupByArtifactStream =
         pageResponse.getResponse().stream().collect(Collectors.groupingBy(Artifact::getArtifactStreamId));
@@ -153,7 +153,7 @@ public class ArtifactServiceImpl implements ArtifactService {
             Preconditions.checkNotNull(wingsPersistence.get(ArtifactStream.class, artifactStreamEntry.getKey()),
                 "Artifact stream has been deleted");
         artifactStreamEntry.getValue().forEach(artifact -> artifact.setArtifactStreamName(artifactStream.getName()));
-        artifacts.addAll(artifactStreamEntry.getValue().stream().sorted(new ArtifactComparator()).collect(toList()));
+        artifacts.addAll(artifactStreamEntry.getValue().stream().collect(toList()));
       }
     }
     pageResponse.setResponse(artifacts);
@@ -161,9 +161,10 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public PageResponse<Artifact> listSortByBuildNo(String appId, String serviceId, PageRequest<Artifact> pageRequest) {
+  public PageResponse<Artifact> listArtifactsForService(
+      String appId, String serviceId, PageRequest<Artifact> pageRequest) {
     if (GLOBAL_APP_ID.equals(appId)) {
-      return listSortByBuildNo(serviceId, pageRequest);
+      return listArtifactsForService(serviceId, pageRequest);
     }
 
     if (serviceId != null) {
@@ -175,11 +176,11 @@ public class ArtifactServiceImpl implements ArtifactService {
       }
     }
 
-    return listSortByBuildNo(pageRequest);
+    return listArtifactsForService(pageRequest);
   }
 
   @Override
-  public PageResponse<Artifact> listSortByBuildNo(String serviceId, PageRequest<Artifact> pageRequest) {
+  public PageResponse<Artifact> listArtifactsForService(String serviceId, PageRequest<Artifact> pageRequest) {
     if (serviceId != null) {
       List<String> artifactStreamIds = artifactStreamServiceBindingService.listArtifactStreamIds(serviceId);
       if (isNotEmpty(artifactStreamIds)) {
@@ -189,7 +190,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       }
     }
 
-    return listSortByBuildNo(pageRequest);
+    return listArtifactsForService(pageRequest);
   }
 
   @Override
@@ -611,7 +612,7 @@ public class ArtifactServiceImpl implements ArtifactService {
                                             .addFilter(ArtifactKeys.status, IN, READY, APPROVED)
                                             .withLimit("100")
                                             .build();
-    List<Artifact> artifacts = listSortByBuildNo(pageRequest);
+    List<Artifact> artifacts = listArtifactsForService(pageRequest);
     return isEmpty(artifacts) ? null : artifacts.get(0);
   }
 

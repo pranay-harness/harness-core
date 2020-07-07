@@ -28,6 +28,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.GcpHelperService;
 
@@ -98,15 +99,18 @@ public class GcrServiceImpl implements GcrService {
       ArtifactStreamAttributes artifactStreamAttributes, GcrImageTagResponse dockerImageTagResponse) {
     if (dockerImageTagResponse != null && dockerImageTagResponse.getTags() != null) {
       String imageName = artifactStreamAttributes.getRegistryHostName() + "/" + artifactStreamAttributes.getImageName();
-      return dockerImageTagResponse.getTags()
-          .stream()
-          .map(tag -> {
-            Map<String, String> metadata = new HashMap();
-            metadata.put(ArtifactMetadataKeys.image, imageName + ":" + tag);
-            metadata.put(ArtifactMetadataKeys.tag, tag);
-            return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
-          })
-          .collect(toList());
+      List<BuildDetails> buildDetails =
+          dockerImageTagResponse.getTags()
+              .stream()
+              .map(tag -> {
+                Map<String, String> metadata = new HashMap();
+                metadata.put(ArtifactMetadataKeys.image, imageName + ":" + tag);
+                metadata.put(ArtifactMetadataKeys.tag, tag);
+                return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
+              })
+              .collect(toList());
+      // Sorting at build tag for docker artifacts.
+      return buildDetails.stream().sorted(new BuildDetailsComparatorAscending()).collect(toList());
     }
     return emptyList();
   }

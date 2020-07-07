@@ -400,21 +400,21 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldListSortByBuildNo() {
+  public void shouldList() {
     constructArtifacts();
 
     wingsPersistence.save(CustomArtifactStream.builder().uuid(SERVICE_ID).name("test").build());
 
     when(artifactStreamServiceBindingService.listArtifactStreamIds(APP_ID, SERVICE_ID))
         .thenReturn(asList(ARTIFACT_STREAM_ID));
-    List<Artifact> artifacts = artifactService.listSortByBuildNo(
+    List<Artifact> artifacts = artifactService.listArtifactsForService(
         APP_ID, SERVICE_ID, aPageRequest().addFilter(ArtifactKeys.accountId, EQ, ACCOUNT_ID).build());
 
     assertThat(artifacts)
         .hasSize(4)
         .extracting(Artifact::getBuildNo)
-        .containsSequence("todolist-1.0-15.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
-            "todolist-1.0-1.x86_64.rpm");
+        .containsSequence("todolist-1.0-1.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
+            "todolist-1.0-15.x86_64.rpm");
   }
 
   @Test
@@ -422,7 +422,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldListSortByBuildNoAtConnector() {
     when(artifactStreamServiceBindingService.listArtifactStreamIds(APP_ID, SERVICE_ID)).thenReturn(asList());
-    List<Artifact> artifacts = artifactService.listSortByBuildNo(
+    List<Artifact> artifacts = artifactService.listArtifactsForService(
         GLOBAL_APP_ID, SERVICE_ID, aPageRequest().addFilter(ArtifactKeys.accountId, EQ, ACCOUNT_ID).build());
     assertThat(artifacts).hasSize(0);
   }
@@ -430,18 +430,18 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldListSortByBuildNoWithoutAppId() {
+  public void shouldListWithoutAppId() {
     constructArtifacts();
 
     when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID)).thenReturn(asList(ARTIFACT_STREAM_ID));
-    List<Artifact> artifacts = artifactService.listSortByBuildNo(
+    List<Artifact> artifacts = artifactService.listArtifactsForService(
         SERVICE_ID, aPageRequest().addFilter(ArtifactKeys.accountId, EQ, ACCOUNT_ID).build());
 
     assertThat(artifacts)
         .hasSize(4)
         .extracting(Artifact::getBuildNo)
-        .containsSequence("todolist-1.0-15.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
-            "todolist-1.0-1.x86_64.rpm");
+        .containsSequence("todolist-1.0-1.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
+            "todolist-1.0-15.x86_64.rpm");
   }
 
   @Test
@@ -458,18 +458,18 @@ public class ArtifactServiceTest extends WingsBaseTest {
     constructArtifactsAtConnectorLevel();
 
     List<Artifact> artifacts =
-        artifactService.listSortByBuildNo(aPageRequest()
-                                              .addFilter(Artifact.APP_ID_KEY, EQ, GLOBAL_APP_ID)
-                                              .addFilter(Artifact.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID)
-                                              .addFilter(ArtifactKeys.artifactStreamId, EQ, ARTIFACT_STREAM_ID)
-                                              .addFilter(ArtifactKeys.settingId, EQ, SETTING_ID)
-                                              .build());
+        artifactService.listArtifactsForService(aPageRequest()
+                                                    .addFilter(Artifact.APP_ID_KEY, EQ, GLOBAL_APP_ID)
+                                                    .addFilter(Artifact.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID)
+                                                    .addFilter(ArtifactKeys.artifactStreamId, EQ, ARTIFACT_STREAM_ID)
+                                                    .addFilter(ArtifactKeys.settingId, EQ, SETTING_ID)
+                                                    .build());
 
     assertThat(artifacts)
         .hasSize(4)
         .extracting(Artifact::getBuildNo)
-        .containsSequence("todolist-1.0-15.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
-            "todolist-1.0-1.x86_64.rpm");
+        .containsSequence("todolist-1.0-1.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
+            "todolist-1.0-15.x86_64.rpm");
   }
 
   @Test
@@ -478,14 +478,14 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldListSortByBuildNoWithNoServiceId() {
     constructArtifacts();
 
-    List<Artifact> artifacts = artifactService.listSortByBuildNo(
+    List<Artifact> artifacts = artifactService.listArtifactsForService(
         APP_ID, null, aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build());
 
     assertThat(artifacts)
         .hasSize(4)
         .extracting(Artifact::getBuildNo)
-        .containsSequence("todolist-1.0-15.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
-            "todolist-1.0-1.x86_64.rpm");
+        .containsSequence("todolist-1.0-1.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
+            "todolist-1.0-15.x86_64.rpm");
   }
 
   @Test
@@ -494,7 +494,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldNotListArtifactsOfDeletedArtifactStreams() {
     constructArtifacts();
 
-    List<Artifact> artifacts = artifactService.listSortByBuildNo(
+    List<Artifact> artifacts = artifactService.listArtifactsForService(
         APP_ID, SERVICE_ID, aPageRequest().addFilter(Artifact.APP_ID_KEY, EQ, APP_ID).build());
 
     assertThat(artifacts).isEmpty();
@@ -596,7 +596,15 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact savedArtifactLatest = artifactService.create(artifactLatestBuilder.build(), true);
     artifactService.updateStatus(savedArtifactLatest.getUuid(), savedArtifactLatest.getAccountId(), READY);
     latestArtifact = artifactService.fetchLastCollectedApprovedArtifactSorted(jenkinsArtifactStream);
-    assertThat(latestArtifact).isNotNull().extracting(Artifact::getBuildNo).isEqualTo(savedArtifactLatest.getBuildNo());
+    if (savedArtifact.getCreatedAt() > savedArtifactLatest.getCreatedAt()) {
+      assertThat(latestArtifact).isNotNull().extracting(Artifact::getBuildNo).isEqualTo(savedArtifact.getBuildNo());
+    }
+    if (savedArtifactLatest.getCreatedAt() > savedArtifact.getCreatedAt()) {
+      assertThat(latestArtifact)
+          .isNotNull()
+          .extracting(Artifact::getBuildNo)
+          .isEqualTo(savedArtifactLatest.getBuildNo());
+    }
   }
 
   @Test
