@@ -1,5 +1,6 @@
 package io.harness.beans.environment.pod.container;
 
+import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
@@ -26,4 +27,6 @@ public class ContainerDefinitionInfo {
   private List<String> args;
   private List<Integer> ports;
   private Map<String, String> volumeToMountPath;
+  Map<String, String> envVars;
+  Map<String, EncryptedDataDetail> encryptedSecrets;
 }

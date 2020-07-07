@@ -28,6 +28,16 @@ public class CIExecutionConstants {
   public static final Integer ADDON_PORT = 8001;
   public static final String ADDON_VOLUME = "addon";
   public static final String ADDON_PATH = "/addon";
+  public static final String ADDON_JFROG_VARIABLE = "JFROG_PATH";
+  public static final String ADDON_JFROG_PATH = "/addon/bin/jfrog";
+
+  public static final String ACCESS_KEY_MINIO_VARIABLE = "ACCESS_KEY_MINIO";
+  public static final String SECRET_KEY_MINIO_VARIABLE = "SECRET_KEY_MINIO";
+  public static final String ENDPOINT_MINIO_VARIABLE = "ENDPOINT_MINIO";
+  public static final String BUCKET_MINIO_VARIABLE = "BUCKET_MINIO";
+
+  public static final String ENDPOINT_MINIO_VARIABLE_VALUE = "35.224.85.116:9000";
+  public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";
 
   public static final String LITE_ENGINE_IMAGE_NAME = "harness/ci-lite-engine";
   public static final String LITE_ENGINE_IMAGE_TAG = "valpha-0.4";

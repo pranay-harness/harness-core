@@ -31,12 +31,10 @@ import io.harness.persistence.Store;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
-import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CIBeansRegistrar;
 import io.harness.serializer.kryo.CIExecutionRegistrar;
-import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -88,7 +86,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
     logger.info("Leaving startup maintenance mode");
     List<Module> modules = new ArrayList<>();
-    modules.add(new KryoModule());
 
     modules.add(new ProviderModule() {
       @Provides
@@ -98,7 +95,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
             .addAll(ManagerRegistrars.kryoRegistrars)
             .add(CIBeansRegistrar.class)
             .add(CIExecutionRegistrar.class)
-            .add(CvNextGenCommonsBeansKryoRegistrar.class)
             .build();
       }
     });
