@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
 import com.google.inject.Singleton;
@@ -8,6 +9,7 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Stack;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -51,6 +53,14 @@ public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskH
       long stackEventsTs = System.currentTimeMillis();
       executionLogCallback.saveExecutionLog(String.format("# Starting to delete stack: %s", stackName));
       DeleteStackRequest deleteStackRequest = new DeleteStackRequest().withStackName(stackId);
+      if (EmptyPredicate.isNotEmpty(cloudFormationDeleteStackRequest.getCloudFormationRoleArn())) {
+        deleteStackRequest.withRoleARN(cloudFormationDeleteStackRequest.getCloudFormationRoleArn());
+        executionLogCallback.saveExecutionLog(format(
+            "Using the cloudformation role arn: [%s]", cloudFormationDeleteStackRequest.getCloudFormationRoleArn()));
+      } else {
+        executionLogCallback.saveExecutionLog(
+            "No specific cloudformation role provided will use the default permissions on delegate.");
+      }
       awsHelperService.deleteStack(request.getRegion(), deleteStackRequest, awsConfig);
       executionLogCallback.saveExecutionLog(
           String.format("# Request to delete stack: %s submitted. Now beginning to poll.", stackName));

@@ -13,5 +13,6 @@ public class CloudFormationRollbackInfo {
   private String url; // Used in s3 case
   private String region;
   private String customStackName;
+  private String cloudFormationRoleArn;
   private List<NameValuePair> variables;
 }

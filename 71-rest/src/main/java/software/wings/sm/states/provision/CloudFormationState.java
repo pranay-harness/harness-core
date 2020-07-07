@@ -93,6 +93,7 @@ public abstract class CloudFormationState extends State {
   @Attributes(title = "Region") @DefaultValue("us-east-1") @Getter @Setter protected String region = "us-east-1";
   @Attributes(title = "AwsConfigId") @Getter @Setter protected String awsConfigId;
   @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
+  @Attributes(title = "CloudFormationRoleArn") @Getter @Setter private String cloudFormationRoleArn;
   @Attributes(title = "Use Custom Stack Name") @Getter @Setter protected boolean useCustomStackName;
   @Attributes(title = "Custom Stack Name") @Getter @Setter protected String customStackName;
 
@@ -339,6 +340,7 @@ public abstract class CloudFormationState extends State {
                               .awsConfigId(awsConfigId)
                               .customStackName(rollbackInfo.getCustomStackName())
                               .createType(createType)
+                              .cloudFormationRoleArn(rollbackInfo.getCloudFormationRoleArn())
                               .variables(rollbackInfo.getVariables())
                               .workflowExecutionId(context.getWorkflowExecutionId())
                               .entityId(getStackNameSuffix(context, provisionerId))

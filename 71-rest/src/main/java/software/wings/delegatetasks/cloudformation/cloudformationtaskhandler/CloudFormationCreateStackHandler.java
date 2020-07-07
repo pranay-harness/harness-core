@@ -19,6 +19,7 @@ import com.amazonaws.services.cloudformation.model.Output;
 import com.amazonaws.services.cloudformation.model.Parameter;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -79,6 +80,14 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       executionLogCallback.saveExecutionLog(format("# Starting to Update stack with name: %s", stack.getStackName()));
       UpdateStackRequest updateStackRequest =
           new UpdateStackRequest().withStackName(stack.getStackName()).withParameters(getCfParams(updateRequest));
+      if (EmptyPredicate.isNotEmpty(updateRequest.getCloudFormationRoleArn())) {
+        updateStackRequest.withRoleARN(updateRequest.getCloudFormationRoleArn());
+        executionLogCallback.saveExecutionLog(
+            format("Using the cloudformation role arn: [%s]", updateRequest.getCloudFormationRoleArn()));
+      } else {
+        executionLogCallback.saveExecutionLog(
+            "No specific cloudformation role provided will use the default permissions on delegate.");
+      }
       switch (updateRequest.getCreateType()) {
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT: {
           executionLogCallback.saveExecutionLog(format("Fetching template from git url: %s, "
@@ -147,6 +156,14 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       executionLogCallback.saveExecutionLog(format("# Creating stack with name: %s", stackName));
       CreateStackRequest createStackRequest =
           new CreateStackRequest().withStackName(stackName).withParameters(getCfParams(createRequest));
+      if (EmptyPredicate.isNotEmpty(createRequest.getCloudFormationRoleArn())) {
+        createStackRequest.withRoleARN(createRequest.getCloudFormationRoleArn());
+        executionLogCallback.saveExecutionLog(
+            format("Using the cloudformation role arn: [%s]", createRequest.getCloudFormationRoleArn()));
+      } else {
+        executionLogCallback.saveExecutionLog(
+            "No specific cloudformation role provided will use the default permissions on delegate.");
+      }
       switch (createRequest.getCreateType()) {
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_GIT: {
           executionLogCallback.saveExecutionLog(format("Fetching template from git url: %s, "
@@ -371,6 +388,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
   private CloudFormationRollbackInfo getRollbackInfo(
       CloudFormationCreateStackRequest cloudFormationCreateStackRequest) {
     CloudFormationRollbackInfoBuilder builder = CloudFormationRollbackInfo.builder();
+
+    builder.cloudFormationRoleArn(cloudFormationCreateStackRequest.getCloudFormationRoleArn());
     if (CLOUD_FORMATION_STACK_CREATE_URL.equals(cloudFormationCreateStackRequest.getCreateType())) {
       builder.url(cloudFormationCreateStackRequest.getData());
     } else {
