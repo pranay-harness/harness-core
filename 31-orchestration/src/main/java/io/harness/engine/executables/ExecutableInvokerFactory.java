@@ -3,6 +3,7 @@ package io.harness.engine.executables;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -15,36 +16,41 @@ import io.harness.engine.executables.invokers.TaskChainStrategy;
 import io.harness.engine.executables.invokers.TaskStrategy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.tasks.TaskMode;
 
 @OwnedBy(CDC)
 @Redesign
 public class ExecutableInvokerFactory {
-  @Inject private AsyncStrategy asyncStrategy;
-  @Inject private SyncStrategy syncStrategy;
-  @Inject private ChildrenStrategy childrenStrategy;
-  @Inject private ChildStrategy childStrategy;
-  @Inject private TaskStrategy taskStrategy;
-  @Inject private TaskChainStrategy taskChainStrategy;
-  @Inject private ChildChainStrategy childChainStrategy;
+  @Inject Injector injector;
 
   public ExecutableInvoker obtainInvoker(ExecutionMode mode) {
+    InvokeStrategy invokeStrategy = null;
     switch (mode) {
       case ASYNC:
-        return new ExecutableInvoker(asyncStrategy);
+        invokeStrategy = new AsyncStrategy();
+        break;
       case SYNC:
-        return new ExecutableInvoker(syncStrategy);
+        invokeStrategy = new SyncStrategy();
+        break;
       case CHILDREN:
-        return new ExecutableInvoker(childrenStrategy);
+        invokeStrategy = new ChildrenStrategy();
+        break;
       case CHILD:
-        return new ExecutableInvoker(childStrategy);
+        invokeStrategy = new ChildStrategy();
+        break;
       case TASK:
-        return new ExecutableInvoker(taskStrategy);
+        invokeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V1);
+        break;
       case TASK_CHAIN:
-        return new ExecutableInvoker(taskChainStrategy);
+        invokeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V1);
+        break;
       case CHILD_CHAIN:
-        return new ExecutableInvoker(childChainStrategy);
+        invokeStrategy = new ChildChainStrategy();
+        break;
       default:
         throw new InvalidRequestException("No Invoker present for execution mode :" + mode);
     }
+    injector.injectMembers(invokeStrategy);
+    return new ExecutableInvoker(invokeStrategy);
   }
 }

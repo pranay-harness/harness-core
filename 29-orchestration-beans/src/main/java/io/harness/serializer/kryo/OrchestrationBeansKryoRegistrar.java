@@ -35,6 +35,7 @@ import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepOutcomeRef;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponseNotifyData;
+import io.harness.tasks.TaskMode;
 
 import java.time.Duration;
 
@@ -79,6 +80,8 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
 
     kryo.register(StepOutcomeRef.class, 2529);
     kryo.register(BarrierExecutionInstance.class, 2530);
+
+    kryo.register(TaskMode.class, 2531);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes

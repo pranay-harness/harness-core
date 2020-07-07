@@ -1,7 +1,7 @@
 package io.harness.utils;
 
-import io.harness.Task;
 import io.harness.ambiance.Ambiance;
+import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
 
 /**

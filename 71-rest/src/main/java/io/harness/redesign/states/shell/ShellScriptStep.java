@@ -43,6 +43,7 @@ import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.Task;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
@@ -87,7 +88,7 @@ public class ShellScriptStep implements Step, TaskExecutable {
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
-  public DelegateTask obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
+  public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     ShellScriptStepParameters shellScriptStepParameters = (ShellScriptStepParameters) stepParameters;
     String activityId = createActivity(ambiance);
     List<ResolvedRefInput> inputs = inputPackage.getInputs();

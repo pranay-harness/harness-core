@@ -2,7 +2,6 @@ package io.harness.cdng.k8s;
 
 import com.google.inject.Inject;
 
-import io.harness.Task;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTask;
 import io.harness.cdng.common.AmbianceHelper;
@@ -23,6 +22,7 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.tasks.Task;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;

@@ -6,6 +6,7 @@ import io.harness.limits.impl.model.StaticLimit;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.security.SimpleEncryption;
+import io.harness.tasks.Task;
 
 import java.io.Serializable;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.Set;
 public class CommonMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
+    set.add(Task.class);
     set.add(Serializable.class);
   }
 
