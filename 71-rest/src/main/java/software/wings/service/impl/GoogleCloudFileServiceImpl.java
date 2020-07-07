@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.READ_FILE_FROM_GCP_STORAGE_FAILED;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.service.impl.FileServiceUtils.FILE_PATH_SEPARATOR;
 import static software.wings.service.impl.FileServiceUtils.GCS_ID_PREFIX;
@@ -10,6 +9,7 @@ import static software.wings.service.impl.FileServiceUtils.GoogleCloudFileIdComp
 import static software.wings.service.impl.FileServiceUtils.parseGoogleCloudFileId;
 
 import com.google.api.gax.paging.Page;
+import com.google.cloud.ReadChannel;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
@@ -26,6 +26,7 @@ import io.harness.beans.ChecksumType;
 import io.harness.beans.FileMetadata;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.GCPStorageFileReadException;
 import io.harness.exception.WingsException;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.Channels;
 import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.HashMap;
@@ -173,11 +175,11 @@ public class GoogleCloudFileServiceImpl implements FileService {
           " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
     }
 
-    byte[] content = blob.getContent();
-    try {
-      IOUtils.write(content, op);
+    try (ReadChannel reader = blob.reader()) {
+      InputStream in = Channels.newInputStream(reader);
+      IOUtils.copy(in, op);
     } catch (IOException e) {
-      throw new WingsException(READ_FILE_FROM_GCP_STORAGE_FAILED, e);
+      throw new GCPStorageFileReadException(e);
     }
   }
 
