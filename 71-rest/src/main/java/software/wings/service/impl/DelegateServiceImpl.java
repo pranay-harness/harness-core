@@ -523,6 +523,9 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, DelegateKeys.description, delegate.getDescription());
     setUnset(updateOperations, DelegateKeys.delegateProfileId, delegate.getDelegateProfileId());
     setUnset(updateOperations, DelegateKeys.sampleDelegate, delegate.isSampleDelegate());
+    setUnset(updateOperations, DelegateKeys.delegateType, delegate.getDelegateType());
+    setUnset(updateOperations, DelegateKeys.proxy, delegate.isProxy());
+    setUnset(updateOperations, DelegateKeys.polllingModeEnabled, delegate.isPolllingModeEnabled());
     return updateOperations;
   }
 
@@ -581,7 +584,12 @@ public class DelegateServiceImpl implements DelegateService {
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .filter(DelegateKeys.accountId, delegate.getAccountId())
                                 .filter(DelegateKeys.uuid, delegate.getUuid()),
-        wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.lastHeartBeat, currentTimeMillis()));
+        wingsPersistence.createUpdateOperations(Delegate.class)
+            .set(DelegateKeys.lastHeartBeat, currentTimeMillis())
+            .set(DelegateKeys.delegateType, delegate.getDelegateType())
+            .set(DelegateKeys.description, delegate.getDescription())
+            .set(DelegateKeys.polllingModeEnabled, delegate.isPolllingModeEnabled())
+            .set(DelegateKeys.proxy, delegate.isProxy()));
     touchExecutingTasks(delegate);
 
     Delegate existingDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);
@@ -1566,7 +1574,6 @@ public class DelegateServiceImpl implements DelegateService {
       delegate.setUuid(existingDelegate.getUuid());
       delegate.setStatus(existingDelegate.getStatus());
       delegate.setDelegateProfileId(existingDelegate.getDelegateProfileId());
-      delegate.setDescription(existingDelegate.getDescription());
       if (ECS.equals(delegate.getDelegateType())) {
         registeredDelegate = updateEcsDelegate(delegate, false);
       } else {
