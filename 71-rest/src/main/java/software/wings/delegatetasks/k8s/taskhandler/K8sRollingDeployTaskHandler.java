@@ -22,6 +22,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
+import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFromMinutes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -117,7 +118,10 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    List<K8sPod> existingPodList = getPods();
+    long steadyStateTimeoutInMillis =
+        getTimeoutMillisFromMinutes(k8sRollingDeployTaskParameters.getTimeoutIntervalInMin());
+
+    List<K8sPod> existingPodList = getPods(steadyStateTimeoutInMillis);
 
     success = k8sTaskHelper.applyManifests(client, resources, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply));
@@ -165,8 +169,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()
             .releaseNumber(release.getNumber())
-            .k8sPodList(tagNewPods(getPods(), existingPodList))
-            .loadBalancer(k8sTaskHelper.getLoadBalancerEndpoint(kubernetesConfig, resources))
+            .k8sPodList(tagNewPods(getPods(steadyStateTimeoutInMillis), existingPodList))
+            .loadBalancer(
+                k8sTaskHelper.getLoadBalancerEndpoint(kubernetesConfig, resources, steadyStateTimeoutInMillis))
             .helmChartInfo(helmChartInfo)
             .build();
 
@@ -176,7 +181,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         .build();
   }
 
-  private List<K8sPod> getPods() throws Exception {
+  private List<K8sPod> getPods(long timeoutInMillis) throws Exception {
     List<K8sPod> k8sPods = new ArrayList<>();
 
     if (isEmpty(managedWorkloads)) {
@@ -184,8 +189,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     }
 
     for (KubernetesResource kubernetesResource : managedWorkloads) {
-      List<K8sPod> podDetails =
-          k8sTaskHelper.getPodDetails(kubernetesConfig, kubernetesResource.getResourceId().getNamespace(), releaseName);
+      List<K8sPod> podDetails = k8sTaskHelper.getPodDetails(
+          kubernetesConfig, kubernetesResource.getResourceId().getNamespace(), releaseName, timeoutInMillis);
 
       if (isNotEmpty(podDetails)) {
         k8sPods.addAll(podDetails);

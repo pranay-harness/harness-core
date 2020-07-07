@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -28,6 +29,7 @@ import static org.powermock.api.mockito.PowerMockito.spy;
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
 import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V3;
 import static software.wings.helpers.ext.helm.HelmDeployServiceImpl.WORKING_DIR;
+import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -177,7 +179,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
     when(containerDeploymentDelegateHelper.isK8sVersion116OrAbove(any(), any())).thenReturn(true);
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
-    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString())).thenReturn(containerInfos);
+    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
              anyString(), anyString(), any(ExecutionLogCallback.class)))
         .thenReturn(true);
@@ -226,7 +228,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
     when(containerDeploymentDelegateHelper.isK8sVersion116OrAbove(any(), any())).thenReturn(true);
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
-    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString())).thenReturn(containerInfos);
+    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
              eq("default"), anyString(), any(ExecutionLogCallback.class)))
         .thenReturn(true);
@@ -839,7 +841,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                         .build());
     when(containerDeploymentDelegateHelper.isK8sVersion116OrAbove(any(), any())).thenReturn(true);
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(resources);
-    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString())).thenReturn(containerInfos);
+    when(k8sTaskHelper.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
              eq("default"), anyString(), any(ExecutionLogCallback.class)))
         .thenReturn(true);
@@ -994,8 +996,8 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(()
-                        -> helmDeployService.getKubectlContainerInfos(
-                            helmInstallCommandRequest, Collections.emptyList(), executionLogCallback))
+                        -> helmDeployService.getKubectlContainerInfos(helmInstallCommandRequest,
+                            Collections.emptyList(), executionLogCallback, LONG_TIMEOUT_INTERVAL))
         .withMessage("Steady state check failed");
 
     verify(k8sTaskHelper, times(1))

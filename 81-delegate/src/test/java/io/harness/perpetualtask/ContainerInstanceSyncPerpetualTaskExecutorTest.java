@@ -2,6 +2,7 @@ package io.harness.perpetualtask;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -80,7 +81,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
     final K8sPod pod = K8sPod.builder().namespace("namespace").releaseName("release").build();
     doReturn(Arrays.asList(pod))
         .when(k8sTaskHelper)
-        .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"));
+        .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"), anyLong());
     doReturn(call)
         .when(delegateAgentManagerClient)
         .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));
@@ -128,7 +129,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
 
     doThrow(new RuntimeException("Failed to retrieve pod list"))
         .when(k8sTaskHelper)
-        .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"));
+        .getPodDetails(any(KubernetesConfig.class), eq("namespace"), eq("release"), anyLong());
     doReturn(call)
         .when(delegateAgentManagerClient)
         .publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class));

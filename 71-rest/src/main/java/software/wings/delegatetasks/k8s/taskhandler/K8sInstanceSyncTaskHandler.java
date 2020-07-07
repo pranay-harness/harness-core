@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFromMinutes;
 
 import com.google.inject.Inject;
 
@@ -40,8 +41,12 @@ public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
     KubernetesConfig kubernetesConfig =
         containerDeploymentDelegateHelper.getKubernetesConfig(k8sInstanceSyncTaskParameters.getK8sClusterConfig());
 
-    List<K8sPod> k8sPodList = k8sTaskHelper.getPodDetails(
-        kubernetesConfig, k8sInstanceSyncTaskParameters.getNamespace(), k8sInstanceSyncTaskParameters.getReleaseName());
+    long steadyStateTimeoutInMillis =
+        getTimeoutMillisFromMinutes(k8sInstanceSyncTaskParameters.getTimeoutIntervalInMin());
+
+    List<K8sPod> k8sPodList =
+        k8sTaskHelper.getPodDetails(kubernetesConfig, k8sInstanceSyncTaskParameters.getNamespace(),
+            k8sInstanceSyncTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
     K8sInstanceSyncResponse k8sInstanceSyncResponse =
         K8sInstanceSyncResponse.builder().k8sPodInfoList(k8sPodList).build();

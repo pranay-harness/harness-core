@@ -15,6 +15,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
@@ -35,6 +36,7 @@ import static software.wings.delegatetasks.k8s.K8sTestHelper.deployment;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.primaryService;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.service;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.stageService;
+import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -485,26 +487,28 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   }
 
   private void testGetAllPodsWitNoPrimary() throws Exception {
-    when(k8sTaskHelper.getPodDetailsWithColor(any(KubernetesConfig.class), anyString(), anyString(), eq("stageColor")))
+    when(k8sTaskHelper.getPodDetailsWithColor(
+             any(KubernetesConfig.class), anyString(), anyString(), eq("stageColor"), anyLong()))
         .thenReturn(asList(podWithName("stage-1"), podWithName("stage-2")));
-    when(
-        k8sTaskHelper.getPodDetailsWithColor(any(KubernetesConfig.class), anyString(), anyString(), eq("primaryColor")))
+    when(k8sTaskHelper.getPodDetailsWithColor(
+             any(KubernetesConfig.class), anyString(), anyString(), eq("primaryColor"), anyLong()))
         .thenReturn(emptyList());
 
-    final List<K8sPod> allPods = k8sBlueGreenDeployTaskHandler.getAllPods();
+    final List<K8sPod> allPods = k8sBlueGreenDeployTaskHandler.getAllPods(LONG_TIMEOUT_INTERVAL);
 
     assertThat(allPods).hasSize(2);
     assertThat(allPods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(2);
   }
 
   private void testGetAllPodsWithStageAndPrimary() throws Exception {
-    when(k8sTaskHelper.getPodDetailsWithColor(any(KubernetesConfig.class), anyString(), anyString(), eq("stageColor")))
+    when(k8sTaskHelper.getPodDetailsWithColor(
+             any(KubernetesConfig.class), anyString(), anyString(), eq("stageColor"), anyLong()))
         .thenReturn(asList(podWithName("stage-1"), podWithName("stage-2")));
-    when(
-        k8sTaskHelper.getPodDetailsWithColor(any(KubernetesConfig.class), anyString(), anyString(), eq("primaryColor")))
+    when(k8sTaskHelper.getPodDetailsWithColor(
+             any(KubernetesConfig.class), anyString(), anyString(), eq("primaryColor"), anyLong()))
         .thenReturn(asList(podWithName("primary-1"), podWithName("primary-2")));
 
-    final List<K8sPod> allPods = k8sBlueGreenDeployTaskHandler.getAllPods();
+    final List<K8sPod> allPods = k8sBlueGreenDeployTaskHandler.getAllPods(LONG_TIMEOUT_INTERVAL);
 
     assertThat(allPods).hasSize(4);
     assertThat(allPods.stream().filter(K8sPod::isNewPod).map(K8sPod::getName).collect(Collectors.toList()))

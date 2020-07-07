@@ -19,6 +19,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
+import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFromMinutes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -131,7 +132,9 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    List<K8sPod> allPods = getAllPods();
+    long steadyStateTimeoutInMillis =
+        getTimeoutMillisFromMinutes(k8sCanaryDeployTaskParameters.getTimeoutIntervalInMin());
+    List<K8sPod> allPods = getAllPods(steadyStateTimeoutInMillis);
     HelmChartInfo helmChartInfo = k8sTaskHelper.getHelmChartDetails(
         k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory);
 
@@ -155,11 +158,11 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
   }
 
   @VisibleForTesting
-  List<K8sPod> getAllPods() throws Exception {
-    List<K8sPod> allPods =
-        k8sTaskHelper.getPodDetails(kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName);
+  List<K8sPod> getAllPods(long timeoutInMillis) throws Exception {
+    List<K8sPod> allPods = k8sTaskHelper.getPodDetails(
+        kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, timeoutInMillis);
     List<K8sPod> canaryPods = k8sTaskHelper.getPodDetailsWithTrack(
-        kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, "canary");
+        kubernetesConfig, canaryWorkload.getResourceId().getNamespace(), releaseName, "canary", timeoutInMillis);
     Set<String> canaryPodNames = canaryPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
     allPods.forEach(pod -> {
       if (canaryPodNames.contains(pod.getName())) {
