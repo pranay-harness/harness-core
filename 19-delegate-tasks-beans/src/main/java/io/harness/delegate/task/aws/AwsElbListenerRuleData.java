@@ -9,4 +9,5 @@ public class AwsElbListenerRuleData {
   private String ruleArn;
   private String rulePriority;
   private String ruleTargetGroupArn;
+  boolean isDefault;
 }

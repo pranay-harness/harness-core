@@ -10,6 +10,9 @@ import software.wings.beans.AwsConfig;
 public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
   private String prodListenerArn;
   private String stageListenerArn;
+  private boolean isUseSpecificListenerRuleArn;
+  private String prodListenerRuleArn;
+  private String stageListenerRuleArn;
   private String targetGroupArn1;
   private String targetGroupArn2;
   private String serviceName;
@@ -22,13 +25,16 @@ public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
 
   @Builder
   public EcsBGListenerUpdateRequest(String commandName, String appId, String accountId, String activityId,
-      String prodListenerArn, String stageListenerArn, String targetGroupArn1, String targetGroupArn2,
-      String serviceName, String clusterName, String region, String serviceNameDownsized, int serviceCountDownsized,
-      AwsConfig awsConfig, boolean rollback, boolean downsizeOldService, String targetGroupForNewService,
+      String prodListenerArn, String stageListenerArn, String prodListenerRuleArn, String stageListenerRuleArn,
+      String targetGroupArn1, String targetGroupArn2, String serviceName, String clusterName, String region,
+      String serviceNameDownsized, int serviceCountDownsized, AwsConfig awsConfig, boolean rollback,
+      boolean downsizeOldService, boolean isUseSpecificListenerRuleArn, String targetGroupForNewService,
       String targetGroupForExistingService) {
     super(accountId, appId, commandName, activityId, region, clusterName, awsConfig, EcsCommandType.LISTENER_UPDATE_BG);
     this.prodListenerArn = prodListenerArn;
     this.stageListenerArn = stageListenerArn;
+    this.prodListenerRuleArn = prodListenerRuleArn;
+    this.stageListenerRuleArn = stageListenerRuleArn;
     this.targetGroupArn1 = targetGroupArn1;
     this.targetGroupArn2 = targetGroupArn2;
     this.serviceName = serviceName;
@@ -38,5 +44,6 @@ public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
     this.targetGroupForNewService = targetGroupForNewService;
     this.targetGroupForExistingService = targetGroupForExistingService;
     this.downsizeOldService = downsizeOldService;
+    this.isUseSpecificListenerRuleArn = isUseSpecificListenerRuleArn;
   }
 }

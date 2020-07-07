@@ -1,12 +1,14 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -48,11 +50,16 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
           request.getServiceNameDownsized(), executionLogCallback, 20);
     }
 
-    if (isUpdateRequired(request, encryptedDataDetails)) {
+    if (isUpdateRequired(request, encryptedDataDetails, executionLogCallback)) {
       logListenerUpdateDetails(request, executionLogCallback);
-      awsElbHelperServiceDelegate.updateListenersForEcsBG(request.getAwsConfig(), encryptedDataDetails,
-          request.getProdListenerArn(), request.getStageListenerArn(), request.getRegion());
+      awsElbHelperServiceDelegate.swapListenersForEcsBG(request.getAwsConfig(), encryptedDataDetails,
+          request.isUseSpecificListenerRuleArn(), request.getProdListenerArn(), request.getStageListenerArn(),
+          request.getProdListenerRuleArn(), request.getStageListenerRuleArn(), request.getTargetGroupForNewService(),
+          request.getTargetGroupForExistingService(), request.getRegion(), executionLogCallback);
       executionLogCallback.saveExecutionLog("Successfully update Prod and Stage Listeners");
+    } else {
+      executionLogCallback.saveExecutionLog(format("Not swapping target groups, prod: [%s], stage: [%s]",
+          request.getTargetGroupForExistingService(), request.getTargetGroupForNewService()));
     }
 
     ecsSwapRoutesCommandTaskHelper.updateServiceTags(request.getAwsConfig(), encryptedDataDetails, request.getRegion(),
@@ -108,9 +115,20 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
     }
   }
 
-  private boolean isUpdateRequired(EcsBGListenerUpdateRequest request, List<EncryptedDataDetail> encryptedDataDetails) {
+  private boolean isUpdateRequired(EcsBGListenerUpdateRequest request, List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback) {
     if (!request.isRollback()) {
       return true;
+    }
+
+    if (request.isUseSpecificListenerRuleArn()) {
+      List<Action> actions = awsElbHelperServiceDelegate.getMatchingTargetGroupForSpecificListenerRuleArn(
+          request.getAwsConfig(), encryptedDataDetails, request.getRegion(), request.getProdListenerArn(),
+          request.getProdListenerRuleArn(), request.getTargetGroupForNewService(), executionLogCallback);
+      if (EmptyPredicate.isNotEmpty(actions)) {
+        return true;
+      }
+      return false;
     }
 
     DescribeListenersResult result = awsElbHelperServiceDelegate.describeListenerResult(
@@ -123,10 +141,10 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
             .findFirst();
 
     String arn = optionalAction.get().getTargetGroupArn();
+
     if (arn.equalsIgnoreCase(request.getTargetGroupForNewService())) {
       return true;
-    } else {
-      return false;
     }
+    return false;
   }
 }

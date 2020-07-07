@@ -1017,7 +1017,9 @@ public class AwsHelperService {
       List<TargetGroup> targetGroupList =
           amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest).getTargetGroups();
       if (isNotEmpty(targetGroupList)) {
-        return targetGroupList.get(0);
+        if (targetGroupList.get(0).getTargetGroupArn().equalsIgnoreCase(targetGroupArn)) {
+          return targetGroupList.get(0);
+        }
       }
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);

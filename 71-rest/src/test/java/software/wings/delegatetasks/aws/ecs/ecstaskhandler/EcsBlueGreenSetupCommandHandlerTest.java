@@ -2,6 +2,7 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -23,6 +24,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListenerRuleData;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,6 +42,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -48,6 +51,33 @@ public class EcsBlueGreenSetupCommandHandlerTest extends WingsBaseTest {
       new Listener().withDefaultActions(new Action().withTargetGroupArn("arn").withType("forward"));
   private final Listener nonForwardListener =
       new Listener().withDefaultActions(new Action().withTargetGroupArn("arn").withType("default"));
+  private final String PROD_LISTENER_RULE_ARN = "prodlistenerRulearn";
+  private final String STAGE_LISTENER_RULE_ARN = "stagelistenerRulearn";
+  private final String PROD_LISTENER_ARN = "prodlistenerarn";
+  private final String STAGE_LISTENER_ARN = "stagelistenerarn";
+  private final String TARGET_GROUP_1_ARN = "targetGroup1Arn";
+  private final String TARGET_GROUP_2_ARN = "targetGroup2Arn";
+
+  private final AwsElbListenerRuleData defaultRuleData =
+      AwsElbListenerRuleData.builder().ruleArn("defaultRuleData").build();
+  private final AwsElbListenerRuleData ruleDataProd =
+      AwsElbListenerRuleData.builder().ruleArn("ruleDataWithTg").build();
+  private final AwsElbListenerRuleData ruleDataStage =
+      AwsElbListenerRuleData.builder().ruleArn("ruleDataWithTg").build();
+  private final String PROD_PORT = "80";
+  private final String STAGE_PORT = "81";
+
+  private final AwsElbListener prodSpecificListener = AwsElbListener.builder()
+                                                          .listenerArn(PROD_LISTENER_ARN)
+                                                          .rules(Arrays.asList(defaultRuleData))
+                                                          .port(Integer.parseInt(PROD_PORT))
+                                                          .build();
+  private final AwsElbListener stageSpecificListener = AwsElbListener.builder()
+                                                           .listenerArn(STAGE_LISTENER_ARN)
+                                                           .rules(Arrays.asList(defaultRuleData))
+                                                           .port(Integer.parseInt(STAGE_PORT))
+                                                           .build();
+
   @InjectMocks @Inject private EcsBlueGreenSetupCommandHandler handler;
   @Mock private AwsHelperService mockAwsHelperService;
   @Mock private EcsSetupCommandTaskHelper mockEcsSetupCommandTaskHelper;
@@ -86,6 +116,105 @@ public class EcsBlueGreenSetupCommandHandlerTest extends WingsBaseTest {
 
     EcsCommandExecutionResponse response = handler.executeTaskInternal(request, null, mockCallback);
     assertThat(response).isNotNull();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
+        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testExecute_NoActionSetForSpecificListenerTargetGroup_isUseSpecificListenerRuleArnFalse() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    EcsBGServiceSetupRequest request =
+        EcsBGServiceSetupRequest.builder().ecsSetupParams(anEcsSetupParams().build()).build();
+
+    doReturn(nonForwardListener)
+        .when(mockAwsElbHelperServiceDelegate)
+        .getElbListener(any(), any(), anyString(), anyString());
+    doReturn(Arrays.asList(prodSpecificListener, stageSpecificListener))
+        .when(mockAwsElbHelperServiceDelegate)
+        .getElbListenersForLoadBalaner(any(), any(), anyString(), anyString());
+
+    EcsCommandExecutionResponse response = handler.executeTaskInternal(request, null, mockCallback);
+    assertThat(response).isNotNull();
+    assertThat(request.getEcsSetupParams().isUseSpecificListenerRuleArn()).isFalse();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
+        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testExecute_NoTargetGroupSetForSpecificListener_isUseSpecificListenerRuleArnTrue() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    EcsBGServiceSetupRequest request =
+        EcsBGServiceSetupRequest.builder()
+            .ecsSetupParams(
+                anEcsSetupParams().withProdListenerArn(PROD_LISTENER_ARN).withUseSpecificListenerRuleArn(true).build())
+            .build();
+
+    doReturn(nonForwardListener)
+        .when(mockAwsElbHelperServiceDelegate)
+        .getElbListener(any(), any(), anyString(), anyString());
+    doReturn(Arrays.asList(prodSpecificListener))
+        .when(mockAwsElbHelperServiceDelegate)
+        .getElbListenersForLoadBalaner(any(), any(), anyString(), anyString());
+    doReturn(null)
+        .when(mockAwsElbHelperServiceDelegate)
+        .fetchTargetGroupForSpecificRules(any(), any(), any(), any(), any(), any());
+
+    EcsCommandExecutionResponse response = handler.executeTaskInternal(request, null, mockCallback);
+    assertThat(response).isNotNull();
+    assertThat(request.getEcsSetupParams().isUseSpecificListenerRuleArn()).isTrue();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
+        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testExecute_TargetGroupSetForSpecificListener_isUseSpecificListenerRuleArnTrue() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    final TargetGroup targetGroup1 = new TargetGroup();
+    final TargetGroup targetGroup2 = new TargetGroup();
+    targetGroup2.setTargetGroupArn(TARGET_GROUP_2_ARN);
+    targetGroup2.setPort(Integer.parseInt(PROD_PORT));
+    EcsBGServiceSetupRequest request = EcsBGServiceSetupRequest.builder()
+                                           .ecsSetupParams(anEcsSetupParams()
+                                                               .withProdListenerArn(PROD_LISTENER_ARN)
+                                                               .withStageListenerArn(STAGE_LISTENER_ARN)
+                                                               .withTargetPort(PROD_PORT)
+                                                               .withStageListenerPort(STAGE_PORT)
+                                                               .withStageListenerRuleArn(STAGE_LISTENER_RULE_ARN)
+                                                               .withProdListenerRuleArn(PROD_LISTENER_RULE_ARN)
+                                                               .withTargetGroupArn2(TARGET_GROUP_2_ARN)
+                                                               .withTargetGroupArn(TARGET_GROUP_1_ARN)
+                                                               .withUseSpecificListenerRuleArn(true)
+                                                               .build())
+                                           .build();
+
+    doReturn(nonForwardListener)
+        .when(mockAwsElbHelperServiceDelegate)
+        .getElbListener(any(), any(), anyString(), anyString());
+    doReturn(Arrays.asList(prodSpecificListener))
+        .when(mockAwsElbHelperServiceDelegate)
+        .getElbListenersForLoadBalaner(any(), any(), anyString(), anyString());
+    doReturn(targetGroup2)
+        .when(mockAwsElbHelperServiceDelegate)
+        .fetchTargetGroupForSpecificRules(any(), any(), any(), any(), any(), any());
+    doReturn(Optional.of(targetGroup2))
+        .when(mockAwsElbHelperServiceDelegate)
+        .getTargetGroup(any(), any(), any(), eq(TARGET_GROUP_2_ARN));
+    doReturn(Optional.of(targetGroup1))
+        .when(mockAwsElbHelperServiceDelegate)
+        .getTargetGroup(any(), any(), any(), eq(TARGET_GROUP_1_ARN));
+
+    EcsCommandExecutionResponse response = handler.executeTaskInternal(request, null, mockCallback);
+    assertThat(response).isNotNull();
+    assertThat(request.getEcsSetupParams().isUseSpecificListenerRuleArn()).isTrue();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
     assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
         .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);

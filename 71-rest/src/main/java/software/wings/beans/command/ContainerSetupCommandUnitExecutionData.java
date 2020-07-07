@@ -36,6 +36,11 @@ public class ContainerSetupCommandUnitExecutionData implements CommandExecutionD
   private String prodEcsListener;
   private String stageEcsListener;
 
+  // Only to be used by ECS BG when specific listener rules are specified
+  private boolean isUseSpecificListenerRuleArn;
+  private String prodListenerRuleArn;
+  private String stageListenerRuleArn;
+
   // This is Target Group associated with Service
   private String targetGroupForNewService;
   private String targetGroupForExistingService;

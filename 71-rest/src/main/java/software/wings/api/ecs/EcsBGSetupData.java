@@ -11,6 +11,9 @@ public class EcsBGSetupData {
   private String stageEcsListener;
   private String ecsBGTargetGroup1;
   private String ecsBGTargetGroup2;
+  private boolean isUseSpecificListenerRuleArn;
+  private String prodListenerRuleArn;
+  private String stageListenerRuleArn;
   private String downsizedServiceName;
   private int downsizedServiceCount;
 
