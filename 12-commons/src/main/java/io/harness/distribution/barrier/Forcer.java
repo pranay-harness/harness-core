@@ -24,6 +24,9 @@ public class Forcer {
     ARRIVED,
 
     // The forcer abandoned the effort to push the barrier
-    ABANDONED
+    ABANDONED,
+
+    // The forcer is abandoned the effort to push the barrier due to timeout
+    TIMED_OUT
   }
 }

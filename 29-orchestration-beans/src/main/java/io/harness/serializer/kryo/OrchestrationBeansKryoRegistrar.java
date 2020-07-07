@@ -10,6 +10,7 @@ import io.harness.ambiance.Level;
 import io.harness.ambiance.LevelType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.barriers.BarrierExecutionInstance;
+import io.harness.barriers.BarrierResponseData;
 import io.harness.data.OutcomeInstance;
 import io.harness.data.SweepingOutput;
 import io.harness.execution.NodeExecution;
@@ -80,6 +81,7 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
 
     kryo.register(StepOutcomeRef.class, 2529);
     kryo.register(BarrierExecutionInstance.class, 2530);
+    kryo.register(BarrierResponseData.class, 2531);
 
     kryo.register(TaskMode.class, 2531);
 

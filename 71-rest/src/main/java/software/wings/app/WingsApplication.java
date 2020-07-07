@@ -781,6 +781,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestCleanupHandler.class).registerIterators();
+    injector.getInstance(io.harness.engine.barriers.BarrierServiceImpl.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

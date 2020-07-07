@@ -46,6 +46,8 @@ public interface CustomExecutionService {
 
   PlanExecution executeSingleBarrierPlan();
 
+  PlanExecution executeMultipleBarriersPlan();
+
   // Interrupts
 
   Interrupt registerInterrupt(String planExecutionId);

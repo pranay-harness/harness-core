@@ -13,6 +13,9 @@ import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -21,6 +24,10 @@ import java.util.Set;
 
 public interface HPersistence extends HealthMonitor {
   Store DEFAULT_STORE = Store.builder().name("default").build();
+
+  static Logger logger() {
+    return LoggerFactory.getLogger(HPersistence.class);
+  }
 
   /**
    * Register Uri for the datastore.
@@ -297,7 +304,8 @@ public interface HPersistence extends HealthMonitor {
     for (int i = 1; i < RETRIES; ++i) {
       try {
         return executor.execute();
-      } catch (MongoSocketOpenException | MongoSocketReadException ignore) {
+      } catch (MongoSocketOpenException | MongoSocketReadException | OptimisticLockingFailureException e) {
+        logger().error("Exception ignored on retry ", e);
         continue;
       } catch (RuntimeException exception) {
         if (ExceptionUtils.cause(MongoSocketOpenException.class, exception) != null) {

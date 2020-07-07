@@ -13,6 +13,7 @@ import io.harness.facilitator.FacilitatorResponse;
 import io.harness.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.facilitator.modes.ExecutionMode;
+import io.harness.state.core.barrier.BarrierStepParameters;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 
@@ -29,7 +30,7 @@ public class BarrierFacilitator implements Facilitator {
       FacilitatorParameters parameters, StepInputPackage inputPackage) {
     FacilitatorResponseBuilder responseBuilder =
         FacilitatorResponse.builder().initialWait(parameters.getWaitDurationSeconds());
-    if (isSingleBarrier(ambiance.obtainCurrentRuntimeId(), ambiance.getPlanExecutionId())) {
+    if (isSingleBarrier(((BarrierStepParameters) stepParameters).getIdentifier(), ambiance.getPlanExecutionId())) {
       responseBuilder.executionMode(ExecutionMode.SYNC);
     } else {
       responseBuilder.executionMode(ExecutionMode.ASYNC);

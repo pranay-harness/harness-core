@@ -69,10 +69,12 @@ public class OrchestrationServiceImpl implements OrchestrationService {
             .map(planNode
                 -> BarrierExecutionInstance.builder()
                        .uuid(generateUuid())
+                       .name(planNode.getName())
                        .planNodeId(planNode.getUuid())
                        .identifier(((BarrierStepParameters) planNode.getStepParameters()).getIdentifier())
                        .planExecutionId(planExecution.getUuid())
                        .barrierState(State.STANDING)
+                       .expiredIn(((BarrierStepParameters) planNode.getStepParameters()).getTimeoutInMillis())
                        .build())
             .collect(Collectors.toList()));
   }

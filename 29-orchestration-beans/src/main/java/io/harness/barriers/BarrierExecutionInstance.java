@@ -34,10 +34,13 @@ import javax.validation.constraints.NotNull;
 public final class BarrierExecutionInstance implements PersistentEntity, UuidAware, PersistentRegularIterable {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
 
+  @NotNull private String name;
   @NotNull private String planNodeId;
   @NotNull private String identifier;
   @NotNull private String planExecutionId;
-  private State barrierState;
+  @NotNull private State barrierState;
+
+  @Builder.Default private long expiredIn = 600_000; // 10 minutes
 
   private Long nextIteration;
 

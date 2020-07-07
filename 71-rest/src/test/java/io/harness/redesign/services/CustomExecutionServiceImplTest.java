@@ -138,4 +138,18 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
     assertThat(graph).isNotNull();
     assertThat(graph.getGraphVertex().getUuid()).isEqualTo(graphVertex.getUuid());
   }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldExecuteMultipleBarriersPlan() {
+    UserThreadLocal.set(user);
+    Plan expectedMultipleBarriersPlan = CustomExecutionUtils.providePlanWithMultipleBarriers();
+    when(orchestrationService.startExecution(any(), any(), any()))
+        .thenReturn(PlanExecution.builder().status(Status.RUNNING).plan(expectedMultipleBarriersPlan).build());
+    PlanExecution planExecutionResponse = customExecutionService.executeMultipleBarriersPlan();
+
+    assertThat(planExecutionResponse.getPlan()).isEqualTo(expectedMultipleBarriersPlan);
+    assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.RUNNING);
+  }
 }

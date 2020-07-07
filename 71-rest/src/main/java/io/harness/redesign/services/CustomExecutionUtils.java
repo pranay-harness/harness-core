@@ -1544,6 +1544,123 @@ public class CustomExecutionUtils {
         .build();
   }
 
+  public Plan providePlanWithMultipleBarriers() {
+    String forkNodeId = generateUuid();
+    String dummyNodeId1 = generateUuid();
+    String dummyNodeId2 = generateUuid();
+    String dummyNodeId3 = generateUuid();
+    String dummyNodeId4 = generateUuid();
+    String barrierNodeId1 = generateUuid();
+    String barrierNodeId2 = generateUuid();
+    String waitNodeId = generateUuid();
+    return Plan.builder()
+        .uuid(generateUuid())
+        .startingNodeId(forkNodeId)
+        .node(PlanNode.builder()
+                  .uuid(forkNodeId)
+                  .name("Fork Node")
+                  .stepType(ForkStep.STEP_TYPE)
+                  .identifier("fork1")
+                  .stepParameters(
+                      ForkStepParameters.builder().parallelNodeId(dummyNodeId1).parallelNodeId(dummyNodeId2).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNodeId1)
+                  .name("Dummy Node 1")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy1")
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(barrierNodeId1).build())
+                          .build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(
+            PlanNode.builder()
+                .uuid(dummyNodeId2)
+                .name("Dummy Node 2")
+                .stepType(DUMMY_STEP_TYPE)
+                .identifier("dummy2")
+                .facilitatorObtainment(FacilitatorObtainment.builder()
+                                           .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                           .build())
+                .adviserObtainment(AdviserObtainment.builder()
+                                       .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                                       .parameters(OnSuccessAdviserParameters.builder().nextNodeId(waitNodeId).build())
+                                       .build())
+                .build())
+        .node(PlanNode.builder()
+                  .uuid(waitNodeId)
+                  .name("Wait Node")
+                  .identifier("wait")
+                  .stepType(StepType.builder().type("WAIT_STATE").build())
+                  .stepParameters(WaitStepParameters.builder().waitDurationSeconds(5).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.ASYNC).build())
+                                             .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(barrierNodeId2).build())
+                          .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(barrierNodeId1)
+                  .identifier("barrier1")
+                  .name("barrier1")
+                  .stepType(BarrierStep.STEP_TYPE)
+                  .stepParameters(BarrierStepParameters.builder().identifier("BAR1").timeoutInMillis(60000).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
+                                             .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId3).build())
+                          .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(barrierNodeId2)
+                  .identifier("barrier2")
+                  .name("barrier2")
+                  .stepType(BarrierStep.STEP_TYPE)
+                  .stepParameters(BarrierStepParameters.builder().identifier("BAR1").timeoutInMillis(60000).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
+                                             .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(dummyNodeId4).build())
+                          .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNodeId3)
+                  .name("Dummy Node 3")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy3")
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(dummyNodeId4)
+                  .name("Dummy Node 4")
+                  .stepType(DUMMY_STEP_TYPE)
+                  .identifier("dummy4")
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
+                                             .build())
+                  .build())
+        .build();
+  }
+
   private static CDPipeline getCdPipeline(ServiceConfig serviceConfig) {
     K8SDirectInfrastructure k8sDirectInfraDefinition = K8SDirectInfrastructure.builder().namespace("namespace").build();
 

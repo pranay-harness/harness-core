@@ -35,6 +35,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
+  public List<NodeExecution> findByIdIn(List<String> ids) {
+    return (List<NodeExecution>) nodeExecutionRepository.findAllById(ids);
+  }
+
+  @Override
   public List<NodeExecution> fetchNodeExecutions(String planExecutionId) {
     return nodeExecutionRepository.findByAmbiancePlanExecutionId(planExecutionId);
   }
