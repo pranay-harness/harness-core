@@ -16,6 +16,7 @@ import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.resume.EngineWaitRetryCallback;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.state.core.barrier.BarrierOutcome;
 import io.harness.state.core.barrier.BarrierStepParameters;
 import io.harness.state.core.dummy.DummySectionOutcome;
 import io.harness.state.core.dummy.DummySectionStepParameters;
@@ -72,5 +73,6 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     h.put("state.core.section.chain.SectionStepParameters", SectionChainStepParameters.class);
     h.put("state.core.section.SectionStepParameters", SectionStepParameters.class);
     h.put("state.core.barrier.BarrierStepParameters", BarrierStepParameters.class);
+    h.put("state.core.barrier.BarrierOutcome", BarrierOutcome.class);
   }
 }

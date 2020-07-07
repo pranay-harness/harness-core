@@ -259,6 +259,16 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     assertThat(shellScript2).isEqualTo(expectedShellScript2);
   }
 
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(FunctionalTests.class)
+  public void shouldExecuteMultipleBarriersPlan() {
+    PlanExecution multipleBarriersResponse =
+        executePlan(bearerToken, application.getAccountId(), application.getAppId(), "multiple-barriers");
+
+    assertThat(multipleBarriersResponse.getStatus()).isEqualTo(SUCCEEDED);
+  }
+
   private String fetchShellScriptLogs(List<NodeExecution> nodeExecutions, String name) {
     NodeExecution nodeExecution =
         nodeExecutions.stream().filter(ne -> name.equals(ne.getNode().getName())).findFirst().orElse(null);

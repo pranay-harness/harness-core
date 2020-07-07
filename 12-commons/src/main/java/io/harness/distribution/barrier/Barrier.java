@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.distribution.barrier.Barrier.State.DOWN;
 import static io.harness.distribution.barrier.Barrier.State.ENDURE;
 import static io.harness.distribution.barrier.Barrier.State.STANDING;
+import static io.harness.distribution.barrier.Barrier.State.TIMED_OUT;
 import static io.harness.govern.Switch.unhandled;
 
 import lombok.Builder;
@@ -50,6 +51,9 @@ public class Barrier {
 
     // The barrier endure when at least one of the forcers abandoned arriving to the barrier.
     ENDURE,
+
+    // WF 2.0, Timed out when one of the barriers expired
+    TIMED_OUT
   }
   @Builder.Default private State state = STANDING;
 
@@ -107,6 +111,8 @@ public class Barrier {
           // If any of the forcers failed, there is nothing else to check - the barrier outlasts the forcers.
           return ENDURE;
 
+        case TIMED_OUT:
+          return TIMED_OUT;
         default:
           unhandled(forcerState);
       }

@@ -141,4 +141,10 @@ public class CustomExecutionResource {
   public RestResponse<PlanExecution> executeSingleBarrierPlan() {
     return new RestResponse<>(customExecutionService.executeSingleBarrierPlan());
   }
+
+  @GET
+  @Path("/multiple-barriers")
+  public RestResponse<PlanExecution> executeMultipleBarriersPlan() {
+    return new RestResponse<>(customExecutionService.executeMultipleBarriersPlan());
+  }
 }
