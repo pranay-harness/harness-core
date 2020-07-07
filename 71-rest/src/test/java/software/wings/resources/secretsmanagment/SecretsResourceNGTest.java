@@ -9,8 +9,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.NgManagerServiceDriver;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.SendTaskResultRequest;
-import io.harness.delegate.SendTaskResultResponse;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -53,9 +52,7 @@ public class SecretsResourceNGTest extends WingsBaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testSendTaskResponse() {
-    SendTaskResultResponse sendTaskResultResponse =
-        SendTaskResultResponse.newBuilder().setAcknowledgement(true).build();
-    when(ngManagerServiceDriver.sendTaskResult(any(SendTaskResultRequest.class))).thenReturn(sendTaskResultResponse);
+    when(ngManagerServiceDriver.sendTaskResult(any(String.class), any(ResponseData.class))).thenReturn(true);
     RestResponse<Boolean> restResponse = secretsResourceNG.sendTaskResponse();
     assertThat(restResponse).isNotNull();
     assertThat(restResponse.getResource()).isNotNull();

@@ -1,14 +1,13 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import com.google.inject.Inject;
 
 import io.harness.NgManagerServiceDriver;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.delegate.SendTaskResultRequest;
-import io.harness.delegate.SendTaskResultResponse;
-import io.harness.delegate.TaskId;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -76,8 +75,7 @@ public class SecretsResourceNG {
   @GET
   @Path("task")
   public RestResponse<Boolean> sendTaskResponse() {
-    SendTaskResultResponse sendTaskResultResponse = ngManagerServiceDriver.sendTaskResult(
-        SendTaskResultRequest.newBuilder().setTaskId(TaskId.newBuilder().setId("MangerId").build()).build());
-    return new RestResponse<>(sendTaskResultResponse.getAcknowledgement());
+    boolean sendTaskResultResponse = ngManagerServiceDriver.sendTaskResult(generateUuid(), null);
+    return new RestResponse<>(sendTaskResultResponse);
   }
 }

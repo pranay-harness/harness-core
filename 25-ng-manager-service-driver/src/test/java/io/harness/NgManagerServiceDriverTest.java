@@ -14,9 +14,7 @@ import io.grpc.testing.GrpcCleanupRule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc.NgDelegateTaskResponseServiceBlockingStub;
-import io.harness.delegate.SendTaskResultRequest;
 import io.harness.delegate.SendTaskResultResponse;
-import io.harness.delegate.TaskId;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import org.junit.Before;
@@ -73,10 +71,7 @@ public class NgManagerServiceDriverTest extends NgManagerServiceDriverBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testSendTaskResult() {
-    SendTaskResultRequest sendTaskResultRequest =
-        SendTaskResultRequest.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build();
-    SendTaskResultResponse sendTaskResultResponse = ngManagerServiceDriver.sendTaskResult(sendTaskResultRequest);
-    assertThat(sendTaskResultResponse).isNotNull();
-    assertThat(sendTaskResultResponse).isEqualTo(sendTaskResultResponse);
+    boolean acknowledgement = ngManagerServiceDriver.sendTaskResult(taskId, null);
+    assertThat(acknowledgement).isEqualTo(true);
   }
 }

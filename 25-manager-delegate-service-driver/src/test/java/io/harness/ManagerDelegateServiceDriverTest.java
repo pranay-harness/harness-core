@@ -131,10 +131,9 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
                             .timeout(TimeUnit.MINUTES.toMillis(1))
                             .parameters(new Object[] {HttpTaskParameters.builder().url("criteria").build()})
                             .build();
-    SendTaskAsyncResponse taskResponse =
-        managerDelegateServiceDriver.sendTaskAsync(ACCOUNT_ID, setupAbstractions, taskData);
-    assertThat(taskResponse).isNotNull();
-    assertThat(taskResponse).isEqualTo(sendTaskAsyncResponse);
+    String taskId = managerDelegateServiceDriver.sendTaskAsync(ACCOUNT_ID, setupAbstractions, taskData);
+    assertThat(taskId).isNotNull();
+    assertThat(taskId).isEqualTo(sendTaskAsyncResponse.getTaskId().getId());
   }
 
   @Test
