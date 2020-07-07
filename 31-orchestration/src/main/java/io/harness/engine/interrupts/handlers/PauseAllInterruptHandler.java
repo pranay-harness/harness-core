@@ -10,10 +10,11 @@ import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
+import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
@@ -36,6 +37,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private PausedStepStatusUpdate pausedStepStatusUpdate;
+  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -84,7 +86,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
                                                   .status(Status.PAUSED)
                                                   .build());
     waitNotifyEngine.waitForAllOn(
-        ORCHESTRATION, EngineResumeAllCallback.builder().nodeExecutionId(nodeExecutionId).build(), interrupt.getUuid());
+        publisherName, EngineResumeAllCallback.builder().nodeExecutionId(nodeExecutionId).build(), interrupt.getUuid());
     return interrupt;
   }
 }

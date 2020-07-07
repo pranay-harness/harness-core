@@ -107,6 +107,9 @@ public class OrchestrationModule extends DependencyModule implements ServersModu
         MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
     orchestrationEventHandlerRegistrarMapBinder.addBinding(OrchestrationModuleEventHandlerRegistrar.class.getName())
         .to(OrchestrationModuleEventHandlerRegistrar.class);
+    bind(String.class)
+        .annotatedWith(Names.named(OrchestrationPublisherName.PUBLISHER_NAME))
+        .toInstance(config.getPublisherName());
   }
 
   @Override

@@ -1,11 +1,12 @@
 package io.harness.engine.executables.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
+import io.harness.OrchestrationPublisherName;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executables.InvokerPackage;
@@ -32,6 +33,7 @@ public class TaskChainStrategy implements TaskInvokeStrategy {
   @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   private TaskMode mode;
 
@@ -71,7 +73,7 @@ public class TaskChainStrategy implements TaskInvokeStrategy {
                 .passThroughData(taskChainResponse.getPassThroughData())
                 .build()));
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, task.getWaitId());
+    waitNotifyEngine.waitForAllOn(publisherName, callback, task.getWaitId());
   }
 
   @Override

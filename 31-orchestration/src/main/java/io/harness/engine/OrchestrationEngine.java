@@ -13,13 +13,13 @@ import static io.harness.execution.status.Status.SUCCEEDED;
 import static io.harness.execution.status.Status.positiveStatuses;
 import static io.harness.execution.status.Status.resumableStatuses;
 import static io.harness.ng.SpringDataMongoUtils.setUnset;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
+import io.harness.OrchestrationPublisherName;
 import io.harness.adviser.Advise;
 import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserObtainment;
@@ -105,6 +105,7 @@ public class OrchestrationEngine {
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private InterruptService interruptService;
   @Inject private BarrierService barrierService;
+  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -203,7 +204,7 @@ public class OrchestrationEngine {
               ops -> ops.set(NodeExecutionKeys.initialWaitDuration, finalFacilitatorResponse.getInitialWait())));
       String resumeId =
           delayEventHelper.delay(finalFacilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
-      waitNotifyEngine.waitForAllOn(ORCHESTRATION,
+      waitNotifyEngine.waitForAllOn(publisherName,
           EngineWaitResumeCallback.builder()
               .ambiance(ambiance)
               .facilitatorResponse(finalFacilitatorResponse)
