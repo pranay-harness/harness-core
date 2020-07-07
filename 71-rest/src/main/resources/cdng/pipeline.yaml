@@ -38,7 +38,7 @@ pipeline:
           #                    fetchValue: master
           #                    paths:
           #                    - test/override/values.yaml
-          overrides:
+          stageOverrides:
             manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
             #            - manifest:/
             #                identifier:
@@ -156,7 +156,7 @@ pipeline:
                         - test/spec
                     valuesFilePaths:
                       - test/baseValues.yaml
-          overrides:
+          stageOverrides:
             manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
               - manifest:
                   identifier: prodOverride

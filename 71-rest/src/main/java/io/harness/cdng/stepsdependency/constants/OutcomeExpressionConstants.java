@@ -5,6 +5,7 @@ import lombok.Getter;
 public enum OutcomeExpressionConstants {
   SERVICE("service"),
   INFRASTRUCTURE("infrastructure"),
+  ARTIFACTS("ARTIFACTS"),
   K8S_ROLL_OUT("rollingOutcome");
 
   @Getter private final String name;

@@ -21,15 +21,16 @@ import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.environment.steps.EnvironmentStep;
+import io.harness.cdng.environment.steps.EnvironmentStepParameters;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureSpec;
+import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
-import io.harness.cdng.manifest.state.ManifestListConfig;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.FetchType;
@@ -42,9 +43,9 @@ import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
-import io.harness.cdng.service.OverrideConfig;
 import io.harness.cdng.service.ServiceConfig;
 import io.harness.cdng.service.ServiceSpec;
+import io.harness.cdng.service.StageOverridesConfig;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
@@ -90,6 +91,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @OwnedBy(CDC)
@@ -1072,7 +1074,7 @@ public class CustomExecutionUtils {
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                              .build())
-                  .stepParameters(environmentYaml)
+                  .stepParameters(EnvironmentStepParameters.builder().environment(environmentYaml).build())
                   .adviserObtainment(
                       AdviserObtainment.builder()
                           .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
@@ -1084,7 +1086,7 @@ public class CustomExecutionUtils {
                   .name(INFRASTRUCTURE)
                   .identifier(INFRASTRUCTURE)
                   .stepType(InfrastructureStep.STEP_TYPE)
-                  .stepParameters(infrastructureSpec)
+                  .stepParameters(InfraStepParameters.builder().infrastructure(infrastructureSpec).build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.SYNC).build())
                                              .build())
@@ -1342,12 +1344,9 @@ public class CustomExecutionUtils {
                                                                         .build())
                                                 .build();
 
-    ManifestListConfig overrideConfigList = getOverrideManifestListConfig();
-
     return ManifestStepParameters.builder()
-        .manifestServiceSpec(
-            ManifestListConfig.builder().manifests(Arrays.asList(manifestConfig1, manifestConfig2)).build())
-        .manifestStageOverride(overrideConfigList)
+        .serviceSpecManifests(Arrays.asList(manifestConfig1, manifestConfig2))
+        .stageOverrideManifests(getOverrideManifestListConfig())
         .build();
   }
 
@@ -1357,17 +1356,16 @@ public class CustomExecutionUtils {
     String dummyNodeId = generateUuid();
 
     ManifestStepParameters manifestStepParameters = getManifestStepParameters();
-
     ServiceConfig serviceConfig =
         ServiceConfig.builder()
             .identifier("service")
             .displayName("k8s")
             .serviceSpec(ServiceSpec.builder()
                              .deploymentType("kubernetes")
-                             .manifests(manifestStepParameters.getManifestServiceSpec())
+                             .manifests(manifestStepParameters.getServiceSpecManifests())
                              .build())
-            .overrides(
-                OverrideConfig.builder().manifestListConfig(manifestStepParameters.getManifestStageOverride()).build())
+            .stageOverrides(
+                StageOverridesConfig.builder().manifests(manifestStepParameters.getStageOverrideManifests()).build())
             .build();
 
     PlanNode manifestPlanNode =
@@ -1404,7 +1402,7 @@ public class CustomExecutionUtils {
             .stepType(ManifestFetchStep.STEP_TYPE)
             .stepParameters(ManifestFetchParameters.builder()
                                 .fetchValuesOnly(false)
-                                .serviceSpecManifestAttributes(Arrays.asList(fetchManifest))
+                                .serviceSpecManifestAttributes(Collections.singletonList(fetchManifest))
                                 .build())
             .facilitatorObtainment(FacilitatorObtainment.builder()
                                        .type(FacilitatorType.builder().type(FacilitatorType.TASK).build())
@@ -1472,7 +1470,7 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  private static ManifestListConfig getOverrideManifestListConfig() {
+  private List<ManifestConfigWrapper> getOverrideManifestListConfig() {
     ManifestConfigWrapper manifestConfigOverride =
         ManifestConfig.builder()
             .identifier("overrideManifest")
@@ -1486,7 +1484,7 @@ public class CustomExecutionUtils {
                                                      .build())
                                     .build())
             .build();
-    return ManifestListConfig.builder().manifests(Arrays.asList(manifestConfigOverride)).build();
+    return Collections.singletonList(manifestConfigOverride);
   }
 
   public Plan providePlanWithSingleBarrier() {
@@ -1661,7 +1659,7 @@ public class CustomExecutionUtils {
         .build();
   }
 
-  private static CDPipeline getCdPipeline(ServiceConfig serviceConfig) {
+  private CDPipeline getCdPipeline(ServiceConfig serviceConfig) {
     K8SDirectInfrastructure k8sDirectInfraDefinition = K8SDirectInfrastructure.builder().namespace("namespace").build();
 
     PipelineInfrastructure pipelineInfrastructure =

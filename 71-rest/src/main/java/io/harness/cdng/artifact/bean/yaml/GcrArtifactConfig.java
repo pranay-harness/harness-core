@@ -7,9 +7,11 @@ import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.ArtifactSourceType;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.data.structure.EmptyPredicate;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.Wither;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,11 +27,11 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GcrArtifactConfig implements ArtifactConfigWrapper {
   /** GCP connector to connect to Google Container Registry. */
-  String gcpConnector;
+  @Wither String gcpConnector;
   /** Registry where the artifact source is located. */
-  String registryHostname;
+  @Wither String registryHostname;
   /** Images in repos need to be referenced via a path. */
-  String imagePath;
+  @Wither String imagePath;
   /** Identifier for artifact. */
   String identifier;
   /** Type to identify whether primary and sidecars artifact. */
@@ -66,5 +68,21 @@ public class GcrArtifactConfig implements ArtifactConfigWrapper {
   public String setIdentifier(String identifier) {
     this.identifier = identifier;
     return identifier;
+  }
+
+  @Override
+  public ArtifactConfigWrapper applyOverrides(ArtifactConfigWrapper overrideConfig) {
+    GcrArtifactConfig gcrArtifactConfig = (GcrArtifactConfig) overrideConfig;
+    GcrArtifactConfig resultantConfig = this;
+    if (EmptyPredicate.isNotEmpty(gcrArtifactConfig.getGcpConnector())) {
+      resultantConfig = resultantConfig.withGcpConnector(gcrArtifactConfig.getGcpConnector());
+    }
+    if (EmptyPredicate.isNotEmpty(gcrArtifactConfig.getImagePath())) {
+      resultantConfig = resultantConfig.withImagePath(gcrArtifactConfig.getImagePath());
+    }
+    if (EmptyPredicate.isNotEmpty(gcrArtifactConfig.getRegistryHostname())) {
+      resultantConfig = resultantConfig.withRegistryHostname(gcrArtifactConfig.getRegistryHostname());
+    }
+    return resultantConfig;
   }
 }

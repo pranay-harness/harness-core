@@ -1,6 +1,7 @@
 package io.harness.cdng.artifact.bean;
 
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
+import io.harness.yaml.core.intfc.OverridesApplier;
 import io.harness.yaml.core.intfc.WithIdentifier;
 
 /**
@@ -14,7 +15,7 @@ import io.harness.yaml.core.intfc.WithIdentifier;
  *              dockerhub:
  */
 
-public interface ArtifactConfigWrapper extends WithIdentifier {
+public interface ArtifactConfigWrapper extends WithIdentifier, OverridesApplier<ArtifactConfigWrapper> {
   String getSourceType();
   String getUniqueHash();
   ArtifactSource getArtifactSource(String accountId);

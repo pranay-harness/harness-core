@@ -1,4 +1,4 @@
-package io.harness.cdng.service.steps;
+package io.harness.cdng.artifact.steps;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
@@ -7,24 +7,22 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
-import io.harness.cdng.service.ServiceConfig;
-import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.cdng.artifact.bean.ArtifactOutcome;
+import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
-import io.harness.cdng.service.beans.ServiceOutcome.ServiceOutcomeBuilder;
+import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome.ArtifactsOutcomeBuilder;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.Outcome;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.FailureType;
 import io.harness.execution.status.Status;
-import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.facilitator.modes.children.ChildrenExecutable;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse;
 import io.harness.facilitator.modes.children.ChildrenExecutableResponse.ChildrenExecutableResponseBuilder;
 import io.harness.state.Step;
 import io.harness.state.StepType;
+import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
@@ -32,27 +30,20 @@ import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-@Slf4j
-public class ServiceStep implements Step, ChildrenExecutable {
-  public static final StepType STEP_TYPE = StepType.builder().type("SERVICE_STEP").build();
+public class ArtifactForkStep implements Step, ChildrenExecutable {
+  public static final StepType STEP_TYPE = StepType.builder().type("ARTIFACT_FORK_STEP").build();
   @Inject private OutcomeService outcomeService;
 
   @Override
   public ChildrenExecutableResponse obtainChildren(
       Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    ServiceStepParameters parameters = (ServiceStepParameters) stepParameters;
-    logger.info("Executing deployment stage with params [{}]", parameters);
-    // TODO(archit): save service entity.
-
+    ForkStepParameters parameters = (ForkStepParameters) stepParameters;
     ChildrenExecutableResponseBuilder responseBuilder = ChildrenExecutableResponse.builder();
     for (String nodeId : parameters.getParallelNodeIds()) {
       responseBuilder.child(ChildrenExecutableResponse.Child.builder().childNodeId(nodeId).build());
@@ -64,7 +55,6 @@ public class ServiceStep implements Step, ChildrenExecutable {
   public StepResponse handleChildrenResponse(
       Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
-    ServiceStepParameters parameters = (ServiceStepParameters) stepParameters;
     boolean allChildrenSuccess = true;
     EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
     List<String> errorMessages = new ArrayList<>();
@@ -80,27 +70,21 @@ public class ServiceStep implements Step, ChildrenExecutable {
         failureTypes.addAll(responseNotifyData.getFailureInfo().getFailureTypes());
       }
     }
+
     if (!allChildrenSuccess) {
       responseBuilder.failureInfo(
           FailureInfo.builder().errorMessage(String.join(",", errorMessages)).failureTypes(failureTypes).build());
     } else {
       responseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
-                                      .name(OutcomeExpressionConstants.SERVICE.getName())
-                                      .outcome(createServiceOutcome(parameters.getService(), responseNotifyDataList))
-                                      .group(StepGroup.STAGE.name())
+                                      .name(OutcomeExpressionConstants.ARTIFACTS.getName())
+                                      .outcome(createArtifactsOutcome(responseNotifyDataList))
                                       .build());
     }
     return responseBuilder.build();
   }
 
   @VisibleForTesting
-  ServiceOutcome createServiceOutcome(
-      ServiceConfig serviceConfig, List<StepResponseNotifyData> responseNotifyDataList) {
-    ServiceOutcomeBuilder outcomeBuilder = ServiceOutcome.builder()
-                                               .displayName(serviceConfig.getDisplayName())
-                                               .identifier(serviceConfig.getIdentifier())
-                                               .deploymentType(serviceConfig.getServiceSpec().getDeploymentType());
-
+  ArtifactsOutcome createArtifactsOutcome(List<StepResponseNotifyData> responseNotifyDataList) {
     // Fetch all outcomes of the children.
     List<String> outcomeInstanceIds = responseNotifyDataList.stream()
                                           .flatMap(notifyData -> notifyData.getStepOutcomesRefs().stream())
@@ -108,32 +92,23 @@ public class ServiceStep implements Step, ChildrenExecutable {
                                           .collect(toList());
     List<Outcome> outcomes = outcomeService.fetchOutcomes(outcomeInstanceIds);
 
+    ArtifactsOutcomeBuilder artifactsBuilder = ArtifactsOutcome.builder();
     if (isNotEmpty(outcomes)) {
-      // Handle ArtifactsForkOutcome
-      Optional<Outcome> artifactsOutcome =
-          outcomes.stream().filter(outcome -> outcome instanceof ArtifactsOutcome).findFirst();
-      handleArtifactOutcome(
-          (ArtifactsOutcome) artifactsOutcome.orElse(ArtifactsOutcome.builder().build()), outcomeBuilder);
-
-      // Handle ManifestOutcome
-      Optional<Outcome> manifestOutcome =
-          outcomes.stream().filter(outcome -> outcome instanceof ManifestOutcome).findFirst();
-      handleManifestOutcome((ManifestOutcome) manifestOutcome.orElse(
-                                ManifestOutcome.builder().manifestAttributes(Collections.emptyList()).build()),
-          outcomeBuilder);
+      // Handle ArtifactOutcomes
+      List<Outcome> artifactOutcomes =
+          outcomes.stream().filter(outcome -> outcome instanceof ArtifactOutcome).collect(toList());
+      artifactOutcomes.forEach(
+          artifactOutcome -> handleArtifactOutcome(artifactsBuilder, (ArtifactOutcome) artifactOutcome));
     }
 
-    return outcomeBuilder.build();
+    return artifactsBuilder.build();
   }
 
-  private void handleManifestOutcome(ManifestOutcome outcome, ServiceOutcomeBuilder outcomeBuilder) {
-    List<ManifestAttributes> manifestAttributesList =
-        isNotEmpty(outcome.getManifestAttributes()) ? outcome.getManifestAttributes() : Collections.emptyList();
-
-    outcomeBuilder.manifests(manifestAttributesList);
-  }
-
-  private void handleArtifactOutcome(ArtifactsOutcome artifactsOutcome, ServiceOutcomeBuilder outcomeBuilder) {
-    outcomeBuilder.artifacts(artifactsOutcome);
+  private void handleArtifactOutcome(ArtifactsOutcomeBuilder artifactsBuilder, ArtifactOutcome artifactOutcome) {
+    if (ArtifactUtils.isPrimaryArtifact(artifactOutcome)) {
+      artifactsBuilder.primary(artifactOutcome);
+    } else {
+      artifactsBuilder.sidecar(artifactOutcome.getIdentifier(), artifactOutcome);
+    }
   }
 }

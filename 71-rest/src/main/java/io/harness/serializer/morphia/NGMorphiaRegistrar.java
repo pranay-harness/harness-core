@@ -13,12 +13,17 @@ import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.environment.beans.Environment;
+import io.harness.cdng.environment.steps.EnvironmentStepParameters;
 import io.harness.cdng.infra.beans.InfraMapping;
+import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
-import io.harness.cdng.service.OverrideConfig;
+import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.service.ServiceConfig;
+import io.harness.cdng.service.StageOverridesConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
-import io.harness.cdng.service.beans.ServiceOutcome.Artifacts;
+import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
+import io.harness.cdng.service.beans.ServiceUseFromStage;
+import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -50,8 +55,14 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     h.put("cdng.artifact.bean.yaml.SidecarArtifact", SidecarArtifact.class);
     h.put("cdng.artifact.bean.DockerArtifactOutcome", DockerArtifactOutcome.class);
     h.put("cdng.service.beans.ServiceOutcome", ServiceOutcome.class);
-    h.put("cdng.service.beans.ServiceOutcome$Artifacts", Artifacts.class);
+    h.put("cdng.service.beans.ServiceOutcome$ArtifactsOutcome", ArtifactsOutcome.class);
     h.put("cdng.environment.beans.Environment", Environment.class);
-    h.put("cdng.service.beans.OverrideConfig", OverrideConfig.class);
+    h.put("cdng.service.beans.StageOverridesConfig", StageOverridesConfig.class);
+    h.put("cdng.service.beans.ServiceUseFromStage", ServiceUseFromStage.class);
+    h.put("cdng.service.beans.ServiceUseFromStage$Overrides", Overrides.class);
+    h.put("cdng.infra.beans.InfraUseFromStage$Overrides", InfraUseFromStage.Overrides.class);
+    h.put("cdng.infra.beans.InfraUseFromStage", InfraUseFromStage.class);
+    h.put("cdng.environment.steps.EnvironmentStepParameters", EnvironmentStepParameters.class);
+    h.put("cdng.infra.steps.InfraStepParameters", InfraStepParameters.class);
   }
 }

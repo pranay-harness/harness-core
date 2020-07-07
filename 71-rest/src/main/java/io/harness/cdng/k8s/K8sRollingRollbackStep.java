@@ -12,7 +12,6 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
@@ -34,7 +33,6 @@ import java.util.Map;
 public class K8sRollingRollbackStep implements Step, TaskExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("K8S_ROLLBACK_ROLLING").build();
 
-  @Inject OutcomeService outcomeService;
   @Inject K8sStepHelper k8sStepHelper;
   @Inject private StepDependencyService stepDependencyService;
 

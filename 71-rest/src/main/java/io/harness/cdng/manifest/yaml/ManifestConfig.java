@@ -1,6 +1,7 @@
 package io.harness.cdng.manifest.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.manifest.ManifestType;
@@ -11,6 +12,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("manifest")
 public class ManifestConfig implements ManifestConfigWrapper {
   String identifier;

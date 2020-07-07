@@ -24,8 +24,10 @@ public class EnvironmentStep implements Step, SyncExecutable {
   @Override
   public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData) {
-    EnvironmentYaml environmentYaml = (EnvironmentYaml) stepParameters;
-    renderExpressions(environmentYaml);
+    EnvironmentStepParameters environmentStepParameters = (EnvironmentStepParameters) stepParameters;
+    EnvironmentYaml environmentYaml = environmentStepParameters.getEnvironmentOverrides() != null
+        ? environmentStepParameters.getEnvironment().applyOverrides(environmentStepParameters.getEnvironmentOverrides())
+        : environmentStepParameters.getEnvironment();
     Environment environment = getEnvironmentObject(environmentYaml, ambiance);
     environmentService.upsert(environment);
     return StepResponse.builder()
@@ -52,9 +54,5 @@ public class EnvironmentStep implements Step, SyncExecutable {
         .projectId(projectId)
         .tags(environmentYaml.getTags())
         .build();
-  }
-
-  private void renderExpressions(EnvironmentYaml environmentYaml) {
-    // Todo: render  later
   }
 }
