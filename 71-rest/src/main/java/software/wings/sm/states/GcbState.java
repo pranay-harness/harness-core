@@ -47,11 +47,16 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.GcbTaskParams;
+import software.wings.beans.template.TemplateUtils;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
@@ -86,6 +91,9 @@ public class GcbState extends State implements SweepingOutputStateMixin {
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private SecretManager secretManager;
   @Transient @Inject private SweepingOutputService sweepingOutputService;
+  @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
+  @Transient @Inject private TemplateUtils templateUtils;
+  @Transient @Inject private SettingsService settingsService;
 
   public GcbState(String name) {
     super(name, StateType.GCB.name());
@@ -145,10 +153,13 @@ public class GcbState extends State implements SweepingOutputStateMixin {
 
     final Application application = context.fetchRequiredApp();
     final String appId = application.getAppId();
-    final GcpConfig config = context.getGlobalSettingValue(context.getAccountId(), gcbOptions.getGcpConfigId());
+    GcpConfig gcpConfig = null;
+    if (gcbOptions.getGcpConfigId() != null) {
+      gcpConfig = context.getGlobalSettingValue(context.getAccountId(), gcbOptions.getGcpConfigId());
+    }
 
     GitConfig gitConfig = null;
-    if (gcbOptions.getSpecSource() == REMOTE && gcbOptions.getRepositorySpec() != null) {
+    if (gcbOptions.getSpecSource() == REMOTE && gcbOptions.getRepositorySpec().getGitConfigId() != null) {
       gitConfig =
           context.getGlobalSettingValue(context.getAccountId(), gcbOptions.getRepositorySpec().getGitConfigId());
     }
@@ -156,13 +167,55 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     if (gcbOptions.getSpecSource() == TRIGGER && !isEmpty(gcbOptions.getTriggerSpec().getSubstitutions())) {
       substitutions = evaluate(context, gcbOptions.getTriggerSpec().getSubstitutions());
     }
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression gcpConfigExp =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "gcpConfigId");
+      TemplateExpression gitConfigExp =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "gitConfigId");
+      if (gcpConfigExp != null) {
+        String resolvedExpression = templateExpressionProcessor.resolveTemplateExpression(context, gcpConfigExp);
+        gcpConfig = context.getGlobalSettingValue(context.getAccountId(), resolvedExpression);
+        if (gcpConfig != null) {
+          gcbOptions.setGcpConfigId(resolvedExpression);
+        } else {
+          SettingAttribute setting =
+              settingsService.getSettingAttributeByName(context.getAccountId(), resolvedExpression);
+          if (setting == null) {
+            return ExecutionResponse.builder()
+                .executionStatus(FAILED)
+                .errorMessage("Google Cloud Provider does not exist. Please update with an appropriate cloud provider.")
+                .build();
+          }
+          gcpConfig = (GcpConfig) setting.getValue();
+          gcbOptions.setGcpConfigId(setting.getUuid());
+        }
+      }
+      if (gitConfigExp != null) {
+        String resolvedExpression = templateExpressionProcessor.resolveTemplateExpression(context, gitConfigExp);
+        gitConfig = context.getGlobalSettingValue(context.getAccountId(), resolvedExpression);
+        if (gitConfig != null) {
+          gcbOptions.getRepositorySpec().setGitConfigId(resolvedExpression);
+        } else {
+          SettingAttribute setting =
+              settingsService.getSettingAttributeByName(context.getAccountId(), resolvedExpression);
+          if (setting == null) {
+            return ExecutionResponse.builder()
+                .executionStatus(FAILED)
+                .errorMessage("Git connector does not exist. Please update with an appropriate git connector.")
+                .build();
+          }
+          gitConfig = (GitConfig) setting.getValue();
+          gcbOptions.getRepositorySpec().setGitConfigId(setting.getUuid());
+        }
+      }
+    }
     GcbTaskParams gcbTaskParams = GcbTaskParams.builder()
-                                      .gcpConfig(config)
+                                      .gcpConfig(gcpConfig)
                                       .type(START)
                                       .gcbOptions(gcbOptions)
                                       .substitutions(substitutions)
                                       .encryptedDataDetails(secretManager.getEncryptionDetails(
-                                          config, context.getAppId(), context.getWorkflowExecutionId()))
+                                          gcpConfig, context.getAppId(), context.getWorkflowExecutionId()))
                                       .activityId(activityId)
                                       .unitName(GCB_LOGS)
                                       .gitConfig(gitConfig)
@@ -178,6 +231,7 @@ public class GcbState extends State implements SweepingOutputStateMixin {
 
     GcbExecutionData gcbExecutionData =
         GcbExecutionData.builder().activityId(activityId).jobParameters(evaluatedParameters).build();
+    gcbExecutionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
     return ExecutionResponse.builder()
         .async(true)

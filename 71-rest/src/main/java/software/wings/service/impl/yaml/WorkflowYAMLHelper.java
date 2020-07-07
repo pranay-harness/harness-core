@@ -84,6 +84,8 @@ public class WorkflowYAMLHelper {
       case HELM_GIT_CONFIG_ID:
       case SS_SSH_CONNECTION_ATTRIBUTE:
       case SS_WINRM_CONNECTION_ATTRIBUTE:
+      case GCP_CONFIG:
+      case GIT_CONFIG:
         return settingsService.get(entryValue);
       default:
         return null;
@@ -136,6 +138,17 @@ public class WorkflowYAMLHelper {
             accountId, variableValue, SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES);
         notNullCheck(
             "Winrm connection attribute [" + variableValue + "] associated to the Shell Script State does not exist",
+            uuidAccess, USER);
+        break;
+      case GCP_CONFIG:
+        uuidAccess = settingsService.fetchSettingAttributeByName(accountId, variableValue, SettingVariableTypes.GCP);
+        notNullCheck(
+            "Google Cloud Provider [" + variableValue + "] associated to Google Cloud Build State does not exist",
+            uuidAccess, USER);
+        break;
+      case GIT_CONFIG:
+        uuidAccess = settingsService.fetchSettingAttributeByName(accountId, variableValue, SettingVariableTypes.GIT);
+        notNullCheck("Git connector [" + variableValue + "] associated to Google Cloud Build State does not exist",
             uuidAccess, USER);
         break;
       default:

@@ -66,6 +66,8 @@ public class WorkflowServiceTemplateHelper {
   private static final String HELM_GITCONFIG_VAR_DESC = "Variable for Helm Git Config entity";
   private static final String SSH_CONNECTION_ATTRIBUTE_DESC = "Variable for SSH Connection Attribute entity";
   private static final String WINRM_CONNECTION_ATTRIBUTE_DESC = "Variable for WINRM Connection Attribute entity";
+  private static final String GCP_CONFIG_VAR_DESC = "Variable for Google Cloud Platform configuration entity";
+  private static final String GIT_CONFIG_VAR_DESC = "Variable for Git connector configuration entity";
   private static final String TIMEOUT_PROPERTY_KEY = "timeoutMillis";
 
   @Inject private TemplateService templateService;
@@ -638,6 +640,10 @@ public class WorkflowServiceTemplateHelper {
           return SSH_CONNECTION_ATTRIBUTE_DESC + " in " + stateName;
         case SS_WINRM_CONNECTION_ATTRIBUTE:
           return WINRM_CONNECTION_ATTRIBUTE_DESC + " in " + stateName;
+        case GCP_CONFIG:
+          return GCP_CONFIG_VAR_DESC + " in " + stateName;
+        case GIT_CONFIG:
+          return GIT_CONFIG_VAR_DESC + " in " + stateName;
         default:
           return "";
       }

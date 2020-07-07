@@ -19,6 +19,8 @@ import static software.wings.beans.EntityType.CF_AWS_CONFIG_ID;
 import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.GCP_CONFIG;
+import static software.wings.beans.EntityType.GIT_CONFIG;
 import static software.wings.beans.EntityType.HELM_GIT_CONFIG_ID;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
@@ -613,6 +615,10 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         addSSHConnectionUserVariables(reorderVariables, entityVariables);
 
         addWINRMConnnectionUserVariables(reorderVariables, entityVariables);
+
+        addGcpConfigVariables(reorderVariables, entityVariables);
+
+        addGitConfigVariables(reorderVariables, entityVariables);
       }
       if (nonEntityVariables != null) {
         reorderVariables.addAll(nonEntityVariables);
@@ -637,6 +643,21 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
   }
 
+  private void addGcpConfigVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (GCP_CONFIG == variable.obtainEntityType()) {
+        reorderVariables.add(variable);
+      }
+    }
+  }
+
+  private void addGitConfigVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (GIT_CONFIG == variable.obtainEntityType()) {
+        reorderVariables.add(variable);
+      }
+    }
+  }
   private List<Variable> getNonEntityVariables() {
     return userVariables.stream().filter(variable -> variable.obtainEntityType() == null).collect(toList());
   }

@@ -6,6 +6,8 @@ import static io.harness.delegate.beans.TaskData.asyncTaskData;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.VGLIJIN;
 import static java.util.Arrays.asList;
+import static java.util.Collections.EMPTY_MAP;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -50,6 +52,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.command.GcbTaskParams;
+import software.wings.beans.template.TemplateUtils;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildStatus;
 import software.wings.service.intfc.ActivityService;
@@ -63,7 +66,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.GcbState.GcbDelegateResponse;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -79,6 +81,7 @@ public class GcbStateTest extends CategoryTest {
   @Mock private SecretManager secretManager;
   @Mock private GcbOptions gcbOptions;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private TemplateUtils templateUtils;
 
   @InjectMocks private GcbState state = spy(new GcbState("gcb"));
 
@@ -112,6 +115,7 @@ public class GcbStateTest extends CategoryTest {
   public void shouldDelegateTask() {
     Application application = mock(Application.class);
     doReturn(application).when(execution).fetchRequiredApp();
+    when(templateUtils.processTemplateVariables(execution, state.getTemplateVariables())).thenReturn(EMPTY_MAP);
     when(application.getAppId()).thenReturn("appId");
     when(gcbOptions.getGcpConfigId()).thenReturn("gcpConfigId");
     GcpConfig gcpConfig = mock(GcpConfig.class);
@@ -120,9 +124,7 @@ public class GcbStateTest extends CategoryTest {
 
     secretManager.getEncryptionDetails(gcpConfig, "appId", "workflowExecutionId");
 
-    doReturn(Collections.emptyList())
-        .when(secretManager)
-        .getEncryptionDetails(gcpConfig, "appId", "workflowExecutionId");
+    doReturn(emptyList()).when(secretManager).getEncryptionDetails(gcpConfig, "appId", "workflowExecutionId");
 
     state.executeInternal(execution, ACTIVITY_ID);
     verify(delegateService).queueTask(any(DelegateTask.class));
