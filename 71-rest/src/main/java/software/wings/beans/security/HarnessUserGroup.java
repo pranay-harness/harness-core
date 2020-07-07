@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.FdIndex;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,7 +33,7 @@ public class HarnessUserGroup extends Base {
   private String description;
   private Set<Action> actions;
   private boolean applyToAllAccounts;
-  private Set<String> memberIds;
+  @FdIndex private Set<String> memberIds;
   private Set<String> accountIds;
 
   @Builder
