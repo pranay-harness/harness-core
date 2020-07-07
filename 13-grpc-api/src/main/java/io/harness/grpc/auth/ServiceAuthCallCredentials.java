@@ -9,9 +9,11 @@ import io.grpc.CallCredentials;
 import io.grpc.Metadata;
 import io.harness.grpc.utils.GrpcAuthUtils;
 import io.harness.security.ServiceTokenGenerator;
+import lombok.Getter;
 
 import java.util.concurrent.Executor;
 
+@Getter
 @Singleton
 public final class ServiceAuthCallCredentials extends CallCredentials {
   private final ServiceTokenGenerator serviceTokenGenerator;
