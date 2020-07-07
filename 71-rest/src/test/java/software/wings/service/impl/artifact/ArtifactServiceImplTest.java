@@ -134,7 +134,7 @@ public class ArtifactServiceImplTest extends WingsBaseTest {
     doReturn(pageResponse).when(mockWingsPersistence).query(any(), any());
     doReturn(artifactStream1).when(mockWingsPersistence).get(any(), eq(ARTIFACT_STREAM_ID));
     PageRequest<Artifact> pageRequest = aPageRequest().build();
-    PageResponse<Artifact> out = artifactService.listSortByBuildNo(pageRequest);
+    PageResponse<Artifact> out = artifactService.listArtifactsForService(pageRequest);
     assertThat(out).isNotNull();
     assertThat(out.get(0).getArtifactStreamName()).isEqualTo("test");
   }

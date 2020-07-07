@@ -702,7 +702,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Artifact>> listArtifacts(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Artifact> pageRequest) {
-    return new RestResponse<>(artifactService.listSortByBuildNo(pageRequest));
+    return new RestResponse<>(artifactService.listArtifactsForService(pageRequest));
   }
 
   @GET

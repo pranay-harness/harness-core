@@ -21,6 +21,7 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,16 +58,20 @@ public class AcrServiceImpl implements AcrService {
 
       String repository = loginServer + "/" + artifactStreamAttributes.getRepositoryName();
 
-      return azureHelperService
-          .listRepositoryTags(config, encryptionDetails, loginServer, artifactStreamAttributes.getRepositoryName())
-          .stream()
-          .map(tag -> {
-            Map<String, String> metadata = new HashMap();
-            metadata.put(ArtifactMetadataKeys.image, repository + ":" + tag);
-            metadata.put(ArtifactMetadataKeys.tag, tag);
-            return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
-          })
-          .collect(toList());
+      List<BuildDetails> buildDetails =
+          azureHelperService
+              .listRepositoryTags(config, encryptionDetails, loginServer, artifactStreamAttributes.getRepositoryName())
+              .stream()
+              .map(tag -> {
+                Map<String, String> metadata = new HashMap();
+                metadata.put(ArtifactMetadataKeys.image, repository + ":" + tag);
+                metadata.put(ArtifactMetadataKeys.tag, tag);
+                return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
+              })
+              .collect(toList());
+      // Reverisng the sorting order to save in DB in correct order
+      Collections.reverse(buildDetails);
+      return buildDetails;
     } catch (Exception e) {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
     }

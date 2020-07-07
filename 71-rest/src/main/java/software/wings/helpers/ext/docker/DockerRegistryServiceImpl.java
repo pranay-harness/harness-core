@@ -29,6 +29,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.security.EncryptionService;
@@ -84,7 +85,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     } catch (Exception e) {
       throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, WingsException.USER);
     }
-    return buildDetails;
+    // Sorting at build tag for docker artifacts.
+    return buildDetails.stream().sorted(new BuildDetailsComparatorAscending()).collect(toList());
   }
 
   private List<BuildDetails> getBuildDetails(

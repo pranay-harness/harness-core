@@ -40,7 +40,7 @@ public interface ArtifactService extends OwnedByArtifactStream {
    * @param pageRequest  the page request
    * @return the page response
    */
-  PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest);
+  PageResponse<Artifact> listArtifactsForService(PageRequest<Artifact> pageRequest);
 
   /***
    * List artifacts sorted by build no.
@@ -49,7 +49,7 @@ public interface ArtifactService extends OwnedByArtifactStream {
    * @param pageRequest
    * @return
    */
-  PageResponse<Artifact> listSortByBuildNo(
+  PageResponse<Artifact> listArtifactsForService(
       @NotEmpty String appId, String serviceId, @NotNull PageRequest<Artifact> pageRequest);
 
   /***
@@ -58,7 +58,7 @@ public interface ArtifactService extends OwnedByArtifactStream {
    * @param pageRequest
    * @return
    */
-  PageResponse<Artifact> listSortByBuildNo(String serviceId, @NotNull PageRequest<Artifact> pageRequest);
+  PageResponse<Artifact> listArtifactsForService(String serviceId, @NotNull PageRequest<Artifact> pageRequest);
 
   /**
    * Creates the artifact and validates artifact type

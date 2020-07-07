@@ -36,6 +36,7 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.AlphanumComparator;
+import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.exception.InvalidArtifactServerException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -356,16 +357,22 @@ public class NexusThreeServiceImpl {
 
     if (isSuccessful(response)) {
       if (response.body() != null && response.body().getTags() != null) {
-        return response.body()
-            .getTags()
-            .stream()
-            .map(tag -> {
-              Map<String, String> metadata = new HashMap();
-              metadata.put(ArtifactMetadataKeys.image, repoName + ":" + tag);
-              metadata.put(ArtifactMetadataKeys.tag, tag);
-              return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
-            })
-            .collect(toList());
+        buildDetails = response.body()
+                           .getTags()
+                           .stream()
+                           .map(tag -> {
+                             Map<String, String> metadata = new HashMap();
+                             metadata.put(ArtifactMetadataKeys.image, repoName + ":" + tag);
+                             metadata.put(ArtifactMetadataKeys.tag, tag);
+                             return aBuildDetails()
+                                 .withNumber(tag)
+                                 .withMetadata(metadata)
+                                 .withUiDisplayName("Tag# " + tag)
+                                 .build();
+                           })
+                           .collect(toList());
+        // Sorting at build tag for docker artifacts.
+        return buildDetails.stream().sorted(new BuildDetailsComparatorAscending()).collect(toList());
       }
     } else {
       throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)

@@ -82,7 +82,7 @@ public class ArtifactResource {
   public RestResponse<PageResponse<Artifact>> list(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
-    return new RestResponse<>(artifactService.listSortByBuildNo(appId, serviceId, pageRequest));
+    return new RestResponse<>(artifactService.listArtifactsForService(appId, serviceId, pageRequest));
   }
 
   @GET
@@ -91,7 +91,7 @@ public class ArtifactResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Artifact>> listArtifactsByServiceId(@QueryParam("serviceId") String serviceId,
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<Artifact> pageRequest) {
-    return new RestResponse<>(artifactService.listSortByBuildNo(serviceId, pageRequest));
+    return new RestResponse<>(artifactService.listArtifactsForService(serviceId, pageRequest));
   }
 
   /**

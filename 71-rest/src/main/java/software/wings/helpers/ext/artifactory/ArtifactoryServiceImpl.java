@@ -47,6 +47,7 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.AlphanumComparator;
+import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.helpers.ext.artifactory.ResponseMsg.Error;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -253,7 +254,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       handleAndRethrow(e, USER);
     }
 
-    return buildDetails;
+    // Sorting at build tag for docker artifacts.
+    return buildDetails.stream().sorted(new BuildDetailsComparatorAscending()).collect(toList());
   }
 
   @Override
