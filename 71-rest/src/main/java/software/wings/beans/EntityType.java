@@ -251,5 +251,9 @@ public enum EntityType {
 
   EXPORT_EXECUTIONS_REQUEST,
 
+  GCP_CONFIG,
+
+  GIT_CONFIG,
+
   SECRETS_MANAGER
 }
