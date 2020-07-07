@@ -2,6 +2,7 @@ package io.harness.ng.core.services.api.impl;
 
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.rule.OwnerRule.VIKAS;
+import static org.apache.http.HttpStatus.SC_BAD_GATEWAY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -16,7 +17,6 @@ import io.harness.rule.Owner;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import okio.BufferedSource;
-import org.apache.commons.httpclient.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -61,7 +61,7 @@ public class NGSecretServiceImplTest extends BaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetSecretById_For_FailedCall() throws IOException {
-    Response<RestResponse<EncryptedData>> response = Response.error(HttpStatus.SC_BAD_GATEWAY, new ResponseBody() {
+    Response<RestResponse<EncryptedData>> response = Response.error(SC_BAD_GATEWAY, new ResponseBody() {
       @Override
       public MediaType contentType() {
         return null;

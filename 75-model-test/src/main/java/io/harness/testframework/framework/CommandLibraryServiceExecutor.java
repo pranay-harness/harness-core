@@ -21,8 +21,8 @@ import io.harness.threading.Poller;
 import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.httpclient.params.HttpConnectionParams;
 import org.apache.http.HttpStatus;
+import org.apache.http.params.HttpConnectionParams;
 import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessExecutor;
 

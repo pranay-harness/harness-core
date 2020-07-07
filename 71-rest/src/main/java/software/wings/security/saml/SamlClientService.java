@@ -2,7 +2,6 @@ package software.wings.security.saml;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.exception.WingsException.USER;
-import static org.opensaml.xml.util.Base64.encodeBytes;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -114,12 +113,7 @@ public class SamlClientService {
     DeflaterOutputStream deflaterStream = new DeflaterOutputStream(bytesOut, deflater);
     deflaterStream.write(decodedXmlParam.getBytes(UTF_8));
     deflaterStream.finish();
-    return encodeBytes(bytesOut.toByteArray(), 8);
-  }
-
-  public SamlClient getSamlClientFromOrigin(String origin) throws SamlException {
-    SamlSettings samlSettings = ssoSettingService.getSamlSettingsByOrigin(origin);
-    return getSamlClient(samlSettings);
+    return Base64.getEncoder().encodeToString(bytesOut.toByteArray());
   }
 
   // TODO: this method should return HIterator and close at the end
