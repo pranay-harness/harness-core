@@ -144,7 +144,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     doReturn(APP_ID).when(mockContext).getAppId();
     CloudFormationRollbackInfoElement stackElement =
         CloudFormationRollbackInfoElement.builder().stackExisted(true).provisionerId(PROVISIONER_ID).build();
-    doReturn(stackElement).when(mockContext).getContextElement(any());
+    doReturn(singletonList(stackElement)).when(mockContext).getContextElementList(any());
     doReturn(ScriptStateExecutionData.builder().build()).when(mockContext).getStateExecutionData();
     Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
         CloudFormationCommandExecutionResponse.builder()
@@ -159,6 +159,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     doReturn(mockParams).when(mockContext).fetchWorkflowStandardParamsFromContext();
     Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
     doReturn(env).when(mockParams).fetchRequiredEnv();
+    state.setProvisionerId(PROVISIONER_ID);
 
     ExecutionResponse response = state.handleAsyncResponse(mockContext, delegateResponse);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
