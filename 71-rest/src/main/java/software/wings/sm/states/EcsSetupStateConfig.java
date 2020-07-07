@@ -32,6 +32,9 @@ public class EcsSetupStateConfig {
   private String targetGroupArn2;
   private String prodListenerArn;
   private String stageListenerArn;
+  private String prodListenerRuleArn;
+  private String stageListenerRuleArn;
+  private boolean isUseSpecificListenerRuleArn;
   private String stageListenerPort;
   private boolean blueGreen;
   private String roleArn;

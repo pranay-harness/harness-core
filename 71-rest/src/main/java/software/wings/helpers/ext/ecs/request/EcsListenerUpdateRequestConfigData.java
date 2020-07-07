@@ -8,6 +8,9 @@ import lombok.Data;
 public class EcsListenerUpdateRequestConfigData {
   private String prodListenerArn;
   private String stageListenerArn;
+  private boolean isUseSpecificRuleArn;
+  private String prodListenerRuleArn;
+  private String stageListenerRuleArn;
   private String serviceName;
   private String clusterName;
   private String region;

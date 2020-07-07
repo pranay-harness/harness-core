@@ -2,6 +2,8 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
@@ -17,11 +19,13 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.PhaseElement;
@@ -66,6 +70,9 @@ public class EcsBlueGreenServiceSetup extends State {
   @Getter @Setter private String roleArn;
   @Getter @Setter @Attributes(title = "Prod Listener ARN", required = true) private String prodListenerArn;
   @Getter @Setter @Attributes(title = "Stage Listener ARN", required = true) private String stageListenerArn;
+  @Getter @Setter @Attributes(title = "Prod Listener Rule ARN", required = false) private String stageListenerRuleArn;
+  @Getter @Setter @Attributes(title = "Stage Listener Rule ARN", required = false) private String prodListenerRuleArn;
+  @Getter @Setter private boolean isUseSpecificListenerRuleArn;
   @Getter @Setter private String desiredInstanceCount;
   @Getter @Setter private String targetContainerName;
   @Getter @Setter private String targetPort;
@@ -106,6 +113,8 @@ public class EcsBlueGreenServiceSetup extends State {
     Activity activity = ecsStateHelper.createActivity(context, ECS_SERVICE_SETUP_COMMAND_ELB, getStateType(),
         CommandUnitType.AWS_ECS_SERVICE_SETUP_ELB, activityService);
 
+    isUseSpecificListenerRuleArn = shouldUseSpecificListenerRule(prodListenerRuleArn, stageListenerRuleArn);
+
     EcsSetupParams ecsSetupParams = (EcsSetupParams) ecsStateHelper.buildContainerSetupParams(context,
         EcsSetupStateConfig.builder()
             .app(dataBag.getApplication())
@@ -120,6 +129,9 @@ public class EcsBlueGreenServiceSetup extends State {
             .roleArn(roleArn)
             .serviceSteadyStateTimeout(dataBag.getServiceSteadyStateTimeout())
             .targetContainerName(targetContainerName)
+            .prodListenerRuleArn(prodListenerRuleArn)
+            .stageListenerRuleArn(stageListenerRuleArn)
+            .isUseSpecificListenerRuleArn(isUseSpecificListenerRuleArn)
             .stageListenerArn(stageListenerArn)
             .prodListenerArn(prodListenerArn)
             .stageListenerArn(stageListenerArn)
@@ -205,6 +217,20 @@ public class EcsBlueGreenServiceSetup extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
+  private boolean shouldUseSpecificListenerRule(String prodListenerRuleArn, String stageListenerRuleArn) {
+    if (isNotEmpty(prodListenerRuleArn) && isNotEmpty(stageListenerRuleArn)) {
+      return true;
+    } else if (isEmpty(prodListenerRuleArn) && isEmpty(stageListenerRuleArn)) {
+      return false;
+    } else {
+      String emptyRuleType = "Prod";
+      if (isNotEmpty(prodListenerRuleArn)) {
+        emptyRuleType = "Stage";
+      }
+      throw new InvalidArgumentsException(
+          Pair.of("Listener Rule Arn", "The " + emptyRuleType + " listener rule arn should not be empty"));
+    }
+  }
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {

@@ -331,6 +331,7 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new DescribeRulesResult().withRules(new Rule()
                                                      .withRuleArn("ruleArn")
                                                      .withPriority("rulePriority")
+                                                     .withIsDefault(true)
                                                      .withActions(new Action().withTargetGroupArn("targetArn"))))
         .when(mockV2Client)
         .describeRules(any());

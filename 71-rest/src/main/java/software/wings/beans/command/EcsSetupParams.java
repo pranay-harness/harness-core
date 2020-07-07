@@ -19,6 +19,9 @@ public class EcsSetupParams extends ContainerSetupParams {
   private String targetGroupArn2;
   private String prodListenerArn;
   private String stageListenerArn;
+  private String prodListenerRuleArn;
+  private String stageListenerRuleArn;
+  private boolean isUseSpecificListenerRuleArn;
   private String loadBalancerName;
   private String region;
   private String vpcId;
@@ -81,6 +84,9 @@ public class EcsSetupParams extends ContainerSetupParams {
     private String prodListenerArn;
     private String stageListenerArn;
     private String stageListenerPort;
+    private String prodListenerRuleArn;
+    private String stageListenerRuleArn;
+    private boolean isUseSpecificListenerRuleArn;
 
     // Only for ECS BG route 53 DNS swap
     private boolean useRoute53DNSSwap;
@@ -256,6 +262,21 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public EcsSetupParamsBuilder withProdListenerRuleArn(String prodListenerRuleArn) {
+      this.prodListenerRuleArn = prodListenerRuleArn;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withStageListenerRuleArn(String stageListenerRuleArn) {
+      this.stageListenerRuleArn = stageListenerRuleArn;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withUseSpecificListenerRuleArn(boolean isUseSpecificListenerRuleArn) {
+      this.isUseSpecificListenerRuleArn = isUseSpecificListenerRuleArn;
+      return this;
+    }
+
     public EcsSetupParamsBuilder withTargetGroupArn2(String targetGroupArn2) {
       this.targetGroupArn2 = targetGroupArn2;
       return this;
@@ -327,6 +348,9 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setProdListenerArn(prodListenerArn);
       ecsSetupParams.setStageListenerArn(stageListenerArn);
       ecsSetupParams.setStageListenerPort(stageListenerPort);
+      ecsSetupParams.setProdListenerRuleArn(prodListenerRuleArn);
+      ecsSetupParams.setStageListenerRuleArn(stageListenerRuleArn);
+      ecsSetupParams.setUseSpecificListenerRuleArn(isUseSpecificListenerRuleArn);
       ecsSetupParams.setUseRoute53DNSSwap(useRoute53DNSSwap);
       ecsSetupParams.setServiceDiscoveryService1JSON(serviceDiscoveryService1JSON);
       ecsSetupParams.setServiceDiscoveryService2JSON(serviceDiscoveryService2JSON);

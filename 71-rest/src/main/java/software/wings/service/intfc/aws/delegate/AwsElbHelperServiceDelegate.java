@@ -1,8 +1,10 @@
 package software.wings.service.intfc.aws.delegate;
 
+import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
+import com.amazonaws.services.elasticloadbalancingv2.model.Rule;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
@@ -42,6 +44,10 @@ public interface AwsElbHelperServiceDelegate {
       String targetGroupArn, String newTargetGroupName);
   Listener getElbListener(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String listenerArn);
+  List<Rule> getListenerRulesFromListenerArn(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String listenerArn, ExecutionLogCallback logCallback);
+  List<Rule> getListenerRuleFromListenerRuleArn(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String listenerRuleArn, ExecutionLogCallback logCallback);
   List<AwsElbListener> getElbListenersForLoadBalaner(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName);
   Listener createStageListener(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
@@ -54,6 +60,13 @@ public interface AwsElbHelperServiceDelegate {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName);
   void updateListenersForEcsBG(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String prodListenerArn,
       String stageListenerArn, String region);
+  List<Action> getMatchingTargetGroupForSpecificListenerRuleArn(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String listenerArn, String prodListenerRuleArn,
+      String targetGroupArn, ExecutionLogCallback executionLogCallback);
+  void swapListenersForEcsBG(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      boolean isUseSpecificRules, String prodListenerArn, String stageListenerArn, String prodListenerRuleArn,
+      String stageListenerRuleArn, String targetGroupArn1, String targetGroupArn2, String region,
+      ExecutionLogCallback logCallback);
   DescribeListenersResult describeListenerResult(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String prodListenerArn, String region);
   String getTargetGroupForDefaultAction(Listener listener, ExecutionLogCallback executionLogCallback);

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -14,8 +15,10 @@ import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.aws.AwsElbListener;
+import io.harness.delegate.task.aws.AwsElbListenerRuleData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -72,12 +75,14 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
       ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder =
           ContainerSetupCommandUnitExecutionData.builder();
       commandExecutionDataBuilder.ecsRegion(setupParams.getRegion());
-      setTargetGroupForProdListener(encryptedDataDetails, ecsBGServiceSetupRequest, setupParams,
-          commandExecutionDataBuilder, executionLogCallback);
+      setTargetGroupForProdListener(encryptedDataDetails, ecsBGServiceSetupRequest, setupParams, executionLogCallback);
       createStageListenerNewServiceIfRequired(encryptedDataDetails, ecsBGServiceSetupRequest, executionLogCallback);
       commandExecutionDataBuilder.stageEcsListener(setupParams.getStageListenerArn());
       commandExecutionDataBuilder.targetGroupForNewService(setupParams.getTargetGroupArn());
       commandExecutionDataBuilder.targetGroupForExistingService(setupParams.getTargetGroupArn2());
+      commandExecutionDataBuilder.isUseSpecificListenerRuleArn(setupParams.isUseSpecificListenerRuleArn());
+      commandExecutionDataBuilder.prodListenerRuleArn(setupParams.getProdListenerRuleArn());
+      commandExecutionDataBuilder.stageListenerRuleArn(setupParams.getStageListenerRuleArn());
 
       TaskDefinition taskDefinition = ecsSetupCommandTaskHelper.createTaskDefinition(
           ecsBGServiceSetupRequest.getAwsConfig(), encryptedDataDetails, ecsBGServiceSetupRequest.getServiceVariables(),
@@ -106,9 +111,23 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
   private void createStageListenerNewServiceIfRequired(List<EncryptedDataDetail> encryptedDataDetails,
       EcsBGServiceSetupRequest ecsBGServiceSetupRequest, ExecutionLogCallback executionLogCallback) {
     EcsSetupParams setupParams = ecsBGServiceSetupRequest.getEcsSetupParams();
+    String targetGroupForNewService;
     if (isNotBlank(setupParams.getStageListenerArn())) {
-      String targetGroupForNewService = getTargetGroupForListener(encryptedDataDetails, ecsBGServiceSetupRequest,
-          setupParams, setupParams.getStageListenerArn(), executionLogCallback);
+      if (setupParams.isUseSpecificListenerRuleArn()) {
+        List<AwsElbListener> listeners =
+            awsElbHelperServiceDelegate.getElbListenersForLoadBalaner(ecsBGServiceSetupRequest.getAwsConfig(),
+                encryptedDataDetails, setupParams.getRegion(), setupParams.getLoadBalancerName());
+        AwsElbListener stageListener = getListenerByArn(
+            listeners, setupParams.getStageListenerArn(), setupParams.getLoadBalancerName(), executionLogCallback);
+
+        TargetGroup currentStageTargetGroup = awsElbHelperServiceDelegate.fetchTargetGroupForSpecificRules(
+            stageListener, setupParams.getStageListenerRuleArn(), executionLogCallback,
+            ecsBGServiceSetupRequest.getAwsConfig(), setupParams.getRegion(), encryptedDataDetails);
+        targetGroupForNewService = currentStageTargetGroup.getTargetGroupArn();
+      } else {
+        targetGroupForNewService = getTargetGroupForListener(encryptedDataDetails, ecsBGServiceSetupRequest,
+            setupParams, setupParams.getStageListenerArn(), executionLogCallback);
+      }
       setupParams.setTargetGroupArn(targetGroupForNewService);
     } else {
       if (isNotBlank(setupParams.getTargetGroupArn())) {
@@ -147,9 +166,29 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
 
       setupParams.setStageListenerArn(optionalListener.get().getListenerArn());
       // Find out target group this listener is forwarding requests to
-      Listener listener = awsElbHelperServiceDelegate.getElbListener(ecsBGServiceSetupRequest.getAwsConfig(),
-          encryptedDataDetails, ecsBGServiceSetupRequest.getRegion(), optionalListener.get().getListenerArn());
-      String targetGroupArn = ecsSetupCommandTaskHelper.getTargetGroupForDefaultAction(listener, executionLogCallback);
+      String targetGroupArn;
+      if (setupParams.isUseSpecificListenerRuleArn()) {
+        Optional<AwsElbListenerRuleData> awsElbListenerRuleData =
+            optionalListener.get()
+                .getRules()
+                .stream()
+                .filter(rule -> setupParams.getStageListenerRuleArn().equalsIgnoreCase(rule.getRuleArn()))
+                .findFirst();
+        if (awsElbListenerRuleData.isPresent()) {
+          targetGroupArn = awsElbListenerRuleData.get().getRuleTargetGroupArn();
+        } else {
+          String message = format(
+              "Stage listener rule provided for deployment does not exist for listener at port [%d], provided rule arn: [%s]",
+              optionalListener.get().getPort(), setupParams.getStageListenerRuleArn());
+          executionLogCallback.saveExecutionLog(message);
+          throw new InvalidRequestException(message);
+        }
+      } else {
+        Listener listener = awsElbHelperServiceDelegate.getElbListener(ecsBGServiceSetupRequest.getAwsConfig(),
+            encryptedDataDetails, ecsBGServiceSetupRequest.getRegion(), optionalListener.get().getListenerArn());
+        targetGroupArn = ecsSetupCommandTaskHelper.getTargetGroupForDefaultAction(listener, executionLogCallback);
+      }
+
       setupParams.setTargetGroupArn(targetGroupArn);
       return;
     }
@@ -171,7 +210,16 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
     String prodTargetGroupArn = setupParams.getTargetGroupArn2();
     Optional<TargetGroup> optionalProdTargetGroup = awsElbHelperServiceDelegate.getTargetGroup(
         ecsBGServiceSetupRequest.getAwsConfig(), encryptedDataDetails, setupParams.getRegion(), prodTargetGroupArn);
-    TargetGroup prodTargetGroup = optionalProdTargetGroup.get();
+    TargetGroup prodTargetGroup = null;
+    if (optionalProdTargetGroup.isPresent()) {
+      prodTargetGroup = optionalProdTargetGroup.get();
+    } else {
+      String message = format(
+          "The specified target group for prod listener rule: [%s] and listener arn: [%s] does not exist, target group arn: [%s]",
+          setupParams.getProdListenerArn(), setupParams.getProdListenerRuleArn(), prodTargetGroupArn);
+      executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
+      throw new InvalidRequestException(message);
+    }
 
     // Check if Stage Target Group already exists
     Optional<TargetGroup> optionalStageTargetGroup =
@@ -213,12 +261,48 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
 
   private void setTargetGroupForProdListener(List<EncryptedDataDetail> encryptedDataDetails,
       EcsBGServiceSetupRequest ecsBGServiceSetupRequest, EcsSetupParams setupParams,
-      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
       ExecutionLogCallback executionLogCallback) {
-    // This is targetGroupArn currently associated with ProdListener for ELB
-    String prodTargetGroupArn = getTargetGroupForListener(encryptedDataDetails, ecsBGServiceSetupRequest, setupParams,
-        setupParams.getProdListenerArn(), executionLogCallback);
-    setupParams.setTargetGroupArn2(prodTargetGroupArn);
+    String currentProdTargetGroupArn;
+    if (setupParams.isUseSpecificListenerRuleArn()) {
+      List<AwsElbListener> listeners =
+          awsElbHelperServiceDelegate.getElbListenersForLoadBalaner(ecsBGServiceSetupRequest.getAwsConfig(),
+              encryptedDataDetails, setupParams.getRegion(), setupParams.getLoadBalancerName());
+      AwsElbListener prodListener = getListenerByArn(
+          listeners, setupParams.getProdListenerArn(), setupParams.getLoadBalancerName(), executionLogCallback);
+
+      // This is targetGroup currently associated with ProdListener for ELB for specific rule specified
+      TargetGroup currentProdTargetGroup = awsElbHelperServiceDelegate.fetchTargetGroupForSpecificRules(prodListener,
+          setupParams.getProdListenerRuleArn(), executionLogCallback, ecsBGServiceSetupRequest.getAwsConfig(),
+          setupParams.getRegion(), encryptedDataDetails);
+      currentProdTargetGroupArn = currentProdTargetGroup.getTargetGroupArn();
+    } else {
+      // This is targetGroupArn currently associated with ProdListener for ELB for default action
+      currentProdTargetGroupArn = getTargetGroupForListener(encryptedDataDetails, ecsBGServiceSetupRequest, setupParams,
+          setupParams.getProdListenerArn(), executionLogCallback);
+    }
+
+    setupParams.setTargetGroupArn2(currentProdTargetGroupArn);
+  }
+
+  AwsElbListener getListenerByArn(
+      List<AwsElbListener> listeners, String listenerArn, String loadBalancerName, ExecutionLogCallback logCallback) {
+    if (isEmpty(listeners)) {
+      String message =
+          format("Did not find any listeners for load balancer: [%s] with arn: [%s]", loadBalancerName, listenerArn);
+      logger.error(message);
+      logCallback.saveExecutionLog(message);
+      throw new InvalidRequestException(message);
+    }
+    Optional<AwsElbListener> optionalListener =
+        listeners.stream().filter(listener -> listenerArn.equalsIgnoreCase(listener.getListenerArn())).findFirst();
+    if (!optionalListener.isPresent()) {
+      String message =
+          format("Did not find any listeners by Arn: [%s] for load balancer: [%s].", listenerArn, loadBalancerName);
+      logger.error(message);
+      logCallback.saveExecutionLog(message);
+      throw new InvalidRequestException(message);
+    }
+    return optionalListener.get();
   }
 
   private String getTargetGroupForListener(List<EncryptedDataDetail> encryptedDataDetails,
