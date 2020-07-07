@@ -284,6 +284,7 @@ governanceConfig {"name": "accountId_1", "background": true} {"accountId": 1}
 harnessApiKeys {"name": "clientType_1", "background": true} {"clientType": 1}
 harnessUserGroups {"name": "appId_1", "background": true} {"appId": 1}
 harnessUserGroups {"name": "createdAt_1", "background": true} {"createdAt": 1}
+harnessUserGroups {"name": "memberIds_1", "background": true} {"memberIds": 1}
 helmChartSpecifications {"name": "accountId_1", "background": true} {"accountId": 1}
 helmChartSpecifications {"name": "appId_1", "background": true} {"appId": 1}
 helmChartSpecifications {"name": "createdAt_1", "background": true} {"createdAt": 1}
