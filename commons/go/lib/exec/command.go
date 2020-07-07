@@ -7,7 +7,7 @@ import (
 	"os/exec"
 )
 
-//go:generate mocken -source command.go -destination command_mock.go -package exec CommandFactory CommandContextFactory Command
+//go:generate mockgen -source command.go -destination command_mock.go -package exec CommandFactory CommandContextFactory Command
 
 //CommandFactory describes an object capable of making a Command
 type CommandFactory interface {
@@ -16,13 +16,6 @@ type CommandFactory interface {
 
 type osCmd struct {
 	*exec.Cmd
-}
-
-//CommandFactoryFunc is an adapter allowing a single function to be used as a CommandFactory
-type CommandFactoryFunc func(name string, args ...string) Command
-
-func (cff CommandFactoryFunc) Command(name string, args ...string) Command {
-	return cff(name, args...)
 }
 
 //Command is an object that can run a command. An os/exec.Cmd is one of these
@@ -69,6 +62,15 @@ type Command interface {
 	WithCombinedOutput(writer io.Writer) Command
 }
 
+//CommandFactoryFunc is an adapter allowing a single function to be used as a CommandFactory
+type CommandFactoryFunc func(name string, args ...string) Command
+
+//Command implements CommandFactory, calling the underlying function
+func (cff CommandFactoryFunc) Command(name string, args ...string) Command {
+	return cff(name, args...)
+}
+
+// osCommand is a CommandFactory that creates an os/exec.Cmd
 var osCommand CommandFactory = CommandFactoryFunc(func(name string, args ...string) Command {
 	return &osCmd{exec.Command(name, args...)}
 })
