@@ -83,7 +83,7 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(BarrierExecutionInstance.class, 2530);
     kryo.register(BarrierResponseData.class, 2531);
 
-    kryo.register(TaskMode.class, 2531);
+    kryo.register(TaskMode.class, 2532);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes
