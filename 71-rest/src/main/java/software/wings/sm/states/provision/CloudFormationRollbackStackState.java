@@ -107,7 +107,11 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
   @Override
   protected List<CloudFormationElement> handleResponse(
       CloudFormationCommandResponse commandResponse, ExecutionContext context) {
-    CloudFormationRollbackInfoElement stackElement = context.getContextElement(CLOUD_FORMATION_ROLLBACK);
+    Optional<CloudFormationRollbackInfoElement> rollbackElement = getRollbackElement(context);
+    if (!rollbackElement.isPresent()) {
+      return emptyList();
+    }
+    CloudFormationRollbackInfoElement stackElement = rollbackElement.get();
     if (stackElement.isStackExisted()) {
       updateInfraMappings(commandResponse, context, stackElement.getProvisionerId());
       saveCloudFormationRollbackConfig(((CloudFormationCreateStackResponse) commandResponse).getRollbackInfo(),
