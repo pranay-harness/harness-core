@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
@@ -32,6 +33,7 @@ import java.util.List;
 @JsonTypeName("SMTP")
 @Data
 @Builder
+@ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
 public class SmtpConfig extends SettingValue implements EncryptableSetting {
   private static final String HOST_PLACEHOLDER_STRING = "host_placeholder";
