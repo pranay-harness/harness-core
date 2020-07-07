@@ -59,8 +59,8 @@ public class NextGenModule extends DependencyModule {
     install(new ConnectorModule());
     install(new SecretManagementModule(
         this.appConfig.getSecretManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
-    install(new ManagerDelegateServiceDriverModule(
-        this.appConfig.getGrpcClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+    install(new ManagerDelegateServiceDriverModule(this.appConfig.getGrpcClientConfig(),
+        this.appConfig.getNextGenConfig().getManagerServiceSecret(), NextGenConfiguration.SERVICE_ID));
     install(new NgManagerGrpcServerModule(
         this.appConfig.getGrpcServerConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ProviderModule() {

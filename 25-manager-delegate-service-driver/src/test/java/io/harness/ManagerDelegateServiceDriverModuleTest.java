@@ -9,6 +9,7 @@ import com.google.inject.Module;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
+import io.harness.grpc.auth.ServiceAuthCallCredentials;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.rule.Owner;
 import io.harness.version.VersionInfoManager;
@@ -24,10 +25,11 @@ import java.util.Map;
 public class ManagerDelegateServiceDriverModuleTest extends CategoryTest {
   private ManagerDelegateServiceDriverModule managerDelegateServiceDriverModule;
   private final String DEV_HARNESS_AUTHORITY = "dev.harness.io";
+  private static final String SERVICE_ID = "ng-manager";
 
   public static class ManagerDelegateServiceDriverTestModule extends ManagerDelegateServiceDriverModule {
     public ManagerDelegateServiceDriverTestModule(GrpcClientConfig grpcClientConfig, String serviceSecret) {
-      super(grpcClientConfig, serviceSecret);
+      super(grpcClientConfig, serviceSecret, SERVICE_ID);
     }
 
     @Override
@@ -62,5 +64,11 @@ public class ManagerDelegateServiceDriverModuleTest extends CategoryTest {
         injector.getInstance(NgDelegateTaskServiceGrpc.NgDelegateTaskServiceBlockingStub.class);
     assertThat(ngDelegateTaskServiceBlockingStub).isNotNull();
     assertThat(ngDelegateTaskServiceBlockingStub.getChannel().authority()).isEqualTo(DEV_HARNESS_AUTHORITY);
+    assertThat(ngDelegateTaskServiceBlockingStub.getCallOptions().getCredentials()).isNotNull();
+    assertThat(ngDelegateTaskServiceBlockingStub.getCallOptions().getCredentials())
+        .isInstanceOf(ServiceAuthCallCredentials.class);
+    ServiceAuthCallCredentials callCredentials =
+        (ServiceAuthCallCredentials) ngDelegateTaskServiceBlockingStub.getCallOptions().getCredentials();
+    assertThat(callCredentials.getServiceId()).isEqualTo(SERVICE_ID);
   }
 }

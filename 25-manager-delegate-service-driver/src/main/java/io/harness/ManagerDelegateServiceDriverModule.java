@@ -6,7 +6,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
 import io.harness.delegate.NgDelegateTaskServiceGrpc.NgDelegateTaskServiceBlockingStub;
@@ -18,10 +17,12 @@ import io.harness.security.ServiceTokenGenerator;
 public class ManagerDelegateServiceDriverModule extends AbstractModule {
   private final GrpcClientConfig grpcClientConfig;
   private final String serviceSecret;
+  private final String serviceId;
 
-  public ManagerDelegateServiceDriverModule(GrpcClientConfig grpcClientConfig, String serviceSecret) {
+  public ManagerDelegateServiceDriverModule(GrpcClientConfig grpcClientConfig, String serviceSecret, String serviceId) {
     this.grpcClientConfig = grpcClientConfig;
     this.serviceSecret = serviceSecret;
+    this.serviceId = serviceId;
   }
 
   @Override
@@ -35,15 +36,9 @@ public class ManagerDelegateServiceDriverModule extends AbstractModule {
   @Provides
   @Singleton
   @VisibleForTesting
-  NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub(@Named("manager-channel") Channel channel,
-      @Named("ng-manager-call-credentials") CallCredentials callCredentials) {
+  NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub(@Named("manager-channel") Channel channel) {
+    ServiceAuthCallCredentials callCredentials =
+        new ServiceAuthCallCredentials(this.serviceSecret, new ServiceTokenGenerator(), this.serviceId);
     return NgDelegateTaskServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
-  }
-
-  @Named("ng-manager-call-credentials")
-  @Provides
-  @Singleton
-  CallCredentials callCredentials() {
-    return new ServiceAuthCallCredentials(this.serviceSecret, new ServiceTokenGenerator(), "ng-manager");
   }
 }

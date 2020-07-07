@@ -23,6 +23,7 @@ import javax.ws.rs.Path;
 
 @Getter
 public class NextGenConfiguration extends Configuration {
+  public static final String SERVICE_ID = "ng-manager";
   public static final String BASE_PACKAGE = "io.harness.ng";
   public static final String CONNECTOR_PACKAGE = "io.harness.connector.apis.resource";
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
