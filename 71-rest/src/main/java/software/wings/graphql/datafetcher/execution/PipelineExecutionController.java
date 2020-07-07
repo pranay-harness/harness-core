@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
@@ -54,6 +55,7 @@ import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.WorkflowLogContext;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -78,6 +80,7 @@ public class PipelineExecutionController {
   @Inject ServiceResourceService serviceResourceService;
   @Inject InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject ExecutionController executionController;
+  @Inject FeatureFlagService featureFlagService;
 
   public void populatePipelineExecution(
       @NotNull WorkflowExecution workflowExecution, QLPipelineExecutionBuilder builder) {
@@ -291,29 +294,45 @@ public class PipelineExecutionController {
               "Service [" + value + "] doesn't exist in specified application " + appId, serviceFromName, USER);
           return serviceFromName.getUuid();
         case INFRASTRUCTURE_DEFINITION:
+          String envIdForInfra;
           if (envId != null) {
+            envIdForInfra = envId;
+          } else {
+            envIdForInfra = variable.obtainEnvIdField();
+          }
+          if (isNotEmpty(envIdForInfra)) {
+            if (value.contains(",")
+                && featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
+              return handleMultiInfra(appId, envIdForInfra, value);
+            }
             InfrastructureDefinition infrastructureDefinition =
-                infrastructureDefinitionService.getInfraDefByName(appId, envId, value);
+                infrastructureDefinitionService.getInfraDefByName(appId, envIdForInfra, value);
             notNullCheck("Infrastructure Definition  [" + value
                     + "] doesn't exist in specified application and environment " + appId,
                 infrastructureDefinition, USER);
             return infrastructureDefinition.getUuid();
           }
-          String envIdFromMetadata = variable.obtainEnvIdField();
-          if (isNotEmpty(envIdFromMetadata)) {
-            InfrastructureDefinition infrastructureDefinition =
-                infrastructureDefinitionService.getInfraDefByName(appId, envIdFromMetadata, value);
-            notNullCheck("Infrastructure Definition  [" + value
-                    + "] doesn't exist in specified application and environment " + appId,
-                infrastructureDefinition, USER);
-            return infrastructureDefinition.getUuid();
-          }
+
           return value;
         default:
           return value;
       }
     }
     return value;
+  }
+
+  private String handleMultiInfra(String appId, String envIdForInfra, String value) {
+    String[] values = value.split(",");
+    List<String> infraValues = new ArrayList<>();
+    for (String val : values) {
+      InfrastructureDefinition infrastructureDefinition =
+          infrastructureDefinitionService.getInfraDefByName(appId, envIdForInfra, val);
+      notNullCheck(
+          "Infrastructure Definition  [" + value + "] doesn't exist in specified application and environment " + appId,
+          infrastructureDefinition, USER);
+      infraValues.add(infrastructureDefinition.getUuid());
+    }
+    return String.join(",", infraValues);
   }
 
   private void validateRequiredVarsPresent(List<QLVariableInput> variableInputs, List<Variable> workflowVariables) {

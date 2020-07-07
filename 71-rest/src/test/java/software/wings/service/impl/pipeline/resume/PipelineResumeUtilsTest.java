@@ -2,10 +2,10 @@ package software.wings.service.impl.pipeline.resume;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.POOJA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -20,6 +20,8 @@ import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecuti
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
+import static software.wings.sm.StateType.ENV_LOOP_RESUME_STATE;
+import static software.wings.sm.StateType.ENV_LOOP_STATE;
 import static software.wings.sm.StateType.ENV_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -40,12 +42,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
@@ -55,22 +57,24 @@ import software.wings.beans.PipelineStageGroupedInfo;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.ApprovalResumeState.ApprovalResumeStateKeys;
+import software.wings.sm.states.EnvLoopResumeState.EnvLoopResumeStateKeys;
 import software.wings.sm.states.EnvResumeState.EnvResumeStateKeys;
 import software.wings.sm.states.EnvState.EnvStateKeys;
+import software.wings.sm.states.ForkState.ForkStateExecutionData;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class PipelineResumeUtilsTest extends WingsBaseTest {
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private PipelineService pipelineService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private AuthHandler authHandler;
 
   @Inject @InjectMocks private PipelineResumeUtils pipelineResumeUtils;
@@ -226,6 +230,167 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
 
     when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
     pipelineResumeUtils.getPipelineForResume(APP_ID, 3, workflowExecution, stateExecutionInstanceMap);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testGetPipelineForResumeEmpty() {
+    Pipeline pipeline = Pipeline.builder().pipelineStages(Collections.emptyList()).build();
+
+    String instanceId1 = generateUuid();
+    StateExecutionInstance instance1 = mock(StateExecutionInstance.class);
+    when(instance1.fetchStateExecutionData()).thenReturn(anEnvStateExecutionData().build());
+    when(instance1.getUuid()).thenReturn(instanceId1);
+    ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
+        ImmutableMap.<String, StateExecutionInstance>builder().put("pse1", instance1).build();
+
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
+    PipelineStageExecution stageExecution1 = PipelineStageExecution.builder().status(ExecutionStatus.SUCCESS).build();
+    workflowExecution.setPipelineExecution(
+        aPipelineExecution().withPipelineStageExecutions(Collections.singletonList(stageExecution1)).build());
+
+    when(pipelineService.readPipelineWithResolvedVariables(any(), any(), any(), anyBoolean())).thenReturn(pipeline);
+    pipelineResumeUtils.getPipelineForResume(APP_ID, 3, workflowExecution, stateExecutionInstanceMap);
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testGetPipelineForResumeWithLoopedStageResumed() {
+    String wfId2 = generateUuid();
+    String wfId3 = generateUuid();
+    PipelineStage stage1 = PipelineStage.builder()
+                               .name("ps1")
+                               .pipelineStageElements(Collections.singletonList(PipelineStageElement.builder()
+                                                                                    .uuid("pse1")
+                                                                                    .type(APPROVAL.name())
+                                                                                    .name("pse1")
+                                                                                    .parallelIndex(1)
+                                                                                    .build()))
+                               .build();
+    PipelineStage stage2 = PipelineStage.builder()
+                               .name("ps2")
+                               .pipelineStageElements(Collections.singletonList(
+                                   PipelineStageElement.builder()
+                                       .type(ENV_LOOP_STATE.name())
+                                       .uuid("pse2")
+                                       .name("pse2")
+                                       .properties(Collections.singletonMap(EnvStateKeys.workflowId, wfId2))
+                                       .parallelIndex(2)
+                                       .build()))
+                               .build();
+    PipelineStage stage3 = PipelineStage.builder()
+                               .name("ps3")
+                               .pipelineStageElements(Collections.singletonList(
+                                   PipelineStageElement.builder()
+                                       .uuid("pse3")
+                                       .type(ENV_STATE.name())
+                                       .name("pse3")
+                                       .properties(Collections.singletonMap(EnvStateKeys.workflowId, wfId3))
+                                       .parallelIndex(3)
+                                       .build()))
+                               .build();
+
+    String instanceId1 = generateUuid();
+    String instanceId2 = generateUuid();
+    String instanceId3 = generateUuid();
+    String instanceId4 = generateUuid();
+    String instanceId5 = generateUuid();
+
+    ForkStateExecutionData forkStateExecutionData = new ForkStateExecutionData();
+    forkStateExecutionData.setForkStateNames(asList("pse2_1", "pse2_2"));
+    forkStateExecutionData.setElements(asList("pse2_1", "pse2_2"));
+
+    String wfExecutionId2 = generateUuid();
+    String wfExecutionId3 = generateUuid();
+    String wfExecutionId4 = generateUuid();
+
+    StateExecutionInstance instance1 = mock(StateExecutionInstance.class);
+    when(instance1.fetchStateExecutionData()).thenReturn(ApprovalStateExecutionData.builder().build());
+    when(instance1.getUuid()).thenReturn(instanceId1);
+    StateExecutionInstance instance2 = mock(StateExecutionInstance.class);
+    when(instance2.fetchStateExecutionData()).thenReturn(forkStateExecutionData);
+    when(instance2.getUuid()).thenReturn(instanceId2);
+    StateExecutionInstance instance3 = mock(StateExecutionInstance.class);
+    when(instance3.fetchStateExecutionData())
+        .thenReturn(anEnvStateExecutionData().withWorkflowExecutionId(wfExecutionId2).build());
+    when(instance3.getUuid()).thenReturn(instanceId3);
+    StateExecutionInstance instance4 = mock(StateExecutionInstance.class);
+    when(instance4.fetchStateExecutionData())
+        .thenReturn(anEnvStateExecutionData().withWorkflowExecutionId(wfExecutionId3).build());
+    when(instance4.getUuid()).thenReturn(instanceId4);
+    StateExecutionInstance instance5 = mock(StateExecutionInstance.class);
+    when(instance5.fetchStateExecutionData()).thenReturn(anEnvStateExecutionData().build());
+    when(instance5.getUuid()).thenReturn(instanceId5);
+
+    ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
+        ImmutableMap.<String, StateExecutionInstance>builder()
+            .put("pse1", instance1)
+            .put("pse2", instance2)
+            .put("pse2_1", instance3)
+            .put("pse2_2", instance4)
+            .put("pse3", instance5)
+            .build();
+
+    Pipeline pipeline = Pipeline.builder().accountId(ACCOUNT_ID).pipelineStages(asList(stage1, stage2, stage3)).build();
+    WorkflowExecution workflowExecution = prepareFailedPipelineExecution();
+    PipelineStageExecution stageExecution1 =
+        PipelineStageExecution.builder().pipelineStageElementId("pse1").status(ExecutionStatus.SUCCESS).build();
+    PipelineStageExecution stageExecution2 =
+        PipelineStageExecution.builder()
+            .looped(true)
+            .pipelineStageElementId("pse2")
+            .status(ExecutionStatus.SUCCESS)
+            .workflowExecutions(Collections.singletonList(
+                WorkflowExecution.builder().uuid(wfExecutionId2).name(wfExecutionId2).workflowId(wfId2).build()))
+            .build();
+    PipelineStageExecution stageExecution3 =
+        PipelineStageExecution.builder()
+            .looped(true)
+            .pipelineStageElementId("pse2")
+            .status(ExecutionStatus.SUCCESS)
+            .workflowExecutions(Collections.singletonList(
+                WorkflowExecution.builder().uuid(wfExecutionId3).name(wfExecutionId3).workflowId(wfId2).build()))
+            .build();
+    PipelineStageExecution stageExecution4 =
+        PipelineStageExecution.builder()
+            .pipelineStageElementId("pse3")
+            .status(ExecutionStatus.FAILED)
+            .workflowExecutions(Collections.singletonList(
+                WorkflowExecution.builder().uuid(wfExecutionId4).name(wfExecutionId4).workflowId(wfId3).build()))
+            .build();
+    workflowExecution.setPipelineExecution(
+        aPipelineExecution()
+            .withPipelineStageExecutions(asList(stageExecution1, stageExecution2, stageExecution3, stageExecution4))
+            .build());
+
+    when(featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, ACCOUNT_ID)).thenReturn(true);
+    when(pipelineService.readPipelineResolvedVariablesLoopedInfo(any(), any(), any(), anyBoolean()))
+        .thenReturn(pipeline);
+    Pipeline resumePipeline =
+        pipelineResumeUtils.getPipelineForResume(APP_ID, 3, workflowExecution, stateExecutionInstanceMap);
+    assertThat(resumePipeline).isNotNull();
+    assertThat(resumePipeline.getPipelineStages()).isNotNull();
+    assertThat(resumePipeline.getPipelineStages().size()).isEqualTo(3);
+
+    PipelineStageElement pse = resumePipeline.getPipelineStages().get(0).getPipelineStageElements().get(0);
+    assertThat(pse.getType()).isEqualTo(APPROVAL_RESUME.name());
+    assertThat(pse.getProperties().size()).isEqualTo(2);
+    assertThat(pse.getProperties().get(ApprovalResumeStateKeys.prevStateExecutionId)).isEqualTo(instanceId1);
+    assertThat(pse.getProperties().get(ApprovalResumeStateKeys.prevPipelineExecutionId)).isEqualTo(pipelineId);
+
+    pse = resumePipeline.getPipelineStages().get(1).getPipelineStageElements().get(0);
+    assertThat(pse.getType()).isEqualTo(ENV_LOOP_RESUME_STATE.name());
+    assertThat(pse.getProperties().size()).isEqualTo(3);
+    assertThat(pse.getProperties().get(EnvLoopResumeStateKeys.prevStateExecutionId)).isEqualTo(instanceId2);
+    assertThat(pse.getProperties().get(EnvLoopResumeStateKeys.prevPipelineExecutionId)).isEqualTo(pipelineId);
+    Map<String, String> workflowInstanceIdMap =
+        (Map<String, String>) pse.getProperties().get(EnvLoopResumeStateKeys.workflowExecutionIdWithStateExecutionIds);
+    assertThat(workflowInstanceIdMap.size()).isEqualTo(2);
+
+    pse = resumePipeline.getPipelineStages().get(2).getPipelineStageElements().get(0);
+    assertThat(pse.getType()).isEqualTo(ENV_STATE.name());
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -624,6 +789,52 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
   }
 
   @Test(expected = InvalidRequestException.class)
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testCheckStageAndStageExecutionLooped() {
+    PipelineStage stage =
+        PipelineStage.builder()
+            .pipelineStageElements(Collections.singletonList(prepareEnvLoopedStatePipelineStageElement(1)))
+            .build();
+    // looped is not set to true
+    PipelineStageExecution stageExecution =
+        PipelineStageExecution.builder()
+            .workflowExecutions(Collections.singletonList(prepareSimpleWorkflowExecution(2)))
+            .build();
+    PipelineStageExecution stageExecution2 =
+        PipelineStageExecution.builder()
+            .workflowExecutions(Collections.singletonList(prepareSimpleWorkflowExecution(2)))
+            .build();
+    pipelineResumeUtils.checkStageAndStageExecutions(stage, asList(stageExecution, stageExecution2));
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testCheckStageAndStageExecutionApprovalToWorkflow() {
+    PipelineStage stage = PipelineStage.builder()
+                              .pipelineStageElements(Collections.singletonList(prepareEnvStatePipelineStageElement(1)))
+                              .build();
+    PipelineStageExecution stageExecution =
+        PipelineStageExecution.builder().stateExecutionData(ApprovalStateExecutionData.builder().build()).build();
+    pipelineResumeUtils.checkStageAndStageExecutions(stage, Collections.singletonList(stageExecution));
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testCheckStageAndStageExecutionWorkflowToApproval() {
+    PipelineStage stage = PipelineStage.builder()
+                              .pipelineStageElements(Collections.singletonList(prepareApprovalPipelineStageElement()))
+                              .build();
+    PipelineStageExecution stageExecution =
+        PipelineStageExecution.builder()
+            .workflowExecutions(Collections.singletonList(prepareSimpleWorkflowExecution(2)))
+            .build();
+    pipelineResumeUtils.checkStageAndStageExecutions(stage, Collections.singletonList(stageExecution));
+  }
+
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCheckStageAndStageExecutionInsufficientStageElement() {
@@ -677,25 +888,6 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
     assertThat(searchFilter2.getFieldValues()).containsExactly(Boolean.TRUE);
   }
 
-  private void authorizeReadDeployments() {
-    authorizeDeployments(Action.READ);
-  }
-
-  private void authorizeDeployments(Action action) {
-    when(authHandler.authorize(any(), any(), any())).thenAnswer((Answer<Boolean>) invocation -> {
-      List<PermissionAttribute> permissionAttributes = invocation.getArgumentAt(0, List.class);
-      if (isEmpty(permissionAttributes)) {
-        return Boolean.TRUE;
-      }
-
-      if (permissionAttributes.stream().anyMatch(
-              pa -> pa.getPermissionType() != PermissionType.DEPLOYMENT || pa.getAction() != action)) {
-        throw new Exception();
-      }
-      return Boolean.TRUE;
-    });
-  }
-
   private WorkflowExecution prepareFailedPipelineExecution(WorkflowType workflowType) {
     return WorkflowExecution.builder()
         .uuid(pipelineId)
@@ -736,6 +928,15 @@ public class PipelineResumeUtilsTest extends WingsBaseTest {
 
   private PipelineStageElement prepareEnvStatePipelineStageElement(int workflowIdx) {
     return prepareEnvStatePipelineStageElement(workflowIdx, 0);
+  }
+
+  private PipelineStageElement prepareEnvLoopedStatePipelineStageElement(int workflowIdx) {
+    return PipelineStageElement.builder()
+        .type(ENV_LOOP_STATE.name())
+        .name("pse" + workflowIdx + "_" + 0)
+        .properties(Collections.singletonMap(EnvStateKeys.workflowId, "wf" + workflowIdx))
+        .parallelIndex(0)
+        .build();
   }
 
   private PipelineStageElement prepareEnvStatePipelineStageElement(int workflowIdx, int parallelIdx) {
