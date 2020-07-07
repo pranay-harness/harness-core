@@ -1,6 +1,7 @@
 package io.harness;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.delegatesTo;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 import io.grpc.ManagedChannel;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AbortTaskRequest;
@@ -20,6 +22,7 @@ import io.harness.delegate.NgDelegateTaskServiceGrpc.NgDelegateTaskServiceBlocki
 import io.harness.delegate.NgDelegateTaskServiceGrpc.NgDelegateTaskServiceImplBase;
 import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
+import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
@@ -37,7 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class ManagerDelegateServiceDriverTest extends NgDelegateServiceDriverTest {
+public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriverBaseTest {
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();
 
   private static final String ACCOUNT_ID = generateUuid();
@@ -53,14 +56,13 @@ public class ManagerDelegateServiceDriverTest extends NgDelegateServiceDriverTes
 
   private final NgDelegateTaskServiceImplBase ngDelegateTaskServiceImplBase =
       mock(NgDelegateTaskServiceImplBase.class, delegatesTo(new NgDelegateTaskServiceImplBase() {
-        public void sendTask(io.harness.delegate.SendTaskRequest request,
-            io.grpc.stub.StreamObserver<io.harness.delegate.SendTaskResponse> responseObserver) {
+        public void sendTask(SendTaskRequest request, StreamObserver<SendTaskResponse> responseObserver) {
           responseObserver.onNext(sendTaskResponse);
           responseObserver.onCompleted();
         }
 
-        public void sendTaskAsync(io.harness.delegate.SendTaskAsyncRequest request,
-            io.grpc.stub.StreamObserver<io.harness.delegate.SendTaskAsyncResponse> responseObserver) {
+        public void sendTaskAsync(
+            SendTaskAsyncRequest request, StreamObserver<io.harness.delegate.SendTaskAsyncResponse> responseObserver) {
           responseObserver.onNext(sendTaskAsyncResponse);
           responseObserver.onCompleted();
         }
@@ -98,7 +100,7 @@ public class ManagerDelegateServiceDriverTest extends NgDelegateServiceDriverTes
   }
 
   @Test
-  @Owner(developers = VIKAS)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testSendTask() {
     Map<String, String> setupAbstractions = new HashMap<>();
@@ -117,11 +119,20 @@ public class ManagerDelegateServiceDriverTest extends NgDelegateServiceDriverTes
   }
 
   @Test
-  @Owner(developers = VIKAS)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testSendTaskAsync() {
-    SendTaskAsyncRequest sendTaskAsyncRequest = SendTaskAsyncRequest.newBuilder().build();
-    SendTaskAsyncResponse taskResponse = managerDelegateServiceDriver.sendTaskAsync(sendTaskAsyncRequest);
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put("appId", APP_ID);
+    setupAbstractions.put("accountId", ACCOUNT_ID);
+    TaskData taskData = TaskData.builder()
+                            .async(true)
+                            .taskType("HTTP")
+                            .timeout(TimeUnit.MINUTES.toMillis(1))
+                            .parameters(new Object[] {HttpTaskParameters.builder().url("criteria").build()})
+                            .build();
+    SendTaskAsyncResponse taskResponse =
+        managerDelegateServiceDriver.sendTaskAsync(ACCOUNT_ID, setupAbstractions, taskData);
     assertThat(taskResponse).isNotNull();
     assertThat(taskResponse).isEqualTo(sendTaskAsyncResponse);
   }
