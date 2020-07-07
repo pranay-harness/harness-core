@@ -1,7 +1,5 @@
 package io.harness.cvng.dashboard.entities;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -22,17 +20,18 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 @CdIndex(name = "insertionIdx",
     fields =
     {
       @Field("serviceIdentifier")
-      , @Field("envIdentifier"), @Field("category"), @Field("heatMapResolution"), @Field("heatMapBucketStartTime")
+      , @Field("envIdentifier"), @Field("category"), @Field("heatMapResolution"), @Field("heatMapBucketStartTime"),
+          @Field("heatMapBucketEndTime")
     })
 @Data
 @Builder
@@ -48,6 +47,7 @@ public class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, Persis
   @FdIndex private CVMonitoringCategory category;
   private HeatMapResolution heatMapResolution;
   @FdIndex private Instant heatMapBucketStartTime;
+  @FdIndex private Instant heatMapBucketEndTime;
   @FdIndex private String accountId;
   private Set<HeatMapRisk> heatMapRisks;
 
@@ -62,37 +62,47 @@ public class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, Persis
   @Data
   @Builder
   @FieldNameConstants(innerTypeName = "HeatMapRiskKeys")
-  @EqualsAndHashCode(of = {"timeStamp"})
+  @EqualsAndHashCode(of = {"startTime", "endTime"})
   public static class HeatMapRisk implements Comparable<HeatMapRisk> {
-    private Instant timeStamp;
+    private Instant startTime;
+    private Instant endTime;
     private double riskScore;
 
     @Override
     public int compareTo(HeatMapRisk o) {
-      return this.timeStamp.compareTo(o.timeStamp);
+      return this.startTime.compareTo(o.startTime);
     }
   }
 
   public enum HeatMapResolution {
-    FIVE_MIN(CV_ANALYSIS_WINDOW_MINUTES, TimeUnit.HOURS.toMinutes(4)),
-    FIFTEEN_MINUTES(CV_ANALYSIS_WINDOW_MINUTES * 3, TimeUnit.HOURS.toMinutes(12)),
-    THIRTY_MINUTES(CV_ANALYSIS_WINDOW_MINUTES * 6, TimeUnit.DAYS.toMinutes(1)),
-    FOUR_HOURS(TimeUnit.HOURS.toMinutes(4), TimeUnit.DAYS.toMinutes(7)),
-    TWELVE_HOURS(TimeUnit.HOURS.toMinutes(12), TimeUnit.DAYS.toMinutes(30));
+    FIVE_MIN(Duration.ofMinutes(5), Duration.ofHours(4)),
+    FIFTEEN_MINUTES(Duration.ofMinutes(15), Duration.ofHours(12)),
+    THIRTY_MINUTES(Duration.ofMinutes(30), Duration.ofDays(1)),
+    FOUR_HOURS(Duration.ofHours(4), Duration.ofDays(7)),
+    TWELVE_HOURS(Duration.ofHours(12), Duration.ofDays(30));
 
-    private long resolutionMinutes;
-    private long bucketSizeMinutes;
-    HeatMapResolution(long resolutionMinutes, long bucketSizeMinutes) {
-      this.resolutionMinutes = resolutionMinutes;
-      this.bucketSizeMinutes = bucketSizeMinutes;
+    private Duration resolution;
+    private Duration bucketSize;
+    HeatMapResolution(Duration resolution, Duration bucketSize) {
+      this.resolution = resolution;
+      this.bucketSize = bucketSize;
     }
 
-    public long getResolutionMinutes() {
-      return resolutionMinutes;
+    public Duration getResolution() {
+      return resolution;
     }
 
-    public long getBucketSizeMinutes() {
-      return bucketSizeMinutes;
+    public Duration getBucketSize() {
+      return bucketSize;
+    }
+
+    public static HeatMapResolution getHeatMapResolution(Instant startTime, Instant endTime) {
+      for (HeatMapResolution heatMapResolution : HeatMapResolution.values()) {
+        if (endTime.toEpochMilli() - startTime.toEpochMilli() <= heatMapResolution.getBucketSize().toMillis()) {
+          return heatMapResolution;
+        }
+      }
+      return HeatMapResolution.TWELVE_HOURS;
     }
   }
 }
