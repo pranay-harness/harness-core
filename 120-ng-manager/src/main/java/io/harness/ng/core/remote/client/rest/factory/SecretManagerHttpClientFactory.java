@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
@@ -33,6 +35,7 @@ import java.util.function.Supplier;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Singleton
 public class SecretManagerHttpClientFactory implements Provider<SecretManagerClient> {
+  public static final String NG_MANAGER_CIRCUIT_BREAKER = "ng-manager";
   private final SecretManagerClientConfig secretManagerConfig;
   private final String serviceSecret;
   private final ServiceTokenGenerator tokenGenerator;
@@ -52,9 +55,14 @@ public class SecretManagerHttpClientFactory implements Provider<SecretManagerCli
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(baseUrl)
                                   .client(getUnsafeOkHttpClient(baseUrl))
+                                  .addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker()))
                                   .addConverterFactory(JacksonConverterFactory.create(objectMapper))
                                   .build();
     return retrofit.create(SecretManagerClient.class);
+  }
+
+  private CircuitBreaker getCircuitBreaker() {
+    return CircuitBreaker.ofDefaults(NG_MANAGER_CIRCUIT_BREAKER);
   }
 
   private ObjectMapper getObjectMapper() {
@@ -74,7 +82,7 @@ public class SecretManagerHttpClientFactory implements Provider<SecretManagerCli
           .getUnsafeOkHttpClientBuilder(
               baseUrl, secretManagerConfig.getConnectTimeOutSeconds(), secretManagerConfig.getReadTimeOutSeconds())
           .connectionPool(new ConnectionPool())
-          .retryOnConnectionFailure(true)
+          .retryOnConnectionFailure(false)
           .addInterceptor(getAuthorizationInterceptor())
           .build();
     } catch (Exception e) {

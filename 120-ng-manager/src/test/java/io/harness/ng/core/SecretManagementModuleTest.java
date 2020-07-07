@@ -8,11 +8,15 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.services.api.impl.NGSecretManagerImpl;
+import io.harness.ng.core.services.api.NGSecretManagerService;
+import io.harness.ng.core.services.api.NGSecretService;
+import io.harness.ng.core.services.api.NgSecretUsageService;
+import io.harness.ng.core.services.api.impl.NGSecretManagerServiceImpl;
+import io.harness.ng.core.services.api.impl.NGSecretServiceImpl;
+import io.harness.ng.core.services.api.impl.NGSecretUsageServiceImpl;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +37,16 @@ public class SecretManagementModuleTest extends BaseTest {
     modules.add(secretManagementModule);
     Injector injector = Guice.createInjector(modules);
 
-    SecretManager secretManager = injector.getInstance(SecretManager.class);
-    assertThat(secretManager).isNotNull();
-    assertThat(secretManager instanceof NGSecretManagerImpl).isTrue();
+    NGSecretManagerService ngSecretManagerService = injector.getInstance(NGSecretManagerService.class);
+    assertThat(ngSecretManagerService).isNotNull();
+    assertThat(ngSecretManagerService).isInstanceOf(NGSecretManagerServiceImpl.class);
+
+    NGSecretService ngSecretService = injector.getInstance(NGSecretService.class);
+    assertThat(ngSecretService).isNotNull();
+    assertThat(ngSecretService).isInstanceOf(NGSecretServiceImpl.class);
+
+    NgSecretUsageService ngSecretUsageService = injector.getInstance(NgSecretUsageService.class);
+    assertThat(ngSecretUsageService).isNotNull();
+    assertThat(ngSecretUsageService).isInstanceOf(NGSecretUsageServiceImpl.class);
   }
 }

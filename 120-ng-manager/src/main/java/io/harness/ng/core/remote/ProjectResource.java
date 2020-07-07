@@ -22,7 +22,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -67,8 +66,8 @@ public class ProjectResource {
   @GET
   @Path("{projectIdentifier}")
   @ApiOperation(value = "Gets a Project by identifier", nickname = "getProject")
-  public ResponseDTO<Optional<ProjectDTO>> get(@PathParam("orgIdentifier") String orgIdentifier,
-      @PathParam("projectIdentifier") @NotEmpty String projectIdentifier) {
+  public ResponseDTO<Optional<ProjectDTO>> get(
+      @PathParam("orgIdentifier") String orgIdentifier, @PathParam("projectIdentifier") String projectIdentifier) {
     Optional<Project> project = projectService.get(orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(project.map(ProjectMapper::writeDTO));
   }
@@ -87,8 +86,7 @@ public class ProjectResource {
   @Path("{projectIdentifier}")
   @ApiOperation(value = "Update a project by identifier", nickname = "putProject")
   public ResponseDTO<Optional<ProjectDTO>> update(@PathParam("orgIdentifier") String orgIdentifier,
-      @PathParam("projectIdentifier") @NotEmpty String projectIdentifier,
-      @NotNull @Valid UpdateProjectDTO updateProjectDTO) {
+      @PathParam("projectIdentifier") String projectIdentifier, @NotNull @Valid UpdateProjectDTO updateProjectDTO) {
     Optional<Project> projectOptional = projectService.get(orgIdentifier, projectIdentifier);
     if (projectOptional.isPresent()) {
       Project project = applyUpdateToProject(projectOptional.get(), updateProjectDTO);
@@ -101,8 +99,8 @@ public class ProjectResource {
   @DELETE
   @Path("{projectIdentifier}")
   @ApiOperation(value = "Delete a project by identifier", nickname = "deleteProject")
-  public ResponseDTO<Boolean> delete(@PathParam("orgIdentifier") String orgIdentifier,
-      @PathParam("projectIdentifier") @NotEmpty String projectIdentifier) {
+  public ResponseDTO<Boolean> delete(
+      @PathParam("orgIdentifier") String orgIdentifier, @PathParam("projectIdentifier") String projectIdentifier) {
     return ResponseDTO.newResponse(projectService.delete(orgIdentifier, projectIdentifier));
   }
 }

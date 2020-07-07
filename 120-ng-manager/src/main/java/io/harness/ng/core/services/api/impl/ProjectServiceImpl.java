@@ -9,7 +9,6 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.dao.api.repositories.spring.ProjectRepository;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.api.ProjectService;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -23,7 +22,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Singleton
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class ProjectServiceImpl implements ProjectService {
   private final ProjectRepository projectRepository;
