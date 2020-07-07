@@ -10,7 +10,6 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.dao.api.repositories.spring.OrganizationRepository;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.services.api.OrganizationService;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -23,7 +22,7 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 @Singleton
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class OrganizationServiceImpl implements OrganizationService {
   private final OrganizationRepository organizationRepository;

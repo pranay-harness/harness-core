@@ -15,7 +15,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -33,14 +32,14 @@ import javax.ws.rs.QueryParam;
 @Path("accounts/{accountIdentifier}")
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 public class AccountResource {
-  @Inject private final ProjectService projectService;
+  private final ProjectService projectService;
 
   @GET
   @Path("projects")
