@@ -111,6 +111,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         String delegateVersion = req.getHeader("Version");
 
         Delegate delegate = JsonUtils.asObject(CharStreams.toString(req.getReader()), Delegate.class);
+        delegate.setUuid(delegateId);
         delegateService.register(delegate);
         delegateConnectionDao.registerHeartbeat(accountId, delegateId,
             DelegateConnectionHeartbeat.builder()
