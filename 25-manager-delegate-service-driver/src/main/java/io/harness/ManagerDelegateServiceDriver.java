@@ -41,10 +41,11 @@ public class ManagerDelegateServiceDriver {
     return ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).sendTask(request);
   }
 
-  public SendTaskAsyncResponse sendTaskAsync(
-      String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
+  public String sendTaskAsync(String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
     SendTaskAsyncRequest request = buildSendTaskAsyncRequest(accountId, setupAbstractions, taskData);
-    return ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).sendTaskAsync(request);
+    SendTaskAsyncResponse response =
+        ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).sendTaskAsync(request);
+    return response.getTaskId().getId();
   }
 
   public io.harness.delegate.AbortTaskResponse abortTask(io.harness.delegate.AbortTaskRequest request) {
