@@ -21,7 +21,10 @@ message SendTaskResponse {
 }
 
 message SendTaskAsyncRequest {
-  TaskId task_id = 1;
+  reserved 1;
+  AccountId account_id = 2;
+  TaskSetupAbstractions setup_abstractions = 3;
+  TaskDetails details = 4;
 }
 
 message SendTaskAsyncResponse {

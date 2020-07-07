@@ -54,17 +54,21 @@ public final class NgDelegateTask {
         + "lsJ\004\010\001\020\002\"m\n\020SendTaskResponse\0224\n\007task_id\030"
         + "\001 \001(\0132\033.io.harness.delegate.TaskIdR\006task"
         + "Id\022#\n\rresponse_data\030\002 \001(\014R\014responseData\""
-        + "L\n\024SendTaskAsyncRequest\0224\n\007task_id\030\001 \001(\013"
-        + "2\033.io.harness.delegate.TaskIdR\006taskId\"M\n"
-        + "\025SendTaskAsyncResponse\0224\n\007task_id\030\001 \001(\0132"
-        + "\033.io.harness.delegate.TaskIdR\006taskId\"\207\001\n"
-        + "\020AbortTaskRequest\022=\n\naccount_id\030\001 \001(\0132\036."
-        + "io.harness.delegate.AccountIdR\taccountId"
-        + "\0224\n\007task_id\030\002 \001(\0132\033.io.harness.delegate."
-        + "TaskIdR\006taskId\"h\n\021AbortTaskResponse\022S\n\021c"
-        + "anceled_at_stage\030\001 \001(\0162\'.io.harness.dele"
-        + "gate.TaskExecutionStageR\017canceledAtStage"
-        + "B\002P\001b\006proto3"};
+        + "\362\001\n\024SendTaskAsyncRequest\022=\n\naccount_id\030\002"
+        + " \001(\0132\036.io.harness.delegate.AccountIdR\tac"
+        + "countId\022Y\n\022setup_abstractions\030\003 \001(\0132*.io"
+        + ".harness.delegate.TaskSetupAbstractionsR"
+        + "\021setupAbstractions\022:\n\007details\030\004 \001(\0132 .io"
+        + ".harness.delegate.TaskDetailsR\007detailsJ\004"
+        + "\010\001\020\002\"M\n\025SendTaskAsyncResponse\0224\n\007task_id"
+        + "\030\001 \001(\0132\033.io.harness.delegate.TaskIdR\006tas"
+        + "kId\"\207\001\n\020AbortTaskRequest\022=\n\naccount_id\030\001"
+        + " \001(\0132\036.io.harness.delegate.AccountIdR\tac"
+        + "countId\0224\n\007task_id\030\002 \001(\0132\033.io.harness.de"
+        + "legate.TaskIdR\006taskId\"h\n\021AbortTaskRespon"
+        + "se\022S\n\021canceled_at_stage\030\001 \001(\0162\'.io.harne"
+        + "ss.delegate.TaskExecutionStageR\017canceled"
+        + "AtStageB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             io.harness.delegate.Account.getDescriptor(),
@@ -93,7 +97,9 @@ public final class NgDelegateTask {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_delegate_SendTaskAsyncRequest_descriptor,
             new java.lang.String[] {
-                "TaskId",
+                "AccountId",
+                "SetupAbstractions",
+                "Details",
             });
     internal_static_io_harness_delegate_SendTaskAsyncResponse_descriptor = getDescriptor().getMessageTypes().get(3);
     internal_static_io_harness_delegate_SendTaskAsyncResponse_fieldAccessorTable =

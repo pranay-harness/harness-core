@@ -8,6 +8,8 @@ import com.google.protobuf.Duration;
 import io.harness.delegate.AbortTaskRequest;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.NgDelegateTaskServiceGrpc.NgDelegateTaskServiceBlockingStub;
+import io.harness.delegate.SendTaskAsyncRequest;
+import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskDetails;
@@ -35,31 +37,49 @@ public class ManagerDelegateServiceDriver {
   }
 
   public SendTaskResponse sendTask(String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
-    TaskDetails taskDetails =
-        TaskDetails.newBuilder()
-            .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
-            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(getTaskParameter(taskData))))
-            .putAllExpressions(taskData.getExpressions() == null ? new HashMap<>() : taskData.getExpressions())
-            .setExpressionFunctorToken(taskData.getExpressionFunctorToken())
-            .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() * 1000).build())
-            .build();
-
-    SendTaskRequest request =
-        SendTaskRequest.newBuilder()
-            .setAccountId(AccountId.newBuilder().setId(accountId).build())
-            .setSetupAbstractions(TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build())
-            .setDetails(taskDetails)
-            .build();
+    SendTaskRequest request = buildSendTaskRequest(accountId, setupAbstractions, taskData);
     return ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).sendTask(request);
   }
 
-  public io.harness.delegate.SendTaskAsyncResponse sendTaskAsync(io.harness.delegate.SendTaskAsyncRequest request) {
+  public SendTaskAsyncResponse sendTaskAsync(
+      String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
+    SendTaskAsyncRequest request = buildSendTaskAsyncRequest(accountId, setupAbstractions, taskData);
     return ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).sendTaskAsync(request);
   }
 
   public io.harness.delegate.AbortTaskResponse abortTask(io.harness.delegate.AbortTaskRequest request) {
     return ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
         .abortTask(AbortTaskRequest.newBuilder().build());
+  }
+
+  private SendTaskRequest buildSendTaskRequest(
+      String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
+    TaskDetails taskDetails = buildTaskDetails(taskData);
+    return SendTaskRequest.newBuilder()
+        .setAccountId(AccountId.newBuilder().setId(accountId).build())
+        .setSetupAbstractions(TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build())
+        .setDetails(taskDetails)
+        .build();
+  }
+
+  private SendTaskAsyncRequest buildSendTaskAsyncRequest(
+      String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
+    TaskDetails taskDetails = buildTaskDetails(taskData);
+    return SendTaskAsyncRequest.newBuilder()
+        .setAccountId(AccountId.newBuilder().setId(accountId).build())
+        .setSetupAbstractions(TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build())
+        .setDetails(taskDetails)
+        .build();
+  }
+
+  private TaskDetails buildTaskDetails(TaskData taskData) {
+    return TaskDetails.newBuilder()
+        .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
+        .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(getTaskParameter(taskData))))
+        .putAllExpressions(taskData.getExpressions() == null ? new HashMap<>() : taskData.getExpressions())
+        .setExpressionFunctorToken(taskData.getExpressionFunctorToken())
+        .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() * 1000).build())
+        .build();
   }
 
   private TaskParameters getTaskParameter(TaskData taskData) {

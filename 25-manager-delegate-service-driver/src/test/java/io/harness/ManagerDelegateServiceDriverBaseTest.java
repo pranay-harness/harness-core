@@ -5,10 +5,10 @@ import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-public abstract class NgDelegateServiceDriverTest extends CategoryTest implements MockableTestMixin {
+public abstract class ManagerDelegateServiceDriverBaseTest extends CategoryTest implements MockableTestMixin {
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule
-  public NgDelegateServiceDriverRule delegateServiceDriverRule =
-      new NgDelegateServiceDriverRule(lifecycleRule.getClosingFactory());
+  public ManagerDelegateServiceDriverRule delegateServiceDriverRule =
+      new ManagerDelegateServiceDriverRule(lifecycleRule.getClosingFactory());
 }

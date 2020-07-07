@@ -45,15 +45,42 @@ public final class SendTaskAsyncRequest extends com.google.protobuf.GeneratedMes
           case 0:
             done = true;
             break;
-          case 10: {
-            io.harness.delegate.TaskId.Builder subBuilder = null;
-            if (taskId_ != null) {
-              subBuilder = taskId_.toBuilder();
+          case 18: {
+            io.harness.delegate.AccountId.Builder subBuilder = null;
+            if (accountId_ != null) {
+              subBuilder = accountId_.toBuilder();
             }
-            taskId_ = input.readMessage(io.harness.delegate.TaskId.parser(), extensionRegistry);
+            accountId_ = input.readMessage(io.harness.delegate.AccountId.parser(), extensionRegistry);
             if (subBuilder != null) {
-              subBuilder.mergeFrom(taskId_);
-              taskId_ = subBuilder.buildPartial();
+              subBuilder.mergeFrom(accountId_);
+              accountId_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
+          case 26: {
+            io.harness.delegate.TaskSetupAbstractions.Builder subBuilder = null;
+            if (setupAbstractions_ != null) {
+              subBuilder = setupAbstractions_.toBuilder();
+            }
+            setupAbstractions_ =
+                input.readMessage(io.harness.delegate.TaskSetupAbstractions.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(setupAbstractions_);
+              setupAbstractions_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
+          case 34: {
+            io.harness.delegate.TaskDetails.Builder subBuilder = null;
+            if (details_ != null) {
+              subBuilder = details_.toBuilder();
+            }
+            details_ = input.readMessage(io.harness.delegate.TaskDetails.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(details_);
+              details_ = subBuilder.buildPartial();
             }
 
             break;
@@ -87,27 +114,74 @@ public final class SendTaskAsyncRequest extends com.google.protobuf.GeneratedMes
             io.harness.delegate.SendTaskAsyncRequest.class, io.harness.delegate.SendTaskAsyncRequest.Builder.class);
   }
 
-  public static final int TASK_ID_FIELD_NUMBER = 1;
-  private io.harness.delegate.TaskId taskId_;
+  public static final int ACCOUNT_ID_FIELD_NUMBER = 2;
+  private io.harness.delegate.AccountId accountId_;
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-   * @return Whether the taskId field is set.
+   * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
+   * @return Whether the accountId field is set.
    */
-  public boolean hasTaskId() {
-    return taskId_ != null;
+  public boolean hasAccountId() {
+    return accountId_ != null;
   }
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-   * @return The taskId.
+   * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
+   * @return The accountId.
    */
-  public io.harness.delegate.TaskId getTaskId() {
-    return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
+  public io.harness.delegate.AccountId getAccountId() {
+    return accountId_ == null ? io.harness.delegate.AccountId.getDefaultInstance() : accountId_;
   }
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
    */
-  public io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder() {
-    return getTaskId();
+  public io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder() {
+    return getAccountId();
+  }
+
+  public static final int SETUP_ABSTRACTIONS_FIELD_NUMBER = 3;
+  private io.harness.delegate.TaskSetupAbstractions setupAbstractions_;
+  /**
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+   * @return Whether the setupAbstractions field is set.
+   */
+  public boolean hasSetupAbstractions() {
+    return setupAbstractions_ != null;
+  }
+  /**
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+   * @return The setupAbstractions.
+   */
+  public io.harness.delegate.TaskSetupAbstractions getSetupAbstractions() {
+    return setupAbstractions_ == null ? io.harness.delegate.TaskSetupAbstractions.getDefaultInstance()
+                                      : setupAbstractions_;
+  }
+  /**
+   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+   */
+  public io.harness.delegate.TaskSetupAbstractionsOrBuilder getSetupAbstractionsOrBuilder() {
+    return getSetupAbstractions();
+  }
+
+  public static final int DETAILS_FIELD_NUMBER = 4;
+  private io.harness.delegate.TaskDetails details_;
+  /**
+   * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+   * @return Whether the details field is set.
+   */
+  public boolean hasDetails() {
+    return details_ != null;
+  }
+  /**
+   * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+   * @return The details.
+   */
+  public io.harness.delegate.TaskDetails getDetails() {
+    return details_ == null ? io.harness.delegate.TaskDetails.getDefaultInstance() : details_;
+  }
+  /**
+   * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+   */
+  public io.harness.delegate.TaskDetailsOrBuilder getDetailsOrBuilder() {
+    return getDetails();
   }
 
   private byte memoizedIsInitialized = -1;
@@ -125,8 +199,14 @@ public final class SendTaskAsyncRequest extends com.google.protobuf.GeneratedMes
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (taskId_ != null) {
-      output.writeMessage(1, getTaskId());
+    if (accountId_ != null) {
+      output.writeMessage(2, getAccountId());
+    }
+    if (setupAbstractions_ != null) {
+      output.writeMessage(3, getSetupAbstractions());
+    }
+    if (details_ != null) {
+      output.writeMessage(4, getDetails());
     }
     unknownFields.writeTo(output);
   }
@@ -138,8 +218,14 @@ public final class SendTaskAsyncRequest extends com.google.protobuf.GeneratedMes
       return size;
 
     size = 0;
-    if (taskId_ != null) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getTaskId());
+    if (accountId_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getAccountId());
+    }
+    if (setupAbstractions_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, getSetupAbstractions());
+    }
+    if (details_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(4, getDetails());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -156,10 +242,22 @@ public final class SendTaskAsyncRequest extends com.google.protobuf.GeneratedMes
     }
     io.harness.delegate.SendTaskAsyncRequest other = (io.harness.delegate.SendTaskAsyncRequest) obj;
 
-    if (hasTaskId() != other.hasTaskId())
+    if (hasAccountId() != other.hasAccountId())
       return false;
-    if (hasTaskId()) {
-      if (!getTaskId().equals(other.getTaskId()))
+    if (hasAccountId()) {
+      if (!getAccountId().equals(other.getAccountId()))
+        return false;
+    }
+    if (hasSetupAbstractions() != other.hasSetupAbstractions())
+      return false;
+    if (hasSetupAbstractions()) {
+      if (!getSetupAbstractions().equals(other.getSetupAbstractions()))
+        return false;
+    }
+    if (hasDetails() != other.hasDetails())
+      return false;
+    if (hasDetails()) {
+      if (!getDetails().equals(other.getDetails()))
         return false;
     }
     if (!unknownFields.equals(other.unknownFields))
@@ -174,9 +272,17 @@ public final class SendTaskAsyncRequest extends com.google.protobuf.GeneratedMes
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    if (hasTaskId()) {
-      hash = (37 * hash) + TASK_ID_FIELD_NUMBER;
-      hash = (53 * hash) + getTaskId().hashCode();
+    if (hasAccountId()) {
+      hash = (37 * hash) + ACCOUNT_ID_FIELD_NUMBER;
+      hash = (53 * hash) + getAccountId().hashCode();
+    }
+    if (hasSetupAbstractions()) {
+      hash = (37 * hash) + SETUP_ABSTRACTIONS_FIELD_NUMBER;
+      hash = (53 * hash) + getSetupAbstractions().hashCode();
+    }
+    if (hasDetails()) {
+      hash = (37 * hash) + DETAILS_FIELD_NUMBER;
+      hash = (53 * hash) + getDetails().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -289,11 +395,23 @@ public final class SendTaskAsyncRequest extends com.google.protobuf.GeneratedMes
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      if (taskIdBuilder_ == null) {
-        taskId_ = null;
+      if (accountIdBuilder_ == null) {
+        accountId_ = null;
       } else {
-        taskId_ = null;
-        taskIdBuilder_ = null;
+        accountId_ = null;
+        accountIdBuilder_ = null;
+      }
+      if (setupAbstractionsBuilder_ == null) {
+        setupAbstractions_ = null;
+      } else {
+        setupAbstractions_ = null;
+        setupAbstractionsBuilder_ = null;
+      }
+      if (detailsBuilder_ == null) {
+        details_ = null;
+      } else {
+        details_ = null;
+        detailsBuilder_ = null;
       }
       return this;
     }
@@ -324,10 +442,20 @@ public final class SendTaskAsyncRequest extends com.google.protobuf.GeneratedMes
     lang.Override
     public io.harness.delegate.SendTaskAsyncRequest buildPartial() {
       io.harness.delegate.SendTaskAsyncRequest result = new io.harness.delegate.SendTaskAsyncRequest(this);
-      if (taskIdBuilder_ == null) {
-        result.taskId_ = taskId_;
+      if (accountIdBuilder_ == null) {
+        result.accountId_ = accountId_;
       } else {
-        result.taskId_ = taskIdBuilder_.build();
+        result.accountId_ = accountIdBuilder_.build();
+      }
+      if (setupAbstractionsBuilder_ == null) {
+        result.setupAbstractions_ = setupAbstractions_;
+      } else {
+        result.setupAbstractions_ = setupAbstractionsBuilder_.build();
+      }
+      if (detailsBuilder_ == null) {
+        result.details_ = details_;
+      } else {
+        result.details_ = detailsBuilder_.build();
       }
       onBuilt();
       return result;
@@ -371,8 +499,14 @@ public final class SendTaskAsyncRequest extends com.google.protobuf.GeneratedMes
     public Builder mergeFrom(io.harness.delegate.SendTaskAsyncRequest other) {
       if (other == io.harness.delegate.SendTaskAsyncRequest.getDefaultInstance())
         return this;
-      if (other.hasTaskId()) {
-        mergeTaskId(other.getTaskId());
+      if (other.hasAccountId()) {
+        mergeAccountId(other.getAccountId());
+      }
+      if (other.hasSetupAbstractions()) {
+        mergeSetupAbstractions(other.getSetupAbstractions());
+      }
+      if (other.hasDetails()) {
+        mergeDetails(other.getDetails());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -401,117 +535,348 @@ public final class SendTaskAsyncRequest extends com.google.protobuf.GeneratedMes
       return this;
     }
 
-    private io.harness.delegate.TaskId taskId_;
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-        io.harness.delegate.TaskIdOrBuilder> taskIdBuilder_;
+    private io.harness.delegate.AccountId accountId_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
+        io.harness.delegate.AccountId.Builder, io.harness.delegate.AccountIdOrBuilder> accountIdBuilder_;
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-     * @return Whether the taskId field is set.
+     * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
+     * @return Whether the accountId field is set.
      */
-    public boolean hasTaskId() {
-      return taskIdBuilder_ != null || taskId_ != null;
+    public boolean hasAccountId() {
+      return accountIdBuilder_ != null || accountId_ != null;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-     * @return The taskId.
+     * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
+     * @return The accountId.
      */
-    public io.harness.delegate.TaskId getTaskId() {
-      if (taskIdBuilder_ == null) {
-        return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
+    public io.harness.delegate.AccountId getAccountId() {
+      if (accountIdBuilder_ == null) {
+        return accountId_ == null ? io.harness.delegate.AccountId.getDefaultInstance() : accountId_;
       } else {
-        return taskIdBuilder_.getMessage();
+        return accountIdBuilder_.getMessage();
       }
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
      */
-    public Builder setTaskId(io.harness.delegate.TaskId value) {
-      if (taskIdBuilder_ == null) {
+    public Builder setAccountId(io.harness.delegate.AccountId value) {
+      if (accountIdBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
         }
-        taskId_ = value;
+        accountId_ = value;
         onChanged();
       } else {
-        taskIdBuilder_.setMessage(value);
+        accountIdBuilder_.setMessage(value);
       }
 
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
      */
-    public Builder setTaskId(io.harness.delegate.TaskId.Builder builderForValue) {
-      if (taskIdBuilder_ == null) {
-        taskId_ = builderForValue.build();
+    public Builder setAccountId(io.harness.delegate.AccountId.Builder builderForValue) {
+      if (accountIdBuilder_ == null) {
+        accountId_ = builderForValue.build();
         onChanged();
       } else {
-        taskIdBuilder_.setMessage(builderForValue.build());
+        accountIdBuilder_.setMessage(builderForValue.build());
       }
 
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
      */
-    public Builder mergeTaskId(io.harness.delegate.TaskId value) {
-      if (taskIdBuilder_ == null) {
-        if (taskId_ != null) {
-          taskId_ = io.harness.delegate.TaskId.newBuilder(taskId_).mergeFrom(value).buildPartial();
+    public Builder mergeAccountId(io.harness.delegate.AccountId value) {
+      if (accountIdBuilder_ == null) {
+        if (accountId_ != null) {
+          accountId_ = io.harness.delegate.AccountId.newBuilder(accountId_).mergeFrom(value).buildPartial();
         } else {
-          taskId_ = value;
+          accountId_ = value;
         }
         onChanged();
       } else {
-        taskIdBuilder_.mergeFrom(value);
+        accountIdBuilder_.mergeFrom(value);
       }
 
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
      */
-    public Builder clearTaskId() {
-      if (taskIdBuilder_ == null) {
-        taskId_ = null;
+    public Builder clearAccountId() {
+      if (accountIdBuilder_ == null) {
+        accountId_ = null;
         onChanged();
       } else {
-        taskId_ = null;
-        taskIdBuilder_ = null;
+        accountId_ = null;
+        accountIdBuilder_ = null;
       }
 
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
      */
-    public io.harness.delegate.TaskId.Builder getTaskIdBuilder() {
+    public io.harness.delegate.AccountId.Builder getAccountIdBuilder() {
       onChanged();
-      return getTaskIdFieldBuilder().getBuilder();
+      return getAccountIdFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
      */
-    public io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder() {
-      if (taskIdBuilder_ != null) {
-        return taskIdBuilder_.getMessageOrBuilder();
+    public io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder() {
+      if (accountIdBuilder_ != null) {
+        return accountIdBuilder_.getMessageOrBuilder();
       } else {
-        return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
+        return accountId_ == null ? io.harness.delegate.AccountId.getDefaultInstance() : accountId_;
       }
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-        io.harness.delegate.TaskIdOrBuilder>
-    getTaskIdFieldBuilder() {
-      if (taskIdBuilder_ == null) {
-        taskIdBuilder_ =
-            new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-                io.harness.delegate.TaskIdOrBuilder>(getTaskId(), getParentForChildren(), isClean());
-        taskId_ = null;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
+        io.harness.delegate.AccountId.Builder, io.harness.delegate.AccountIdOrBuilder>
+    getAccountIdFieldBuilder() {
+      if (accountIdBuilder_ == null) {
+        accountIdBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
+            io.harness.delegate.AccountId.Builder, io.harness.delegate.AccountIdOrBuilder>(
+            getAccountId(), getParentForChildren(), isClean());
+        accountId_ = null;
       }
-      return taskIdBuilder_;
+      return accountIdBuilder_;
+    }
+
+    private io.harness.delegate.TaskSetupAbstractions setupAbstractions_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskSetupAbstractions,
+        io.harness.delegate.TaskSetupAbstractions.Builder, io.harness.delegate.TaskSetupAbstractionsOrBuilder>
+        setupAbstractionsBuilder_;
+    /**
+     * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+     * @return Whether the setupAbstractions field is set.
+     */
+    public boolean hasSetupAbstractions() {
+      return setupAbstractionsBuilder_ != null || setupAbstractions_ != null;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+     * @return The setupAbstractions.
+     */
+    public io.harness.delegate.TaskSetupAbstractions getSetupAbstractions() {
+      if (setupAbstractionsBuilder_ == null) {
+        return setupAbstractions_ == null ? io.harness.delegate.TaskSetupAbstractions.getDefaultInstance()
+                                          : setupAbstractions_;
+      } else {
+        return setupAbstractionsBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+     */
+    public Builder setSetupAbstractions(io.harness.delegate.TaskSetupAbstractions value) {
+      if (setupAbstractionsBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        setupAbstractions_ = value;
+        onChanged();
+      } else {
+        setupAbstractionsBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+     */
+    public Builder setSetupAbstractions(io.harness.delegate.TaskSetupAbstractions.Builder builderForValue) {
+      if (setupAbstractionsBuilder_ == null) {
+        setupAbstractions_ = builderForValue.build();
+        onChanged();
+      } else {
+        setupAbstractionsBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+     */
+    public Builder mergeSetupAbstractions(io.harness.delegate.TaskSetupAbstractions value) {
+      if (setupAbstractionsBuilder_ == null) {
+        if (setupAbstractions_ != null) {
+          setupAbstractions_ =
+              io.harness.delegate.TaskSetupAbstractions.newBuilder(setupAbstractions_).mergeFrom(value).buildPartial();
+        } else {
+          setupAbstractions_ = value;
+        }
+        onChanged();
+      } else {
+        setupAbstractionsBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+     */
+    public Builder clearSetupAbstractions() {
+      if (setupAbstractionsBuilder_ == null) {
+        setupAbstractions_ = null;
+        onChanged();
+      } else {
+        setupAbstractions_ = null;
+        setupAbstractionsBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+     */
+    public io.harness.delegate.TaskSetupAbstractions.Builder getSetupAbstractionsBuilder() {
+      onChanged();
+      return getSetupAbstractionsFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+     */
+    public io.harness.delegate.TaskSetupAbstractionsOrBuilder getSetupAbstractionsOrBuilder() {
+      if (setupAbstractionsBuilder_ != null) {
+        return setupAbstractionsBuilder_.getMessageOrBuilder();
+      } else {
+        return setupAbstractions_ == null ? io.harness.delegate.TaskSetupAbstractions.getDefaultInstance()
+                                          : setupAbstractions_;
+      }
+    }
+    /**
+     * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3[json_name = "setupAbstractions"];</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskSetupAbstractions,
+        io.harness.delegate.TaskSetupAbstractions.Builder, io.harness.delegate.TaskSetupAbstractionsOrBuilder>
+    getSetupAbstractionsFieldBuilder() {
+      if (setupAbstractionsBuilder_ == null) {
+        setupAbstractionsBuilder_ =
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskSetupAbstractions,
+                io.harness.delegate.TaskSetupAbstractions.Builder, io.harness.delegate.TaskSetupAbstractionsOrBuilder>(
+                getSetupAbstractions(), getParentForChildren(), isClean());
+        setupAbstractions_ = null;
+      }
+      return setupAbstractionsBuilder_;
+    }
+
+    private io.harness.delegate.TaskDetails details_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskDetails,
+        io.harness.delegate.TaskDetails.Builder, io.harness.delegate.TaskDetailsOrBuilder> detailsBuilder_;
+    /**
+     * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+     * @return Whether the details field is set.
+     */
+    public boolean hasDetails() {
+      return detailsBuilder_ != null || details_ != null;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+     * @return The details.
+     */
+    public io.harness.delegate.TaskDetails getDetails() {
+      if (detailsBuilder_ == null) {
+        return details_ == null ? io.harness.delegate.TaskDetails.getDefaultInstance() : details_;
+      } else {
+        return detailsBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+     */
+    public Builder setDetails(io.harness.delegate.TaskDetails value) {
+      if (detailsBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        details_ = value;
+        onChanged();
+      } else {
+        detailsBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+     */
+    public Builder setDetails(io.harness.delegate.TaskDetails.Builder builderForValue) {
+      if (detailsBuilder_ == null) {
+        details_ = builderForValue.build();
+        onChanged();
+      } else {
+        detailsBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+     */
+    public Builder mergeDetails(io.harness.delegate.TaskDetails value) {
+      if (detailsBuilder_ == null) {
+        if (details_ != null) {
+          details_ = io.harness.delegate.TaskDetails.newBuilder(details_).mergeFrom(value).buildPartial();
+        } else {
+          details_ = value;
+        }
+        onChanged();
+      } else {
+        detailsBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+     */
+    public Builder clearDetails() {
+      if (detailsBuilder_ == null) {
+        details_ = null;
+        onChanged();
+      } else {
+        details_ = null;
+        detailsBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+     */
+    public io.harness.delegate.TaskDetails.Builder getDetailsBuilder() {
+      onChanged();
+      return getDetailsFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+     */
+    public io.harness.delegate.TaskDetailsOrBuilder getDetailsOrBuilder() {
+      if (detailsBuilder_ != null) {
+        return detailsBuilder_.getMessageOrBuilder();
+      } else {
+        return details_ == null ? io.harness.delegate.TaskDetails.getDefaultInstance() : details_;
+      }
+    }
+    /**
+     * <code>.io.harness.delegate.TaskDetails details = 4[json_name = "details"];</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskDetails,
+        io.harness.delegate.TaskDetails.Builder, io.harness.delegate.TaskDetailsOrBuilder>
+    getDetailsFieldBuilder() {
+      if (detailsBuilder_ == null) {
+        detailsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskDetails,
+            io.harness.delegate.TaskDetails.Builder, io.harness.delegate.TaskDetailsOrBuilder>(
+            getDetails(), getParentForChildren(), isClean());
+        details_ = null;
+      }
+      return detailsBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

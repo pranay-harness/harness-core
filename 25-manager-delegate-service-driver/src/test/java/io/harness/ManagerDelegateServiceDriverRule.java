@@ -26,10 +26,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class NgDelegateServiceDriverRule implements MethodRule, InjectorRuleMixin {
+public class ManagerDelegateServiceDriverRule implements MethodRule, InjectorRuleMixin {
   ClosingFactory closingFactory;
 
-  public NgDelegateServiceDriverRule(ClosingFactory closingFactory) {
+  public ManagerDelegateServiceDriverRule(ClosingFactory closingFactory) {
     this.closingFactory = closingFactory;
   }
 
