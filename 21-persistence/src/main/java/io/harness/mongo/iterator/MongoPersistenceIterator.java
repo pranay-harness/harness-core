@@ -215,7 +215,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
           ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
         }
 
-        long delay = nextIteration == null ? 0 : startTime - nextIteration;
+        long delay = nextIteration == null || nextIteration == 0 ? 0 : startTime - nextIteration;
 
         try (DelayLogContext ignore2 = new DelayLogContext(delay, OVERRIDE_ERROR)) {
           if (delay < acceptableNoAlertDelay.toMillis()) {

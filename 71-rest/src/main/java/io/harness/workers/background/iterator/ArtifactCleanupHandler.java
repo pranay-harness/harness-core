@@ -17,7 +17,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
-import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.artifact.ArtifactStream;
@@ -37,7 +37,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject @Named("AsyncArtifactCleanupService") private ArtifactCleanupService artifactCleanupServiceAsync;
   @Inject ArtifactCollectionUtils artifactCollectionUtils;
-  @Inject private MorphiaPersistenceProvider<ArtifactStream> persistenceProvider;
+  @Inject private MorphiaPersistenceRequiredProvider<ArtifactStream> persistenceProvider;
 
   public void registerIterators(ScheduledThreadPoolExecutor artifactCollectionExecutor) {
     PersistenceIterator iterator = persistenceIteratorFactory.createIterator(ArtifactCleanupHandler.class,
