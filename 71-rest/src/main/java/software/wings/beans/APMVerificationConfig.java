@@ -192,15 +192,11 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   public List<String> fetchRelevantEncryptedSecrets() {
     List<String> rv = new ArrayList<>();
     if (isNotEmpty(headersList)) {
-      headersList.stream()
-          .filter(keyValues -> keyValues.encrypted)
-          .forEach(keyValues -> rv.add(keyValues.encryptedValue));
+      headersList.forEach(keyValues -> rv.add(keyValues.value));
     }
 
     if (isNotEmpty(optionsList)) {
-      optionsList.stream()
-          .filter(keyValues -> keyValues.encrypted)
-          .forEach(keyValues -> rv.add(keyValues.encryptedValue));
+      optionsList.forEach(keyValues -> rv.add(keyValues.value));
     }
 
     List<KeyValues> bodySecrets = getSecretNameIdKeyValueList(validationBody);
