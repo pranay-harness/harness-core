@@ -6,6 +6,8 @@ import static io.harness.common.CIExecutionConstants.ADDON_CONTAINER_LIMIT_MEM;
 import static io.harness.common.CIExecutionConstants.ADDON_CONTAINER_NAME;
 import static io.harness.common.CIExecutionConstants.ADDON_CONTAINER_REQ_CPU;
 import static io.harness.common.CIExecutionConstants.ADDON_CONTAINER_REQ_MEM;
+import static io.harness.common.CIExecutionConstants.ADDON_JFROG_PATH;
+import static io.harness.common.CIExecutionConstants.ADDON_JFROG_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ADDON_PATH;
 import static io.harness.common.CIExecutionConstants.ADDON_PORT;
 import static io.harness.common.CIExecutionConstants.ADDON_VOLUME;
@@ -75,6 +77,7 @@ public class InternalContainerParamsProvider {
     return CIK8ContainerParams.builder()
         .name(ADDON_CONTAINER_NAME)
         .containerResourceParams(getAddonResourceParams())
+        .envVars(getAddonEnvVars())
         .containerType(CIContainerType.ADD_ON)
         .imageDetailsWithConnector(InternalImageDetailsProvider.getImageDetails(ADDON_IMAGE))
         .volumeToMountPath(map)
@@ -82,6 +85,12 @@ public class InternalContainerParamsProvider {
         .args(args)
         .ports(Collections.singletonList(ADDON_PORT))
         .build();
+  }
+
+  private Map<String, String> getAddonEnvVars() {
+    Map<String, String> envVars = new HashMap<>();
+    envVars.put(ADDON_JFROG_VARIABLE, ADDON_JFROG_PATH);
+    return envVars;
   }
 
   private ContainerResourceParams getAddonResourceParams() {

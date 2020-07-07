@@ -1,5 +1,11 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
+import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE;
+import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE;
+import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SETUP_TASK_ARGS;
 import static io.harness.common.CIExecutionConstants.SH_COMMAND;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -16,6 +22,7 @@ import com.google.inject.Singleton;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
+import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
@@ -28,6 +35,7 @@ import io.harness.network.SafeHttpCall;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -116,6 +124,8 @@ public class K8BuildSetupUtils {
                        .name(containerDefinitionInfo.getName())
                        .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
                        .containerType(CIContainerType.STEP_EXECUTOR)
+                       .envVars(getCIExecutorEnvVariables(containerDefinitionInfo))
+                       .encryptedSecrets(getSecretEnvVars(containerDefinitionInfo))
                        .commands(commands)
                        .args(args)
                        .imageDetailsWithConnector(
@@ -163,5 +173,31 @@ public class K8BuildSetupUtils {
       throw new InvalidRequestException("Pod setup info can not be empty");
     }
     return podSetupInfoOpt.get();
+  }
+
+  @NotNull
+  private Map<String, EncryptedDataDetail> getSecretEnvVars(ContainerDefinitionInfo containerDefinitionInfo) {
+    Map<String, EncryptedDataDetail> envSecretVars = new HashMap<>();
+    if (isNotEmpty(containerDefinitionInfo.getEncryptedSecrets())) {
+      envSecretVars.putAll(containerDefinitionInfo.getEncryptedSecrets()); // Put customer input env variables
+    }
+    // Put Harness internal env variable like that of minio
+    // TODO Replace null with encrypted values once cdng secret apis are ready
+    envSecretVars.put(ACCESS_KEY_MINIO_VARIABLE, null);
+    envSecretVars.put(SECRET_KEY_MINIO_VARIABLE, null);
+
+    return envSecretVars;
+  }
+
+  @NotNull
+  private Map<String, String> getCIExecutorEnvVariables(ContainerDefinitionInfo containerDefinitionInfo) {
+    Map<String, String> envVars = new HashMap<>();
+    if (isNotEmpty(containerDefinitionInfo.getEnvVars())) {
+      envVars.putAll(containerDefinitionInfo.getEnvVars()); // Put customer input env variables
+    }
+    // Put Harness internal env variable like that of minio
+    envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
+    envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
+    return envVars;
   }
 }

@@ -1,6 +1,5 @@
 package software.wings.service.impl.ci;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -28,7 +27,6 @@ import software.wings.beans.ci.CIK8BuildTaskParams;
 import software.wings.beans.ci.CIK8CleanupTaskParams;
 import software.wings.beans.ci.K8ExecCommandParams;
 import software.wings.beans.ci.K8ExecuteCommandTaskParams;
-import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
@@ -62,14 +60,6 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
   @Inject private SecretManager secretManager;
   @Inject private DelegateService delegateService;
   private static final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
-  private static final String REPLACE_USERNAME_HERE = "REPLACE_USERNAME_HERE";
-  private static final String REPLACE_PASSWORD_HERE = "REPLACE_PASSWORD_HERE";
-  private static final String HARNESS_GENERATION_PASSPHRASE = "HARNESS_GENERATION_PASSPHRASE";
-
-  private static final String ENDPOINT_MINIO = "ENDPOINT_MINIO";
-  private static final String ACCESS_KEY_MINIO = "ACCESS_KEY_MINIO";
-  private static final String SECRET_KEY_MINIO = "SECRET_KEY_MINIO";
-  private static final String BUCKET_MINIO = "BUCKET_MINIO";
 
   @Override
   public K8sTaskExecutionResponse setBuildEnv(String k8ConnectorName, String gitConnectorName, String branchName,
@@ -251,33 +241,19 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
 
   private void addSecrets(CIK8PodParams<CIK8ContainerParams> podParams) {
     List<CIK8ContainerParams> cik8ContainerParamsList = podParams.getContainerParamsList();
-    Map<String, EncryptedDataDetail> secrets = new HashMap<>();
 
     cik8ContainerParamsList.forEach(cik8ContainerParams -> {
-      if (isEmpty(cik8ContainerParams.getEncryptedSecrets())
-          && cik8ContainerParams.getContainerType() == (CIContainerType.STEP_EXECUTOR)) {
-        getEncryptedDataDetails(ACCOUNT_ID, REPLACE_USERNAME_HERE)
-            .ifPresent(encryptedDataDetail -> secrets.put(REPLACE_USERNAME_HERE, encryptedDataDetail));
-        getEncryptedDataDetails(ACCOUNT_ID, REPLACE_PASSWORD_HERE)
-            .ifPresent(encryptedDataDetail -> secrets.put(REPLACE_PASSWORD_HERE, encryptedDataDetail));
-        getEncryptedDataDetails(ACCOUNT_ID, HARNESS_GENERATION_PASSPHRASE)
-            .ifPresent(encryptedDataDetail -> secrets.put(HARNESS_GENERATION_PASSPHRASE, encryptedDataDetail));
-        getEncryptedDataDetails(ACCOUNT_ID, ENDPOINT_MINIO)
-            .ifPresent(encryptedDataDetail -> secrets.put(ENDPOINT_MINIO, encryptedDataDetail));
-        getEncryptedDataDetails(ACCOUNT_ID, ACCESS_KEY_MINIO)
-            .ifPresent(encryptedDataDetail -> secrets.put(ACCESS_KEY_MINIO, encryptedDataDetail));
-        getEncryptedDataDetails(ACCOUNT_ID, SECRET_KEY_MINIO)
-            .ifPresent(encryptedDataDetail -> secrets.put(SECRET_KEY_MINIO, encryptedDataDetail));
-        getEncryptedDataDetails(ACCOUNT_ID, BUCKET_MINIO)
-            .ifPresent(encryptedDataDetail -> secrets.put(BUCKET_MINIO, encryptedDataDetail));
-
+      if (isNotEmpty(cik8ContainerParams.getEncryptedSecrets())) {
+        Map<String, EncryptedDataDetail> secrets = new HashMap<>();
+        for (Map.Entry<String, EncryptedDataDetail> entry : cik8ContainerParams.getEncryptedSecrets().entrySet()) {
+          getEncryptedDataDetails(ACCOUNT_ID, entry.getKey())
+              .ifPresent(encryptedDataDetail -> secrets.put(entry.getKey(), encryptedDataDetail));
+        }
         cik8ContainerParams.setEncryptedSecrets(secrets);
       }
 
-      else if (cik8ContainerParams.getContainerType() == (CIContainerType.ADD_ON)) {
-        if (isNotEmpty(cik8ContainerParams.getPublishArtifactEncryptedValues())) {
-          setPublishImageEncryptedInfo(cik8ContainerParams);
-        }
+      if (isNotEmpty(cik8ContainerParams.getPublishArtifactEncryptedValues())) {
+        setPublishImageEncryptedInfo(cik8ContainerParams);
       }
     });
   }

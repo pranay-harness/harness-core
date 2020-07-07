@@ -2,6 +2,12 @@
 
 package io.harness.stateutils.buildstate;
 
+import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
+import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE;
+import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE;
+import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE_VALUE;
+import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider.ContainerKind.ADDON_CONTAINER;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,6 +22,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +73,14 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     CIK8PodParams<CIK8ContainerParams> podParams =
         k8BuildSetupUtils.getPodParams(podsSetupInfo.getPodSetupInfoList().get(0), "default", command, args, null);
 
+    Map<String, EncryptedDataDetail> envSecretVars = new HashMap<>();
+    envSecretVars.put(ACCESS_KEY_MINIO_VARIABLE, null);
+    envSecretVars.put(SECRET_KEY_MINIO_VARIABLE, null);
+
+    Map<String, String> envVars = new HashMap<>();
+    envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
+    envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
+
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     assertThat(podParams.getContainerParamsList().get(0))
@@ -75,6 +90,8 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
                 .containerResourceParams(null)
                 .containerType(CIContainerType.STEP_EXECUTOR)
                 .commands(command)
+                .encryptedSecrets(envSecretVars)
+                .envVars(envVars)
                 .args(args)
                 .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
                 .volumeToMountPath(map)
