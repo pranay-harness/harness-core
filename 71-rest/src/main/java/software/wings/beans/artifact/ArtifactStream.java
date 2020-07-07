@@ -83,8 +83,8 @@ public abstract class ArtifactStream
   @Deprecated private transient boolean autoApproveForProduction;
   private boolean metadataOnly;
   private int failedCronAttempts;
-  @FdIndex private Long nextIteration;
-  @FdIndex private Long nextCleanupIteration;
+  @FdIndex private long nextIteration;
+  @FdIndex private long nextCleanupIteration;
   @FdIndex private String templateUuid;
   private String templateVersion;
   private List<Variable> templateVariables = new ArrayList<>();
@@ -192,11 +192,11 @@ public abstract class ArtifactStream
   @Override
   public void updateNextIteration(String fieldName, Long nextIteration) {
     if (ArtifactStreamKeys.nextCleanupIteration.equals(fieldName)) {
-      this.nextCleanupIteration = nextIteration;
+      this.nextCleanupIteration = nextIteration == null ? 0L : nextIteration;
       return;
     }
 
-    this.nextIteration = nextIteration;
+    this.nextIteration = nextIteration == null ? 0L : nextIteration;
   }
 
   @Override

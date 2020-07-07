@@ -25,6 +25,7 @@ import migrations.all.AddWhitelistedDomainsToAccountMigration;
 import migrations.all.AmiDeploymentTypeMigration;
 import migrations.all.AppDTemplateMigration;
 import migrations.all.AppKeywordsMigration;
+import migrations.all.ArtifactStreamIteratorRequiredMigration;
 import migrations.all.AuditRecordMigration;
 import migrations.all.AuditViewerPermissionMigration;
 import migrations.all.AuthTokenTtlMigration;
@@ -350,6 +351,7 @@ public class MigrationList {
         .add(Pair.of(317, BaseMigration.class))
         .add(Pair.of(318, AddCEPermissionToAllUserGroups.class))
         .add(Pair.of(319, AddDisabledFieldMigration.class))
+        .add(Pair.of(320, ArtifactStreamIteratorRequiredMigration.class))
         .build();
   }
 }
