@@ -216,11 +216,11 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
 
       String directoryPath = resolveEnvVarsInPath(this.config.getWorkingDirectory() + "/");
       String envVariablesFilename = null;
-      command = "cd " + directoryPath + "\n" + command;
+      command = "cd \"" + directoryPath + "\"\n" + command;
       if (!envVariablesToCollect.isEmpty()) {
         envVariablesFilename = "harness-" + this.config.getExecutionId() + ".out";
         command = addEnvVariablesCollector(
-            command, envVariablesToCollect, directoryPath + envVariablesFilename, ScriptType.BASH);
+            command, envVariablesToCollect, "\"" + directoryPath + envVariablesFilename + "\"", ScriptType.BASH);
       }
 
       try (OutputStream outputStream = channel.getOutputStream(); InputStream inputStream = channel.getInputStream()) {
