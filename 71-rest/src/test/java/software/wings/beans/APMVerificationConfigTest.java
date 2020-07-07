@@ -129,11 +129,11 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     String optionSecretRef = generateUuid();
     APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
     List<KeyValues> headers = new ArrayList<>();
-    headers.add(KeyValues.builder().key("api_key").encryptedValue(headerSecretRef).encrypted(true).build());
+    headers.add(KeyValues.builder().key("api_key").value(headerSecretRef).encrypted(true).build());
     headers.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
 
     List<KeyValues> options = new ArrayList<>();
-    options.add(KeyValues.builder().key("option_key").encryptedValue(optionSecretRef).encrypted(true).build());
+    options.add(KeyValues.builder().key("option_key").value(optionSecretRef).encrypted(true).build());
     options.add(KeyValues.builder().key("option_key_plain").value("321").encrypted(false).build());
 
     apmVerificationConfig.setHeadersList(headers);
@@ -164,6 +164,8 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     List<String> expectedRelevantSecretIds = new ArrayList<>();
     expectedRelevantSecretIds.add(headerSecretRef);
     expectedRelevantSecretIds.add(optionSecretRef);
+    expectedRelevantSecretIds.add("123");
+    expectedRelevantSecretIds.add("321");
     expectedRelevantSecretIds.addAll(urlSecrets);
     expectedRelevantSecretIds.addAll(bodySecrets);
 
