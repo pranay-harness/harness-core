@@ -1,10 +1,11 @@
 package io.harness.engine.advise.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
+import io.harness.OrchestrationPublisherName;
 import io.harness.adviser.advise.RetryAdvise;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
@@ -23,13 +24,14 @@ public class RetryAdviseHandler implements AdviseHandler<RetryAdvise> {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private RetryHelper retryHelper;
+  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   @Override
   public void handleAdvise(Ambiance ambiance, RetryAdvise advise) {
     if (advise.getWaitInterval() > 0) {
       logger.info("Retry Wait Interval : {}", advise.getWaitInterval());
       String resumeId = delayEventHelper.delay(advise.getWaitInterval(), Collections.emptyMap());
-      waitNotifyEngine.waitForAllOn(ORCHESTRATION,
+      waitNotifyEngine.waitForAllOn(publisherName,
           new EngineWaitRetryCallback(ambiance.getPlanExecutionId(), advise.getRetryNodeExecutionId()), resumeId);
       return;
     }

@@ -3,11 +3,11 @@ package io.harness.engine.executables.invokers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.execution.status.Status.QUEUED;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.OrchestrationPublisherName;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
 import io.harness.annotations.dev.OwnedBy;
@@ -37,6 +37,7 @@ public class ChildChainStrategy implements InvokeStrategy {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
+  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   @Override
   public void invoke(InvokerPackage invokerPackage) {
@@ -74,7 +75,7 @@ public class ChildChainStrategy implements InvokeStrategy {
     executorService.submit(
         ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).orchestrationEngine(engine).build());
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback, childInstanceId);
+    waitNotifyEngine.waitForAllOn(publisherName, callback, childInstanceId);
     nodeExecutionService.update(
         nodeExecution.getUuid(), ops -> ops.addToSet(NodeExecutionKeys.executableResponses, childChainResponse));
   }
