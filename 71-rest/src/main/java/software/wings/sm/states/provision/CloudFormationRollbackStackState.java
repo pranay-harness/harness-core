@@ -193,6 +193,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
        * For details, see CD-4767
        */
       AwsConfig awsConfig = getAwsConfig(configParameter.getAwsConfigId());
+      String roleArnRendered = executionContext.renderExpression(configParameter.getCloudFormationRoleArn());
       CloudFormationCreateStackRequestBuilder builder = CloudFormationCreateStackRequest.builder().awsConfig(awsConfig);
       if (CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL.equals(configParameter.getCreateType())) {
         builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL);
@@ -208,6 +209,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
                                                      .commandType(CloudFormationCommandType.CREATE_STACK)
                                                      .accountId(context.getAccountId())
                                                      .appId(context.getAppId())
+                                                     .cloudFormationRoleArn(roleArnRendered)
                                                      .commandName(commandUnit())
                                                      .activityId(activityId)
                                                      .variables(textVariables)
@@ -263,18 +265,22 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
     AwsConfig awsConfig = getAwsConfig(stackElement.getAwsConfigId());
     DelegateTask delegateTask;
     if (!stackElement.isStackExisted()) {
-      CloudFormationDeleteStackRequest request = CloudFormationDeleteStackRequest.builder()
-                                                     .region(stackElement.getRegion())
-                                                     .stackNameSuffix(stackElement.getStackNameSuffix())
-                                                     .customStackName(stackElement.getCustomStackName())
-                                                     .commandType(CloudFormationCommandType.DELETE_STACK)
-                                                     .accountId(executionContext.getApp().getAccountId())
-                                                     .appId(executionContext.getApp().getUuid())
-                                                     .activityId(activityId)
-                                                     .commandName(commandUnit())
-                                                     .awsConfig(awsConfig)
-                                                     .build();
+      CloudFormationDeleteStackRequest request =
+          CloudFormationDeleteStackRequest.builder()
+              .region(stackElement.getRegion())
+              .stackNameSuffix(stackElement.getStackNameSuffix())
+              .customStackName(stackElement.getCustomStackName())
+              .commandType(CloudFormationCommandType.DELETE_STACK)
+              .accountId(executionContext.getApp().getAccountId())
+              .cloudFormationRoleArn(executionContext.renderExpression(getCloudFormationRoleArn()))
+              .appId(executionContext.getApp().getUuid())
+              .activityId(activityId)
+              .commandName(commandUnit())
+              .awsConfig(awsConfig)
+              .build();
+
       setTimeOutOnRequest(request);
+
       delegateTask =
           DelegateTask.builder()
               .accountId(executionContext.getApp().getAccountId())
@@ -299,6 +305,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
           .region(stackElement.getRegion())
           .commandType(CloudFormationCommandType.CREATE_STACK)
           .accountId(executionContext.fetchRequiredApp().getAccountId())
+          .cloudFormationRoleArn(executionContext.renderExpression(getCloudFormationRoleArn()))
           .appId(executionContext.fetchRequiredApp().getUuid())
           .activityId(activityId)
           .commandName(commandUnit())

@@ -98,12 +98,14 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     String accessKey = "abcd";
     char[] secretKey = "pqrs".toCharArray();
     String stackNameSuffix = "Stack Name 00";
+    String roleArn = "roleArn";
     CloudFormationCreateStackRequest request =
         CloudFormationCreateStackRequest.builder()
             .commandType(CloudFormationCommandType.CREATE_STACK)
             .accountId(ACCOUNT_ID)
             .appId(APP_ID)
             .activityId(ACTIVITY_ID)
+            .cloudFormationRoleArn(roleArn)
             .commandName("Create Stack")
             .awsConfig(AwsConfig.builder().accessKey(accessKey).accountId(ACCOUNT_ID).secretKey(secretKey).build())
             .timeoutInMs(10 * 60 * 1000)
@@ -112,8 +114,10 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .stackNameSuffix(stackNameSuffix)
             .build();
     doReturn(null).when(mockEncryptionService).decrypt(any(), any());
-    CreateStackRequest createStackRequest =
-        new CreateStackRequest().withStackName("HarnessStack-" + stackNameSuffix).withTemplateBody(templateBody);
+    CreateStackRequest createStackRequest = new CreateStackRequest()
+                                                .withStackName("HarnessStack-" + stackNameSuffix)
+                                                .withTemplateBody(templateBody)
+                                                .withRoleARN(roleArn);
     String stackId = "Stack Id 00";
     CreateStackResult createStackResult = new CreateStackResult().withStackId(stackId);
     doReturn(createStackResult).when(mockAwsHelperService).createStack(anyString(), any(), any());
@@ -272,6 +276,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     String accessKey = "abcd";
     char[] secretKey = "pqrs".toCharArray();
     String stackNameSuffix = "Stack Name 01";
+    String roleArn = "RoleArn";
     CloudFormationDeleteStackRequest request =
         CloudFormationDeleteStackRequest.builder()
             .commandType(CloudFormationCommandType.DELETE_STACK)
@@ -279,6 +284,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
             .appId(APP_ID)
             .activityId(ACTIVITY_ID)
             .commandName("Delete Stack")
+            .cloudFormationRoleArn(roleArn)
             .awsConfig(AwsConfig.builder().accessKey(accessKey).accountId(ACCOUNT_ID).secretKey(secretKey).build())
             .timeoutInMs(10 * 60 * 1000)
             .stackNameSuffix(stackNameSuffix)

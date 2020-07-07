@@ -48,6 +48,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
             .customStackName(
                 useCustomStackName ? executionContext.renderExpression(customStackName) : StringUtils.EMPTY)
             .commandType(CloudFormationCommandType.DELETE_STACK)
+            .cloudFormationRoleArn(executionContext.renderExpression(getCloudFormationRoleArn()))
             .accountId(executionContext.getApp().getAccountId())
             .appId(executionContext.getApp().getUuid())
             .activityId(activityId)

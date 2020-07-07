@@ -65,6 +65,10 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   protected DelegateTask buildDelegateTask(ExecutionContextImpl executionContext,
       CloudFormationInfrastructureProvisioner provisioner, AwsConfig awsConfig, String activityId) {
     CloudFormationCreateStackRequestBuilder builder = CloudFormationCreateStackRequest.builder();
+
+    String roleArnRendered = executionContext.renderExpression(getCloudFormationRoleArn());
+    builder.cloudFormationRoleArn(roleArnRendered);
+
     if (provisioner.provisionByUrl()) {
       ensureNonEmptyStringField(provisioner.getTemplateFilePath(), "Template Url");
       builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL)

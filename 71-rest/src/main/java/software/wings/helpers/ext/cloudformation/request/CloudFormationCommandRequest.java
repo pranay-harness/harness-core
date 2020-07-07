@@ -20,6 +20,7 @@ public class CloudFormationCommandRequest implements ExecutionCapabilityDemander
   private AwsConfig awsConfig;
   private int timeoutInMs;
   private String region;
+  private String cloudFormationRoleArn;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
