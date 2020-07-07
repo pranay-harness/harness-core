@@ -2,8 +2,6 @@ package io.harness.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.harness.Task;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.ParametersConverter;
@@ -12,6 +10,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.task.HDelegateTask;
 import io.harness.mongo.KryoConverter;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -41,7 +40,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -59,9 +57,8 @@ import javax.validation.constraints.NotNull;
       @Field(DelegateTaskKeys.accountId)
       , @Field(DelegateTaskKeys.status), @Field("data.async"), @Field(DelegateTaskKeys.expiry),
     })
-public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, Task {
-  public static final String TASK_IDENTIFIER = "DELEGATE_TASK";
-
+public class DelegateTask
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, HDelegateTask {
   // TODO: this is temporary to propagate if the compatibility framework is enabled for particular task
   private boolean capabilityFrameworkEnabled;
 
@@ -151,13 +148,6 @@ public class DelegateTask implements PersistentEntity, UuidAware, CreatedAtAware
    */
   public String getArtifactStreamId() {
     return setupAbstractions == null ? null : setupAbstractions.get(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD);
-  }
-
-  @Override
-  @JsonIgnore
-  @Nonnull
-  public String getTaskIdentifier() {
-    return TASK_IDENTIFIER;
   }
 
   public static class ParametersConverter extends KryoConverter {

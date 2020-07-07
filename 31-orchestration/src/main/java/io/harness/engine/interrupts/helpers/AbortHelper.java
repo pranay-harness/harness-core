@@ -57,7 +57,7 @@ public class AbortHelper {
       ExecutableResponse executableResponse = nodeExecution.obtainLatestExecutableResponse();
       if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {
         TaskSpawningExecutableResponse taskExecutableResponse = (TaskSpawningExecutableResponse) executableResponse;
-        TaskExecutor executor = taskExecutorMap.get(taskExecutableResponse.getTaskIdentifier());
+        TaskExecutor executor = taskExecutorMap.get(taskExecutableResponse.getTaskMode().name());
         executor.abortTask(ambiance, taskExecutableResponse.getTaskId());
       }
       if (currentState instanceof Abortable) {

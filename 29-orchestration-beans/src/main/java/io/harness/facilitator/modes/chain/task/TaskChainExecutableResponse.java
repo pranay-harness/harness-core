@@ -6,6 +6,7 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.TaskSpawningExecutableResponse;
+import io.harness.tasks.TaskMode;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -16,7 +17,7 @@ import lombok.Value;
 @Builder
 public class TaskChainExecutableResponse implements TaskSpawningExecutableResponse {
   @NonNull String taskId;
-  @NonNull String taskIdentifier;
+  @NonNull TaskMode taskMode;
   boolean chainEnd;
   PassThroughData passThroughData;
 }

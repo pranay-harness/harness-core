@@ -17,7 +17,6 @@ import com.google.inject.name.Names;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
-import io.harness.beans.DelegateTask;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -98,6 +97,7 @@ import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.serializer.YamlUtils;
 import io.harness.tasks.TaskExecutor;
+import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -229,6 +229,7 @@ import software.wings.security.encryption.setupusage.builders.SecretManagerSetup
 import software.wings.security.encryption.setupusage.builders.ServiceVariableSetupUsageBuilder;
 import software.wings.security.encryption.setupusage.builders.SettingAttributeSetupUsageBuilder;
 import software.wings.security.saml.SamlUserGroupSync;
+import software.wings.service.DelegateTaskExecutor;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
@@ -1122,7 +1123,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-    taskExecutorMap.addBinding(DelegateTask.TASK_IDENTIFIER).to(DelegateService.class);
+    taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V1.name()).to(DelegateTaskExecutor.class);
 
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);

@@ -37,11 +37,11 @@ import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.kryo.OrchestrationTestKryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.tasks.TaskExecutor;
+import io.harness.tasks.TaskMode;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
-import io.harness.utils.DummyTask;
 import io.harness.utils.DummyTaskExecutor;
 import io.harness.version.VersionInfoManager;
 import io.harness.version.VersionModule;
@@ -133,7 +133,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
       protected void configure() {
         MapBinder<String, TaskExecutor> taskExecutorMap =
             MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-        taskExecutorMap.addBinding(DummyTask.TASK_IDENTIFIER).to(DummyTaskExecutor.class);
+        taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V1.name()).to(DummyTaskExecutor.class);
       }
     });
 

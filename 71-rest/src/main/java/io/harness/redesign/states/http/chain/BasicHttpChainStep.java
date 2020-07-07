@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
-import io.harness.Task;
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
@@ -44,7 +43,7 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable {
     BasicHttpChainStepParameters parameters =
         obtainBasicHttpChainStepParameters((BasicHttpChainStepParameters) stepParameters);
     BasicHttpStepParameters linkParam = parameters.getLinkParameters().get(0);
-    Task task = buildTask(ambiance, linkParam);
+    DelegateTask task = buildTask(ambiance, linkParam);
     return TaskChainResponse.builder().chainEnd(false).task(task).build();
   }
 
@@ -54,7 +53,7 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable {
     BasicHttpChainStepParameters parameters =
         obtainBasicHttpChainStepParameters((BasicHttpChainStepParameters) stepParameters);
     BasicHttpStepParameters linkParam = parameters.getLinkParameters().get(1);
-    Task task = buildTask(ambiance, linkParam);
+    DelegateTask task = buildTask(ambiance, linkParam);
     return TaskChainResponse.builder().chainEnd(true).task(task).build();
   }
 
@@ -64,7 +63,7 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable {
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 
-  private Task buildTask(Ambiance ambiance, BasicHttpStepParameters linkParam) {
+  private DelegateTask buildTask(Ambiance ambiance, BasicHttpStepParameters linkParam) {
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
                                                 .url(linkParam.getUrl())
                                                 .body(linkParam.getBody())
