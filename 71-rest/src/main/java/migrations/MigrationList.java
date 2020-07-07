@@ -352,6 +352,7 @@ public class MigrationList {
         .add(Pair.of(318, AddCEPermissionToAllUserGroups.class))
         .add(Pair.of(319, AddDisabledFieldMigration.class))
         .add(Pair.of(320, ArtifactStreamIteratorRequiredMigration.class))
+        .add(Pair.of(321, BaseMigration.class))
         .build();
   }
 }

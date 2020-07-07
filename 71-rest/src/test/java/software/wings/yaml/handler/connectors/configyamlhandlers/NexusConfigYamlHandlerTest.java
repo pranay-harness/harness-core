@@ -29,6 +29,7 @@ public class NexusConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
       + "username: admin\n"
       + "password: safeharness:Q1ESI1KVTrCaBARuR38kqA\n"
       + "harnessApiVersion: '1.0'\n"
+      + "version: 3.x\n"
       + "type: NEXUS";
 
   private Class yamlClass = NexusConfig.Yaml.class;
@@ -73,6 +74,7 @@ public class NexusConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
                                                    .nexusUrl(url)
                                                    .username(userName)
                                                    .password(password.toCharArray())
+                                                   .version("3.x")
                                                    .build())
                                     .build());
   }

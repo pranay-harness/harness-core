@@ -29,12 +29,14 @@ public class NexusConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Nexu
                  .url(nexusConfig.getNexusUrl())
                  .username(nexusConfig.getUsername())
                  .password(getEncryptedValue(nexusConfig, "password", false))
+                 .version(nexusConfig.getVersion())
                  .build();
     } else {
       yaml = Yaml.builder()
                  .harnessApiVersion(getHarnessApiVersion())
                  .type(nexusConfig.getType())
                  .url(nexusConfig.getNexusUrl())
+                 .version(nexusConfig.getVersion())
                  .build();
     }
     toYaml(yaml, settingAttribute, appId);
@@ -53,6 +55,7 @@ public class NexusConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Nexu
                              .nexusUrl(yaml.getUrl())
                              .encryptedPassword(yaml.getPassword())
                              .username(yaml.getUsername())
+                             .version(yaml.getVersion())
                              .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }

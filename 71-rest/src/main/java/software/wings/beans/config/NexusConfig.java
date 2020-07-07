@@ -94,10 +94,12 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
+    private String version;
     @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String username, String password,
+    public Yaml(String type, String harnessApiVersion, String url, String username, String password, String version,
         UsageRestrictions.Yaml usageRestrictions) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
+      this.version = version;
     }
   }
 }
