@@ -592,7 +592,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getNexus2MavenData() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -o \"DESTINATION_DIR_PATH/todolist-7.0.war\"\n"},
+            "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -o \"DESTINATION_DIR_PATH/todolist-7.0.war\"\n"},
         {ScriptType.POWERSHELL,
             "$Headers = @{\n"
                 + "    Authorization = \"Basic YWRtaW46ZHVtbXkxMjMh\"\n"
@@ -604,8 +604,8 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getNexus2MavenDataAnon() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --progress-bar -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -o \"DESTINATION_DIR_PATH/todolist-7.0.war\"\n"
-                + "curl --progress-bar -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=tar\" -o \"DESTINATION_DIR_PATH/todolist-7.0.tar\"\n"},
+            "curl --fail --progress-bar -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -o \"DESTINATION_DIR_PATH/todolist-7.0.war\"\n"
+                + "curl --fail --progress-bar -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=tar\" -o \"DESTINATION_DIR_PATH/todolist-7.0.tar\"\n"},
         {ScriptType.POWERSHELL,
             "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
                 + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0.war\"\n"
@@ -615,9 +615,9 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getJenkinsData() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"" + JENKINS_ARTIFACT_URL_1
-                + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_1 + "\"\n"
-                + "curl --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \""
+            "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \""
+                + JENKINS_ARTIFACT_URL_1 + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_1 + "\"\n"
+                + "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \""
                 + JENKINS_ARTIFACT_URL_2 + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_2 + "\"\n"},
         {ScriptType.POWERSHELL,
             "$webClient = New-Object System.Net.WebClient \n"
@@ -633,8 +633,8 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getBambooData() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --progress-bar -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -o \"DESTINATION_DIR_PATH/todolist.tar\"\n"
-                + "curl --progress-bar -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -o \"DESTINATION_DIR_PATH/todolist.war\"\n"},
+            "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -o \"DESTINATION_DIR_PATH/todolist.tar\"\n"
+                + "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -o \"DESTINATION_DIR_PATH/todolist.war\"\n"},
         {ScriptType.POWERSHELL,
             "$Headers = @{\n"
                 + "    Authorization = \"Basic YWRtaW46YWRtaW4=\"\n"
