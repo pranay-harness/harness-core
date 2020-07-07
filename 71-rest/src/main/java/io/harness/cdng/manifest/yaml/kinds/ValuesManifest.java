@@ -12,6 +12,7 @@ import io.harness.cdng.manifest.yaml.StoreConfig;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.Wither;
 
 @Data
 @Builder
@@ -20,12 +21,23 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ValuesManifest implements ManifestAttributes {
   private String identifier;
-  @JsonIgnore private StoreConfig storeConfig;
+  @Wither @JsonIgnore private StoreConfig storeConfig;
   @Builder.Default private String kind = ManifestType.VALUES;
 
   @JsonProperty(ManifestStoreType.GIT)
   public void setGitStore(GitStore gitStore) {
     gitStore.setKind(ManifestStoreType.GIT);
     this.storeConfig = gitStore;
+  }
+
+  @Override
+  public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
+    ValuesManifest valuesManifest = (ValuesManifest) overrideConfig;
+    ValuesManifest resultantManifest = this;
+    if (valuesManifest.getStoreConfig() != null) {
+      resultantManifest =
+          resultantManifest.withStoreConfig(storeConfig.applyOverrides(valuesManifest.getStoreConfig()));
+    }
+    return resultantManifest;
   }
 }

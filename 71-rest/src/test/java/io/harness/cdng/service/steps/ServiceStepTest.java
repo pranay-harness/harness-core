@@ -25,14 +25,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 public class ServiceStepTest extends CategoryTest {
-  private ServiceStep serviceState = new ServiceStep();
+  private final ServiceStep serviceStep = new ServiceStep();
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCreateServiceOutcome() throws Exception {
+  public void testCreateServiceOutcome() {
     K8sManifest k8Manifest = K8sManifest.builder()
                                  .identifier("m1")
                                  .kind(ManifestType.K8Manifest)
@@ -45,7 +46,7 @@ public class ServiceStepTest extends CategoryTest {
                                  .build();
 
     K8sManifest k8Manifest1 = K8sManifest.builder()
-                                  .identifier("o1")
+                                  .identifier("m2")
 
                                   .kind(ManifestType.K8Manifest)
                                   .storeConfig(GitStore.builder()
@@ -57,30 +58,26 @@ public class ServiceStepTest extends CategoryTest {
                                   .build();
 
     OutcomeService outcomeService = mock(OutcomeService.class);
-    doReturn(Arrays.asList(ManifestOutcome.builder()
-                               .manifestAttributesForServiceSpec(Arrays.asList(k8Manifest))
-                               .manifestAttributesForOverride(Arrays.asList(k8Manifest1))
-                               .build()))
+    doReturn(Collections.singletonList(
+                 ManifestOutcome.builder().manifestAttributes(Arrays.asList(k8Manifest, k8Manifest1)).build()))
         .when(outcomeService)
         .fetchOutcomes(anyList());
 
-    Reflect.on(serviceState).set("outcomeService", outcomeService);
-    ServiceOutcome serviceOutcome = serviceState.createServiceOutcome(
+    Reflect.on(serviceStep).set("outcomeService", outcomeService);
+    ServiceOutcome serviceOutcome = serviceStep.createServiceOutcome(
         ServiceConfig.builder()
             .identifier("s1")
             .displayName("s1")
             .serviceSpec(ServiceSpec.builder().deploymentType("kubernetes").build())
             .build(),
-        Arrays.asList(StepResponseNotifyData.builder()
-                          .stepOutcomesRefs(Arrays.asList(StepOutcomeRef.builder().instanceId("1").name("1").build()))
-                          .build()));
+        Collections.singletonList(
+            StepResponseNotifyData.builder()
+                .stepOutcomesRefs(Collections.singletonList(StepOutcomeRef.builder().instanceId("1").name("1").build()))
+                .build()));
 
     assertThat(serviceOutcome.getManifests()).isNotEmpty();
-    assertThat(serviceOutcome.getManifests().size()).isEqualTo(1);
-    assertThat(serviceOutcome.getManifests()).containsOnly(k8Manifest);
-
-    assertThat(serviceOutcome.getOverrides().getManifests()).isNotEmpty();
-    assertThat(serviceOutcome.getOverrides().getManifests().size()).isEqualTo(1);
-    assertThat(serviceOutcome.getOverrides().getManifests()).containsOnly(k8Manifest1);
+    assertThat(serviceOutcome.getManifests().size()).isEqualTo(2);
+    assertThat(serviceOutcome.getManifests().get(0)).isEqualTo(k8Manifest);
+    assertThat(serviceOutcome.getManifests().get(1)).isEqualTo(k8Manifest1);
   }
 }

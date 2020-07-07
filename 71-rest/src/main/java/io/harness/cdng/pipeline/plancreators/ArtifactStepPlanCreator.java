@@ -5,9 +5,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Singleton;
 
-import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
+import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
@@ -22,10 +22,11 @@ import java.util.List;
 
 @Singleton
 @Slf4j
-public class ArtifactStepPlanCreator implements SupportDefinedExecutorPlanCreator<ArtifactConfigWrapper> {
+public class ArtifactStepPlanCreator implements SupportDefinedExecutorPlanCreator<ArtifactStepParameters> {
   @Override
-  public CreateExecutionPlanResponse createPlan(ArtifactConfigWrapper artifact, CreateExecutionPlanContext context) {
-    final PlanNode artifactExecutionNode = prepareArtifactStepExecutionNode(artifact);
+  public CreateExecutionPlanResponse createPlan(
+      ArtifactStepParameters artifactStepParameters, CreateExecutionPlanContext context) {
+    final PlanNode artifactExecutionNode = prepareArtifactStepExecutionNode(artifactStepParameters);
 
     return CreateExecutionPlanResponse.builder()
         .planNode(artifactExecutionNode)
@@ -33,15 +34,18 @@ public class ArtifactStepPlanCreator implements SupportDefinedExecutorPlanCreato
         .build();
   }
 
-  private PlanNode prepareArtifactStepExecutionNode(ArtifactConfigWrapper artifact) {
+  private PlanNode prepareArtifactStepExecutionNode(ArtifactStepParameters artifactStepParameters) {
     final String artifactStepUid = generateUuid();
-    final String ARTIFACTS = "ARTIFACTS";
+    final String artifactIdentifier = artifactStepParameters.getArtifact().getIdentifier();
+    final String artifactNodeIdentifier = ArtifactUtils.isPrimaryArtifact(artifactStepParameters.getArtifact())
+        ? artifactIdentifier
+        : artifactStepParameters.getArtifact().getArtifactType() + "." + artifactIdentifier;
     return PlanNode.builder()
         .uuid(artifactStepUid)
-        .name(ARTIFACTS)
-        .identifier(ARTIFACTS)
+        .name(artifactNodeIdentifier)
+        .identifier(artifactNodeIdentifier)
         .stepType(ArtifactStep.STEP_TYPE)
-        .stepParameters(ArtifactStepParameters.builder().artifact(artifact).build())
+        .stepParameters(artifactStepParameters)
         .facilitatorObtainment(
             FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.TASK).build()).build())
         .build();
@@ -50,7 +54,7 @@ public class ArtifactStepPlanCreator implements SupportDefinedExecutorPlanCreato
   @Override
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
     return getSupportedTypes().contains(searchContext.getType())
-        && searchContext.getObjectToPlan() instanceof ArtifactConfigWrapper;
+        && searchContext.getObjectToPlan() instanceof ArtifactStepParameters;
   }
 
   @Override

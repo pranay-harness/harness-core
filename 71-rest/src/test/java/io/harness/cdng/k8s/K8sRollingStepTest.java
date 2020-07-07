@@ -27,7 +27,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -107,20 +106,8 @@ public class K8sRollingStepTest extends WingsBaseTest {
     serviceManifests.add(k8sManifest);
     serviceManifests.add(valuesManifest);
 
-    List<ValuesManifest> aggregatedValuesManifests =
-        k8sRollingStep.getAggregatedValuesManifests(serviceManifests, Collections.emptyList());
+    List<ValuesManifest> aggregatedValuesManifests = k8sRollingStep.getAggregatedValuesManifests(serviceManifests);
     assertThat(aggregatedValuesManifests).hasSize(1);
     assertThat(aggregatedValuesManifests.get(0)).isEqualTo(valuesManifest);
-
-    // With Overrides
-    ValuesManifest overridesValues1 = ValuesManifest.builder().build();
-    ValuesManifest overridesValues2 = ValuesManifest.builder().build();
-    List<ManifestAttributes> overridesValuesManifests = Arrays.asList(overridesValues1, overridesValues2);
-
-    aggregatedValuesManifests = k8sRollingStep.getAggregatedValuesManifests(serviceManifests, overridesValuesManifests);
-    assertThat(aggregatedValuesManifests).hasSize(3);
-    assertThat(aggregatedValuesManifests.get(0)).isEqualTo(valuesManifest);
-    assertThat(aggregatedValuesManifests.get(1)).isEqualTo(overridesValues1);
-    assertThat(aggregatedValuesManifests.get(2)).isEqualTo(overridesValues2);
   }
 }

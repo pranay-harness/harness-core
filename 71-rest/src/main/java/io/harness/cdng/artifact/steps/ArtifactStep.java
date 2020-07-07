@@ -3,16 +3,15 @@ package io.harness.cdng.artifact.steps;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
+import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
-import io.harness.cdng.artifact.service.ArtifactSourceService;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
@@ -40,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ArtifactStep implements Step, TaskExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("ARTIFACT_STEP").build();
-  @Inject private ArtifactSourceService artifactSourceService;
 
   // Default timeout of 1 minute.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
@@ -49,11 +47,14 @@ public class ArtifactStep implements Step, TaskExecutable {
   public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     ArtifactStepParameters parameters = (ArtifactStepParameters) stepParameters;
     logger.info("Executing deployment stage with params [{}]", parameters);
-    ArtifactSource artifactSource = getArtifactSource(parameters, ambiance.getSetupAbstractions().get("accountId"));
+    ArtifactConfigWrapper finalArtifact = parameters.getArtifactStageOverride() != null
+        ? parameters.getArtifact().applyOverrides(parameters.getArtifactStageOverride())
+        : parameters.getArtifact();
+    ArtifactSource artifactSource = getArtifactSource(finalArtifact, ambiance.getSetupAbstractions().get("accountId"));
 
     String waitId = generateUuid();
-    ArtifactTaskParameters taskParameters = ArtifactUtils.getArtifactTaskParameters(
-        artifactSource.getAccountId(), parameters.getArtifact().getSourceAttributes());
+    ArtifactTaskParameters taskParameters =
+        ArtifactUtils.getArtifactTaskParameters(artifactSource.getAccountId(), finalArtifact.getSourceAttributes());
     final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.ARTIFACT_COLLECT_TASK.name());
     DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder()
@@ -101,9 +102,8 @@ public class ArtifactStep implements Step, TaskExecutable {
   }
 
   @VisibleForTesting
-  ArtifactSource getArtifactSource(ArtifactStepParameters parameters, String accountId) {
-    ArtifactSource artifactSource = parameters.getArtifact().getArtifactSource(accountId);
-    return artifactSourceService.saveOrGetArtifactStream(artifactSource);
+  ArtifactSource getArtifactSource(ArtifactConfigWrapper artifactConfig, String accountId) {
+    return artifactConfig.getArtifactSource(accountId);
   }
 
   @VisibleForTesting

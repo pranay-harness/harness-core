@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
@@ -98,13 +99,11 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
     Infrastructure infrastructure = CDStepDependencyUtils.getInfrastructure(
         stepDependencyService, infraSpec, inputPackage, stepParameters, ambiance);
 
-    List<ManifestAttributes> serviceManifests = serviceOutcome.getManifests();
-    Validator.notEmptyCheck("Service Level Manifests can't be empty", serviceManifests);
-    List<ManifestAttributes> overrideManifests =
-        serviceOutcome.getOverrides() == null ? Collections.emptyList() : serviceOutcome.getOverrides().getManifests();
+    List<ManifestAttributes> manifests = serviceOutcome.getManifests();
+    Validator.notEmptyCheck("Manifests can't be empty", manifests);
 
-    K8sManifest k8sManifest = getK8sManifest(serviceManifests);
-    List<ValuesManifest> aggregatedValuesManifests = getAggregatedValuesManifests(serviceManifests, overrideManifests);
+    K8sManifest k8sManifest = getK8sManifest(manifests);
+    List<ValuesManifest> aggregatedValuesManifests = getAggregatedValuesManifests(manifests);
 
     if (isEmpty(aggregatedValuesManifests)) {
       return executeK8sTask(k8sManifest, ambiance, k8sRollingStepParameters, Collections.emptyList(), infrastructure);
@@ -265,14 +264,14 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
         valuesManifest -> ManifestStoreType.GIT.equals(valuesManifest.getStoreConfig().getKind()));
   }
 
-  List<ValuesManifest> getAggregatedValuesManifests(
-      @NotEmpty List<ManifestAttributes> serviceManifests, List<ManifestAttributes> overrideManifests) {
+  @VisibleForTesting
+  List<ValuesManifest> getAggregatedValuesManifests(@NotEmpty List<ManifestAttributes> manifestAttributesList) {
     List<ValuesManifest> aggregateValuesManifests = new ArrayList<>();
 
-    addValuesEntryForK8ManifestIfNeeded(serviceManifests, aggregateValuesManifests);
+    addValuesEntryForK8ManifestIfNeeded(manifestAttributesList, aggregateValuesManifests);
 
     List<ValuesManifest> serviceValuesManifests =
-        serviceManifests.stream()
+        manifestAttributesList.stream()
             .filter(manifestAttribute -> ManifestType.VALUES.equals(manifestAttribute.getKind()))
             .map(manifestAttribute -> (ValuesManifest) manifestAttribute)
             .collect(Collectors.toList());
@@ -280,19 +279,6 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
     if (isNotEmpty(serviceValuesManifests)) {
       aggregateValuesManifests.addAll(serviceValuesManifests);
     }
-
-    if (isNotEmpty(overrideManifests)) {
-      List<ValuesManifest> overridesValuesManifests =
-          overrideManifests.stream()
-              .filter(manifestAttribute -> ManifestType.VALUES.equals(manifestAttribute.getKind()))
-              .map(manifestAttribute -> (ValuesManifest) manifestAttribute)
-              .collect(Collectors.toList());
-
-      if (isNotEmpty(overridesValuesManifests)) {
-        aggregateValuesManifests.addAll(overridesValuesManifests);
-      }
-    }
-
     return aggregateValuesManifests;
   }
 
@@ -318,9 +304,9 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
     }
   }
 
-  K8sManifest getK8sManifest(@NotEmpty List<ManifestAttributes> serviceManifests) {
+  K8sManifest getK8sManifest(@NotEmpty List<ManifestAttributes> manifestAttributes) {
     List<ManifestAttributes> k8sManifests =
-        serviceManifests.stream()
+        manifestAttributes.stream()
             .filter(manifestAttribute -> ManifestType.K8Manifest.equals(manifestAttribute.getKind()))
             .collect(Collectors.toList());
 

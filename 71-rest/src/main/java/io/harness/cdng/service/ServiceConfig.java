@@ -1,8 +1,9 @@
 package io.harness.cdng.service;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.data.Outcome;
-import io.harness.data.structure.EmptyPredicate;
-import io.harness.yaml.core.UseFromStage;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,18 +16,21 @@ public class ServiceConfig implements Outcome {
   @NotNull private String displayName;
   private String description;
   private ServiceSpec serviceSpec;
-  private OverrideConfig overrides;
-  private UseFromStage useFromStage;
+  private StageOverridesConfig stageOverrides;
+  private ServiceUseFromStage useFromStage;
 
-  /** Merge non null properties of given parameter on caller properties and return a new config. */
-  public ServiceConfig mergeNonNullProperties(ServiceConfig serviceConfig) {
-    return ServiceConfig.builder()
-        .displayName(
-            EmptyPredicate.isNotEmpty(serviceConfig.getDisplayName()) ? serviceConfig.getDisplayName() : displayName)
-        .description(
-            EmptyPredicate.isNotEmpty(serviceConfig.getDescription()) ? serviceConfig.getDescription() : description)
-        .overrides(serviceConfig.getOverrides())
-        .serviceSpec(serviceSpec)
-        .build();
+  public ServiceConfig applyUseFromStage(ServiceConfig serviceConfigToUseFrom) {
+    ServiceConfigBuilder builder = ServiceConfig.builder();
+    if (useFromStage.getOverrides() != null) {
+      builder
+          .displayName(isNotEmpty(useFromStage.getOverrides().getDisplayName())
+                  ? useFromStage.getOverrides().getDisplayName()
+                  : serviceConfigToUseFrom.getDisplayName())
+          .description(isNotEmpty(useFromStage.getOverrides().getDescription())
+                  ? useFromStage.getOverrides().getDescription()
+                  : serviceConfigToUseFrom.getDescription());
+    }
+
+    return builder.serviceSpec(serviceConfigToUseFrom.getServiceSpec()).stageOverrides(stageOverrides).build();
   }
 }

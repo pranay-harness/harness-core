@@ -6,7 +6,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.artifact.bean.ArtifactOutcome;
+import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
+import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -85,5 +88,26 @@ public class ArtifactUtilsTest extends WingsBaseTest {
     assertThat(attributes.getImagePath()).isEqualTo("DOCKER_IMAGE");
     assertThat(attributes.getTag()).isEqualTo("tag");
     assertThat(attributes.getTagRegex()).isEqualTo("tagRegex");
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testIsPrimaryArtifact() {
+    DockerHubArtifactConfig config =
+        DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.PRIMARY_ARTIFACT).build();
+    boolean primaryArtifact = ArtifactUtils.isPrimaryArtifact(config);
+    assertThat(primaryArtifact).isTrue();
+    config = DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.SIDECAR_ARTIFACT).build();
+    primaryArtifact = ArtifactUtils.isPrimaryArtifact(config);
+    assertThat(primaryArtifact).isFalse();
+
+    ArtifactOutcome artifactOutcome =
+        DockerArtifactOutcome.builder().artifactType(ArtifactUtils.PRIMARY_ARTIFACT).build();
+    primaryArtifact = ArtifactUtils.isPrimaryArtifact(artifactOutcome);
+    assertThat(primaryArtifact).isTrue();
+    artifactOutcome = DockerArtifactOutcome.builder().artifactType(ArtifactUtils.SIDECAR_ARTIFACT).build();
+    primaryArtifact = ArtifactUtils.isPrimaryArtifact(artifactOutcome);
+    assertThat(primaryArtifact).isFalse();
   }
 }

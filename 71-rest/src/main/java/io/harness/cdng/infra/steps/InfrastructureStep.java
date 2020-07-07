@@ -27,7 +27,10 @@ public class InfrastructureStep implements Step, SyncExecutable {
   @Override
   public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData) {
-    Infrastructure infrastructure = (Infrastructure) stepParameters;
+    InfraStepParameters parameters = (InfraStepParameters) stepParameters;
+    Infrastructure infrastructure = parameters.getInfrastructureOverrides() != null
+        ? parameters.getInfrastructure().applyOverrides(parameters.getInfrastructureOverrides())
+        : parameters.getInfrastructure();
     // TODO: render variables later
     return StepResponse.builder()
         .status(Status.SUCCEEDED)

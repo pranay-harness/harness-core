@@ -5,6 +5,7 @@ import static io.harness.cdng.manifest.ManifestConstants.MANIFEST_STEP;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
+import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.execution.status.Status;
@@ -15,10 +16,13 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.yaml.core.intfc.WithIdentifier;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ManifestStep implements Step, SyncExecutable {
@@ -28,21 +32,26 @@ public class ManifestStep implements Step, SyncExecutable {
   public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData) {
     ManifestStepParameters parameters = (ManifestStepParameters) stepParameters;
-    ManifestListConfig manifestListConfig = parameters.getManifestServiceSpec();
+    Map<String, ManifestAttributes> identifierToManifestMap = new HashMap<>();
 
     // 1. Get Manifests belonging to ServiceSpec
-    List<ManifestAttributes> manifestAttributesForServiceSpec = new ArrayList<>();
-    if (EmptyPredicate.isNotEmpty(manifestListConfig.getManifests())) {
-      manifestListConfig.getManifests().forEach(
-          manifestConfigWrapper -> manifestAttributesForServiceSpec.add(manifestConfigWrapper.getManifestAttributes()));
+    if (EmptyPredicate.isNotEmpty(parameters.getServiceSpecManifests())) {
+      identifierToManifestMap = parameters.getServiceSpecManifests().stream().collect(
+          Collectors.toMap(WithIdentifier::getIdentifier, ManifestConfigWrapper::getManifestAttributes, (a, b) -> b));
     }
 
     // 2. Get Manifests belonging to Override
-    manifestListConfig = parameters.getManifestStageOverride();
-    List<ManifestAttributes> manifestAttributesForOverride = new ArrayList<>();
-    if (EmptyPredicate.isNotEmpty(manifestListConfig.getManifests())) {
-      manifestListConfig.getManifests().forEach(
-          manifestConfigWrapper -> manifestAttributesForOverride.add(manifestConfigWrapper.getManifestAttributes()));
+    if (EmptyPredicate.isNotEmpty(parameters.getStageOverrideManifests())) {
+      for (ManifestConfigWrapper stageOverrideManifest : parameters.getStageOverrideManifests()) {
+        if (identifierToManifestMap.containsKey(stageOverrideManifest.getIdentifier())) {
+          identifierToManifestMap.put(stageOverrideManifest.getIdentifier(),
+              identifierToManifestMap.get(stageOverrideManifest.getIdentifier())
+                  .applyOverrides(stageOverrideManifest.getManifestAttributes()));
+        } else {
+          identifierToManifestMap.put(
+              stageOverrideManifest.getIdentifier(), stageOverrideManifest.getManifestAttributes());
+        }
+      }
     }
 
     // 3. Get Manifests belonging to OverrideSets, Not done yet
@@ -52,8 +61,7 @@ public class ManifestStep implements Step, SyncExecutable {
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(MANIFESTS.toLowerCase())
                          .outcome(ManifestOutcome.builder()
-                                      .manifestAttributesForServiceSpec(manifestAttributesForServiceSpec)
-                                      .manifestAttributesForOverride(manifestAttributesForOverride)
+                                      .manifestAttributes(new ArrayList<>(identifierToManifestMap.values()))
                                       .build())
                          .build())
         .build();

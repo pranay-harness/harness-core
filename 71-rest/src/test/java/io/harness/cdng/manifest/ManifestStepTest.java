@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.manifest.state.ManifestListConfig;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.FetchType;
@@ -21,14 +20,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 public class ManifestStepTest extends CategoryTest {
-  private ManifestStep manifestStep = new ManifestStep();
+  private final ManifestStep manifestStep = new ManifestStep();
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testManifestStepExecuteSync() throws Exception {
+  public void testManifestStepExecuteSync() {
     K8sManifest k8Manifest1 = K8sManifest.builder()
                                   .identifier("specsManifest")
                                   .storeConfig(GitStore.builder()
@@ -56,22 +56,21 @@ public class ManifestStepTest extends CategoryTest {
         ManifestConfig.builder().identifier("valuesManifest").manifestAttributes(k8Manifest2).build();
 
     K8sManifest k8Manifest3 = K8sManifest.builder()
-                                  .identifier("overrideManifest")
+                                  .identifier("valuesManifest")
                                   .storeConfig(GitStore.builder()
-                                                   .path("overrides/path1")
-                                                   .connectorId("connector")
-                                                   .fetchValue("commitId")
+                                                   .path("overrides/path2")
+                                                   .connectorId("connector2")
+                                                   .fetchValue("commitId2")
                                                    .fetchType(FetchType.COMMIT)
                                                    .build())
                                   .build();
     ManifestConfigWrapper manifestConfig3 =
-        ManifestConfig.builder().identifier("overrideManifest").manifestAttributes(k8Manifest3).build();
+        ManifestConfig.builder().identifier("valuesManifest").manifestAttributes(k8Manifest3).build();
 
     ManifestStepParameters manifestStepParameters =
         ManifestStepParameters.builder()
-            .manifestServiceSpec(
-                ManifestListConfig.builder().manifests(Arrays.asList(manifestConfig1, manifestConfig2)).build())
-            .manifestStageOverride(ManifestListConfig.builder().manifests(Arrays.asList(manifestConfig3)).build())
+            .serviceSpecManifests(Arrays.asList(manifestConfig1, manifestConfig2))
+            .stageOverrideManifests(Collections.singletonList(manifestConfig3))
             .build();
 
     StepResponse stepResponse = manifestStep.executeSync(null, manifestStepParameters, null, null);
@@ -82,12 +81,8 @@ public class ManifestStepTest extends CategoryTest {
     StepResponse.StepOutcome stepOutcome = stepResponse.getStepOutcomes().iterator().next();
     ManifestOutcome manifestOutcome = (ManifestOutcome) stepOutcome.getOutcome();
 
-    assertThat(manifestOutcome.getManifestAttributesForServiceSpec()).isNotEmpty();
-    assertThat(manifestOutcome.getManifestAttributesForServiceSpec().size()).isEqualTo(2);
-    assertThat(manifestOutcome.getManifestAttributesForServiceSpec()).containsOnly(k8Manifest1, k8Manifest2);
-
-    assertThat(manifestOutcome.getManifestAttributesForOverride()).isNotEmpty();
-    assertThat(manifestOutcome.getManifestAttributesForOverride().size()).isEqualTo(1);
-    assertThat(manifestOutcome.getManifestAttributesForOverride()).containsOnly(k8Manifest3);
+    assertThat(manifestOutcome.getManifestAttributes()).isNotEmpty();
+    assertThat(manifestOutcome.getManifestAttributes().size()).isEqualTo(2);
+    assertThat(manifestOutcome.getManifestAttributes()).containsOnly(k8Manifest1, k8Manifest3);
   }
 }

@@ -5,6 +5,8 @@ import static software.wings.common.VerificationConstants.CONNECTOR;
 
 import com.google.common.hash.Hashing;
 
+import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.connector.ConnectorConfig;
@@ -20,7 +22,15 @@ import java.util.List;
 @UtilityClass
 public class ArtifactUtils {
   public final String PRIMARY_ARTIFACT = "primary";
-  public final String SIDECAR_ARTIFACT = "sidecar";
+  public final String SIDECAR_ARTIFACT = "sidecars";
+
+  public boolean isPrimaryArtifact(ArtifactConfigWrapper artifactConfigWrapper) {
+    return artifactConfigWrapper.getArtifactType().equals(PRIMARY_ARTIFACT);
+  }
+
+  public boolean isPrimaryArtifact(ArtifactOutcome artifactOutcome) {
+    return artifactOutcome.getArtifactType().equals(PRIMARY_ARTIFACT);
+  }
 
   public void appendIfNecessary(StringBuilder keyBuilder, String value) {
     if (keyBuilder == null) {

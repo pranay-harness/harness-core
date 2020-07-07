@@ -17,20 +17,13 @@ public class ServiceOutcome implements Outcome {
   String identifier;
   String displayName;
   String deploymentType;
-  Artifacts artifacts;
+  ArtifactsOutcome artifacts;
   List<ManifestAttributes> manifests;
-  Override overrides;
 
   @Data
   @Builder
-  public static class Artifacts {
-    ArtifactOutcome primary;
-    @Singular Map<String, ArtifactOutcome> sidecars;
-  }
-
-  @Data
-  @Builder
-  public static class Override {
-    List<ManifestAttributes> manifests;
+  public static class ArtifactsOutcome implements Outcome {
+    private ArtifactOutcome primary;
+    @Singular private Map<String, ArtifactOutcome> sidecars;
   }
 }
