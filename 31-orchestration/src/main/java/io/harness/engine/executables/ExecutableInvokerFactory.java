@@ -41,6 +41,9 @@ public class ExecutableInvokerFactory {
       case TASK:
         invokeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V1);
         break;
+      case TASK_V2:
+        invokeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V2);
+        break;
       case TASK_CHAIN:
         invokeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V1);
         break;
