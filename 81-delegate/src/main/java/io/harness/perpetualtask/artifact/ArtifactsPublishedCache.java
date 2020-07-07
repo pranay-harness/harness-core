@@ -2,6 +2,8 @@ package io.harness.perpetualtask.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
@@ -44,31 +46,34 @@ import java.util.stream.Collectors;
  *
  *   Now, we can do artifact collection
  */
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ArtifactsPublishedCache {
   // Max artifacts published to the manager in one call.
   public static final int ARTIFACT_ONE_TIME_PUBLISH_LIMIT = 500;
 
-  private Set<String> publishedArtifactKeys;
-  private List<BuildDetails> unpublishedBuildDetails;
-  private Set<String> unpublishedArtifactKeys;
-  private Set<String> toBeDeletedArtifactKeys;
-  private Function<BuildDetails, String> buildDetailsKeyFunction;
-  private boolean enableCleanup;
+  Set<String> publishedArtifactKeys;
+  Set<String> unpublishedArtifactKeys;
+  List<BuildDetails> unpublishedBuildDetails;
+  Set<String> toBeDeletedArtifactKeys;
+  Function<BuildDetails, String> buildDetailsKeyFunction;
+  boolean enableCleanup;
 
   public ArtifactsPublishedCache(Collection<String> publishedArtifactKeys,
       Function<BuildDetails, String> buildDetailsKeyFunction, boolean enableCleanup) {
     this.publishedArtifactKeys =
         new HashSet<>(publishedArtifactKeys == null ? Collections.emptySet() : publishedArtifactKeys);
     this.toBeDeletedArtifactKeys = new HashSet<>();
-    this.unpublishedBuildDetails = new ArrayList<>();
     this.unpublishedArtifactKeys = new HashSet<>();
+    this.unpublishedBuildDetails = new ArrayList<>();
     this.buildDetailsKeyFunction = buildDetailsKeyFunction;
     this.enableCleanup = enableCleanup;
   }
 
-  /*
+  /**
    * Add all the build details to unpublished build details. This method ignores artifacts already in the published or
    * unpublished set. It also find out artifacts that need to cleaned up.
+   *
+   * @param builds the new build details returned by third party-repo
    */
   public void addArtifactCollectionResult(List<BuildDetails> builds) {
     if (isEmpty(builds)) {
@@ -80,16 +85,33 @@ public class ArtifactsPublishedCache {
       String key = buildDetailsKeyFunction.apply(build);
       newKeys.add(key);
       if (!publishedArtifactKeys.contains(key) && !unpublishedArtifactKeys.contains(key)) {
+        // Add any new key we find as unpublished.
         unpublishedBuildDetails.add(build);
         unpublishedArtifactKeys.add(key);
       }
     }
 
     if (enableCleanup) {
+      // If some published keys are no longer in the new result, add them in the to be deleted set.
       for (String key : publishedArtifactKeys) {
         if (!newKeys.contains(key)) {
           toBeDeletedArtifactKeys.add(key);
         }
+      }
+
+      // If some unpublished keys are no longer in the new result, remove them from unpublished set and list.
+      Set<String> unpublishedKeysToRemove = new HashSet<>();
+      boolean changed = false;
+      for (String key : unpublishedArtifactKeys) {
+        if (!newKeys.contains(key)) {
+          unpublishedKeysToRemove.add(key);
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        unpublishedArtifactKeys.removeAll(unpublishedKeysToRemove);
+        updateUnpublishedBuildDetails();
       }
     }
   }
@@ -101,6 +123,7 @@ public class ArtifactsPublishedCache {
 
     publishedArtifactKeys.removeAll(deletedKeys);
     toBeDeletedArtifactKeys.removeAll(deletedKeys);
+    updateUnpublishedBuildDetails();
   }
 
   public void addPublishedBuildDetails(Collection<BuildDetails> builds) {
@@ -108,14 +131,10 @@ public class ArtifactsPublishedCache {
       return;
     }
 
-    Set<String> artifactKeys =
-        builds.stream().map(build -> buildDetailsKeyFunction.apply(build)).collect(Collectors.toSet());
+    Set<String> artifactKeys = builds.stream().map(buildDetailsKeyFunction).collect(Collectors.toSet());
     publishedArtifactKeys.addAll(artifactKeys);
     unpublishedArtifactKeys.removeAll(artifactKeys);
-    unpublishedBuildDetails =
-        unpublishedBuildDetails.stream()
-            .filter(build -> unpublishedArtifactKeys.contains(buildDetailsKeyFunction.apply(build)))
-            .collect(Collectors.toList());
+    updateUnpublishedBuildDetails();
   }
 
   public boolean needsToPublish() {
@@ -127,17 +146,18 @@ public class ArtifactsPublishedCache {
   }
 
   public Set<String> getToBeDeletedArtifactKeys() {
-    return !enableCleanup || toBeDeletedArtifactKeys.isEmpty() ? new HashSet<>()
-                                                               : new HashSet<>(toBeDeletedArtifactKeys);
+    return !hasToBeDeletedArtifactKeys() ? new HashSet<>() : new HashSet<>(toBeDeletedArtifactKeys);
   }
 
   public boolean hasUnpublishedBuildDetails() {
     return !unpublishedBuildDetails.isEmpty();
   }
 
-  /*
+  /**
    * Return unpublished build details (not more than ARTIFACT_ONE_TIME_PUBLISH_LIMIT). The right value of the pair is
    * true if there are more unpublished build details left.
+   *
+   * @return the next limited sublist of unpublished build details and boolean indicating if any more are left
    */
   public ImmutablePair<List<BuildDetails>, Boolean> getLimitedUnpublishedBuildDetails() {
     if (isEmpty(unpublishedBuildDetails)) {
@@ -150,5 +170,13 @@ public class ArtifactsPublishedCache {
       return ImmutablePair.of(
           new ArrayList<>(unpublishedBuildDetails.subList(0, ARTIFACT_ONE_TIME_PUBLISH_LIMIT)), Boolean.TRUE);
     }
+  }
+
+  /**
+   * Update unpublishedBuildDetails so that it contains only those build details that are also in
+   * unpublishedArtifactKeys.
+   */
+  private void updateUnpublishedBuildDetails() {
+    unpublishedBuildDetails.removeIf(build -> !unpublishedArtifactKeys.contains(buildDetailsKeyFunction.apply(build)));
   }
 }

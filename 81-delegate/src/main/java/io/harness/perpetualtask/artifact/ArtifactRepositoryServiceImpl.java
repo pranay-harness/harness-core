@@ -1,6 +1,5 @@
 package io.harness.perpetualtask.artifact;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType.GET_BUILDS;
@@ -68,11 +67,10 @@ public class ArtifactRepositoryServiceImpl {
     SettingValue settingValue = buildSourceParameters.getSettingValue();
     String appId = buildSourceParameters.getAppId();
 
+    // NOTE: Here we are only setting the collection field and not the savedBuildDetailsKeys. The management of whether
+    // some keys need to be added/deleted is now done by ArtifactsPublishedCache so we don't need to pass
+    // savedBuildDetailsKeys. Doing the same thing at 2 different places can result in bugs.
     artifactStreamAttributes.setCollection(buildSourceParameters.isCollection());
-
-    if (isNotEmpty(buildSourceParameters.getSavedBuildDetailsKeys())) {
-      artifactStreamAttributes.setSavedBuildDetailsKeys(buildSourceParameters.getSavedBuildDetailsKeys());
-    }
 
     List<EncryptedDataDetail> encryptedDataDetails = buildSourceParameters.getEncryptedDataDetails();
     BuildSourceRequestType buildSourceRequestType = buildSourceParameters.getBuildSourceRequestType();
