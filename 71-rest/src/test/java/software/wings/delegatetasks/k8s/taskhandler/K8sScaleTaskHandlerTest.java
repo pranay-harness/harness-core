@@ -10,10 +10,12 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -62,6 +64,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
                                  .instances(1)
                                  .releaseName(releaseName)
                                  .workload(workload)
+                                 .timeoutIntervalInMin(1)
                                  .build();
     kubernetesConfig = KubernetesConfig.builder().namespace(kubeConfigNamespace).accountId(ACCOUNT_ID).build();
     k8sDelegateTaskParams = K8sDelegateTaskParams.builder().build();
@@ -73,7 +76,8 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
   public void testExecuteForNamespaceFromKubeConfig() throws Exception {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(kubernetesConfig);
-    when(k8sTaskHelper.getPodDetails(kubernetesConfig, kubeConfigNamespace, releaseName)).thenReturn(null);
+    when(k8sTaskHelper.getPodDetails(kubernetesConfig, kubeConfigNamespace, releaseName, LONG_TIMEOUT_INTERVAL))
+        .thenReturn(null);
     when(k8sTaskHelper.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
              anyInt(), any(ExecutionLogCallback.class)))
         .thenReturn(false);
@@ -83,7 +87,8 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
             any(ExecutionLogCallback.class));
     ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
-    verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString());
+    verify(k8sTaskHelper, times(1))
+        .getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString(), eq(LONG_TIMEOUT_INTERVAL));
     assertThat(argumentCaptor.getValue()).isEqualTo(kubeConfigNamespace);
   }
 
@@ -97,7 +102,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(kubernetesConfig);
-    when(k8sTaskHelper.getPodDetails(kubernetesConfig, namespace, releaseName)).thenReturn(null);
+    when(k8sTaskHelper.getPodDetails(kubernetesConfig, namespace, releaseName, LONG_TIMEOUT_INTERVAL)).thenReturn(null);
     when(k8sTaskHelper.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
              anyInt(), any(ExecutionLogCallback.class)))
         .thenReturn(false);
@@ -107,7 +112,8 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
             any(ExecutionLogCallback.class));
     ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
-    verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString());
+    verify(k8sTaskHelper, times(1))
+        .getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString(), eq(LONG_TIMEOUT_INTERVAL));
     assertThat(argumentCaptor.getValue()).isEqualTo(namespace);
   }
 
@@ -159,7 +165,8 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
             any(ExecutionLogCallback.class));
     ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
-    verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString());
+    verify(k8sTaskHelper, times(1))
+        .getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString(), eq(LONG_TIMEOUT_INTERVAL));
   }
 
   @Test

@@ -28,6 +28,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
+import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFromMinutes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -158,7 +159,9 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, WrapUp));
 
-    final List<K8sPod> podList = getAllPods();
+    long steadyStateTimeoutInMillis =
+        getTimeoutMillisFromMinutes(k8sBlueGreenDeployTaskParameters.getTimeoutIntervalInMin());
+    final List<K8sPod> podList = getAllPods(steadyStateTimeoutInMillis);
 
     currentRelease.setManagedWorkloadRevision(
         k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
@@ -178,14 +181,14 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   }
 
   @VisibleForTesting
-  List<K8sPod> getAllPods() throws Exception {
+  List<K8sPod> getAllPods(long timeoutInMillis) throws Exception {
     List<K8sPod> allPods = new ArrayList<>();
     final List<K8sPod> stagePods = k8sTaskHelper.getPodDetailsWithColor(
-        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, stageColor);
+        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, stageColor, timeoutInMillis);
     stagePods.forEach(pod -> pod.setNewPod(true));
     allPods.addAll(stagePods);
     allPods.addAll(k8sTaskHelper.getPodDetailsWithColor(
-        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, primaryColor));
+        kubernetesConfig, managedWorkload.getResourceId().getNamespace(), releaseName, primaryColor, timeoutInMillis));
     return allPods;
   }
 

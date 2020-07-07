@@ -22,6 +22,7 @@ import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -38,6 +39,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.LogWeight.Normal;
 import static software.wings.beans.Log.color;
+import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.delegatetasks.k8s.K8sTask.KUBECONFIG_FILENAME;
 import static software.wings.delegatetasks.k8s.taskhandler.K8sTrafficSplitTaskHandler.ISTIO_DESTINATION_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
@@ -880,7 +882,7 @@ public class K8sTaskHelper {
 
   public List<ManifestFile> renderTemplateForHelm(String helmPath, String manifestFilesDirectory,
       List<String> valuesFiles, String releaseName, String namespace, ExecutionLogCallback executionLogCallback,
-      HelmVersion helmVersion) throws Exception {
+      HelmVersion helmVersion, long timeoutInMillis) throws Exception {
     String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
     logger.info("Values file options: " + valuesFileOptions);
 
@@ -892,7 +894,8 @@ public class K8sTaskHelper {
           helmPath, manifestFilesDirectory, releaseName, namespace, valuesFileOptions, helmVersion);
       printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
 
-      ProcessResult processResult = executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream);
+      ProcessResult processResult =
+          executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
       if (processResult.getExitValue() != 0) {
         throw new WingsException(format("Failed to render helm chart. Error %s", processResult.getOutput().getUTF8()));
       }
@@ -930,8 +933,8 @@ public class K8sTaskHelper {
   }
 
   private List<ManifestFile> renderManifestFilesForGoTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
-      List<ManifestFile> manifestFiles, List<String> valuesFiles, ExecutionLogCallback executionLogCallback)
-      throws Exception {
+      List<ManifestFile> manifestFiles, List<String> valuesFiles, ExecutionLogCallback executionLogCallback,
+      long timeoutInMillis) throws Exception {
     if (isEmpty(valuesFiles)) {
       executionLogCallback.saveExecutionLog("No values.yaml file found. Skipping template rendering.");
       return manifestFiles;
@@ -965,8 +968,8 @@ public class K8sTaskHelper {
       try (LogOutputStream logErrorStream = getExecutionLogOutputStream(executionLogCallback, ERROR)) {
         String goTemplateCommand = encloseWithQuotesIfNeeded(k8sDelegateTaskParams.getGoTemplateClientPath())
             + " -t template.yaml " + valuesFileOptions;
-        ProcessResult processResult =
-            executeShellCommand(k8sDelegateTaskParams.getWorkingDirectory(), goTemplateCommand, logErrorStream);
+        ProcessResult processResult = executeShellCommand(
+            k8sDelegateTaskParams.getWorkingDirectory(), goTemplateCommand, logErrorStream, timeoutInMillis);
 
         if (processResult.getExitValue() != 0) {
           throw new InvalidRequestException(format("Failed to render template for %s. Error %s",
@@ -989,24 +992,25 @@ public class K8sTaskHelper {
       String releaseName, String namespace, ExecutionLogCallback executionLogCallback,
       K8sTaskParameters k8sTaskParameters) throws Exception {
     StoreType storeType = k8sDelegateManifestConfig.getManifestStoreTypes();
+    long timeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
 
     switch (storeType) {
       case Local:
       case Remote:
         List<ManifestFile> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
         return renderManifestFilesForGoTemplate(
-            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback);
+            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
 
       case HelmSourceRepo:
         return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, valuesFiles,
-            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion());
+            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(), timeoutInMillis);
 
       case HelmChartRepo:
         manifestFilesDirectory =
             Paths.get(manifestFilesDirectory, k8sDelegateManifestConfig.getHelmChartConfigParams().getChartName())
                 .toString();
         return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, valuesFiles,
-            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion());
+            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(), timeoutInMillis);
 
       case KustomizeSourceRepo:
         return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
@@ -1027,6 +1031,7 @@ public class K8sTaskHelper {
       @NotEmpty List<String> filesList, List<String> valuesFiles, String releaseName, String namespace,
       ExecutionLogCallback executionLogCallback, K8sTaskParameters k8sTaskParameters) throws Exception {
     StoreType storeType = k8sDelegateManifestConfig.getManifestStoreTypes();
+    long timeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
 
     switch (storeType) {
       case Local:
@@ -1034,18 +1039,18 @@ public class K8sTaskHelper {
         List<ManifestFile> manifestFiles =
             readFilesFromDirectory(manifestFilesDirectory, filesList, executionLogCallback);
         return renderManifestFilesForGoTemplate(
-            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback);
+            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
 
       case HelmSourceRepo:
         return renderTemplateForHelmChartFiles(k8sDelegateTaskParams, manifestFilesDirectory, filesList, valuesFiles,
-            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion());
+            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(), timeoutInMillis);
 
       case HelmChartRepo:
         manifestFilesDirectory =
             Paths.get(manifestFilesDirectory, k8sDelegateManifestConfig.getHelmChartConfigParams().getChartName())
                 .toString();
         return renderTemplateForHelmChartFiles(k8sDelegateTaskParams, manifestFilesDirectory, filesList, valuesFiles,
-            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion());
+            releaseName, namespace, executionLogCallback, k8sTaskParameters.getHelmVersion(), timeoutInMillis);
       case KustomizeSourceRepo:
         return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(),
             k8sDelegateManifestConfig.getKustomizeConfig(), manifestFilesDirectory, filesList, executionLogCallback);
@@ -1311,33 +1316,33 @@ public class K8sTaskHelper {
         delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), commandUnit);
   }
 
-  public List<K8sPod> getPodDetailsWithTrack(
-      KubernetesConfig kubernetesConfig, String namespace, String releaseName, String track) throws Exception {
+  public List<K8sPod> getPodDetailsWithTrack(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
+      String track, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.track, track);
-    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels);
+    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
-  public List<K8sPod> getPodDetailsWithColor(
-      KubernetesConfig kubernetesConfig, String namespace, String releaseName, String color) throws Exception {
+  public List<K8sPod> getPodDetailsWithColor(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
+      String color, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.color, color);
-    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels);
+    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
-  public List<K8sPod> getPodDetails(KubernetesConfig kubernetesConfig, String namespace, String releaseName)
-      throws Exception {
+  public List<K8sPod> getPodDetails(
+      KubernetesConfig kubernetesConfig, String namespace, String releaseName, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName);
-    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels);
+    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
   @VisibleForTesting
-  List<K8sPod> getHelmPodDetails(KubernetesConfig kubernetesConfig, String namespace, String releaseName)
-      throws Exception {
+  List<K8sPod> getHelmPodDetails(
+      KubernetesConfig kubernetesConfig, String namespace, String releaseName, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HELM_RELEASE_LABEL, releaseName);
-    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels);
+    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
   public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
-      Map<String, String> labels) throws Exception {
+      Map<String, String> labels, long timeoutInMillis) throws Exception {
     return timeLimiter.callWithTimeout(() -> {
       return kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, emptyList(), namespace, labels)
           .stream()
@@ -1361,17 +1366,18 @@ public class K8sTaskHelper {
                      .labels(pod.getMetadata().getLabels())
                      .build())
           .collect(toList());
-    }, 10, TimeUnit.SECONDS, true);
+    }, timeoutInMillis, TimeUnit.MILLISECONDS, true);
   }
 
-  public String getLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, List<KubernetesResource> resources) {
+  public String getLoadBalancerEndpoint(
+      KubernetesConfig kubernetesConfig, List<KubernetesResource> resources, long timeoutInMillis) {
     KubernetesResource loadBalancerResource = getFirstLoadBalancerService(resources);
     if (loadBalancerResource == null) {
       return null;
     }
 
     Service service = waitForLoadBalancerService(kubernetesConfig, loadBalancerResource.getResourceId().getName(),
-        loadBalancerResource.getResourceId().getNamespace(), 60);
+        loadBalancerResource.getResourceId().getNamespace(), timeoutInMillis);
 
     if (service == null) {
       logger.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
@@ -1409,7 +1415,7 @@ public class K8sTaskHelper {
   }
 
   private Service waitForLoadBalancerService(
-      KubernetesConfig kubernetesConfig, String serviceName, String namespace, int timeoutInSeconds) {
+      KubernetesConfig kubernetesConfig, String serviceName, String namespace, long timeoutInMillis) {
     try {
       return timeLimiter.callWithTimeout(() -> {
         while (true) {
@@ -1425,7 +1431,7 @@ public class K8sTaskHelper {
               serviceName, sleepTimeInSeconds);
           sleep(ofSeconds(sleepTimeInSeconds));
         }
-      }, timeoutInSeconds, TimeUnit.SECONDS, true);
+      }, timeoutInMillis, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException e) {
       logger.error("Timed out waiting for LoadBalancer service. Moving on.", e);
     } catch (Exception e) {
@@ -1729,7 +1735,8 @@ public class K8sTaskHelper {
 
   private List<ManifestFile> renderTemplateForHelmChartFiles(K8sDelegateTaskParams k8sDelegateTaskParams,
       String manifestFilesDirectory, List<String> chartFiles, List<String> valuesFiles, String releaseName,
-      String namespace, ExecutionLogCallback executionLogCallback, HelmVersion helmVersion) throws Exception {
+      String namespace, ExecutionLogCallback executionLogCallback, HelmVersion helmVersion, long timeoutInMillis)
+      throws Exception {
     String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
     String helmPath = k8sDelegateTaskParams.getHelmPath();
     logger.info("Values file options: " + valuesFileOptions);
@@ -1746,7 +1753,7 @@ public class K8sTaskHelper {
           printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
 
           ProcessResult processResult =
-              executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream);
+              executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
           if (processResult.getExitValue() != 0) {
             throw new WingsException(format("Failed to render chart file [%s]", chartFile));
           }
@@ -1773,10 +1780,10 @@ public class K8sTaskHelper {
   }
 
   @VisibleForTesting
-  ProcessResult executeShellCommand(String commandDirectory, String command, LogOutputStream logErrorStream)
-      throws IOException, InterruptedException, TimeoutException {
+  ProcessResult executeShellCommand(String commandDirectory, String command, LogOutputStream logErrorStream,
+      long timeoutInMillis) throws IOException, InterruptedException, TimeoutException {
     ProcessExecutor processExecutor = new ProcessExecutor()
-                                          .timeout(10, TimeUnit.SECONDS)
+                                          .timeout(timeoutInMillis, TimeUnit.MILLISECONDS)
                                           .directory(new File(commandDirectory))
                                           .commandSplit(command)
                                           .readOutput(true)
@@ -1901,9 +1908,9 @@ public class K8sTaskHelper {
         .toString();
   }
 
-  public List<ContainerInfo> getContainerInfos(KubernetesConfig kubernetesConfig, String releaseName, String namespace)
-      throws Exception {
-    List<K8sPod> helmPods = getHelmPodDetails(kubernetesConfig, namespace, releaseName);
+  public List<ContainerInfo> getContainerInfos(
+      KubernetesConfig kubernetesConfig, String releaseName, String namespace, long timeoutInMillis) throws Exception {
+    List<K8sPod> helmPods = getHelmPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis);
 
     return helmPods.stream()
         .map(pod
@@ -1924,4 +1931,12 @@ public class K8sTaskHelper {
   }
 
   private static final Set<String> openshiftResources = ImmutableSet.of("Route");
+
+  public static long getTimeoutMillisFromMinutes(Integer timeoutMinutes) {
+    if (timeoutMinutes == null || timeoutMinutes <= 0) {
+      timeoutMinutes = DEFAULT_STEADY_STATE_TIMEOUT;
+    }
+
+    return ofMinutes(timeoutMinutes).toMillis();
+  }
 }

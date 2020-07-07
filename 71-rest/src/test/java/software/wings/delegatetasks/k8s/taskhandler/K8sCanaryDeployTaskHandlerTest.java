@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -29,6 +30,7 @@ import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_DIRECT_APPLY_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
+import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -304,12 +306,13 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
 
   private void testGetAllPodsWithNoPreviousPods() throws Exception {
     final K8sPod canaryPod = K8sPod.builder().name("pod-canary").build();
-    when(k8sTaskHelper.getPodDetails(any(KubernetesConfig.class), anyString(), anyString()))
+    when(k8sTaskHelper.getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong()))
         .thenReturn(asList(canaryPod));
-    when(k8sTaskHelper.getPodDetailsWithTrack(any(KubernetesConfig.class), anyString(), anyString(), eq("canary")))
+    when(k8sTaskHelper.getPodDetailsWithTrack(
+             any(KubernetesConfig.class), anyString(), anyString(), eq("canary"), anyLong()))
         .thenReturn(asList(canaryPod));
 
-    final List<K8sPod> allPods = k8sCanaryDeployTaskHandler.getAllPods();
+    final List<K8sPod> allPods = k8sCanaryDeployTaskHandler.getAllPods(LONG_TIMEOUT_INTERVAL);
     assertThat(allPods).hasSize(1);
     assertThat(allPods.get(0).isNewPod()).isTrue();
     assertThat(allPods.get(0).getName()).isEqualTo(canaryPod.getName());
@@ -319,11 +322,13 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
     final K8sPod canaryPod = K8sPod.builder().name("pod-canary").build();
     final List<K8sPod> allPods =
         asList(K8sPod.builder().name("primary-1").build(), K8sPod.builder().name("primary-2").build(), canaryPod);
-    when(k8sTaskHelper.getPodDetails(any(KubernetesConfig.class), anyString(), anyString())).thenReturn(allPods);
-    when(k8sTaskHelper.getPodDetailsWithTrack(any(KubernetesConfig.class), anyString(), anyString(), eq("canary")))
+    when(k8sTaskHelper.getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong()))
+        .thenReturn(allPods);
+    when(k8sTaskHelper.getPodDetailsWithTrack(
+             any(KubernetesConfig.class), anyString(), anyString(), eq("canary"), anyLong()))
         .thenReturn(asList(canaryPod));
 
-    final List<K8sPod> pods = k8sCanaryDeployTaskHandler.getAllPods();
+    final List<K8sPod> pods = k8sCanaryDeployTaskHandler.getAllPods(LONG_TIMEOUT_INTERVAL);
     assertThat(pods).hasSize(3);
     assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(1);
     assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
@@ -380,7 +385,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
         any(K8sCanaryDeployTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     doReturn(true).when(handler).prepareForCanary(
         any(K8sDelegateTaskParams.class), any(K8sCanaryDeployTaskParameters.class), any(ExecutionLogCallback.class));
-    doReturn(Arrays.asList(K8sPod.builder().build())).when(handler).getAllPods();
+    doReturn(Arrays.asList(K8sPod.builder().build())).when(handler).getAllPods(anyLong());
 
     on(handler).set("canaryWorkload", deployment);
     ReleaseHistory releaseHist = ReleaseHistory.createNew();
@@ -534,7 +539,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
         any(K8sCanaryDeployTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     doReturn(true).when(handler).prepareForCanary(
         any(K8sDelegateTaskParams.class), any(K8sCanaryDeployTaskParameters.class), any(ExecutionLogCallback.class));
-    doReturn(Arrays.asList(K8sPod.builder().build())).when(handler).getAllPods();
+    doReturn(Arrays.asList(K8sPod.builder().build())).when(handler).getAllPods(anyLong());
     doReturn(helmChartInfo)
         .when(k8sTaskHelper)
         .getHelmChartDetails(manifestConfig, Paths.get(".", MANIFEST_FILES_DIR).toString());

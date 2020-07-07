@@ -12,6 +12,7 @@ import static io.harness.k8s.model.Kind.Service;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -45,11 +46,13 @@ import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.OC_TEMPLATES;
 import static software.wings.beans.appmanifest.StoreType.Remote;
+import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.configMap;
 import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
+import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
@@ -137,6 +140,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -1225,7 +1229,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
 
     ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    doReturn(processResult).when(spyHelper).executeShellCommand(any(), any(), any());
+    doReturn(processResult).when(spyHelper).executeShellCommand(any(), any(), any(), anyLong());
 
     final List<ManifestFile> manifestFiles = spyHelper.renderTemplateForGivenFiles(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder().manifestStoreTypes(HelmSourceRepo).build(), ".", new ArrayList<>(),
@@ -1280,7 +1284,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
 
     ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    doReturn(processResult).when(spyHelper).executeShellCommand(any(), any(), any());
+    doReturn(processResult).when(spyHelper).executeShellCommand(any(), any(), any(), anyLong());
 
     final List<ManifestFile> manifestFiles = spyHelper.renderTemplateForGivenFiles(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder()
@@ -1372,7 +1376,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
 
     ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    doReturn(processResult).when(spyHelper).executeShellCommand(any(), any(), any());
+    doReturn(processResult).when(spyHelper).executeShellCommand(any(), any(), any(), anyLong());
 
     final List<ManifestFile> manifestFiles = spyHelper.renderTemplate(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder().manifestStoreTypes(HelmSourceRepo).build(), ".", new ArrayList<>(),
@@ -1427,7 +1431,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).helmPath("helm").build();
 
     ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
-    doReturn(processResult).when(spyHelper).executeShellCommand(any(), any(), any());
+    doReturn(processResult).when(spyHelper).executeShellCommand(any(), any(), any(), anyLong());
 
     final List<ManifestFile> manifestFiles = spyHelper.renderTemplate(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder()
@@ -1593,7 +1597,8 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     doAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call())
         .when(mockTimeLimiter)
         .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
-    List<K8sPod> pods = helper.getPodDetailsWithLabels(config, "default", "releaseName", labelsQuery);
+    List<K8sPod> pods =
+        helper.getPodDetailsWithLabels(config, "default", "releaseName", labelsQuery, LONG_TIMEOUT_INTERVAL);
 
     assertThat(pods).isNotEmpty();
     assertThat(pods).hasSize(3);
@@ -1601,6 +1606,19 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     assertThatK8sPodHas(pods.get(0), "uid-1", ImmutableMap.of("marker", "marker-value"), singletonList("container"));
     assertThatK8sPodHas(pods.get(1), "uid-2", ImmutableMap.of("release", "releaseName", "color", "green"), emptyList());
     assertThatK8sPodHas(pods.get(2), "uid-3", ImmutableMap.of(), asList("container-1", "container-2", "container-3"));
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillisFromMinutes() throws Exception {
+    int randomPositiveInt = new Random().nextInt(1000) + 1;
+    assertThat(K8sTaskHelper.getTimeoutMillisFromMinutes(-randomPositiveInt))
+        .isEqualTo(DEFAULT_STEADY_STATE_TIMEOUT * 60 * 1000L);
+    assertThat(K8sTaskHelper.getTimeoutMillisFromMinutes(null)).isEqualTo(DEFAULT_STEADY_STATE_TIMEOUT * 60 * 1000L);
+    assertThat(K8sTaskHelper.getTimeoutMillisFromMinutes(0)).isEqualTo(DEFAULT_STEADY_STATE_TIMEOUT * 60 * 1000L);
+    assertThat(K8sTaskHelper.getTimeoutMillisFromMinutes(1)).isEqualTo(60 * 1000L);
+    assertThat(K8sTaskHelper.getTimeoutMillisFromMinutes(randomPositiveInt)).isEqualTo(randomPositiveInt * 60 * 1000L);
   }
 
   private void assertThatK8sPodHas(K8sPod pod, String uid, Map<String, String> labels, List<String> containerIds) {

@@ -5,6 +5,7 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.perpetualtask.PerpetualTaskState.TASK_RUN_FAILED;
 import static io.harness.perpetualtask.PerpetualTaskState.TASK_RUN_SUCCEEDED;
+import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.service.impl.ContainerMetadataType.K8S;
 
 import com.google.inject.Inject;
@@ -135,9 +136,10 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
       K8sContainerInstanceSyncPerpetualTaskParams k8sContainerInstanceSyncPerpetualTaskParams,
       KubernetesConfig kubernetesConfig) {
     try {
+      long timeoutMillis = K8sTaskHelper.getTimeoutMillisFromMinutes(DEFAULT_STEADY_STATE_TIMEOUT);
       List<K8sPod> k8sPodList =
           k8sTaskHelper.getPodDetails(kubernetesConfig, k8sContainerInstanceSyncPerpetualTaskParams.getNamespace(),
-              k8sContainerInstanceSyncPerpetualTaskParams.getReleaseName());
+              k8sContainerInstanceSyncPerpetualTaskParams.getReleaseName(), timeoutMillis);
 
       return K8sTaskExecutionResponse.builder()
           .k8sTaskResponse(K8sInstanceSyncResponse.builder().k8sPodInfoList(k8sPodList).build())

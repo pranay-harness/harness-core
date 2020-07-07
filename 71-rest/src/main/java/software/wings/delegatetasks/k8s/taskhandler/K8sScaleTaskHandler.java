@@ -17,6 +17,7 @@ import static software.wings.beans.Log.color;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Scale;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
+import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFromMinutes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -85,8 +86,9 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
       return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.SUCCESS);
     }
 
-    List<K8sPod> beforePodList = k8sTaskHelper.getPodDetails(
-        kubernetesConfig, resourceIdToScale.getNamespace(), k8sScaleTaskParameters.getReleaseName());
+    long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sScaleTaskParameters.getTimeoutIntervalInMin());
+    List<K8sPod> beforePodList = k8sTaskHelper.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
+        k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
     success = k8sTaskHelper.scale(client, k8sDelegateTaskParams, resourceIdToScale, targetReplicaCount,
         new ExecutionLogCallback(delegateLogService, k8sScaleTaskParameters.getAccountId(),
@@ -106,8 +108,8 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
       }
     }
 
-    List<K8sPod> afterPodList = k8sTaskHelper.getPodDetails(
-        kubernetesConfig, resourceIdToScale.getNamespace(), k8sScaleTaskParameters.getReleaseName());
+    List<K8sPod> afterPodList = k8sTaskHelper.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
+        k8sScaleTaskParameters.getReleaseName(), steadyStateTimeoutInMillis);
 
     k8sScaleResponse.setK8sPodList(tagNewPods(beforePodList, afterPodList));
     return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.SUCCESS);

@@ -201,8 +201,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       throws Exception {
     boolean isK8sV116OrAbove = containerDeploymentDelegateHelper.isK8sVersion116OrAbove(
         commandRequest.getContainerServiceParams(), (ExecutionLogCallback) executionLogCallback);
-    return isK8sV116OrAbove ? getKubectlContainerInfos(commandRequest, variableOverridesYamlFiles, executionLogCallback)
-                            : getFabric8ContainerInfos(commandRequest, executionLogCallback, timeoutInMillis);
+    return isK8sV116OrAbove
+        ? getKubectlContainerInfos(commandRequest, variableOverridesYamlFiles, executionLogCallback, timeoutInMillis)
+        : getFabric8ContainerInfos(commandRequest, executionLogCallback, timeoutInMillis);
   }
 
   private List<ContainerInfo> getFabric8ContainerInfos(
@@ -218,7 +219,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   @VisibleForTesting
   List<ContainerInfo> getKubectlContainerInfos(HelmCommandRequest commandRequest,
-      List<String> variableOverridesYamlFiles, LogCallback executionLogCallback) throws Exception {
+      List<String> variableOverridesYamlFiles, LogCallback executionLogCallback, long timeoutInMillis)
+      throws Exception {
     Kubectl client = Kubectl.client(k8sGlobalConfigService.getKubectlPath(), commandRequest.getKubeConfigLocation());
 
     String workingDirPath = Paths.get(commandRequest.getWorkingDir()).normalize().toAbsolutePath().toString();
@@ -226,7 +228,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     List<ManifestFile> manifestFiles = k8sTaskHelper.renderTemplateForHelm(
         helmClient.getHelmPath(commandRequest.getHelmVersion()), workingDirPath, variableOverridesYamlFiles,
         commandRequest.getReleaseName(), commandRequest.getContainerServiceParams().getNamespace(),
-        (ExecutionLogCallback) executionLogCallback, commandRequest.getHelmVersion());
+        (ExecutionLogCallback) executionLogCallback, commandRequest.getHelmVersion(), timeoutInMillis);
 
     List<KubernetesResource> resources =
         k8sTaskHelper.readManifests(manifestFiles, (ExecutionLogCallback) executionLogCallback);
@@ -251,7 +253,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
             format("Status check done with success [%s] for resources in namespace: [%s]", success, namespace));
         containerInfoList.addAll(k8sTaskHelper.getContainerInfos(
             containerDeploymentDelegateHelper.getKubernetesConfig(commandRequest.getContainerServiceParams()),
-            commandRequest.getReleaseName(), namespace));
+            commandRequest.getReleaseName(), namespace, timeoutInMillis));
       }
     }
     executionLogCallback.saveExecutionLog(format("Currently running Containers: [%s]", containerInfoList.size()));
