@@ -146,9 +146,9 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
           .append(env)
           .append("=\"\n $e+=$Env:")
           .append(env)
-          .append("\n Write-Output $e | Out-File -Encoding UTF8 -append -FilePath ")
+          .append("\n Write-Output $e | Out-File -Encoding UTF8 -append -FilePath '")
           .append(envVariablesOutputFileName)
-          .append('\n');
+          .append("'\n");
     }
     return wrapperCommand.toString();
   }
@@ -288,7 +288,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
   @VisibleForTesting
   protected void cleanupFiles(WinRmSession session, String file) {
-    String command = "Remove-Item -Path " + file;
+    String command = "Remove-Item -Path '" + file + "'";
     try (StringWriter outputAccumulator = new StringWriter(1024)) {
       if (disableCommandEncoding) {
         command = format(
