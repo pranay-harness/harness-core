@@ -3,12 +3,14 @@ package io.harness.ng.orchestration;
 import com.google.inject.Inject;
 
 import io.harness.ManagerDelegateServiceDriver;
-import io.harness.ambiance.Ambiance;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.exception.InvalidRequestException;
 import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.NonNull;
+
+import java.util.Map;
 
 public class NgDelegateTaskExecutor implements TaskExecutor {
   private final ManagerDelegateServiceDriver managerDelegateServiceDriver;
@@ -20,24 +22,23 @@ public class NgDelegateTaskExecutor implements TaskExecutor {
   }
 
   @Override
-  public String queueTask(Ambiance ambiance, Task task) {
+  public String queueTask(@NonNull Map<String, String> setupAbstractions, @NonNull Task task) {
     if (task instanceof HDelegateTask) {
       HDelegateTask hDelegateTask = (HDelegateTask) task;
       String accountId = hDelegateTask.getAccountId();
-      return managerDelegateServiceDriver.sendTaskAsync(
-          accountId, ambiance.getSetupAbstractions(), hDelegateTask.getData());
+      return managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, hDelegateTask.getData());
     }
     throw new InvalidRequestException(
         "Execution not supported for Task. TaskClass: " + task.getClass().getCanonicalName());
   }
 
   @Override
-  public void expireTask(Ambiance ambiance, String taskId) {
+  public void expireTask(@NonNull Map<String, String> setupAbstractions, @NonNull String taskId) {
     // Implement Expire task
   }
 
   @Override
-  public void abortTask(Ambiance ambiance, String taskId) {
+  public void abortTask(@NonNull Map<String, String> setupAbstractions, @NonNull String taskId) {
     // Implement Abort task
   }
 }

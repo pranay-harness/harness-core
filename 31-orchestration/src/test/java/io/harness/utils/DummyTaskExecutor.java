@@ -1,8 +1,9 @@
 package io.harness.utils;
 
-import io.harness.ambiance.Ambiance;
 import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
+
+import java.util.Map;
 
 /**
  * The type Dummy task executor.
@@ -10,17 +11,17 @@ import io.harness.tasks.TaskExecutor;
  */
 public class DummyTaskExecutor implements TaskExecutor {
   @Override
-  public String queueTask(Ambiance ambiance, Task task) {
+  public String queueTask(Map<String, String> setupAbstractions, Task task) {
     return null;
   }
 
   @Override
-  public void expireTask(Ambiance ambiance, String taskId) {
+  public void expireTask(Map<String, String> setupAbstractions, String taskId) {
     // Just a placeholder
   }
 
   @Override
-  public void abortTask(Ambiance ambiance, String taskId) {
+  public void abortTask(Map<String, String> setupAbstractions, String taskId) {
     // Just a placeholder
   }
 }
