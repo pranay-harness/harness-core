@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.rule.OwnerRule.DHRUV;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,6 +49,7 @@ import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.yaml.ChangeContext;
@@ -64,6 +66,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 import software.wings.yaml.trigger.ArtifactTriggerConditionHandler;
 import software.wings.yaml.trigger.PipelineTriggerConditionHandler;
@@ -91,6 +94,8 @@ public class TriggerYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Mock private SettingsService settingsService;
+
+  @Mock private UserGroupService userGroupService;
 
   @InjectMocks @Inject private TriggerYamlHandler handler;
   @InjectMocks @Inject private ArtifactTriggerConditionHandler artifactTriggerConditionHandler;
@@ -135,6 +140,16 @@ public class TriggerYamlHandlerTest extends BaseYamlHandlerTest {
     private static final String Trigger13 = "trigger13.yaml";
     // On GitLab with branch regex with verification variables, ssh credentials variables pipeline
     private static final String Trigger14 = "trigger14.yaml";
+    // On webhook with userGroup templatised workflow with concrete value
+    private static final String Trigger15 = "trigger15.yaml";
+    // On webhook with userGroup templatised workflow with custom value
+    private static final String Trigger16 = "trigger16.yaml";
+    // On webhook with userGroup templatised workflow with concrete values
+    private static final String Trigger17 = "trigger17.yaml";
+    // On webhook with userGroup templatised workflow with custom value
+    private static final String Trigger18 = "trigger18.yaml";
+    // On webhook with userGroup templatised workflow with concrete values
+    private static final String Trigger19 = "trigger19.yaml";
 
     private static final String TriggerPackage = "triggerPackage.yaml";
     private static final String TriggerPackageWrongAction = "triggerPackageWrongAction.yaml";
@@ -189,8 +204,13 @@ public class TriggerYamlHandlerTest extends BaseYamlHandlerTest {
     doReturn(infrastructureDefinition).when(infrastructureDefinitionService).get(anyString(), anyString());
 
     SettingAttribute sshConnectionAttributes = aSettingAttribute().withUuid("ssh-id").withName("Wings Key").build();
+    UserGroup userGroup = new UserGroup();
+    userGroup.setName("Account Administrator");
+    userGroup.setUuid("dIyaCXXVRp65abGOlN5Fmg");
     doReturn(sshConnectionAttributes).when(settingsService).fetchSettingAttributeByName(any(), any(), any());
     doReturn(sshConnectionAttributes).when(settingsService).get(anyString());
+    doReturn(userGroup).when(userGroupService).fetchUserGroupByName(any(), any());
+    doReturn(userGroup).when(userGroupService).get(anyString());
   }
 
   @Test
@@ -517,6 +537,68 @@ public class TriggerYamlHandlerTest extends BaseYamlHandlerTest {
                                WorkflowType.ORCHESTRATION))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Unsupported Release action opened.");
+  }
+
+  @Test
+  @Owner(developers = DHRUV)
+  @Category(UnitTests.class)
+  public void testCrudTriggerWithUserGroup() throws IOException {
+    Workflow workflow = aWorkflow().uuid("workflow-id").name("w1").envId("env-id").build();
+    Variable variable1 = aVariable().name("User_Group").entityType(EntityType.USER_GROUP).build();
+    List<Variable> userVariables = new ArrayList<>();
+    userVariables.add(variable1);
+    workflow.setOrchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
+    testCRUD(validTriggerFiles.Trigger15, TriggerConditionType.WEBHOOK, WorkflowType.ORCHESTRATION);
+  }
+
+  @Test
+  @Owner(developers = DHRUV)
+  @Category(UnitTests.class)
+  public void testCrudTriggerWithUserGroupCustomVariable() throws IOException {
+    Workflow workflow = aWorkflow().uuid("workflow-id").name("w1").envId("env-id").build();
+    Variable variable1 = aVariable().name("User_Group").entityType(EntityType.USER_GROUP).build();
+    List<Variable> userVariables = new ArrayList<>();
+    userVariables.add(variable1);
+    workflow.setOrchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
+    doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
+    testCRUD(validTriggerFiles.Trigger16, TriggerConditionType.WEBHOOK, WorkflowType.ORCHESTRATION);
+  }
+
+  @Test
+  @Owner(developers = DHRUV)
+  @Category(UnitTests.class)
+  public void testCrudTriggerWithUserGroupPipeline() throws IOException {
+    Variable variable1 = aVariable().name("variable1").entityType(EntityType.USER_GROUP).build();
+
+    List<Variable> pipelineVariables = new ArrayList<>();
+    pipelineVariables.add(variable1);
+
+    Pipeline pipeline = Pipeline.builder().uuid("pipeline-id").name("tp_1").build();
+    pipeline.setPipelineVariables(pipelineVariables);
+    doReturn(pipeline).when(mockYamlHelper).getPipelineFromName(any(), any());
+    doReturn(pipeline).when(mockYamlHelper).getPipelineFromId(any(), any());
+    testCRUD(validTriggerFiles.Trigger17, TriggerConditionType.WEBHOOK, WorkflowType.PIPELINE);
+  }
+
+  @Test
+  @Owner(developers = DHRUV)
+  @Category(UnitTests.class)
+  public void testCrudTriggerWithUserGroupPipelineCustomValue() throws IOException {
+    Variable variable1 = aVariable().name("variable1").entityType(EntityType.USER_GROUP).build();
+    Variable variable2 = aVariable().name("User_Group2").entityType(EntityType.USER_GROUP).build();
+
+    List<Variable> pipelineVariables = new ArrayList<>();
+    pipelineVariables.add(variable1);
+    pipelineVariables.add(variable2);
+
+    Pipeline pipeline = Pipeline.builder().uuid("pipeline-id").name("tp_1").build();
+    pipeline.setPipelineVariables(pipelineVariables);
+    doReturn(pipeline).when(mockYamlHelper).getPipelineFromName(any(), any());
+    doReturn(pipeline).when(mockYamlHelper).getPipelineFromId(any(), any());
+    testCRUD(validTriggerFiles.Trigger18, TriggerConditionType.WEBHOOK, WorkflowType.PIPELINE);
   }
 
   private void testCRUD(String yamlFileName, TriggerConditionType conditionType, WorkflowType actionType)

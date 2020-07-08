@@ -55,6 +55,8 @@ public interface UserGroupService extends OwnedByAccount {
    */
   UserGroup get(@NotEmpty String accountId, @NotEmpty String uuid);
 
+  UserGroup get(@NotEmpty String uuid);
+
   /**
    * Find by name.
    */

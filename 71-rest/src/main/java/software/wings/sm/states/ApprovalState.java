@@ -10,6 +10,7 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.event.model.EventConstants.ENVIRONMENT_ID;
@@ -47,6 +48,8 @@ import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -60,6 +63,7 @@ import okhttp3.MediaType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.ApprovalStateExecutionData.ApprovalStateExecutionDataKeys;
 import software.wings.api.ServiceNowExecutionData;
@@ -77,6 +81,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.NameValuePairKeys;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.NotificationRule.NotificationRuleBuilder;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ApprovalNeededAlert;
@@ -90,8 +95,11 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
+import software.wings.beans.security.UserGroup;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
+import software.wings.common.TemplateExpressionProcessor;
+import software.wings.exception.ApprovalStateException;
 import software.wings.security.SecretManager;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.JiraHelperService;
@@ -119,6 +127,7 @@ import software.wings.utils.Misc;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -156,6 +165,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Inject private SecretManager secretManager;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private UserGroupService userGroupService;
+  @Inject @Transient private TemplateExpressionProcessor templateExpressionProcessor;
 
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   private Integer DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -181,7 +191,40 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     String approvalId = generateUuid();
+    List<String> resolvedUserGroup = new ArrayList<>();
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression userGroupExp =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), ApprovalStateKeys.userGroups);
+
+      if (userGroupExp != null && userGroupExp.getExpression().length() != 0) {
+        String userGroupsString = templateExpressionProcessor.resolveTemplateExpression(context, userGroupExp);
+        if (!isEmpty(userGroupsString)) {
+          userGroups = Arrays.asList(userGroupsString.split("\\s*,\\s*"));
+        } else {
+          throw new InvalidRequestException("User group templatised but value is not provided", USER);
+        }
+      }
+
+      if (isEmpty(userGroups)) {
+        throw new ApprovalStateException("Valid user groups not provided in Approval Step", ErrorCode.USER_GROUP_ERROR,
+            Level.ERROR, WingsException.USER);
+      }
+
+      for (String singleUserGroup : userGroups) {
+        UserGroup userGroup = userGroupService.get(executionContext.getApp().getAccountId(), singleUserGroup);
+        if (userGroup == null) {
+          userGroup = userGroupService.fetchUserGroupByName(executionContext.getApp().getAccountId(), singleUserGroup);
+        }
+        if (userGroup == null) {
+          throw new ApprovalStateException("User Group provided in Approval Step not found for " + singleUserGroup,
+              ErrorCode.USER_GROUP_ERROR, Level.ERROR, WingsException.USER);
+        }
+        resolvedUserGroup.add(userGroup.getUuid());
+      }
+      userGroups = resolvedUserGroup;
+    }
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()

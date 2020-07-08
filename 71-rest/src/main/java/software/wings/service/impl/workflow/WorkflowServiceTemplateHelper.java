@@ -65,6 +65,7 @@ public class WorkflowServiceTemplateHelper {
   private static final String CF_AWSCONFIG_VAR_DESC = "Variable for CloudFormation AWS Config entity";
   private static final String HELM_GITCONFIG_VAR_DESC = "Variable for Helm Git Config entity";
   private static final String SSH_CONNECTION_ATTRIBUTE_DESC = "Variable for SSH Connection Attribute entity";
+  private static final String USER_GROUP_DESC = "Variable for User Group entity";
   private static final String WINRM_CONNECTION_ATTRIBUTE_DESC = "Variable for WINRM Connection Attribute entity";
   private static final String GCP_CONFIG_VAR_DESC = "Variable for Google Cloud Platform configuration entity";
   private static final String GIT_CONFIG_VAR_DESC = "Variable for Git connector configuration entity";
@@ -603,7 +604,9 @@ public class WorkflowServiceTemplateHelper {
     Matcher matcher = ManagerExpressionEvaluator.variableNamePattern.matcher(variable);
     if (entityType != null) {
       if (!matcher.matches()) {
-        throw new InvalidRequestException("Template variable:[" + variable + "] contains special characters", USER);
+        throw new InvalidRequestException("Template variable:[" + variable
+                + "] is not valid, should start with ${ and end with }, can have a-z,A-Z,0-9,-_",
+            USER);
       }
     }
     return variable;
@@ -638,6 +641,8 @@ public class WorkflowServiceTemplateHelper {
           return HELM_GITCONFIG_VAR_DESC + " in " + stateName;
         case SS_SSH_CONNECTION_ATTRIBUTE:
           return SSH_CONNECTION_ATTRIBUTE_DESC + " in " + stateName;
+        case USER_GROUP:
+          return USER_GROUP_DESC + " in " + stateName;
         case SS_WINRM_CONNECTION_ATTRIBUTE:
           return WINRM_CONNECTION_ATTRIBUTE_DESC + " in " + stateName;
         case GCP_CONFIG:

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static java.lang.String.format;
 import static software.wings.sm.StateType.APPROVAL;
 
@@ -18,11 +19,40 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.sm.states.ApprovalState;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @OwnedBy(CDC)
 public class PipelineServiceValidator {
   private PipelineServiceValidator() {}
+  public static boolean validateTemplateExpressions(Pipeline pipeline) {
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    if (pipelineStages != null) {
+      for (PipelineStage pipelineStage : pipelineStages) {
+        for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
+          if (APPROVAL.name().equals(pse.getType())) {
+            Map<String, Object> properties = pse.getProperties();
+            List<Map<String, Object>> templateExpressions =
+                (List<Map<String, Object>>) properties.get("templateExpressions");
+            if (!isEmpty(templateExpressions)) {
+              for (Map<String, Object> templateExpression : templateExpressions) {
+                if (templateExpression != null) {
+                  String expression = (String) templateExpression.get("expression");
+                  if (!matchesVariablePattern(expression)) {
+                    throw new InvalidRequestException("Template variable:[" + expression
+                            + "] not in proper format ,should start with ${ and end with }, only a-zA-Z0-9_- allowed",
+                        USER);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return true;
+  }
+
   public static void checkUniqueApprovalPublishedVariable(Pipeline pipeline) {
     if (isEmpty(pipeline.getPipelineStages())) {
       return;

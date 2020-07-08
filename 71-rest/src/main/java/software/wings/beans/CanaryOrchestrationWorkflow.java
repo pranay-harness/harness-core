@@ -33,6 +33,7 @@ import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
 import static software.wings.beans.EntityType.SS_SSH_CONNECTION_ATTRIBUTE;
 import static software.wings.beans.EntityType.SS_WINRM_CONNECTION_ATTRIBUTE;
 import static software.wings.beans.EntityType.SUMOLOGIC_CONFIGID;
+import static software.wings.beans.EntityType.USER_GROUP;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.common.Constants.PHASE_NAME_PREFIX;
@@ -614,6 +615,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
         addSSHConnectionUserVariables(reorderVariables, entityVariables);
 
+        // add User Group Variables
+        addUserGroupVariables(reorderVariables, entityVariables);
+
         addWINRMConnnectionUserVariables(reorderVariables, entityVariables);
 
         addGcpConfigVariables(reorderVariables, entityVariables);
@@ -630,6 +634,14 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   private void addSSHConnectionUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
       if (SS_SSH_CONNECTION_ATTRIBUTE == variable.obtainEntityType()) {
+        reorderVariables.add(variable);
+      }
+    }
+  }
+
+  private void addUserGroupVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (USER_GROUP == variable.obtainEntityType()) {
         reorderVariables.add(variable);
       }
     }
