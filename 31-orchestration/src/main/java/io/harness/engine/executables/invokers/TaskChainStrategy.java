@@ -59,7 +59,8 @@ public class TaskChainStrategy implements TaskInvokeStrategy {
     NodeExecution nodeExecution =
         Preconditions.checkNotNull(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId()));
     TaskExecutor taskExecutor = taskExecutorMap.get(mode.name());
-    String taskId = Preconditions.checkNotNull(taskExecutor.queueTask(ambiance, taskChainResponse.getTask()));
+    String taskId = Preconditions.checkNotNull(
+        taskExecutor.queueTask(ambiance.getSetupAbstractions(), taskChainResponse.getTask()));
     // Update Execution Node Instance state to TASK_WAITING
     nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.TASK_WAITING,
         ops
