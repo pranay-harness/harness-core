@@ -8,11 +8,13 @@ import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.security.SecretText;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
@@ -28,6 +30,18 @@ public interface SecretManagerClient {
   @GET(SECRETS_API + "/{secretId}")
   Call<RestResponse<EncryptedData>> getSecretById(@Path(value = SECRET_ID_KEY) String secretId,
       @Query(value = ACCOUNT_ID_KEY) String accountId, @Query(value = USER_ID_KEY) String userId);
+
+  @POST(SECRETS_API)
+  Call<RestResponse<String>> createSecret(@Query(value = ACCOUNT_ID_KEY) String accountId,
+      @Query(value = "local") boolean localMode, @Body SecretText secretText);
+
+  @PUT(SECRETS_API)
+  Call<RestResponse<Boolean>> updateSecret(
+      @Query(value = ACCOUNT_ID_KEY) String accountId, @Query(value = "uuid") String uuId, @Body SecretText secretText);
+
+  @DELETE(SECRETS_API)
+  Call<RestResponse<Boolean>> deleteSecret(
+      @Query(value = ACCOUNT_ID_KEY) String accountId, @Query(value = "uuid") String uuId);
 
   @GET(SECRETS_API)
   Call<RestResponse<PageResponse<EncryptedData>>> getSecretsForAccountByType(@Query("accountId") String accountId,
