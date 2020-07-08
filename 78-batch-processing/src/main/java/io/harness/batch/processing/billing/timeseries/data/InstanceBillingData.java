@@ -30,6 +30,7 @@ public class InstanceBillingData {
   private String parentInstanceId;
   private String cloudProviderId;
   private String cloudProvider;
+  private String pricingSource;
   private BigDecimal billingAmount;
   private BigDecimal cpuBillingAmount;
   private BigDecimal memoryBillingAmount;
@@ -45,6 +46,7 @@ public class InstanceBillingData {
   private BigDecimal memoryActualIdleCost;
   private BigDecimal cpuUnallocatedCost;
   private BigDecimal memoryUnallocatedCost;
+  private double networkCost;
   private double maxCpuUtilization;
   private double maxMemoryUtilization;
   private double avgCpuUtilization;

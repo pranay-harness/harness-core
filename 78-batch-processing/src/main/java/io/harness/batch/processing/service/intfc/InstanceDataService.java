@@ -3,6 +3,7 @@ package io.harness.batch.processing.service.intfc;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.entities.InstanceData;
+import io.harness.batch.processing.pricing.data.CloudProvider;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,4 +26,6 @@ public interface InstanceDataService {
       String accountId, String clusterId, String instanceId, Long occurredAt);
 
   List<InstanceData> fetchClusterActiveInstanceData(String accountId, String clusterId, Instant startTime);
+
+  InstanceData getActiveInstance(String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider);
 }

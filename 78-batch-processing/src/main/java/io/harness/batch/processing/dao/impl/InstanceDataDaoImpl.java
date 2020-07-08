@@ -14,6 +14,7 @@ import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.entities.InstanceData.InstanceDataKeys;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
+import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.persistence.HPersistence;
@@ -233,5 +234,19 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
         .field(InstanceDataKeys.usageStartTime)
         .lessThanOrEq(startTime)
         .asList();
+  }
+
+  @Override
+  public InstanceData getActiveInstance(
+      String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider) {
+    Query<InstanceData> query =
+        hPersistence.createQuery(InstanceData.class).filter(InstanceDataKeys.accountId, accountId);
+    query.and(query.or(query.and(query.criteria(InstanceDataKeys.usageStartTime).lessThanOrEq(startTime),
+                           query.or(query.criteria(InstanceDataKeys.usageStopTime).doesNotExist(),
+                               query.criteria(InstanceDataKeys.usageStopTime).greaterThan(startTime))),
+        query.and(query.criteria(InstanceDataKeys.usageStartTime).greaterThanOrEq(startTime),
+            query.criteria(InstanceDataKeys.usageStartTime).lessThan(endTime))));
+    query.filter(InstanceDataKeys.CLOUD_PROVIDER, cloudProvider);
+    return query.get();
   }
 }

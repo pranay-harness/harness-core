@@ -12,14 +12,18 @@ import io.harness.batch.processing.billing.service.impl.EcsFargateInstancePricin
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.data.ZonePrice;
 import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
-import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
+import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
+import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
+import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -44,8 +48,10 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @InjectMocks private BillingCalculationService billingCalculationService;
   @Mock private InstancePricingStrategyContext instancePricingStrategyRegistry;
   @Mock private VMPricingServiceImpl vmPricingService;
-  @Mock private AwsCustomPricingService awsCustomPricingService;
+  @Mock private AwsCustomBillingService awsCustomBillingService;
+  @Mock private InstanceResourceService instanceResourceService;
   @Mock private EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy;
+  @Mock private CustomBillingMetaDataService customBillingMetaDataService;
 
   private final Instant NOW = Instant.now().truncatedTo(ChronoUnit.DAYS);
   private final Instant INSTANCE_STOP_TIMESTAMP = NOW;
@@ -53,6 +59,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   private final Long ONE_DAY_SECONDS = 86400l;
   private final Long HALF_DAY_SECONDS = 43200l;
 
+  private final String ACCOUNT_ID = "accountId";
   private final String REGION = "us-east-1";
   private final String GCP_REGION = "us-central1";
   private final String GCP_ZONE_1 = "us-central1-a";
@@ -261,7 +268,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmount() {
-    PricingData pricingData = new PricingData(10, 256.0, 512.0);
+    PricingData pricingData = new PricingData(0, 10, 256.0, 512.0, PricingSource.PUBLIC_API);
     Resource instanceResource = getInstanceResource(256, 512);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
@@ -287,7 +294,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testGetBillingAmountWithZeroResourceInInstance() {
-    PricingData pricingData = new PricingData(10, 256.0, 512.0);
+    PricingData pricingData = new PricingData(10, 10, 256.0, 512.0, PricingSource.PUBLIC_API);
     Resource instanceResource = getInstanceResource(0, 0);
     Map<String, String> metaData = new HashMap<>();
     addParentResource(metaData, 1024, 1024);
@@ -306,16 +313,17 @@ public class BillingCalculationServiceTest extends CategoryTest {
     assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(ONE_DAY_SECONDS.doubleValue());
     assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(256.0 * ONE_DAY_SECONDS);
     assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(512.0 * ONE_DAY_SECONDS);
+    assertThat(billingAmount.getNetworkCost()).isEqualTo(0d);
   }
 
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmountWhereResourceIsNotPresent() {
-    PricingData pricingData = new PricingData(10, 256.0, 512.0);
+    PricingData pricingData = new PricingData(10, 10, 256.0, 512.0, PricingSource.CUR_REPORT);
     Map<String, String> metaData = new HashMap<>();
     InstanceData instanceData = getInstance(null, null, metaData, INSTANCE_START_TIMESTAMP,
-        INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.EC2_INSTANCE);
+        INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_NODE);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount =
         billingCalculationService.getBillingAmount(instanceData, utilizationData, pricingData, HALF_DAY_SECONDS);
@@ -328,6 +336,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
     assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(256.0 * HALF_DAY_SECONDS);
     assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(512.0 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getNetworkCost()).isEqualTo(10d);
   }
 
   @Test
@@ -337,8 +346,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     when(vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS))
         .thenReturn(createVMComputePricingInfo());
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.ECS_TASK_EC2))
-        .thenReturn(new ComputeInstancePricingStrategy(
-            vmPricingService, awsCustomPricingService, ecsFargateInstancePricingStrategy));
+        .thenReturn(getComputeInstancePricingStrategy());
     Resource instanceResource = getInstanceResource(18432, 30720);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
@@ -364,12 +372,47 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
+  public void testGetInstanceBillingAmountForComputeFromCurReport() throws IOException {
+    when(instanceResourceService.getComputeVMResource(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS))
+        .thenReturn(getResource());
+    when(customBillingMetaDataService.getAwsDataSetId(ACCOUNT_ID)).thenReturn("AWSDataSet");
+    when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_NODE))
+        .thenReturn(getComputeInstancePricingStrategy());
+    Resource instanceResource = getInstanceResource(18432, 30720);
+    Map<String, String> metaData = new HashMap<>();
+    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
+    metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY, DEFAULT_INSTANCE_FAMILY);
+    metaData.put(InstanceMetaDataConstants.REGION, REGION);
+    metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY, InstanceCategory.ON_DEMAND.name());
+    metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
+    addParentResource(metaData, DEFAULT_INSTANCE_CPU * 1024, DEFAULT_INSTANCE_MEMORY * 1024);
+    InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
+        INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_NODE);
+    UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
+    when(awsCustomBillingService.getComputeVMPricingInfo(
+             instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP))
+        .thenReturn(
+            VMInstanceBillingData.builder().resourceId("resourceId").networkCost(10.0).computeCost(40.0).build());
+    BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
+        instanceData, utilizationData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("40.0"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("20.0"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("10.0"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("10.0"));
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(18432 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(30720 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getNetworkCost()).isEqualTo(10.0);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
   public void testGetInstanceBillingAmountForSpotComputeInstance() throws IOException {
     when(vmPricingService.getComputeVMPricingInfo(GCP_INSTANCE_FAMILY, GCP_REGION, CloudProvider.GCP))
         .thenReturn(createVMComputePricingInfo());
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_NODE))
-        .thenReturn(new ComputeInstancePricingStrategy(
-            vmPricingService, awsCustomPricingService, ecsFargateInstancePricingStrategy));
+        .thenReturn(getComputeInstancePricingStrategy());
     Resource totalResource = getInstanceResource(4096, 15360);
     Resource instanceResource = getInstanceResource(3988, 14360);
     Map<String, String> metaData = new HashMap<>();
@@ -427,8 +470,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountGCPCustomInstance() throws IOException {
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_POD))
-        .thenReturn(new ComputeInstancePricingStrategy(
-            vmPricingService, awsCustomPricingService, ecsFargateInstancePricingStrategy));
+        .thenReturn(getComputeInstancePricingStrategy());
     Resource instanceResource = getInstanceResource(4 * 1024, 5 * 1024);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.GCP.name());
@@ -446,13 +488,17 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .isEqualTo(new BigDecimal("0.3358799999999999625"));
   }
 
+  private ComputeInstancePricingStrategy getComputeInstancePricingStrategy() {
+    return new ComputeInstancePricingStrategy(vmPricingService, awsCustomBillingService, instanceResourceService,
+        ecsFargateInstancePricingStrategy, customBillingMetaDataService);
+  }
+
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountIBMInstance() throws IOException {
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_POD))
-        .thenReturn(new ComputeInstancePricingStrategy(
-            vmPricingService, awsCustomPricingService, ecsFargateInstancePricingStrategy));
+        .thenReturn(getComputeInstancePricingStrategy());
     Resource instanceResource = getInstanceResource(4 * 1024, 5 * 1024);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.IBM.name());
@@ -477,6 +523,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   private InstanceData getInstance(Resource totalResource, Resource instanceResource, Map<String, String> metaData,
       Instant startInstant, Instant endInstant, InstanceType instanceType) {
     return InstanceData.builder()
+        .accountId(ACCOUNT_ID)
         .totalResource(totalResource)
         .allocatableResource(instanceResource)
         .metaData(metaData)
@@ -507,6 +554,10 @@ public class BillingCalculationServiceTest extends CategoryTest {
         .avgCpuUtilizationValue(cpuUtilizationValue)
         .avgMemoryUtilizationValue(memoryUtilizationValue)
         .build();
+  }
+
+  private Resource getResource() {
+    return Resource.builder().cpuUnits(DEFAULT_INSTANCE_CPU).memoryMb(DEFAULT_INSTANCE_MEMORY).build();
   }
 
   private VMComputePricingInfo createVMComputePricingInfo() {

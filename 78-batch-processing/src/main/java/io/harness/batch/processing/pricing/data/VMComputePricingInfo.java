@@ -14,6 +14,7 @@ public class VMComputePricingInfo {
   private String type;
   private double onDemandPrice;
   private List<ZonePrice> spotPrice;
+  private double networkPrice;
   private double cpusPerVm;
   private double memPerVm;
 }

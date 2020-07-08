@@ -53,6 +53,9 @@ public class BillingDataPipelineRecordDaoImplTest extends WingsBaseTest {
 
     assertThat(billingDataPipelineRecord).isEqualTo(dataPipelineRecord);
 
+    BillingDataPipelineRecord bySettingId = billingDataPipelineRecordDao.getBySettingId(accountId, settingId);
+    assertThat(bySettingId).isEqualTo(dataPipelineRecord);
+
     BillingDataPipelineRecord updatedBillingDataPipelineRecord = billingDataPipelineRecord;
     updatedBillingDataPipelineRecord.setAwsFallbackTableScheduledQueryStatus(TransferState.SUCCEEDED.toString());
     updatedBillingDataPipelineRecord.setPreAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());

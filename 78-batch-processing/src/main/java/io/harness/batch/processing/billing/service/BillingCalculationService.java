@@ -1,9 +1,12 @@
 package io.harness.batch.processing.billing.service;
 
+import static io.harness.batch.processing.ccm.InstanceType.K8S_NODE;
+
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.CostAttribution;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Map;
 
 @Service
@@ -30,7 +34,8 @@ public class BillingCalculationService {
     InstancePricingStrategy instancePricingStrategy =
         instancePricingStrategyContext.getInstancePricingStrategy(instanceData.getInstanceType());
 
-    PricingData pricingData = instancePricingStrategy.getPricePerHour(instanceData, startTime);
+    PricingData pricingData =
+        instancePricingStrategy.getPricePerHour(instanceData, startTime, endTime, instanceActiveSeconds);
     return getBillingAmount(instanceData, utilizationData, pricingData, instanceActiveSeconds);
   }
 
@@ -59,10 +64,16 @@ public class BillingCalculationService {
     logger.debug("Billing amount {} {} {}", billingAmount, pricePerHour, instanceActiveSeconds);
     BillingAmountBreakup billingAmountForResource =
         getBillingAmountForResource(instanceData, billingAmount, cpuUnit, memoryMb);
+    PricingSource pricingSource =
+        null != pricingData.getPricingSource() ? pricingData.getPricingSource() : PricingSource.PUBLIC_API;
+    double networkCost = 0;
+    if (Collections.singletonList(K8S_NODE).contains(instanceData.getInstanceType())) {
+      networkCost = pricingData.getNetworkCost();
+    }
     return new BillingData(billingAmountForResource,
         getIdleCostForResource(billingAmountForResource, utilizationData, instanceData),
         getSystemCostForResource(billingAmountForResource, instanceData), instanceActiveSeconds,
-        cpuUnit * instanceActiveSeconds, memoryMb * instanceActiveSeconds);
+        cpuUnit * instanceActiveSeconds, memoryMb * instanceActiveSeconds, networkCost, pricingSource);
   }
 
   BillingAmountBreakup getBillingAmountForResource(

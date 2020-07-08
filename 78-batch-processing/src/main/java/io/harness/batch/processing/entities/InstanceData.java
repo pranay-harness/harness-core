@@ -78,4 +78,9 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   long lastUpdatedAt;
 
   HarnessServiceInfo harnessServiceInfo;
+
+  public static final class InstanceDataKeys {
+    private InstanceDataKeys() {}
+    public static final String CLOUD_PROVIDER = "metaData.cloud_provider";
+  }
 }

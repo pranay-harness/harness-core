@@ -4,6 +4,7 @@ import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
 import io.harness.batch.processing.entities.InstanceData;
+import io.harness.batch.processing.pricing.data.CloudProvider;
 
 import java.time.Instant;
 import java.util.List;
@@ -29,4 +30,6 @@ public interface InstanceDataDao {
 
   List<InstanceData> fetchClusterActiveInstanceData(
       String accountId, String clusterName, List<InstanceState> instanceState, Instant startTime);
+
+  InstanceData getActiveInstance(String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider);
 }

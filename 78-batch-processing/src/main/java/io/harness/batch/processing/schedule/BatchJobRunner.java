@@ -1,9 +1,12 @@
 package io.harness.batch.processing.schedule;
 
+import com.google.common.collect.ImmutableSet;
+
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.service.intfc.BatchJobIntervalService;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
+import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.ccm.cluster.entities.BatchJobInterval;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +33,7 @@ public class BatchJobRunner {
   @Autowired private JobLauncher jobLauncher;
   @Autowired private BatchJobIntervalService batchJobIntervalService;
   @Autowired private BatchJobScheduledDataService batchJobScheduledDataService;
+  @Autowired private CustomBillingMetaDataService customBillingMetaDataService;
 
   /**
    * Runs the batch job from previous end time and save the job logs
@@ -59,7 +63,8 @@ public class BatchJobRunner {
     Instant startInstant = startAt;
     while (batchJobScheduleTimeProvider.hasNext()) {
       Instant endInstant = batchJobScheduleTimeProvider.next();
-      if (null != endInstant && checkDependentJobFinished(accountId, startInstant, dependentBatchJobs)) {
+      if (null != endInstant && checkDependentJobFinished(accountId, startInstant, dependentBatchJobs)
+          && checkOutOfClusterDependentJobs(accountId, startAt, endAt, batchJobType)) {
         JobParameters params =
             new JobParametersBuilder()
                 .addString(CCMJobConstants.JOB_ID, String.valueOf(System.currentTimeMillis()))
@@ -96,6 +101,13 @@ public class BatchJobRunner {
       if (null == instant || !instant.isAfter(startAt)) {
         return false;
       }
+    }
+    return true;
+  }
+
+  boolean checkOutOfClusterDependentJobs(String accountId, Instant startAt, Instant endAt, BatchJobType batchJobType) {
+    if (ImmutableSet.of(BatchJobType.INSTANCE_BILLING, BatchJobType.INSTANCE_BILLING_HOURLY).contains(batchJobType)) {
+      return customBillingMetaDataService.checkPipelineJobFinished(accountId, startAt, endAt);
     }
     return true;
   }

@@ -21,9 +21,12 @@ import io.harness.batch.processing.billing.writer.support.BillingDataGenerationV
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
+import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
 import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
+import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
@@ -88,6 +91,8 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
   @Mock private UtilizationDataServiceImpl utilizationDataService;
   @Mock private BillingDataGenerationValidator billingDataGenerationValidator;
   @Mock private InstanceDataService instanceDataService;
+  @Mock private AwsCustomBillingService awsCustomBillingService;
+  @Mock private CustomBillingMetaDataService customBillingMetaDataService;
 
   @Captor private ArgumentCaptor<List<InstanceBillingData>> instanceBillingDataArgumentCaptor;
 
@@ -245,15 +250,17 @@ public class InstanceBillingDataWriterTest extends CategoryTest {
             .harnessServiceInfo(getHarnessServiceInfo())
             .build();
     when(parameters.getString(CCMJobConstants.JOB_START_DATE)).thenReturn(String.valueOf(START_TIME_MILLIS));
+    when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(String.valueOf(ACCOUNT_ID));
     when(parameters.getString(CCMJobConstants.JOB_END_DATE)).thenReturn(String.valueOf(END_TIME_MILLIS));
     when(parameters.getString(CCMJobConstants.BATCH_JOB_TYPE)).thenReturn(BatchJobType.INSTANCE_BILLING.name());
+    when(customBillingMetaDataService.getAwsDataSetId(ACCOUNT_ID)).thenReturn("AWS_DATA_SETID");
     when(utilizationDataService.getUtilizationDataForInstances(any(), any(), any(), any(), any(), any()))
         .thenReturn(utilizationDataForInstances);
     when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any()))
         .thenReturn(new BillingData(BillingAmountBreakup.builder().billingAmount(BigDecimal.ONE).build(),
             new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO),
             new SystemCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO), USAGE_DURATION_SECONDS,
-            CPU_UNIT_SECONDS, MEMORY_MB_SECONDS));
+            CPU_UNIT_SECONDS, MEMORY_MB_SECONDS, 5.0, PricingSource.PUBLIC_API));
     when(billingDataGenerationValidator.shouldGenerateBillingData(
              ACCOUNT_ID, CLUSTER_ID, Instant.ofEpochMilli(START_TIME_MILLIS)))
         .thenReturn(true);

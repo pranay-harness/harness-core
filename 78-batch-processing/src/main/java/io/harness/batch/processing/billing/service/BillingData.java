@@ -1,5 +1,6 @@
 package io.harness.batch.processing.billing.service;
 
+import io.harness.batch.processing.ccm.PricingSource;
 import lombok.Value;
 
 @Value
@@ -10,4 +11,6 @@ public class BillingData {
   private double usageDurationSeconds;
   private double cpuUnitSeconds;
   private double memoryMbSeconds;
+  private double networkCost;
+  private PricingSource pricingSource;
 }
