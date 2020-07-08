@@ -32,6 +32,7 @@ import io.harness.delegate.TaskType;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.waiter.WaitNotifyEngine;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,16 +52,18 @@ public class DelegateTaskGrpcServerTest extends WingsBaseTest {
   private NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub;
   @Inject private KryoSerializer kryoSerializer;
   @Mock private DelegateService delegateService;
+  @Mock private WaitNotifyEngine waitNotifyEngine;
 
   @Before
   public void doSetup() throws IOException {
     String serverName = InProcessServerBuilder.generateName();
 
-    grpcCleanupRule.register(InProcessServerBuilder.forName(serverName)
-                                 .directExecutor()
-                                 .addService(new DelegateTaskGrpcServer(delegateService, kryoSerializer))
-                                 .build()
-                                 .start());
+    grpcCleanupRule.register(
+        InProcessServerBuilder.forName(serverName)
+            .directExecutor()
+            .addService(new DelegateTaskGrpcServer(delegateService, kryoSerializer, waitNotifyEngine))
+            .build()
+            .start());
 
     ngDelegateTaskServiceBlockingStub = NgDelegateTaskServiceGrpc.newBlockingStub(
         grpcCleanupRule.register(InProcessChannelBuilder.forName(serverName).directExecutor().build()));

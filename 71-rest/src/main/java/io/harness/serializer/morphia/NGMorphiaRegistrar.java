@@ -25,6 +25,7 @@ import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
 import io.harness.cdng.service.steps.ServiceStepParameters;
+import io.harness.grpc.ng.manager.DelegateTaskResumeCallback;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -64,5 +65,6 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     h.put("cdng.infra.beans.InfraUseFromStage", InfraUseFromStage.class);
     h.put("cdng.environment.steps.EnvironmentStepParameters", EnvironmentStepParameters.class);
     h.put("cdng.infra.steps.InfraStepParameters", InfraStepParameters.class);
+    h.put("grpc.ng.manager.DelegateTaskResumeCallback", DelegateTaskResumeCallback.class);
   }
 }

@@ -9,6 +9,7 @@ import io.harness.facilitator.async.AsyncFacilitator;
 import io.harness.facilitator.barrier.BarrierFacilitator;
 import io.harness.facilitator.chain.ChildChainFacilitator;
 import io.harness.facilitator.chain.TaskChainFacilitator;
+import io.harness.facilitator.chain.TaskChainV2Facilitator;
 import io.harness.facilitator.child.ChildFacilitator;
 import io.harness.facilitator.children.ChildrenFacilitator;
 import io.harness.facilitator.sync.SyncFacilitator;
@@ -32,5 +33,6 @@ public class OrchestrationFacilitatorRegistrar implements FacilitatorRegistrar {
     facilitatorClasses.add(Pair.of(ChildChainFacilitator.FACILITATOR_TYPE, ChildChainFacilitator.class));
     facilitatorClasses.add(Pair.of(BarrierFacilitator.FACILITATOR_TYPE, BarrierFacilitator.class));
     facilitatorClasses.add(Pair.of(TaskV2Facilitator.FACILITATOR_TYPE, TaskV2Facilitator.class));
+    facilitatorClasses.add(Pair.of(TaskChainV2Facilitator.FACILITATOR_TYPE, TaskChainV2Facilitator.class));
   }
 }

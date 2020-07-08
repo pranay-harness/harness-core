@@ -192,6 +192,28 @@ public class CustomExecutionUtils {
         .build();
   }
 
+  public static Plan provideHttpSwitchPlanV2() {
+    String planId = generateUuid();
+    String httpNodeId = generateUuid();
+
+    BasicHttpStepParameters basicHttpStateParameters =
+        BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
+    return Plan.builder()
+        .node(PlanNode.builder()
+                  .uuid(httpNodeId)
+                  .name("Basic Http 1")
+                  .stepType(BASIC_HTTP_STEP_TYPE)
+                  .identifier("http_1")
+                  .stepParameters(basicHttpStateParameters)
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.TASK_V2).build())
+                                             .build())
+                  .build())
+        .startingNodeId(httpNodeId)
+        .uuid(planId)
+        .build();
+  }
+
   public static Plan provideHttpForkPlan() {
     String planId = generateUuid();
     String httpNodeId1 = generateUuid();
