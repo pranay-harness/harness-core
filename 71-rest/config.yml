@@ -59,6 +59,7 @@ ceSetUpConfig:
   awsAccountId: 108817434118
   awsAccessKey: awsAccessKeyPlaceHolder
   awsSecretKey: awsSecretKeyPlaceHolder
+  awsS3BucketName: awsS3BucketPlaceHolder
   masterAccountCloudFormationTemplateLink: masterAccountCloudFormationTemplateLinkPlaceHolder
   linkedAccountCloudFormationTemplateLink: cloudFormationTemplateLinkPlaceHolder
   gcpProjectId: gcpProjectIdPlaceHolder

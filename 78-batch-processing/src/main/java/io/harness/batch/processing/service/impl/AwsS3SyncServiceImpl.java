@@ -41,14 +41,11 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
     AwsS3SyncConfig awsCredentials = configuration.getAwsS3SyncConfig();
     ImmutableMap<String, String> envVariables = ImmutableMap.of(AWS_ACCESS_KEY_ID, awsCredentials.getAwsAccessKey(),
         AWS_SECRET_ACCESS_KEY, awsCredentials.getAwsSecretKey(), AWS_DEFAULT_REGION, awsCredentials.getRegion());
-
-    String destinationBucketPath = String.join("/", "s3://" + awsCredentials.getAwsS3BucketName(),
-        s3SyncRecord.getAccountId(), s3SyncRecord.getSettingId(), s3SyncRecord.getCurReportName());
-
+    String destinationBucketPath = null;
     try {
       final ArrayList<String> assumeRoleCmd =
           Lists.newArrayList("aws", "sts", "assume-role", "--role-arn", s3SyncRecord.getRoleArn(),
-              "--role-session-name", s3SyncRecord.getBillingAccountId(), "--external-id", s3SyncRecord.getExternalId());
+              "--role-session-name", s3SyncRecord.getAccountId(), "--external-id", s3SyncRecord.getExternalId());
 
       ProcessResult processResult =
           getProcessExecutor().command(assumeRoleCmd).environment(envVariables).readOutput(true).execute();
@@ -58,6 +55,14 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
           ImmutableMap.of(AWS_ACCESS_KEY_ID, credentials.get("AccessKeyId").getAsString(), AWS_SECRET_ACCESS_KEY,
               credentials.get("SecretAccessKey").getAsString(), AWS_DEFAULT_REGION, awsCredentials.getRegion(),
               SESSION_TOKEN, credentials.get("SessionToken").getAsString());
+
+      JsonObject assumedRoleUser = new Gson()
+                                       .fromJson(processResult.getOutput().getString(), JsonObject.class)
+                                       .getAsJsonObject("AssumedRoleUser");
+
+      destinationBucketPath = String.join("/", "s3://" + awsCredentials.getAwsS3BucketName(),
+          assumedRoleUser.get("AssumedRoleId").getAsString(), s3SyncRecord.getSettingId(),
+          s3SyncRecord.getCurReportName());
 
       final ArrayList<String> cmd =
           Lists.newArrayList("aws", "s3", "sync", s3SyncRecord.getBillingBucketPath(), destinationBucketPath,

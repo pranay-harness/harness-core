@@ -78,7 +78,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   private static final String WRITE_TRUNCATE_VALUE = "WRITE_TRUNCATE";
   protected static final String PARENT_TEMPLATE = "projects/%s";
   protected static final String PARENT_TEMPLATE_WITH_LOCATION = "projects/%s/locations/%s";
-  private static final String DATA_PATH_TEMPLATE = "%s/%s/%s/%s/*/*.csv.gz";
+  private static final String DATA_PATH_TEMPLATE = "%s/*%s/%s/%s/*/*.csv.gz";
   private static final String TRANSFER_JOB_NAME_TEMPLATE = "gcsToBigQueryTransferJob_%s";
   private static final String SCHEDULED_QUERY_TEMPLATE = "scheduledQuery_%s";
   private static final String AWS_PRE_AGG_QUERY_TEMPLATE = "awsPreAggQuery_%s";

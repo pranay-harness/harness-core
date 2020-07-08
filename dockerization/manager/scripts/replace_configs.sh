@@ -281,6 +281,10 @@ if [[ "" != "$CE_SETUP_CONFIG_AWS_ACCOUNT_ID" ]]; then
   yq write -i $CONFIG_FILE ceSetUpConfig.awsAccountId "$CE_SETUP_CONFIG_AWS_ACCOUNT_ID"
 fi
 
+if [[ "" != "$CE_SETUP_CONFIG_AWS_S3_BUCKET_NAME" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.awsS3BucketName "$CE_SETUP_CONFIG_AWS_S3_BUCKET_NAME"
+fi
+
 if [[ "" != "$CE_SETUP_CONFIG_GCP_PROJECT_ID" ]]; then
   yq write -i $CONFIG_FILE ceSetUpConfig.gcpProjectId "$CE_SETUP_CONFIG_GCP_PROJECT_ID"
 fi

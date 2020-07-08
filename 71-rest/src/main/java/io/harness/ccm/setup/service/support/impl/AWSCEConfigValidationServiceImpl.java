@@ -1,6 +1,7 @@
 package io.harness.ccm.setup.service.support.impl;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -19,9 +20,12 @@ import com.amazonaws.services.organizations.model.ListAccountsResult;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.BucketPolicy;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import io.harness.ccm.setup.service.support.AwsCredentialHelper;
+import io.harness.ccm.setup.service.support.impl.pojo.BucketPolicyJson;
+import io.harness.ccm.setup.service.support.impl.pojo.BucketPolicyStatement;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
 import io.harness.exception.InvalidArgumentsException;
@@ -34,6 +38,7 @@ import software.wings.beans.ce.CEAwsConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -48,6 +53,7 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
   private static final String curReportKey = "CUR Report";
   private static final String curReportConfigKey = "CUR Report Config";
   private static final String validationFailureKey = "Validation Failed";
+  private static final String aws = "AWS";
 
   @Override
   public AwsS3BucketDetails validateCURReportAccessAndReturnS3Config(CEAwsConfig awsConfig) {
@@ -63,6 +69,38 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
       throw new InvalidArgumentsException(ImmutablePair.of(curReportKey, "Invalid CUR Report Name"));
     }
     return validateReportAndGetS3Region(report, awsConfig);
+  }
+
+  @Override
+  public boolean updateBucketPolicy(CEAwsConfig awsConfig) {
+    AWSCredentialsProvider credentialsProvider = awsCredentialHelper.constructBasicAwsCredentials();
+    AmazonS3Client amazonS3Client = getAmazonS3Client(credentialsProvider);
+    String crossAccountRoleArn = awsConfig.getAwsCrossAccountAttributes().getCrossAccountRoleArn();
+    String awsS3Bucket = awsCredentialHelper.getAWSS3Bucket();
+
+    BucketPolicy bucketPolicy = amazonS3Client.getBucketPolicy(awsS3Bucket);
+    String policyText = bucketPolicy.getPolicyText();
+    BucketPolicyJson policyJson = new Gson().fromJson(policyText, BucketPolicyJson.class);
+    List<BucketPolicyStatement> listStatements = new ArrayList<>();
+    for (BucketPolicyStatement statement : policyJson.getStatement()) {
+      Map<String, List<String>> principal = statement.getPrincipal();
+      List<String> rolesList = principal.get(aws);
+      rolesList.add(crossAccountRoleArn);
+      principal.put(aws, rolesList);
+      statement.setPrincipal(principal);
+      listStatements.add(statement);
+    }
+    policyJson = BucketPolicyJson.builder().Version(policyJson.getVersion()).Statement(listStatements).build();
+    String updatedBucketPolicy = new Gson().toJson(policyJson);
+    amazonS3Client.setBucketPolicy(awsS3Bucket, updatedBucketPolicy);
+    return true;
+  }
+
+  protected AmazonS3Client getAmazonS3Client(AWSCredentialsProvider credentialsProvider) {
+    AmazonS3ClientBuilder builder =
+        AmazonS3ClientBuilder.standard().withRegion(ceAWSRegion).withForceGlobalBucketAccessEnabled(Boolean.TRUE);
+    builder.withCredentials(credentialsProvider);
+    return (AmazonS3Client) builder.build();
   }
 
   private AwsS3BucketDetails validateReportAndGetS3Region(ReportDefinition report, CEAwsConfig awsConfig) {
