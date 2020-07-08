@@ -5,9 +5,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 
-import io.harness.delegate.AbortTaskRequest;
 import io.harness.delegate.AccountId;
-import io.harness.delegate.NgDelegateTaskServiceGrpc.NgDelegateTaskServiceBlockingStub;
 import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
@@ -18,39 +16,37 @@ import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
+import io.harness.grpc.ManagerDelegateGrpcClient;
 import io.harness.serializer.KryoSerializer;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class ManagerDelegateServiceDriver {
-  private final NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub;
   private final KryoSerializer kryoSerializer;
+  private final ManagerDelegateGrpcClient managerDelegateGrpcClient;
 
   @Inject
   public ManagerDelegateServiceDriver(
-      NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub, KryoSerializer kryoSerializer) {
-    this.ngDelegateTaskServiceBlockingStub = ngDelegateTaskServiceBlockingStub;
+      ManagerDelegateGrpcClient managerDelegateGrpcClient, KryoSerializer kryoSerializer) {
+    this.managerDelegateGrpcClient = managerDelegateGrpcClient;
     this.kryoSerializer = kryoSerializer;
   }
 
   public SendTaskResponse sendTask(String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
     SendTaskRequest request = buildSendTaskRequest(accountId, setupAbstractions, taskData);
-    return ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).sendTask(request);
+    return managerDelegateGrpcClient.sendTask(request);
   }
 
   public String sendTaskAsync(String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
     SendTaskAsyncRequest request = buildSendTaskAsyncRequest(accountId, setupAbstractions, taskData);
-    SendTaskAsyncResponse response =
-        ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).sendTaskAsync(request);
+    SendTaskAsyncResponse response = managerDelegateGrpcClient.sendTaskAsync(request);
     return response.getTaskId().getId();
   }
 
   public io.harness.delegate.AbortTaskResponse abortTask(io.harness.delegate.AbortTaskRequest request) {
-    return ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
-        .abortTask(AbortTaskRequest.newBuilder().build());
+    return managerDelegateGrpcClient.abortTask(request);
   }
 
   private SendTaskRequest buildSendTaskRequest(

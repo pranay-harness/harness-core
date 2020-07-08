@@ -5,7 +5,9 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.delegatesTo;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
@@ -28,12 +30,14 @@ import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.grpc.ManagerDelegateGrpcClient;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -77,6 +81,7 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
   private NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub;
   private ManagerDelegateServiceDriver managerDelegateServiceDriver;
   @Inject private KryoSerializer kryoSerializer;
+  @Mock ManagerDelegateGrpcClient managerDelegateGrpcClient;
 
   @Before
   public void doSetup() throws IOException {
@@ -96,7 +101,7 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
 
     ngDelegateTaskServiceBlockingStub = NgDelegateTaskServiceGrpc.newBlockingStub(channel);
 
-    managerDelegateServiceDriver = new ManagerDelegateServiceDriver(ngDelegateTaskServiceBlockingStub, kryoSerializer);
+    managerDelegateServiceDriver = new ManagerDelegateServiceDriver(managerDelegateGrpcClient, kryoSerializer);
   }
 
   @Test
@@ -113,6 +118,9 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
                             .parameters(new Object[] {HttpTaskParameters.builder().url("criteria").build()})
                             .build();
 
+    SendTaskResponse sendTaskResponse =
+        SendTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
+    when(managerDelegateGrpcClient.sendTask(any(SendTaskRequest.class))).thenReturn(sendTaskResponse);
     SendTaskResponse taskResponse = managerDelegateServiceDriver.sendTask(ACCOUNT_ID, setupAbstractions, taskData);
     assertThat(taskResponse).isNotNull();
     assertThat(taskResponse).isEqualTo(sendTaskResponse);
@@ -131,9 +139,13 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
                             .timeout(TimeUnit.MINUTES.toMillis(1))
                             .parameters(new Object[] {HttpTaskParameters.builder().url("criteria").build()})
                             .build();
-    String taskId = managerDelegateServiceDriver.sendTaskAsync(ACCOUNT_ID, setupAbstractions, taskData);
-    assertThat(taskId).isNotNull();
-    assertThat(taskId).isEqualTo(sendTaskAsyncResponse.getTaskId().getId());
+
+    SendTaskAsyncResponse sendTaskAsyncResponse =
+        SendTaskAsyncResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
+    when(managerDelegateGrpcClient.sendTaskAsync(any(SendTaskAsyncRequest.class))).thenReturn(sendTaskAsyncResponse);
+    String taskResponse = managerDelegateServiceDriver.sendTaskAsync(ACCOUNT_ID, setupAbstractions, taskData);
+    assertThat(taskResponse).isNotNull();
+    assertThat(taskResponse).isEqualTo("test");
   }
 
   @Test
@@ -141,6 +153,9 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
   @Category(UnitTests.class)
   public void testAbortTask() {
     AbortTaskRequest abortTaskRequest = AbortTaskRequest.newBuilder().build();
+    AbortTaskResponse abortTaskResponse =
+        AbortTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.EXECUTING).build();
+    when(managerDelegateGrpcClient.abortTask(any(AbortTaskRequest.class))).thenReturn(abortTaskResponse);
     AbortTaskResponse taskResponse = managerDelegateServiceDriver.abortTask(abortTaskRequest);
     assertThat(taskResponse).isNotNull();
     assertThat(taskResponse).isEqualTo(abortTaskResponse);
