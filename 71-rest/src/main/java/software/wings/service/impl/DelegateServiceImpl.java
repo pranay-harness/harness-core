@@ -371,9 +371,11 @@ public class DelegateServiceImpl implements DelegateService {
                                         .filter(DelegateKeys.accountId, accountId)
                                         .field(DelegateKeys.tags)
                                         .notEqual(null)
+                                        .project(DelegateKeys.accountId, true)
                                         .project(DelegateKeys.tags, true)
                                         .project(DelegateKeys.delegateName, true)
-                                        .project(DelegateKeys.hostName, true);
+                                        .project(DelegateKeys.hostName, true)
+                                        .project(DelegateKeys.delegateProfileId, true);
 
     try (HIterator<Delegate> delegates = new HIterator<>(delegateQuery.fetch())) {
       if (delegates.hasNext()) {

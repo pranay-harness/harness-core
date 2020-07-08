@@ -1477,13 +1477,16 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetAllDelegateSelectors() {
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
+
     DelegateProfile delegateProfile =
-        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("profile-name").build();
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("primary").build();
 
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
                             .ip("127.0.0.1")
                             .hostName("a.b.c")
+                            .delegateName("testDelegateName1")
                             .version(VERSION)
                             .status(Status.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
@@ -1495,6 +1498,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                    .accountId(ACCOUNT_ID)
                    .ip("127.0.0.1")
                    .hostName("d.e.f")
+                   .delegateName("testDelegateName2")
                    .version(VERSION)
                    .status(Status.ENABLED)
                    .lastHeartBeat(System.currentTimeMillis())
@@ -1506,8 +1510,9 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
     Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
-    assertThat(tags.size()).isEqualTo(2);
-    assertThat(tags).containsExactlyInAnyOrder("abc", "def");
+    assertThat(tags.size()).isEqualTo(7);
+    assertThat(tags).containsExactlyInAnyOrder(
+        "abc", "def", "testdelegatename1", "testdelegatename2", "a.b.c", "d.e.f", "primary");
   }
 
   @Test
