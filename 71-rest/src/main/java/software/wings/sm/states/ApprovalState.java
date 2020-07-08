@@ -546,20 +546,20 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
           return respondWithStatus(context, executionData, null,
               ExecutionResponse.builder()
                   .executionStatus(SUCCESS)
-                  .errorMessage("Approval provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+                  .errorMessage("Approval provided on Ticket: " + servicenowApprovalParams.getIssueNumber())
                   .stateExecutionData(executionData));
         }
         executionData.setTimeoutMillis(Integer.MAX_VALUE);
         executionData.setWaitingForChangeWindow(true);
         executionData.setErrorMsg(
-            "Approved but waiting for Change window (" + serviceNowExecutionData.getMessage() + " )");
+            "Approved but waiting for Change Window (" + serviceNowExecutionData.getMessage() + " )");
       }
 
       if (executionData.getSnowRejection() != null && executionData.getSnowRejection().satisfied(currentStatus)) {
         return respondWithStatus(context, executionData, null,
             ExecutionResponse.builder()
                 .executionStatus(REJECTED)
-                .errorMessage("Rejection provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+                .errorMessage("Rejection provided on Ticket: " + servicenowApprovalParams.getIssueNumber())
                 .stateExecutionData(executionData));
       }
 
@@ -567,7 +567,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         return respondWithStatus(context, executionData, null,
             ExecutionResponse.builder()
                 .executionStatus(SUCCESS)
-                .errorMessage("Approval provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+                .errorMessage("Approval provided on Ticket: " + servicenowApprovalParams.getIssueNumber())
                 .stateExecutionData(executionData));
       }
 
@@ -576,7 +576,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         return respondWithStatus(context, executionData, null,
             ExecutionResponse.builder()
                 .executionStatus(REJECTED)
-                .errorMessage("Rejection provided on ticket: " + servicenowApprovalParams.getIssueNumber())
+                .errorMessage("Rejection provided on Ticket: " + servicenowApprovalParams.getIssueNumber())
                 .stateExecutionData(executionData));
       }
 

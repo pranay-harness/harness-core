@@ -98,7 +98,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalForMultipleORConditions() {
     Criteria rejectionCriteria = new Criteria();
@@ -132,7 +132,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalWithChangeWindowTimeout() {
     Criteria rejectionCriteria = new Criteria();
@@ -191,7 +191,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalWithChangingTimeWindowValuesForChange() {
     Criteria rejectionCriteria = new Criteria();
@@ -238,7 +238,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ThrowExceptionForInvalidChangeWindowValues() {
     Criteria rejectionCriteria = new Criteria();
@@ -288,11 +288,11 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
     Map<String, Object> executionDetails = (Map<String, Object>) snowApprovalNode.getExecutionDetails();
     assertThat(executionDetails.get("errorMsg"))
         .isEqualTo(
-            ExecutionDataValue.builder().displayName("Message").value("Time window fields given are invalid").build());
+            ExecutionDataValue.builder().displayName("Message").value("Time Window fields given are invalid").build());
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalForExpiredButWaitingForTimeWindow() {
     Criteria rejectionCriteria = new Criteria();
@@ -346,7 +346,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalWithChangingTimeWindowValuesOtherTicketTypes() {
     Criteria rejectionCriteria = new Criteria();
@@ -423,7 +423,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowRejectionForMultipleANDConditions() {
     Criteria rejectionCriteria = new Criteria();
@@ -457,7 +457,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowApprovalPipelineForMultipleANDConditions() {
     Criteria rejectionCriteria = new Criteria();
@@ -547,7 +547,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRABU)
+  @Owner(developers = PRABU, intermittent = true)
   @Category({FunctionalTests.class})
   public void ExecuteServiceNowRejectionPipelineForMultipleORConditions() {
     Criteria rejectionCriteria = new Criteria();
@@ -737,12 +737,14 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
           workflowExecutionService.getWorkflowExecution(environment.getAppId(), workflowExecution.getUuid())
               .getStatus();
       logger.info("Current workflow execution status: {}", executionStatus.name());
-      return executionStatus == status;
+      return executionStatus == status || ExecutionStatus.isFinalStatus(executionStatus);
     });
 
     logger.info("Workflow Execution completed successfully");
     WorkflowExecution completedExecution =
         workflowExecutionService.getExecutionDetails(environment.getAppId(), workflowExecution.getUuid(), false);
+
+    assertThat(completedExecution.getStatus()).isEqualTo(status);
 
     assertThat(completedExecution).isNotNull();
     return completedExecution;

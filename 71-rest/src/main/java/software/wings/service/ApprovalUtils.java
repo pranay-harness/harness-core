@@ -95,7 +95,7 @@ public class ApprovalUtils {
     executionData.setStatus(ExecutionStatus.FAILED);
     executionData.setApprovedOn(System.currentTimeMillis());
     executionData.setCurrentStatus(approvalData.getCurrentStatus());
-    executionData.setErrorMsg("Servicenow approval failed: " + errorMesage + " ticket: ");
+    executionData.setErrorMsg("ServiceNow approval failed: " + errorMesage + " ticket: ");
 
     logger.info("Sending notify for approvalId: {}, workflowExecutionId: {} ", approvalId, workflowExecutionId);
     waitNotifyEngine.doneWith(approvalId, executionData);

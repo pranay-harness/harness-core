@@ -1029,7 +1029,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
-    assertThat(executionResponse.getErrorMessage()).isEqualTo("Change window end time value in ticket is invalid");
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Change Window End Time value in Ticket is invalid");
 
     when(serviceNowService.getIssueUrl(anyString(), anyString(), any()))
         .thenReturn(
@@ -1042,7 +1042,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
-    assertThat(executionResponse.getErrorMessage()).isEqualTo("Start window time must be lesser than end window time");
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Start Window Time must be earlier than End Window Time");
   }
 
   @Test

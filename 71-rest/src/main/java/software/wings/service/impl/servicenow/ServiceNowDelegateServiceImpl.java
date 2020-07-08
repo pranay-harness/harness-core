@@ -354,7 +354,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       try {
         issueStatus.putAll(getIssueValues(issueObj, approvalParams.getChangeWindowTimeFields()));
       } catch (NullPointerException npe) {
-        throw new InvalidRequestException("Time window fields given are invalid", npe, SERVICENOW_ERROR, USER);
+        throw new InvalidRequestException("Time Window fields given are invalid", npe, SERVICENOW_ERROR, USER);
       }
       return ServiceNowExecutionData.builder()
           .issueUrl(issueUrl)
