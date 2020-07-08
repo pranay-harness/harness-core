@@ -56,6 +56,6 @@ public class BatchMongoConfiguration {
   @Bean
   @Profile("!test")
   public KryoModule kryoModule() {
-    return KryoModule.getInstance();
+    return new KryoModule(true);
   }
 }
