@@ -1678,7 +1678,7 @@ public class TriggerServiceImpl implements TriggerService {
   public boolean triggerActionExists(Trigger trigger) {
     WorkflowType workflowType = trigger.getWorkflowType();
     if (PIPELINE == workflowType) {
-      return pipelineService.pipelineExists(trigger.getAppId(), trigger.getPipelineId());
+      return pipelineService.pipelineExists(trigger.getAppId(), trigger.getWorkflowId());
     } else if (WorkflowType.ORCHESTRATION == workflowType) {
       return workflowService.workflowExists(trigger.getAppId(), trigger.getWorkflowId());
     }
