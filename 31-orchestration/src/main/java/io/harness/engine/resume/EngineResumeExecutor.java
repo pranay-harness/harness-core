@@ -85,10 +85,12 @@ public class EngineResumeExecutor implements Runnable {
               childExecutable.handleChildResponse(ambiance, nodeExecution.getResolvedStepParameters(), response);
           break;
         case TASK:
+        case TASK_V2:
           TaskExecutable taskExecutable = (TaskExecutable) step;
           stepResponse = taskExecutable.handleTaskResult(ambiance, nodeExecution.getResolvedStepParameters(), response);
           break;
         case TASK_CHAIN:
+        case TASK_CHAIN_V2:
           TaskChainExecutable taskChainExecutable = (TaskChainExecutable) step;
           TaskChainExecutableResponse lastLinkResponse =
               Preconditions.checkNotNull((TaskChainExecutableResponse) nodeExecution.obtainLatestExecutableResponse());

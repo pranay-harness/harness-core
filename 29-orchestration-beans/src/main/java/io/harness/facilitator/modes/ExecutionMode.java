@@ -12,6 +12,7 @@ public enum ExecutionMode {
   ASYNC,
   SKIP,
   TASK_CHAIN,
+  TASK_CHAIN_V2,
   CHILDREN,
   CHILD,
   TASK,

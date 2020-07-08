@@ -19,7 +19,6 @@ import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutableResponse;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
-import io.harness.tasks.Task;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.waiter.NotifyCallback;
@@ -57,7 +56,6 @@ public class TaskChainStrategy implements TaskInvokeStrategy {
   }
 
   private void handleResponse(@NonNull Ambiance ambiance, @NonNull TaskChainResponse taskChainResponse) {
-    Task task = taskChainResponse.getTask();
     NodeExecution nodeExecution =
         Preconditions.checkNotNull(nodeExecutionService.get(ambiance.obtainCurrentRuntimeId()));
     TaskExecutor taskExecutor = taskExecutorMap.get(mode.name());
@@ -73,7 +71,7 @@ public class TaskChainStrategy implements TaskInvokeStrategy {
                 .passThroughData(taskChainResponse.getPassThroughData())
                 .build()));
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    waitNotifyEngine.waitForAllOn(publisherName, callback, task.getWaitId());
+    waitNotifyEngine.waitForAllOn(publisherName, callback, taskId);
   }
 
   @Override

@@ -1,6 +1,7 @@
 package io.harness.grpc.ng.manager;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -21,6 +22,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.serializer.KryoSerializer;
+import io.harness.waiter.WaitNotifyEngine;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.Map;
@@ -28,11 +30,14 @@ import java.util.Map;
 public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegateTaskServiceImplBase {
   private DelegateService delegateService;
   private KryoSerializer kryoSerializer;
+  private WaitNotifyEngine waitNotifyEngine;
 
   @Inject
-  public DelegateTaskGrpcServer(DelegateService delegateService, KryoSerializer kryoSerializer) {
+  public DelegateTaskGrpcServer(
+      DelegateService delegateService, KryoSerializer kryoSerializer, WaitNotifyEngine waitNotifyEngine) {
     this.delegateService = delegateService;
     this.kryoSerializer = kryoSerializer;
+    this.waitNotifyEngine = waitNotifyEngine;
   }
 
   @Override
@@ -55,6 +60,7 @@ public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegate
   public void sendTaskAsync(SendTaskAsyncRequest request, StreamObserver<SendTaskAsyncResponse> responseObserver) {
     DelegateTask task = extractDelegateTask(request);
     String taskId = delegateService.queueTask(task);
+    waitNotifyEngine.waitForAllOn(ORCHESTRATION, DelegateTaskResumeCallback.builder().taskId(taskId).build(), taskId);
     responseObserver.onNext(
         SendTaskAsyncResponse.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build());
     responseObserver.onCompleted();

@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
@@ -15,6 +17,11 @@ public class DelegateTaskExecutor implements TaskExecutor {
   @Override
   public String queueTask(@NonNull Ambiance ambiance, @NonNull Task task) {
     DelegateTask delegateTask = (DelegateTask) task;
+    // This is for backward compatibility as current delegate service works with wait Id
+    if (delegateTask.getWaitId() == null) {
+      delegateTask.setWaitId(generateUuid());
+    }
+    delegateTask.setUuid(delegateTask.getWaitId());
     return delegateService.queueTask(delegateTask);
   }
 

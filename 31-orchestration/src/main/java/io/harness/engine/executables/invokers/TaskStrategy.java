@@ -56,7 +56,7 @@ public class TaskStrategy implements TaskInvokeStrategy {
     TaskExecutor taskExecutor = taskExecutorMap.get(mode.name());
     String taskId = Preconditions.checkNotNull(taskExecutor.queueTask(ambiance, task));
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    waitNotifyEngine.waitForAllOn(publisherName, callback, task.getWaitId());
+    waitNotifyEngine.waitForAllOn(publisherName, callback, taskId);
 
     // Update Execution Node Instance state to TASK_WAITING
     nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.TASK_WAITING,
