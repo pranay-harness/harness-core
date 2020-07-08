@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
@@ -45,6 +46,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void accessManagementPermissionTestForList() {
     logger.info("Logging in as a ReadOnly user");
     String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
@@ -65,6 +67,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void accessManagementNoPermissionTestForGet() {
     logger.info("Readonly test for GET");
     final String READ_ONLY_USER = "rbac2@harness.io";
@@ -76,6 +79,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void amNoPermissionToPostForUserGroup() {
     final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.testPermissionToPostInUserGroup(
@@ -94,6 +98,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void amNoPermissionToPostForAPIKeys() {
     final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.runAPIKeyPostTest(
@@ -103,6 +108,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void amNoPermissionToPostForLDAP() {
     final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.ldapCreationFailureCheckTest(
@@ -112,6 +118,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void amNoPermissionToPostForSAML() {
     final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.amNoPermissionToPostForSAML(
@@ -121,6 +128,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void updateIPWhitelistingTest() {
     final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.updateIPWhiteListing(
@@ -130,6 +138,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void deleteIPWhitelistingTest() {
     final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.deleteIPWhitelisting(
@@ -139,6 +148,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void updateAndDeleteApiKeysTest() {
     final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.updateAndDeleteAPIKeys(

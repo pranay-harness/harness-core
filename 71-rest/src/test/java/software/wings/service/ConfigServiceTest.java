@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -46,6 +47,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.security.auth.ConfigFileAuthHandler;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
@@ -75,6 +77,7 @@ public class ConfigServiceTest extends WingsBaseTest {
   @Mock private HostService hostService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private ConfigFileAuthHandler configFileAuthHandler;
 
   @Inject @InjectMocks private ConfigService configService;
   private InputStream inputStream;
@@ -298,6 +301,8 @@ public class ConfigServiceTest extends WingsBaseTest {
   public void shouldDelete() {
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
+    doNothing().when(configFileAuthHandler).authorize(any());
+
     configService.delete(APP_ID, FILE_ID);
     verify(wingsPersistence).delete(query);
     verify(fileService).deleteAllFilesForEntity(FILE_ID, FileBucket.CONFIGS);

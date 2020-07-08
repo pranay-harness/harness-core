@@ -436,7 +436,6 @@ public class ConfigServiceImpl implements ConfigService {
     if (configFile == null) {
       return;
     }
-
     boolean deleted = wingsPersistence.delete(query);
     if (deleted) {
       yamlPushService.pushYamlChangeSet(

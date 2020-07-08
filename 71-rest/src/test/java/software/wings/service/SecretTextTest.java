@@ -17,6 +17,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -89,6 +90,7 @@ import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.impl.UsageRestrictionsServiceImplTest;
 import software.wings.service.impl.security.SecretText;
+import software.wings.service.impl.security.auth.ConfigFileAuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
@@ -148,6 +150,8 @@ public class SecretTextTest extends WingsBaseTest {
   @Inject private ServiceResourceService serviceResourceService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
+  @Mock private ConfigFileAuthHandler configFileAuthHandler;
+
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().email(userEmail).name(userName).build();
@@ -170,7 +174,10 @@ public class SecretTextTest extends WingsBaseTest {
 
     Account account = getAccount(AccountType.PAID);
     accountId = account.getUuid();
+
     when(accountService.get(accountId)).thenReturn(account);
+
+    doNothing().when(configFileAuthHandler).authorize(any());
 
     appId = wingsPersistence.save(anApplication().accountId(accountId).name(generateUuid()).build());
     workflowName = generateUuid();
