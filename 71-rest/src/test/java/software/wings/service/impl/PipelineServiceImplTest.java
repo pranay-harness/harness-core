@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.DHRUV;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -27,6 +28,7 @@ import static software.wings.beans.EntityType.NEWRELIC_MARKER_APPID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
+import static software.wings.beans.EntityType.USER_GROUP;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -743,12 +745,14 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pseWorkflowVariables.put("Environment", "${env}");
     pseWorkflowVariables.put("InfraDefinition_ECS", "${infra1}");
 
-    PipelineStageElement pse = PipelineStageElement.builder().workflowVariables(pseWorkflowVariables).build();
+    PipelineStageElement pse =
+        PipelineStageElement.builder().workflowVariables(pseWorkflowVariables).type("ENV_STATE").build();
 
     Map<String, String> pse2WorkflowVariables = new HashMap<>();
     pse2WorkflowVariables.put("Environment", "${env}");
     pse2WorkflowVariables.put("InfraDefinition_ECS", "${infra2}");
-    PipelineStageElement pse2 = PipelineStageElement.builder().workflowVariables(pse2WorkflowVariables).build();
+    PipelineStageElement pse2 =
+        PipelineStageElement.builder().workflowVariables(pse2WorkflowVariables).type("ENV_STATE").build();
 
     pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
     pipelineServiceImpl.setPipelineVariables(workflow, pse2, pipelineVariables, false, true);
@@ -774,7 +778,8 @@ public class PipelineServiceImplTest extends WingsBaseTest {
             .build();
     List<Variable> pipelineVariables = new ArrayList<>();
     Map<String, String> pseWorkflowVariables = new HashMap<>();
-    PipelineStageElement pse = PipelineStageElement.builder().workflowVariables(pseWorkflowVariables).build();
+    PipelineStageElement pse =
+        PipelineStageElement.builder().workflowVariables(pseWorkflowVariables).type("ENV_STATE").build();
 
     pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
     assertThat(pipelineVariables).isNotEmpty();
@@ -847,13 +852,15 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     pseWorkflowVariables.put("InfraDefinition_ECS", "I1");
     pseWorkflowVariables.put("Service", "${srv}");
 
-    PipelineStageElement pse = PipelineStageElement.builder().workflowVariables(pseWorkflowVariables).build();
+    PipelineStageElement pse =
+        PipelineStageElement.builder().workflowVariables(pseWorkflowVariables).type("ENV_STATE").build();
 
     Map<String, String> pse2WorkflowVariables = new HashMap<>();
     pse2WorkflowVariables.put("Environment", "E2");
     pse2WorkflowVariables.put("InfraDefinition_ECS", "I2");
     pse2WorkflowVariables.put("Service", "${srv}");
-    PipelineStageElement pse2 = PipelineStageElement.builder().workflowVariables(pse2WorkflowVariables).build();
+    PipelineStageElement pse2 =
+        PipelineStageElement.builder().workflowVariables(pse2WorkflowVariables).type("ENV_STATE").build();
 
     pipelineServiceImpl.setPipelineVariables(workflow, pse, pipelineVariables, false, true);
     pipelineServiceImpl.setPipelineVariables(workflow, pse2, pipelineVariables, false, true);
@@ -999,5 +1006,33 @@ public class PipelineServiceImplTest extends WingsBaseTest {
     assertThat(pipeline.isValid()).isFalse();
     assertThat(pipelineStage.isValid()).isFalse();
     assertThat(pipeline.getValidationMessage()).isEqualTo("Some steps [TEST_STEP] are found to be invalid/incomplete.");
+  }
+
+  @Test
+  @Owner(developers = DHRUV)
+  @Category(UnitTests.class)
+  public void setPipelineVariablesApprovalState() {
+    HashMap<String, Object> metadata = new HashMap<>();
+    PipelineStage pipelineStage = PipelineStage.builder().name("Approval").build();
+    metadata.put(Variable.ENTITY_TYPE, USER_GROUP);
+    List<Variable> pipelineVariables = new ArrayList<>();
+    HashMap<String, Object> propertiestest = new HashMap<>();
+    HashMap<String, Object> metadatatest = new HashMap<>();
+    HashMap<String, Object> metadatatestvalue = new HashMap<>();
+    metadatatestvalue.put("entityType", "USER_GROUP");
+    metadatatestvalue.put("relatedField", "");
+    metadatatest.put("metadata", metadatatestvalue);
+    HashMap<String, Object> values = new HashMap<>();
+    values.put("expression", "${User_Group}");
+    values.put("fieldName", "userGroups");
+    values.put("metadata", metadatatest);
+    ArrayList listValues = new ArrayList();
+    listValues.add(values);
+    propertiestest.put("templateExpressions", listValues);
+    PipelineStageElement pse = PipelineStageElement.builder().type("APPROVAL").properties(propertiestest).build();
+    pipelineServiceImpl.setPipelineVariablesApproval(pse, pipelineVariables, pipelineStage.getName());
+
+    assertThat(pipelineVariables).isNotEmpty();
+    assertThat(pipelineVariables.get(0).getName()).isEqualTo("User_Group");
   }
 }

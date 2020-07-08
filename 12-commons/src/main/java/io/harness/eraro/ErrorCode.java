@@ -91,6 +91,8 @@ public enum ErrorCode {
 
   SSH_CONNECTION_ERROR("Ssh Connection error"),
 
+  USER_GROUP_ERROR("User Group Invalid"),
+
   INVALID_EXECUTION_ID,
 
   ERROR_IN_GETTING_CHANNEL_STREAMS,

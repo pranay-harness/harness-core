@@ -14,13 +14,19 @@ import io.harness.persistence.NameAccess;
 import io.harness.persistence.UuidAccess;
 import org.jetbrains.annotations.Nullable;
 import software.wings.beans.EntityType;
+import software.wings.beans.security.UserGroup;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @OwnedBy(CDC)
 @Singleton
@@ -31,6 +37,7 @@ public class WorkflowYAMLHelper {
   @Inject InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject ServiceResourceService serviceResourceService;
   @Inject SettingsService settingsService;
+  @Inject UserGroupService userGroupService;
 
   public String getWorkflowVariableValueBean(
       String accountId, String envId, String appId, String entityType, String variableValue, boolean skipEmpty) {
@@ -38,13 +45,21 @@ public class WorkflowYAMLHelper {
       return variableValue;
     }
     EntityType entityTypeEnum = EntityType.valueOf(entityType);
+    List<String> values = new ArrayList<>();
+    List<String> returnValues = new ArrayList<>();
 
-    UuidAccess uuidAccess = getUuidAccess(accountId, envId, appId, variableValue, entityTypeEnum);
-    if (uuidAccess != null) {
-      return uuidAccess.getUuid();
-    } else {
-      return variableValue;
+    String valuesArray[] = variableValue.split(",");
+    values = Arrays.asList(valuesArray);
+
+    for (String str : values) {
+      UuidAccess uuidAccess = getUuidAccess(accountId, envId, appId, str, entityTypeEnum);
+      if (uuidAccess != null) {
+        returnValues.add(uuidAccess.getUuid());
+      } else {
+        return variableValue;
+      }
     }
+    return String.join(",", returnValues);
   }
 
   public String getWorkflowVariableValueBean(
@@ -57,6 +72,24 @@ public class WorkflowYAMLHelper {
     if (entityType == null || (skipEmpty && isEmpty(entryValue)) || matchesVariablePattern(entryValue)) {
       return entryValue;
     }
+
+    List<String> userGroupValueName = new ArrayList<>();
+    if (entityType.equals(EntityType.USER_GROUP)) {
+      List<String> values = new ArrayList<>();
+      String valuesArray[] = entryValue.split(",");
+      values = Arrays.asList(valuesArray);
+      for (String value : values) {
+        UserGroup userGroup = userGroupService.get(value);
+        String name = userGroup.getName();
+        if (name != null) {
+          userGroupValueName.add(name);
+        } else {
+          userGroupValueName.add(entryValue);
+        }
+      }
+      return String.join("\n", userGroupValueName);
+    }
+
     NameAccess x = getNameAccess(appId, entryValue, entityType);
     if (x != null) {
       return x.getName();
@@ -132,6 +165,11 @@ public class WorkflowYAMLHelper {
         notNullCheck(
             "Ssh connection attribute [" + variableValue + "] associated to the Shell Script State does not exist",
             uuidAccess, USER);
+        break;
+      case USER_GROUP:
+        uuidAccess = userGroupService.fetchUserGroupByName(accountId, variableValue);
+        notNullCheck(
+            "userGroup [" + variableValue + "] associated to the Approval State does not exist", uuidAccess, USER);
         break;
       case SS_WINRM_CONNECTION_ATTRIBUTE:
         uuidAccess = settingsService.fetchSettingAttributeByName(

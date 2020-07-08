@@ -18,6 +18,7 @@ import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.EntityType;
@@ -121,8 +122,8 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         yamlProperties.forEach((name, value) -> {
           if (!shouldBeIgnored(name)) {
             properties.put(name,
-                "userGroups".equals(name)
-                    ? getUserGroupUuids((List<String>) value, appService.getAccountIdByAppId(appId))
+                ("userGroups".equals(name))
+                    ? getUserGroupUuids((List<String>) value, appService.getAccountIdByAppId(appId), yamlProperties)
                     : value);
           }
         });
@@ -142,14 +143,24 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     return stage;
   }
 
-  private Object getUserGroupUuids(List<String> userGroupNameList, String accountId) {
-    List<String> userGroupUuids = new ArrayList<>();
-    for (String userGroupName : userGroupNameList) {
-      UserGroup userGroup = userGroupService.fetchUserGroupByName(accountId, userGroupName);
-      notNullCheck("User group " + userGroupName + "doesn't exist", userGroup);
-      userGroupUuids.add(userGroup.getUuid());
+  private Object getUserGroupUuids(
+      List<String> userGroupNameList, String accountId, Map<String, Object> yamlProperties) {
+    if (isEmpty(userGroupNameList)) {
+      if (yamlProperties.get("templateExpressions") == null) {
+        throw new InvalidRequestException("user groups cannot be empty in non templatized approval");
+      }
     }
-    return userGroupUuids;
+    if (userGroupNameList != null) {
+      List<String> userGroupUuids = new ArrayList<>();
+      for (String userGroupName : userGroupNameList) {
+        UserGroup userGroup = userGroupService.fetchUserGroupByName(accountId, userGroupName);
+        notNullCheck("User group " + userGroupName + "doesn't exist", userGroup);
+        userGroupUuids.add(userGroup.getUuid());
+      }
+      return userGroupUuids;
+    } else {
+      return userGroupNameList;
+    }
   }
 
   private String resolveEnvironmentId(Yaml yaml, String appId, Map<String, Object> properties,
@@ -256,7 +267,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         properties.forEach((name, value) -> {
           if (!shouldBeIgnored(name)) {
             outputProperties.put(name,
-                "userGroups".equals(name)
+                ("userGroups".equals(name) && value != null)
                     ? getUserGroupNames((List<String>) value, appService.getAccountIdByAppId(appId))
                     : value);
           }

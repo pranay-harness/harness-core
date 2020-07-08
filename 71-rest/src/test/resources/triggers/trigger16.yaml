@@ -1,0 +1,11 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+description: testing
+executionName: w1
+executionType: Workflow
+triggerCondition:
+- type: WEBHOOK
+workflowVariables:
+- entityType: USER_GROUP
+  name: User_Group
+  value: ${variable1}

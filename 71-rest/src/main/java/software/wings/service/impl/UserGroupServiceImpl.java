@@ -255,6 +255,12 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
+  public UserGroup get(String varId) {
+    UserGroup userGroup = wingsPersistence.get(UserGroup.class, varId);
+    return userGroup;
+  }
+
+  @Override
   @Nullable
   public UserGroup getByName(String accountId, String name) {
     return wingsPersistence.createQuery(UserGroup.class)

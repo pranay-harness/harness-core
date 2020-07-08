@@ -8,6 +8,7 @@ import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.DHRUV;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -15,6 +16,7 @@ import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -81,6 +83,7 @@ import software.wings.beans.NameValuePair.NameValuePairKeys;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
 import software.wings.beans.WorkflowExecution;
@@ -93,7 +96,9 @@ import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.beans.security.UserGroup;
 import software.wings.common.NotificationMessageResolver;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.security.SecretManager;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
@@ -102,12 +107,14 @@ import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.State;
 import software.wings.sm.StateExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
@@ -150,7 +157,9 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private JiraHelperService jiraHelperService;
   @Mock private ServiceNowService serviceNowService;
   @Mock private ApprovalPolingService approvalPolingService;
-
+  @Mock private UserGroupService userGroupService;
+  @Mock private State state;
+  @Mock private TemplateExpressionProcessor templateExpressionProcessor;
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
 
   @Before
@@ -534,7 +543,6 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testFillSweepingOutput() {
     when(context.renderExpression(anyString(), any(StateExecutionContext.class)))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-
     when(context.prepareSweepingOutputBuilder(any())).thenReturn(SweepingOutputInstance.builder());
     approvalState.setSweepingOutputName("test");
     approvalState.setVariables(asList(NameValuePair.builder().name("test").value("test").valueType("TEXT").build()));
@@ -1077,6 +1085,81 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     ExecutionResponse executionResponse = approvalState.executeServiceNowApproval(context, executionData, "id");
     assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+  }
+
+  @Test
+  @Owner(developers = DHRUV)
+  @Category(UnitTests.class)
+  public void shouldExecuteWorkflowWithTemplateExpressionWithName() {
+    PageResponse pageResponse = new PageResponse();
+    pageResponse.setResponse(asList(User.Builder.anUser().build()));
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
+
+    List<TemplateExpression> templateExpressions = new ArrayList<>();
+    TemplateExpression t = new TemplateExpression();
+    t.setFieldName("userGroups");
+    t.setExpression("${USER_GROUP}");
+    templateExpressions.add(t);
+    on(approvalState).set("templateExpressions", templateExpressions);
+    UserGroup userGroup = new UserGroup();
+    userGroup.setName("Account Administrator");
+    userGroup.setUuid("dIyaCXXVRp65abGOlN5Fmg");
+
+    when(templateExpressionProcessor.getTemplateExpression(any(), eq("userGroups"))).thenReturn(t);
+    when(templateExpressionProcessor.resolveTemplateExpression(any(), any())).thenReturn("Account Administrator");
+    when(state.getTemplateExpressions()).thenReturn(templateExpressions);
+    when(userGroupService.get(any(), eq("Account Administrator"))).thenReturn(null);
+    when(userGroupService.fetchUserGroupByName(any(), eq("Account Administrator"))).thenReturn(userGroup);
+
+    when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
+    ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(alertService)
+        .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
+    assertThat(executionResponse.isAsync()).isTrue();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+
+    Mockito.verify(workflowNotificationHelper, Mockito.times(1))
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_PAUSE_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+  }
+
+  @Test
+  @Owner(developers = DHRUV)
+  @Category(UnitTests.class)
+  public void shouldExecuteWorkflowWithTemplateExpressionWithValue() {
+    PageResponse pageResponse = new PageResponse();
+    pageResponse.setResponse(asList(User.Builder.anUser().build()));
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
+
+    List<TemplateExpression> templateExpressions = new ArrayList<>();
+    TemplateExpression t = new TemplateExpression();
+    t.setFieldName("userGroups");
+    t.setExpression("${USER_GROUP}");
+    templateExpressions.add(t);
+    on(approvalState).set("templateExpressions", templateExpressions);
+    UserGroup userGroup = new UserGroup();
+    userGroup.setName("Account Administrator");
+    userGroup.setUuid("dIyaCXXVRp65abGOlN5Fmg");
+
+    when(templateExpressionProcessor.getTemplateExpression(any(), eq("userGroups"))).thenReturn(t);
+    when(templateExpressionProcessor.resolveTemplateExpression(any(), any())).thenReturn("dIyaCXXVRp65abGOlN5Fmg");
+    when(state.getTemplateExpressions()).thenReturn(templateExpressions);
+    when(userGroupService.get(any(), eq("dIyaCXXVRp65abGOlN5Fmg"))).thenReturn(userGroup);
+
+    when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
+    ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(alertService)
+        .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
+    assertThat(executionResponse.isAsync()).isTrue();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+
+    Mockito.verify(workflowNotificationHelper, Mockito.times(1))
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_PAUSE_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
   }
 

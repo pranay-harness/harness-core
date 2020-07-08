@@ -33,9 +33,15 @@ import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
+import static software.wings.beans.EntityType.USER_GROUP;
+import static software.wings.beans.EntityType.valueOf;
+import static software.wings.beans.Variable.VariableBuilder;
+import static software.wings.beans.VariableType.ENTITY;
+import static software.wings.beans.VariableType.TEXT;
 import static software.wings.expression.ManagerExpressionEvaluator.getName;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
 import static software.wings.service.impl.pipeline.PipelineServiceValidator.checkUniqueApprovalPublishedVariable;
+import static software.wings.service.impl.pipeline.PipelineServiceValidator.validateTemplateExpressions;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 
@@ -91,11 +97,13 @@ import software.wings.beans.deployment.DeploymentMetadata.Include;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.pipeline.PipelineServiceHelper;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -120,6 +128,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
@@ -204,6 +213,7 @@ public class PipelineServiceImpl implements PipelineService {
    */
   @Override
   public Pipeline update(Pipeline pipeline, boolean migration, boolean fromYaml) {
+    validateTemplateExpressions(pipeline);
     Pipeline savedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     notNullCheck("Pipeline not saved", savedPipeline, USER);
 
@@ -731,12 +741,15 @@ public class PipelineServiceImpl implements PipelineService {
     Map<String, Workflow> workflowCache = new HashMap<>();
     for (PipelineStage pipelineStage : pipelineStages) {
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
-        if (!ENV_STATE.name().equals(pse.getType()) || pse.checkDisableAssertion()) {
+        if (pse.checkDisableAssertion()) {
           continue;
+        } else if (ENV_STATE.name().equals(pse.getType())) {
+          String workflowId = (String) pse.getProperties().get("workflowId");
+          Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
+          setPipelineVariables(workflow, pse, pipelineVariables, true, infraRefactor);
+        } else if (APPROVAL.name().equals(pse.getType())) {
+          setPipelineVariablesApproval(pse, pipelineVariables, pipelineStage.getName());
         }
-        String workflowId = (String) pse.getProperties().get("workflowId");
-        Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
-        setPipelineVariables(workflow, pse, pipelineVariables, true, infraRefactor);
       }
     }
     return pipelineVariables;
@@ -754,40 +767,42 @@ public class PipelineServiceImpl implements PipelineService {
     Map<String, Workflow> workflowCache = new HashMap<>();
     for (PipelineStage pipelineStage : pipelineStages) {
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
-        if (!ENV_STATE.name().equals(pse.getType()) || pse.checkDisableAssertion()) {
+        if (pse.checkDisableAssertion()) {
           continue;
-        }
+        } else if (ENV_STATE.name().equals(pse.getType())) {
+          try {
+            String workflowId = (String) pse.getProperties().get("workflowId");
+            Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
 
-        try {
-          String workflowId = (String) pse.getProperties().get("workflowId");
-          Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
+            if (!hasSshInfraMapping) {
+              hasSshInfraMapping = workflowServiceHelper.workflowHasSshDeploymentPhase(
+                  (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
+            }
+            deploymentTypes.addAll(workflowServiceHelper.obtainDeploymentTypes(workflow.getOrchestrationWorkflow()));
+            if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
+              templatized = true;
+            }
 
-          if (!hasSshInfraMapping) {
-            hasSshInfraMapping = workflowServiceHelper.workflowHasSshDeploymentPhase(
-                (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
-          }
-          deploymentTypes.addAll(workflowServiceHelper.obtainDeploymentTypes(workflow.getOrchestrationWorkflow()));
-          if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
-            templatized = true;
-          }
+            if (!workflow.getOrchestrationWorkflow().isValid()) {
+              invalidStages.add(pse.getName());
+              pse.setValid(false);
+              pse.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
+              pipelineStage.setValid(false);
+              pipelineStage.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
+            }
 
-          if (!workflow.getOrchestrationWorkflow().isValid()) {
-            invalidStages.add(pse.getName());
-            pse.setValid(false);
-            pse.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
-            pipelineStage.setValid(false);
-            pipelineStage.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
+            validateWorkflowVariables(workflow, pse, pipelineStage, invalidStages);
+            setPipelineVariables(workflow, pse, pipelineVariables, withFinalValuesOnly, infraRefactor);
+            if (!pipelineParameterized) {
+              pipelineParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
+            }
+          } catch (Exception ex) {
+            logger.warn(
+                format("Exception occurred while reading workflow associated to the pipeline %s", pipeline.toString()),
+                ex);
           }
-
-          validateWorkflowVariables(workflow, pse, pipelineStage, invalidStages);
-          setPipelineVariables(workflow, pse, pipelineVariables, withFinalValuesOnly, infraRefactor);
-          if (!pipelineParameterized) {
-            pipelineParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
-          }
-        } catch (Exception ex) {
-          logger.warn(
-              format("Exception occurred while reading workflow associated to the pipeline %s", pipeline.toString()),
-              ex);
+        } else if (APPROVAL.name().equals(pse.getType())) {
+          setPipelineVariablesApproval(pse, pipelineVariables, pipelineStage.getName());
         }
       }
     }
@@ -905,6 +920,8 @@ public class PipelineServiceImpl implements PipelineService {
           if (!envParameterized) {
             envParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
           }
+        } else if (APPROVAL.name().equals(pse.getType())) {
+          setPipelineVariablesApproval(pse, pipelineVariables, pipelineStage.getName());
         }
       }
     }
@@ -929,7 +946,6 @@ public class PipelineServiceImpl implements PipelineService {
     if (isEmpty(workflowVariables)) {
       return;
     }
-
     Map<String, String> pseWorkflowVariables = pse.getWorkflowVariables();
     List<Variable> nonEntityVariables =
         workflowVariables.stream()
@@ -964,6 +980,69 @@ public class PipelineServiceImpl implements PipelineService {
             pseWorkflowVariables, variable, allowMulti);
       }
     }
+  }
+
+  @VisibleForTesting
+  void setPipelineVariablesApproval(PipelineStageElement pse, List<Variable> pipelineVariables, String stageName) {
+    Map<String, Object> properties = pse.getProperties();
+    List<Map<String, Object>> templateExpressions = (List<Map<String, Object>>) properties.get("templateExpressions");
+
+    if (templateExpressions != null) {
+      addToUserVariablePipelineApproval(templateExpressions, pipelineVariables, pse.getType(), APPROVAL.name());
+    }
+  }
+
+  private void addToUserVariablePipelineApproval(List<Map<String, Object>> templateExpressions,
+      List<Variable> pipelineVariables, String stageName, String stateType) {
+    for (Map<String, Object> templateExpression : templateExpressions) {
+      EntityType entityType = EntityType.USER_GROUP;
+      Map<String, Object> metadata = (Map<String, Object>) templateExpression.get("metadata");
+      if (metadata != null) {
+        if (metadata.get("entityType") != null && entityType == USER_GROUP) {
+          entityType = valueOf((String) metadata.get(Variable.ENTITY_TYPE));
+        }
+      }
+      String expression = (String) templateExpression.get("expression");
+      Matcher matcher = ManagerExpressionEvaluator.wingsVariablePattern.matcher(expression);
+      if (matcher.matches()) {
+        expression =
+            validateAndGetVariablePipeLine(matcher.group(0).substring(2, matcher.group(0).length() - 1), entityType);
+      }
+      Variable variable = getContainedVariable(pipelineVariables, expression);
+
+      if (variable == null) {
+        VariableBuilder variableBuilder = VariableBuilder.aVariable()
+                                              .name(expression)
+                                              .entityType(entityType)
+                                              .type(entityType != null ? ENTITY : TEXT)
+                                              .mandatory(entityType != null);
+
+        if (isNotEmpty(stateType)) {
+          variableBuilder.stateType(stateType);
+        }
+        // Set the description
+        variable = variableBuilder.build();
+        setVariableDescription(variable, stageName);
+        pipelineVariables.add(variable);
+      }
+    }
+  }
+
+  private String validateAndGetVariablePipeLine(String substring, EntityType entityType) {
+    Matcher matcher = ManagerExpressionEvaluator.variableNamePattern.matcher(substring);
+    if (entityType != null) {
+      if (!matcher.matches()) {
+        throw new InvalidRequestException("Template variable:[" + substring
+                + "] not in proper format ,should start with ${ and end with }, only a-zA-Z0-9_ - allowed",
+            USER);
+      }
+    }
+    return substring;
+  }
+
+  private void setVariableDescription(Variable variable, String stateName) {
+    variable.setDescription(
+        WorkflowServiceTemplateHelper.getVariableDescription(variable.obtainEntityType(), null, stateName));
   }
 
   private void handleEntityVariables(List<Variable> pipelineVariables, boolean withFinalValuesOnly,
@@ -1517,6 +1596,10 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private Variable getContainedVariable(List<Variable> pipelineVariables, String name) {
+    if (pipelineVariables == null) {
+      return null;
+    }
+
     return pipelineVariables.stream()
         .filter(variable -> variable != null && variable.getName() != null && variable.getName().equals(name))
         .findFirst()
@@ -1526,6 +1609,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   @ValidationGroups(Create.class)
   public Pipeline save(Pipeline pipeline) {
+    validateTemplateExpressions(pipeline);
     validatePipelineNameForDuplicates(pipeline);
     ensurePipelineStageUuidAndParallelIndex(pipeline);
     checkUniquePipelineStepName(pipeline);
