@@ -49,6 +49,14 @@ public class BillingDataPipelineRecordDaoImpl implements BillingDataPipelineReco
   }
 
   @Override
+  public BillingDataPipelineRecord getBySettingId(String accountId, String settingId) {
+    return hPersistence.createQuery(BillingDataPipelineRecord.class)
+        .filter(BillingDataPipelineRecordKeys.accountId, accountId)
+        .filter(BillingDataPipelineRecordKeys.settingId, settingId)
+        .get();
+  }
+
+  @Override
   public List<BillingDataPipelineRecord> listByGcpBillingAccountDataset(
       String accountId, String gcpBqProjectId, String gcpBqDatasetId) {
     return hPersistence.createQuery(BillingDataPipelineRecord.class)

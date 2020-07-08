@@ -9,7 +9,9 @@ import io.harness.batch.processing.billing.service.impl.EcsFargateInstancePricin
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
-import io.harness.batch.processing.pricing.service.intfc.AwsCustomPricingService;
+import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
+import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
+import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -21,17 +23,19 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class InstancePricingStrategyContextTest extends CategoryTest {
   @Mock private VMPricingServiceImpl vmPricingService;
-  @Mock private AwsCustomPricingService awsCustomPricingService;
+  @Mock private AwsCustomBillingService awsCustomBillingService;
+  @Mock private InstanceResourceService instanceResourceService;
   @Mock private EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy;
+  @Mock private CustomBillingMetaDataService customBillingMetaDataService;
 
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstancePricingStrategy() {
-    InstancePricingStrategyContext instancePricingStrategyContext =
-        new InstancePricingStrategyContext(new ComputeInstancePricingStrategy(vmPricingService, awsCustomPricingService,
-                                               ecsFargateInstancePricingStrategy),
-            new EcsFargateInstancePricingStrategy(vmPricingService));
+    InstancePricingStrategyContext instancePricingStrategyContext = new InstancePricingStrategyContext(
+        new ComputeInstancePricingStrategy(vmPricingService, awsCustomBillingService, instanceResourceService,
+            ecsFargateInstancePricingStrategy, customBillingMetaDataService),
+        new EcsFargateInstancePricingStrategy(vmPricingService));
     InstancePricingStrategy computeInstancePricingStrategy =
         instancePricingStrategyContext.getInstancePricingStrategy(InstanceType.EC2_INSTANCE);
     assertThat(computeInstancePricingStrategy.getClass()).isEqualTo(ComputeInstancePricingStrategy.class);

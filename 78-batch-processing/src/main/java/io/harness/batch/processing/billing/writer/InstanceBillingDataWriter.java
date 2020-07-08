@@ -1,5 +1,7 @@
 package io.harness.batch.processing.billing.writer;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
 
@@ -15,6 +17,9 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.InstanceType;
 import io.harness.batch.processing.ccm.Resource;
 import io.harness.batch.processing.entities.InstanceData;
+import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
+import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +45,8 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
   @Autowired private UtilizationDataServiceImpl utilizationDataService;
   @Autowired private BillingDataGenerationValidator billingDataGenerationValidator;
   @Autowired private InstanceDataService instanceDataService;
+  @Autowired private AwsCustomBillingService awsCustomBillingService;
+  @Autowired private CustomBillingMetaDataService customBillingMetaDataService;
 
   private JobParameters parameters;
 
@@ -50,6 +57,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
 
   @Override
   public void write(List<? extends InstanceData> instanceDataLists) throws Exception {
+    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     Instant startTime = getFieldValueFromJobParams(CCMJobConstants.JOB_START_DATE);
     Instant endTime = getFieldValueFromJobParams(CCMJobConstants.JOB_END_DATE);
     BatchJobType batchJobType =
@@ -58,6 +66,22 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
 
     Map<String, ? extends List<? extends InstanceData>> instanceDataGroupedCluster =
         instanceDataLists.stream().collect(Collectors.groupingBy(InstanceData::getClusterId));
+    String awsDataSetId = customBillingMetaDataService.getAwsDataSetId(accountId);
+    if (awsDataSetId != null) {
+      List<String> resourceIds = new ArrayList<>();
+      instanceDataLists.forEach(instanceData -> {
+        String resourceId =
+            getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData);
+        String cloudProvider =
+            getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER, instanceData);
+        if (null != resourceId && cloudProvider.equals(CloudProvider.AWS.name())) {
+          resourceIds.add(resourceId);
+        }
+      });
+      if (isNotEmpty(resourceIds)) {
+        awsCustomBillingService.updateAwsEC2BillingDataCache(resourceIds, startTime, endTime, awsDataSetId);
+      }
+    }
 
     List<InstanceBillingData> instanceBillingDataList = new ArrayList<>();
     instanceDataGroupedCluster.forEach((clusterRecordId, instanceDataList) -> {
@@ -151,6 +175,8 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                     .unallocatedCost(BigDecimal.ZERO)
                     .cpuUnallocatedCost(BigDecimal.ZERO)
                     .memoryUnallocatedCost(BigDecimal.ZERO)
+                    .networkCost(billingData.getNetworkCost())
+                    .pricingSource(billingData.getPricingSource().name())
                     .build();
             instanceBillingDataList.add(instanceBillingData);
           });

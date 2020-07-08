@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
+import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -24,9 +25,12 @@ import java.time.temporal.ChronoUnit;
 public class BatchJobRunnerTest extends CategoryTest {
   @InjectMocks private BatchJobRunner batchJobRunner;
   @Mock private BatchJobScheduledDataService batchJobScheduledDataService;
+  @Mock private CustomBillingMetaDataService customBillingMetaDataService;
 
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final Instant NOW = Instant.now();
+  private final Instant START_TIME = NOW.minus(1, ChronoUnit.HOURS);
+  private final Instant END_TIME = NOW;
 
   @Test
   @Owner(developers = HITESH)
@@ -54,6 +58,37 @@ public class BatchJobRunnerTest extends CategoryTest {
     boolean jobFinished = batchJobRunner.checkDependentJobFinished(
         ACCOUNT_ID, NOW.minus(3, ChronoUnit.DAYS), batchJobType.getDependentBatchJobs());
     assertThat(jobFinished).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldReturnFalseIfOutOfClusterDependentJobsNotFinished() {
+    when(customBillingMetaDataService.checkPipelineJobFinished(ACCOUNT_ID, START_TIME, END_TIME))
+        .thenReturn(Boolean.FALSE);
+    BatchJobType batchJobType = BatchJobType.INSTANCE_BILLING;
+    boolean jobFinished = batchJobRunner.checkOutOfClusterDependentJobs(ACCOUNT_ID, START_TIME, END_TIME, batchJobType);
+    assertThat(jobFinished).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldReturnTrueIfOutOfClusterDependentJobFinished() {
+    when(customBillingMetaDataService.checkPipelineJobFinished(ACCOUNT_ID, START_TIME, END_TIME))
+        .thenReturn(Boolean.TRUE);
+    BatchJobType batchJobType = BatchJobType.INSTANCE_BILLING;
+    boolean jobFinished = batchJobRunner.checkOutOfClusterDependentJobs(ACCOUNT_ID, START_TIME, END_TIME, batchJobType);
+    assertThat(jobFinished).isTrue();
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void shouldReturnTrueIfOutOfClusterDependentJobsIsNotApplicable() {
+    BatchJobType batchJobType = BatchJobType.K8S_EVENT;
+    boolean jobFinished = batchJobRunner.checkOutOfClusterDependentJobs(ACCOUNT_ID, START_TIME, END_TIME, batchJobType);
+    assertThat(jobFinished).isTrue();
   }
 
   @Test

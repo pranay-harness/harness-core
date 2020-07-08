@@ -12,6 +12,7 @@ import migrations.timescaledb.AddIndexToInstanceV2Migration;
 import migrations.timescaledb.AddIndicesForCostEvents;
 import migrations.timescaledb.AddInstancesDeployedToDeployment;
 import migrations.timescaledb.AddMaxUtilColumns;
+import migrations.timescaledb.AddNonComputeCostColumnToBillingData;
 import migrations.timescaledb.AddPercentagesToCostEvents;
 import migrations.timescaledb.AddRequestColumnToBillingData;
 import migrations.timescaledb.AddRollbackToDeployment;
@@ -67,6 +68,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(26, AddRequestColumnToBillingData.class))
         .add(Pair.of(27, AddPercentagesToCostEvents.class))
         .add(Pair.of(28, AddIndicesForCostEvents.class))
+        .add(Pair.of(29, AddNonComputeCostColumnToBillingData.class))
         .build();
   }
 }

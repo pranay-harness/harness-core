@@ -5,4 +5,7 @@ import io.harness.batch.processing.entities.InstanceData;
 
 import java.time.Instant;
 
-public interface InstancePricingStrategy { PricingData getPricePerHour(InstanceData instanceData, Instant startTime); }
+public interface InstancePricingStrategy {
+  PricingData getPricePerHour(
+      InstanceData instanceData, Instant startTime, Instant endTime, double instanceActiveSeconds);
+}
