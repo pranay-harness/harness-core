@@ -25,6 +25,16 @@ public class KryoModule extends DependencyModule {
     return instance;
   }
 
+  private boolean inSpring;
+
+  public KryoModule() {
+    inSpring = false;
+  }
+
+  public KryoModule(boolean inSpring) {
+    this.inSpring = inSpring;
+  }
+
   public void testAutomaticSearch(Provider<Set<Class<? extends KryoRegistrar>>> registrarsProvider) {
     Reflections reflections = new Reflections("io.harness.serializer.kryo");
 
@@ -45,11 +55,13 @@ public class KryoModule extends DependencyModule {
     // Dummy kryo initialization trigger to make sure it is in good condition
     KryoUtils.asBytes(1);
 
-    Provider<Set<Class<? extends KryoRegistrar>>> provider =
-        getProvider(Key.get(new TypeLiteral<Set<Class<? extends KryoRegistrar>>>() {}));
-    MapBinder<String, TestExecution> testExecutionMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
-    testExecutionMapBinder.addBinding("Kryo test registration").toInstance(() -> testAutomaticSearch(provider));
+    if (!inSpring) {
+      Provider<Set<Class<? extends KryoRegistrar>>> provider =
+          getProvider(Key.get(new TypeLiteral<Set<Class<? extends KryoRegistrar>>>() {}));
+      MapBinder<String, TestExecution> testExecutionMapBinder =
+          MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
+      testExecutionMapBinder.addBinding("Kryo test registration").toInstance(() -> testAutomaticSearch(provider));
+    }
   }
 
   @Override
