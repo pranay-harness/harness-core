@@ -78,6 +78,7 @@ import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -89,6 +90,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
@@ -195,6 +197,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private ConfigurationController configurationController;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Inject private DelegateConnectionDao delegateConnectionDao;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -680,7 +683,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     delegateTask = wingsPersistence.get(DelegateTask.class, delegateTask.getUuid());
-    assertThat(delegateTask.getStatus()).isEqualTo(DelegateTask.Status.FINISHED);
+    assertThat(delegateTask).isNull();
   }
 
   @Test
@@ -1735,8 +1738,9 @@ public class DelegateServiceTest extends WingsBaseTest {
         + "  -  The capabilities were tested by the following delegates: [ DELEGATE_ID ]\n"
         + "  -  Following delegates were validating but never returned: [  ]\n"
         + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.";
-    RemoteMethodReturnValueData notifyResponse =
-        (RemoteMethodReturnValueData) wingsPersistence.createQuery(DelegateTask.class).get().getNotifyResponse();
+    RemoteMethodReturnValueData notifyResponse = (RemoteMethodReturnValueData) kryoSerializer.asInflatedObject(
+        wingsPersistence.createQuery(DelegateSyncTaskResponse.class).get().getResponseData());
+
     assertThat(notifyResponse.getException().getMessage()).isEqualTo(expectedMessage);
   }
 

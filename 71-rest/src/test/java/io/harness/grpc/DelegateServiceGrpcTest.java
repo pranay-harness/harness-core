@@ -203,7 +203,7 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
     when(delegateService.fetchDelegateTask(accountId, taskId))
         .thenReturn(Optional.ofNullable(DelegateTask.builder().status(Status.QUEUED).build()))
         .thenReturn(Optional.ofNullable(DelegateTask.builder().status(Status.STARTED).build()))
-        .thenReturn(Optional.ofNullable(DelegateTask.builder().status(Status.FINISHED).build()));
+        .thenReturn(Optional.ofNullable(null));
 
     Consumer<TaskExecutionStage> taskExecutionStageConsumer = mock(Consumer.class);
 
@@ -211,7 +211,6 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
         TaskId.newBuilder().setId(taskId).build(), taskExecutionStageConsumer);
     verify(taskExecutionStageConsumer).accept(TaskExecutionStage.QUEUEING);
     verify(taskExecutionStageConsumer).accept(TaskExecutionStage.EXECUTING);
-    verify(taskExecutionStageConsumer).accept(TaskExecutionStage.FINISHED);
   }
 
   @Test

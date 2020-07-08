@@ -62,5 +62,5 @@ public enum TaskGroup {
   GUARD_24x7,
   CI,
   SLACK,
-  ARTIFACT_COLLECT
+  ARTIFACT_COLLECT,
 }

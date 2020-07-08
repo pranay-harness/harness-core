@@ -4,7 +4,6 @@ import static com.google.common.base.Charsets.UTF_8;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.beans.DelegateTask.Status.ABORTED;
 import static io.harness.beans.DelegateTask.Status.ERROR;
-import static io.harness.beans.DelegateTask.Status.FINISHED;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.beans.DelegateTask.Status.runningStatuses;
@@ -84,6 +83,7 @@ import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -117,7 +117,7 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
@@ -301,6 +301,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private SystemEnvironment sysenv;
   @Inject private DelegateSyncService delegateSyncService;
   @Inject private DelegateTaskService delegateTaskService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
 
@@ -1760,7 +1761,8 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       broadcastHelper.rebroadcastDelegateTask(task);
-      return delegateSyncService.waitForTask(task);
+      return delegateSyncService.waitForTask(
+          task.getUuid(), task.calcDescription(), Duration.ofMillis(task.getData().getTimeout()));
     }
   }
 
@@ -2234,7 +2236,7 @@ public class DelegateServiceImpl implements DelegateService {
               .responseCode(ResponseCode.FAILED)
               .accountId(delegateTask.getAccountId())
               .build();
-      handleResponse(delegateTask, taskQuery, response, ERROR);
+      handleResponse(delegateTask, taskQuery, response);
       return null;
     }
   }
@@ -2268,13 +2270,12 @@ public class DelegateServiceImpl implements DelegateService {
               .responseCode(ResponseCode.FAILED)
               .accountId(delegateTask.getAccountId())
               .build();
-      handleResponse(delegateTask, taskQuery, response, ERROR);
+      handleResponse(delegateTask, taskQuery, response);
       return null;
     }
   }
 
-  private void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response,
-      DelegateTask.Status error) {
+  private void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response) {
     if (delegateTask.getData().isAsync()) {
       String waitId = delegateTask.getWaitId();
       if (waitId != null) {
@@ -2282,13 +2283,13 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         logger.error("Async task has no wait ID");
       }
-      wingsPersistence.delete(taskQuery);
     } else {
-      wingsPersistence.update(taskQuery,
-          wingsPersistence.createUpdateOperations(DelegateTask.class)
-              .set(DelegateTaskKeys.notifyResponse, KryoUtils.asBytes(response.getResponse()))
-              .set(DelegateTaskKeys.status, error));
+      wingsPersistence.save(DelegateSyncTaskResponse.builder()
+                                .uuid(delegateTask.getUuid())
+                                .responseData(kryoSerializer.asDeflatedBytes(response.getResponse()))
+                                .build());
     }
+    wingsPersistence.delete(taskQuery);
   }
 
   @VisibleForTesting
@@ -2400,7 +2401,7 @@ public class DelegateServiceImpl implements DelegateService {
             logger.info("Task has been tried on all the connected delegates. Proceeding with error.");
           }
         }
-        handleResponse(delegateTask, taskQuery, response, FINISHED);
+        handleResponse(delegateTask, taskQuery, response);
         assignDelegateService.refreshWhitelist(delegateTask, delegateId);
       }
     } else {
@@ -2464,6 +2465,14 @@ public class DelegateServiceImpl implements DelegateService {
         return null;
       }
       logger.info("Aborting delegate task");
+
+      wingsPersistence.save(
+          DelegateSyncTaskResponse.builder()
+              .uuid(delegateTaskId)
+              .responseData(kryoSerializer.asDeflatedBytes(
+                  ErrorNotifyResponseData.builder().errorMessage("Delegate task was aborted").build()))
+              .build());
+
       return endTask(accountId, delegateTaskId, getRunningTaskQuery(accountId, delegateTaskId), ABORTED);
     }
   }
