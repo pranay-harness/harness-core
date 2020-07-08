@@ -60,10 +60,10 @@ public class GcpBillingServiceImplTest extends CategoryTest {
     calendar1 = new GregorianCalendar(2020, Calendar.JANUARY, 1);
     calendar2 = new GregorianCalendar(2020, Calendar.JANUARY, 31);
     Condition condition1 =
-        BinaryCondition.greaterThanOrEq(GcpBillingTableSchema.usageStartTime, Timestamp.of(calendar1.getTime()));
+        BinaryCondition.greaterThanOrEq(RawBillingTableSchema.startTime, Timestamp.of(calendar1.getTime()));
     Condition condition2 =
-        BinaryCondition.greaterThanOrEq(GcpBillingTableSchema.usageEndTime, Timestamp.of(calendar2.getTime()));
-    Condition condition3 = BinaryCondition.equalTo(GcpBillingTableSchema.projectId, "projectId");
+        BinaryCondition.greaterThanOrEq(RawBillingTableSchema.endTime, Timestamp.of(calendar2.getTime()));
+    Condition condition3 = BinaryCondition.equalTo(RawBillingTableSchema.gcpProjectId, "projectId");
     conditions.add(condition1);
     conditions.add(condition2);
     conditions.add(condition3);
@@ -106,7 +106,7 @@ public class GcpBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetGcpBillingTimeSeriesStats() {
     List<Object> gcpBillingGroupby = Collections.EMPTY_LIST;
-    FunctionCall aggregateFunction = FunctionCall.sum().addColumnParams(GcpBillingTableSchema.cost);
+    FunctionCall aggregateFunction = FunctionCall.sum().addColumnParams(RawBillingTableSchema.cost);
 
     GcpBillingTimeSeriesStatsDTO timeSeriesStats =
         gcpBillingService.getGcpBillingTimeSeriesStats(aggregateFunction, gcpBillingGroupby, conditions);
@@ -129,10 +129,10 @@ public class GcpBillingServiceImplTest extends CategoryTest {
 
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenReturn(tableResult);
 
-    List<Object> gcpBillingGroupby = Arrays.asList(GcpBillingTableSchema.skuId, GcpBillingTableSchema.skuDescription,
-        GcpBillingTableSchema.serviceDescription, GcpBillingTableSchema.usagePricingUnit,
-        GcpBillingTableSchema.usageAmountInPricingUnits, GcpBillingTableSchema.cost,
-        GcpBillingTableSchema.creditsAmount);
+    List<Object> gcpBillingGroupby = Arrays.asList(RawBillingTableSchema.gcpSkuId,
+        RawBillingTableSchema.gcpSkuDescription, RawBillingTableSchema.gcpProduct,
+        RawBillingTableSchema.usagePricingUnit, RawBillingTableSchema.usageAmountInPricingUnits,
+        RawBillingTableSchema.cost, RawBillingTableSchema.creditsAmount);
 
     GcpBillingEntityStatsDTO entityStats =
         gcpBillingService.getGcpBillingEntityStats(null, gcpBillingGroupby, conditions);

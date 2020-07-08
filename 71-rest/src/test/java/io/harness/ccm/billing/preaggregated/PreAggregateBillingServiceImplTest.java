@@ -15,6 +15,7 @@ import com.google.cloud.bigquery.TableResult;
 
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
+import com.healthmarketscience.sqlbuilder.SelectQuery;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -52,6 +53,7 @@ import java.util.Set;
 public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Mock BigQuery bigQuery;
   @Mock TableResult tableResult;
+  @Mock SelectQuery selectQuery;
   @Mock BigQueryService bigQueryService;
   @Mock PreAggregatedBillingDataHelper dataHelper;
   @Mock CECloudAccountDao ceCloudAccountDao;
@@ -96,8 +98,8 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
 
     when(bigQueryService.get()).thenReturn(bigQuery);
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenReturn(tableResult);
-    when(dataHelper.getQuery(anyList(), anyList(), anyList(), anyList(), anyBoolean()))
-        .thenReturn(PreAggregatedTableSchema.defaultTableName);
+    when(dataHelper.getQuery(anyList(), anyList(), anyList(), anyList(), anyBoolean())).thenReturn(selectQuery);
+    when(selectQuery.toString()).thenReturn(PreAggregatedTableSchema.defaultTableName);
     when(dataHelper.convertToPreAggregatesTimeSeriesData(tableResult))
         .thenReturn(PreAggregateBillingTimeSeriesStatsDTO.builder().stats(null).build());
     doCallRealMethod().when(dataHelper).getTrendFilters(filters);
@@ -164,7 +166,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getPreAggregateBillingTimeSeriesStats() {
     PreAggregateBillingTimeSeriesStatsDTO stats = preAggregateBillingService.getPreAggregateBillingTimeSeriesStats(
-        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
+        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, null);
     assertThat(stats.getStats()).isEqualTo(null);
   }
 
@@ -173,7 +175,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getPreAggregateEntitySeriesStats() {
     PreAggregateBillingEntityStatsDTO stats = preAggregateBillingService.getPreAggregateBillingEntityStats(
-        ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters);
+        ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters, null);
     assertThat(stats.getStats()).isNotNull();
     assertThat(stats.getStats().get(0).getAwsService()).isEqualTo(SERVICE_NAME);
     assertThat(stats.getStats().get(0).getAwsBlendedCost()).isEqualTo(COST);
@@ -184,7 +186,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getPreAggregateBillingOverviewTest() {
     PreAggregateCloudOverviewDataDTO stats = preAggregateBillingService.getPreAggregateBillingOverview(
-        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters);
+        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters, null);
     assertThat(stats.getData()).isNotNull();
     assertThat(stats.getTotalCost()).isEqualTo(TOTAL_COST);
     assertThat(stats.getData().get(0).getTrend()).isEqualTo(TREND);
@@ -198,7 +200,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   public void getPreAggregateBillingOverviewNegativeCase() throws InterruptedException {
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
     PreAggregateCloudOverviewDataDTO stats = preAggregateBillingService.getPreAggregateBillingOverview(
-        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters);
+        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters, null);
     assertThat(stats).isNull();
   }
 
@@ -208,7 +210,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   public void getPreAggregateEntitySeriesStatsNegativeCase() throws InterruptedException {
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
     PreAggregateBillingEntityStatsDTO stats = preAggregateBillingService.getPreAggregateBillingEntityStats(
-        ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters);
+        ACCOUNT_ID, null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, filters, null);
     assertThat(stats).isNull();
   }
 
@@ -218,7 +220,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   public void getPreAggregateBillingTimeSeriesStatsNegativeCase() throws InterruptedException {
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
     PreAggregateBillingTimeSeriesStatsDTO stats = preAggregateBillingService.getPreAggregateBillingTimeSeriesStats(
-        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME);
+        null, groupByObjects, null, Collections.emptyList(), TABLE_NAME, null);
     assertThat(stats).isNull();
   }
 
@@ -227,7 +229,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getPreAggregateBillingTrendStats() {
     PreAggregateBillingTrendStatsDTO stats =
-        preAggregateBillingService.getPreAggregateBillingTrendStats(null, conditions, TABLE_NAME, filters);
+        preAggregateBillingService.getPreAggregateBillingTrendStats(null, conditions, TABLE_NAME, filters, null);
     assertThat(stats.getBlendedCost()).isNotNull();
     assertThat(stats.getBlendedCost().getStatsValue()).isEqualTo(STATS_VALUE);
     assertThat(stats.getBlendedCost().getStatsLabel()).isEqualTo(STATS_LABEL);
@@ -240,7 +242,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   public void getPreAggregateBillingTrendStatsNegativeCase() throws InterruptedException {
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
     PreAggregateBillingTrendStatsDTO stats =
-        preAggregateBillingService.getPreAggregateBillingTrendStats(null, conditions, TABLE_NAME, filters);
+        preAggregateBillingService.getPreAggregateBillingTrendStats(null, conditions, TABLE_NAME, filters, null);
     assertThat(stats).isEqualTo(PreAggregateBillingTrendStatsDTO.builder().build());
   }
 
@@ -249,7 +251,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getPreAggregateFilterValueStatsTest() {
     PreAggregateFilterValuesDTO stats =
-        preAggregateBillingService.getPreAggregateFilterValueStats(ACCOUNT_ID, groupByObjects, null, TABLE_NAME);
+        preAggregateBillingService.getPreAggregateFilterValueStats(ACCOUNT_ID, groupByObjects, null, TABLE_NAME, null);
     assertThat(stats.getData().get(0)).isNotNull();
     assertThat(stats.getData().get(0).getRegion().size()).isEqualTo(1);
   }
@@ -260,7 +262,7 @@ public class PreAggregateBillingServiceImplTest extends CategoryTest {
   public void getPreAggregateFilterValueStatsTestNegativeCase() throws InterruptedException {
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenThrow(new InterruptedException());
     PreAggregateFilterValuesDTO stats =
-        preAggregateBillingService.getPreAggregateFilterValueStats(ACCOUNT_ID, groupByObjects, null, TABLE_NAME);
+        preAggregateBillingService.getPreAggregateFilterValueStats(ACCOUNT_ID, groupByObjects, null, TABLE_NAME, null);
     assertThat(stats).isNull();
   }
 

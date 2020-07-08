@@ -35,6 +35,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest {
@@ -75,7 +76,7 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
         getUsageTypeGroupBy(), getRegionGroupBy()));
 
     when(preAggregateBillingService.getPreAggregateBillingTimeSeriesStats(
-             anyList(), anyList(), anyList(), anyList(), any()))
+             anyList(), anyList(), anyList(), anyList(), any(), any()))
         .thenReturn(PreAggregateBillingTimeSeriesStatsDTO.builder().build());
     when(cloudBillingHelper.getCloudProviderTableName(anyString())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
 
@@ -127,6 +128,18 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
   public void testTimeSeriesDataFetcher() {
     QLData data =
         cloudTimeSeriesStatsDataFetcher.fetch(ACCOUNT1_ID, cloudBillingAggregates, filters, groupBy, null, 5, 0);
+    assertThat(data).isEqualTo(PreAggregateBillingTimeSeriesStatsDTO.builder().build());
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testTimeSeriesDataFetcherWithLabels() {
+    doCallRealMethod().when(cloudBillingHelper).fetchIfRawTableQueryRequired(anyList(), anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
+    QLData data = cloudTimeSeriesStatsDataFetcher.fetch(ACCOUNT1_ID, null, Collections.emptyList(),
+        Arrays.asList(getLabelsKeyGroupBy(), getLabelsValueGroupBy()), null, 5, 0);
     assertThat(data).isEqualTo(PreAggregateBillingTimeSeriesStatsDTO.builder().build());
   }
 
@@ -237,6 +250,18 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
   private CloudBillingGroupBy getRegionGroupBy() {
     CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
     cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.region);
+    return cloudBillingGroupBy;
+  }
+
+  private CloudBillingGroupBy getLabelsKeyGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.labelsKey);
+    return cloudBillingGroupBy;
+  }
+
+  private CloudBillingGroupBy getLabelsValueGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.labelsValue);
     return cloudBillingGroupBy;
   }
 }

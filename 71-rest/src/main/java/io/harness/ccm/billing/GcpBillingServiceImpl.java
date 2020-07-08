@@ -57,7 +57,7 @@ public class GcpBillingServiceImpl implements GcpBillingService {
   public BigDecimal getTotalCost(List<Condition> conditions) {
     List<Object> selectObjects = new ArrayList<>();
     selectObjects.add(
-        AliasedObject.toAliasedObject(FunctionCall.sum().addColumnParams(GcpBillingTableSchema.cost), "cost_sum"));
+        AliasedObject.toAliasedObject(FunctionCall.sum().addColumnParams(RawBillingTableSchema.cost), "cost_sum"));
 
     BigQuerySQL bigQuerySql = BigQuerySQL.builder().selectColumns(selectObjects).conditions(conditions).build();
     String query = bigQuerySql.getQuery().validate().toString();
@@ -126,10 +126,10 @@ public class GcpBillingServiceImpl implements GcpBillingService {
   private double[][] getGcpBillingObservations(List<Condition> conditions) {
     List<Object> selectObjects = new ArrayList<>();
     Object timeTruncGroupBy =
-        new TruncExpression(GcpBillingTableSchema.usageStartTime, TruncExpression.DatePart.DAY, "start_time_trunc");
+        new TruncExpression(RawBillingTableSchema.startTime, TruncExpression.DatePart.DAY, "start_time_trunc");
     selectObjects.add(timeTruncGroupBy);
     selectObjects.add(
-        AliasedObject.toAliasedObject(FunctionCall.sum().addColumnParams(GcpBillingTableSchema.cost), "cost_sum"));
+        AliasedObject.toAliasedObject(FunctionCall.sum().addColumnParams(RawBillingTableSchema.cost), "cost_sum"));
 
     BigQuerySQL bigQuerySql = BigQuerySQL.builder()
                                   .selectColumns(selectObjects)
@@ -322,7 +322,7 @@ public class GcpBillingServiceImpl implements GcpBillingService {
     Optional<Object> timeTruncGroupBy = groupbyObjects.stream().filter(g -> g instanceof TruncExpression).findFirst();
     if (!timeTruncGroupBy.isPresent()) { // set default timeTruncGroupby
       timeTruncGroupBy = Optional.of(
-          new TruncExpression(GcpBillingTableSchema.usageStartTime, TruncExpression.DatePart.DAY, "start_time_trunc"));
+          new TruncExpression(RawBillingTableSchema.startTime, TruncExpression.DatePart.DAY, "start_time_trunc"));
     }
     // ensure timeTruncGroupby come before entityGroupBy
     sqlGroubyObjects.add(timeTruncGroupBy.get());

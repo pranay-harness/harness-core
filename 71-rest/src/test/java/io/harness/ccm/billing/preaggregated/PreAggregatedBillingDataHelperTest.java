@@ -44,6 +44,7 @@ import com.google.cloud.bigquery.TableResult;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
+import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -140,7 +141,8 @@ public class PreAggregatedBillingDataHelperTest extends CategoryTest {
     List<Object> groupBy = Arrays.asList(PreAggregatedTableSchema.awsUsageAccountId,
         PreAggregatedTableSchema.awsServiceCode, PreAggregatedTableSchema.awsUsageType,
         PreAggregatedTableSchema.awsInstanceType, PreAggregatedTableSchema.region);
-    String query = dataHelper.getQuery(aggregates, groupBy, conditions, Collections.emptyList(), true);
+    SelectQuery selectQuery = dataHelper.getQuery(aggregates, groupBy, conditions, Collections.emptyList(), true);
+    String query = selectQuery.toString();
     assertThat(query.contains(entityConstantRegion)).isTrue();
     assertThat(query.contains(entityConstantAwsLinkedAccount)).isTrue();
   }

@@ -33,12 +33,12 @@ public class BigQuerySQLTest {
 
     List<Condition> conditions = new ArrayList<>();
     Condition condition = new BetweenCondition(
-        GcpBillingTableSchema.usageStartTime, Timestamp.of(calendar1.getTime()), Timestamp.of(calendar2.getTime()));
+        RawBillingTableSchema.startTime, Timestamp.of(calendar1.getTime()), Timestamp.of(calendar2.getTime()));
     conditions.add(condition);
 
     Object groupbyObject = CloudEntityGroupBy.product;
 
-    FunctionCall aggregateFunction = FunctionCall.sum().addColumnParams(GcpBillingTableSchema.cost);
+    FunctionCall aggregateFunction = FunctionCall.sum().addColumnParams(RawBillingTableSchema.cost);
     BigQuerySQL bigQuerySQL =
         BigQuerySQL.builder().groupbyObjects(Arrays.asList(groupbyObject)).conditions(conditions).build();
     String query = bigQuerySQL.getQuery().validate().toString();
@@ -54,12 +54,12 @@ public class BigQuerySQLTest {
 
     List<Condition> conditions = new ArrayList<>();
     Condition condition = new BetweenCondition(
-        GcpBillingTableSchema.usageStartTime, Timestamp.of(calendar1.getTime()), Timestamp.of(calendar2.getTime()));
+        RawBillingTableSchema.startTime, Timestamp.of(calendar1.getTime()), Timestamp.of(calendar2.getTime()));
     conditions.add(condition);
 
     Object groupbyObject = null;
 
-    FunctionCall aggregateFunction = FunctionCall.sum().addColumnParams(GcpBillingTableSchema.cost);
+    FunctionCall aggregateFunction = FunctionCall.sum().addColumnParams(RawBillingTableSchema.cost);
     String query = BigQuerySQL.builder()
                        .groupbyObjects(Arrays.asList(groupbyObject))
                        .conditions(conditions)

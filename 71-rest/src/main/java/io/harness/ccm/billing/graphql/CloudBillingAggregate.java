@@ -4,6 +4,7 @@ import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.AliasedObject;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.SqlObject;
+import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 import lombok.Builder;
 import lombok.Data;
@@ -30,23 +31,7 @@ public class CloudBillingAggregate {
       return null;
     }
 
-    FunctionCall functionCall = null;
-    switch (operationType) {
-      case SUM:
-        functionCall = FunctionCall.sum();
-        break;
-      case AVG:
-        functionCall = FunctionCall.avg();
-        break;
-      case MAX:
-        functionCall = FunctionCall.max();
-        break;
-      case MIN:
-        functionCall = FunctionCall.min();
-        break;
-      default:
-        return null; // should throw exception
-    }
+    FunctionCall functionCall = getFunctionCallType();
 
     // map columnName to db columns
     switch (columnName) {
@@ -70,5 +55,41 @@ public class CloudBillingAggregate {
     }
     alias = String.join("_", operationType.name().toLowerCase(), columnName);
     return AliasedObject.toAliasedObject(functionCall, alias);
+  }
+
+  public SqlObject toRawTableFunctionCall() {
+    Preconditions.checkNotNull(columnName, "Billing aggregate is missing column name.");
+    if (operationType == null || columnName == null) {
+      return null;
+    }
+
+    FunctionCall functionCall = getFunctionCallType();
+    switch (columnName) {
+      case BILLING_GCP_COST:
+        functionCall.addColumnParams(RawBillingTableSchema.cost);
+        break;
+      case PRE_AGG_START_TIME:
+        functionCall.addColumnParams(RawBillingTableSchema.startTime);
+        break;
+      default:
+        break;
+    }
+    alias = String.join("_", operationType.name().toLowerCase(), columnName);
+    return AliasedObject.toAliasedObject(functionCall, alias);
+  }
+
+  private FunctionCall getFunctionCallType() {
+    switch (operationType) {
+      case SUM:
+        return FunctionCall.sum();
+      case AVG:
+        return FunctionCall.avg();
+      case MAX:
+        return FunctionCall.max();
+      case MIN:
+        return FunctionCall.min();
+      default:
+        return null;
+    }
   }
 }

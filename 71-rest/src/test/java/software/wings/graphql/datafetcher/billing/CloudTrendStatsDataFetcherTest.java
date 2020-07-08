@@ -56,7 +56,7 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
     cloudBillingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.MAX, START_TIME));
     filters.addAll(Arrays.asList(getCloudProviderFilter(new String[] {CLOUD_PROVIDER})));
 
-    when(preAggregateBillingService.getPreAggregateBillingTrendStats(anyList(), anyList(), any(), anyList()))
+    when(preAggregateBillingService.getPreAggregateBillingTrendStats(anyList(), anyList(), any(), anyList(), any()))
         .thenReturn(PreAggregateBillingTrendStatsDTO.builder()
                         .blendedCost(QLBillingStatsInfo.builder()
                                          .statsValue(STATS_VALUE)
