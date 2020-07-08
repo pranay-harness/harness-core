@@ -10,6 +10,7 @@ import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
@@ -49,18 +50,36 @@ public class CloudBillingTimeFilter implements Filter {
       throw new InvalidRequestException("Invalid time filter.");
     }
 
-    Condition condition;
+    return getCondition(dbColumn, timestamp);
+  }
+
+  public Condition toRawTableCondition() {
+    Preconditions.checkNotNull(value, "The billing time filter is missing value.");
+    Preconditions.checkNotNull(operator, "The billing time filter is missing operator");
+    Timestamp timestamp = Timestamp.of(DateUtils.round(new Date(value.longValue()), Calendar.SECOND));
+
+    DbColumn dbColumn = null;
+    if (variable.equals(BILLING_GCP_STARTTIME)) {
+      dbColumn = RawBillingTableSchema.startTime;
+    } else if (variable.equals(BILLING_GCP_ENDTIME)) {
+      dbColumn = RawBillingTableSchema.endTime;
+    } else if (variable.equals(BILLING_AWS_STARTTIME)) {
+      dbColumn = RawBillingTableSchema.startTime;
+    } else {
+      throw new InvalidRequestException("Invalid time filter.");
+    }
+
+    return getCondition(dbColumn, timestamp);
+  }
+
+  private Condition getCondition(DbColumn dbColumn, Timestamp timestamp) {
     switch (operator) {
       case AFTER:
-        condition = BinaryCondition.greaterThanOrEq(dbColumn, timestamp);
-        break;
+        return BinaryCondition.greaterThanOrEq(dbColumn, timestamp);
       case BEFORE:
-        condition = BinaryCondition.lessThanOrEq(dbColumn, timestamp);
-        break;
+        return BinaryCondition.lessThanOrEq(dbColumn, timestamp);
       default:
         return null;
     }
-
-    return condition;
   }
 }

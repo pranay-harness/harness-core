@@ -63,6 +63,7 @@ type CloudEntityData {
   gcpProduct: String
   gcpSkuDescription: String
   gcpSkuId: String
+  gcpLabel: String
   gcpTotalCost: Number
   costTrend: Number
 }
@@ -98,6 +99,7 @@ type CloudFilterDataPoint {
   gcpProduct: [EntityData]
   gcpSku: [EntityData]
   gcpBillingAccount: [EntityData]
+  gcpLabels: [K8sLabel]
 }
 
 input CloudBillingFilter {
@@ -115,6 +117,8 @@ input CloudBillingFilter {
   awsInstanceType: IdFilter
   awsService: IdFilter
   cloudProvider: IdFilter
+  labelsKey: IdFilter
+  labelsValue: IdFilter
 }
 
 input CloudBillingGroupBy {
@@ -129,6 +133,8 @@ enum CloudEntityGroupBy {
   product
   sku
   skuId
+  labelsKey
+  labelsValue
   region
   usageAmount
   usageUnit

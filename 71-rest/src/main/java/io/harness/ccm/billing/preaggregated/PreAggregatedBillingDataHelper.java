@@ -14,6 +14,8 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityC
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUsageType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpBillingAccount;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpCost;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpLabelKey;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpLabelValue;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoProduct;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoProjectId;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpNoSku;
@@ -23,8 +25,15 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityC
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpSku;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpSkuId;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantNoRegion;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableGcpBillingAccount;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableGcpProduct;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableGcpProjectId;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableGcpRegion;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableGcpSku;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableGcpSkuId;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRegion;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityNoCloudProviderConst;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityNoLabelConst;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.maxPreAggStartTimeConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.minPreAggStartTimeConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.nullStringValueConstant;
@@ -36,6 +45,7 @@ import com.google.cloud.bigquery.FieldList;
 import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Schema;
+import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.TableResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -43,8 +53,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.healthmarketscience.sqlbuilder.Condition;
+import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.TimeSeriesDataPoints;
 import io.harness.ccm.billing.bigquery.AliasExpression;
 import io.harness.ccm.billing.bigquery.BigQuerySQL;
@@ -60,6 +72,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
 import software.wings.graphql.datafetcher.billing.QLEntityData;
+import software.wings.graphql.schema.type.QLK8sLabel;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint.QLBillingDataPointBuilder;
 import software.wings.graphql.schema.type.aggregation.QLReference;
@@ -92,6 +105,7 @@ public class PreAggregatedBillingDataHelper {
   private static final String COST_DESCRIPTION = "of %s - %s";
   private static final String COST_VALUE = "$%s";
   private static final String AWS_ACCOUNT_TEMPLATE = "%s (%s)";
+  private static final String LABEL = "%s:%s";
 
   public PreAggregateBillingTimeSeriesStatsDTO convertToPreAggregatesTimeSeriesData(TableResult result) {
     preconditionsValidation(result, "PreAggregate billing time series stats");
@@ -108,8 +122,7 @@ public class PreAggregatedBillingDataHelper {
             startTimeTruncatedTimestamp = Timestamp.ofTimeMicroseconds(row.get(field.getName()).getTimestampValue());
             break;
           case STRING:
-            String value = fetchStringValue(row, field);
-            billingDataPointBuilder.key(QLReference.builder().id(value).name(value).type(field.getName()).build());
+            setTimeSeriesDataPointKey(row, field, billingDataPointBuilder);
             break;
           case FLOAT64:
             billingDataPointBuilder.value(getNumericValue(row, field));
@@ -132,6 +145,29 @@ public class PreAggregatedBillingDataHelper {
         .build();
   }
 
+  private void setTimeSeriesDataPointKey(
+      FieldValueList row, Field field, QLBillingDataPointBuilder billingDataPointBuilder) {
+    String value;
+    switch (field.getName()) {
+      case entityConstantGcpLabelKey:
+        String labelKey = fetchStringValue(row, field);
+        String labelValue =
+            fetchStringValue(row, Field.newBuilder(entityConstantGcpLabelValue, StandardSQLTypeName.STRING).build());
+        value = String.format(LABEL, labelKey, labelValue);
+        if (labelKey.equals(nullStringValueConstant)) {
+          value = entityNoLabelConst;
+        }
+        billingDataPointBuilder.key(QLReference.builder().id(value).name(value).type(field.getName()).build());
+        return;
+      case entityConstantGcpLabelValue:
+        return;
+      default:
+        value = fetchStringValue(row, field);
+        billingDataPointBuilder.key(QLReference.builder().id(value).name(value).type(field.getName()).build());
+        return;
+    }
+  }
+
   private String fetchStringValue(FieldValueList row, Field field) {
     Object value = row.get(field.getName()).getValue();
     if (value != null) {
@@ -143,6 +179,7 @@ public class PreAggregatedBillingDataHelper {
   protected String getDefaultValue(Field field) {
     switch (field.getName()) {
       case entityConstantRegion:
+      case entityConstantRawTableGcpRegion:
         return entityConstantNoRegion;
       case entityConstantAwsLinkedAccount:
         return entityConstantAwsNoLinkedAccount;
@@ -153,12 +190,16 @@ public class PreAggregatedBillingDataHelper {
       case entityConstantAwsInstanceType:
         return entityConstantAwsNoInstanceType;
       case entityConstantGcpProjectId:
+      case entityConstantRawTableGcpProjectId:
         return entityConstantGcpNoProjectId;
       case entityConstantGcpProduct:
+      case entityConstantRawTableGcpProduct:
         return entityConstantGcpNoProduct;
       case entityConstantGcpSku:
+      case entityConstantRawTableGcpSku:
         return entityConstantGcpNoSku;
       case entityConstantGcpSkuId:
+      case entityConstantRawTableGcpSkuId:
         return entityConstantGcpNoSkuId;
       case entityCloudProviderConst:
         return entityNoCloudProviderConst;
@@ -200,8 +241,8 @@ public class PreAggregatedBillingDataHelper {
         .collect(Collectors.toList());
   }
 
-  public String getQuery(List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions,
-      List<SqlObject> sort, boolean addTimeTruncGroupBy) {
+  public SelectQuery getQuery(List<SqlObject> aggregateFunction, List<Object> groupByObjects,
+      List<Condition> conditions, List<SqlObject> sort, boolean addTimeTruncGroupBy) {
     List<Object> selectObjects = new ArrayList<>();
     List<Object> sqlGroupByObjects = new ArrayList<>();
     List<Object> sortObjects = new ArrayList<>();
@@ -228,15 +269,21 @@ public class PreAggregatedBillingDataHelper {
                                   .sortObjects(sortObjects)
                                   .conditions(conditions)
                                   .build();
-    return bigQuerySql.getQuery().validate().toString();
+    return bigQuerySql.getQuery().validate();
   }
 
   private void processAndAddTimeTruncatedGroupBy(List<Object> groupByObjects, List<Object> sqlGroupByObjects) {
     Optional<Object> timeTruncatedGroupBy =
         groupByObjects.stream().filter(g -> g instanceof TruncExpression).findFirst();
 
-    timeTruncatedGroupBy = Optional.of(new TruncExpression(PreAggregatedTableSchema.startTime,
-        getTimeTruncationInterval(timeTruncatedGroupBy), PreAggregateConstants.startTimeTruncatedConstant));
+    boolean isLabelsPresent = groupByObjects.stream().anyMatch(g
+        -> g instanceof DbColumn
+            && ((((DbColumn) g).getColumnNameSQL().equals(RawBillingTableSchema.labelsKey.getColumnNameSQL()))
+                   || ((DbColumn) g).getColumnNameSQL().equals(RawBillingTableSchema.labelsValue.getColumnNameSQL())));
+
+    timeTruncatedGroupBy = Optional.of(
+        new TruncExpression(isLabelsPresent ? RawBillingTableSchema.startTime : PreAggregatedTableSchema.startTime,
+            getTimeTruncationInterval(timeTruncatedGroupBy), PreAggregateConstants.startTimeTruncatedConstant));
 
     sqlGroupByObjects.add(timeTruncatedGroupBy.get());
   }
@@ -261,6 +308,10 @@ public class PreAggregatedBillingDataHelper {
       if (sqlGroupByObjects.get(i) instanceof DbColumn) {
         String columnNameSQL = ((DbColumn) sqlGroupByObjects.get(i)).getColumnNameSQL();
         String alias = columnNameSQL.replace(".", "_");
+        if (columnNameSQL.equals(RawBillingTableSchema.labelsKey.getColumnNameSQL())
+            || columnNameSQL.equals(RawBillingTableSchema.labelsValue.getColumnNameSQL())) {
+          sqlGroupByObjects.set(i, alias);
+        }
         selectObjects.add(new AliasExpression(columnNameSQL, alias));
       }
     }
@@ -304,6 +355,7 @@ public class PreAggregatedBillingDataHelper {
       String value = null;
       switch (field.getName()) {
         case entityConstantRegion:
+        case entityConstantRawTableGcpRegion:
           value = fetchStringValue(row, field);
           dataPointBuilder.id(value);
           dataPointBuilder.region(value);
@@ -339,24 +391,39 @@ public class PreAggregatedBillingDataHelper {
           dataPointBuilder.awsUnblendedCost(billingDataHelper.getRoundedDoubleValue(unBlendedCost));
           break;
         case entityConstantGcpProjectId:
+        case entityConstantRawTableGcpProjectId:
           value = fetchStringValue(row, field);
           dataPointBuilder.id(value);
           dataPointBuilder.gcpProjectId(value);
           break;
         case entityConstantGcpProduct:
+        case entityConstantRawTableGcpProduct:
           value = fetchStringValue(row, field);
           dataPointBuilder.id(value);
           dataPointBuilder.gcpProduct(value);
           break;
         case entityConstantGcpSku:
+        case entityConstantRawTableGcpSku:
           value = fetchStringValue(row, field);
           dataPointBuilder.id(value);
           dataPointBuilder.gcpSkuDescription(value);
           break;
         case entityConstantGcpSkuId:
+        case entityConstantRawTableGcpSkuId:
           value = fetchStringValue(row, field);
           dataPointBuilder.id(value);
           dataPointBuilder.gcpSkuId(value);
+          break;
+        case entityConstantGcpLabelKey:
+          String labelKey = fetchStringValue(row, field);
+          String labelValue =
+              fetchStringValue(row, Field.newBuilder(entityConstantGcpLabelValue, StandardSQLTypeName.STRING).build());
+          value = String.format(LABEL, labelKey, labelValue);
+          if (labelKey.equals(nullStringValueConstant)) {
+            value = entityNoLabelConst;
+          }
+          dataPointBuilder.id(value);
+          dataPointBuilder.gcpLabel(value);
           break;
         case entityConstantGcpCost:
           double cost = getNumericValue(row, field);
@@ -533,10 +600,14 @@ public class PreAggregatedBillingDataHelper {
   }
 
   protected List<Condition> filtersToConditions(List<CloudBillingFilter> filters) {
+    return filtersToConditions(filters, false);
+  }
+
+  protected List<Condition> filtersToConditions(List<CloudBillingFilter> filters, boolean isQueryRawTable) {
     return Optional.ofNullable(filters)
         .map(Collection::stream)
         .orElseGet(Stream::empty)
-        .map(CloudBillingFilter::toCondition)
+        .map(isQueryRawTable ? CloudBillingFilter::toRawTableCondition : CloudBillingFilter::toCondition)
         .collect(Collectors.toList());
   }
 
@@ -581,10 +652,12 @@ public class PreAggregatedBillingDataHelper {
     Set<QLEntityData> gcpProduct = new HashSet<>();
     Set<QLEntityData> gcpSku = new HashSet<>();
     Set<QLEntityData> gcpBillingAccount = new HashSet<>();
+    Map<String, Set<String>> labelsMap = new HashMap<>();
 
     for (FieldValueList row : result.iterateAll()) {
       for (Field field : fields) {
         switch (field.getName()) {
+          case entityConstantRawTableGcpRegion:
           case entityConstantRegion:
             getEntityDataPoint(row, field);
             region.add(getEntityDataPoint(row, field));
@@ -605,21 +678,41 @@ public class PreAggregatedBillingDataHelper {
             awsInstanceType.add(getEntityDataPoint(row, field));
             break;
           case entityConstantGcpSku:
+          case entityConstantRawTableGcpSku:
             gcpSku.add(getEntityDataPoint(row, field));
             break;
           case entityConstantGcpProduct:
+          case entityConstantRawTableGcpProduct:
             gcpProduct.add(getEntityDataPoint(row, field));
             break;
           case entityConstantGcpProjectId:
+          case entityConstantRawTableGcpProjectId:
             gcpProjectId.add(getEntityDataPoint(row, field));
             break;
           case entityConstantGcpBillingAccount:
+          case entityConstantRawTableGcpBillingAccount:
             gcpBillingAccount.add(getEntityDataPoint(row, field));
+            break;
+          case entityConstantGcpLabelKey:
+            String labelKey = fetchStringValue(row, field);
+            String labelValue = fetchStringValue(
+                row, Field.newBuilder(entityConstantGcpLabelValue, StandardSQLTypeName.STRING).build());
+            if (labelKey.equals(nullStringValueConstant)) {
+              updateLabelsMap(labelsMap, labelKey, labelValue);
+            }
             break;
           default:
             break;
         }
       }
+    }
+
+    List<QLK8sLabel> labelsDTO = new ArrayList<>();
+    for (Map.Entry<String, Set<String>> labels : labelsMap.entrySet()) {
+      labelsDTO.add(QLK8sLabel.builder()
+                        .name(labels.getKey())
+                        .values(labels.getValue().toArray(new String[labels.getValue().size()]))
+                        .build());
     }
 
     return PreAggregateFilterValuesDTO.builder()
@@ -633,8 +726,17 @@ public class PreAggregatedBillingDataHelper {
                                 .gcpProduct(gcpProduct)
                                 .gcpProjectId(gcpProjectId)
                                 .gcpBillingAccount(gcpBillingAccount)
+                                .gcpLabels(labelsDTO)
                                 .build()))
         .build();
+  }
+
+  public void updateLabelsMap(Map<String, Set<String>> labels, String labelKey, String labelValue) {
+    if (!labels.containsKey(labelKey)) {
+      labels.put(labelKey, new HashSet<>());
+    }
+    Set<String> labelValues = labels.get(labelKey);
+    labelValues.add(labelValue);
   }
 
   private String getAwsAccountName(String awsAccountId, Map<String, String> awsCloudAccountMap) {
@@ -718,7 +820,21 @@ public class PreAggregatedBillingDataHelper {
         case entityConstantGcpProduct:
         case entityConstantGcpSku:
         case entityConstantGcpSkuId:
+        case entityConstantRawTableGcpProjectId:
+        case entityConstantRawTableGcpProduct:
+        case entityConstantRawTableGcpSku:
+        case entityConstantRawTableGcpSkuId:
+        case entityConstantRawTableGcpRegion:
           id = fetchStringValue(row, field);
+          break;
+        case entityConstantGcpLabelKey:
+          String labelKey = fetchStringValue(row, field);
+          String labelValue =
+              fetchStringValue(row, Field.newBuilder(entityConstantGcpLabelValue, StandardSQLTypeName.STRING).build());
+          id = String.format(LABEL, labelKey, labelValue);
+          if (labelKey.equals(nullStringValueConstant)) {
+            id = entityNoLabelConst;
+          }
           break;
         case entityConstantAwsBlendedCost:
         case entityConstantAwsUnBlendedCost:

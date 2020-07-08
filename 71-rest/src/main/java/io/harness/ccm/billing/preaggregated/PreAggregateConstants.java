@@ -25,6 +25,14 @@ public class PreAggregateConstants {
   public static final String entityConstantGcpSkuId = "gcpSkuId";
   public static final String entityConstantGcpSku = "gcpSkuDescription";
   public static final String entityConstantGcpCost = "sum_cost";
+  public static final String entityConstantRawTableGcpBillingAccount = "billing_account_id";
+  public static final String entityConstantRawTableGcpProjectId = "project_id";
+  public static final String entityConstantRawTableGcpProduct = "service_description";
+  public static final String entityConstantRawTableGcpSkuId = "sku_id";
+  public static final String entityConstantRawTableGcpSku = "sku_description";
+  public static final String entityConstantRawTableGcpRegion = "location_region";
+  public static final String entityConstantGcpLabelKey = "labels_key";
+  public static final String entityConstantGcpLabelValue = "labels_value";
   public static final String entityCloudProviderConst = "cloudProvider";
 
   public static final String entityConstantNoRegion = "No Region";
@@ -37,4 +45,5 @@ public class PreAggregateConstants {
   public static final String entityConstantGcpNoSkuId = "No SkuId";
   public static final String entityConstantGcpNoSku = "No Sku";
   public static final String entityNoCloudProviderConst = "No Cloud Provider";
+  public static final String entityNoLabelConst = "Label not present";
 }

@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
+import com.healthmarketscience.sqlbuilder.CustomSql;
+import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.ccm.billing.TimeSeriesDataPoints;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
@@ -39,30 +41,43 @@ public class CloudTimeSeriesStatsDataFetcher
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
       Integer limit, Integer offset) {
-    String queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
+    boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, groupByList);
+    SqlObject leftJoin = null;
+    String queryTableName;
+    if (isQueryRawTableRequired) {
+      leftJoin = new CustomSql(" LEFT JOIN UNNEST(labels) as labels");
+      String tableName = cloudBillingHelper.getTableName(cloudBillingHelper.getCloudProvider(filters));
+      queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId, tableName);
+      filters = cloudBillingHelper.removeAndReturnCloudProviderFilter(filters);
+      groupByList = cloudBillingHelper.removeAndReturnCloudProviderGroupBy(groupByList);
+    } else {
+      queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
+    }
 
     return preAggregateBillingService.getPreAggregateBillingTimeSeriesStats(
         Optional.ofNullable(aggregateFunction)
             .map(Collection::stream)
             .orElseGet(Stream::empty)
-            .map(CloudBillingAggregate::toFunctionCall)
+            .map(isQueryRawTableRequired ? CloudBillingAggregate::toRawTableFunctionCall
+                                         : CloudBillingAggregate::toFunctionCall)
             .collect(Collectors.toList()),
         Optional.ofNullable(groupByList)
             .map(Collection::stream)
             .orElseGet(Stream::empty)
-            .map(CloudBillingGroupBy::toGroupbyObject)
+            .map(isQueryRawTableRequired ? CloudBillingGroupBy::toRawTableGroupbyObject
+                                         : CloudBillingGroupBy::toGroupbyObject)
             .collect(Collectors.toList()),
         Optional.ofNullable(filters)
             .map(Collection::stream)
             .orElseGet(Stream::empty)
-            .map(CloudBillingFilter::toCondition)
+            .map(isQueryRawTableRequired ? CloudBillingFilter::toRawTableCondition : CloudBillingFilter::toCondition)
             .collect(Collectors.toList()),
         Optional.ofNullable(sort)
             .map(Collection::stream)
             .orElseGet(Stream::empty)
             .map(CloudBillingSortCriteria::toOrderObject)
             .collect(Collectors.toList()),
-        queryTableName);
+        queryTableName, leftJoin);
   }
 
   @Override

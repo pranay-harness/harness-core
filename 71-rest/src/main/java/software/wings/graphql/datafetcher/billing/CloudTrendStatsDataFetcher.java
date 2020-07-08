@@ -39,7 +39,7 @@ public class CloudTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
             .orElseGet(Stream::empty)
             .map(CloudBillingFilter::toCondition)
             .collect(Collectors.toList()),
-        queryTableName, filters);
+        queryTableName, filters, null);
   }
 
   @Override

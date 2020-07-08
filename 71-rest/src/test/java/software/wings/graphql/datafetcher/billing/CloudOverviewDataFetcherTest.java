@@ -61,7 +61,7 @@ public class CloudOverviewDataFetcherTest extends AbstractDataFetcherTest {
                  .build();
 
     when(preAggregateBillingService.getPreAggregateBillingOverview(
-             anyList(), anyList(), anyList(), anyList(), any(), anyList()))
+             anyList(), anyList(), anyList(), anyList(), any(), anyList(), any()))
         .thenReturn(QLData);
     when(cloudBillingHelper.getCloudProviderTableName(anyString())).thenReturn("CLOUD_PROVIDER_TABLE_NAME");
   }

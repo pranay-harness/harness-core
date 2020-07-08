@@ -7,7 +7,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.healthmarketscience.sqlbuilder.Condition;
+import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.SqlObject;
+import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.setup.CECloudAccountDao;
@@ -39,11 +41,17 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
 
   @Override
   public PreAggregateBillingTimeSeriesStatsDTO getPreAggregateBillingTimeSeriesStats(List<SqlObject> aggregateFunction,
-      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String tableName) {
+      List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String tableName,
+      SqlObject leftJoin) {
     Preconditions.checkNotNull(
         groupByObjects, "Queries to getPreAggregateBillingTimeSeriesStats need at least one groupBy");
-    String timeSeriesDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, true);
+    SelectQuery query = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, true);
+    if (leftJoin != null) {
+      query.addFromTable(RawBillingTableSchema.table);
+      query.addCustomJoin(leftJoin);
+    }
     // Replacing the Default Table with the Table in the context
+    String timeSeriesDataQuery = query.toString();
     timeSeriesDataQuery = timeSeriesDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, tableName);
     logger.info("getPreAggregateBillingTimeSeriesStats Query {}", timeSeriesDataQuery);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(timeSeriesDataQuery).build();
@@ -61,11 +69,16 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   @Override
   public PreAggregateBillingEntityStatsDTO getPreAggregateBillingEntityStats(String accountId,
       List<SqlObject> aggregateFunction, List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort,
-      String queryTableName, List<CloudBillingFilter> filters) {
+      String queryTableName, List<CloudBillingFilter> filters, SqlObject leftJoin) {
     Preconditions.checkNotNull(
         groupByObjects, "Queries to getPreAggregateBillingEntityStats need at least one groupBy");
-    String entityDataQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, false);
+    SelectQuery query = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, false);
+    if (leftJoin != null) {
+      query.addFromTable(RawBillingTableSchema.table);
+      query.addCustomJoin(leftJoin);
+    }
     // Replacing the Default Table with the Table in the context
+    String entityDataQuery = query.toString();
     entityDataQuery = entityDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
     Map<String, String> linkedAccountMap =
         isAWSLinkedAccountGroupByPresent(groupByObjects) ? linkedAccountsMap(accountId) : Collections.emptyMap();
@@ -73,8 +86,13 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     List<CloudBillingFilter> trendFilters = dataHelper.getTrendFilters(filters);
     Instant trendStartInstant =
         Instant.ofEpochMilli(dataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
-    String prevEntityDataQuery = dataHelper.getQuery(
-        aggregateFunction, groupByObjects, dataHelper.filtersToConditions(trendFilters), sort, false);
+    SelectQuery prevQuery = dataHelper.getQuery(
+        aggregateFunction, groupByObjects, dataHelper.filtersToConditions(trendFilters, leftJoin != null), sort, false);
+    if (leftJoin != null) {
+      prevQuery.addFromTable(RawBillingTableSchema.table);
+      prevQuery.addCustomJoin(leftJoin);
+    }
+    String prevEntityDataQuery = prevQuery.toString();
     prevEntityDataQuery = prevEntityDataQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
     Map<String, PreAggregatedCostData> idToPrevBillingAmountData = getPrevAggregatedEntityData(prevEntityDataQuery);
 
@@ -108,14 +126,14 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
 
   @Override
   public PreAggregateBillingTrendStatsDTO getPreAggregateBillingTrendStats(List<SqlObject> aggregateFunction,
-      List<Condition> conditions, String queryTableName, List<CloudBillingFilter> filters) {
+      List<Condition> conditions, String queryTableName, List<CloudBillingFilter> filters, SqlObject leftJoin) {
     PreAggregatedCostDataStats preAggregatedCostDataStats =
-        getAggregatedCostData(aggregateFunction, conditions, queryTableName);
+        getAggregatedCostData(aggregateFunction, conditions, queryTableName, leftJoin);
     List<CloudBillingFilter> trendFilters = dataHelper.getTrendFilters(filters);
     Instant trendStartInstant =
         Instant.ofEpochMilli(dataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
-    PreAggregatedCostDataStats prevPreAggregatedCostDataStats =
-        getAggregatedCostData(aggregateFunction, dataHelper.filtersToConditions(trendFilters), queryTableName);
+    PreAggregatedCostDataStats prevPreAggregatedCostDataStats = getAggregatedCostData(
+        aggregateFunction, dataHelper.filtersToConditions(trendFilters), queryTableName, leftJoin);
     if (preAggregatedCostDataStats != null) {
       return PreAggregateBillingTrendStatsDTO.builder()
           .blendedCost(dataHelper.getCostBillingStats(preAggregatedCostDataStats.getBlendedCost(),
@@ -131,10 +149,15 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   }
 
   @Override
-  public PreAggregateFilterValuesDTO getPreAggregateFilterValueStats(
-      String accountId, List<Object> groupByObjects, List<Condition> conditions, String queryTableName) {
-    String filterValueQuery = dataHelper.getQuery(null, groupByObjects, conditions, null, false);
+  public PreAggregateFilterValuesDTO getPreAggregateFilterValueStats(String accountId, List<Object> groupByObjects,
+      List<Condition> conditions, String queryTableName, SqlObject leftJoin) {
+    SelectQuery query = dataHelper.getQuery(null, groupByObjects, conditions, null, false);
+    if (leftJoin != null) {
+      query.addFromTable(RawBillingTableSchema.table);
+      query.addCustomJoin(leftJoin);
+    }
     // Replacing the Default Table with the Table in the context
+    String filterValueQuery = query.toString();
     filterValueQuery = filterValueQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
     logger.info("getPreAggregateFilterValueStats Query {}", filterValueQuery);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(filterValueQuery).build();
@@ -150,9 +173,14 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   }
 
   public PreAggregatedCostDataStats getAggregatedCostData(
-      List<SqlObject> aggregateFunction, List<Condition> conditions, String queryTableName) {
-    String trendStatsQuery = dataHelper.getQuery(aggregateFunction, null, conditions, null, false);
+      List<SqlObject> aggregateFunction, List<Condition> conditions, String queryTableName, SqlObject leftJoin) {
+    SelectQuery query = dataHelper.getQuery(aggregateFunction, null, conditions, null, false);
+    if (leftJoin != null) {
+      query.addFromTable(RawBillingTableSchema.table);
+      query.addCustomJoin(leftJoin);
+    }
     // Replacing the Default Table with the Table in the context
+    String trendStatsQuery = query.toString();
     trendStatsQuery = trendStatsQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
     logger.info("getAggregatedCostData Query {}", trendStatsQuery);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(trendStatsQuery).build();
@@ -170,17 +198,27 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   @Override
   public PreAggregateCloudOverviewDataDTO getPreAggregateBillingOverview(List<SqlObject> aggregateFunction,
       List<Object> groupByObjects, List<Condition> conditions, List<SqlObject> sort, String queryTableName,
-      List<CloudBillingFilter> filters) {
-    String cloudOverviewQuery = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, false);
+      List<CloudBillingFilter> filters, SqlObject leftJoin) {
+    SelectQuery query = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, false);
+    if (leftJoin != null) {
+      query.addFromTable(RawBillingTableSchema.table);
+      query.addCustomJoin(leftJoin);
+    }
     // Replacing the Default Table with the Table in the context
+    String cloudOverviewQuery = query.toString();
     cloudOverviewQuery = cloudOverviewQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
     logger.info("getPreAggregateBillingOverview Query {}", cloudOverviewQuery);
 
     List<CloudBillingFilter> trendFilters = dataHelper.getTrendFilters(filters);
     Instant trendStartInstant =
         Instant.ofEpochMilli(dataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
-    String prevCloudOverviewQuery = dataHelper.getQuery(
+    SelectQuery prevQuery = dataHelper.getQuery(
         aggregateFunction, groupByObjects, dataHelper.filtersToConditions(trendFilters), sort, false);
+    if (leftJoin != null) {
+      query.addFromTable(RawBillingTableSchema.table);
+      prevQuery.addCustomJoin(leftJoin);
+    }
+    String prevCloudOverviewQuery = prevQuery.toString();
     prevCloudOverviewQuery =
         prevCloudOverviewQuery.replaceAll(PreAggregatedTableSchema.defaultTableName, queryTableName);
     Map<String, PreAggregatedCostData> idToPrevOverviewAmountData = getPrevOverviewData(prevCloudOverviewQuery);

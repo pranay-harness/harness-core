@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -31,6 +32,7 @@ import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
@@ -42,6 +44,8 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
   private static final String BLENDED_COST = "blendedCost";
   private static final String SERVICE_NAME = "service";
   private static final String CLOUD_PROVIDER = "AWS";
+  private static final String LABELS_KEY = "labelKey";
+  private static final String LABELS_VALUE = "labelValue";
   private static final Double UN_BLENDED_COST_VALUE = 2.0;
   private static final Double BLENDED_COST_VALUE = 1.0;
 
@@ -60,7 +64,7 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
     sort.addAll(Arrays.asList(getAscBlended(), getAscTime(), getDescUnBlended()));
 
     when(preAggregateBillingService.getPreAggregateBillingEntityStats(
-             anyString(), anyList(), anyList(), anyList(), anyList(), any(), anyList()))
+             anyString(), anyList(), anyList(), anyList(), anyList(), any(), anyList(), any()))
         .thenReturn(PreAggregateBillingEntityStatsDTO.builder()
                         .stats(Arrays.asList(PreAggregateBillingEntityDataPoint.builder()
                                                  .awsService(SERVICE_NAME)
@@ -81,6 +85,24 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getStats().get(0).getAwsService()).isEqualTo(SERVICE_NAME);
     assertThat(data.getStats().get(0).getAwsBlendedCost()).isEqualTo(BLENDED_COST_VALUE);
     assertThat(data.getStats().get(0).getAwsUnblendedCost()).isEqualTo(UN_BLENDED_COST_VALUE);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldFetchWithLabels() {
+    doCallRealMethod().when(cloudBillingHelper).fetchIfRawTableQueryRequired(anyList(), anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
+    when(preAggregateBillingService.getPreAggregateBillingEntityStats(
+             anyString(), anyList(), anyList(), anyList(), anyList(), any(), anyList(), any()))
+        .thenReturn(null);
+
+    PreAggregateBillingEntityStatsDTO data = (PreAggregateBillingEntityStatsDTO) cloudEntityStatsDataFetcher.fetch(
+        ACCOUNT1_ID, cloudBillingAggregates,
+        Arrays.asList(getLablesKeyFilter(new String[] {LABELS_KEY}), getLablesValueFilter(new String[] {LABELS_VALUE})),
+        Collections.emptyList(), null, 5, 0);
+    assertThat(data).isNull();
   }
 
   @Test
@@ -132,6 +154,19 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setCloudProvider(
         CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(cloudProvider).build());
+    return cloudBillingFilter;
+  }
+
+  private CloudBillingFilter getLablesKeyFilter(String[] labelsKey) {
+    CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+    cloudBillingFilter.setLabelsKey(CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(labelsKey).build());
+    return cloudBillingFilter;
+  }
+
+  private CloudBillingFilter getLablesValueFilter(String[] labelsValue) {
+    CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
+    cloudBillingFilter.setLabelsValue(
+        CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(labelsValue).build());
     return cloudBillingFilter;
   }
 }

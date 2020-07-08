@@ -5,6 +5,8 @@ import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_LINK
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_SERVICE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_USAGE_TYPE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_BILLING_ACCOUNT_ID;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_LABEL_KEY;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_LABEL_VALUE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_PRODUCT;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_PROJECT;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_SKU;
@@ -15,9 +17,11 @@ import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.ComboCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
+import com.healthmarketscience.sqlbuilder.CustomSql;
 import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 import lombok.Builder;
@@ -92,9 +96,50 @@ public class CloudBillingIdFilter implements Filter {
         return null;
     }
 
-    boolean containsNullStringConst = containsNullFilter(Arrays.asList(values));
+    return returnCondition(operator, dbColumn);
+  }
 
+  public Condition toRawTableCondition() {
+    Preconditions.checkNotNull(values, "The billing Id filter is missing values");
+    Preconditions.checkNotNull(operator, "The billing Id filter is missing operator");
+
+    DbColumn dbColumn = null;
+    switch (variable) {
+      case BILLING_GCP_PROJECT:
+        dbColumn = RawBillingTableSchema.gcpProjectId;
+        break;
+      case BILLING_GCP_PRODUCT:
+        dbColumn = RawBillingTableSchema.gcpProduct;
+        break;
+      case BILLING_GCP_SKU:
+        dbColumn = RawBillingTableSchema.gcpSkuDescription;
+        break;
+      case BILLING_GCP_BILLING_ACCOUNT_ID:
+        dbColumn = RawBillingTableSchema.gcpBillingAccountId;
+        break;
+      case BILLING_REGION:
+        dbColumn = RawBillingTableSchema.region;
+        break;
+      case BILLING_GCP_LABEL_KEY:
+        dbColumn = RawBillingTableSchema.labelsKey;
+        break;
+      case BILLING_GCP_LABEL_VALUE:
+        dbColumn = RawBillingTableSchema.labelsValue;
+        break;
+      default:
+        return null;
+    }
+    return returnCondition(operator, dbColumn);
+  }
+
+  public Condition returnCondition(QLIdOperator operator, DbColumn dbColumnName) {
+    Object dbColumn = dbColumnName;
+    if (dbColumnName.equals(RawBillingTableSchema.labelsKey)
+        || dbColumnName.equals(RawBillingTableSchema.labelsValue)) {
+      dbColumn = new CustomSql(dbColumnName.getColumnNameSQL());
+    }
     Condition condition;
+    boolean containsNullStringConst = containsNullFilter(Arrays.asList(values));
     switch (operator) {
       case EQUALS:
         if (containsNullStringConst) {
@@ -116,7 +161,6 @@ public class CloudBillingIdFilter implements Filter {
       default:
         return null;
     }
-
     return condition;
   }
 

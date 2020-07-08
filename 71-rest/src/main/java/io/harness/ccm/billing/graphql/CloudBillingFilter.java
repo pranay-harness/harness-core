@@ -25,6 +25,8 @@ public class CloudBillingFilter {
   public static final String GCP_TIME_FILTER_ERROR = "Invalid GCP billing time filter.";
   public static final String AWS_TIME_FILTER_ERROR = "Invalid GCP billing time filter.";
   public static final String CLOUD_PROVIDER = "cloudProvider";
+  public static final String BILLING_GCP_LABEL_KEY = "billing/gcp/labelsKey";
+  public static final String BILLING_GCP_LABEL_VALUE = "billing/gcp/labelsValue";
 
   CloudBillingTimeFilter startTime;
   CloudBillingTimeFilter endTime;
@@ -40,6 +42,8 @@ public class CloudBillingFilter {
   CloudBillingIdFilter awsInstanceType;
   CloudBillingIdFilter awsService;
   CloudBillingIdFilter cloudProvider;
+  CloudBillingIdFilter labelsKey;
+  CloudBillingIdFilter labelsValue;
 
   public CloudBillingTimeFilter getStartTime() {
     if (startTime == null) {
@@ -82,8 +86,27 @@ public class CloudBillingFilter {
   }
 
   public CloudBillingIdFilter getCloudProvider() {
+    if (cloudProvider == null) {
+      return null;
+    }
     cloudProvider.setVariable(CLOUD_PROVIDER);
     return cloudProvider;
+  }
+
+  public CloudBillingIdFilter getLabelsKey() {
+    if (labelsKey == null) {
+      return null;
+    }
+    labelsKey.setVariable(BILLING_GCP_LABEL_KEY);
+    return labelsKey;
+  }
+
+  public CloudBillingIdFilter getLabelsValue() {
+    if (labelsValue == null) {
+      return null;
+    }
+    labelsValue.setVariable(BILLING_GCP_LABEL_VALUE);
+    return labelsValue;
   }
 
   public CloudBillingIdFilter getProject() {
@@ -173,6 +196,43 @@ public class CloudBillingFilter {
     }
     if (cloudProvider != null) {
       return getCloudProvider().toCondition();
+    }
+    return null;
+  }
+
+  public Condition toRawTableCondition() {
+    if (startTime != null) {
+      return getStartTime().toRawTableCondition();
+    }
+    if (endTime != null) {
+      return getEndTime().toRawTableCondition();
+    }
+    if (projectId != null) {
+      return getProject().toRawTableCondition();
+    }
+    if (product != null) {
+      return getProduct().toRawTableCondition();
+    }
+    if (sku != null) {
+      return getSku().toRawTableCondition();
+    }
+    if (billingAccountId != null) {
+      return getBillingAccountId().toRawTableCondition();
+    }
+    if (region != null) {
+      return getRegion().toRawTableCondition();
+    }
+    if (labelsKey != null) {
+      return getLabelsKey().toRawTableCondition();
+    }
+    if (labelsValue != null) {
+      return getLabelsValue().toRawTableCondition();
+    }
+    if (preAggregatedTableStartTime != null) {
+      return getPreAggregatedStartTime().toRawTableCondition();
+    }
+    if (preAggregatedTableEndTime != null) {
+      return getPreAggregatedEndTime().toRawTableCondition();
     }
     return null;
   }
