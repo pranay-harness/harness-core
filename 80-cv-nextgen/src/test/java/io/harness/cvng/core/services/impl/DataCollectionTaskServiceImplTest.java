@@ -31,7 +31,6 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import io.harness.time.Timestamp;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -330,10 +329,9 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     assertThat(savedTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(AppDynamicsDataCollectionInfo.class);
     assertThat(taskIdFromApi).isEqualTo(taskId);
-    assertThat(savedTask.getEndTime())
-        .isEqualTo(Instant.ofEpochMilli(Timestamp.minuteBoundary(fakeNow.toEpochMilli())).minusMillis(1));
-    assertThat(savedTask.getStartTime())
-        .isEqualTo(Instant.ofEpochMilli(Timestamp.minuteBoundary(fakeNow.toEpochMilli())).minus(2, ChronoUnit.HOURS));
+    Instant startTime = Instant.parse("2020-04-22T07:55:00Z");
+    assertThat(savedTask.getEndTime()).isEqualTo(Instant.parse("2020-04-22T10:00:00Z").minusMillis(1));
+    assertThat(savedTask.getStartTime()).isEqualTo(startTime);
   }
 
   private AppDynamicsCVConfig getCVConfig() {

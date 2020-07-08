@@ -20,8 +20,8 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.persistence.HPersistence;
-import io.harness.time.Timestamp;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -158,11 +158,10 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   public String enqueueFirstTask(CVConfig cvConfig) {
     logger.info("Enqueuing cvConfigId for the first time: {}", cvConfig.getUuid());
     populateMetricPack(cvConfig);
-    Instant now = Instant.ofEpochMilli(Timestamp.minuteBoundary(clock.instant().toEpochMilli()));
-    // setting it to 2 hours for now. This should come from cvConfig
+    Instant now = DateTimeUtils.roundDownTo5MinBoundary(clock.instant());
+    // setting it to 2:05 min hours for now. This should come from cvConfig
     DataCollectionTask dataCollectionTask =
-        getDataCollectionTask(cvConfig, now.minus(2, ChronoUnit.HOURS), now.minusMillis(1));
-
+        getDataCollectionTask(cvConfig, now.minus(125, ChronoUnit.MINUTES), now.minusMillis(1));
     save(dataCollectionTask);
     String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(
         cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getConnectorId());
