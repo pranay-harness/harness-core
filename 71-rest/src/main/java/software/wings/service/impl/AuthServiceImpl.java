@@ -218,10 +218,8 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private void addAuthTokenToCache(AuthToken authToken) {
-    if (authToken != null) {
-      if (authTokenCache != null) {
-        authTokenCache.put(authToken.getUuid(), authToken);
-      }
+    if (authToken != null && authTokenCache != null) {
+      authTokenCache.put(authToken.getUuid(), authToken);
     }
   }
 
@@ -1002,12 +1000,59 @@ public class AuthServiceImpl implements AuthService {
                                                       .getAppPermissionMapInternal()
                                                       .get(appId)
                                                       .getDeploymentExecutePermissionsForEnvs();
+
     if (isEmpty(deploymentEnvExecutePermissions)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
 
     if (!deploymentEnvExecutePermissions.contains(envId)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+    }
+  }
+
+  @Override
+  public void checkIfUserAllowedToDeployWorkflowToEnv(String appId, String envId) {
+    if (isEmpty(envId)) {
+      return;
+    }
+
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return;
+    }
+
+    Set<String> workflowExecutePermissionsForEnvs = user.getUserRequestContext()
+                                                        .getUserPermissionInfo()
+                                                        .getAppPermissionMapInternal()
+                                                        .get(appId)
+                                                        .getWorkflowExecutePermissionsForEnvs();
+
+    if (isEmpty(workflowExecutePermissionsForEnvs) || !workflowExecutePermissionsForEnvs.contains(envId)) {
+      throw new InvalidRequestException(
+          "User doesn't have rights to execute Workflow in this Environment", ErrorCode.ACCESS_DENIED, USER);
+    }
+  }
+
+  @Override
+  public void checkIfUserAllowedToDeployPipelineToEnv(String appId, String envId) {
+    if (isEmpty(envId)) {
+      return;
+    }
+
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return;
+    }
+
+    Set<String> pipelineExecutePermissionsForEnvs = user.getUserRequestContext()
+                                                        .getUserPermissionInfo()
+                                                        .getAppPermissionMapInternal()
+                                                        .get(appId)
+                                                        .getPipelineExecutePermissionsForEnvs();
+
+    if (isEmpty(pipelineExecutePermissionsForEnvs) || !pipelineExecutePermissionsForEnvs.contains(envId)) {
+      throw new InvalidRequestException(
+          "User doesn't have rights to execute Pipeline in this Environment", ErrorCode.ACCESS_DENIED, USER);
     }
   }
 
@@ -1080,10 +1125,7 @@ public class AuthServiceImpl implements AuthService {
         return;
     }
 
-    if (isEmpty(allowedEnvIds)) {
-      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
-    }
-    if (!allowedEnvIds.contains(envId)) {
+    if (isEmpty(allowedEnvIds) || !allowedEnvIds.contains(envId)) {
       throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
   }

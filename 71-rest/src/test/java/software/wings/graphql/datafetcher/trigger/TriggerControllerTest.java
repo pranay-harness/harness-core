@@ -1,7 +1,19 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.rule.OwnerRule.MILAN;
+import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.beans.EmbeddedUser;
@@ -12,9 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
@@ -36,8 +46,8 @@ import software.wings.graphql.schema.type.trigger.QLTriggerConditionType;
 import software.wings.graphql.schema.type.trigger.QLTriggerPayload;
 import software.wings.graphql.schema.type.trigger.QLTriggerVariableValue;
 import software.wings.graphql.schema.type.trigger.QLWorkflowAction;
-import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 
@@ -55,9 +65,9 @@ public class TriggerControllerTest extends CategoryTest {
   @Mock WorkflowExecutionController workflowExecutionController;
   @Mock PipelineExecutionController pipelineExecutionController;
   @Mock DeploymentAuthHandler deploymentAuthHandler;
-  @Mock AuthHandler authHandler;
+  @Mock AuthService authService;
 
-  @InjectMocks TriggerController triggerController = Mockito.spy(new TriggerController());
+  @InjectMocks TriggerController triggerController = spy(new TriggerController());
 
   @Before
   public void initMocks() {
@@ -92,7 +102,7 @@ public class TriggerControllerTest extends CategoryTest {
             .triggerConditionType(QLTriggerConditionType.PIPELINE_COMPLETION)
             .build();
 
-    Mockito.when(triggerConditionController.populateTriggerCondition(Matchers.any(Trigger.class), Matchers.anyString()))
+    when(triggerConditionController.populateTriggerCondition(any(Trigger.class), anyString()))
         .thenReturn(qlOnPipelineCompletionMock);
 
     List<QLArtifactSelection> artifactSelections = Arrays.asList(QLLastCollected.builder()
@@ -114,8 +124,7 @@ public class TriggerControllerTest extends CategoryTest {
                                                 .variables(variableValues)
                                                 .build();
 
-    Mockito.when(triggerActionController.populateTriggerAction(Matchers.any(Trigger.class)))
-        .thenReturn(qlWorkflowActionMock);
+    when(triggerActionController.populateTriggerAction(any(Trigger.class))).thenReturn(qlWorkflowActionMock);
 
     QLTriggerBuilder qlTriggerBuilder = QLTrigger.builder();
     triggerController.populateTrigger(trigger, qlTriggerBuilder, "accountId");
@@ -177,7 +186,7 @@ public class TriggerControllerTest extends CategoryTest {
             .triggerConditionType(QLTriggerConditionType.PIPELINE_COMPLETION)
             .build();
 
-    Mockito.when(triggerConditionController.populateTriggerCondition(Matchers.any(Trigger.class), Matchers.anyString()))
+    when(triggerConditionController.populateTriggerCondition(any(Trigger.class), anyString()))
         .thenReturn(qlOnPipelineCompletionMock);
 
     List<QLArtifactSelection> artifactSelections = Arrays.asList(QLLastCollected.builder()
@@ -199,8 +208,7 @@ public class TriggerControllerTest extends CategoryTest {
                                                 .variables(variableValues)
                                                 .build();
 
-    Mockito.when(triggerActionController.populateTriggerAction(Matchers.any(Trigger.class)))
-        .thenReturn(qlWorkflowActionMock);
+    when(triggerActionController.populateTriggerAction(any(Trigger.class))).thenReturn(qlWorkflowActionMock);
 
     EmbeddedUser embeddedUser = EmbeddedUser.builder().name("name").email("email").uuid("uuid").build();
 
@@ -222,7 +230,7 @@ public class TriggerControllerTest extends CategoryTest {
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
-  public void prepareTriggerInOrchestrationWorkflowShouldReturnTrigger() throws Exception {
+  public void prepareTriggerInOrchestrationWorkflowShouldReturnTrigger() {
     QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput = QLCreateOrUpdateTriggerInput.builder()
                                                                     .triggerId("triggerId")
                                                                     .name("name")
@@ -258,55 +266,40 @@ public class TriggerControllerTest extends CategoryTest {
                                                             .regex(true)
                                                             .build();
 
-    Mockito.doNothing()
-        .when(triggerController)
-        .validateTrigger(Matchers.any(QLCreateOrUpdateTriggerInput.class), Matchers.anyString());
-    Mockito
-        .when(workflowService.readWorkflow(
-            qlCreateOrUpdateTriggerInput.getApplicationId(), qlCreateOrUpdateTriggerInput.getAction().getEntityId()))
-        .thenReturn(Mockito.mock(Workflow.class));
-    Mockito.doNothing()
-        .when(triggerController)
-        .validateWorkflow(Matchers.anyString(), Matchers.anyString(), Matchers.any(Workflow.class));
-    Mockito.when(workflowExecutionController.resolveEnvId(Matchers.any(Workflow.class), Matchers.anyList()))
-        .thenReturn("envId");
-    Mockito.doNothing()
-        .when(deploymentAuthHandler)
-        .authorizeWorkflowExecution(Matchers.anyString(), Matchers.anyString());
-    Mockito.doNothing().when(authHandler).checkIfUserAllowedToDeployToEnv(Matchers.anyString(), Matchers.anyString());
-    Mockito
-        .when(triggerActionController.validateAndResolveWorkflowVariables(
-            Matchers.anyList(), Matchers.any(Workflow.class), Matchers.anyString()))
+    doNothing().when(triggerController).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
+
+    when(workflowService.readWorkflow(
+             qlCreateOrUpdateTriggerInput.getApplicationId(), qlCreateOrUpdateTriggerInput.getAction().getEntityId()))
+        .thenReturn(mock(Workflow.class));
+    doNothing().when(triggerController).validateWorkflow(anyString(), anyString(), any(Workflow.class));
+    when(workflowExecutionController.resolveEnvId(any(Workflow.class), anyList())).thenReturn("envId");
+    doNothing().when(deploymentAuthHandler).authorizeWorkflowExecution(anyString(), anyString());
+    doNothing().when(authService).checkIfUserAllowedToDeployWorkflowToEnv(anyString(), anyString());
+
+    when(triggerActionController.validateAndResolveWorkflowVariables(anyList(), any(Workflow.class), anyString()))
         .thenReturn(workflowVariables);
-    Mockito.doNothing()
+    doNothing()
         .when(triggerController)
-        .validateWorkflowArtifactSourceServiceIds(Matchers.anyMap(), Matchers.anyList(), Matchers.any(Workflow.class));
-    Mockito.when(triggerActionController.resolveArtifactSelections(Matchers.any(QLCreateOrUpdateTriggerInput.class)))
+        .validateWorkflowArtifactSourceServiceIds(anyMap(), anyList(), any(Workflow.class));
+    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class)))
         .thenReturn(artifactSelections);
-    Mockito.when(triggerConditionController.resolveTriggerCondition(Matchers.any(QLCreateOrUpdateTriggerInput.class)))
+    when(triggerConditionController.resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class)))
         .thenReturn(artifactTriggerCondition);
 
     Trigger trigger = triggerController.prepareTrigger(qlCreateOrUpdateTriggerInput, "accountId");
 
-    Mockito.verify(triggerController, Mockito.times(1))
-        .validateTrigger(Matchers.any(QLCreateOrUpdateTriggerInput.class), Matchers.anyString());
-    Mockito.verify(workflowService, Mockito.times(1)).readWorkflow(Matchers.anyString(), Matchers.anyString());
-    Mockito.verify(triggerController, Mockito.times(1))
-        .validateWorkflow(Matchers.anyString(), Matchers.anyString(), Matchers.any(Workflow.class));
-    Mockito.verify(workflowExecutionController, Mockito.times(1))
-        .resolveEnvId(Matchers.any(Workflow.class), Matchers.anyList());
-    Mockito.verify(deploymentAuthHandler, Mockito.times(1))
-        .authorizeWorkflowExecution(Matchers.anyString(), Matchers.anyString());
-    Mockito.verify(authHandler, Mockito.times(1))
-        .checkIfUserAllowedToDeployToEnv(Matchers.anyString(), Matchers.anyString());
-    Mockito.verify(triggerActionController, Mockito.times(1))
-        .validateAndResolveWorkflowVariables(Matchers.anyList(), Matchers.any(Workflow.class), Matchers.anyString());
-    Mockito.verify(triggerController, Mockito.times(1))
-        .validateWorkflowArtifactSourceServiceIds(Matchers.anyMap(), Matchers.anyList(), Matchers.any(Workflow.class));
-    Mockito.verify(triggerActionController, Mockito.times(1))
-        .resolveArtifactSelections(Matchers.any(QLCreateOrUpdateTriggerInput.class));
-    Mockito.verify(triggerConditionController, Mockito.times(1))
-        .resolveTriggerCondition(Matchers.any(QLCreateOrUpdateTriggerInput.class));
+    verify(triggerController, times(1)).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
+    verify(workflowService, times(1)).readWorkflow(anyString(), anyString());
+    verify(triggerController, times(1)).validateWorkflow(anyString(), anyString(), any(Workflow.class));
+    verify(workflowExecutionController, times(1)).resolveEnvId(any(Workflow.class), anyList());
+    verify(deploymentAuthHandler, times(1)).authorizeWorkflowExecution(anyString(), anyString());
+    verify(authService, times(1)).checkIfUserAllowedToDeployWorkflowToEnv(anyString(), anyString());
+    verify(triggerActionController, times(1))
+        .validateAndResolveWorkflowVariables(anyList(), any(Workflow.class), anyString());
+    verify(triggerController, times(1))
+        .validateWorkflowArtifactSourceServiceIds(anyMap(), anyList(), any(Workflow.class));
+    verify(triggerActionController, times(1)).resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class));
+    verify(triggerConditionController, times(1)).resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class));
 
     assertThat(trigger).isNotNull();
     assertThat(trigger.getUuid()).isEqualTo(qlCreateOrUpdateTriggerInput.getTriggerId());
@@ -341,7 +334,7 @@ public class TriggerControllerTest extends CategoryTest {
   @Test
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
-  public void prepareTriggerInPipelineWorkflowShouldReturnTrigger() throws Exception {
+  public void prepareTriggerInPipelineWorkflowShouldReturnTrigger() {
     QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput = QLCreateOrUpdateTriggerInput.builder()
                                                                     .triggerId("triggerId")
                                                                     .name("name")
@@ -377,55 +370,39 @@ public class TriggerControllerTest extends CategoryTest {
                                                             .regex(true)
                                                             .build();
 
-    Mockito.doNothing()
-        .when(triggerController)
-        .validateTrigger(Matchers.any(QLCreateOrUpdateTriggerInput.class), Matchers.anyString());
-    Mockito.when(pipelineService.readPipeline(Matchers.anyString(), Matchers.anyString(), Matchers.anyBoolean()))
-        .thenReturn(Mockito.mock(Pipeline.class));
-    Mockito.doNothing()
-        .when(triggerController)
-        .validatePipeline(Matchers.anyString(), Matchers.anyString(), Matchers.any(Pipeline.class));
-    Mockito.when(pipelineExecutionController.resolveEnvId(Matchers.any(Pipeline.class), Matchers.anyList()))
-        .thenReturn("envId");
-    Mockito.doNothing()
-        .when(deploymentAuthHandler)
-        .authorizePipelineExecution(Matchers.anyString(), Matchers.anyString());
-    Mockito
-        .when(triggerActionController.validateAndResolvePipelineVariables(
-            Matchers.anyList(), Matchers.any(Pipeline.class), Matchers.anyString()))
+    doNothing().when(triggerController).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
+    when(pipelineService.readPipeline(anyString(), anyString(), anyBoolean())).thenReturn(mock(Pipeline.class));
+    doNothing().when(triggerController).validatePipeline(anyString(), anyString(), any(Pipeline.class));
+    when(pipelineExecutionController.resolveEnvId(any(Pipeline.class), anyList())).thenReturn("envId");
+    doNothing().when(deploymentAuthHandler).authorizePipelineExecution(anyString(), anyString());
+    doNothing().when(authService).checkIfUserAllowedToDeployPipelineToEnv(anyString(), anyString());
+
+    when(triggerActionController.validateAndResolvePipelineVariables(anyList(), any(Pipeline.class), anyString()))
         .thenReturn(workflowVariables);
-    Mockito.doNothing()
+    doNothing()
         .when(triggerController)
-        .validatePipelineArtifactSourceServiceIds(Matchers.anyMap(), Matchers.anyList(), Matchers.any(Pipeline.class));
-    Mockito.when(triggerActionController.resolveArtifactSelections(Matchers.any(QLCreateOrUpdateTriggerInput.class)))
+        .validatePipelineArtifactSourceServiceIds(anyMap(), anyList(), any(Pipeline.class));
+    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class)))
         .thenReturn(artifactSelections);
-    Mockito.when(triggerConditionController.resolveTriggerCondition(Matchers.any(QLCreateOrUpdateTriggerInput.class)))
+    when(triggerConditionController.resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class)))
         .thenReturn(artifactTriggerCondition);
 
-    Mockito.doNothing()
-        .when(triggerController)
-        .validateTrigger(Matchers.any(QLCreateOrUpdateTriggerInput.class), Matchers.anyString());
+    doNothing().when(triggerController).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
 
     Trigger trigger = triggerController.prepareTrigger(qlCreateOrUpdateTriggerInput, "accountId");
 
-    Mockito.verify(triggerController, Mockito.times(1))
-        .validateTrigger(Matchers.any(QLCreateOrUpdateTriggerInput.class), Matchers.anyString());
-    Mockito.verify(pipelineService, Mockito.times(1))
-        .readPipeline(Matchers.anyString(), Matchers.anyString(), Matchers.anyBoolean());
-    Mockito.verify(triggerController, Mockito.times(1))
-        .validatePipeline(Matchers.anyString(), Matchers.anyString(), Matchers.any(Pipeline.class));
-    Mockito.verify(pipelineExecutionController, Mockito.times(1))
-        .resolveEnvId(Matchers.any(Pipeline.class), Matchers.anyList());
-    Mockito.verify(deploymentAuthHandler, Mockito.times(1))
-        .authorizePipelineExecution(Matchers.anyString(), Matchers.anyString());
-    Mockito.verify(triggerActionController, Mockito.times(1))
-        .validateAndResolvePipelineVariables(Matchers.anyList(), Matchers.any(Pipeline.class), Matchers.anyString());
-    Mockito.verify(triggerController, Mockito.times(1))
-        .validatePipelineArtifactSourceServiceIds(Matchers.anyMap(), Matchers.anyList(), Matchers.any(Pipeline.class));
-    Mockito.verify(triggerActionController, Mockito.times(1))
-        .resolveArtifactSelections(Matchers.any(QLCreateOrUpdateTriggerInput.class));
-    Mockito.verify(triggerConditionController, Mockito.times(1))
-        .resolveTriggerCondition(Matchers.any(QLCreateOrUpdateTriggerInput.class));
+    verify(triggerController, times(1)).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
+    verify(pipelineService, times(1)).readPipeline(anyString(), anyString(), anyBoolean());
+    verify(triggerController, times(1)).validatePipeline(anyString(), anyString(), any(Pipeline.class));
+    verify(pipelineExecutionController, times(1)).resolveEnvId(any(Pipeline.class), anyList());
+    verify(deploymentAuthHandler, times(1)).authorizePipelineExecution(anyString(), anyString());
+    verify(triggerActionController, times(1))
+        .validateAndResolvePipelineVariables(anyList(), any(Pipeline.class), anyString());
+    verify(triggerController, times(1))
+        .validatePipelineArtifactSourceServiceIds(anyMap(), anyList(), any(Pipeline.class));
+    verify(triggerActionController, times(1)).resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class));
+    verify(triggerConditionController, times(1)).resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class));
+    verify(authService, times(1)).checkIfUserAllowedToDeployPipelineToEnv(anyString(), anyString());
 
     assertThat(trigger).isNotNull();
     assertThat(trigger.getUuid()).isEqualTo(qlCreateOrUpdateTriggerInput.getTriggerId());
@@ -455,5 +432,140 @@ public class TriggerControllerTest extends CategoryTest {
     assertThat(returnedArtifactTriggerCondition.getArtifactFilter())
         .isEqualTo(artifactTriggerCondition.getArtifactFilter());
     assertThat(returnedArtifactTriggerCondition.isRegex()).isEqualTo(artifactTriggerCondition.isRegex());
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void prepareTriggerInPipelineWorkflowShouldReturnTriggerEnvExec() {
+    QLCreateOrUpdateTriggerInput createOrUpdateTriggerInput = QLCreateOrUpdateTriggerInput.builder()
+                                                                  .triggerId("id")
+                                                                  .name("triggername")
+                                                                  .applicationId("appId")
+                                                                  .description("desc")
+                                                                  .action(QLTriggerActionInput.builder()
+                                                                              .entityId("entityId")
+                                                                              .executionType(QLExecutionType.PIPELINE)
+                                                                              .artifactSelections(new ArrayList<>())
+                                                                              .variables(new ArrayList<>())
+                                                                              .build())
+                                                                  .build();
+
+    List<ArtifactSelection> artifactSelectionList = Arrays.asList(ArtifactSelection.builder()
+                                                                      .type(ArtifactSelection.Type.LAST_DEPLOYED)
+                                                                      .serviceId("id")
+                                                                      .serviceName("name")
+                                                                      .artifactStreamId("artifactStreamId")
+                                                                      .artifactSourceName("sourceName")
+                                                                      .artifactFilter("artifactFilter")
+                                                                      .pipelineId("pipelineId")
+                                                                      .pipelineName("pipelineName")
+                                                                      .regex(true)
+                                                                      .build());
+
+    Map<String, String> workflowVariables = new HashMap<>();
+    workflowVariables.put("ID", "value");
+
+    ArtifactTriggerCondition triggerCondition = ArtifactTriggerCondition.builder()
+                                                    .artifactStreamId("id")
+                                                    .artifactSourceName("name")
+                                                    .artifactFilter("filter")
+                                                    .regex(true)
+                                                    .build();
+
+    doNothing().when(triggerController).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
+    when(pipelineService.readPipeline(anyString(), anyString(), anyBoolean())).thenReturn(mock(Pipeline.class));
+    doNothing().when(triggerController).validatePipeline(anyString(), anyString(), any(Pipeline.class));
+    when(pipelineExecutionController.resolveEnvId(any(Pipeline.class), anyList())).thenReturn("envId");
+    doNothing().when(deploymentAuthHandler).authorizePipelineExecution(anyString(), anyString());
+    doNothing().when(authService).checkIfUserAllowedToDeployPipelineToEnv(anyString(), anyString());
+    when(triggerActionController.validateAndResolvePipelineVariables(anyList(), any(Pipeline.class), anyString()))
+        .thenReturn(workflowVariables);
+    doNothing()
+        .when(triggerController)
+        .validatePipelineArtifactSourceServiceIds(anyMap(), anyList(), any(Pipeline.class));
+    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class)))
+        .thenReturn(artifactSelectionList);
+    when(triggerConditionController.resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class)))
+        .thenReturn(triggerCondition);
+
+    doNothing().when(triggerController).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
+
+    Trigger trigger = triggerController.prepareTrigger(createOrUpdateTriggerInput, "accountId");
+    verify(deploymentAuthHandler, times(1)).authorizePipelineExecution(anyString(), anyString());
+
+    verify(authService, times(1)).checkIfUserAllowedToDeployPipelineToEnv(anyString(), anyString());
+    assertThat(trigger).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void prepareTriggerInOrchestrationWorkflowShouldReturnTriggerExecRights() {
+    QLCreateOrUpdateTriggerInput createOrUpdateTriggerInput = QLCreateOrUpdateTriggerInput.builder()
+                                                                  .triggerId("id")
+                                                                  .name("name")
+                                                                  .applicationId("appId")
+                                                                  .description("desc")
+                                                                  .action(QLTriggerActionInput.builder()
+                                                                              .entityId("entityId")
+                                                                              .executionType(QLExecutionType.WORKFLOW)
+                                                                              .artifactSelections(new ArrayList<>())
+                                                                              .variables(new ArrayList<>())
+                                                                              .build())
+                                                                  .build();
+
+    List<ArtifactSelection> artifactSelectionList = Arrays.asList(ArtifactSelection.builder()
+                                                                      .type(ArtifactSelection.Type.LAST_DEPLOYED)
+                                                                      .serviceId("id")
+                                                                      .serviceName("name")
+                                                                      .artifactStreamId("artifactStreamId")
+                                                                      .artifactSourceName("sourceName")
+                                                                      .artifactFilter("artifactFilter")
+                                                                      .workflowId("workflowId")
+                                                                      .workflowName("workflow-name")
+                                                                      .regex(true)
+                                                                      .build());
+
+    Map<String, String> workflowVariables = new HashMap<>();
+    workflowVariables.put("ID", "value");
+
+    ArtifactTriggerCondition triggerCondition = ArtifactTriggerCondition.builder()
+                                                    .artifactStreamId("id")
+                                                    .artifactSourceName("name")
+                                                    .artifactFilter("filter")
+                                                    .regex(true)
+                                                    .build();
+
+    doNothing().when(triggerController).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
+
+    when(workflowService.readWorkflow(
+             createOrUpdateTriggerInput.getApplicationId(), createOrUpdateTriggerInput.getAction().getEntityId()))
+        .thenReturn(mock(Workflow.class));
+    doNothing().when(triggerController).validateWorkflow(anyString(), anyString(), any(Workflow.class));
+    when(workflowExecutionController.resolveEnvId(any(Workflow.class), anyList())).thenReturn("envId");
+    doNothing().when(deploymentAuthHandler).authorizeWorkflowExecution(anyString(), anyString());
+    doNothing().when(authService).checkIfUserAllowedToDeployWorkflowToEnv(anyString(), anyString());
+
+    when(triggerActionController.validateAndResolveWorkflowVariables(anyList(), any(Workflow.class), anyString()))
+        .thenReturn(workflowVariables);
+    doNothing()
+        .when(triggerController)
+        .validateWorkflowArtifactSourceServiceIds(anyMap(), anyList(), any(Workflow.class));
+    when(triggerActionController.resolveArtifactSelections(any(QLCreateOrUpdateTriggerInput.class)))
+        .thenReturn(artifactSelectionList);
+    when(triggerConditionController.resolveTriggerCondition(any(QLCreateOrUpdateTriggerInput.class)))
+        .thenReturn(triggerCondition);
+
+    Trigger trigger = triggerController.prepareTrigger(createOrUpdateTriggerInput, "accountId");
+
+    verify(triggerController, times(1)).validateTrigger(any(QLCreateOrUpdateTriggerInput.class), anyString());
+    verify(workflowService, times(1)).readWorkflow(anyString(), anyString());
+    verify(triggerController, times(1)).validateWorkflow(anyString(), anyString(), any(Workflow.class));
+    verify(workflowExecutionController, times(1)).resolveEnvId(any(Workflow.class), anyList());
+    verify(deploymentAuthHandler, times(1)).authorizeWorkflowExecution(anyString(), anyString());
+    verify(authService, times(1)).checkIfUserAllowedToDeployWorkflowToEnv(anyString(), anyString());
+
+    assertThat(trigger).isNotNull();
   }
 }

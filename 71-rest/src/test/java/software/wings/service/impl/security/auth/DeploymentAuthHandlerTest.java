@@ -1,5 +1,7 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
+import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,7 +18,6 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -79,7 +80,7 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
 
       when(workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecution.getUuid()))
           .thenReturn(workflowExecution);
-      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      doNothing().when(authService).checkIfUserAllowedToDeployPipelineToEnv(appId, workflowExecution.getEnvId());
       doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
 
       deploymentAuthHandler.authorize(appId, workflowExecution.getUuid());
@@ -100,13 +101,14 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
           PipelineSummary.builder().pipelineId(entityId).pipelineName("pipeline-name").build();
       WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                                 .uuid(generateUuid())
+                                                .workflowType(PIPELINE)
                                                 .pipelineSummary(pipelineSummary)
                                                 .workflowId(entityId)
                                                 .build();
 
       when(workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecution.getUuid()))
           .thenReturn(workflowExecution);
-      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      doNothing().when(authService).checkIfUserAllowedToDeployPipelineToEnv(appId, workflowExecution.getEnvId());
       doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
 
       deploymentAuthHandler.authorize(appId, workflowExecution.getUuid());
@@ -123,12 +125,16 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
   public void testAuthorizeWorkflowExecutionWithIdNullSummary() {
     try {
       UserThreadLocal.set(user);
-      WorkflowExecution workflowExecution =
-          WorkflowExecution.builder().uuid(generateUuid()).workflowId(entityId).envId(generateUuid()).build();
+      WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                                .uuid(generateUuid())
+                                                .workflowType(ORCHESTRATION)
+                                                .workflowId(entityId)
+                                                .envId(generateUuid())
+                                                .build();
 
       when(workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecution.getUuid()))
           .thenReturn(workflowExecution);
-      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      doNothing().when(authService).checkIfUserAllowedToDeployWorkflowToEnv(appId, workflowExecution.getEnvId());
       doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
 
       deploymentAuthHandler.authorize(appId, workflowExecution.getUuid());
@@ -150,7 +156,7 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
 
       when(workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecution.getUuid()))
           .thenReturn(workflowExecution);
-      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      doNothing().when(authService).checkIfUserAllowedToDeployWorkflowToEnv(appId, workflowExecution.getEnvId());
       doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
 
       deploymentAuthHandler.authorize(appId, workflowExecution.getUuid());
@@ -413,7 +419,7 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .appId(appId)
                                               .uuid(generateUuid())
-                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .workflowType(ORCHESTRATION)
                                               .workflowId(entityId)
                                               .build();
 
@@ -426,7 +432,7 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
           .when(authService)
           .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
       deploymentAuthHandler.authorize(appId, workflowExecution);
-      verify(authService, times(0)).checkIfUserAllowedToDeployToEnv(eq(appId), anyString());
+      verify(authService, times(0)).checkIfUserAllowedToDeployWorkflowToEnv(eq(appId), anyString());
     } catch (Exception e) {
       assertThat(e).isNotNull();
       assertThat(e.getMessage()).isNotNull();
@@ -448,7 +454,7 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .appId(appId)
                                               .uuid(generateUuid())
-                                              .workflowType(WorkflowType.PIPELINE)
+                                              .workflowType(PIPELINE)
                                               .workflowId(entityId)
                                               .build();
 
@@ -461,7 +467,7 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
           .when(authService)
           .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
       deploymentAuthHandler.authorize(appId, workflowExecution);
-      verify(authService, times(0)).checkIfUserAllowedToDeployToEnv(eq(appId), anyString());
+      verify(authService, times(0)).checkIfUserAllowedToDeployWorkflowToEnv(eq(appId), anyString());
     } catch (Exception e) {
       assertThat(e).isNotNull();
       assertThat(e.getMessage()).isNotNull();
@@ -483,7 +489,7 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .appId(appId)
                                               .uuid(generateUuid())
-                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .workflowType(ORCHESTRATION)
                                               .workflowId(entityId)
                                               .build();
 
@@ -498,7 +504,7 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
       when(workflowExecutionService.getWorkflowExecution(appId, workflowExecution.getUuid()))
           .thenReturn(workflowExecution);
       deploymentAuthHandler.authorizeWithWorkflowExecutionId(appId, workflowExecution.getUuid());
-      verify(authService, times(0)).checkIfUserAllowedToDeployToEnv(eq(appId), anyString());
+      verify(authService, times(0)).checkIfUserAllowedToDeployWorkflowToEnv(eq(appId), anyString());
     } catch (Exception e) {
       assertThat(e).isNotNull();
       assertThat(e.getMessage()).isNotNull();
@@ -521,7 +527,7 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
                                               .envId(envId)
                                               .appId(appId)
                                               .uuid(generateUuid())
-                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .workflowType(ORCHESTRATION)
                                               .workflowId(entityId)
                                               .build();
 
@@ -535,9 +541,10 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
           .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
       when(workflowExecutionService.getWorkflowExecution(appId, workflowExecution.getUuid()))
           .thenReturn(workflowExecution);
-      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      doNothing().when(authService).checkIfUserAllowedToDeployWorkflowToEnv(appId, workflowExecution.getEnvId());
       deploymentAuthHandler.authorize(appId, workflowExecution);
-      verify(authService, atLeastOnce()).checkIfUserAllowedToDeployToEnv(eq(appId), eq(workflowExecution.getEnvId()));
+      verify(authService, atLeastOnce())
+          .checkIfUserAllowedToDeployWorkflowToEnv(eq(appId), eq(workflowExecution.getEnvId()));
     } catch (Exception e) {
       assertThat(e).isNotNull();
       assertThat(e.getMessage()).isNotNull();
@@ -560,7 +567,7 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
                                               .envId(envId)
                                               .appId(appId)
                                               .uuid(generateUuid())
-                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .workflowType(ORCHESTRATION)
                                               .workflowId(entityId)
                                               .build();
 
@@ -572,9 +579,10 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
       doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
       when(workflowExecutionService.getWorkflowExecution(appId, workflowExecution.getUuid()))
           .thenReturn(workflowExecution);
-      doNothing().when(authService).checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
+      doNothing().when(authService).checkIfUserAllowedToDeployWorkflowToEnv(appId, workflowExecution.getEnvId());
       deploymentAuthHandler.authorizeWithWorkflowExecutionId(appId, workflowExecution.getUuid());
-      verify(authService, atLeastOnce()).checkIfUserAllowedToDeployToEnv(eq(appId), eq(workflowExecution.getEnvId()));
+      verify(authService, atLeastOnce())
+          .checkIfUserAllowedToDeployWorkflowToEnv(eq(appId), eq(workflowExecution.getEnvId()));
     } catch (Exception e) {
       assertThat(e).isNull();
     } finally {

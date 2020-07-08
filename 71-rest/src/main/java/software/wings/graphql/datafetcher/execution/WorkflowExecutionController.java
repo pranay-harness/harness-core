@@ -60,6 +60,7 @@ import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.WorkflowLogContext;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -80,6 +81,7 @@ import javax.validation.constraints.NotNull;
 public class WorkflowExecutionController {
   @Inject private HPersistence persistence;
   @Inject AuthHandler authHandler;
+  @Inject AuthService authService;
   @Inject WorkflowService workflowService;
   @Inject EnvironmentService environmentService;
   @Inject ServiceResourceService serviceResourceService;
@@ -178,7 +180,7 @@ public class WorkflowExecutionController {
       try (
           AutoLogContext ignore1 = new WorkflowLogContext(workflowId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
         String envId = resolveEnvId(workflow, variableInputs);
-        authHandler.checkIfUserAllowedToDeployToEnv(appId, envId);
+        authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
 
         List<String> extraVariables = new ArrayList<>();
         Map<String, String> variableValues =

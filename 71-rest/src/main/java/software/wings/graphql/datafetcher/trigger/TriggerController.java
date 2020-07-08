@@ -28,9 +28,9 @@ import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLTrigger;
 import software.wings.graphql.schema.type.trigger.QLTrigger.QLTriggerBuilder;
 import software.wings.graphql.schema.type.trigger.QLTriggerPayload;
-import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 
@@ -49,7 +49,7 @@ public class TriggerController {
   @Inject DeploymentAuthHandler deploymentAuthHandler;
   @Inject PipelineService pipelineService;
   @Inject WorkflowService workflowService;
-  @Inject AuthHandler authHandler;
+  @Inject AuthService authService;
   @Inject WorkflowExecutionController workflowExecutionController;
   @Inject PipelineExecutionController pipelineExecutionController;
 
@@ -94,7 +94,8 @@ public class TriggerController {
 
         envId = workflowExecutionController.resolveEnvId(workflow, variables);
         deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
-        authHandler.checkIfUserAllowedToDeployToEnv(appId, envId);
+
+        authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
 
         resolvedWorkflowVariables =
             triggerActionController.validateAndResolveWorkflowVariables(variables, workflow, envId);
@@ -109,6 +110,7 @@ public class TriggerController {
         deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
 
         envId = pipelineExecutionController.resolveEnvId(pipeline, variables);
+        authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envId);
 
         resolvedWorkflowVariables =
             triggerActionController.validateAndResolvePipelineVariables(variables, pipeline, envId);

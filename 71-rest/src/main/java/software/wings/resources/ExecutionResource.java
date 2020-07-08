@@ -203,13 +203,15 @@ public class ExecutionResource {
     if (pipelineId != null && executionArgs != null && executionArgs.getWorkflowType() == WorkflowType.PIPELINE) {
       executionArgs.setPipelineId(pipelineId);
       deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
+      authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envId);
     } else {
       if (executionArgs != null) {
         if (executionArgs.getOrchestrationId() != null) {
           deploymentAuthHandler.authorizeWorkflowExecution(appId, executionArgs.getOrchestrationId());
-          authService.checkIfUserAllowedToDeployToEnv(appId, envId);
+          authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
         } else if (executionArgs.getPipelineId() != null) {
           deploymentAuthHandler.authorizePipelineExecution(appId, executionArgs.getPipelineId());
+          authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envId);
         }
       }
     }

@@ -60,7 +60,7 @@ public class TriggerActionController {
   @Inject WorkflowExecutionController workflowExecutionController;
   @Inject ArtifactStreamService artifactStreamService;
 
-  public QLTriggerAction populateTriggerAction(Trigger trigger) {
+  QLTriggerAction populateTriggerAction(Trigger trigger) {
     QLTriggerAction triggerAction = null;
 
     List<QLArtifactSelection> artifactSelections =
@@ -146,7 +146,7 @@ public class TriggerActionController {
     return triggerAction;
   }
 
-  public List<ArtifactSelection> resolveArtifactSelections(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+  List<ArtifactSelection> resolveArtifactSelections(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     if (qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections() == null) {
       return new ArrayList<>();
     }
@@ -271,17 +271,16 @@ public class TriggerActionController {
     return workflowType;
   }
 
-  public Map<String, String> validateAndResolvePipelineVariables(
+  Map<String, String> validateAndResolvePipelineVariables(
       List<QLVariableInput> qlVariables, Pipeline pipeline, String envId) {
     if (qlVariables == null) {
       return new HashMap<>();
     }
-
     return pipelineExecutionController.validateAndResolvePipelineVariables(
         pipeline, qlVariables, envId, new ArrayList<>(), true);
   }
 
-  public Map<String, String> validateAndResolveWorkflowVariables(
+  Map<String, String> validateAndResolveWorkflowVariables(
       List<QLVariableInput> qlVariables, Workflow workflow, String envId) {
     if (qlVariables == null) {
       return new HashMap<>();
@@ -291,7 +290,7 @@ public class TriggerActionController {
         workflow, qlVariables, envId, new ArrayList<>(), true);
   }
 
-  public void validatePipeline(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, String pipelineId) {
+  void validatePipeline(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, String pipelineId) {
     Pipeline pipeline = null;
     String appId = qlCreateOrUpdateTriggerInput.getApplicationId();
 
@@ -333,14 +332,14 @@ public class TriggerActionController {
   }
 
   private void validateArtifactSource(QLArtifactSelectionInput qlArtifactSelectionInput) {
-    String artifactSourceid = qlArtifactSelectionInput.getArtifactSourceId();
+    String artifactSourceId = qlArtifactSelectionInput.getArtifactSourceId();
 
-    if (EmptyPredicate.isEmpty(artifactSourceid)) {
+    if (EmptyPredicate.isEmpty(artifactSourceId)) {
       throw new InvalidRequestException("Artifact Source must not be null", USER);
     }
-    ArtifactStream artifactStream = artifactStreamService.get(artifactSourceid);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactSourceId);
     if (artifactStream == null) {
-      throw new InvalidRequestException("Artifact Stream for given id does not exist. Id: " + artifactSourceid, USER);
+      throw new InvalidRequestException("Artifact Stream for given id does not exist. Id: " + artifactSourceId, USER);
     }
     if (!qlArtifactSelectionInput.getServiceId().equals(artifactStream.getServiceId())) {
       throw new InvalidRequestException(
