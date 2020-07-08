@@ -29,6 +29,7 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
+import io.harness.service.DelegateServiceModule;
 import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -114,6 +115,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     });
 
     modules.add(new ValidationModule(validatorFactory));
+    modules.add(new DelegateServiceModule());
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());

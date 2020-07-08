@@ -111,6 +111,7 @@ import io.harness.scheduler.PersistentScheduler;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
+import io.harness.service.DelegateServiceModule;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.stream.GuiceObjectFactory;
@@ -346,6 +347,7 @@ public class WingsApplication extends Application<MainConfiguration> {
                     .build());
 
     modules.add(new ValidationModule(validatorFactory));
+    modules.add(new DelegateServiceModule());
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());

@@ -89,13 +89,15 @@ public class DelegateQueueTask implements Runnable {
     }
   }
 
+  private static final FindOptions expiryLimit = new FindOptions().limit(100);
+
   private void markTimedOutTasksAsFailed() {
     List<Key<DelegateTask>> longRunningTimedOutTaskKeys =
         wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
             .filter(DelegateTaskKeys.status, STARTED)
-            .where("this." + DelegateTaskKeys.lastUpdatedAt + " + this." + DelegateTaskKeys.data_timeout + " < "
-                + clock.millis())
-            .asKeyList(new FindOptions().limit(100));
+            .field(DelegateTaskKeys.expiry)
+            .lessThan(currentTimeMillis())
+            .asKeyList(expiryLimit);
 
     if (!longRunningTimedOutTaskKeys.isEmpty()) {
       List<String> keyList = longRunningTimedOutTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());
@@ -111,7 +113,7 @@ public class DelegateQueueTask implements Runnable {
                                                      .filter(DelegateTaskKeys.status, QUEUED)
                                                      .field(DelegateTaskKeys.expiry)
                                                      .lessThan(currentTimeMillis())
-                                                     .asKeyList(new FindOptions().limit(100));
+                                                     .asKeyList(expiryLimit);
 
     if (!longQueuedTaskKeys.isEmpty()) {
       List<String> keyList = longQueuedTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());

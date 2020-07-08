@@ -24,6 +24,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
+import io.harness.service.DelegateServiceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -144,6 +145,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
                                             .buildValidatorFactory();
 
     modules.add(new ValidationModule(validatorFactory));
+    modules.add(new DelegateServiceModule());
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());

@@ -31,6 +31,7 @@ import io.harness.persistence.Store;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.CIBeansRegistrar;
@@ -86,7 +87,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
     logger.info("Leaving startup maintenance mode");
     List<Module> modules = new ArrayList<>();
-
+    modules.add(KryoModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

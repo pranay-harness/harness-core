@@ -42,6 +42,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.security.AsymmetricDecryptor;
+import io.harness.service.DelegateServiceModule;
 import io.harness.testframework.framework.ManagerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -247,6 +248,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     });
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
+    modules.add(new DelegateServiceModule());
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());
