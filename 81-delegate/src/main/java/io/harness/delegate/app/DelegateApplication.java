@@ -131,7 +131,7 @@ public class DelegateApplication {
         new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
 
     List<Module> modules = new ArrayList<>();
-    modules.add(new KryoModule());
+    modules.add(KryoModule.getInstance());
 
     modules.add(new ProviderModule() {
       @Provides

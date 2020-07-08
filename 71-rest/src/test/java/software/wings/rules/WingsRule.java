@@ -54,6 +54,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.TestManagerRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
+import io.harness.service.DelegateServiceModule;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -161,7 +162,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     configuration = getConfiguration(annotations, dbName);
 
     List<Module> modules = modules(annotations);
-    modules.add(new KryoModule());
+    modules.add(KryoModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -286,6 +287,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new WingsPersistenceTestModule());
+    modules.add(new DelegateServiceModule());
     modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());

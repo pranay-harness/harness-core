@@ -9,6 +9,10 @@
     <artifactId>70-delegate-service</artifactId>
     <dependencies>
         <dependency>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server-memory-backend</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
@@ -24,8 +28,20 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>31-orchestration</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>11-commons-test</artifactId>
             <version>${project.parent.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>21-persistence</artifactId>
+            <version>${project.parent.version}</version>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
     </dependencies>

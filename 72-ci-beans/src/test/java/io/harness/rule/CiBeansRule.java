@@ -55,7 +55,7 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin {
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ComponentTestsModule());
-    modules.add(new KryoModule());
+    modules.add(KryoModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

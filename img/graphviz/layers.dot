@@ -33,9 +33,11 @@ digraph G {
 
   subgraph {
     rank=same
+    edge[style=invis];
     delegate_agent [shape=rect label="delegate agent"];
     delegate_service [shape=rect label="delegate service"];
     manager_cx [shape=rect label="manager Cx"];
+    delegate_agent -> delegate_service-> manager_cx;
   }
 
 
@@ -61,7 +63,7 @@ digraph G {
   orchestration -> orchestration_beans;
 
   delegate_agent -> delegate_agent_beans;
-  delegate_agent -> delegate_tasks [minlen=4];
+  delegate_agent -> delegate_tasks [minlen=5];
 
   delegate_service_driver -> delegate_service_beans;
 
