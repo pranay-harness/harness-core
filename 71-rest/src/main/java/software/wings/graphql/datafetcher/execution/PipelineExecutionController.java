@@ -54,6 +54,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.WorkflowLogContext;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
@@ -74,6 +75,7 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class PipelineExecutionController {
   @Inject AuthHandler authHandler;
+  @Inject AuthService authService;
   @Inject PipelineService pipelineService;
   @Inject WorkflowExecutionService workflowExecutionService;
   @Inject EnvironmentService environmentService;
@@ -147,6 +149,7 @@ public class PipelineExecutionController {
       notNullCheck("Pipeline " + pipelineId + " doesn't exist in the specified application " + appId, pipeline, USER);
 
       String envId = resolveEnvId(pipeline, variableInputs);
+      authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envId);
 
       List<String> extraVariables = new ArrayList<>();
       Map<String, String> variableValues =

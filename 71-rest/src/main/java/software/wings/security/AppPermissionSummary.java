@@ -59,7 +59,9 @@ public class AppPermissionSummary {
    * This mapping is required for handling of rbac for templates
    * The Set contains Env Ids
    */
-  private Set<String> deploymentExecutePermissionsForEnvs;
+  @Deprecated private Set<String> deploymentExecutePermissionsForEnvs;
+  private Set<String> workflowExecutePermissionsForEnvs;
+  private Set<String> pipelineExecutePermissionsForEnvs;
 
   // Key - action, Value - set of entity ids
   private Map<Action, Set<String>> servicePermissions;
@@ -83,6 +85,7 @@ public class AppPermissionSummary {
       Set<EnvironmentType> envCreatePermissionsForEnvTypes, Set<String> workflowCreatePermissionsForEnvs,
       Set<String> workflowUpdatePermissionsForEnvs, Set<String> pipelineCreatePermissionsForEnvs,
       Set<String> pipelineUpdatePermissionsForEnvs, Set<String> deploymentExecutePermissionsForEnvs,
+      Set<String> pipelineExecutePermissionsForEnvs, Set<String> workflowExecutePermissionsForEnvs,
       Map<Action, Set<String>> servicePermissions, Map<Action, Set<String>> provisionerPermissions,
       Map<Action, Set<EnvInfo>> envPermissions, Map<Action, Set<String>> workflowPermissions,
       Map<Action, Set<String>> deploymentPermissions, Map<Action, Set<String>> pipelinePermissions) {
@@ -98,6 +101,8 @@ public class AppPermissionSummary {
     this.pipelineCreatePermissionsForEnvs = pipelineCreatePermissionsForEnvs;
     this.pipelineUpdatePermissionsForEnvs = pipelineUpdatePermissionsForEnvs;
     this.deploymentExecutePermissionsForEnvs = deploymentExecutePermissionsForEnvs;
+    this.pipelineExecutePermissionsForEnvs = pipelineExecutePermissionsForEnvs;
+    this.workflowExecutePermissionsForEnvs = workflowExecutePermissionsForEnvs;
     this.servicePermissions = servicePermissions;
     this.provisionerPermissions = provisionerPermissions;
     this.envPermissions = envPermissions;

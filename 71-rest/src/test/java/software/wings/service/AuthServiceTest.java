@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.MARKO;
@@ -70,9 +71,13 @@ import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
 import software.wings.dl.GenericDbCache;
+import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
@@ -82,6 +87,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import javax.cache.Cache;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -135,6 +144,280 @@ public class AuthServiceTest extends WingsBaseTest {
     when(portalConfig.getJwtAuthSecret()).thenReturn(AUTH_SECRET);
 
     when(persistence.getDatastore(AuthToken.class)).thenReturn(advancedDatastore);
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC0_testCheckIfUserAllowedToDeployWorkflowToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    Set<String> workflowExecutePermissionsForEnvs = new HashSet<>();
+    workflowExecutePermissionsForEnvs.add(envId);
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder().workflowExecutePermissionsForEnvs(workflowExecutePermissionsForEnvs).build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+    try {
+      authService.checkIfUserAllowedToDeployWorkflowToEnv(application.getUuid(), envId);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC1_testCheckIfUserAllowedToDeployWorkflowToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    UserThreadLocal.set(null);
+    boolean exceptionThrown = false;
+    try {
+      authService.checkIfUserAllowedToDeployWorkflowToEnv(application.getUuid(), envId);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC2_testCheckIfUserAllowedToDeployWorkflowToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+
+    UserThreadLocal.set(null);
+    boolean exceptionThrown = false;
+    try {
+      authService.checkIfUserAllowedToDeployWorkflowToEnv(application.getUuid(), null);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC4_testCheckIfUserAllowedToDeployWorkflowToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    Set<String> workflowExecutePermissionsForEnvs = new HashSet<>();
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder().workflowExecutePermissionsForEnvs(workflowExecutePermissionsForEnvs).build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+    try {
+      authService.checkIfUserAllowedToDeployWorkflowToEnv(application.getUuid(), envId);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC5_testCheckIfUserAllowedToDeployWorkflowToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    Set<String> workflowExecutePermissionsForEnvs = new HashSet<>();
+    workflowExecutePermissionsForEnvs.add(generateUuid());
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder().workflowExecutePermissionsForEnvs(workflowExecutePermissionsForEnvs).build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+    try {
+      authService.checkIfUserAllowedToDeployWorkflowToEnv(application.getUuid(), envId);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC0_testCheckIfUserAllowedToDeployPipelineToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    Set<String> pipelineExecutePermissionsForEnvs = new HashSet<>();
+    pipelineExecutePermissionsForEnvs.add(envId);
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder().pipelineExecutePermissionsForEnvs(pipelineExecutePermissionsForEnvs).build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+    try {
+      authService.checkIfUserAllowedToDeployPipelineToEnv(application.getUuid(), envId);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC1_testCheckIfUserAllowedToDeployPipelineToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    UserThreadLocal.set(null);
+    boolean exceptionThrown = false;
+    try {
+      authService.checkIfUserAllowedToDeployPipelineToEnv(application.getUuid(), envId);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC2_testCheckIfUserAllowedToDeployPipelineToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+
+    UserThreadLocal.set(null);
+    boolean exceptionThrown = false;
+    try {
+      authService.checkIfUserAllowedToDeployPipelineToEnv(application.getUuid(), null);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC4_testCheckIfUserAllowedToDeployPipelineToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    Set<String> pipelineExecutePermissionsForEnvs = new HashSet<>();
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder().pipelineExecutePermissionsForEnvs(pipelineExecutePermissionsForEnvs).build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+    try {
+      authService.checkIfUserAllowedToDeployWorkflowToEnv(application.getUuid(), envId);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isTrue();
+  }
+
+  @Test
+  @Owner(developers = UJJAWAL)
+  @Category(UnitTests.class)
+  public void TC5_testCheckIfUserAllowedToDeployPipelineToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    Set<String> pipelineExecutePermissionsForEnvs = new HashSet<>();
+    pipelineExecutePermissionsForEnvs.add(generateUuid());
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder().pipelineExecutePermissionsForEnvs(pipelineExecutePermissionsForEnvs).build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+    try {
+      authService.checkIfUserAllowedToDeployWorkflowToEnv(application.getUuid(), envId);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isTrue();
   }
 
   /**
@@ -295,8 +578,8 @@ public class AuthServiceTest extends WingsBaseTest {
     String expiredToken =
         "eyJlbmMiOiJBMTI4R0NNIiwiYWxnIjoiZGlyIn0..SFvYSml0znPxoa7K.JcsFw5GiYevubqqzjy-nQyDMzjtA64YhxZjnQz6VH7lRCAGP5JML9Ov86rSRV1V7Kb-a12UvTNzqEqdJ4PCLv4R7GA5SzCwxLEYrlTLtUWX40r0GKuRGoiJVJqax2bBy3gOqDftETZCm_90lD3NxDeJ__RICl4osp9IxCKmlfGyoqriAswoEvkVtu0wjRlvBS-FtY42AeyCf9XIH5rppw-AsXoHH40M6_8FN-mFkilfqv3QKPaGL6Zph.1ipAjbMS834AKSotvHy4sg";
     assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, expiredToken))
-        .isInstanceOf(WingsException.class)
-        .hasMessageContaining("Unauthorized");
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Unauthorized");
   }
 
   @Test

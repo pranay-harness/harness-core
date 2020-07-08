@@ -11,11 +11,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.WorkflowType;
 import io.harness.exception.TriggerException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import software.wings.beans.Environment;
 import software.wings.beans.User;
+import software.wings.beans.trigger.Trigger;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -26,8 +28,6 @@ import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
 import java.util.Set;
@@ -39,11 +39,10 @@ public class TriggerAuthHandler {
   @Inject private DeploymentAuthHandler deploymentAuthHandler;
   @Inject private EnvironmentService environmentService;
   @Inject private AuthService authService;
-  @Inject private PipelineService pipelineService;
-  @Inject private WorkflowService workflowService;
 
-  void authorizeEnvironment(String appId, String environmentValue) {
-    if (ManagerExpressionEvaluator.matchesVariablePattern(environmentValue)) {
+  void authorizeEnvironment(Trigger trigger, String envId) {
+    String appId = trigger.getAppId();
+    if (ManagerExpressionEvaluator.matchesVariablePattern(envId)) {
       try {
         authHandler.authorizeAccountPermission(
             asList(new PermissionAttribute(PermissionType.ACCOUNT_MANAGEMENT, Action.READ)));
@@ -54,16 +53,19 @@ public class TriggerAuthHandler {
       }
     } else {
       // Check if environment exist by envId
-      Environment environment = environmentService.get(appId, environmentValue);
+      Environment environment = environmentService.get(appId, envId);
       if (environment != null) {
         try {
-          authService.checkIfUserAllowedToDeployToEnv(appId, environmentValue);
+          if (WorkflowType.ORCHESTRATION == trigger.getWorkflowType()) {
+            authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
+          } else {
+            authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envId);
+          }
         } catch (WingsException ex) {
           throw new TriggerException(
               "User does not have deployment execution permission on environment. [" + environment.getName() + "]",
               USER);
         }
-
       } else {
         // either environment does not exist or user give some random name.. then check account level permission
         try {

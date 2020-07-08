@@ -28,7 +28,7 @@ import software.wings.beans.security.UserGroup;
 
 @Slf4j
 public class AccessManagementROTest extends AbstractFunctionalTest {
-  final String RBAC_USER = "rbac1@harness.io";
+  final String RBAC_USER = "rbac2@harness.io";
   String readOnlyUserid;
   UserGroup userGroup;
 
@@ -47,7 +47,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void accessManagementPermissionTestForList() {
     logger.info("Logging in as a ReadOnly user");
-    String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac1");
+    String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
     AccessManagementUtils.runUserAndGroupsListTest(getAccount(), roBearerToken, HttpStatus.SC_OK);
     AccessManagementUtils.runNoAccessTest(getAccount(), roBearerToken, readOnlyUserid);
   }
@@ -55,9 +55,9 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUser() {
-    final String READ_ONLY_USER = "rbac1@harness.io";
+    final String READ_ONLY_USER = "rbac2@harness.io";
     String email = "testemail@harness.mailinator.com";
-    String password = "rbac1";
+    String password = "rbac2";
     AccessManagementUtils.runUserPostTest(
         getAccount(), bearerToken, READ_ONLY_USER, email, password, HttpStatus.SC_BAD_REQUEST);
   }
@@ -67,9 +67,9 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void accessManagementNoPermissionTestForGet() {
     logger.info("Readonly test for GET");
-    final String READ_ONLY_USER = "rbac1@harness.io";
+    final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.runAllGetTests(
-        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_OK, HttpStatus.SC_BAD_REQUEST);
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac2", HttpStatus.SC_OK, HttpStatus.SC_BAD_REQUEST);
     logger.info("Readonly test for GET ends");
   }
 
@@ -77,9 +77,9 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForUserGroup() {
-    final String READ_ONLY_USER = "rbac1@harness.io";
+    final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.testPermissionToPostInUserGroup(
-        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST);
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac2", HttpStatus.SC_BAD_REQUEST);
   }
 
   @Test
@@ -95,54 +95,54 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForAPIKeys() {
-    final String READ_ONLY_USER = "rbac1@harness.io";
+    final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.runAPIKeyPostTest(
-        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST, userGroup);
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac2", HttpStatus.SC_BAD_REQUEST, userGroup);
   }
 
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForLDAP() {
-    final String READ_ONLY_USER = "rbac1@harness.io";
+    final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.ldapCreationFailureCheckTest(
-        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST);
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac2", HttpStatus.SC_BAD_REQUEST);
   }
 
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void amNoPermissionToPostForSAML() {
-    final String READ_ONLY_USER = "rbac1@harness.io";
+    final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.amNoPermissionToPostForSAML(
-        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST);
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac2", HttpStatus.SC_BAD_REQUEST);
   }
 
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void updateIPWhitelistingTest() {
-    final String READ_ONLY_USER = "rbac1@harness.io";
+    final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.updateIPWhiteListing(
-        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST);
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac2", HttpStatus.SC_BAD_REQUEST);
   }
 
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void deleteIPWhitelistingTest() {
-    final String READ_ONLY_USER = "rbac1@harness.io";
+    final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.deleteIPWhitelisting(
-        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", HttpStatus.SC_BAD_REQUEST);
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac2", HttpStatus.SC_BAD_REQUEST);
   }
 
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
   public void updateAndDeleteApiKeysTest() {
-    final String READ_ONLY_USER = "rbac1@harness.io";
+    final String READ_ONLY_USER = "rbac2@harness.io";
     AccessManagementUtils.updateAndDeleteAPIKeys(
-        getAccount(), bearerToken, READ_ONLY_USER, "rbac1", userGroup, HttpStatus.SC_BAD_REQUEST);
+        getAccount(), bearerToken, READ_ONLY_USER, "rbac2", userGroup, HttpStatus.SC_BAD_REQUEST);
     logger.info("Test completed successfully");
   }
 
@@ -151,7 +151,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void createApplicationFail() {
     logger.info("Check if create application test fails");
-    String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac1");
+    String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
     final String appName = "TestApp" + System.currentTimeMillis();
     Application application = anApplication().name(appName).build();
     assertThat(Setup.portal()
@@ -172,7 +172,7 @@ public class AccessManagementROTest extends AbstractFunctionalTest {
   @Category(FunctionalTests.class)
   public void deleteApplicationFail() {
     logger.info("Check if delete application test fails");
-    String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac1");
+    String roBearerToken = Setup.getAuthToken(RBAC_USER, "rbac2");
     final String appName = "TestApp" + System.currentTimeMillis();
     Application application = anApplication().name(appName).build();
     Application createdApp = ApplicationRestUtils.createApplication(bearerToken, getAccount(), application);

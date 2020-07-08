@@ -33,7 +33,6 @@ public class TokenAuthenticator {
   public String validateToken(String accountId, String tokenString) {
     EncryptedJWT encryptedJWT;
     encryptedJWT = parseToken(tokenString);
-
     SecretKey accountKey = makeKeySpec(fetchKey(accountId));
 
     JWEDecrypter decrypter;

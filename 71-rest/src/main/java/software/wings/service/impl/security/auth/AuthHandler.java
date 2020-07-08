@@ -452,10 +452,16 @@ public class AuthHandler {
 
           Set<String> envIdSet =
               getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
-          if (entityActions.contains(Action.EXECUTE_PIPELINE) || entityActions.contains(Action.EXECUTE_WORKFLOW)) {
+
+          if (entityActions.contains(Action.EXECUTE_WORKFLOW)) {
             Set<String> updatedEnvIdSet =
-                addToExistingEntityIdSet(finalAppPermissionSummary.getDeploymentExecutePermissionsForEnvs(), envIdSet);
-            finalAppPermissionSummary.setDeploymentExecutePermissionsForEnvs(updatedEnvIdSet);
+                addToExistingEntityIdSet(finalAppPermissionSummary.getWorkflowExecutePermissionsForEnvs(), envIdSet);
+            finalAppPermissionSummary.setWorkflowExecutePermissionsForEnvs(updatedEnvIdSet);
+          }
+          if (entityActions.contains(Action.EXECUTE_PIPELINE)) {
+            Set<String> updatedEnvIdSet =
+                addToExistingEntityIdSet(finalAppPermissionSummary.getPipelineExecutePermissionsForEnvs(), envIdSet);
+            finalAppPermissionSummary.setPipelineExecutePermissionsForEnvs(updatedEnvIdSet);
           }
           break;
         }
@@ -774,10 +780,6 @@ public class AuthHandler {
       }
     }
     return true;
-  }
-
-  public void checkIfUserAllowedToDeployToEnv(String appId, String envId) {
-    authService.checkIfUserAllowedToDeployToEnv(appId, envId);
   }
 
   private void setEntityIdFilter(List<PermissionAttribute> requiredPermissionAttributes,

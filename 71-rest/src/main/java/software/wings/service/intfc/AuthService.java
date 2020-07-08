@@ -107,7 +107,14 @@ public interface AuthService {
 
   User generateBearerTokenForUser(@NotNull User user);
 
-  void checkIfUserAllowedToDeployToEnv(String appId, String envId);
+  /**
+   * @deprecated.
+   */
+  @Deprecated void checkIfUserAllowedToDeployToEnv(String appId, String envId);
+
+  void checkIfUserAllowedToDeployWorkflowToEnv(String appId, String envId);
+
+  void checkIfUserAllowedToDeployPipelineToEnv(String appId, String envId);
 
   void checkIfUserCanCreateEnv(String appId, EnvironmentType envType);
 

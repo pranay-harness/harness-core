@@ -1,6 +1,7 @@
 package software.wings.service.impl.security.auth;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
@@ -71,9 +72,7 @@ public class DeploymentAuthHandler {
       permissionAttributeList.add(new PermissionAttribute(DEPLOYMENT, EXECUTE_WORKFLOW));
       authorize(permissionAttributeList, asList(appId), workflowId);
     }
-    if (StringUtils.isNotEmpty(workflowExecution.getEnvId())) {
-      authService.checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
-    }
+    checkPermissionToDeployEnv(appId, workflowExecution);
   }
 
   public void authorize(String appId, WorkflowExecution workflowExecution) {
@@ -82,9 +81,7 @@ public class DeploymentAuthHandler {
       List<PermissionAttribute> permissionAttributeList = getPermissionAttributeList(workflowExecution);
       authorize(permissionAttributeList, Collections.singletonList(appId), workflowId);
     }
-    if (workflowExecution != null && StringUtils.isNotEmpty(workflowExecution.getEnvId())) {
-      authService.checkIfUserAllowedToDeployToEnv(appId, workflowExecution.getEnvId());
-    }
+    checkPermissionToDeployEnv(appId, workflowExecution);
   }
 
   private List<PermissionAttribute> getPermissionAttributeList(WorkflowExecution workflowExecution) {
@@ -127,6 +124,16 @@ public class DeploymentAuthHandler {
           appId, workflowOrPipelineId);
       throw new InvalidRequestException(
           "Provided workflowOrPipelineId for authorization is neither a workflow nor a pipeline");
+    }
+  }
+
+  private void checkPermissionToDeployEnv(String appId, WorkflowExecution workflowExecution) {
+    if (workflowExecution != null && StringUtils.isNotEmpty(workflowExecution.getEnvId())) {
+      if (ORCHESTRATION == workflowExecution.getWorkflowType()) {
+        authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, workflowExecution.getEnvId());
+      } else {
+        authService.checkIfUserAllowedToDeployPipelineToEnv(appId, workflowExecution.getEnvId());
+      }
     }
   }
 }

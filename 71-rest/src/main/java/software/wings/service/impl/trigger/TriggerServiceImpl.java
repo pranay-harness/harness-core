@@ -1716,12 +1716,13 @@ public class TriggerServiceImpl implements TriggerService {
       notNullCheck("Pipeline does not exist", pipeline, USER);
       envParamaterized = pipeline.isEnvParameterized();
       variables = pipeline.getPipelineVariables();
-    } else if (WorkflowType.ORCHESTRATION == workflowType) {
+    } else if (ORCHESTRATION == workflowType) {
       Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
       notNullCheck("Workflow does not exist", workflow, USER);
       notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
       envParamaterized = workflow.checkEnvironmentTemplatized();
       variables = workflow.getOrchestrationWorkflow().getUserVariables();
+
     } else {
       logger.error("WorkflowType {} not supported", workflowType);
       throw new WingsException("Workflow Type [" + workflowType + "] not supported", USER);
@@ -1741,14 +1742,14 @@ public class TriggerServiceImpl implements TriggerService {
         }
         throw new WingsException("Please select a value for entity type variables.", USER);
       }
-      String environment = workflowVariables.get(templatizedEnvVariableName);
-      if (isEmpty(environment)) {
+      String envId = workflowVariables.get(templatizedEnvVariableName);
+      if (isEmpty(envId)) {
         if (existing) {
           return;
         }
         throw new WingsException("Environment is parameterized. Please select a value in the format ${varName}.", USER);
       }
-      triggerAuthHandler.authorizeEnvironment(trigger.getAppId(), environment);
+      triggerAuthHandler.authorizeEnvironment(trigger, envId);
     }
   }
 }

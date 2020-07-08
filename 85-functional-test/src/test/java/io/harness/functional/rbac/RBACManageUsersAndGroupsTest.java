@@ -108,16 +108,6 @@ public class RBACManageUsersAndGroupsTest extends AbstractFunctionalTest {
     Setup.signOut(userGroupManagementId, roBearerToken);
   }
 
-  //  @Test
-  //  @Owner(emails = UNKNOWN)
-  //  @Owner(emails = SWAMY)
-  //  @Category(FunctionalTests.class)
-  //  public void accessManagementPermissionTestForGet() {
-  //    final String READ_ONLY_USER = "rbac2@harness.io";
-  //    AccessManagementUtils.runAllGetTests(
-  //        getAccount(), bearerToken, READ_ONLY_USER, "rbac2", HttpStatus.SC_OK, HttpStatus.SC_BAD_REQUEST);
-  //  }
-
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
