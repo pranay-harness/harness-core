@@ -5,6 +5,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
@@ -15,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 @Data
 @Builder
+@ToString(exclude = "password")
 public class WinRmSessionConfig implements EncryptableSetting {
   @NotEmpty private String accountId;
   @NotEmpty private String appId;

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.encryption.Encrypted;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.HostConnectionAttributes.AccessType;
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 2/8/16.
  */
 @Data
+@ToString(exclude = {"password", "key", "keyPassphrase", "sudoAppPassword", "sshPassword"})
 public class SshSessionConfig implements EncryptableSetting, ScriptExecutionContext {
   @NotEmpty private String accountId;
   @NotEmpty private String appId;
