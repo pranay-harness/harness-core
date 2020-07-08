@@ -10,6 +10,7 @@ import io.harness.ng.core.services.api.NGSecretService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.security.encryption.EncryptedData;
+import software.wings.service.impl.security.SecretText;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
@@ -23,6 +24,21 @@ public class NGSecretServiceImpl implements NGSecretService {
   @Override
   public EncryptedData getSecretById(String accountId, String id) {
     return getResponse(secretManagerClient.getSecretById(id, accountId, null));
+  }
+
+  @Override
+  public String createSecret(String accountId, boolean localMode, SecretText secretText) {
+    return getResponse(secretManagerClient.createSecret(accountId, localMode, secretText));
+  }
+
+  @Override
+  public boolean updateSecret(String accountId, String uuId, SecretText secretText) {
+    return getResponse(secretManagerClient.updateSecret(accountId, uuId, secretText));
+  }
+
+  @Override
+  public boolean deleteSecret(String accountId, String uuId) {
+    return getResponse(secretManagerClient.deleteSecret(accountId, uuId));
   }
 
   @Override
