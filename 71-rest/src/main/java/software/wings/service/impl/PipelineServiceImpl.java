@@ -524,7 +524,7 @@ public class PipelineServiceImpl implements PipelineService {
   public boolean pipelineExists(String appId, String pipelineId) {
     return wingsPersistence.createQuery(Trigger.class)
                .filter(TriggerKeys.appId, appId)
-               .filter(TriggerKeys.pipelineId, pipelineId)
+               .filter(TriggerKeys.workflowId, pipelineId)
                .getKey()
         != null;
   }
