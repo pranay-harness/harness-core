@@ -76,21 +76,21 @@ public class ServiceNowApprovalParams {
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
     try {
-      Objects.requireNonNull(currentStatus.get(startTimeField), "Change window start time value in ticket is invalid");
-      Objects.requireNonNull(currentStatus.get(endTimeField), "Change window end time value in ticket is invalid");
+      Objects.requireNonNull(currentStatus.get(startTimeField), "Change Window Start Time value in Ticket is invalid");
+      Objects.requireNonNull(currentStatus.get(endTimeField), "Change Window End Time value in Ticket is invalid");
       Instant startTime = dateFormat.parse(addTimeIfNeeded(currentStatus.get(startTimeField))).toInstant();
       Instant endTime = dateFormat.parse(addTimeIfNeeded(currentStatus.get(endTimeField))).toInstant();
       logger.info(
           "[CHANGE_WINDOW_TIME_LOG]: Start time: {}, End time: {}, Current time: {}", startTime, endTime, nowInstant);
       if (endTime.compareTo(startTime) <= 0) {
-        throw new IllegalArgumentException("Start window time must be lesser than end window time");
+        throw new IllegalArgumentException("Start Window Time must be earlier than End Window Time");
       }
       if (endTime.compareTo(nowInstant) < 0) {
-        throw new IllegalArgumentException("End window time must be greater than current time");
+        throw new IllegalArgumentException("End Window Time must be greater than current time");
       }
       return startTime.compareTo(nowInstant) < 0 && endTime.compareTo(nowInstant) > 0;
     } catch (ParseException pe) {
-      throw new ServiceNowException("Invalid approval change window values in servicenow", SERVICENOW_ERROR, USER, pe);
+      throw new ServiceNowException("Invalid approval Change Window values in ServiceNow", SERVICENOW_ERROR, USER, pe);
     } catch (NullPointerException | IllegalArgumentException ex) {
       throw new ServiceNowException(ex.getMessage(), SERVICENOW_ERROR, USER, ex);
     }
