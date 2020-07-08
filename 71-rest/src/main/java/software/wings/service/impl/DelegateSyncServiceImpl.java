@@ -1,30 +1,25 @@
 package software.wings.service.impl;
 
-import static io.harness.beans.DelegateTask.Status.ABORTED;
-import static io.harness.beans.DelegateTask.Status.ERROR;
-import static io.harness.beans.DelegateTask.Status.FINISHED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.beans.DelegateTask;
-import io.harness.beans.DelegateTask.DelegateTaskKeys;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskResponseKeys;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.TimeoutException;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.service.intfc.DelegateSyncService;
 
+import java.time.Duration;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -32,25 +27,18 @@ import java.util.concurrent.atomic.AtomicLong;
 @Singleton
 @Slf4j
 public class DelegateSyncServiceImpl implements DelegateSyncService {
-  private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
-
   @Inject private HPersistence persistence;
+  @Inject private KryoSerializer kryoSerializer;
 
   final ConcurrentMap<String, AtomicLong> syncTaskWaitMap = new ConcurrentHashMap<>();
 
-  /* (non-Javadoc)
-   * @see java.lang.Runnable#run()
-   */
   @Override
   @SuppressWarnings({"PMD", "SynchronizationOnLocalVariableOrMethodParameter"})
   public void run() {
     try {
       if (isNotEmpty(syncTaskWaitMap)) {
-        List<String> completedSyncTasks = persistence.createQuery(DelegateTask.class, excludeAuthority)
-                                              .filter(DelegateTaskKeys.data_async, false)
-                                              .field(DelegateTaskKeys.status)
-                                              .in(TASK_COMPLETED_STATUSES)
-                                              .field(DelegateTaskKeys.uuid)
+        List<String> completedSyncTasks = persistence.createQuery(DelegateSyncTaskResponse.class, excludeAuthority)
+                                              .field(DelegateSyncTaskResponseKeys.uuid)
                                               .in(syncTaskWaitMap.keySet())
                                               .asKeyList()
                                               .stream()
@@ -72,39 +60,29 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
   }
 
   @Override
-  public <T extends ResponseData> T waitForTask(DelegateTask task) {
-    ResponseData responseData;
-    DelegateTask completedTask;
+  public <T extends ResponseData> T waitForTask(String taskId, String description, Duration timeout) {
+    DelegateSyncTaskResponse taskResponse;
     try {
       logger.info("Executing sync task");
-      AtomicLong endAt = syncTaskWaitMap.computeIfAbsent(
-          task.getUuid(), k -> new AtomicLong(currentTimeMillis() + task.getData().getTimeout()));
+      AtomicLong endAt =
+          syncTaskWaitMap.computeIfAbsent(taskId, k -> new AtomicLong(currentTimeMillis() + timeout.toMillis()));
       synchronized (endAt) {
         while (currentTimeMillis() < endAt.get()) {
-          endAt.wait(task.getData().getTimeout());
+          endAt.wait(timeout.toMillis());
         }
       }
-      completedTask = persistence.get(DelegateTask.class, task.getUuid());
+      taskResponse = persistence.get(DelegateSyncTaskResponse.class, taskId);
     } catch (Exception e) {
       throw new InvalidArgumentsException(Pair.of("args", "Error while waiting for completion"));
     } finally {
-      syncTaskWaitMap.remove(task.getUuid());
-      persistence.delete(persistence.createQuery(DelegateTask.class)
-                             .filter(DelegateTaskKeys.accountId, task.getAccountId())
-                             .filter(DelegateTaskKeys.uuid, task.getUuid()));
+      syncTaskWaitMap.remove(taskId);
+      persistence.delete(DelegateSyncTaskResponse.class, taskId);
     }
 
-    if (completedTask == null) {
-      logger.info("Task was deleted while waiting for completion");
+    if (taskResponse == null) {
       throw new InvalidArgumentsException(Pair.of("args", "Task was deleted while waiting for completion"));
     }
 
-    responseData = completedTask.getNotifyResponse();
-    if (responseData == null || !TASK_COMPLETED_STATUSES.contains(completedTask.getStatus())) {
-      throw new TimeoutException("Delegate task", task.calcDescription(), USER_ADMIN);
-    }
-    logger.info("Returning response to calling function for delegate task");
-
-    return (T) responseData;
+    return (T) kryoSerializer.asInflatedObject(taskResponse.getResponseData());
   }
 }

@@ -232,8 +232,6 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
         return TaskExecutionStage.QUEUEING;
       case STARTED:
         return TaskExecutionStage.EXECUTING;
-      case FINISHED:
-        return TaskExecutionStage.FINISHED;
       case ERROR:
         return TaskExecutionStage.FAILED;
       case ABORTED:

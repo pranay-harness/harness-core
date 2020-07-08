@@ -30,7 +30,7 @@ metrics:
 
   - delegate_tasks_finished_count:
       check_interval:   10      # seconds
-      query:            "db.delegateTasks.find({ $or :[ {status:'FINISHED'}, {status:'ABORTED'}, {status:'ERROR'} ] }).count()"
+      query:            "db.delegateTasks.find({ $or :[ {status:'ABORTED'}, {status:'ERROR'} ] }).count()"
 
   - delegate_tasks_sync_count:
       check_interval:   10      # seconds

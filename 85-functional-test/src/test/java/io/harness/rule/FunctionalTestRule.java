@@ -7,6 +7,7 @@ import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -42,6 +43,11 @@ import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
 import io.harness.security.AsymmetricDecryptor;
+import io.harness.serializer.KryoModule;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.ManagerRegistrars;
+import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
+import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.testframework.framework.ManagerExecutor;
 import io.harness.testframework.framework.Setup;
@@ -90,6 +96,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -165,6 +172,19 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
+
+    modules.add(new KryoModule());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(ManagerRegistrars.kryoRegistrars)
+            .add(CvNextGenCommonsBeansKryoRegistrar.class)
+            .add(TestPersistenceKryoRegistrar.class)
+            .build();
+      }
+    });
 
     modules.add(new ProviderModule() {
       @Override

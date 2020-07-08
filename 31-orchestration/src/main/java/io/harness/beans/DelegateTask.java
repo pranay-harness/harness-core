@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.ParametersConverter;
-import io.harness.beans.DelegateTask.ResponseDataConverter;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
@@ -47,7 +46,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(exclude = {"uuid", "createdAt", "lastUpdatedAt", "validUntil"})
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@Converters({ParametersConverter.class, ResponseDataConverter.class})
+@Converters({ParametersConverter.class})
 @FieldNameConstants(innerTypeName = "DelegateTaskKeys")
 @CdIndex(name = "index", fields = { @Field(DelegateTaskKeys.status)
                                     , @Field(DelegateTaskKeys.expiry) })
@@ -83,7 +82,6 @@ public class DelegateTask
   private long lastUpdatedAt;
 
   private Status status;
-  private ResponseData notifyResponse;
 
   private Long validationStartedAt;
   private Set<String> validatingDelegateIds;
@@ -165,11 +163,10 @@ public class DelegateTask
   public enum Status {
     QUEUED,
     STARTED,
-    FINISHED,
     ERROR,
     ABORTED;
 
-    private static Set<Status> finalStatuses = EnumSet.of(FINISHED, ERROR, ABORTED);
+    private static Set<Status> finalStatuses = EnumSet.of(ERROR, ABORTED);
     private static Set<Status> runningStatuses = EnumSet.of(QUEUED, STARTED);
 
     public static Set<Status> finalStatuses() {

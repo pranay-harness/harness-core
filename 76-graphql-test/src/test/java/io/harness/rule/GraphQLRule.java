@@ -5,10 +5,13 @@ import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.mockito.Mockito.mock;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 
 import graphql.GraphQL;
@@ -21,9 +24,15 @@ import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.ManagerRegistrars;
+import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
+import io.harness.serializer.kryo.TestManagerRegistrar;
+import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -59,6 +68,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
@@ -118,6 +128,18 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(VersionModule.getInstance());
     modules.addAll(TimeModule.getInstance().cumulativeDependencies());
     modules.add(new GraphQLPersistenceTestModule());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(ManagerRegistrars.kryoRegistrars)
+            .add(CvNextGenCommonsBeansKryoRegistrar.class)
+            .add(TestPersistenceKryoRegistrar.class)
+            .add(TestManagerRegistrar.class)
+            .build();
+      }
+    });
 
     MainConfiguration configuration = getConfiguration("graphQL");
 
