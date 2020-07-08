@@ -25,6 +25,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.security.auth.ConfigFileAuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 
@@ -61,6 +62,7 @@ public class ConfigResource {
   @Inject private ConfigService configService;
   @Inject private MainConfiguration configuration;
   @Inject private AppService appService;
+  @Inject private ConfigFileAuthHandler configFileAuthHandler;
 
   /**
    * List.
@@ -99,6 +101,7 @@ public class ConfigResource {
     configFile.setEntityId(entityId);
     configFile.setEntityType(entityType == null ? SERVICE : entityType);
     configFile.setFileName(fileName);
+    configFileAuthHandler.authorize(configFile);
     if (configFile.getEnvIdVersionMapString() != null) {
       try {
         Map<String, EntityVersion> envIdVersionMap = JsonUtils.asObject(
@@ -164,6 +167,7 @@ public class ConfigResource {
     if (fileDetail != null && fileDetail.getFileName() != null) {
       configFile.setFileName(new File(fileDetail.getFileName()).getName());
     }
+    configFileAuthHandler.authorize(appId, configFile.getUuid());
     configService.update(configFile,
         uploadedInputStream == null
             ? null
@@ -183,6 +187,7 @@ public class ConfigResource {
   @Timed
   @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
+    configFileAuthHandler.authorize(appId, configId);
     configService.delete(appId, configId);
     return new RestResponse();
   }

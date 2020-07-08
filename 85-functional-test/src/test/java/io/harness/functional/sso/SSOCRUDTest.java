@@ -11,15 +11,17 @@ import io.harness.testframework.restutils.SSORestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.sso.LdapSettings;
 
 @Slf4j
 public class SSOCRUDTest extends AbstractFunctionalTest {
-  @Test()
+  @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void testLDAPCRUD() {
     logger.info("Starting the LDAP test");
     logger.info("Creating LDAP SSO Setting");
