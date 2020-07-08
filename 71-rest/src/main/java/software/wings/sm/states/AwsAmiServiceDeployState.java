@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -217,8 +218,16 @@ public class AwsAmiServiceDeployState extends State {
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
-    Activity activity = crateActivity(context);
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
+    if (serviceSetupElement == null) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .errorMessage("No service setup element found. Skipping deploy.")
+          .build();
+    }
+
+    Activity activity = crateActivity(context);
+
     boolean blueGreen = BLUE_GREEN == context.getOrchestrationWorkflowType();
 
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData;

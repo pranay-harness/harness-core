@@ -184,7 +184,11 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
     doReturn(EmbeddedUser.builder().email("user@harness.io").name("user").build()).when(mockParams).getCurrentUser();
-    doReturn(mockParams).doReturn(serviceSetupElement).when(mockContext).getContextElement(any());
+    doReturn(serviceSetupElement)
+        .doReturn(mockParams)
+        .doReturn(serviceSetupElement)
+        .when(mockContext)
+        .getContextElement(any());
     Environment environment = anEnvironment().uuid(ENV_ID).name(ENV_NAME).build();
     doReturn(environment).when(mockParams).getEnv();
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
@@ -276,7 +280,11 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     assertThat(params.getExistingInstanceIds()).containsOnly("instanceId1", "instanceId2");
 
     // BG
-    doReturn(mockParams).doReturn(serviceSetupElement).when(mockContext).getContextElement(any());
+    doReturn(serviceSetupElement)
+        .doReturn(mockParams)
+        .doReturn(serviceSetupElement)
+        .when(mockContext)
+        .getContextElement(any());
     response = state.execute(mockContext);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockDelegateService, times(2)).queueTask(captor.capture());
