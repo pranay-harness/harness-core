@@ -23,4 +23,14 @@ public class AwsCredentialHelper {
         .withCredentials(awsCredentialsProvider)
         .build();
   }
+
+  public AWSCredentialsProvider constructBasicAwsCredentials() {
+    CESetUpConfig ceSetUpConfig = configuration.getCeSetUpConfig();
+    return new AWSStaticCredentialsProvider(
+        new BasicAWSCredentials(ceSetUpConfig.getAwsAccessKey(), ceSetUpConfig.getAwsSecretKey()));
+  }
+
+  public String getAWSS3Bucket() {
+    return configuration.getCeSetUpConfig().getAwsS3BucketName();
+  }
 }

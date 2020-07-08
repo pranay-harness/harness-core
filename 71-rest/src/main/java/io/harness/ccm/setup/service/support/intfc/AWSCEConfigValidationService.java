@@ -7,4 +7,5 @@ import software.wings.beans.ce.CEAwsConfig;
 public interface AWSCEConfigValidationService {
   void verifyCrossAccountAttributes(SettingAttribute settingAttribute);
   AwsS3BucketDetails validateCURReportAccessAndReturnS3Config(CEAwsConfig awsConfig);
+  boolean updateBucketPolicy(CEAwsConfig awsConfig);
 }

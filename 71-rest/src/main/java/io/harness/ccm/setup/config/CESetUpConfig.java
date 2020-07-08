@@ -16,6 +16,7 @@ public class CESetUpConfig {
   private String awsAccountId;
   private String awsAccessKey;
   private String awsSecretKey;
+  private String awsS3BucketName;
   private String masterAccountCloudFormationTemplateLink;
   private String linkedAccountCloudFormationTemplateLink;
   private String gcpProjectId;

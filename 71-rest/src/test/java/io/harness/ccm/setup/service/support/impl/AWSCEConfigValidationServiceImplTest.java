@@ -7,19 +7,28 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import com.google.gson.Gson;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.costandusagereport.AWSCostAndUsageReport;
 import com.amazonaws.services.costandusagereport.model.DescribeReportDefinitionsRequest;
 import com.amazonaws.services.costandusagereport.model.DescribeReportDefinitionsResult;
 import com.amazonaws.services.costandusagereport.model.ReportDefinition;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.BucketPolicy;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.setup.service.support.AwsCredentialHelper;
+import io.harness.ccm.setup.service.support.impl.pojo.BucketPolicyJson;
+import io.harness.ccm.setup.service.support.impl.pojo.BucketPolicyStatement;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -29,10 +38,14 @@ import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class AWSCEConfigValidationServiceImplTest {
   @Spy @InjectMocks AWSCEConfigValidationServiceImpl awsceConfigValidationService;
+  @Mock private AwsCredentialHelper awsCredentialHelper;
   @Mock AwsEKSHelperService awsEKSHelperService;
 
   private static final String S3_BUCKET_NAME = "s3BucketName";
@@ -46,6 +59,15 @@ public class AWSCEConfigValidationServiceImplTest {
   private static final String timeGranularity = "HOURLY";
   private static final String reportVersioning = "OVERWRITE_REPORT";
   private static final String invalidValue = "invalidValue";
+  private static final String awsS3BucketName = "awsS3BucketName";
+  private static final String roleArnPredefined = "roleArnPredefined";
+  private static final String aws = "AWS";
+  private static final String sid = "Sid";
+  private static final String version = "version";
+  private static final String effect = "allow";
+  private static final String action = "*:*";
+  private static final String resource = "*";
+  private static final String crossAccountRole = "RoleArn";
   private static CEAwsConfig ceAwsConfig = CEAwsConfig.builder().build();
   private static ReportDefinition reportDefinition = new ReportDefinition();
   private static HashMap<String, String> exceptionParamsMap = new HashMap<>();
@@ -70,6 +92,66 @@ public class AWSCEConfigValidationServiceImplTest {
     reportDefinition.setS3Prefix(s3Prefix);
     reportDefinition.setReportName(CUR_REPORT_NAME);
     reportDefinition.setRefreshClosedReports(true);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void updateBucketPermissionsTest() {
+    AWSCredentialsProvider mockCredential = mock(AWSCredentialsProvider.class);
+    AmazonS3Client mockS3Client = mock(AmazonS3Client.class);
+    BucketPolicy mockBucketPolicy = mock(BucketPolicy.class);
+    doReturn(mockCredential).when(awsCredentialHelper).constructBasicAwsCredentials();
+    doReturn(mockS3Client).when(awsceConfigValidationService).getAmazonS3Client(mockCredential);
+    Map<String, List<String>> principle = new HashMap<>();
+
+    principle.put(aws, Collections.singletonList(roleArnPredefined));
+    BucketPolicyStatement bucketPolicyStatement = BucketPolicyStatement.builder()
+                                                      .Sid(sid)
+                                                      .Effect(effect)
+                                                      .Condition(null)
+                                                      .Resource(resource)
+                                                      .Action(action)
+                                                      .Principal(principle)
+                                                      .build();
+    BucketPolicyJson policyJson =
+        BucketPolicyJson.builder().Version(version).Statement(Collections.singletonList(bucketPolicyStatement)).build();
+    Gson gson = new Gson();
+    String policy = gson.toJson(policyJson);
+
+    doReturn(awsS3BucketName).when(awsCredentialHelper).getAWSS3Bucket();
+    doReturn(mockBucketPolicy).when(mockS3Client).getBucketPolicy(awsS3BucketName);
+    doReturn(policy).when(mockBucketPolicy).getPolicyText();
+
+    boolean updateBucketPolicy = awsceConfigValidationService.updateBucketPolicy(
+        CEAwsConfig.builder()
+            .awsCrossAccountAttributes(
+                AwsCrossAccountAttributes.builder().crossAccountRoleArn(crossAccountRole).build())
+            .build());
+
+    ArgumentCaptor<String> bucketPolicyCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> bucketNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockS3Client).setBucketPolicy(bucketNameCaptor.capture(), bucketPolicyCaptor.capture());
+    BucketPolicyJson bucketPolicyJson = gson.fromJson(bucketPolicyCaptor.getAllValues().get(0), BucketPolicyJson.class);
+    assertThat(bucketPolicyJson.getVersion()).isEqualTo(version);
+    assertThat(bucketPolicyJson.getStatement().get(0).getSid()).isEqualTo(sid);
+    assertThat(bucketPolicyJson.getStatement().get(0).getEffect()).isEqualTo(effect);
+    assertThat(bucketPolicyJson.getStatement().get(0).getAction()).isEqualTo(action);
+    assertThat(bucketPolicyJson.getStatement().get(0).getResource()).isEqualTo(resource);
+    assertThat(bucketPolicyJson.getStatement().get(0).getCondition()).isNull();
+    assertThat(bucketPolicyJson.getStatement().get(0).getPrincipal().get(aws).contains(roleArnPredefined)).isTrue();
+    assertThat(bucketPolicyJson.getStatement().get(0).getPrincipal().get(aws).contains(roleArnPredefined)).isTrue();
+    assertThat(updateBucketPolicy).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testGetAmazonS3Client() {
+    AWSCredentialsProvider mockCredential = mock(AWSCredentialsProvider.class);
+    doReturn(mockCredential).when(awsCredentialHelper).constructBasicAwsCredentials();
+    AmazonS3Client amazonS3Client = awsceConfigValidationService.getAmazonS3Client(mockCredential);
+    assertThat(amazonS3Client).isNotNull();
   }
 
   @Test
