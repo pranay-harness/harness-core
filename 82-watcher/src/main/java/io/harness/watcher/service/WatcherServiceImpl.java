@@ -62,6 +62,7 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
@@ -94,6 +95,7 @@ import io.harness.watcher.logging.WatcherStackdriverLogAppender;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.io.filefilter.AgeFileFilter;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -102,8 +104,11 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -111,6 +116,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -121,6 +127,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -145,6 +152,7 @@ public class WatcherServiceImpl implements WatcherService {
   private static final String USER_DIR = "user.dir";
   private static final String DELEGATE_RESTART_SCRIPT = "DelegateRestartScript";
   private static final String NO_SPACE_LEFT_ON_DEVICE_ERROR = "No space left on device";
+  private static final String FILE_HANDLES_LOGS_FOLDER = "file_handle_logs";
   private final String watcherJreVersion = System.getProperty("java.version");
   private long delegateRestartedToUpgradeJreAt;
   private boolean watcherRestartedToUpgradeJre;
@@ -233,6 +241,7 @@ public class WatcherServiceImpl implements WatcherService {
       checkAccountStatus();
       startUpgradeCheck();
       startWatching();
+      startMonitoringFileHandles();
 
       synchronized (waiter) {
         waiter.wait();
@@ -242,6 +251,119 @@ public class WatcherServiceImpl implements WatcherService {
 
     } catch (InterruptedException e) {
       logger.error("Interrupted while running watcher", e);
+    }
+  }
+
+  private void startMonitoringFileHandles() {
+    if (!watcherConfiguration.isFileHandlesMonitoringEnabled()) {
+      logger.info("File handles monitoring disabled.");
+      return;
+    }
+
+    if (!isLsofCommandPresent()) {
+      logger.info("lsof command is not available.");
+      return;
+    }
+
+    logger.info("Scheduling logging of file handles...");
+    watchExecutor.scheduleWithFixedDelay(
+        new Schedulable("Unexpected exception occurred while logging file handles", this ::logFileHandles), 0,
+        watcherConfiguration.getFileHandlesMonitoringIntervalInMinutes(), TimeUnit.MINUTES);
+  }
+
+  private boolean isLsofCommandPresent() {
+    try {
+      logger.info("Checking if lsof command is available...");
+      ProcessExecutor processExecutor = new ProcessExecutor();
+      processExecutor.command("lsof", "-v");
+      int exitCode = processExecutor.execute().getExitValue();
+
+      return exitCode == 0;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return false;
+    } catch (IOException | TimeoutException ex) {
+      logger.warn("lsof command not present", ex);
+      return false;
+    }
+  }
+
+  private void logFileHandles() {
+    try {
+      logger.debug("Making sure that folder exists...");
+      File logsFolder = new File(FILE_HANDLES_LOGS_FOLDER);
+      if (!logsFolder.exists()) {
+        boolean created = logsFolder.mkdir();
+        if (!created) {
+          return;
+        }
+      }
+
+      if (!deleteOldFiles(logsFolder)) {
+        return;
+      }
+
+      logger.debug("Logging all file handles...");
+      logAllFileHandles();
+
+      logger.debug("Logging watcher file handles...");
+      String watcherProcessId =
+          Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
+      logProcessFileHandles(watcherProcessId, true);
+
+      logger.debug("Logging delegate file handles...");
+      ArrayList<String> monitoredProcesses = new ArrayList<>(runningDelegates);
+      for (String pid : monitoredProcesses) {
+        logProcessFileHandles(pid, false);
+      }
+      logger.debug("File handles logging finished.");
+    } catch (Exception ex) {
+      logger.error("Unexpected exception occurred while logging file handles.", ex);
+    }
+  }
+
+  private boolean deleteOldFiles(File logsFolder) {
+    long retentionPeriod = TimeUnit.MINUTES.toMillis(watcherConfiguration.getFileHandlesLogsRetentionInMinutes());
+    long cutoff = System.currentTimeMillis() - retentionPeriod;
+    File[] filesToBeDeleted = logsFolder.listFiles((FileFilter) new AgeFileFilter(cutoff));
+    if (filesToBeDeleted != null) {
+      for (File logFile : filesToBeDeleted) {
+        try {
+          Files.delete(Paths.get(logFile.getAbsolutePath()));
+        } catch (IOException ex) {
+          logger.warn("File handles log file {} could not be deleted.", logFile.getAbsolutePath(), ex);
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private void logProcessFileHandles(String pid, boolean isWatcher)
+      throws InterruptedException, TimeoutException, IOException {
+    logger.debug("Logging file handles for pid {}", pid);
+
+    String filePath = FILE_HANDLES_LOGS_FOLDER + File.separator + LocalDateTime.now()
+        + (isWatcher ? "-watcher" : "-delegate") + "-pid-" + pid + ".txt";
+
+    try (FileOutputStream fileOutputStream = new FileOutputStream(filePath)) {
+      ProcessExecutor processExecutor = new ProcessExecutor();
+      processExecutor.command("lsof", "-b", "-w", "-p", pid);
+      processExecutor.redirectOutput(fileOutputStream);
+      processExecutor.execute();
+    }
+  }
+
+  private void logAllFileHandles() throws InterruptedException, TimeoutException, IOException {
+    logger.debug("Logging all file handles");
+
+    String filePath = FILE_HANDLES_LOGS_FOLDER + File.separator + LocalDateTime.now() + "-all.txt";
+
+    try (FileOutputStream fileOutputStream = new FileOutputStream(filePath)) {
+      ProcessExecutor processExecutor = new ProcessExecutor();
+      processExecutor.command("lsof", "-b", "-w");
+      processExecutor.redirectOutput(fileOutputStream);
+      processExecutor.execute();
     }
   }
 

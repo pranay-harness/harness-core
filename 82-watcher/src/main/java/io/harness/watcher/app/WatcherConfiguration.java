@@ -17,4 +17,7 @@ public class WatcherConfiguration {
   private String queueFilePath;
   private String publishTarget;
   private String publishAuthority;
+  private boolean fileHandlesMonitoringEnabled;
+  private long fileHandlesMonitoringIntervalInMinutes;
+  private long fileHandlesLogsRetentionInMinutes;
 }
