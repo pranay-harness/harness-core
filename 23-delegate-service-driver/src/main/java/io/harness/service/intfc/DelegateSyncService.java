@@ -1,4 +1,4 @@
-package software.wings.service.intfc;
+package io.harness.service.intfc;
 
 import io.harness.delegate.beans.ResponseData;
 
