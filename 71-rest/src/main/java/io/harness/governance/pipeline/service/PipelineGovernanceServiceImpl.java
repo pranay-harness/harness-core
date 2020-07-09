@@ -6,8 +6,8 @@ import com.google.inject.Inject;
 
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig.PipelineGovernanceConfigKeys;
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.HQuery;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Event;

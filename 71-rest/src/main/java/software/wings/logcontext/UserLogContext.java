@@ -2,8 +2,8 @@ package software.wings.logcontext;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.AccountLogContext;
 import io.harness.persistence.LogKeyUtils;
 import software.wings.beans.User;
 

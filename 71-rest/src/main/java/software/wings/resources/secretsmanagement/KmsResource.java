@@ -6,8 +6,8 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;

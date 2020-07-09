@@ -8,8 +8,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 import com.google.inject.Inject;
 
 import io.harness.exception.HintException;
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;

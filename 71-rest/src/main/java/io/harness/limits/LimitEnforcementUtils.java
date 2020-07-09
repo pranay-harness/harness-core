@@ -4,8 +4,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.checker.UsageLimitExceededException;
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.AccountLogContext;
 import lombok.experimental.UtilityClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -7,7 +7,7 @@ import static software.wings.beans.yaml.YamlSuccessfulChange.ChangeSource.HARNES
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.persistence.AccountLogContext;
+import io.harness.logging.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.mongodb.morphia.query.Query;

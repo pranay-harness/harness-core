@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.AccountLogContext;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.graphql.datafetcher.AbstractArrayDataFetcher;
 import software.wings.graphql.schema.query.QLArtifactSourceQueryParam;

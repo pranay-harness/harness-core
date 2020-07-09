@@ -20,10 +20,10 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.ProcessTimeLogContext;
-import io.harness.persistence.AccountLogContext;
 import lombok.EqualsAndHashCode;
 import lombok.EqualsAndHashCode.Include;
 import lombok.Value;
