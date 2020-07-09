@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
@@ -30,6 +31,7 @@ import java.util.List;
 @JsonTypeName("JIRA")
 @Data
 @Builder
+@ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
 public class JiraConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
   public enum JiraSetupType { JIRA_CLOUD, JIRA_SERVER }

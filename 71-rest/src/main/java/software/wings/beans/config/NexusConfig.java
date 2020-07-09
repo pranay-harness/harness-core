@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
@@ -33,6 +34,7 @@ import java.util.List;
 @JsonTypeName("NEXUS")
 @Data
 @Builder
+@ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
 public class NexusConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Nexus URL", required = true) @NotEmpty private String nexusUrl;
