@@ -671,6 +671,11 @@ public class WatcherServiceImpl implements WatcherService {
           ()
               -> SafeHttpCall.execute(managerClient.getAccountStatus(watcherConfiguration.getAccountId())),
           5L, TimeUnit.SECONDS, true);
+
+      if (restResponse == null) {
+        return;
+      }
+
       if ("DELETED".equals(restResponse.getResource())) {
         selfDestruct();
       }
@@ -686,6 +691,10 @@ public class WatcherServiceImpl implements WatcherService {
             ()
                 -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())),
             15L, TimeUnit.SECONDS, true);
+
+        if (restResponse == null) {
+          return emptyList();
+        }
 
         DelegateConfiguration config = restResponse.getResource();
 
