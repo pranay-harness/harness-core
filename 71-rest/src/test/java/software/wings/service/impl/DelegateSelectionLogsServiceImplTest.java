@@ -38,6 +38,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
@@ -611,6 +612,56 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(delegateSelectionLogParams.get(0).getMessage()).isEqualTo(delegateSelectionLog.getMessage());
     assertThat(delegateSelectionLogParams.get(0).getEventTimestamp())
         .isEqualTo(delegateSelectionLog.getEventTimestamp());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldFetchSelectedDelegateForTaskWithEmptyOptional() {
+    Optional<DelegateSelectionLogParams> logParamsOptional =
+        delegateSelectionLogsService.fetchSelectedDelegateForTask(generateUuid());
+
+    assertThat(logParamsOptional.isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldFetchSelectedDelegateForTask() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    String message = generateUuid();
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(delegateId);
+
+    DelegateSelectionLog delegateSelectionLog1 = DelegateSelectionLog.builder()
+                                                     .taskId(taskId)
+                                                     .accountId(accountId)
+                                                     .message(message)
+                                                     .delegateIds(delegateIds)
+                                                     .conclusion(SELECTED)
+                                                     .eventTimestamp(System.currentTimeMillis())
+                                                     .build();
+
+    DelegateSelectionLog delegateSelectionLog2 = DelegateSelectionLog.builder()
+                                                     .taskId(taskId)
+                                                     .accountId(accountId)
+                                                     .message(message)
+                                                     .delegateIds(delegateIds)
+                                                     .conclusion(ACCEPTED)
+                                                     .eventTimestamp(System.currentTimeMillis())
+                                                     .build();
+    wingsPersistence.save(delegateSelectionLog1);
+    wingsPersistence.save(delegateSelectionLog2);
+
+    Optional<DelegateSelectionLogParams> logParamsOptional =
+        delegateSelectionLogsService.fetchSelectedDelegateForTask(taskId);
+
+    assertThat(logParamsOptional.isPresent()).isTrue();
+    assertThat(logParamsOptional.get().getConclusion()).isEqualTo(delegateSelectionLog1.getConclusion());
+    assertThat(logParamsOptional.get().getDelegateId()).isEqualTo(delegateId);
   }
 
   private DelegateSelectionLogBuilder createDelegateSelectionLogBuilder() {

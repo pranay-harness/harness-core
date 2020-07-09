@@ -36,6 +36,7 @@ import com.google.inject.Injector;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,7 @@ import software.wings.api.HostElement;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
@@ -61,6 +63,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 public class GraphRendererTest extends WingsBaseTest {
@@ -68,6 +71,7 @@ public class GraphRendererTest extends WingsBaseTest {
   @Mock FeatureFlagService featureFlagService;
   @Mock AppService appService;
   @Mock WorkflowExecutionService workflowExecutionService;
+  @Mock DelegateSelectionLogsService delegateSelectionLogsService;
   @Mock Injector injector;
 
   @Before
@@ -185,12 +189,21 @@ public class GraphRendererTest extends WingsBaseTest {
                                                 .contextTransition(true)
                                                 .status(SUCCESS)
                                                 .build();
+    String taskId = generateUuid();
+    String delegateId = generateUuid();
+    String delegateName = "name";
+    String delegateHostname = "hostname";
     List<DelegateTaskDetails> delegateTaskDetailsList = new ArrayList<>();
-    delegateTaskDetailsList.add(DelegateTaskDetails.builder()
-                                    .delegateTaskId(generateUuid())
-                                    .taskDescription("description")
-                                    .taskType("type")
-                                    .build());
+    delegateTaskDetailsList.add(
+        DelegateTaskDetails.builder().delegateTaskId(taskId).taskDescription("description").build());
+
+    DelegateSelectionLogParams delegateSelectionLogParams = DelegateSelectionLogParams.builder()
+                                                                .delegateId(delegateId)
+                                                                .delegateName(delegateName)
+                                                                .delegateHostName(delegateHostname)
+                                                                .build();
+    when(delegateSelectionLogsService.fetchSelectedDelegateForTask(taskId))
+        .thenReturn(Optional.of(delegateSelectionLogParams));
 
     instance.setStateParams(ImmutableMap.of("key", "value"));
     instance.setSelectionLogsTrackingForTasksEnabled(true);
