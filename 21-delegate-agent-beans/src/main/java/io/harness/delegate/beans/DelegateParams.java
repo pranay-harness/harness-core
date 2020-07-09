@@ -28,7 +28,6 @@ public class DelegateParams {
   boolean sampleDelegate;
   boolean keepAlivePacket;
   boolean polllingModeEnabled;
-  boolean proxy;
 
   List<String> currentlyExecutingDelegateTasks;
 }
