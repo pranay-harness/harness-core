@@ -16,12 +16,12 @@ import io.harness.execution.export.request.ExportExecutionsRequest.ExportExecuti
 import io.harness.execution.export.request.ExportExecutionsRequest.Status;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
-import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.FeatureName;
 import software.wings.service.intfc.FeatureFlagService;

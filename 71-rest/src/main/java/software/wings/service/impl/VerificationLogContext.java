@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.AccountLogContext;
 import software.wings.sm.StateType;
 
 import java.util.HashMap;

@@ -5,8 +5,8 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.AccountLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.stream.BoundedInputStream;

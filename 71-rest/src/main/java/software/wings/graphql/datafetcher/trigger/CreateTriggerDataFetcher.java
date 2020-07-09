@@ -2,8 +2,8 @@ package software.wings.graphql.datafetcher.trigger;
 
 import com.google.inject.Inject;
 
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.AccountLogContext;
 import software.wings.beans.trigger.Trigger;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;

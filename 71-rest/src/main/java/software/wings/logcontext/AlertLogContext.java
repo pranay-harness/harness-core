@@ -1,8 +1,8 @@
 package software.wings.logcontext;
 
 import io.harness.data.structure.NullSafeImmutableMap;
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.AccountLogContext;
 import software.wings.beans.alert.AlertType;
 import software.wings.service.impl.AppLogContext;
 

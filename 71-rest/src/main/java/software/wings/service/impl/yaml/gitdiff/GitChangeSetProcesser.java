@@ -16,9 +16,9 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.logging.AccountLogContext;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.ProcessTimeLogContext;
-import io.harness.persistence.AccountLogContext;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;

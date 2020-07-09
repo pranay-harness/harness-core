@@ -54,9 +54,9 @@ import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationEx
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
-import io.harness.persistence.AccountLogContext;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.Builder;
 import lombok.Value;

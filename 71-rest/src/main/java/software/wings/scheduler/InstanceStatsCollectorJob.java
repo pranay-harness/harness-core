@@ -7,8 +7,8 @@ import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 
 import io.harness.lock.AcquiredLock;
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.persistence.AccountLogContext;
 import io.harness.scheduler.BackgroundExecutorService;
 import io.harness.scheduler.BackgroundSchedulerLocker;
 import io.harness.scheduler.PersistentScheduler;
