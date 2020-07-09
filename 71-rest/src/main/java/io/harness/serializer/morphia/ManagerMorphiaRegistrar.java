@@ -301,6 +301,7 @@ import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation;
 import software.wings.beans.alert.NotificationRulesStatus;
+import software.wings.beans.alert.PerpetualTaskAlert;
 import software.wings.beans.alert.ResourceUsageApproachingLimitAlert;
 import software.wings.beans.alert.SSOSyncFailedAlert;
 import software.wings.beans.alert.SettingAttributeValidationFailedAlert;
@@ -1199,6 +1200,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.alert.NoActiveDelegatesAlert", NoActiveDelegatesAlert.class);
     w.put("beans.alert.NoEligibleDelegatesAlert", NoEligibleDelegatesAlert.class);
     w.put("beans.alert.NoEligibleDelegatesAlertReconciliation", NoEligibleDelegatesAlertReconciliation.class);
+    w.put("beans.alert.PerpetualTaskAlert", PerpetualTaskAlert.class);
     w.put("beans.alert.ResourceUsageApproachingLimitAlert", ResourceUsageApproachingLimitAlert.class);
     w.put("beans.alert.SettingAttributeValidationFailedAlert", SettingAttributeValidationFailedAlert.class);
     w.put("beans.alert.SSOSyncFailedAlert", SSOSyncFailedAlert.class);
