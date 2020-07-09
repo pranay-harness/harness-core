@@ -108,7 +108,12 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
         }
       } catch (Exception e) {
         // suppress metrics server not present error.
-        if (!(e instanceof KubernetesClientException && contains(e.getMessage(), "Message: 404 page not found"))) {
+        if (!(e instanceof KubernetesClientException
+                && (contains(e.getMessage(), "Message: 404 page not found")
+                       || ((e.getMessage().contains("pods is forbidden")
+                               || e.getMessage().contains("nodes is forbidden"))
+                              && (e.getMessage().contains("cannot watch resource")
+                                     || e.getMessage().contains("cannot list resource")))))) {
           logger.error(String.format("Encountered exceptions when executing perpetual task with id=%s", taskId), e);
         }
         try {
