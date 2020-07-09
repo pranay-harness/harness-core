@@ -21,6 +21,7 @@ public enum AlertType {
   DelegateProfileError(Setup, Error, DelegateProfileErrorAlert.class),
   NoEligibleDelegates(
       Setup, Error, NoEligibleDelegatesAlert.class, 0, NoEligibleDelegatesAlertReconciliation.builder().build()),
+  PerpetualTaskAlert(Setup, Error, PerpetualTaskAlert.class),
   InvalidKMS(Setup, Error, KmsSetupAlert.class),
   GitSyncError(Setup, Error, GitSyncErrorAlert.class),
   GitConnectionError(Setup, Error, GitConnectionErrorAlert.class),
