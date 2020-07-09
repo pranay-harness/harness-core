@@ -11,7 +11,6 @@ import com.cronutils.parser.CronParser;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,20 +29,10 @@ public interface PersistentCronIterable extends PersistentIrregularIterable {
 
     final long epochMilli = now.toInstant().toEpochMilli();
 
-    if (skipMissing) {
-      int end = Collections.binarySearch(times, epochMilli);
-      if (end < 0) {
-        end = -end - 1;
-      } else {
-        while (end < times.size() && times.get(end) == epochMilli) {
-          end++;
-        }
-      }
-      times.subList(0, end).clear();
-    }
+    boolean removed = skipMissing && removeMissed(epochMilli, times);
 
     if (times.size() > INVENTORY_MINIMUM) {
-      return false;
+      return removed;
     }
 
     final Cron cron = parser.parse(cronExpression);

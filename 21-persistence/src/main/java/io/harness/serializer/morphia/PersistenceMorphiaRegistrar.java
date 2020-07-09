@@ -3,6 +3,7 @@ package io.harness.serializer.morphia;
 import io.harness.beans.Encryptable;
 import io.harness.cache.CacheEntity;
 import io.harness.iterator.PersistentCronIterable;
+import io.harness.iterator.PersistentFibonacciIterable;
 import io.harness.iterator.PersistentIrregularIterable;
 import io.harness.iterator.PersistentIterable;
 import io.harness.iterator.PersistentRegularIterable;
@@ -32,6 +33,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(AccountAccess.class);
+    set.add(CacheEntity.class);
     set.add(CreatedAtAccess.class);
     set.add(CreatedAtAware.class);
     set.add(CreatedByAccess.class);
@@ -43,6 +45,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(NameAccess.class);
     set.add(PersistentCronIterable.class);
     set.add(PersistentEntity.class);
+    set.add(PersistentFibonacciIterable.class);
     set.add(PersistentIrregularIterable.class);
     set.add(PersistentIterable.class);
     set.add(PersistentRegularIterable.class);
@@ -53,7 +56,6 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(UpdatedByAware.class);
     set.add(UuidAccess.class);
     set.add(UuidAware.class);
-    set.add(CacheEntity.class);
   }
 
   @Override
