@@ -20,6 +20,7 @@ import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueConsumer.Filter;
 import io.harness.queue.QueueListenerController;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Poller;
 import org.junit.Before;
@@ -42,6 +43,7 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
   @Inject private NotifyResponseCleaner notifyResponseCleaner;
   @Inject private TestNotifyEventListener notifyEventListener;
   @Inject private QueueListenerController queueListenerController;
+  @Inject private KryoSerializer kryoSerializer;
 
   /**
    * Setup response map.
@@ -68,11 +70,11 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.doneWith(uuid, data);
-
-      assertThat(persistence.get(NotifyResponse.class, id))
-          .isNotNull()
-          .extracting(NotifyResponse::getResponse)
-          .isEqualTo(data);
+      NotifyResponse notifyResponse = persistence.get(NotifyResponse.class, id);
+      assertThat(notifyResponse).isNotNull();
+      ResponseData responseDataResult =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
+      assertThat(responseDataResult).isEqualTo(data);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
 
@@ -94,10 +96,11 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.doneWith(uuid, data);
 
-      assertThat(persistence.get(NotifyResponse.class, id))
-          .isNotNull()
-          .extracting(NotifyResponse::getResponse)
-          .isEqualTo(data);
+      NotifyResponse notifyResponse = persistence.get(NotifyResponse.class, id);
+      assertThat(notifyResponse).isNotNull();
+      ResponseData responseDataResult =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
+      assertThat(responseDataResult).isEqualTo(data);
 
       Concurrent.test(10, i -> { notifyEventListener.execute(); });
 
@@ -121,10 +124,11 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       assertThat(persistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
-      assertThat(persistence.get(NotifyResponse.class, id))
-          .isNotNull()
-          .extracting(NotifyResponse::getResponse)
-          .isEqualTo(data);
+      NotifyResponse notifyResponse = persistence.get(NotifyResponse.class, id);
+      assertThat(notifyResponse).isNotNull();
+      ResponseData responseDataResult =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
+      assertThat(responseDataResult).isEqualTo(data);
 
       notifyEventListener.execute();
 
@@ -156,10 +160,11 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       String id = waitNotifyEngine.doneWith(uuid1, data1);
 
-      assertThat(persistence.get(NotifyResponse.class, id))
-          .isNotNull()
-          .extracting(NotifyResponse::getResponse)
-          .isEqualTo(data1);
+      NotifyResponse notifyResponse1 = persistence.get(NotifyResponse.class, id);
+      assertThat(notifyResponse1).isNotNull();
+      ResponseData responseDataResult1 =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse1.getResponseData());
+      assertThat(responseDataResult1).isEqualTo(data1);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
 
@@ -168,10 +173,11 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       id = waitNotifyEngine.doneWith(uuid2, data2);
 
-      assertThat(persistence.get(NotifyResponse.class, id))
-          .isNotNull()
-          .extracting(NotifyResponse::getResponse)
-          .isEqualTo(data2);
+      NotifyResponse notifyResponse2 = persistence.get(NotifyResponse.class, id);
+      assertThat(notifyResponse2).isNotNull();
+      ResponseData responseDataResult2 =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse2.getResponseData());
+      assertThat(responseDataResult2).isEqualTo(data2);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
 
@@ -180,10 +186,11 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
 
       id = waitNotifyEngine.doneWith(uuid3, data3);
 
-      assertThat(persistence.get(NotifyResponse.class, id))
-          .isNotNull()
-          .extracting(NotifyResponse::getResponse)
-          .isEqualTo(data3);
+      NotifyResponse notifyResponse3 = persistence.get(NotifyResponse.class, id);
+      assertThat(notifyResponse3).isNotNull();
+      ResponseData responseDataResult =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse3.getResponseData());
+      assertThat(responseDataResult).isEqualTo(data3);
 
       Poller.pollFor(Duration.ofSeconds(10), ofMillis(100), () -> notifyConsumer.count(Filter.ALL) == 0);
 
@@ -214,10 +221,11 @@ public class WaitNotifyEngineTest extends OrchestrationTest {
       ResponseData data = StringNotifyResponseData.builder().data("response-" + uuid).build();
       String id = waitNotifyEngine.doneWith(uuid, data);
 
-      assertThat(persistence.get(NotifyResponse.class, id))
-          .isNotNull()
-          .extracting(NotifyResponse::getResponse)
-          .isEqualTo(data);
+      NotifyResponse notifyResponse = persistence.get(NotifyResponse.class, id);
+      assertThat(notifyResponse).isNotNull();
+      ResponseData responseDataResult =
+          (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
+      assertThat(responseDataResult).isEqualTo(data);
 
       while (notifyConsumer.count(Filter.ALL) != 0) {
         Thread.yield();
