@@ -1,10 +1,10 @@
-package software.wings.delegatetasks;
+package io.harness.delegate.task;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import io.harness.exception.WingsException;
+import io.harness.exception.UnexpectedException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -46,9 +46,9 @@ public class DataCollectionExecutorService {
           throw new TimeoutException("Timeout. Execution took longer than 3 minutes ");
         }
       } catch (ExecutionException ee) {
-        throw new WingsException("Error executing task " + ee.getMessage(), ee);
+        throw new UnexpectedException("Error executing task " + ee.getMessage(), ee);
       } catch (Exception e) {
-        throw new WingsException("Error executing task " + e.getMessage(), e);
+        throw new UnexpectedException("Error executing task " + e.getMessage(), e);
       }
     }
     logger.debug("Done parallelizing callables {} ", callables.size());

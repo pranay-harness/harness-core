@@ -17,6 +17,7 @@ import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsValidation
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.core.services.CVNextGenConstants;
+import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,6 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;

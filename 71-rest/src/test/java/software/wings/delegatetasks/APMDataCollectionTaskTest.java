@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;

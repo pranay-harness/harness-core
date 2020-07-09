@@ -6,6 +6,7 @@ import static junit.framework.TestCase.fail;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Test;

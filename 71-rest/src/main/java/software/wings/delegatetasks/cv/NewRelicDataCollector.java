@@ -18,6 +18,7 @@ import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
@@ -29,7 +30,6 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.NewRelicConfig;
-import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.helpers.ext.newrelic.NewRelicRestClient;
 import software.wings.service.impl.analysis.MetricElement;
 import software.wings.service.impl.newrelic.NewRelicApdex;

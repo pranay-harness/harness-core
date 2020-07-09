@@ -15,6 +15,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.exception.DelegateRetryableException;
+import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;

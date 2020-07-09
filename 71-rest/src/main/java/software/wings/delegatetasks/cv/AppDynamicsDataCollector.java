@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.DataCollectionExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -18,7 +19,6 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.service.impl.analysis.MetricElement;
 import software.wings.service.impl.appdynamics.AppDynamicsDataCollectionInfoV2;

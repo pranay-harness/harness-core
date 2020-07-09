@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -23,7 +24,6 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.service.impl.analysis.MetricElement;
 import software.wings.service.impl.appdynamics.AppDynamicsDataCollectionInfoV2;
