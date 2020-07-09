@@ -241,6 +241,15 @@ if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
 else
   sed -i.bak "s|^delegateCheckLocation:.*$|delegateCheckLocation: http://localhost:8888/delegateci.txt|" config-watcher.yml
 fi
+if ! `grep fileHandlesMonitoringEnabled config-watcher.yml > /dev/null`; then
+  echo "fileHandlesMonitoringEnabled: false" >> config-watcher.yml
+fi
+if ! `grep fileHandlesMonitoringIntervalInMinutes config-watcher.yml > /dev/null`; then
+  echo "fileHandlesMonitoringIntervalInMinutes: 15" >> config-watcher.yml
+fi
+if ! `grep fileHandlesLogsRetentionInMinutes config-watcher.yml > /dev/null`; then
+  echo "fileHandlesLogsRetentionInMinutes: 1440" >> config-watcher.yml
+fi
 
 rm -f -- *.bak
 

@@ -7,3 +7,6 @@ upgradeCheckIntervalSeconds: 60
 publishTarget: localhost:9890
 publishAuthority: localhost
 queueFilePath: ../eventQueue
+fileHandlesMonitoringEnabled: false
+fileHandlesMonitoringIntervalInMinutes: 15
+fileHandlesLogsRetentionInMinutes: 1440
