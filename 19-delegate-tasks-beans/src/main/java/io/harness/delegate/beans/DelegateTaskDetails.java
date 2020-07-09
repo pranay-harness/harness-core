@@ -10,6 +10,9 @@ import lombok.experimental.FieldNameConstants;
 public class DelegateTaskDetails {
   private String delegateTaskId;
   private String taskDescription;
+  private String selectedDelegateId;
+  private String selectedDelegateName;
+  private String selectedDelegateHostName;
   /**
    * @deprecated Use taskDescription instead.
    */

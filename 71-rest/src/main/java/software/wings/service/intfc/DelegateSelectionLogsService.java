@@ -6,6 +6,7 @@ import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.DelegateScope;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface DelegateSelectionLogsService {
@@ -27,6 +28,8 @@ public interface DelegateSelectionLogsService {
   void logNoIncludeScopeMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
   List<DelegateSelectionLogParams> fetchTaskSelectionLogs(String accountId, String taskId);
+
+  Optional<DelegateSelectionLogParams> fetchSelectedDelegateForTask(String taskId);
 
   void logDisconnectedDelegate(BatchDelegateSelectionLog batch, String accountId, Set<String> delegateIds);
 

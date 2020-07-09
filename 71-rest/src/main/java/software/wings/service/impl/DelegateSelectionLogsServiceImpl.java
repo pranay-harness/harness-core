@@ -197,33 +197,51 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     List<DelegateSelectionLogParams> delegateSelectionLogs = new ArrayList<>();
 
     for (DelegateSelectionLog log : delegateSelectionLogsList) {
-      for (String delegateId : log.getDelegateIds()) {
-        Delegate delegate = delegateService.get(accountId, delegateId, false);
-        String delegateName = Optional.ofNullable(delegate).map(delegateService::obtainDelegateName).orElse(delegateId);
-        String delegateHostName = Optional.ofNullable(delegate).map(Delegate::getHostName).orElse("");
-
-        String delegateProfileName = "";
-        if (delegate != null) {
-          DelegateProfile delegateProfile =
-              wingsPersistence.get(DelegateProfile.class, delegate.getDelegateProfileId());
-          delegateProfileName = Optional.ofNullable(delegateProfile).map(DelegateProfile::getName).orElse("");
-        }
-
-        DelegateSelectionLogParams delegateSelectionLogParams = DelegateSelectionLogParams.builder()
-                                                                    .delegateId(delegateId)
-                                                                    .delegateName(delegateName)
-                                                                    .delegateHostName(delegateHostName)
-                                                                    .delegateProfileName(delegateProfileName)
-                                                                    .conclusion(log.getConclusion())
-                                                                    .message(log.getMessage())
-                                                                    .eventTimestamp(log.getEventTimestamp())
-                                                                    .build();
-
-        delegateSelectionLogs.add(delegateSelectionLogParams);
-      }
+      delegateSelectionLogs.addAll(buildDelegateSelectionLogParamsList(log));
     }
 
     return delegateSelectionLogs;
+  }
+
+  private List<DelegateSelectionLogParams> buildDelegateSelectionLogParamsList(DelegateSelectionLog log) {
+    List<DelegateSelectionLogParams> delegateSelectionLogParamsList = new ArrayList<>();
+
+    for (String delegateId : log.getDelegateIds()) {
+      Delegate delegate = delegateService.get(log.getAccountId(), delegateId, false);
+      String delegateName = Optional.ofNullable(delegate).map(delegateService::obtainDelegateName).orElse(delegateId);
+      String delegateHostName = Optional.ofNullable(delegate).map(Delegate::getHostName).orElse("");
+
+      String delegateProfileName = "";
+      if (delegate != null) {
+        DelegateProfile delegateProfile = wingsPersistence.get(DelegateProfile.class, delegate.getDelegateProfileId());
+        delegateProfileName = Optional.ofNullable(delegateProfile).map(DelegateProfile::getName).orElse("");
+      }
+
+      delegateSelectionLogParamsList.add(DelegateSelectionLogParams.builder()
+                                             .delegateId(delegateId)
+                                             .delegateName(delegateName)
+                                             .delegateHostName(delegateHostName)
+                                             .delegateProfileName(delegateProfileName)
+                                             .conclusion(log.getConclusion())
+                                             .message(log.getMessage())
+                                             .eventTimestamp(log.getEventTimestamp())
+                                             .build());
+    }
+
+    return delegateSelectionLogParamsList;
+  }
+
+  @Override
+  public Optional<DelegateSelectionLogParams> fetchSelectedDelegateForTask(String taskId) {
+    DelegateSelectionLog delegateSelectionLog = wingsPersistence.createQuery(DelegateSelectionLog.class)
+                                                    .filter(DelegateSelectionLogKeys.taskId, taskId)
+                                                    .filter(DelegateSelectionLogKeys.conclusion, SELECTED)
+                                                    .get();
+    if (delegateSelectionLog == null) {
+      return Optional.empty();
+    }
+
+    return Optional.ofNullable(buildDelegateSelectionLogParamsList(delegateSelectionLog).get(0));
   }
 
   @Override
