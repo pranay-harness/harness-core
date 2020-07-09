@@ -26,6 +26,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String SERVICE_ID = "ng-manager";
   public static final String BASE_PACKAGE = "io.harness.ng";
   public static final String CONNECTOR_PACKAGE = "io.harness.connector.apis.resource";
+  public static final String GIT_SYNC_PACKAGE = "io.harness.gitsync";
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
@@ -52,7 +53,7 @@ public class NextGenConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE);
+    Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GIT_SYNC_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
