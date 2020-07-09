@@ -237,12 +237,14 @@ public class K8sDeleteTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testValidateFields() {
+    String RESOURCES_KEY = "resources";
     k8sDelete.setFilePaths(null);
     k8sDelete.setResources(null);
     Map<String, String> invalidFields = k8sDelete.validateFields();
     assertThat(invalidFields).isNotEmpty();
-    assertThat(invalidFields.size()).isEqualTo(2);
-    assertThat(invalidFields).containsKeys("resources", "FilePaths");
+    assertThat(invalidFields.size()).isEqualTo(1);
+    assertThat(invalidFields).containsKeys(RESOURCES_KEY);
+    assertThat(invalidFields.get(RESOURCES_KEY)).isEqualTo("Resources must not be blank");
   }
 
   @Test
