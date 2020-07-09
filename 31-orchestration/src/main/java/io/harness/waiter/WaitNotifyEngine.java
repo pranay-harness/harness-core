@@ -19,6 +19,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.logging.AutoLogRemoveContext;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.KryoSerializer;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceBuilder;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
@@ -41,6 +42,7 @@ import java.util.Set;
 @Slf4j
 public class WaitNotifyEngine {
   @Inject private HPersistence persistence;
+  @Inject private KryoSerializer kryoSerializer;
   @Inject private NotifyQueuePublisherRegister publisherRegister;
 
   public String waitForAllOn(String publisherName, NotifyCallback callback, String... correlationIds) {
@@ -111,7 +113,7 @@ public class WaitNotifyEngine {
       persistence.save(NotifyResponse.builder()
                            .uuid(correlationId)
                            .createdAt(currentTimeMillis())
-                           .response(response)
+                           .responseData(kryoSerializer.asDeflatedBytes(response))
                            .error(error || response instanceof ErrorNotifyResponseData)
                            .build());
       handleNotifyResponse(correlationId);

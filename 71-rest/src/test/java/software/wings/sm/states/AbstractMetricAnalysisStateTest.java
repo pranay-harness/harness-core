@@ -21,6 +21,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.waiter.NotifyResponse;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -63,6 +64,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Inject private AppService appService;
   @Inject protected MetricDataAnalysisService metricAnalysisService;
   @Inject protected CVActivityLogService cvActivityLogService;
+  @Inject private KryoSerializer kryoSerializer;
   @Mock private ExecutionContext executionContext;
   private AppDynamicsState appDynamicsState = new AppDynamicsState(generateUuid());
   private String accountId;
@@ -436,7 +438,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     final NotifyResponse notifyResponse = wingsPersistence.get(NotifyResponse.class, correlationId);
     assertThat(notifyResponse).isNotNull();
     VerificationDataAnalysisResponse verificationDataAnalysisResponse =
-        (VerificationDataAnalysisResponse) notifyResponse.getResponse();
+        (VerificationDataAnalysisResponse) kryoSerializer.asInflatedObject(notifyResponse.getResponseData());
     assertThat(verificationDataAnalysisResponse.getExecutionStatus()).isEqualTo(executionStatus);
     assertThat(verificationDataAnalysisResponse.getStateExecutionData().getStatus()).isEqualTo(executionStatus);
 

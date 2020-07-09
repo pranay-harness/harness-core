@@ -13,6 +13,7 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
+import io.harness.serializer.KryoSerializer;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
 
   @Inject private Injector injector;
   @Inject private HPersistence persistence;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Inject
   public NotifyEventListener(QueueConsumer<NotifyEvent> queueConsumer) {
@@ -78,7 +80,8 @@ public class NotifyEventListener extends QueueListener<NotifyEvent> {
             logger.info("Failed notification response {}", notifyResponse.getUuid());
             isError = true;
           }
-          responseMap.put(notifyResponse.getUuid(), notifyResponse.getResponse());
+          responseMap.put(notifyResponse.getUuid(),
+              (ResponseData) kryoSerializer.asInflatedObject(notifyResponse.getResponseData()));
         }
       }
 
