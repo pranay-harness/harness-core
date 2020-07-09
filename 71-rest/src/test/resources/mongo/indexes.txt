@@ -459,7 +459,7 @@ permits {"name": "createdAt_1", "background": true} {"createdAt": 1}
 permits {"name": "expireAt_1", "background": true, "expireAfterSeconds": 0} {"expireAt": 1}
 permits {"name": "key_1", "unique": true} {"key": 1}
 perpetualTask {"name": "accountId_1", "background": true} {"accountId": 1}
-perpetualTask {"name": "assignerIteration_1", "background": true} {"assignerIteration": 1}
+perpetualTask {"name": "assignerIterations_1", "background": true} {"assignerIterations": 1}
 perpetualTask {"name": "delegateId_1", "background": true} {"delegateId": 1}
 perpetualTask {"name": "resetterIteration_1", "background": true} {"resetterIteration": 1}
 personalization {"name": "identification", "unique": true} {"accountId": 1, "userId": 1}

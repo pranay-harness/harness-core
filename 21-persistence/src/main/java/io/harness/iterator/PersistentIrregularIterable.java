@@ -1,5 +1,6 @@
 package io.harness.iterator;
 
+import java.util.Collections;
 import java.util.List;
 
 public interface PersistentIrregularIterable extends PersistentIterable {
@@ -9,4 +10,17 @@ public interface PersistentIrregularIterable extends PersistentIterable {
   // such call can be limited with providing rich list that will caver multiple iterations.
   // Returning will keep the list as is without an update operation.
   List<Long> recalculateNextIterations(String fieldName, boolean skipMissed, long throttled);
+
+  default boolean removeMissed(long now, List<Long> times) {
+    int end = Collections.binarySearch(times, now);
+    if (end < 0) {
+      end = -end - 1;
+    } else {
+      while (end < times.size() && times.get(end) == now) {
+        end++;
+      }
+    }
+    times.subList(0, end).clear();
+    return end > 0;
+  }
 }

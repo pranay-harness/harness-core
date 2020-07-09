@@ -107,8 +107,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
 
   @Override
   public boolean resetTask(String accountId, String taskId) {
-    // TODO(Hitesh) -> make a callback
     logger.info("Resetting the perpetual task with id={}.", taskId);
+    // TODO: this should be a single call to the DB
     perpetualTaskRecordDao.setTaskState(taskId, PerpetualTaskState.TASK_UNASSIGNED.name());
     return perpetualTaskRecordDao.resetDelegateIdForTask(accountId, taskId);
   }

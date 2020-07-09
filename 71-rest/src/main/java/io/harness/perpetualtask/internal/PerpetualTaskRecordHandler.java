@@ -2,7 +2,7 @@ package io.harness.perpetualtask.internal;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -58,13 +58,13 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
         PerpetualTaskRecordHandler.class,
         MongoPersistenceIterator.<PerpetualTaskRecord, MorphiaFilterExpander<PerpetualTaskRecord>>builder()
             .clazz(PerpetualTaskRecord.class)
-            .fieldName(PerpetualTaskRecordKeys.assignerIteration)
+            .fieldName(PerpetualTaskRecordKeys.assignerIterations)
             .targetInterval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .acceptableNoAlertDelay(ofSeconds(45))
             .acceptableExecutionTime(ofSeconds(30))
             .handler(this)
             .filterExpander(query -> query.field(PerpetualTaskRecordKeys.delegateId).equal(""))
-            .schedulingType(REGULAR)
+            .schedulingType(IRREGULAR_SKIP_MISSED)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
@@ -101,7 +101,6 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
         } else {
           logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, sue);
         }
-
         // TODO: we should not log errors for delegates not being assigned, we need a red bell alert for that.
       } catch (WingsException exception) {
         ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
