@@ -1,5 +1,6 @@
 package io.harness.gitsync.beans;
 
+import io.harness.gitsync.common.beans.Change;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 

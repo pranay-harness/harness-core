@@ -1,4 +1,4 @@
-package io.harness.gitsync.beans;
+package io.harness.gitsync.common.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -10,6 +10,7 @@ import lombok.experimental.SuperBuilder;
 public class Change {
   private String filePath;
   private String fileContent;
+  private String rootPath;
   private String accountId;
   private ChangeType changeType;
   private String oldFilePath;

@@ -11,6 +11,7 @@ import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.connector.ConnectorModule;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.gitsync.GitSyncModule;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
@@ -71,6 +72,7 @@ public class NextGenModule extends DependencyModule {
     install(new NextGenPersistenceModule());
     install(new CoreModule());
     install(new ConnectorModule());
+    install(new GitSyncModule());
     install(new SecretManagementModule(
         this.appConfig.getSecretManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ManagerDelegateServiceDriverModule(this.appConfig.getGrpcClientConfig(),

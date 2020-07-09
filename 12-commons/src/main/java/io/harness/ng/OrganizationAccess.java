@@ -1,3 +1,3 @@
 package io.harness.ng;
 
-public interface OrganizationAccess { String getOrganizationIdentifier(); }
+public interface OrganizationAccess { String getOrganizationId(); }
