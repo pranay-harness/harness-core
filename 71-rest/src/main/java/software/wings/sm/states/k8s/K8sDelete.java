@@ -138,8 +138,7 @@ public class K8sDelete extends State implements K8sStateExecutor {
     Map<String, String> invalidFields = new HashMap<>();
 
     if (isBlank(resources) && isBlank(filePaths)) {
-      invalidFields.put("resources", "Both File paths and resources must not be blank");
-      invalidFields.put("FilePaths", "Both File paths and resources must not be blank");
+      invalidFields.put("resources", "Resources must not be blank");
     }
 
     return invalidFields;
