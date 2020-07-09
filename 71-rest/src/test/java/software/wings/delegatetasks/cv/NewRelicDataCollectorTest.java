@@ -17,6 +17,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import okhttp3.Request;
@@ -33,7 +34,6 @@ import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.WingsBaseTest;
 import software.wings.beans.NewRelicConfig;
-import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateCVActivityLogService.Logger;
 import software.wings.helpers.ext.newrelic.NewRelicRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;

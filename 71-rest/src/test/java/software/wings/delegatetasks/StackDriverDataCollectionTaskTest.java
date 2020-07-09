@@ -22,6 +22,7 @@ import com.google.common.collect.TreeBasedTable;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.time.Timestamp;
@@ -246,7 +247,7 @@ public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
 
     // setup the executor service to run the mock calls.
     DataCollectionExecutorService executorService = new DataCollectionExecutorService();
-    executorService.dataCollectionService = Executors.newFixedThreadPool(2);
+    FieldUtils.writeField(executorService, "dataCollectionService", Executors.newFixedThreadPool(2), true);
     FieldUtils.writeField(dataCollectionTask, "dataCollectionService", executorService, true);
     setupFields();
 

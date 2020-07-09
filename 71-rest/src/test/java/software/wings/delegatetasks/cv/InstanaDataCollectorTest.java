@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -24,7 +25,6 @@ import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.WingsBaseTest;
 import software.wings.beans.InstanaConfig;
-import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.MetricElement;

@@ -15,6 +15,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.time.Timestamp;
@@ -23,7 +24,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import software.wings.beans.FeatureName;
 import software.wings.common.VerificationConstants;
-import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
