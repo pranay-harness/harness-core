@@ -1,10 +1,11 @@
-package software.wings.service.impl;
+package io.harness.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -14,9 +15,9 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.intfc.DelegateSyncService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import software.wings.service.intfc.DelegateSyncService;
 
 import java.time.Duration;
 import java.util.List;
@@ -30,7 +31,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
   @Inject private HPersistence persistence;
   @Inject private KryoSerializer kryoSerializer;
 
-  final ConcurrentMap<String, AtomicLong> syncTaskWaitMap = new ConcurrentHashMap<>();
+  @VisibleForTesting public final ConcurrentMap<String, AtomicLong> syncTaskWaitMap = new ConcurrentHashMap<>();
 
   @Override
   @SuppressWarnings({"PMD", "SynchronizationOnLocalVariableOrMethodParameter"})
@@ -73,7 +74,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
       }
       taskResponse = persistence.get(DelegateSyncTaskResponse.class, taskId);
     } catch (Exception e) {
-      throw new InvalidArgumentsException(Pair.of("args", "Error while waiting for completion"));
+      throw new InvalidArgumentsException(Pair.of("args", "Error while waiting for completion"), e);
     } finally {
       syncTaskWaitMap.remove(taskId);
       persistence.delete(DelegateSyncTaskResponse.class, taskId);

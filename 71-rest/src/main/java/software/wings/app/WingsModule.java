@@ -96,6 +96,7 @@ import io.harness.registries.registrar.StepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.serializer.YamlUtils;
+import io.harness.service.DelegateServiceDriverModule;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
@@ -261,7 +262,6 @@ import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.impl.DelegateScopeServiceImpl;
 import software.wings.service.impl.DelegateSelectionLogsServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
-import software.wings.service.impl.DelegateSyncServiceImpl;
 import software.wings.service.impl.DownloadTokenServiceImpl;
 import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
@@ -472,7 +472,6 @@ import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.DelegateSyncService;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.DownloadTokenService;
 import software.wings.service.intfc.EcrBuildService;
@@ -777,7 +776,6 @@ public class WingsModule extends DependencyModule implements ServersModule {
     bind(PluginService.class).to(PluginServiceImpl.class);
     bind(CommandService.class).to(CommandServiceImpl.class);
     bind(DelegateService.class).to(DelegateServiceImpl.class);
-    bind(DelegateSyncService.class).to(DelegateSyncServiceImpl.class);
     bind(DelegateScopeService.class).to(DelegateScopeServiceImpl.class);
     bind(DelegateSelectionLogsService.class).to(DelegateSelectionLogsServiceImpl.class);
     bind(BarrierService.class).to(BarrierServiceImpl.class);
@@ -1278,7 +1276,8 @@ public class WingsModule extends DependencyModule implements ServersModule {
         OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .build()),
-        PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance(), NGModule.getInstance());
+        PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance(), NGModule.getInstance(),
+        DelegateServiceDriverModule.getInstance());
   }
 
   @Provides

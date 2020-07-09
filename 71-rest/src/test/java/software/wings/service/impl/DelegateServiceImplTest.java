@@ -34,6 +34,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
+import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.tasks.Cd1SetupFields;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
