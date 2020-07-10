@@ -33,6 +33,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ArtifactCollectionExecutionData;
@@ -77,6 +78,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -163,11 +165,22 @@ public class EnvState extends State {
               .stateExecutionData(envStateExecutionData)
               .build();
         }
+      } catch (JexlException je) {
+        logger.error("Skip Assertion Evaluation Failed", je);
+        String jexlError = Optional.ofNullable(je.getMessage()).orElse("");
+        if (jexlError.contains(":")) {
+          jexlError = jexlError.split(":")[1];
+        }
+        return ExecutionResponse.builder()
+            .executionStatus(FAILED)
+            .errorMessage("Skip Assertion Evaluation Failed : " + jexlError)
+            .stateExecutionData(envStateExecutionData)
+            .build();
       } catch (Exception e) {
         logger.error("Skip Assertion Evaluation Failed", e);
         return ExecutionResponse.builder()
             .executionStatus(FAILED)
-            .errorMessage("Skip Assertion Evaluation Failed : " + e.getMessage())
+            .errorMessage("Skip Assertion Evaluation Failed : " + (e.getMessage() != null ? e.getMessage() : ""))
             .stateExecutionData(envStateExecutionData)
             .build();
       }

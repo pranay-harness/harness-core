@@ -1867,9 +1867,6 @@ public class PipelineServiceImpl implements PipelineService {
           if (!isValidPipelineStageName(stageElement.getName())) {
             throw new InvalidArgumentsException("Pipeline step name can only have a-z, A-Z, 0-9, -, (, ) and _", USER);
           }
-          if (!isValidSkipCondition(stageElement)) {
-            throw new InvalidArgumentsException("Not a valid skip condition for " + stageElement.getName(), USER);
-          }
 
           if (!ENV_STATE.name().equals(stageElement.getType())) {
             continue;
@@ -1916,15 +1913,6 @@ public class PipelineServiceImpl implements PipelineService {
       return false;
     }
     return ALLOWED_CHARS_SET_PIPELINE_STAGE.containsAll(Sets.newHashSet(Lists.charactersOf(name)));
-  }
-
-  private boolean isValidSkipCondition(PipelineStageElement pipelineStageElement) {
-    if (APPROVAL.name().equals(pipelineStageElement.getType())) {
-      return pipelineStageElement.getDisableAssertion() == null
-          || pipelineStageElement.getDisableAssertion().equals("true");
-    } else {
-      return true;
-    }
   }
 
   private boolean prunePipeline(String appId, String pipelineId) {
