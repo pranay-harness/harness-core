@@ -14,6 +14,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Pipeline;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.trigger.Trigger;
@@ -24,6 +25,7 @@ import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.type.trigger.QLArtifactSelectionInput;
+import software.wings.graphql.schema.type.trigger.QLConditionType;
 import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLTrigger;
 import software.wings.graphql.schema.type.trigger.QLTrigger.QLTriggerBuilder;
@@ -32,9 +34,11 @@ import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +56,7 @@ public class TriggerController {
   @Inject AuthService authService;
   @Inject WorkflowExecutionController workflowExecutionController;
   @Inject PipelineExecutionController pipelineExecutionController;
+  @Inject SettingsService settingsService;
 
   public void populateTrigger(Trigger trigger, QLTriggerBuilder qlTriggerBuilder, String accountId) {
     qlTriggerBuilder.id(trigger.getUuid())
@@ -154,6 +159,8 @@ public class TriggerController {
     if (EmptyPredicate.isEmpty(qlCreateOrUpdateTriggerInput.getAction().getEntityId())) {
       throw new InvalidRequestException("Entity Id must not be empty", USER);
     }
+
+    validateGitConnector(qlCreateOrUpdateTriggerInput, accountId);
   }
 
   private void validateUpdateTrigger(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, String accountId) {
@@ -172,6 +179,38 @@ public class TriggerController {
 
       if (qlCreateOrUpdateTriggerInput.getAction().getExecutionType() != qlExecutionType) {
         throw new InvalidRequestException("Execution Type cannot be modified", USER);
+      }
+    }
+  }
+
+  private void validateGitConnector(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, String accountId) {
+    if (qlCreateOrUpdateTriggerInput.getCondition().getConditionType() == QLConditionType.ON_WEBHOOK) {
+      if (null != qlCreateOrUpdateTriggerInput.getCondition().getWebhookConditionInput()) {
+        Boolean deployOnlyIfFilesChanged =
+            qlCreateOrUpdateTriggerInput.getCondition().getWebhookConditionInput().getDeployOnlyIfFilesChanged();
+
+        if (deployOnlyIfFilesChanged != null && deployOnlyIfFilesChanged) {
+          validateGitConnectorChecks(
+              qlCreateOrUpdateTriggerInput.getCondition().getWebhookConditionInput().getGitConnectorId(), accountId,
+              qlCreateOrUpdateTriggerInput.getApplicationId());
+        }
+      }
+    }
+  }
+
+  private void validateGitConnectorChecks(String gitConnectorId, String accountId, String appId) {
+    if (EmptyPredicate.isNotEmpty(gitConnectorId)) {
+      SettingAttribute gitConfig = settingsService.get(gitConnectorId);
+      if (gitConfig == null) {
+        throw new InvalidRequestException(String.format("GitConnector: %s doesn't exists", gitConnectorId), USER);
+      }
+      if (!accountId.equals(gitConfig.getAccountId())) {
+        throw new InvalidRequestException(
+            String.format("GitConnector: %s doesn't belong to this account", gitConnectorId), USER);
+      }
+      if (settingsService.getFilteredSettingAttributes(Collections.singletonList(gitConfig), appId, null).isEmpty()) {
+        throw new InvalidRequestException(
+            String.format("User doesn't have access to use the GitConnector: %s", gitConnectorId), USER);
       }
     }
   }
