@@ -7,6 +7,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("serviceAccountK8")
-public class ServiceAccountK8 extends KubernetesAuth {
+public class ServiceAccountK8 implements KubernetesAuth {
   String serviceAcccountToken;
 }

@@ -1,14 +1,14 @@
-package io.harness.delegate.beans.connector;
+package io.harness.delegate.beans.connector.gitconnector;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ConnectorType {
-  KUBERNETES_CLUSTER("K8sCluster"),
-  GIT("Git");
+public enum GitAuthType {
+  HTTP("Http"),
+  SSH("Ssh");
 
   private final String displayName;
 
-  ConnectorType(String displayName) {
+  GitAuthType(String displayName) {
     this.displayName = displayName;
   }
 

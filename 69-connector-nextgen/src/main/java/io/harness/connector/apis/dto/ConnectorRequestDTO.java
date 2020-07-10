@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -48,6 +49,9 @@ public class ConnectorRequestDTO {
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @JsonSubTypes({ @JsonSubTypes.Type(value = KubernetesClusterConfigDTO.class, name = "K8sCluster") })
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = KubernetesClusterConfigDTO.class, name = "K8sCluster")
+    , @JsonSubTypes.Type(value = GitConfigDTO.class, name = "Git")
+  })
   ConnectorConfigDTO connectorConfig;
 }

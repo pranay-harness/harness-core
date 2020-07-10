@@ -7,6 +7,8 @@ import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.mongo.index.CdUniqueIndex;
+import io.harness.mongo.index.Field;
 import io.harness.persistence.PersistentEntity;
 import lombok.Data;
 import lombok.Singular;
@@ -16,7 +18,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -27,10 +28,10 @@ import javax.validation.constraints.Size;
 @Data
 @FieldNameConstants(innerTypeName = "ConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
-@Document("connectors")
-@TypeAlias("connector")
 // todo deepak: Add index after adding the queries
+@CdUniqueIndex(name = "unique_fullyQualifiedIdentifier", fields = { @Field("fullyQualifiedIdentifier") })
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Document("connectors")
 public abstract class Connector implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty @EntityIdentifier String identifier;
