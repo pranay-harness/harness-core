@@ -7,6 +7,7 @@ import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
@@ -24,6 +25,7 @@ import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
@@ -81,5 +83,7 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(InfraUseFromStage.Overrides.class, 8040);
     kryo.register(EnvironmentStepParameters.class, 8041);
     kryo.register(InfraStepParameters.class, 8042);
+    kryo.register(ManifestOverrideSets.class, 8043);
+    kryo.register(ArtifactOverrideSets.class, 8044);
   }
 }

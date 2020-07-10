@@ -3,14 +3,15 @@ package io.harness.cdng.service;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 
-import java.io.Serializable;
 import java.util.List;
 
-@Data
+@Value
 @Builder
-public class StageOverridesConfig implements Serializable {
-  private List<ManifestConfigWrapper> manifests;
-  private ArtifactListConfig artifacts;
+public class StageOverridesConfig {
+  List<ManifestConfigWrapper> manifests;
+  ArtifactListConfig artifacts;
+  List<String> useManifestOverrideSets;
+  List<String> useArtifactOverrideSets;
 }

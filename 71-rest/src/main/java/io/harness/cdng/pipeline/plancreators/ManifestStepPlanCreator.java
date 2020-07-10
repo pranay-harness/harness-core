@@ -10,6 +10,7 @@ import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.service.ServiceConfig;
+import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
@@ -37,9 +38,11 @@ public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreato
   }
 
   private PlanNode prepareManifestStepExecutionNode(ServiceConfig serviceConfig) {
-    List<ManifestConfigWrapper> overrideManifests = serviceConfig.getStageOverrides() == null
-        ? new LinkedList<>()
-        : serviceConfig.getStageOverrides().getManifests();
+    List<ManifestConfigWrapper> stageOverrideManifests = new LinkedList<>();
+    if (serviceConfig.getStageOverrides() != null) {
+      stageOverrideManifests = serviceConfig.getStageOverrides().getManifests();
+    }
+    List<ManifestConfigWrapper> manifestOverrideSets = getManifestOverrideSetsApplicable(serviceConfig);
     return PlanNode.builder()
         .uuid(generateUuid())
         .name(MANIFESTS)
@@ -47,11 +50,35 @@ public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreato
         .stepType(ManifestStep.STEP_TYPE)
         .stepParameters(ManifestStepParameters.builder()
                             .serviceSpecManifests(serviceConfig.getServiceSpec().getManifests())
-                            .stageOverrideManifests(overrideManifests)
+                            .stageOverrideManifests(stageOverrideManifests)
+                            .manifestOverrideSets(manifestOverrideSets)
                             .build())
         .facilitatorObtainment(
             FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.SYNC).build()).build())
         .build();
+  }
+
+  private List<ManifestConfigWrapper> getManifestOverrideSetsApplicable(ServiceConfig serviceConfig) {
+    List<ManifestConfigWrapper> manifestOverrideSets = new LinkedList<>();
+    if (serviceConfig.getStageOverrides() != null
+        && serviceConfig.getStageOverrides().getUseManifestOverrideSets() != null) {
+      serviceConfig.getStageOverrides()
+          .getUseManifestOverrideSets()
+          .stream()
+          .map(useManifestOverrideSet
+              -> serviceConfig.getServiceSpec()
+                     .getManifestOverrideSets()
+                     .stream()
+                     .filter(o -> o.getIdentifier().equals(useManifestOverrideSet))
+                     .findFirst())
+          .forEachOrdered(optionalManifestOverrideSets -> {
+            if (!optionalManifestOverrideSets.isPresent()) {
+              throw new InvalidRequestException("Manifest Override Set is not defined.");
+            }
+            manifestOverrideSets.addAll(optionalManifestOverrideSets.get().getManifests());
+          });
+    }
+    return manifestOverrideSets;
   }
 
   @Override

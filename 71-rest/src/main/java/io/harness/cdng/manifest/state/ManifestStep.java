@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -40,21 +41,11 @@ public class ManifestStep implements Step, SyncExecutable {
           Collectors.toMap(WithIdentifier::getIdentifier, ManifestConfigWrapper::getManifestAttributes, (a, b) -> b));
     }
 
-    // 2. Get Manifests belonging to Override
-    if (EmptyPredicate.isNotEmpty(parameters.getStageOverrideManifests())) {
-      for (ManifestConfigWrapper stageOverrideManifest : parameters.getStageOverrideManifests()) {
-        if (identifierToManifestMap.containsKey(stageOverrideManifest.getIdentifier())) {
-          identifierToManifestMap.put(stageOverrideManifest.getIdentifier(),
-              identifierToManifestMap.get(stageOverrideManifest.getIdentifier())
-                  .applyOverrides(stageOverrideManifest.getManifestAttributes()));
-        } else {
-          identifierToManifestMap.put(
-              stageOverrideManifest.getIdentifier(), stageOverrideManifest.getManifestAttributes());
-        }
-      }
-    }
+    // 2. Apply Override Sets
+    applyManifestOverlay(identifierToManifestMap, parameters.getManifestOverrideSets());
 
-    // 3. Get Manifests belonging to OverrideSets, Not done yet
+    // 3. Get Manifests belonging to Stage Overrides
+    applyManifestOverlay(identifierToManifestMap, parameters.getStageOverrideManifests());
 
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
@@ -65,5 +56,21 @@ public class ManifestStep implements Step, SyncExecutable {
                                       .build())
                          .build())
         .build();
+  }
+
+  private void applyManifestOverlay(
+      Map<String, ManifestAttributes> identifierToManifestMap, List<ManifestConfigWrapper> stageOverrideManifests) {
+    if (EmptyPredicate.isNotEmpty(stageOverrideManifests)) {
+      stageOverrideManifests.forEach(stageOverrideManifest -> {
+        if (identifierToManifestMap.containsKey(stageOverrideManifest.getIdentifier())) {
+          identifierToManifestMap.put(stageOverrideManifest.getIdentifier(),
+              identifierToManifestMap.get(stageOverrideManifest.getIdentifier())
+                  .applyOverrides(stageOverrideManifest.getManifestAttributes()));
+        } else {
+          identifierToManifestMap.put(
+              stageOverrideManifest.getIdentifier(), stageOverrideManifest.getManifestAttributes());
+        }
+      });
+    }
   }
 }

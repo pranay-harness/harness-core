@@ -102,6 +102,9 @@ public class DockerHubArtifactConfig implements ArtifactConfigWrapper {
       resultantConfig = resultantConfig.withImagePath(dockerHubArtifactConfig.getImagePath());
     }
     if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getTag())) {
+      resultantConfig = resultantConfig.withTag(dockerHubArtifactConfig.getTag());
+    }
+    if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getTagRegex())) {
       resultantConfig = resultantConfig.withTagRegex(dockerHubArtifactConfig.getTagRegex());
     }
     return resultantConfig;

@@ -12,5 +12,6 @@ import java.util.List;
 @Builder
 public class ServiceStepParameters implements StepParameters {
   ServiceConfig service;
+  ServiceConfig serviceOverrides;
   @Singular List<String> parallelNodeIds;
 }

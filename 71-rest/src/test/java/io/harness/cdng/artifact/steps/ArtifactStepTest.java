@@ -13,6 +13,7 @@ import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.DockerArtifactAttributes;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
@@ -20,6 +21,7 @@ import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttribut
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
+import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -129,5 +131,32 @@ public class ArtifactStepTest extends CategoryTest {
     responseDataMap.put("KEY", taskResponse);
     stepResponse = artifactStep.handleTaskResult(null, stepParameters, responseDataMap);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testApplyArtifactOverrides() {
+    DockerHubArtifactConfig dockerHubArtifactConfig = DockerHubArtifactConfig.builder()
+                                                          .artifactType(ArtifactUtils.PRIMARY_ARTIFACT)
+                                                          .dockerhubConnector("CONNECTOR")
+                                                          .imagePath("IMAGE")
+                                                          .tag("TAG1")
+                                                          .build();
+    DockerHubArtifactConfig dockerHubArtifactConfig2 =
+        DockerHubArtifactConfig.builder().imagePath("IMAGE2").tag("TAG2").build();
+
+    ArtifactStepParameters stepParameters = ArtifactStepParameters.builder()
+                                                .artifact(dockerHubArtifactConfig)
+                                                .artifactStageOverride(dockerHubArtifactConfig2)
+                                                .build();
+    ArtifactConfigWrapper finalArtifact = artifactStep.applyArtifactsOverlay(stepParameters);
+    assertThat(finalArtifact).isInstanceOf(DockerHubArtifactConfig.class);
+    DockerHubArtifactConfig artifact = (DockerHubArtifactConfig) finalArtifact;
+    assertThat(artifact.getArtifactType()).isEqualTo(ArtifactUtils.PRIMARY_ARTIFACT);
+    assertThat(artifact.getDockerhubConnector()).isEqualTo("CONNECTOR");
+    assertThat(artifact.getTag()).isEqualTo("TAG2");
+    assertThat(artifact.getImagePath()).isEqualTo("IMAGE2");
+    assertThat(artifact.getTagRegex()).isEqualTo(null);
   }
 }

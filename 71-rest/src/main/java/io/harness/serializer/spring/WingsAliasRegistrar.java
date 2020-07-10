@@ -2,8 +2,10 @@ package io.harness.serializer.spring;
 
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.environment.steps.EnvironmentStepParameters;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
@@ -22,6 +24,7 @@ import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.pipeline.CDPhase;
@@ -162,5 +165,8 @@ public class WingsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("infraUseFromStage", InfraUseFromStage.class);
     orchestrationElements.put("environmentStepParameters", EnvironmentStepParameters.class);
     orchestrationElements.put("infraStepParameters", InfraStepParameters.class);
+    orchestrationElements.put("manifestOverrideSets", ManifestOverrideSets.class);
+    orchestrationElements.put("artifactOverrideSets", ArtifactOverrideSets.class);
+    orchestrationElements.put("sidecarArtifact", SidecarArtifact.class);
   }
 }

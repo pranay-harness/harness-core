@@ -13,11 +13,13 @@ import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.delegate.exception.ArtifactServerException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
 import io.harness.state.Step;
@@ -33,6 +35,8 @@ import io.harness.tasks.Task;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.TaskType;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -47,9 +51,7 @@ public class ArtifactStep implements Step, TaskExecutable {
   public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     ArtifactStepParameters parameters = (ArtifactStepParameters) stepParameters;
     logger.info("Executing deployment stage with params [{}]", parameters);
-    ArtifactConfigWrapper finalArtifact = parameters.getArtifactStageOverride() != null
-        ? parameters.getArtifact().applyOverrides(parameters.getArtifactStageOverride())
-        : parameters.getArtifact();
+    ArtifactConfigWrapper finalArtifact = applyArtifactsOverlay(parameters);
     ArtifactSource artifactSource = getArtifactSource(finalArtifact, ambiance.getSetupAbstractions().get("accountId"));
 
     String waitId = generateUuid();
@@ -108,8 +110,31 @@ public class ArtifactStep implements Step, TaskExecutable {
 
   @VisibleForTesting
   StepOutcome getStepOutcome(ArtifactTaskResponse taskResponse, ArtifactStepParameters stepParameters) {
-    ArtifactOutcome artifact = taskResponse.getArtifactAttributes().getArtifactOutcome(stepParameters.getArtifact());
+    ArtifactOutcome artifact =
+        taskResponse.getArtifactAttributes().getArtifactOutcome(applyArtifactsOverlay(stepParameters));
     String outcomeKey = artifact.getArtifactType() + ":" + artifact.getIdentifier();
     return StepOutcome.builder().name(outcomeKey).outcome(artifact).build();
+  }
+
+  @VisibleForTesting
+  ArtifactConfigWrapper applyArtifactsOverlay(ArtifactStepParameters stepParameters) {
+    List<ArtifactConfigWrapper> artifactList = new LinkedList<>();
+    if (stepParameters.getArtifact() != null) {
+      artifactList.add(stepParameters.getArtifact());
+    }
+    if (stepParameters.getArtifactOverrideSet() != null) {
+      artifactList.add(stepParameters.getArtifactOverrideSet());
+    }
+    if (stepParameters.getArtifactStageOverride() != null) {
+      artifactList.add(stepParameters.getArtifactStageOverride());
+    }
+    if (EmptyPredicate.isEmpty(artifactList)) {
+      throw new InvalidArgumentsException("No Artifact details defined.");
+    }
+    ArtifactConfigWrapper resultantArtifact = artifactList.get(0);
+    for (ArtifactConfigWrapper artifact : artifactList) {
+      resultantArtifact = resultantArtifact.applyOverrides(artifact);
+    }
+    return resultantArtifact;
   }
 }

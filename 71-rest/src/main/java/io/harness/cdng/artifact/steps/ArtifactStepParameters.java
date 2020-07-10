@@ -11,5 +11,6 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class ArtifactStepParameters implements StepParameters {
   @NotNull ArtifactConfigWrapper artifact;
+  ArtifactConfigWrapper artifactOverrideSet;
   ArtifactConfigWrapper artifactStageOverride;
 }

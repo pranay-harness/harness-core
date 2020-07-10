@@ -84,9 +84,12 @@ public class ServiceStep implements Step, ChildrenExecutable {
       responseBuilder.failureInfo(
           FailureInfo.builder().errorMessage(String.join(",", errorMessages)).failureTypes(failureTypes).build());
     } else {
+      ServiceConfig serviceConfig = parameters.getServiceOverrides() != null
+          ? parameters.getService().applyOverrides(parameters.getServiceOverrides())
+          : parameters.getService();
       responseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
                                       .name(OutcomeExpressionConstants.SERVICE.getName())
-                                      .outcome(createServiceOutcome(parameters.getService(), responseNotifyDataList))
+                                      .outcome(createServiceOutcome(serviceConfig, responseNotifyDataList))
                                       .group(StepGroup.STAGE.name())
                                       .build());
     }
@@ -99,6 +102,7 @@ public class ServiceStep implements Step, ChildrenExecutable {
     ServiceOutcomeBuilder outcomeBuilder = ServiceOutcome.builder()
                                                .displayName(serviceConfig.getDisplayName())
                                                .identifier(serviceConfig.getIdentifier())
+                                               .description(serviceConfig.getDescription())
                                                .deploymentType(serviceConfig.getServiceSpec().getDeploymentType());
 
     // Fetch all outcomes of the children.
