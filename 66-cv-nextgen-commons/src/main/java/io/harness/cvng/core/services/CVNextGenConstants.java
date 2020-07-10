@@ -9,7 +9,7 @@ public interface CVNextGenConstants {
   String DELEGATE_DATA_COLLECTION = "delegate-data-collection";
   String DELEGATE_DATA_COLLECTION_TASK = "delegate-data-collection-task";
   String VERIFICATION_SERVICE_SECRET = "VERIFICATION_SERVICE_SECRET";
-  String CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX = CV_NEXTGEN_RESOURCE_PREFIX + "/service/";
+  String CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX = CV_NEXTGEN_RESOURCE_PREFIX + "/service";
   long CV_ANALYSIS_WINDOW_MINUTES = 5;
   String CV_DATA_COLLECTION_PATH = CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX + "/cv-data-collection-task";
   Duration DATA_COLLECTION_DELAY = Duration.ofMinutes(2);

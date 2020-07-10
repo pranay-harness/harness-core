@@ -29,6 +29,7 @@ import org.junit.experimental.categories.Category;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -174,12 +175,14 @@ public class HeatMapServiceImplTest extends CVNextGenBaseTest {
     // no analysis
     int startMin = 5;
     int endMin = 200;
-    SortedSet<HeatMapDTO> heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier, envIdentifier,
-        CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
+    Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier,
+        envIdentifier, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMin)));
 
-    assertThat(heatMap.size()).isEqualTo((endMin - startMin) / FIVE_MIN.getResolution().toMinutes() + 1);
-    Iterator<HeatMapDTO> heatMapIterator = heatMap.iterator();
+    assertThat(heatMap.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(heatMap.get(CVMonitoringCategory.PERFORMANCE).size())
+        .isEqualTo((endMin - startMin) / FIVE_MIN.getResolution().toMinutes() + 1);
+    Iterator<HeatMapDTO> heatMapIterator = heatMap.get(CVMonitoringCategory.PERFORMANCE).iterator();
     for (long i = startMin; i <= endMin; i += FIVE_MIN.getResolution().toMinutes()) {
       HeatMapDTO heatMapDTO = heatMapIterator.next();
       assertThat(heatMapDTO)
@@ -197,12 +200,13 @@ public class HeatMapServiceImplTest extends CVNextGenBaseTest {
           Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry);
     }
 
-    heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE,
+    heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier, envIdentifier,
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMin)));
 
-    assertThat(heatMap.size()).isEqualTo((endMin - startMin) / FIVE_MIN.getResolution().toMinutes() + 1);
-    heatMapIterator = heatMap.iterator();
+    assertThat(heatMap.get(CVMonitoringCategory.PERFORMANCE).size())
+        .isEqualTo((endMin - startMin) / FIVE_MIN.getResolution().toMinutes() + 1);
+    heatMapIterator = heatMap.get(CVMonitoringCategory.PERFORMANCE).iterator();
     for (long i = startMin; i <= endMin; i += FIVE_MIN.getResolution().toMinutes()) {
       HeatMapDTO heatMapDTO = heatMapIterator.next();
       if (i < riskStartBoundary || i >= riskStartBoundary + numOfRiskUnits * CV_ANALYSIS_WINDOW_MINUTES) {
@@ -229,12 +233,14 @@ public class HeatMapServiceImplTest extends CVNextGenBaseTest {
     // no analysis
     int startMin = 75;
     int endMin = 350;
-    SortedSet<HeatMapDTO> heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier, envIdentifier,
-        CVMonitoringCategory.PERFORMANCE, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
+    Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier,
+        envIdentifier, Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMin)));
 
-    assertThat(heatMap.size()).isEqualTo((endMin - startMin) / FIFTEEN_MINUTES.getResolution().toMinutes() + 1);
-    Iterator<HeatMapDTO> heatMapIterator = heatMap.iterator();
+    assertThat(heatMap.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(heatMap.get(CVMonitoringCategory.PERFORMANCE).size())
+        .isEqualTo((endMin - startMin) / FIFTEEN_MINUTES.getResolution().toMinutes() + 1);
+    Iterator<HeatMapDTO> heatMapIterator = heatMap.get(CVMonitoringCategory.PERFORMANCE).iterator();
     for (long i = startMin; i <= endMin; i += FIFTEEN_MINUTES.getResolution().toMinutes()) {
       HeatMapDTO heatMapDTO = heatMapIterator.next();
       assertThat(heatMapDTO)
@@ -252,12 +258,13 @@ public class HeatMapServiceImplTest extends CVNextGenBaseTest {
           Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minuteBoundry)), 0.01 * minuteBoundry);
     }
 
-    heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier, envIdentifier, CVMonitoringCategory.PERFORMANCE,
+    heatMap = heatMapService.getHeatMap(accountId, serviceIdentifier, envIdentifier,
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(startMin)),
         Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(endMin)));
 
-    assertThat(heatMap.size()).isEqualTo((endMin - startMin) / FIFTEEN_MINUTES.getResolution().toMinutes() + 1);
-    heatMapIterator = heatMap.iterator();
+    assertThat(heatMap.get(CVMonitoringCategory.PERFORMANCE).size())
+        .isEqualTo((endMin - startMin) / FIFTEEN_MINUTES.getResolution().toMinutes() + 1);
+    heatMapIterator = heatMap.get(CVMonitoringCategory.PERFORMANCE).iterator();
     for (long i = startMin; i <= endMin; i += FIFTEEN_MINUTES.getResolution().toMinutes()) {
       HeatMapDTO heatMapDTO = heatMapIterator.next();
       if (i < riskStartBoundary

@@ -45,6 +45,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
@@ -330,8 +331,14 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(AppDynamicsDataCollectionInfo.class);
     assertThat(taskIdFromApi).isEqualTo(taskId);
     Instant startTime = Instant.parse("2020-04-22T07:55:00Z");
-    assertThat(savedTask.getEndTime()).isEqualTo(Instant.parse("2020-04-22T10:00:00Z").minusMillis(1));
-    assertThat(savedTask.getStartTime()).isEqualTo(startTime);
+    assertThat(savedTask.getEndTime()).isEqualTo(getFiveMinBoundaryInstant(fakeNow).minus(1, ChronoUnit.MILLIS));
+    assertThat(savedTask.getStartTime()).isEqualTo(getFiveMinBoundaryInstant(fakeNow).minus(125, ChronoUnit.MINUTES));
+  }
+
+  private Instant getFiveMinBoundaryInstant(Instant instant) {
+    long minute = TimeUnit.MILLISECONDS.toMinutes(instant.toEpochMilli());
+    minute -= minute % 5;
+    return Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minute));
   }
 
   private AppDynamicsCVConfig getCVConfig() {

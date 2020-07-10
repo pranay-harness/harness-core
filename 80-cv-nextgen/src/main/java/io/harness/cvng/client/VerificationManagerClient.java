@@ -29,9 +29,9 @@ public interface VerificationManagerClient {
       @Query("featureName") String featureName, @Query("accountId") String accountId);
 
   @POST(CV_DATA_COLLECTION_PATH + "/create-task")
-
   Call<RestResponse<String>> createDataCollectionTask(@Query("accountId") String accountId,
       @Query("cvConfigId") String cvConfigId, @Query("connectorId") String connectorId);
+
   @GET(SPLUNK_RESOURCE_PATH + SPLUNK_SAVED_SEARCH_PATH)
   Call<RestResponse<List<SplunkSavedSearch>>> getSavedSearches(
       @Query("accountId") String accountId, @Query("connectorId") String connectorId);

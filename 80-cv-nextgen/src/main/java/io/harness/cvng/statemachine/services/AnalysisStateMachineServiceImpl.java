@@ -101,15 +101,27 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
             analysisStateMachine.getAnalysisEndTime());
         return;
       case TRANSITION:
+        logger.info("Analysis is currently in TRANSITION for {} and analysis range {} to {}. We will return.",
+            analysisStateMachine.getCvConfigId(), analysisStateMachine.getAnalysisStartTime(),
+            analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleTransition();
         break;
       case TIMEOUT:
+        logger.info("Analysis has TIMED OUT for {} and analysis range {} to {}. We will return.",
+            analysisStateMachine.getCvConfigId(), analysisStateMachine.getAnalysisStartTime(),
+            analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleTimeout();
         break;
       case FAILED:
+        logger.info("Analysis has FAILED for {} and analysis range {} to {}. We will return.",
+            analysisStateMachine.getCvConfigId(), analysisStateMachine.getAnalysisStartTime(),
+            analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleFailure();
         break;
       case RETRY:
+        logger.info("Analysis is going to be RETRIED for {} and analysis range {} to {}. We will return.",
+            analysisStateMachine.getCvConfigId(), analysisStateMachine.getAnalysisStartTime(),
+            analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleRetry();
         break;
       case SUCCESS:

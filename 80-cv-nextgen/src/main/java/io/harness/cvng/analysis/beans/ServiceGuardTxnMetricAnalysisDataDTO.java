@@ -1,7 +1,6 @@
 package io.harness.cvng.analysis.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import lombok.Builder;
@@ -18,7 +17,7 @@ public class ServiceGuardTxnMetricAnalysisDataDTO {
   private int risk;
   private boolean isKeyTransaction;
   private List<Double> shortTermHistory;
-  private List<TimeSeriesAnomalousPatterns> anomalousPatterns;
+  private List<TimeSeriesAnomalies> anomalousPatterns;
   private TimeSeriesCumulativeSums.MetricSum cumulativeSums;
   private TimeSeriesMetricType metricType;
 }

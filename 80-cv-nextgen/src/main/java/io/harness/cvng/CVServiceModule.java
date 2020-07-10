@@ -4,9 +4,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
-import io.harness.cvng.analysis.services.api.LearningEngineAnalysisService;
+import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
-import io.harness.cvng.analysis.services.impl.LearningEngineAnalysisServiceImpl;
+import io.harness.cvng.analysis.services.impl.LearningEngineTaskServiceImpl;
 import io.harness.cvng.analysis.services.impl.TimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.VerificationManagerService;
@@ -89,7 +89,7 @@ public class CVServiceModule extends AbstractModule {
       bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
       bind(AnalysisStateMachineService.class).to(AnalysisStateMachineServiceImpl.class);
       bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
-      bind(LearningEngineAnalysisService.class).to(LearningEngineAnalysisServiceImpl.class);
+      bind(LearningEngineTaskService.class).to(LearningEngineTaskServiceImpl.class);
       bind(DataCollectionTaskService.class).to(DataCollectionTaskServiceImpl.class);
       bind(VerificationManagerService.class).to(VerificationManagerServiceImpl.class);
       bind(Clock.class).toInstance(Clock.systemUTC());

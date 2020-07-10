@@ -55,12 +55,12 @@ public class HeatMapServiceImpl implements HeatMapService {
           .update(heatMapQuery,
               hPersistence.createUpdateOperations(HeatMap.class)
                   .set(HeatMapKeys.accountId, accountId)
-                  .push(HeatMapKeys.heatMapRisks,
-                      Lists.newArrayList(HeatMapRisk.builder()
-                                             .riskScore(riskScore)
-                                             .startTime(heatMapStartTime)
-                                             .endTime(heatMapEndTime)
-                                             .build())),
+                  .addToSet(HeatMapKeys.heatMapRisks,
+                      HeatMapRisk.builder()
+                          .riskScore(riskScore)
+                          .startTime(heatMapStartTime)
+                          .endTime(heatMapEndTime)
+                          .build()),
               options);
 
       DBCollectionUpdateOptions arrayFilterOptions = new DBCollectionUpdateOptions();
@@ -80,29 +80,33 @@ public class HeatMapServiceImpl implements HeatMapService {
   }
 
   @Override
-  public SortedSet<HeatMapDTO> getHeatMap(String accountId, String serviceIdentifier, String envIdentifier,
-      CVMonitoringCategory category, Instant startTime, Instant endTime) {
+  public Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> getHeatMap(
+      String accountId, String serviceIdentifier, String envIdentifier, Instant startTime, Instant endTime) {
+    Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> heatMaps = new HashMap<>();
     HeatMapResolution heatMapResolution = getHeatMapResolution(startTime, endTime);
-    Map<Instant, HeatMapDTO> heatMapsFromDB =
-        getHeatMapsFromDB(serviceIdentifier, envIdentifier, category, startTime, endTime, heatMapResolution);
-
-    SortedSet<HeatMapDTO> heatMapDTOS = new TreeSet<>();
     Instant startTimeBoundary = getBoundaryOfResolution(startTime, heatMapResolution.getResolution());
     Instant endTimeBoundary = getBoundaryOfResolution(endTime, heatMapResolution.getResolution());
 
-    for (long timeStampMs = startTimeBoundary.toEpochMilli(); timeStampMs <= endTimeBoundary.toEpochMilli();
-         timeStampMs += heatMapResolution.getResolution().toMillis()) {
-      if (heatMapsFromDB.containsKey(Instant.ofEpochMilli(timeStampMs))) {
-        heatMapDTOS.add(heatMapsFromDB.get(Instant.ofEpochMilli(timeStampMs)));
-        continue;
-      }
+    for (CVMonitoringCategory category : CVMonitoringCategory.values()) {
+      Map<Instant, HeatMapDTO> heatMapsFromDB =
+          getHeatMapsFromDB(serviceIdentifier, envIdentifier, category, startTime, endTime, heatMapResolution);
 
-      heatMapDTOS.add(HeatMapDTO.builder()
-                          .startTime(timeStampMs)
-                          .endTime(timeStampMs + heatMapResolution.getResolution().toMillis() - 1)
-                          .build());
+      SortedSet<HeatMapDTO> heatMapDTOS = new TreeSet<>();
+      for (long timeStampMs = startTimeBoundary.toEpochMilli(); timeStampMs <= endTimeBoundary.toEpochMilli();
+           timeStampMs += heatMapResolution.getResolution().toMillis()) {
+        if (heatMapsFromDB.containsKey(Instant.ofEpochMilli(timeStampMs))) {
+          heatMapDTOS.add(heatMapsFromDB.get(Instant.ofEpochMilli(timeStampMs)));
+          continue;
+        }
+
+        heatMapDTOS.add(HeatMapDTO.builder()
+                            .startTime(timeStampMs)
+                            .endTime(timeStampMs + heatMapResolution.getResolution().toMillis() - 1)
+                            .build());
+      }
+      heatMaps.put(category, heatMapDTOS);
     }
-    return heatMapDTOS;
+    return heatMaps;
   }
 
   private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String serviceIdentifier, String envIdentifier,
