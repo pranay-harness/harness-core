@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/wings-software/portal/commons/go/lib/awsutils"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/jfrogutils"
 	"github.com/wings-software/portal/commons/go/lib/kaniko"
@@ -17,15 +18,20 @@ import (
 )
 
 const (
-	jfrogDstPattern     = `(.*?)\/artifactory\/(.+)`
-	jfrogRTFormat       = `/artifactory/`
-	jfrogPathEnv        = "JFROG_PATH" // JFROG CLI path
-	userNameEnvFormat   = "USERNAME_"
-	passwordEnvFormat   = "PASSWORD_"
-	accessKeyEnvFormat  = "ACCESS_KEY_"
-	secretKeyEnvFormat  = "SECRET_KEY_"
-	secretPathEnvFormat = "SECRET_PATH_"
-	endpointEnvFormat   = "ENDPOINT_"
+	jfrogDstPattern         = `(.*?)\/artifactory\/(.+)`
+	jfrogDstPatternMatchLen = 3
+	jfrogRTFormat           = `/artifactory/`
+	jfrogPathEnv            = "JFROG_PATH" // JFROG CLI path
+	s3DstPattern            = `s3:\/\/(.*?)\/(.+)`
+	s3DstPatternMatchLen    = 3
+	defaultS3Token          = ""
+	enableTLSV2             = true
+	userNameEnvFormat       = "USERNAME_"
+	passwordEnvFormat       = "PASSWORD_"
+	accessKeyEnvFormat      = "ACCESS_KEY_"
+	secretKeyEnvFormat      = "SECRET_KEY_"
+	secretPathEnvFormat     = "SECRET_PATH_"
+	endpointEnvFormat       = "ENDPOINT_"
 )
 
 var (
@@ -54,8 +60,7 @@ func (p *publishArtifacts) Publish(ctx context.Context, in *pb.PublishArtifactsR
 	// and error out if any argument is invalid or we can do preliminary validation to ensure that
 	// the request is mostly correct and then error out if an individual publish fails. We are going with
 	// the second approach here.
-
-	err := p.validate(in)
+	err := validatePublishRequest(in)
 	if err != nil {
 		logWarning(p.log, "invalid artifact upload arguments", in.String(), start, err)
 		return err
@@ -63,14 +68,20 @@ func (p *publishArtifacts) Publish(ctx context.Context, in *pb.PublishArtifactsR
 
 	// Upload files
 	for _, file := range in.GetFiles() {
-		if file.GetDestination().GetLocationType() != pb.LocationType_JFROG {
+		switch file.GetDestination().GetLocationType() {
+		case pb.LocationType_JFROG:
+			if err := p.publishToJfrog(ctx, file.GetFilePattern(), file.GetDestination()); err != nil {
+				logWarning(p.log, "failed to publish to jfrog", file.String(), start, err)
+				return err
+			}
+		case pb.LocationType_S3:
+			if err := p.publishToS3(ctx, file.GetFilePattern(), file.GetDestination()); err != nil {
+				logWarning(p.log, "failed to publish to s3", file.String(), start, err)
+				return err
+			}
+		default:
 			logWarning(p.log, "unsupported artifact upload", file.String(), start, err)
 			return fmt.Errorf("unsupported artifact upload")
-		}
-
-		if err := p.publishToJfrog(ctx, file.GetFilePattern(), file.GetDestination()); err != nil {
-			logWarning(p.log, "failed to publish to jfrog", file.String(), start, err)
-			return err
 		}
 	}
 
@@ -105,33 +116,11 @@ func (p *publishArtifacts) Publish(ctx context.Context, in *pb.PublishArtifactsR
 	return nil
 }
 
-//Validates the publish artifact request
-func (p *publishArtifacts) validate(in *pb.PublishArtifactsRequest) error {
-	if in.GetTaskId().GetId() == "" {
-		return errors.New("task id is not set")
-	}
-
-	for _, file := range in.GetFiles() {
-		err := p.validateFile(file)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, image := range in.GetImages() {
-		err := p.validateImage(image)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (p *publishArtifacts) buildPublishToDockerHub(dockerFilePath string, context string,
 	destination *pb.Destination, fs filesystem.FileSystem) error {
 	st := time.Now()
 
-	destinationUrl := destination.GetDestinationUrl()
+	destinationURL := destination.GetDestinationUrl()
 	connectorID := destination.GetConnector().GetId()
 
 	usernameEnv := fmt.Sprintf("%s%s", userNameEnvFormat, connectorID)
@@ -155,7 +144,7 @@ func (p *publishArtifacts) buildPublishToDockerHub(dockerFilePath string, contex
 		return err
 	}
 
-	if err = c.Publish(dockerFilePath, context, destinationUrl); err != nil {
+	if err = c.Publish(dockerFilePath, context, destinationURL); err != nil {
 		p.log.Warnw("Failed to publish image", "docker_file_path", dockerFilePath,
 			"context", context, "destination", destination.String(),
 			"time_elapsed_ms", utils.TimeSince(st), zap.Error(err))
@@ -171,7 +160,7 @@ func (p *publishArtifacts) buildPublishToGCR(dockerFilePath, context string,
 	destination *pb.Destination, fs filesystem.FileSystem) error {
 	st := time.Now()
 
-	destinationUrl := destination.GetDestinationUrl()
+	destinationURL := destination.GetDestinationUrl()
 	connectorID := destination.GetConnector().GetId()
 
 	gcrSecretPathEnv := fmt.Sprintf("%s%s", secretPathEnvFormat, connectorID)
@@ -184,7 +173,7 @@ func (p *publishArtifacts) buildPublishToGCR(dockerFilePath, context string,
 		return err
 	}
 
-	if err = c.Publish(dockerFilePath, context, destinationUrl); err != nil {
+	if err = c.Publish(dockerFilePath, context, destinationURL); err != nil {
 		p.log.Warnw("Failed to publish image", "docker_file_path", dockerFilePath,
 			"context", context, "destination", destination.String(),
 			"time_elapsed_ms", utils.TimeSince(st), zap.Error(err))
@@ -200,7 +189,7 @@ func (p *publishArtifacts) buildPublishToECR(dockerFilePath, context string,
 	destination *pb.Destination, fs filesystem.FileSystem) error {
 	st := time.Now()
 
-	destinationUrl := destination.GetDestinationUrl()
+	destinationURL := destination.GetDestinationUrl()
 	connectorID := destination.GetConnector().GetId()
 
 	accessKeyEnv := fmt.Sprintf("%s%s", accessKeyEnvFormat, connectorID)
@@ -213,13 +202,13 @@ func (p *publishArtifacts) buildPublishToECR(dockerFilePath, context string,
 	if !ok2 {
 		return errors.New(fmt.Sprintf("No environment variable was set for %s", secretKeyEnv))
 	}
-	c, err := newRegistryClient(p.log, fs, kaniko.WithEcrClient(accessKey, secretKey))
 
+	c, err := newRegistryClient(p.log, fs, kaniko.WithEcrClient(accessKey, secretKey))
 	if err != nil {
 		return err
 	}
 
-	if err = c.Publish(dockerFilePath, context, destinationUrl); err != nil {
+	if err = c.Publish(dockerFilePath, context, destinationURL); err != nil {
 		p.log.Warnw("Failed to publish image", "docker_file_path", dockerFilePath,
 			"context", context, "destination", destination.String(),
 			"time_elapsed_ms", utils.TimeSince(st), zap.Error(err))
@@ -259,8 +248,8 @@ func (p *publishArtifacts) publishToJfrog(ctx context.Context, filePattern strin
 	}
 
 	matches := r.FindStringSubmatch(url)
-	if matches == nil || len(matches) != 3 {
-		return fmt.Errorf(fmt.Sprintf("invalid destination url, %s", destination.GetDestinationUrl()))
+	if matches == nil || len(matches) != jfrogDstPatternMatchLen {
+		return fmt.Errorf(fmt.Sprintf("invalid destination url, %s", url))
 	}
 
 	rtURL := fmt.Sprintf("%s%s", matches[1], jfrogRTFormat)
@@ -273,66 +262,46 @@ func (p *publishArtifacts) publishToJfrog(ctx context.Context, filePattern strin
 	return c.Upload(ctx, filePattern, repoPath, rtURL)
 }
 
-// Validate a single file.
-func (p *publishArtifacts) validateFile(file *pb.UploadFile) error {
-	if file.GetFilePattern() == "" {
-		return errors.New("file pattern is not set")
-	}
-	destination := file.GetDestination()
-	// Validate auth type for the specified file
-	if destination.GetLocationType() == pb.LocationType_JFROG {
-		if destination.GetConnector().GetAuth() != pb.AuthType_BASIC_AUTH {
-			return errors.New(fmt.Sprintf("Unsupported authorization method for JFROG: %s", file.String()))
-		}
-	}
-	if err := p.validateDestination(destination); err != nil {
-		return err
-	}
-	return nil
-}
+//Publishes the artifacts to S3 artifactory.
+func (p *publishArtifacts) publishToS3(ctx context.Context, filePattern string, destination *pb.Destination) error {
+	connector := destination.GetConnector()
+	connectorID := connector.GetId()
+	url := destination.GetDestinationUrl()
+	region := destination.GetRegion()
 
-// Validate a single image. Path to the dockerfile and the context should be set.
-func (p *publishArtifacts) validateImage(image *pb.BuildPublishImage) error {
-	if image.GetDockerFile() == "" {
-		return errors.New("Docker file path is not set")
+	accessKeyEnv := fmt.Sprintf("%s%s", accessKeyEnvFormat, connectorID)
+	accessKey, ok := os.LookupEnv(accessKeyEnv)
+	if !ok {
+		return errors.New(fmt.Sprintf("access key not set for environment variable %s", accessKeyEnv))
 	}
-	if image.GetContext() == "" {
-		return errors.New("Docker file context is not set")
-	}
-	destination := image.GetDestination()
-	// Validate auth type for the specified registry
-	if destination.GetLocationType() == pb.LocationType_GCR {
-		if destination.GetConnector().GetAuth() != pb.AuthType_SECRET_FILE {
-			return errors.New(fmt.Sprintf("Unsupported authorization method for GCR: %s", image.String()))
-		}
-	} else if destination.GetLocationType() == pb.LocationType_ECR {
-		if destination.GetConnector().GetAuth() != pb.AuthType_ACCESS_KEY {
-			return errors.New(fmt.Sprintf("Unsupported authorization method for ECR: %s", image.String()))
-		}
-	} else if destination.GetLocationType() == pb.LocationType_DOCKERHUB {
-		if destination.GetConnector().GetAuth() != pb.AuthType_BASIC_AUTH {
-			return errors.New(fmt.Sprintf("Unsupported authorization method for DockerHub: %s", image.String()))
-		}
-	}
-	if err := p.validateDestination(destination); err != nil {
-		return err
-	}
-	return nil
-}
 
-// Validate the destination. The destination URL should be set and the connector
-// should be valid.
-func (p *publishArtifacts) validateDestination(in *pb.Destination) error {
-	if in.GetDestinationUrl() == "" {
-		return fmt.Errorf("artifact destination url is not set")
+	secretKeyEnv := fmt.Sprintf("%s%s", secretKeyEnvFormat, connectorID)
+	secretKey, ok := os.LookupEnv(secretKeyEnv)
+	if !ok {
+		return errors.New(fmt.Sprintf("secret key not set for environment variable %s", secretKey))
 	}
-	if in.GetConnector().GetId() == "" {
-		return fmt.Errorf("connector ID is not set")
+
+	r, err := regexp.Compile(s3DstPattern)
+	if err != nil {
+		return errors.New(fmt.Sprintf("invalid regex pattern %s", s3DstPattern))
 	}
-	if in.GetLocationType() == pb.LocationType_UNKNOWN {
-		return errors.New(fmt.Sprintf("Unsupported location type"))
+	matches := r.FindStringSubmatch(url)
+	if matches == nil || len(matches) != s3DstPatternMatchLen {
+		return errors.New(fmt.Sprintf("invalid destination url, %s", url))
 	}
-	return nil
+
+	bucket := matches[1]
+	key := matches[2]
+	session, err := awsutils.NewS3Session(accessKey, secretKey, defaultS3Token, region, enableTLSV2)
+	if err != nil {
+		return errors.Wrap(err, "failed to create s3 session")
+	}
+
+	fs := filesystem.NewOSFileSystem(p.log)
+	client := awsutils.NewS3UploadClient(session)
+	uploader := awsutils.NewS3Uploader(bucket, client, fs, p.log)
+	_, _, err = uploader.UploadFileWithContext(ctx, key, filePattern)
+	return err
 }
 
 func logWarning(log *zap.SugaredLogger, warnMsg, args string, startTime time.Time, err error) {

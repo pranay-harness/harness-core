@@ -90,7 +90,7 @@ func TestOsCmdContext_Output(t *testing.T) {
 
 func TestOsCmdContextWithSleep_NoErr(t *testing.T) {
 	c := osCommandContextGraceful
-	cmd := c.CmdContextWithSleep(context.Background(), 5,"pwd").WithDir("/tmp").WithStdout(nil).WithStderr(nil).WithCombinedOutput(nil).(*osCmdContext)
+	cmd := c.CmdContextWithSleep(context.Background(), 5, "pwd").WithDir("/tmp").WithStdout(nil).WithStderr(nil).WithCombinedOutput(nil).(*osCmdContext)
 	err := cmd.Run()
 	assert.NoError(t, err, "should not be error to run command with a working dir")
 }

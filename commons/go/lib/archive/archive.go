@@ -95,7 +95,7 @@ func (a *archiver) Archive(srcFilePaths []string, dstFilePath string) error {
 // srcFilePath can be a file/directory or even a regex consisting of files and directories.
 func (a *archiver) addSrcPathToArchive(tw *tar.Writer, srcFilePath string, pathsPresentInArchive map[string]bool) error {
 	// Resolve ~ in file path
-	path, err := expand(srcFilePath)
+	path, err := filesystem.ExpandTilde(srcFilePath)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to expand %s", srcFilePath))
 	}
@@ -273,28 +273,4 @@ func (a *archiver) unarchiveReader(r io.ReadCloser, dstPath string) error {
 				fmt.Sprintf("unknown file type while un-archiving: %v in %s", header.Typeflag, header.Name))
 		}
 	}
-}
-
-// expand method expands the given file path to include the home directory
-// if the path is prefixed with `~`. If it isn't prefixed with `~`, the path is
-// returned as-is.
-func expand(path string) (string, error) {
-	if len(path) == 0 {
-		return path, nil
-	}
-
-	if path[0] != '~' {
-		return path, nil
-	}
-
-	if len(path) > 1 && path[1] != '/' && path[1] != '\\' {
-		return "", errors.New("cannot expand user-specific home dir")
-	}
-
-	dir, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.Wrap(err, "failed to fetch home directory")
-	}
-
-	return filepath.Join(dir, path[1:]), nil
 }

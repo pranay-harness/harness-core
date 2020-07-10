@@ -43,4 +43,15 @@ public interface DestinationOrBuilder extends
    * @return The locationType.
    */
   io.harness.product.ci.addon.proto.LocationType getLocationType();
+
+  /**
+   * <code>string region = 4[json_name = "region"];</code>
+   * @return The region.
+   */
+  java.lang.String getRegion();
+  /**
+   * <code>string region = 4[json_name = "region"];</code>
+   * @return The bytes for region.
+   */
+  com.google.protobuf.ByteString getRegionBytes();
 }

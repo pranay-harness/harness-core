@@ -2,10 +2,14 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
-    srcs = ["publish_artifacts.go"],
+    srcs = [
+        "publish_artifacts.go",
+        "validate_publish_artifacts.go",
+    ],
     importpath = "github.com/wings-software/portal/product/ci/addon/tasks",
     visibility = ["//visibility:public"],
     deps = [
+        "//commons/go/lib/awsutils:go_default_library",
         "//commons/go/lib/filesystem:go_default_library",
         "//commons/go/lib/jfrogutils:go_default_library",
         "//commons/go/lib/kaniko:go_default_library",

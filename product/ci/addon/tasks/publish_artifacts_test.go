@@ -17,10 +17,6 @@ import (
 )
 
 func Test_validatePublishArtifactRequest(t *testing.T) {
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	p := &publishArtifacts{
-		log: log.Sugar(),
-	}
 	taskID := "test-id"
 	filePattern := "/a/b/c"
 	destinationURL := "file://a/b/c"
@@ -158,11 +154,12 @@ func Test_validatePublishArtifactRequest(t *testing.T) {
 			expectedErr: true,
 		},
 		{
-			name: "jfrog with different auth",
+			name: "jfrog with invalid auth type",
 			input: &pb.PublishArtifactsRequest{
 				TaskId: &pb.TaskId{Id: taskID},
 				Files: []*pb.UploadFile{
-					{FilePattern: filePattern,
+					{
+						FilePattern: filePattern,
 						Destination: &pb.Destination{
 							DestinationUrl: destinationURL,
 							Connector: &pb.Connector{
@@ -176,7 +173,45 @@ func Test_validatePublishArtifactRequest(t *testing.T) {
 			expectedErr: true,
 		},
 		{
-			name: "gcr with different auth",
+			name: "s3 with invalid auth type",
+			input: &pb.PublishArtifactsRequest{
+				TaskId: &pb.TaskId{Id: taskID},
+				Files: []*pb.UploadFile{
+					{
+						FilePattern: filePattern,
+						Destination: &pb.Destination{
+							DestinationUrl: destinationURL,
+							Connector: &pb.Connector{
+								Id:   connectorID,
+								Auth: pb.AuthType_SECRET_FILE,
+							},
+							LocationType: pb.LocationType_S3},
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			name: "s3 with unset region",
+			input: &pb.PublishArtifactsRequest{
+				TaskId: &pb.TaskId{Id: taskID},
+				Files: []*pb.UploadFile{
+					{
+						FilePattern: filePattern,
+						Destination: &pb.Destination{
+							DestinationUrl: destinationURL,
+							Connector: &pb.Connector{
+								Id:   connectorID,
+								Auth: pb.AuthType_ACCESS_KEY,
+							},
+							LocationType: pb.LocationType_S3},
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			name: "gcr with invalid auth type",
 			input: &pb.PublishArtifactsRequest{
 				TaskId: &pb.TaskId{Id: taskID},
 				Images: []*pb.BuildPublishImage{
@@ -195,7 +230,7 @@ func Test_validatePublishArtifactRequest(t *testing.T) {
 			expectedErr: true,
 		},
 		{
-			name: "ecr with different auth",
+			name: "ecr with invalid auth type",
 			input: &pb.PublishArtifactsRequest{
 				TaskId: &pb.TaskId{Id: taskID},
 				Images: []*pb.BuildPublishImage{
@@ -214,7 +249,7 @@ func Test_validatePublishArtifactRequest(t *testing.T) {
 			expectedErr: true,
 		},
 		{
-			name: "dockerhub with different auth",
+			name: "dockerhub with invalid auth type",
 			input: &pb.PublishArtifactsRequest{
 				TaskId: &pb.TaskId{Id: taskID},
 				Images: []*pb.BuildPublishImage{
@@ -234,7 +269,7 @@ func Test_validatePublishArtifactRequest(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		got := p.validate(tc.input)
+		got := validatePublishRequest(tc.input)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
@@ -301,7 +336,7 @@ func Test_publishToJfrog_WithError(t *testing.T) {
 			},
 		},
 		{
-			name: "file pattern is not correct",
+			name: "destination URL is not correct",
 			inputDst: &pb.Destination{
 				Connector: &pb.Connector{
 					Id:   connectorID,
@@ -343,6 +378,112 @@ func Test_publishToJfrog_WithError(t *testing.T) {
 			}
 		}
 		got := p.publishToJfrog(ctx, tc.inputFilePattern, tc.inputDst)
+		if tc.expectedErr == (got == nil) {
+			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
+		}
+		if tc.envVars != nil {
+			for k := range tc.envVars {
+				if err := os.Unsetenv(k); err != nil {
+					t.Fatalf("%s: failed to unset environment variable: %s", tc.name, k)
+				}
+			}
+		}
+	}
+}
+
+func Test_publishToS3_WithError(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	p := &publishArtifacts{
+		log: log.Sugar(),
+	}
+
+	filePattern := "/a/b/c"
+	destinationURL := "s3://bucket/key"
+	incorrectDstURL := "s3/bucket/key"
+	connectorID := "s3Connector"
+	accessKey := "test"
+	secretKey := "test123"
+	region := "us-east-1"
+
+	tests := []struct {
+		name             string
+		inputDst         *pb.Destination
+		inputFilePattern string
+		expectedErr      bool
+		envVars          map[string]string
+	}{
+		{
+			name: "access key environment var is not set",
+			inputDst: &pb.Destination{
+				Connector: &pb.Connector{
+					Id:   connectorID,
+					Auth: pb.AuthType_ACCESS_KEY,
+				},
+				Region: region,
+			},
+			expectedErr: true,
+		},
+		{
+			name: "secret environment var is not set",
+			inputDst: &pb.Destination{
+				Connector: &pb.Connector{
+					Id:   connectorID,
+					Auth: pb.AuthType_ACCESS_KEY,
+				},
+				Region: region,
+			},
+			expectedErr: true,
+			envVars: map[string]string{
+				"ACCESS_KEY_" + connectorID: accessKey,
+			},
+		},
+		{
+			name: "destination URL is not correct",
+			inputDst: &pb.Destination{
+				Connector: &pb.Connector{
+					Id:   connectorID,
+					Auth: pb.AuthType_BASIC_AUTH,
+				},
+				Region:         region,
+				DestinationUrl: incorrectDstURL,
+			},
+			inputFilePattern: filePattern,
+			expectedErr:      true,
+			envVars: map[string]string{
+				"ACCESS_KEY_" + connectorID: accessKey,
+				"SECRET_KEY_" + connectorID: secretKey,
+			},
+		},
+		{
+			name: "file pattern is not correct",
+			inputDst: &pb.Destination{
+				Connector: &pb.Connector{
+					Id:   connectorID,
+					Auth: pb.AuthType_BASIC_AUTH,
+				},
+				Region:         region,
+				DestinationUrl: destinationURL,
+			},
+			inputFilePattern: filePattern,
+			expectedErr:      true,
+			envVars: map[string]string{
+				"ACCESS_KEY_" + connectorID: accessKey,
+				"SECRET_KEY_" + connectorID: secretKey,
+			},
+		},
+	}
+	for _, tc := range tests {
+		if tc.envVars != nil {
+			for k, v := range tc.envVars {
+				if err := os.Setenv(k, v); err != nil {
+					t.Fatalf("%s: failed to set environment variable: %s, %s", tc.name, k, v)
+				}
+			}
+		}
+		got := p.publishToS3(ctx, tc.inputFilePattern, tc.inputDst)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
@@ -959,6 +1100,7 @@ func Test_Publish(t *testing.T) {
 	filePattern := "/a/b/c"
 	destinationURL := "https://harness.jfrog.io/artifactory/pcf"
 	connectorID := "jfrogConnector"
+	s3Region := "us-east-1"
 
 	tests := []struct {
 		name        string
@@ -1017,6 +1159,27 @@ func Test_Publish(t *testing.T) {
 								Id: connectorID,
 							},
 							LocationType: pb.LocationType_JFROG,
+						},
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			name: "failed to publish to S3",
+			input: &pb.PublishArtifactsRequest{
+				TaskId: &pb.TaskId{Id: taskID},
+				Files: []*pb.UploadFile{
+					{
+						FilePattern: filePattern,
+						Destination: &pb.Destination{
+							DestinationUrl: destinationURL,
+							Connector: &pb.Connector{
+								Id:   connectorID,
+								Auth: pb.AuthType_ACCESS_KEY,
+							},
+							LocationType: pb.LocationType_S3,
+							Region:       s3Region,
 						},
 					},
 				},

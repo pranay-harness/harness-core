@@ -19,7 +19,6 @@ const defSleep = 5
 type CmdContextFactory interface {
 	CmdContext(ctx context.Context, name string, args ...string) Command
 	CmdContextWithSleep(ctx context.Context, sleep time.Duration, name string, args ...string) Command
-
 }
 
 type osCmdContext struct {
@@ -35,7 +34,7 @@ type CmdContextFactoryFunc func(ctx context.Context, sleep time.Duration, name s
 
 //CmdContext implements CmdContextFactory, calling the underlying function
 func (cff CmdContextFactoryFunc) CmdContext(ctx context.Context, name string, args ...string) Command {
-	return cff(ctx, defSleep * time.Second, name, args...)
+	return cff(ctx, defSleep*time.Second, name, args...)
 }
 
 //CmdContext implements CmdContextFactory, calling the underlying function. It uses the provided sleep duration
@@ -58,9 +57,9 @@ var osCommandContextGraceful = OsCommandContextGracefulWithLog(zap.NewNop().Suga
 func OsCommandContextGracefulWithLog(log *zap.SugaredLogger) CmdContextFactory {
 	return CmdContextFactoryFunc(func(ctx context.Context, sleep time.Duration, name string, args ...string) Command {
 		return &osCmdContext{
-			ctx: ctx,
-			log: log,
-			Cmd: exec.Command(name, args...),
+			ctx:   ctx,
+			log:   log,
+			Cmd:   exec.Command(name, args...),
 			sleep: sleep,
 		}
 	})
