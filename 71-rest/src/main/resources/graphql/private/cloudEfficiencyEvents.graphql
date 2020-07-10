@@ -44,6 +44,7 @@ input EventsFilter {
   taskId: IdFilter
   namespace: IdFilter
   workloadName: IdFilter
+  workloadType: IdFilter
   startTime: TimeFilter
   endTime: TimeFilter
 }

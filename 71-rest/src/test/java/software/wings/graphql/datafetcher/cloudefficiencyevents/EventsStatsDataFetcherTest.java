@@ -123,13 +123,15 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void testFetchMethodInEventsDataFetcherTimeFilter() {
+  public void testFetchMethodInEventsDataFetcherFilters() {
     String[] clusterValues = new String[] {CLUSTER1_ID};
+    String[] workloadTypes = new String[] {WORKLOAD_TYPE_ACCOUNT1};
 
     List<QLEventsDataFilter> filters = new ArrayList<>();
     filters.add(makeClusterFilter(clusterValues));
     filters.add(makeTimeFilter(0L));
     filters.add(makeEndTimeFilter(currentTime + 3600000 * 30));
+    filters.add(makeWorkloadTypeFilter(workloadTypes));
     List<QLEventsSortCriteria> sortCriteria = Arrays.asList(makeAscByTimeSortingCriteria());
 
     QLEventData data = (QLEventData) eventsStatsDataFetcher.fetch(
@@ -160,6 +162,11 @@ public class EventsStatsDataFetcherTest extends AbstractDataFetcherTest {
   private QLEventsDataFilter makeClusterFilter(String[] values) {
     QLIdFilter clusterFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
     return QLEventsDataFilter.builder().cluster(clusterFilter).build();
+  }
+
+  private QLEventsDataFilter makeWorkloadTypeFilter(String[] values) {
+    QLIdFilter workloadTypeFilter = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(values).build();
+    return QLEventsDataFilter.builder().cluster(workloadTypeFilter).build();
   }
 
   private void mockResultSet() throws SQLException {

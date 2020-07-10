@@ -23,6 +23,7 @@ public class QLEventsDataFilter {
   private QLIdFilter taskId;
   private QLIdFilter namespace;
   private QLIdFilter workloadName;
+  private QLIdFilter workloadType;
   private QLTimeFilter startTime;
   private QLTimeFilter endTime;
 
@@ -58,6 +59,9 @@ public class QLEventsDataFilter {
     if (filter.getWorkloadName() != null) {
       filterTypes.add(QLEventsDataFilterType.WorkloadName);
     }
+    if (filter.getWorkloadType() != null) {
+      filterTypes.add(QLEventsDataFilterType.WorkloadType);
+    }
     return filterTypes;
   }
 
@@ -83,6 +87,8 @@ public class QLEventsDataFilter {
         return filter.getNamespace();
       case WorkloadName:
         return filter.getWorkloadName();
+      case WorkloadType:
+        return filter.getWorkloadType();
       default:
         throw new InvalidRequestException("Unsupported type " + type);
     }

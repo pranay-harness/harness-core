@@ -201,6 +201,8 @@ public class EventsDataQueryBuilder {
         return schema.getTaskId();
       case WorkloadName:
         return schema.getWorkloadName();
+      case WorkloadType:
+        return schema.getWorkloadType();
       case Namespace:
         return schema.getNamespace();
       default:
