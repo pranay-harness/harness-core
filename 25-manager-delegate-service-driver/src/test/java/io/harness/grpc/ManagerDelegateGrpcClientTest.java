@@ -96,7 +96,7 @@ public class ManagerDelegateGrpcClientTest extends CategoryTest {
   public void testSendTask() {
     SendTaskRequest sendTaskRequest =
         SendTaskRequest.newBuilder().setAccountId(AccountId.newBuilder().setId(ACCOUNT_ID).build()).build();
-    SendTaskResponse taskResponse = managerDelegateGrpcClient.sendTask(sendTaskRequest);
+    SendTaskResponse taskResponse = managerDelegateGrpcClient.sendTask(sendTaskRequest, 5);
     assertThat(taskResponse).isNotNull();
     assertThat(taskResponse).isEqualTo(sendTaskResponse);
   }

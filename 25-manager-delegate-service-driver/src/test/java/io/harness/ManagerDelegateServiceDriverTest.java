@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.delegatesTo;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -120,7 +121,7 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
 
     SendTaskResponse sendTaskResponse =
         SendTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
-    when(managerDelegateGrpcClient.sendTask(any(SendTaskRequest.class))).thenReturn(sendTaskResponse);
+    when(managerDelegateGrpcClient.sendTask(any(SendTaskRequest.class), anyLong())).thenReturn(sendTaskResponse);
     SendTaskResponse taskResponse = managerDelegateServiceDriver.sendTask(ACCOUNT_ID, setupAbstractions, taskData);
     assertThat(taskResponse).isNotNull();
     assertThat(taskResponse).isEqualTo(sendTaskResponse);

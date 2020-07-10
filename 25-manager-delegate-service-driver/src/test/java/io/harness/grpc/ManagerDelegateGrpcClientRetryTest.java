@@ -101,7 +101,7 @@ public class ManagerDelegateGrpcClientRetryTest {
     int failureCount = 2;
     IntStream.range(0, failureCount).forEach(i -> {
       try {
-        managerDelegateGrpcClient.sendTask(sendTaskRequest);
+        managerDelegateGrpcClient.sendTask(sendTaskRequest, 5);
       } catch (Exception ex) {
         logger.debug("Exception occurred when making grpc call");
       }
@@ -120,7 +120,7 @@ public class ManagerDelegateGrpcClientRetryTest {
     int failureCount = 43;
     IntStream.range(0, failureCount).forEach(i -> {
       try {
-        managerDelegateGrpcClient.sendTask(sendTaskRequest);
+        managerDelegateGrpcClient.sendTask(sendTaskRequest, 5);
       } catch (Exception ex) {
         logger.debug("Exception occurred when making grpc call");
       }
