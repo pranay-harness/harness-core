@@ -77,6 +77,9 @@ import static software.wings.sm.StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_SETUP;
+import static software.wings.sm.StepType.K8S_TRAFFIC_SPLIT;
+import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT;
+import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
 import static software.wings.sm.states.provision.TerraformProvisionState.INHERIT_APPROVED_PLAN;
 import static software.wings.sm.states.provision.TerraformProvisionState.RUN_PLAN_ONLY_KEY;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
@@ -154,6 +157,7 @@ import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.TrafficShiftMetadata;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
@@ -289,6 +293,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       Arrays.asList(AWS_AMI_SERVICE_SETUP.name(), AWS_AMI_SERVICE_DEPLOY.name(), ASG_AMI_SERVICE_ALB_SHIFT_SETUP.name(),
           ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY.name(), StateType.SPOTINST_SETUP.name(), StateType.SPOTINST_DEPLOY.name(),
           StateType.SPOTINST_ALB_SHIFT_SETUP.name(), StateType.SPOTINST_ALB_SHIFT_DEPLOY.name());
+
+  private static final Set<String> trafficShiftStateTypes = new HashSet<>(
+      Arrays.asList(ASG_AMI_ALB_SHIFT_SWITCH_ROUTES.name(), ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES.name(),
+          SPOTINST_LISTENER_ALB_SHIFT.name(), SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK.name(), K8S_TRAFFIC_SPLIT.name()));
 
   private static final List<String> codeDeployArtifactNeededStateTypes = Arrays.asList(AWS_CODEDEPLOY_STATE.name());
 
@@ -645,6 +653,53 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Workflow readWorkflow(String appId, String workflowId) {
     return readWorkflow(appId, workflowId, null);
+  }
+
+  @Override
+  public TrafficShiftMetadata readWorkflowTrafficShiftMetadata(@NotNull String appId, @NotNull String workflowId) {
+    Workflow workflow = readWorkflow(appId, workflowId);
+    if (workflow == null) {
+      return TrafficShiftMetadata.builder().build();
+    }
+
+    Set<String> phaseIds = new HashSet<>();
+    if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+      CanaryOrchestrationWorkflow coWorkflow = (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+
+      if (coWorkflow.getWorkflowPhases() == null) {
+        return TrafficShiftMetadata.builder().build();
+      }
+
+      for (WorkflowPhase workflowPhase : coWorkflow.getWorkflowPhases()) {
+        List<WorkflowPhase> workflowPhases = new ArrayList<>();
+        workflowPhases.add(workflowPhase);
+        WorkflowPhase rollbackPhase = coWorkflow.getRollbackWorkflowPhaseIdMap().get(workflowPhase.getUuid());
+        if (rollbackPhase != null) {
+          workflowPhases.add(rollbackPhase);
+        }
+        for (WorkflowPhase phase : workflowPhases) {
+          loadTrafficShiftPhaseIds(phaseIds, phase);
+        }
+      }
+    }
+
+    return TrafficShiftMetadata.builder().phaseIdsWithTrafficShift(new ArrayList<>(phaseIds)).build();
+  }
+
+  private void loadTrafficShiftPhaseIds(Set<String> phaseIds, WorkflowPhase phase) {
+    List<PhaseStep> phaseSteps = phase.getPhaseSteps();
+    if (isNotEmpty(phaseSteps)) {
+      for (PhaseStep phaseStep : phaseSteps) {
+        List<GraphNode> steps = phaseStep.getSteps();
+        if (isNotEmpty(steps)) {
+          for (GraphNode node : steps) {
+            if (trafficShiftStateTypes.contains(node.getType())) {
+              phaseIds.add(phase.getUuid());
+            }
+          }
+        }
+      }
+    }
   }
 
   @Override

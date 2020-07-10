@@ -37,6 +37,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.TrafficShiftMetadata;
 import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -202,6 +203,15 @@ public class WorkflowResource {
       }
     }
     return new RestResponse<>(workflow);
+  }
+
+  @GET
+  @Path("{workflowId}/traffic-shift-metadata")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<TrafficShiftMetadata> readTrafficShiftMetadata(
+      @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
+    return new RestResponse<>(workflowService.readWorkflowTrafficShiftMetadata(appId, workflowId));
   }
 
   /**

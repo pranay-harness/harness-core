@@ -50,6 +50,8 @@ import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_CONTAINERS;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_SERVICE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.RUNTIME;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.SPOTINST_ALB_SHIFT_LISTENER_UPDATE;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE_CONTAINERS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
@@ -111,6 +113,7 @@ import software.wings.beans.stats.CloneMetadata;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1167,6 +1170,34 @@ public class WorkflowServiceTestHelper {
         .extracting(Variable::getValue)
         .contains("https://harness.io?q=${artifact.name}");
     assertThat(preDeploymentStep.getProperties()).isNotEmpty().containsKeys("url", "method", "assertion");
+  }
+
+  public static Workflow constructWfWithTrafficShiftSteps() {
+    return aWorkflow()
+        .uuid(generateUuid())
+        .name(WORKFLOW_NAME)
+        .appId(APP_ID)
+        .envId(ENV_ID)
+        .accountId(ACCOUNT_ID)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .orchestrationWorkflow(
+            aCanaryOrchestrationWorkflow()
+                .addWorkflowPhase(aWorkflowPhase()
+                                      .infraDefinitionId(INFRA_DEFINITION_ID)
+                                      .infraMappingId(INFRA_MAPPING_ID)
+                                      .serviceId(SERVICE_ID)
+                                      .deploymentType(AMI)
+                                      .phaseSteps(Collections.singletonList(
+                                          aPhaseStep(PhaseStepType.SPOTINST_LISTENER_UPDATE, SPOTINST_LISTENER_UPDATE)
+                                              .addStep(GraphNode.builder()
+                                                           .type(StateType.SPOTINST_LISTENER_ALB_SHIFT.name())
+                                                           .name(SPOTINST_ALB_SHIFT_LISTENER_UPDATE)
+                                                           .build())
+                                              .build()))
+                                      .build())
+                .withRollbackWorkflowPhaseIdMap(Collections.emptyMap())
+                .build())
+        .build();
   }
 
   public static Workflow constructCanaryWorkflowWithConcurrencyStrategy() {
