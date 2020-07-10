@@ -49,8 +49,16 @@ public class CECommunicationsResource {
   @ExceptionMetered
   public RestResponse update(@QueryParam("accountId") String accountId, @QueryParam("type") CommunicationType type,
       @QueryParam("enable") boolean enable) {
-    communicationsService.update(accountId, getUserEmail(), type, enable);
+    communicationsService.update(accountId, getUserEmail(), type, enable, true);
     return new RestResponse();
+  }
+
+  @GET
+  @Path("{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse getEntriesEnabledViaEmails(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(communicationsService.getEntriesEnabledViaEmail(accountId));
   }
 
   @POST
@@ -59,7 +67,7 @@ public class CECommunicationsResource {
   @ExceptionMetered
   public RestResponse enableViaEmail(@PathParam("accountId") String accountId,
       @QueryParam("type") CommunicationType type, @QueryParam("email") String email) {
-    communicationsService.update(accountId, email, type, true);
+    communicationsService.update(accountId, email, type, true, false);
     return new RestResponse();
   }
 
@@ -80,7 +88,7 @@ public class CECommunicationsResource {
   public RestResponse enableViaEmailInternal(@PathParam("accountId") String accountId,
       @QueryParam("targetAccount") String targetAccount, @QueryParam("type") CommunicationType type,
       @QueryParam("email") String email) {
-    communicationsService.update(targetAccount, email, type, true);
+    communicationsService.update(targetAccount, email, type, true, true);
     return new RestResponse();
   }
 

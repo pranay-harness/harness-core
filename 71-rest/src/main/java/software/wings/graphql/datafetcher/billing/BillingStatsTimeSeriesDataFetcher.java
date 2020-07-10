@@ -216,22 +216,27 @@ public class BillingStatsTimeSeriesDataFetcher
                     roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / (timePeriod * 1024)));
                 break;
               case AVGCPUUTILIZATIONVALUE:
-                cpuAvgUtilValuePointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
+                cpuAvgUtilValuePointBuilder.value(
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
                 break;
               case AVGMEMORYUTILIZATIONVALUE:
-                memoryAvgUtilValuePointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
+                memoryAvgUtilValuePointBuilder.value(
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
                 break;
               case MAXCPUUTILIZATIONVALUE:
-                cpuMaxUtilValuePointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
+                cpuMaxUtilValuePointBuilder.value(
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
                 break;
               case MAXMEMORYUTILIZATIONVALUE:
-                memoryMaxUtilValuePointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
+                memoryMaxUtilValuePointBuilder.value(
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
                 break;
               case CPUREQUEST:
-                cpuAvgRequestPointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
+                cpuAvgRequestPointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
                 break;
               case MEMORYREQUEST:
-                memoryAvgRequestPointBuilder.value(roundingDoubleValue(resultSet.getDouble(field.getFieldName())));
+                memoryAvgRequestPointBuilder.value(
+                    roundingDoubleValue(resultSet.getDouble(field.getFieldName()) / 1024));
                 break;
               default:
                 dataPointBuilder.value(roundingDoubleFieldValue(field, resultSet));

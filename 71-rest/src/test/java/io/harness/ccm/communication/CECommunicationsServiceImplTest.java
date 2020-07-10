@@ -19,6 +19,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 
+import java.util.List;
+
 public class CECommunicationsServiceImplTest extends WingsBaseTest {
   @Mock private CECommunicationsDao communicationsDao;
   @Inject @InjectMocks private CECommunicationsServiceImpl communicationsService;
@@ -37,8 +39,13 @@ public class CECommunicationsServiceImplTest extends WingsBaseTest {
   public void setUp() {
     communications =
         CECommunications.builder().accountId(accountId).uuid(uuid).emailId(email).type(type).enabled(enable).build();
-    newCommunications =
-        CECommunications.builder().accountId(accountId2).emailId(defaultEmail).type(type).enabled(enable).build();
+    newCommunications = CECommunications.builder()
+                            .accountId(accountId2)
+                            .emailId(defaultEmail)
+                            .type(type)
+                            .enabled(enable)
+                            .selfEnabled(true)
+                            .build();
     when(communicationsDao.get(accountId, email, type)).thenReturn(communications);
     when(communicationsDao.get(accountId2, defaultEmail, type)).thenReturn(null);
   }
@@ -56,7 +63,7 @@ public class CECommunicationsServiceImplTest extends WingsBaseTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testUpdate() throws Exception {
-    communicationsService.update(accountId, email, type, false);
+    communicationsService.update(accountId, email, type, false, true);
     verify(communicationsDao).update(eq(accountId), eq(email), eq(type), eq(false));
   }
 
@@ -64,7 +71,7 @@ public class CECommunicationsServiceImplTest extends WingsBaseTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testUpdateAsSave() throws Exception {
-    communicationsService.update(accountId2, defaultEmail, type, true);
+    communicationsService.update(accountId2, defaultEmail, type, true, true);
     verify(communicationsDao).save(eq(newCommunications));
   }
 
@@ -74,5 +81,13 @@ public class CECommunicationsServiceImplTest extends WingsBaseTest {
   public void testDelete() throws Exception {
     communicationsService.delete(accountId, email, type);
     verify(communicationsDao).delete(eq(uuid));
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testGetEntriesEnabledViaEmail() {
+    List<CECommunications> enabledEntries = communicationsService.getEntriesEnabledViaEmail(accountId);
+    verify(communicationsDao).getEntriesEnabledViaEmail(eq(accountId));
   }
 }
