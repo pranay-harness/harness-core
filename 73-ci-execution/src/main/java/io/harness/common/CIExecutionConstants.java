@@ -9,11 +9,12 @@ import java.util.List;
 @UtilityClass
 public class CIExecutionConstants {
   // entry point constants
-  public static final String STAGE_ARG_PREFIX = "--stage";
-  public static final String INPUT_ARG_PREFIX = "--input";
-  public static final String LOGPATH_ARG_PREFIX = "--logpath";
   public static final String LITE_ENGINE_COMMAND = "/step-exec/.harness/bin/ci-lite-engine";
+  public static final String STAGE_ARG_COMMAND = "stage";
+  public static final String INPUT_ARG_PREFIX = "--input";
+  public static final String LOG_PATH_ARG_PREFIX = "--logpath";
   public static final String LOG_PATH = "/step-exec/.harness/logs/";
+  public static final String TMP_PATH_ARG_PREFIX = "--tmppath";
   public static final String TMP_PATH = "/step-exec/.harness/tmp/";
 
   public static final String LITE_ENGINE_STEP_COMMAND_FORMAT =

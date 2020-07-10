@@ -13,7 +13,7 @@ public class SaveCacheStepProtobufSerializer implements ProtobufSerializer<SaveC
     return Base64.encodeBase64String(convertSaveCacheStepInfo(object).toByteArray());
   }
 
-  private Step convertSaveCacheStepInfo(SaveCacheStepInfo saveCacheStepInfo) {
+  public Step convertSaveCacheStepInfo(SaveCacheStepInfo saveCacheStepInfo) {
     SaveCacheStepInfo.SaveCache saveCache = saveCacheStepInfo.getSaveCache();
     SaveCacheStep.Builder saveCacheBuilder = SaveCacheStep.newBuilder();
     saveCacheBuilder.addAllPaths(saveCache.getPaths());

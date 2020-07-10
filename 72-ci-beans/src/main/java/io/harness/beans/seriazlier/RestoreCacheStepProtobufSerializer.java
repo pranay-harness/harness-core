@@ -13,7 +13,7 @@ public class RestoreCacheStepProtobufSerializer implements ProtobufSerializer<Re
     return Base64.encodeBase64String(convertRestoreCacheStepInfo(object).toByteArray());
   }
 
-  private Step convertRestoreCacheStepInfo(RestoreCacheStepInfo restoreCacheStepInfo) {
+  public Step convertRestoreCacheStepInfo(RestoreCacheStepInfo restoreCacheStepInfo) {
     RestoreCacheStepInfo.RestoreCache restoreCache = restoreCacheStepInfo.getRestoreCache();
     RestoreCacheStep.Builder restoreCacheBuilder = RestoreCacheStep.newBuilder();
     restoreCacheBuilder.setKey(restoreCache.getKey());

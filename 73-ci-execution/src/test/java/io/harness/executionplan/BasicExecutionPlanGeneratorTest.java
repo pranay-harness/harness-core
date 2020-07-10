@@ -50,6 +50,6 @@ public class BasicExecutionPlanGeneratorTest extends CIExecutionTest {
     when(basicStepToExecutionNodeConverter.convertStep(any(), any())).thenReturn(planNode);
     Execution execution = ciExecutionPlanTestHelper.getExecution();
     Plan plan = basicExecutionPlanGenerator.generateExecutionPlan(execution);
-    assertThat(plan.getNodes()).isEqualTo(Arrays.asList(planNode, planNode));
+    assertThat(plan.getNodes()).isEqualTo(Arrays.asList(planNode, planNode, planNode));
   }
 }
