@@ -412,7 +412,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
                      .count(upToOne);
 
     if (count > 0) {
-      String message = "Can not delete the vault configuration since there are secrets encrypted with this. "
+      String message = "Cannot delete the vault configuration since there are secrets encrypted with it. "
           + "Please transition your secrets to another secret manager and try again.";
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
     }
