@@ -271,8 +271,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
                      .count(upToOne);
 
     if (count > 0) {
-      String message =
-          "Can not delete the AWS Secrets Manager configuration since there are secrets encrypted with this. "
+      String message = "Cannot delete the AWS Secrets Manager configuration since there are secrets encrypted with it. "
           + "Please transition your secrets to another secret manager and try again.";
       throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER);
     }

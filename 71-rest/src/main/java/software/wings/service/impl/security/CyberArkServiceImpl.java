@@ -189,7 +189,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
                      .count(upToOne);
 
     if (count > 0) {
-      String message = "Can not delete the CyberArk configuration since there are secrets encrypted with this. "
+      String message = "Cannot delete the CyberArk configuration since there are secrets encrypted with it. "
           + "Please transition your secrets to another secret manager and try again.";
       throw new SecretManagementException(CYBERARK_OPERATION_ERROR, message, USER);
     }

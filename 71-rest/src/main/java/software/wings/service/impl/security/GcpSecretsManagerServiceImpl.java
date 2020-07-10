@@ -254,7 +254,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
                      .filter(EncryptedDataKeys.encryptionType, EncryptionType.GCP_KMS)
                      .count(upToOne);
     if (count > 0) {
-      String message = "Can not delete the GCP KMS configuration since there are secrets encrypted with this. "
+      String message = "Cannot delete the GCP KMS configuration since there are secrets encrypted with it. "
           + "Please transition your secrets to another secret manager and try again.";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER);
     }

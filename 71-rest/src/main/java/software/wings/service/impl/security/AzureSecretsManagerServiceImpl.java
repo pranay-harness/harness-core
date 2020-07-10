@@ -171,7 +171,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
 
     if (count > 0) {
       String message =
-          "Can not delete the Azure Secrets Manager configuration since there are secrets encrypted with this. "
+          "Cannot delete the Azure Secrets Manager configuration since there are secrets encrypted with it. "
           + "Please transition your secrets to another secret manager and try again.";
       throw new AzureKeyVaultOperationException(message, AZURE_KEY_VAULT_OPERATION_ERROR, USER);
     }
