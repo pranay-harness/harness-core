@@ -12,6 +12,7 @@ public enum QLEventsDataFilterType {
   CloudServiceName(CEEventsMetaDataFields.CLOUDSERVICENAME),
   TaskId(CEEventsMetaDataFields.TASKID),
   WorkloadName(CEEventsMetaDataFields.WORKLOADNAME),
+  WorkloadType(CEEventsMetaDataFields.WORKLOADTYPE),
   Namespace(CEEventsMetaDataFields.NAMESPACE);
 
   private CEEventsMetaDataFields metaDataFields;
