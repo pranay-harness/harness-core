@@ -518,6 +518,7 @@ yq delete -i $REDISSON_CACHE_FILE codec
 
 if [[ "" != "$REDIS_URL" ]]; then
   yq write -i $CONFIG_FILE redisLockConfig.redisUrl "$REDIS_URL"
+  yq write -i $CONFIG_FILE redisAtmosphereConfig.redisUrl "$REDIS_URL"
   yq write -i $REDISSON_CACHE_FILE singleServerConfig.address "$REDIS_URL"
 fi
 
