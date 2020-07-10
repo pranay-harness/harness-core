@@ -342,14 +342,19 @@ public class ContainerDeploymentDelegateHelper {
         containerServiceParams, kubernetesConfig, executionLogCallback, controllers, existingPods);
   }
 
-  public boolean isK8sVersion116OrAbove(
+  public boolean useK8sSteadyStateCheck(boolean isK8sSteadyStateCheckEnabled,
       ContainerServiceParams containerServiceParams, ExecutionLogCallback executionLogCallback) {
+    if (!isK8sSteadyStateCheckEnabled) {
+      return false;
+    }
+
     List<EncryptedDataDetail> encryptionDetails = containerServiceParams.getEncryptionDetails();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
     VersionInfo versionInfo = kubernetesContainerService.getVersion(kubernetesConfig, encryptionDetails);
     executionLogCallback.saveExecutionLog(
         format("Kubernetess version [%s.%s]", versionInfo.getMajor(), versionInfo.getMinor()));
     int versionMajorMin = Integer.parseInt(escapeNonDigitsAndTruncate(versionInfo.getMajor() + versionInfo.getMinor()));
+
     return KUBERNETESS_116_VERSION <= versionMajorMin;
   }
 

@@ -36,11 +36,11 @@ public class HelmRollbackCommandRequest extends HelmCommandRequest {
       String repoName, GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails,
       LogCallback executionLogCallback, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig,
       HelmVersion helmVersion, String ocPath, String workingDir, GitFileConfig gitFileConfig,
-      List<String> variableOverridesYamlFiles) {
+      List<String> variableOverridesYamlFiles, boolean k8SteadyStateCheckEnabled) {
     super(HelmCommandType.ROLLBACK, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails,
         executionLogCallback, commandFlags, sourceRepoConfig, helmVersion, ocPath, workingDir,
-        variableOverridesYamlFiles, gitFileConfig);
+        variableOverridesYamlFiles, gitFileConfig, k8SteadyStateCheckEnabled);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;
     this.rollbackVersion = rollbackVersion;

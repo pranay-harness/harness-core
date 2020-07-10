@@ -199,9 +199,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   private List<ContainerInfo> getContainerInfos(HelmCommandRequest commandRequest,
       List<String> variableOverridesYamlFiles, LogCallback executionLogCallback, long timeoutInMillis)
       throws Exception {
-    boolean isK8sV116OrAbove = containerDeploymentDelegateHelper.isK8sVersion116OrAbove(
-        commandRequest.getContainerServiceParams(), (ExecutionLogCallback) executionLogCallback);
-    return isK8sV116OrAbove
+    boolean useK8sSteadyStateCheck =
+        containerDeploymentDelegateHelper.useK8sSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(),
+            commandRequest.getContainerServiceParams(), (ExecutionLogCallback) executionLogCallback);
+    return useK8sSteadyStateCheck
         ? getKubectlContainerInfos(commandRequest, variableOverridesYamlFiles, executionLogCallback, timeoutInMillis)
         : getFabric8ContainerInfos(commandRequest, executionLogCallback, timeoutInMillis);
   }
@@ -279,9 +280,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         commandRequest.getExecutionLogCallback().saveExecutionLog(msg);
         throw new InvalidRequestException(msg, USER);
       }
-      boolean isK8sV116OrAbove = containerDeploymentDelegateHelper.isK8sVersion116OrAbove(
-          commandRequest.getContainerServiceParams(), (ExecutionLogCallback) commandRequest.getExecutionLogCallback());
-      if (isK8sV116OrAbove) {
+      boolean useK8sSteadyStateCheck = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
+          commandRequest.isK8SteadyStateCheckEnabled(), commandRequest.getContainerServiceParams(),
+          (ExecutionLogCallback) commandRequest.getExecutionLogCallback());
+      if (useK8sSteadyStateCheck) {
         fetchInlineChartUrl(commandRequest);
       }
     } else {
@@ -450,10 +452,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         return commandResponse;
       }
 
-      boolean isK8sV116OrAbove = containerDeploymentDelegateHelper.isK8sVersion116OrAbove(
-          commandRequest.getContainerServiceParams(), (ExecutionLogCallback) executionLogCallback);
+      boolean useK8sSteadyStateCheck =
+          containerDeploymentDelegateHelper.useK8sSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(),
+              commandRequest.getContainerServiceParams(), (ExecutionLogCallback) executionLogCallback);
 
-      if (isK8sV116OrAbove) {
+      if (useK8sSteadyStateCheck) {
         fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
         prepareRepoAndCharts(commandRequest);
       }

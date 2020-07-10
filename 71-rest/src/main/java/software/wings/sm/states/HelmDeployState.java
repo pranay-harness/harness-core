@@ -345,7 +345,6 @@ public class HelmDeployState extends State {
       helmInstallCommandRequestBuilder.gitConfig(gitConfig);
       helmInstallCommandRequestBuilder.encryptedDataDetails(encryptedDataDetails);
     }
-
     return helmInstallCommandRequestBuilder.build();
   }
 
@@ -864,6 +863,9 @@ public class HelmDeployState extends State {
     HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
         releaseName, app.getAccountId(), app.getUuid(), activityId, imageDetails, repoName, gitConfig,
         encryptedDataDetails, cmdFlags, repoConfig, appManifestMap, helmVersion);
+
+    commandRequest.setK8SteadyStateCheckEnabled(
+        featureFlagService.isEnabled(FeatureName.HELM_STEADY_STATE_CHECK_1_16, context.getAccountId()));
 
     List<String> tags = new ArrayList<>();
     tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
