@@ -12,7 +12,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -32,6 +31,7 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.aws.delegate.AwsS3HelperServiceDelegate;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,14 +47,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AmazonS3ServiceImpl implements AmazonS3Service {
   @Inject AwsHelperService awsHelperService;
+  @Inject AwsS3HelperServiceDelegate awsS3HelperServiceDelegate;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   private static final int MAX_FILES_TO_SHOW_IN_UI = 1000;
   private static final int FETCH_FILE_COUNT_IN_BUCKET = 500;
 
   @Override
   public Map<String, String> getBuckets(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    List<Bucket> bucketList = awsHelperService.listS3Buckets(awsConfig, encryptionDetails);
-    return bucketList.stream().collect(Collectors.toMap(Bucket::getName, Bucket::getName, (a, b) -> b));
+    List<String> bucketNames = awsS3HelperServiceDelegate.listBucketNames(awsConfig, encryptionDetails);
+    return bucketNames.stream().collect(Collectors.toMap(s -> s, s -> s));
   }
 
   @Override

@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
@@ -30,6 +29,7 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.aws.delegate.AwsS3HelperServiceDelegate;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,6 +45,7 @@ import java.util.UUID;
  */
 public class AmazonS3ServiceTest extends WingsBaseTest {
   @Mock AwsHelperService awsHelperService;
+  @Mock AwsS3HelperServiceDelegate mockAwsS3HelperServiceDelegate;
   @Inject private AmazonS3Service amazonS3Service;
   @Inject @InjectMocks private DelegateFileManager delegateFileManager;
 
@@ -54,13 +55,14 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws IllegalAccessException {
     FieldUtils.writeField(amazonS3Service, "awsHelperService", awsHelperService, true);
+    FieldUtils.writeField(amazonS3Service, "awsS3HelperServiceDelegate", mockAwsS3HelperServiceDelegate, true);
   }
 
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldGetBuckets() {
-    when(awsHelperService.listS3Buckets(awsConfig, null)).thenReturn(Lists.newArrayList(new Bucket("bucket1")));
+    when(mockAwsS3HelperServiceDelegate.listBucketNames(awsConfig, null)).thenReturn(Lists.newArrayList("bucket1"));
     Map<String, String> buckets = amazonS3Service.getBuckets(awsConfig, null);
     assertThat(buckets).hasSize(1).containsKeys("bucket1");
   }
