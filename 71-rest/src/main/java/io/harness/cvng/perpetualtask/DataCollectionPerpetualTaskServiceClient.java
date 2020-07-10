@@ -34,32 +34,27 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
   @Inject private KryoSerializer kryoSerializer;
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
-    try {
-      logger.info("getting client params {}", clientContext.getClientParams());
-      Map<String, String> clientParams = clientContext.getClientParams();
-      String accountId = clientParams.get("accountId");
-      String cvConfigId = clientParams.get("cvConfigId");
-      String connectorId = clientParams.get("connectorId");
+    logger.info("getting client params {}", clientContext.getClientParams());
+    Map<String, String> clientParams = clientContext.getClientParams();
+    String accountId = clientParams.get("accountId");
+    String cvConfigId = clientParams.get("cvConfigId");
+    String connectorId = clientParams.get("connectorId");
 
-      SettingAttribute settingAttribute = settingsService.get(connectorId);
-      List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-      if (settingAttribute.getValue() instanceof EncryptableSetting) {
-        encryptedDataDetails = secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue());
-      }
-      CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
-                                                      .settingValue(settingAttribute.getValue())
-                                                      .encryptedDataDetails(encryptedDataDetails)
-                                                      .build();
-      ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo));
-      return DataCollectionPerpetualTaskParams.newBuilder()
-          .setAccountId(accountId)
-          .setCvConfigId(cvConfigId)
-          .setDataCollectionInfo(bytes)
-          .build();
-    } catch (Exception e) {
-      logger.error("Error executing data collection for {}", clientContext.getClientParams(), e);
-      throw e;
+    SettingAttribute settingAttribute = settingsService.get(connectorId);
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    if (settingAttribute.getValue() instanceof EncryptableSetting) {
+      encryptedDataDetails = secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue());
     }
+    CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
+                                                    .settingValue(settingAttribute.getValue())
+                                                    .encryptedDataDetails(encryptedDataDetails)
+                                                    .build();
+    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo));
+    return DataCollectionPerpetualTaskParams.newBuilder()
+        .setAccountId(accountId)
+        .setCvConfigId(cvConfigId)
+        .setDataCollectionInfo(bytes)
+        .build();
   }
 
   @Override

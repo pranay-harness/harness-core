@@ -11,6 +11,7 @@ import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
@@ -32,11 +33,14 @@ public class BugsnagConfig extends SettingValue implements EncryptableSetting {
 
   @Attributes(title = "URL", required = true) @NotEmpty private String url;
 
-  @Attributes(title = "Auth Token", required = true) @Encrypted(fieldName = "auth_token") private char[] authToken;
+  @Attributes(title = "Auth Token", required = true)
+  @Encrypted(fieldName = "auth_token")
+  @ToString.Exclude
+  private char[] authToken;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedAuthToken;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore @ToString.Exclude private String encryptedAuthToken;
 
   public BugsnagConfig() {
     super(SettingVariableTypes.BUG_SNAG.name());
