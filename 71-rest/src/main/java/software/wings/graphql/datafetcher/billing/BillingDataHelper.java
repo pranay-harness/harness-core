@@ -227,7 +227,9 @@ public class BillingDataHelper {
   }
 
   public BigDecimal getNewForecastCost(QLBillingAmountData billingAmountData, Instant endInstant) {
-    Preconditions.checkNotNull(billingAmountData);
+    if (billingAmountData == null) {
+      return null;
+    }
     Instant currentTime = Instant.now();
     if (currentTime.isAfter(endInstant)) {
       return null;
