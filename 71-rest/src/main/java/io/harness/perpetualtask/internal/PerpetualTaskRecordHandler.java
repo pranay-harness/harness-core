@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.internal;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 import static java.lang.String.format;
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.NoAvaliableDelegatesException;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -35,8 +37,6 @@ import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
-
-import javax.ws.rs.ServiceUnavailableException;
 
 @Slf4j
 public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>, PerpetualTaskCrudObserver {
@@ -122,18 +122,10 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
           logger.error(format(
               "Assignment for perpetual task id=%s got unexpected delegate response %s", taskId, response.toString()));
         }
-      } catch (ServiceUnavailableException sue) {
-        if (sue.getMessage().contains("Delegates are not available")) {
-          perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_DELEGATE_AVAILABLE.name());
-
-          raiseAlert(taskRecord, taskId, taskType, NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK);
-
-          logger.warn(sue.getMessage());
-        } else {
-          raiseAlert(taskRecord, taskId, taskType, SERVICE_UNAVAILABLE);
-          logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, sue);
-        }
-        // TODO: we should not log errors for delegates not being assigned, we need a red bell alert for that.
+      } catch (NoAvaliableDelegatesException exception) {
+        ignoredOnPurpose(exception);
+        perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_DELEGATE_AVAILABLE.name());
+        raiseAlert(taskRecord, taskId, taskType, NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK);
       } catch (WingsException exception) {
         raiseAlert(taskRecord, taskId, taskType, PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE);
         ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
