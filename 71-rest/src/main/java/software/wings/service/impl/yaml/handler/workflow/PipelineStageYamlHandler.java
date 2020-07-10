@@ -255,6 +255,9 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       Map<String, Object> properties = stageElement.getProperties();
 
       if (properties != null) {
+        // Removing the disableAssertion field in approval stage properties as the expression is already displayed as
+        // skipCondition
+        properties.remove(ApprovalStateKeys.disableAssertion);
         if (ApprovalStateType.SERVICENOW.name().equals(properties.get(APPROVAL_STATE_TYPE_VARIABLE))) {
           Map<String, Object> snowParams =
               (Map<String, Object>) ((Map<String, Object>) properties.get(ApprovalStateKeys.approvalStateParams))

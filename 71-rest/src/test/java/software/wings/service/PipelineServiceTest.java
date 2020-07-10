@@ -9,7 +9,7 @@ import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MILOS;
-import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
@@ -67,7 +67,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.interrupts.RepairActionCode;
@@ -337,16 +336,24 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = PRASHANT)
+  @Owner(developers = PRABU)
   @Category(UnitTests.class)
-  public void shouldNotUpdatePipelineWithDisableAssertion() {
+  public void shouldUpdatePipelineApprovalWithDisableAssertion() {
     FailureStrategy failureStrategy =
         FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
     Pipeline pipeline = getPipelineSimple(
         failureStrategy, prepareStageApprovalDisableAssertion(), prepareStageDisableAssertion(ENV_ID, WORKFLOW_ID));
+    Pipeline updatedPipeline = pipelineService.update(pipeline, false, false);
+    assertThat(updatedPipeline)
+        .isNotNull()
+        .extracting(Pipeline::getFailureStrategies)
+        .asList()
+        .containsExactly(failureStrategy);
 
-    assertThatExceptionOfType(InvalidArgumentsException.class)
-        .isThrownBy(() -> pipelineService.update(pipeline, false, false));
+    verify(wingsPersistence, times(2)).getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+    verify(wingsPersistence).createQuery(Pipeline.class);
+    verify(pipelineQuery, times(2)).filter(any(), any());
+    verify(wingsPersistence).createUpdateOperations(Pipeline.class);
   }
 
   @Test
@@ -391,7 +398,8 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
-    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+    when(workflowService.stencilMap(any()))
+        .thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE, "APPROVAL", APPROVAL));
     when(wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid())).thenReturn(pipeline);
 
     pipeline.setName(UPDATED_PIPELINE_NAME);

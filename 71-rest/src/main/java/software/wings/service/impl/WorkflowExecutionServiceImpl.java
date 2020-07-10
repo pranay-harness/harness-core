@@ -692,6 +692,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               approvalStateExecutionData.setAppId(pipeline.getAppId());
               approvalStateExecutionData.setWorkflowId(pipelineExecution.getPipelineId());
             }
+            stageExecution.setMessage(stateExecutionData != null ? stateExecutionData.getErrorMsg() : "");
             stageExecutionDataList.add(stageExecution);
 
           } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())

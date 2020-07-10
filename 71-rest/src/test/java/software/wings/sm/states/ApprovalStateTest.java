@@ -61,6 +61,7 @@ import io.harness.context.ContextElementType;
 import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
+import org.apache.commons.jexl3.JexlException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -293,6 +294,52 @@ public class ApprovalStateTest extends WingsBaseTest {
         .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldSkipDisabledStepWithAssertion() {
+    String disableAssertion = "${app.name}==\"APP_NAME\"";
+    approvalState.setDisableAssertion(disableAssertion);
+    when(context.evaluateExpression(eq(disableAssertion), any())).thenReturn(true);
+    ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(workflowExecutionService, times(0))
+        .triggerOrchestrationExecution(
+            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
+    assertThat(executionResponse.getErrorMessage()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldFailIfAssertionException() {
+    String disableAssertion = "${app.name]==\"APP_NAME\"";
+    approvalState.setDisableAssertion(disableAssertion);
+    when(context.evaluateExpression(eq(disableAssertion), any())).thenThrow(JexlException.class);
+    ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(workflowExecutionService, times(0))
+        .triggerOrchestrationExecution(
+            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(executionResponse.getErrorMessage()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldExecuteIfAssertionFailed() {
+    String disableAssertion = "${app.name]==\"APP_NAM\"";
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
+    approvalState.setDisableAssertion(disableAssertion);
+    when(context.evaluateExpression(eq(disableAssertion), any())).thenReturn(false);
+    ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(workflowExecutionService, times(0))
+        .triggerOrchestrationExecution(
+            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
   }
 
   @Test

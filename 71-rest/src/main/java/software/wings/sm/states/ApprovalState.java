@@ -60,8 +60,10 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
+import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ApprovalStateExecutionData;
@@ -135,6 +137,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -193,37 +196,9 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   public ExecutionResponse execute(ExecutionContext context) {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     String approvalId = generateUuid();
-    List<String> resolvedUserGroup = new ArrayList<>();
+
     if (!isEmpty(getTemplateExpressions())) {
-      TemplateExpression userGroupExp =
-          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), ApprovalStateKeys.userGroups);
-
-      if (userGroupExp != null && userGroupExp.getExpression().length() != 0) {
-        String userGroupsString = templateExpressionProcessor.resolveTemplateExpression(context, userGroupExp);
-        if (!isEmpty(userGroupsString)) {
-          userGroups = Arrays.asList(userGroupsString.split("\\s*,\\s*"));
-        } else {
-          throw new InvalidRequestException("User group templatised but value is not provided", USER);
-        }
-      }
-
-      if (isEmpty(userGroups)) {
-        throw new ApprovalStateException("Valid user groups not provided in Approval Step", ErrorCode.USER_GROUP_ERROR,
-            Level.ERROR, WingsException.USER);
-      }
-
-      for (String singleUserGroup : userGroups) {
-        UserGroup userGroup = userGroupService.get(executionContext.getApp().getAccountId(), singleUserGroup);
-        if (userGroup == null) {
-          userGroup = userGroupService.fetchUserGroupByName(executionContext.getApp().getAccountId(), singleUserGroup);
-        }
-        if (userGroup == null) {
-          throw new ApprovalStateException("User Group provided in Approval Step not found for " + singleUserGroup,
-              ErrorCode.USER_GROUP_ERROR, Level.ERROR, WingsException.USER);
-        }
-        resolvedUserGroup.add(userGroup.getUuid());
-      }
-      userGroups = resolvedUserGroup;
+      resolveUserGroupFromTemplate(context, executionContext);
     }
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -234,12 +209,11 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
                                                    .variables(getVariables())
                                                    .triggeredBy(workflowStandardParams.getCurrentUser())
                                                    .build();
-    if (disableAssertion != null && disableAssertion.equals("true")) {
-      return respondWithStatus(context, executionData, null,
-          ExecutionResponse.builder()
-              .executionStatus(SKIPPED)
-              .errorMessage(getName() + " step in " + context.getPipelineStageName() + " has been skipped")
-              .stateExecutionData(executionData));
+    if (disableAssertion != null) {
+      ExecutionResponse skipResponse = handleSkipCondition(context, executionData);
+      if (skipResponse != null) {
+        return skipResponse;
+      }
     }
 
     setPipelineVariables(context);
@@ -294,6 +268,82 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         throw new InvalidRequestException(
             "Invalid ApprovalStateType, it should be one of ServiceNow, Jira, HarnessUi or Custom Shell script");
     }
+  }
+
+  private void resolveUserGroupFromTemplate(ExecutionContext context, ExecutionContextImpl executionContext) {
+    List<String> resolvedUserGroup = new ArrayList<>();
+    TemplateExpression userGroupExp =
+        templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), ApprovalStateKeys.userGroups);
+
+    if (userGroupExp != null && userGroupExp.getExpression().length() != 0) {
+      String userGroupsString = templateExpressionProcessor.resolveTemplateExpression(context, userGroupExp);
+      if (!isEmpty(userGroupsString)) {
+        userGroups = Arrays.asList(userGroupsString.split("\\s*,\\s*"));
+      } else {
+        throw new InvalidRequestException("User group templatised but value is not provided", USER);
+      }
+    }
+
+    if (isEmpty(userGroups)) {
+      throw new ApprovalStateException("Valid user groups not provided in Approval Step", ErrorCode.USER_GROUP_ERROR,
+          Level.ERROR, WingsException.USER);
+    }
+
+    for (String singleUserGroup : userGroups) {
+      UserGroup userGroup = userGroupService.get(executionContext.getApp().getAccountId(), singleUserGroup);
+      if (userGroup == null) {
+        userGroup = userGroupService.fetchUserGroupByName(executionContext.getApp().getAccountId(), singleUserGroup);
+      }
+      if (userGroup == null) {
+        throw new ApprovalStateException("User Group provided in Approval Step not found for " + singleUserGroup,
+            ErrorCode.USER_GROUP_ERROR, Level.ERROR, WingsException.USER);
+      }
+      resolvedUserGroup.add(userGroup.getUuid());
+    }
+    userGroups = resolvedUserGroup;
+  }
+
+  @Nullable
+  private ExecutionResponse handleSkipCondition(ExecutionContext context, ApprovalStateExecutionData executionData) {
+    try {
+      if (isTrueExpression(disableAssertion, context, executionData)) {
+        return respondWithStatus(context, executionData, null,
+            ExecutionResponse.builder()
+                .executionStatus(SKIPPED)
+                .errorMessage(getName() + " step in " + context.getPipelineStageName() + " has been skipped"
+                    + ("true".equals(disableAssertion) ? ""
+                                                       : " based on assertion expression [" + disableAssertion + "]"))
+                .stateExecutionData(executionData));
+      }
+    } catch (JexlException je) {
+      logger.error("Skip Assertion Evaluation Failed", je);
+      String jexlError = Optional.ofNullable(je.getMessage()).orElse("");
+      if (jexlError.contains(":")) {
+        jexlError = jexlError.split(":")[1];
+      }
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage("Skip Assertion Evaluation Failed : " + jexlError)
+              .stateExecutionData(executionData));
+    } catch (Exception e) {
+      logger.error("Skip Assertion Evaluation Failed", e);
+      return respondWithStatus(context, executionData, null,
+          ExecutionResponse.builder()
+              .executionStatus(FAILED)
+              .errorMessage("Skip Assertion Evaluation Failed : " + (e.getMessage() != null ? e.getMessage() : ""))
+              .stateExecutionData(executionData));
+    }
+    return null;
+  }
+
+  private boolean isTrueExpression(
+      String disableAssertion, ExecutionContext context, ApprovalStateExecutionData executionData) {
+    if ("true".equals(disableAssertion)) {
+      return true;
+    }
+    return (boolean) context.evaluateExpression(
+        disableAssertion, StateExecutionContext.builder().stateExecutionData(executionData).build());
   }
 
   @Override
