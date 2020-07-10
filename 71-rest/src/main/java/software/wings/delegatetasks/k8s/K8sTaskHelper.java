@@ -39,7 +39,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.LogWeight.Normal;
 import static software.wings.beans.Log.color;
-import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static software.wings.common.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.delegatetasks.k8s.K8sTask.KUBECONFIG_FILENAME;
 import static software.wings.delegatetasks.k8s.taskhandler.K8sTrafficSplitTaskHandler.ISTIO_DESTINATION_TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_PATH_PLACEHOLDER;

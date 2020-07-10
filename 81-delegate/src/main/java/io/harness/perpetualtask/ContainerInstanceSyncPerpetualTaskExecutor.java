@@ -5,7 +5,7 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.perpetualtask.PerpetualTaskState.TASK_RUN_FAILED;
 import static io.harness.perpetualtask.PerpetualTaskState.TASK_RUN_SUCCEEDED;
-import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static software.wings.common.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.service.impl.ContainerMetadataType.K8S;
 
 import com.google.inject.Inject;
