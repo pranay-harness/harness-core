@@ -17,7 +17,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var defaultStorageClass = "ONZONE_IA"
 var defaultACL = "bucket-owner-full-control"
 
 //go:generate mockgen -source s3_uploader.go -destination mocks/s3_uploader_mock.go -package awsutils S3Uploader S3UploadClient
@@ -147,11 +146,10 @@ func (t TracedS3UploadClient) UploadWithContext(ctx aws.Context, input *s3manage
 func (s *s3Uploader) uploadReader(ctx context.Context, key string, reader io.Reader) (string, string, error) {
 	start := time.Now()
 	resp, err := s.client.UploadWithContext(ctx, &s3manager.UploadInput{
-		ACL:          &defaultACL,
-		Bucket:       &s.bucket,
-		Key:          &key,
-		Body:         reader,
-		StorageClass: &defaultStorageClass,
+		ACL:    &defaultACL,
+		Bucket: &s.bucket,
+		Key:    &key,
+		Body:   reader,
 	})
 
 	if err != nil {

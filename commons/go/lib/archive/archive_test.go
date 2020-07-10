@@ -202,26 +202,6 @@ func TestUnarchiveInvalidType(t *testing.T) {
 	check(err)
 }
 
-func TestExpand(t *testing.T) {
-	// Empty path
-	path := ""
-	fpath, err := expand(path)
-	assert.Equal(t, err, nil)
-	assert.Equal(t, fpath, "")
-
-	// Unset $HOME
-	path = "~/home"
-	_, err = expand(path)
-	assert.NotEqual(t, err, nil)
-
-	// Set $HOME
-	os.Setenv("HOME", "/test")
-	path = "~/home"
-	_, err = expand(path)
-	assert.Equal(t, err, nil)
-	os.Unsetenv("HOME")
-}
-
 func TestArchiveUnarchiveFoldersOnly(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()

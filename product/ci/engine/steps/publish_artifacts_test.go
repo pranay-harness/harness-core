@@ -42,7 +42,6 @@ func bufDialer(context.Context, string) (net.Conn, error) {
 }
 
 func createPublishArtifactsStep() *enginepb.Step {
-
 	// Registry type not specified
 	info1 := &addonpb.BuildPublishImage{
 		DockerFile: "/step/harness/Dockerifle_1",
@@ -213,4 +212,89 @@ func TestCreatePublishArtifacts_ClientCreationErr(t *testing.T) {
 	err := testPublishStep.Run(ctx)
 
 	assert.NotNil(t, err)
+}
+
+func Test_GetRequestArgError(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	stepID := "test-step"
+	stepName := "test step"
+	// taskID := "test-id"
+	// filePattern := "/a/b/c"
+	// destinationURL := "file://a/b/c"
+	// connectorID := "testConnector"
+	// dockerFilePath := "~/DockerFile"
+	// context := "~/"
+	dockerFile := "/a/b"
+	invalidFilePattern := "~test"
+	invalidDockerFile := "~test"
+	invalidContext := "~test"
+
+	tests := []struct {
+		name        string
+		input       *enginepb.Step
+		expectedErr bool
+	}{
+		{
+			name: "invalid file pattern",
+			input: &enginepb.Step{
+				Id:          stepID,
+				DisplayName: stepName,
+				Step: &enginepb.Step_PublishArtifacts{
+					PublishArtifacts: &enginepb.PublishArtifactsStep{
+						Files: []*addonpb.UploadFile{
+							{
+								FilePattern: invalidFilePattern,
+							},
+						},
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			name: "invalid docker file",
+			input: &enginepb.Step{
+				Id:          stepID,
+				DisplayName: stepName,
+				Step: &enginepb.Step_PublishArtifacts{
+					PublishArtifacts: &enginepb.PublishArtifactsStep{
+						Images: []*addonpb.BuildPublishImage{
+							{
+								DockerFile: invalidDockerFile,
+							},
+						},
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			name: "invalid context",
+			input: &enginepb.Step{
+				Id:          stepID,
+				DisplayName: stepName,
+				Step: &enginepb.Step_PublishArtifacts{
+					PublishArtifacts: &enginepb.PublishArtifactsStep{
+						Images: []*addonpb.BuildPublishImage{
+							{
+								DockerFile: dockerFile,
+								Context:    invalidContext,
+							},
+						},
+					},
+				},
+			},
+			expectedErr: true,
+		},
+	}
+	for _, tc := range tests {
+		testPublishStep := NewPublishArtifactsStep(tc.input, log.Sugar())
+		got := testPublishStep.Run(ctx)
+		if tc.expectedErr == (got == nil) {
+			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
+		}
+	}
 }

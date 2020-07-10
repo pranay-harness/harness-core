@@ -2,7 +2,10 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
-    srcs = ["s3_uploader.go"],
+    srcs = [
+        "s3_session.go",
+        "s3_uploader.go",
+    ],
     importpath = "github.com/wings-software/portal/commons/go/lib/awsutils",
     visibility = ["//visibility:public"],
     deps = [
@@ -11,6 +14,7 @@ go_library(
         "//commons/go/lib/utils:go_default_library",
         "//commons/go/lib/x/trace:go_default_library",
         "@com_github_aws_aws_sdk_go//aws:go_default_library",
+        "@com_github_aws_aws_sdk_go//aws/credentials:go_default_library",
         "@com_github_aws_aws_sdk_go//aws/session:go_default_library",
         "@com_github_aws_aws_sdk_go//service/s3/s3manager:go_default_library",
         "@com_github_opentracing_opentracing_go//:go_default_library",

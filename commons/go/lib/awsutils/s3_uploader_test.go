@@ -18,11 +18,10 @@ import (
 func TestS3Uploader_UploadReader(t *testing.T) {
 	ctx, client, bucket, ul, key, reader := setupTestS3uploader(t)
 	client.EXPECT().UploadWithContext(ctx, &s3manager.UploadInput{
-		ACL:          &defaultACL,
-		Bucket:       &bucket,
-		Key:          &key,
-		Body:         reader,
-		StorageClass: &defaultStorageClass,
+		ACL:    &defaultACL,
+		Bucket: &bucket,
+		Key:    &key,
+		Body:   reader,
 	}).Return(&s3manager.UploadOutput{}, nil)
 
 	actBucket, actKey, err := ul.uploadReader(ctx, key, reader)
@@ -31,11 +30,10 @@ func TestS3Uploader_UploadReader(t *testing.T) {
 	assert.NoError(t, err)
 
 	client.EXPECT().UploadWithContext(gomock.Any(), &s3manager.UploadInput{
-		ACL:          &defaultACL,
-		Bucket:       &bucket,
-		Key:          &key,
-		Body:         reader,
-		StorageClass: &defaultStorageClass,
+		ACL:    &defaultACL,
+		Bucket: &bucket,
+		Key:    &key,
+		Body:   reader,
 	}).Return(&s3manager.UploadOutput{}, nil)
 
 	actBucket, actKey, err = ul.UploadReader(key, reader)
@@ -47,11 +45,10 @@ func TestS3Uploader_UploadReader(t *testing.T) {
 func TestS3Uploader_UploadReader_Err(t *testing.T) {
 	ctx, client, bucket, ul, key, reader := setupTestS3uploader(t)
 	client.EXPECT().UploadWithContext(ctx, &s3manager.UploadInput{
-		ACL:          &defaultACL,
-		Bucket:       &bucket,
-		Key:          &key,
-		Body:         reader,
-		StorageClass: &defaultStorageClass,
+		ACL:    &defaultACL,
+		Bucket: &bucket,
+		Key:    &key,
+		Body:   reader,
 	}).Return(&s3manager.UploadOutput{}, errors.New("some error"))
 
 	actBucket, actKey, err := ul.uploadReader(ctx, key, reader)

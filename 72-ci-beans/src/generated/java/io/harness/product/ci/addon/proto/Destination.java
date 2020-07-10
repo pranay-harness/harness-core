@@ -18,6 +18,7 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
   private Destination() {
     destinationUrl_ = "";
     locationType_ = 0;
+    region_ = "";
   }
 
   @java.
@@ -71,6 +72,12 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
             int rawValue = input.readEnum();
 
             locationType_ = rawValue;
+            break;
+          }
+          case 34: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            region_ = s;
             break;
           }
           default: {
@@ -179,6 +186,38 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
     return result == null ? io.harness.product.ci.addon.proto.LocationType.UNRECOGNIZED : result;
   }
 
+  public static final int REGION_FIELD_NUMBER = 4;
+  private volatile java.lang.Object region_;
+  /**
+   * <code>string region = 4[json_name = "region"];</code>
+   * @return The region.
+   */
+  public java.lang.String getRegion() {
+    java.lang.Object ref = region_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      region_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string region = 4[json_name = "region"];</code>
+   * @return The bytes for region.
+   */
+  public com.google.protobuf.ByteString getRegionBytes() {
+    java.lang.Object ref = region_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      region_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -203,6 +242,9 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
     if (locationType_ != io.harness.product.ci.addon.proto.LocationType.UNKNOWN.getNumber()) {
       output.writeEnum(3, locationType_);
     }
+    if (!getRegionBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, region_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -221,6 +263,9 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
     }
     if (locationType_ != io.harness.product.ci.addon.proto.LocationType.UNKNOWN.getNumber()) {
       size += com.google.protobuf.CodedOutputStream.computeEnumSize(3, locationType_);
+    }
+    if (!getRegionBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, region_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -247,6 +292,8 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
     }
     if (locationType_ != other.locationType_)
       return false;
+    if (!getRegion().equals(other.getRegion()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -267,6 +314,8 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
     }
     hash = (37 * hash) + LOCATION_TYPE_FIELD_NUMBER;
     hash = (53 * hash) + locationType_;
+    hash = (37 * hash) + REGION_FIELD_NUMBER;
+    hash = (53 * hash) + getRegion().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -390,6 +439,8 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
       }
       locationType_ = 0;
 
+      region_ = "";
+
       return this;
     }
 
@@ -427,6 +478,7 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
         result.connector_ = connectorBuilder_.build();
       }
       result.locationType_ = locationType_;
+      result.region_ = region_;
       onBuilt();
       return result;
     }
@@ -478,6 +530,10 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
       }
       if (other.locationType_ != 0) {
         setLocationTypeValue(other.getLocationTypeValue());
+      }
+      if (!other.getRegion().isEmpty()) {
+        region_ = other.region_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -738,6 +794,75 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
      */
     public Builder clearLocationType() {
       locationType_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object region_ = "";
+    /**
+     * <code>string region = 4[json_name = "region"];</code>
+     * @return The region.
+     */
+    public java.lang.String getRegion() {
+      java.lang.Object ref = region_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        region_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string region = 4[json_name = "region"];</code>
+     * @return The bytes for region.
+     */
+    public com.google.protobuf.ByteString getRegionBytes() {
+      java.lang.Object ref = region_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        region_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string region = 4[json_name = "region"];</code>
+     * @param value The region to set.
+     * @return This builder for chaining.
+     */
+    public Builder setRegion(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      region_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string region = 4[json_name = "region"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearRegion() {
+      region_ = getDefaultInstance().getRegion();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string region = 4[json_name = "region"];</code>
+     * @param value The bytes for region to set.
+     * @return This builder for chaining.
+     */
+    public Builder setRegionBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      region_ = value;
       onChanged();
       return this;
     }

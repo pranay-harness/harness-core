@@ -4,10 +4,12 @@ package steps
 
 import (
 	"context"
+	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"time"
 
+	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
 	egrpc "github.com/wings-software/portal/product/ci/engine/grpc"
@@ -25,7 +27,7 @@ const (
 
 // mockgen -source publish_artifacts.go -package steps -destination mocks/publish_artifacts_mock.go
 
-// Step to publish artifacts to an artifactory
+// PublishArtifactsStep to publish artifacts to an artifactory
 type PublishArtifactsStep interface {
 	Run(ctx context.Context) error
 }
@@ -51,6 +53,12 @@ func NewPublishArtifactsStep(step *enginepb.Step, log *zap.SugaredLogger) Publis
 
 func (s *publishArtifactsStep) Run(ctx context.Context) error {
 	st := time.Now()
+	arg, err := s.createPublishArtifactArg()
+	if err != nil {
+		s.log.Warnw("Failed to generate request argument", "error_msg", zap.Error(err))
+		return err
+	}
+
 	ciAddonClient, err := newCIAddonClient(ciAddonPort, s.log)
 	if err != nil {
 		s.log.Warnw("Unable to create CI addon client", "error_msg", zap.Error(err))
@@ -58,20 +66,57 @@ func (s *publishArtifactsStep) Run(ctx context.Context) error {
 	}
 	defer ciAddonClient.CloseConn()
 
-	newUUID, err := uuid.NewV4()
-	if err != nil {
-		s.log.Warnw("Unable to generate UUID", "error_msg", zap.Error(err))
-		return errors.Wrap(err, "Failed to generate UUID")
-	}
-	taskIdString := newUUID.String()
-	taskId := &addonpb.TaskId{Id: taskIdString}
-	req := &addonpb.PublishArtifactsRequest{TaskId: taskId, Files: s.files, Images: s.images}
 	c := ciAddonClient.Client()
-	_, err = c.PublishArtifacts(ctx, req)
+	_, err = c.PublishArtifacts(ctx, arg)
 	if err != nil {
 		s.log.Warnw("Publish artifact RPC failed", "error_msg", zap.Error(err), "elapsed_time_ms", utils.TimeSince(st))
 		return err
 	}
 	s.log.Infow("Successfully published artifacts", "elapsed_time_ms", utils.TimeSince(st))
 	return nil
+}
+
+// createPublishArtifactArg method creates arguments for addon PublishArtifacts GRPC
+func (s *publishArtifactsStep) createPublishArtifactArg() (*addonpb.PublishArtifactsRequest, error) {
+	newUUID, err := uuid.NewV4()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to generate UUID")
+	}
+	taskID := &addonpb.TaskId{Id: newUUID.String()}
+
+	// Resolving home directory for files and images
+	var resolvedFiles []*addonpb.UploadFile
+	for _, file := range s.files {
+		if file.FilePattern, err = expand(file.GetFilePattern()); err != nil {
+			return nil, err
+		}
+		resolvedFiles = append(resolvedFiles, file)
+	}
+
+	var resolvedImages []*addonpb.BuildPublishImage
+	for _, image := range s.images {
+		if image.DockerFile, err = expand(image.GetDockerFile()); err != nil {
+			return nil, err
+		}
+		if image.Context, err = expand(image.GetContext()); err != nil {
+			return nil, err
+		}
+		resolvedImages = append(resolvedImages, image)
+	}
+
+	return &addonpb.PublishArtifactsRequest{
+		TaskId: taskID,
+		Files:  resolvedFiles,
+		Images: resolvedImages,
+	}, nil
+}
+
+// expand method expands the filepath to resolve tilde and environment variables
+// TODO: Add resolution of environment variables
+func expand(filepath string) (string, error) {
+	path, err := filesystem.ExpandTilde(filepath)
+	if err != nil {
+		return "", errors.Wrap(err, fmt.Sprintf("failed to expand %s", filepath))
+	}
+	return path, nil
 }
