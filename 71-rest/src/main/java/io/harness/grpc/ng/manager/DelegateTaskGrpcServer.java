@@ -42,37 +42,47 @@ public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegate
 
   @Override
   public void sendTask(SendTaskRequest request, StreamObserver<SendTaskResponse> responseObserver) {
-    DelegateTask task = extractDelegateTask(request);
     try {
+      DelegateTask task = extractDelegateTask(request);
       ResponseData responseData = delegateService.executeTask(task);
       responseObserver.onNext(SendTaskResponse.newBuilder()
                                   .setTaskId(TaskId.newBuilder().setId(task.getUuid()).build())
                                   .setResponseData(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(responseData)))
                                   .build());
       responseObserver.onCompleted();
-    } catch (InterruptedException ex) {
+    } catch (InterruptedException ie) {
       Thread.currentThread().interrupt();
+      responseObserver.onError(ie);
+    } catch (Exception ex) {
       responseObserver.onError(ex);
     }
   }
 
   @Override
   public void sendTaskAsync(SendTaskAsyncRequest request, StreamObserver<SendTaskAsyncResponse> responseObserver) {
-    DelegateTask task = extractDelegateTask(request);
-    String taskId = delegateService.queueTask(task);
-    waitNotifyEngine.waitForAllOn(ORCHESTRATION, DelegateTaskResumeCallback.builder().taskId(taskId).build(), taskId);
-    responseObserver.onNext(
-        SendTaskAsyncResponse.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build());
-    responseObserver.onCompleted();
+    try {
+      DelegateTask task = extractDelegateTask(request);
+      String taskId = delegateService.queueTask(task);
+      waitNotifyEngine.waitForAllOn(ORCHESTRATION, DelegateTaskResumeCallback.builder().taskId(taskId).build(), taskId);
+      responseObserver.onNext(
+          SendTaskAsyncResponse.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build());
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      responseObserver.onError(ex);
+    }
   }
 
   @Override
   public void abortTask(io.harness.delegate.AbortTaskRequest request,
       io.grpc.stub.StreamObserver<io.harness.delegate.AbortTaskResponse> responseObserver) {
-    AbortTaskResponse abortTaskResponse =
-        AbortTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.EXECUTING).build();
-    responseObserver.onNext(abortTaskResponse);
-    responseObserver.onCompleted();
+    try {
+      AbortTaskResponse abortTaskResponse =
+          AbortTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.EXECUTING).build();
+      responseObserver.onNext(abortTaskResponse);
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      responseObserver.onError(ex);
+    }
   }
 
   private DelegateTask extractDelegateTask(SendTaskRequest request) {
