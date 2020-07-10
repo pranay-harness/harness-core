@@ -11,6 +11,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionBuilder;
@@ -35,10 +36,12 @@ import software.wings.graphql.schema.type.trigger.QLOnWebhook;
 import software.wings.graphql.schema.type.trigger.QLTriggerCondition;
 import software.wings.graphql.schema.type.trigger.QLTriggerConditionInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerConditionType;
+import software.wings.graphql.schema.type.trigger.QLWebhookConditionInput;
 import software.wings.graphql.schema.type.trigger.QLWebhookDetails;
 import software.wings.graphql.schema.type.trigger.QLWebhookEvent;
 import software.wings.graphql.schema.type.trigger.QLWebhookSource;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.SettingsService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -50,6 +53,7 @@ public class TriggerConditionController {
   @Inject TriggerActionController triggerActionController;
   @Inject MainConfiguration mainConfiguration;
   @Inject ArtifactStreamService artifactStreamService;
+  @Inject SettingsService settingsService;
 
   public QLTriggerCondition populateTriggerCondition(Trigger trigger, String accountId) {
     QLTriggerCondition condition = null;
@@ -134,14 +138,24 @@ public class TriggerConditionController {
         }
 
         QLWebhookEvent event = QLWebhookEvent.builder().action(action).event(eventType).build();
+
+        SettingAttribute gitConfig = settingsService.get(webHookTriggerCondition.getGitConnectorId());
+        String gitConnectorName = gitConfig != null ? gitConfig.getName() : null;
+
         condition =
             QLOnWebhook.builder()
                 .webhookSource(webhookSource)
                 .webhookDetails(details)
                 .webhookEvent(event)
                 .branchRegex(webHookTriggerCondition.getBranchRegex())
+                .branchName(webHookTriggerCondition.getBranchName())
+                .gitConnectorId(webHookTriggerCondition.getGitConnectorId())
+                .gitConnectorName(gitConnectorName)
+                .filePaths(webHookTriggerCondition.getFilePaths())
+                .deployOnlyIfFilesChanged(webHookTriggerCondition.isCheckFileContentChanged())
                 .triggerConditionType(QLTriggerConditionType.valueOf(webHookTriggerCondition.getConditionType().name()))
                 .build();
+
         break;
       default:
     }
@@ -254,8 +268,9 @@ public class TriggerConditionController {
 
   TriggerCondition resolveWebhookTriggerCondition(QLTriggerConditionInput qlTriggerConditionInput) {
     WebHookTriggerConditionBuilder builder = WebHookTriggerCondition.builder();
+    QLWebhookConditionInput qlWebhookConditionInput = qlTriggerConditionInput.getWebhookConditionInput();
 
-    switch (qlTriggerConditionInput.getWebhookConditionInput().getWebhookSourceType()) {
+    switch (qlWebhookConditionInput.getWebhookSourceType()) {
       case GITHUB:
         resolveGitHubEvent(qlTriggerConditionInput, builder);
         break;
@@ -268,10 +283,18 @@ public class TriggerConditionController {
       default:
     }
 
+    Boolean deployOnlyIfFilesChanged = qlWebhookConditionInput.getDeployOnlyIfFilesChanged();
+
+    if (deployOnlyIfFilesChanged != null && deployOnlyIfFilesChanged) {
+      builder.checkFileContentChanged(true);
+      builder.gitConnectorId(qlWebhookConditionInput.getGitConnectorId());
+      builder.filePaths(qlWebhookConditionInput.getFilePaths());
+      builder.branchName(qlWebhookConditionInput.getBranchName());
+    }
     builder.branchRegex(qlTriggerConditionInput.getWebhookConditionInput().getBranchRegex());
-    if (QLWebhookSource.CUSTOM != qlTriggerConditionInput.getWebhookConditionInput().getWebhookSourceType()) {
-      builder.webhookSource(
-          WebhookSource.valueOf(qlTriggerConditionInput.getWebhookConditionInput().getWebhookSourceType().name()));
+
+    if (QLWebhookSource.CUSTOM != qlWebhookConditionInput.getWebhookSourceType()) {
+      builder.webhookSource(WebhookSource.valueOf(qlWebhookConditionInput.getWebhookSourceType().name()));
     }
     return builder.build();
   }

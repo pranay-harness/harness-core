@@ -6,14 +6,20 @@ import lombok.Value;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
+import java.util.List;
+
 @Value
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QLWebhookConditionInput {
-  private QLWebhookSource webhookSourceType;
-  private QLGitHubEvent githubEvent;
-  private QLBitbucketEvent bitbucketEvent;
-  private QLGitlabEvent gitlabEvent;
-  private String branchRegex;
+  QLWebhookSource webhookSourceType;
+  QLGitHubEvent githubEvent;
+  QLBitbucketEvent bitbucketEvent;
+  QLGitlabEvent gitlabEvent;
+  String branchRegex;
+  String branchName;
+  Boolean deployOnlyIfFilesChanged;
+  List<String> filePaths;
+  String gitConnectorId;
 }

@@ -9,6 +9,8 @@ import lombok.experimental.FieldNameConstants;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
+import java.util.List;
+
 @Value
 @OwnedBy(CDC)
 @Builder
@@ -20,4 +22,9 @@ public class QLOnWebhook implements QLTriggerCondition {
   QLWebhookEvent webhookEvent;
   QLWebhookDetails webhookDetails;
   String branchRegex;
+  String gitConnectorId;
+  String gitConnectorName;
+  List<String> filePaths;
+  Boolean deployOnlyIfFilesChanged;
+  String branchName;
 }

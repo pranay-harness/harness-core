@@ -16,6 +16,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.GithubAction;
@@ -34,12 +35,14 @@ import software.wings.graphql.schema.type.trigger.QLOnPipelineCompletion;
 import software.wings.graphql.schema.type.trigger.QLOnSchedule;
 import software.wings.graphql.schema.type.trigger.QLOnWebhook;
 import software.wings.graphql.schema.type.trigger.QLTriggerConditionInput;
+import software.wings.service.intfc.SettingsService;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 public class TriggerConditionControllerTest extends CategoryTest {
   @Mock MainConfiguration mainConfiguration;
+  @Mock SettingsService settingsService;
 
   @InjectMocks TriggerConditionController triggerConditionController = Mockito.spy(new TriggerConditionController());
 
@@ -137,14 +140,28 @@ public class TriggerConditionControllerTest extends CategoryTest {
                                                           .eventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST))
                                                           .actions(Arrays.asList(GithubAction.OPENED))
                                                           .branchRegex("regex")
+                                                          .branchName("branchName")
+                                                          .gitConnectorId("gitConnectorId")
+                                                          .filePaths(Arrays.asList("filePath1", "filePath2"))
+                                                          .checkFileContentChanged(true)
                                                           .build();
     Trigger trigger = Trigger.builder().condition(webhookTriggerCondition).build();
+
+    SettingAttribute gitConfig = new SettingAttribute();
+    gitConfig.setName("gitConnectorName");
+    Mockito.when(settingsService.get(Matchers.anyString())).thenReturn(gitConfig);
 
     QLOnWebhook qlOnWebhook = (QLOnWebhook) triggerConditionController.populateTriggerCondition(trigger, accountId);
 
     assertThat(qlOnWebhook).isNotNull();
     assertThat(qlOnWebhook.getWebhookSource().name()).isEqualTo(webhookTriggerCondition.getWebhookSource().name());
     assertThat(qlOnWebhook.getBranchRegex()).isEqualTo(webhookTriggerCondition.getBranchRegex());
+    assertThat(qlOnWebhook.getBranchName()).isEqualTo(webhookTriggerCondition.getBranchName());
+    assertThat(qlOnWebhook.getGitConnectorId()).isEqualTo(webhookTriggerCondition.getGitConnectorId());
+    assertThat(qlOnWebhook.getGitConnectorName()).isEqualTo(gitConfig.getName());
+    assertThat(qlOnWebhook.getFilePaths()).isEqualTo(webhookTriggerCondition.getFilePaths());
+    assertThat(qlOnWebhook.getDeployOnlyIfFilesChanged())
+        .isEqualTo(webhookTriggerCondition.isCheckFileContentChanged());
     assertThat(qlOnWebhook.getTriggerConditionType().name())
         .isEqualTo(webhookTriggerCondition.getConditionType().name());
     assertThat(qlOnWebhook.getWebhookDetails()).isNotNull();
@@ -180,14 +197,28 @@ public class TriggerConditionControllerTest extends CategoryTest {
                                                           .eventTypes(Arrays.asList(WebhookEventType.PACKAGE))
                                                           .actions(Arrays.asList(GithubAction.OPENED))
                                                           .branchRegex("regex")
+                                                          .branchName("branchName")
+                                                          .gitConnectorId("gitConnectorId")
+                                                          .filePaths(Arrays.asList("filePath1", "filePath2"))
+                                                          .checkFileContentChanged(true)
                                                           .build();
     Trigger trigger = Trigger.builder().condition(webhookTriggerCondition).build();
+
+    SettingAttribute gitConfig = new SettingAttribute();
+    gitConfig.setName("gitConnectorName");
+    Mockito.when(settingsService.get(Matchers.anyString())).thenReturn(gitConfig);
 
     QLOnWebhook qlOnWebhook = (QLOnWebhook) triggerConditionController.populateTriggerCondition(trigger, accountId);
 
     assertThat(qlOnWebhook).isNotNull();
     assertThat(qlOnWebhook.getWebhookSource().name()).isEqualTo(webhookTriggerCondition.getWebhookSource().name());
     assertThat(qlOnWebhook.getBranchRegex()).isEqualTo(webhookTriggerCondition.getBranchRegex());
+    assertThat(qlOnWebhook.getBranchName()).isEqualTo(webhookTriggerCondition.getBranchName());
+    assertThat(qlOnWebhook.getGitConnectorId()).isEqualTo(webhookTriggerCondition.getGitConnectorId());
+    assertThat(qlOnWebhook.getGitConnectorName()).isEqualTo(gitConfig.getName());
+    assertThat(qlOnWebhook.getFilePaths()).isEqualTo(webhookTriggerCondition.getFilePaths());
+    assertThat(qlOnWebhook.getDeployOnlyIfFilesChanged())
+        .isEqualTo(webhookTriggerCondition.isCheckFileContentChanged());
     assertThat(qlOnWebhook.getTriggerConditionType().name())
         .isEqualTo(webhookTriggerCondition.getConditionType().name());
     assertThat(qlOnWebhook.getWebhookDetails()).isNotNull();
@@ -222,14 +253,28 @@ public class TriggerConditionControllerTest extends CategoryTest {
                                                           .eventTypes(Arrays.asList(WebhookEventType.RELEASE))
                                                           .releaseActions(Arrays.asList(ReleaseAction.CREATED))
                                                           .branchRegex("regex")
+                                                          .branchName("branchName")
+                                                          .gitConnectorId("gitConnectorId")
+                                                          .filePaths(Arrays.asList("filePath1", "filePath2"))
+                                                          .checkFileContentChanged(true)
                                                           .build();
     Trigger trigger = Trigger.builder().condition(webhookTriggerCondition).build();
+
+    SettingAttribute gitConfig = new SettingAttribute();
+    gitConfig.setName("gitConnectorName");
+    Mockito.when(settingsService.get(Matchers.anyString())).thenReturn(gitConfig);
 
     QLOnWebhook qlOnWebhook = (QLOnWebhook) triggerConditionController.populateTriggerCondition(trigger, accountId);
 
     assertThat(qlOnWebhook).isNotNull();
     assertThat(qlOnWebhook.getWebhookSource().name()).isEqualTo(webhookTriggerCondition.getWebhookSource().name());
     assertThat(qlOnWebhook.getBranchRegex()).isEqualTo(webhookTriggerCondition.getBranchRegex());
+    assertThat(qlOnWebhook.getBranchName()).isEqualTo(webhookTriggerCondition.getBranchName());
+    assertThat(qlOnWebhook.getGitConnectorId()).isEqualTo(webhookTriggerCondition.getGitConnectorId());
+    assertThat(qlOnWebhook.getGitConnectorName()).isEqualTo(gitConfig.getName());
+    assertThat(qlOnWebhook.getFilePaths()).isEqualTo(webhookTriggerCondition.getFilePaths());
+    assertThat(qlOnWebhook.getDeployOnlyIfFilesChanged())
+        .isEqualTo(webhookTriggerCondition.isCheckFileContentChanged());
     assertThat(qlOnWebhook.getTriggerConditionType().name())
         .isEqualTo(webhookTriggerCondition.getConditionType().name());
     assertThat(qlOnWebhook.getWebhookDetails()).isNotNull();
@@ -262,14 +307,28 @@ public class TriggerConditionControllerTest extends CategoryTest {
                                                           .webHookToken(webHookToken)
                                                           .webhookSource(WebhookSource.GITLAB)
                                                           .eventTypes(Arrays.asList(WebhookEventType.PUSH))
+                                                          .branchName("branchName")
+                                                          .gitConnectorId("gitConnectorId")
+                                                          .filePaths(Arrays.asList("filePath1", "filePath2"))
+                                                          .checkFileContentChanged(true)
                                                           .build();
     Trigger trigger = Trigger.builder().condition(webhookTriggerCondition).build();
+
+    SettingAttribute gitConfig = new SettingAttribute();
+    gitConfig.setName("gitConnectorName");
+    Mockito.when(settingsService.get(Matchers.anyString())).thenReturn(gitConfig);
 
     QLOnWebhook qlOnWebhook = (QLOnWebhook) triggerConditionController.populateTriggerCondition(trigger, accountId);
 
     assertThat(qlOnWebhook).isNotNull();
     assertThat(qlOnWebhook.getWebhookSource().name()).isEqualTo(webhookTriggerCondition.getWebhookSource().name());
     assertThat(qlOnWebhook.getBranchRegex()).isEqualTo(webhookTriggerCondition.getBranchRegex());
+    assertThat(qlOnWebhook.getBranchName()).isEqualTo(webhookTriggerCondition.getBranchName());
+    assertThat(qlOnWebhook.getGitConnectorId()).isEqualTo(webhookTriggerCondition.getGitConnectorId());
+    assertThat(qlOnWebhook.getGitConnectorName()).isEqualTo(gitConfig.getName());
+    assertThat(qlOnWebhook.getFilePaths()).isEqualTo(webhookTriggerCondition.getFilePaths());
+    assertThat(qlOnWebhook.getDeployOnlyIfFilesChanged())
+        .isEqualTo(webhookTriggerCondition.isCheckFileContentChanged());
     assertThat(qlOnWebhook.getTriggerConditionType().name())
         .isEqualTo(webhookTriggerCondition.getConditionType().name());
     assertThat(qlOnWebhook.getWebhookDetails()).isNotNull();
@@ -302,14 +361,28 @@ public class TriggerConditionControllerTest extends CategoryTest {
             .webHookToken(webHookToken)
             .webhookSource(WebhookSource.BITBUCKET)
             .bitBucketEvents(Arrays.asList(WebhookSource.BitBucketEventType.PULL_REQUEST_CREATED))
+            .branchName("branchName")
+            .gitConnectorId("gitConnectorId")
+            .filePaths(Arrays.asList("filePath1", "filePath2"))
+            .checkFileContentChanged(true)
             .build();
     Trigger trigger = Trigger.builder().condition(webhookTriggerCondition).build();
+
+    SettingAttribute gitConfig = new SettingAttribute();
+    gitConfig.setName("gitConnectorName");
+    Mockito.when(settingsService.get(Matchers.anyString())).thenReturn(gitConfig);
 
     QLOnWebhook qlOnWebhook = (QLOnWebhook) triggerConditionController.populateTriggerCondition(trigger, accountId);
 
     assertThat(qlOnWebhook).isNotNull();
     assertThat(qlOnWebhook.getWebhookSource().name()).isEqualTo(webhookTriggerCondition.getWebhookSource().name());
     assertThat(qlOnWebhook.getBranchRegex()).isEqualTo(webhookTriggerCondition.getBranchRegex());
+    assertThat(qlOnWebhook.getBranchName()).isEqualTo(webhookTriggerCondition.getBranchName());
+    assertThat(qlOnWebhook.getGitConnectorId()).isEqualTo(webhookTriggerCondition.getGitConnectorId());
+    assertThat(qlOnWebhook.getGitConnectorName()).isEqualTo(gitConfig.getName());
+    assertThat(qlOnWebhook.getFilePaths()).isEqualTo(webhookTriggerCondition.getFilePaths());
+    assertThat(qlOnWebhook.getDeployOnlyIfFilesChanged())
+        .isEqualTo(webhookTriggerCondition.isCheckFileContentChanged());
     assertThat(qlOnWebhook.getTriggerConditionType().name())
         .isEqualTo(webhookTriggerCondition.getConditionType().name());
     assertThat(qlOnWebhook.getWebhookDetails()).isNotNull();
@@ -427,6 +500,9 @@ public class TriggerConditionControllerTest extends CategoryTest {
             .eventTypes(Collections.singletonList(WebhookEventType.PULL_REQUEST))
             .actions(Collections.singletonList(GithubAction.OPENED))
             .branchRegex("regex")
+            .checkFileContentChanged(true)
+            .filePaths(Arrays.asList("filePath1", "filePath2"))
+            .gitConnectorId("gitConnectorId")
             .build();
 
     Mockito.doReturn(webHookTriggerCondition)
@@ -449,5 +525,11 @@ public class TriggerConditionControllerTest extends CategoryTest {
     assertThat(retrievedWebHookTriggerCondition.getActions().get(0))
         .isEqualTo(webHookTriggerCondition.getActions().get(0));
     assertThat(retrievedWebHookTriggerCondition.getBranchRegex()).isEqualTo(webHookTriggerCondition.getBranchRegex());
+    assertThat(retrievedWebHookTriggerCondition.getBranchName()).isEqualTo(webHookTriggerCondition.getBranchName());
+    assertThat(retrievedWebHookTriggerCondition.isCheckFileContentChanged())
+        .isEqualTo(webHookTriggerCondition.isCheckFileContentChanged());
+    assertThat(retrievedWebHookTriggerCondition.getGitConnectorId())
+        .isEqualTo(webHookTriggerCondition.getGitConnectorId());
+    assertThat(retrievedWebHookTriggerCondition.getFilePaths()).isEqualTo(webHookTriggerCondition.getFilePaths());
   }
 }

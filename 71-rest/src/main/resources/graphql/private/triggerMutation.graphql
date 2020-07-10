@@ -58,6 +58,10 @@ input WebhookConditionInput {
   bitbucketEvent: BitbucketEvent
   gitlabEvent: GitlabEvent
   branchRegex: String
+  branchName: String
+  deployOnlyIfFilesChanged: Boolean
+  filePaths: [String]
+  gitConnectorId: String
 }
 
 input GitHubEvent {

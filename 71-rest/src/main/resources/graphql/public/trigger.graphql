@@ -60,6 +60,11 @@ type OnWebhook implements TriggerCondition {
   webhookDetails: WebhoookDetails
   webhookEvent: WebhookEvent
   branchRegex: String
+  branchName: String
+  deployOnlyIfFilesChanged: Boolean
+  filePaths: [String]
+  gitConnectorId: String
+  gitConnectorName: String
 }
 
 type OnSchedule implements TriggerCondition {
