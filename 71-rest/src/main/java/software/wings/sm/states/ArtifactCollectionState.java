@@ -113,6 +113,7 @@ public class ArtifactCollectionState extends State {
       }
       evaluatedBuildNo = context.renderExpression(buildNo);
       runtimeValues.put("buildNo", evaluatedBuildNo);
+      runtimeValues.replaceAll((k, v) -> context.renderExpression((String) runtimeValues.get(k)));
       artifactStreamHelper.resolveArtifactStreamRuntimeValues(artifactStream, runtimeValues);
       artifactStream.setSourceName(artifactStream.generateSourceName());
       lastCollectedArtifact = fetchCollectedArtifactForParameterizedArtifactStream(artifactStream, evaluatedBuildNo);
