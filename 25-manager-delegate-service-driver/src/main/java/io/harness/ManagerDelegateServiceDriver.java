@@ -37,8 +37,14 @@ public class ManagerDelegateServiceDriver {
   }
 
   public SendTaskResponse sendTask(String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
-    SendTaskRequest request = buildSendTaskRequest(accountId, setupAbstractions, taskData);
-    return managerDelegateGrpcClient.sendTask(request);
+    TaskDetails taskDetails = buildTaskDetails(taskData);
+    SendTaskRequest request =
+        SendTaskRequest.newBuilder()
+            .setAccountId(AccountId.newBuilder().setId(accountId).build())
+            .setSetupAbstractions(TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build())
+            .setDetails(taskDetails)
+            .build();
+    return managerDelegateGrpcClient.sendTask(request, taskData.getTimeout());
   }
 
   public String sendTaskAsync(String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
@@ -49,16 +55,6 @@ public class ManagerDelegateServiceDriver {
 
   public io.harness.delegate.AbortTaskResponse abortTask(io.harness.delegate.AbortTaskRequest request) {
     return managerDelegateGrpcClient.abortTask(request);
-  }
-
-  private SendTaskRequest buildSendTaskRequest(
-      String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
-    TaskDetails taskDetails = buildTaskDetails(taskData);
-    return SendTaskRequest.newBuilder()
-        .setAccountId(AccountId.newBuilder().setId(accountId).build())
-        .setSetupAbstractions(TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build())
-        .setDetails(taskDetails)
-        .build();
   }
 
   private SendTaskAsyncRequest buildSendTaskAsyncRequest(
