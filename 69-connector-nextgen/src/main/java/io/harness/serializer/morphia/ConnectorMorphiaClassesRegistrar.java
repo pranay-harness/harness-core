@@ -1,6 +1,9 @@
 package io.harness.serializer.morphia;
 
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.embedded.gitconnector.GitConfig;
+import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
+import io.harness.connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication;
 import io.harness.connector.entities.embedded.kubernetescluster.ClientKeyCertK8;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
@@ -17,6 +20,7 @@ public class ConnectorMorphiaClassesRegistrar implements io.harness.morphia.Morp
   public void registerClasses(Set<Class> set) {
     set.add(Connector.class);
     set.add(KubernetesClusterConfig.class);
+    set.add(GitConfig.class);
   }
 
   @Override
@@ -27,5 +31,8 @@ public class ConnectorMorphiaClassesRegistrar implements io.harness.morphia.Morp
     h.put("connector.entities.embedded.kubernetescluster.OpenIdConnectK8", OpenIdConnectK8.class);
     h.put("connector.entities.embedded.kubernetescluster.ServiceAccountK8", ServiceAccountK8.class);
     h.put("connector.entities.embedded.kubernetescluster.UserNamePasswordK8", UserNamePasswordK8.class);
+    h.put("connector.entities.embedded.gitconnector.GitSSHAuthentication", GitSSHAuthentication.class);
+    h.put("connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication",
+        UserNamePasswordGitAuthentication.class);
   }
 }

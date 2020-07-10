@@ -100,7 +100,7 @@ public class ConnectorResourceTest extends ConnectorsBaseTest {
   public void list() {
     final Page<ConnectorSummaryDTO> page = new PageImpl<>(Arrays.asList(ConnectorSummaryDTO.builder().build()));
     when(connectorService.list(null, 100, 0)).thenReturn(page);
-    Page<ConnectorSummaryDTO> connectorSummaryList = connectorResource.list(100, 0);
+    Page<ConnectorSummaryDTO> connectorSummaryList = connectorResource.list(100, 0, null);
     Mockito.verify(connectorService, times(1)).list(null, 100, 0);
     assertThat(connectorSummaryList).isNotNull();
   }
