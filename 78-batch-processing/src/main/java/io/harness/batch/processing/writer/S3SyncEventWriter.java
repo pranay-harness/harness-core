@@ -1,5 +1,8 @@
 package io.harness.batch.processing.writer;
 
+import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
+import static software.wings.settings.SettingValue.SettingVariableTypes.CE_AWS;
+
 import com.google.inject.Singleton;
 
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -16,7 +19,6 @@ import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.settings.SettingValue;
 
 import java.util.List;
 
@@ -36,8 +38,8 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
   public void write(List<? extends SettingAttribute> dummySettingAttributeList) {
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
 
-    List<SettingAttribute> ceConnectorsList = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-        accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingValue.SettingVariableTypes.CE_AWS);
+    List<SettingAttribute> ceConnectorsList =
+        cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(accountId, CE_CONNECTOR, CE_AWS);
 
     logger.info("Processing batch size of {} in S3SyncEventWriter", ceConnectorsList.size());
 

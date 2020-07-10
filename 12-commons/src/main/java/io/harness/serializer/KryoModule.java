@@ -54,7 +54,6 @@ public class KryoModule extends DependencyModule {
   protected void configure() {
     // Dummy kryo initialization trigger to make sure it is in good condition
     KryoUtils.asBytes(1);
-
     if (!inSpring) {
       Provider<Set<Class<? extends KryoRegistrar>>> provider =
           getProvider(Key.get(new TypeLiteral<Set<Class<? extends KryoRegistrar>>>() {}));

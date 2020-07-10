@@ -15,7 +15,7 @@ events-mongo:
 timescaledb:
   timescaledbUrl: "jdbc:postgresql://localhost:5432/harness"
   timescaledbUsername: "postgres"
-  timescaledbPassword:
+  timescaledbPassword: ""
   connectTimeout: 10
   socketTimeout: 30
   logUnclosedConnections: false
@@ -43,5 +43,9 @@ smtp:
   useSSL: true
   username: smtp_username_placeholder
   password: "smtp_password_placeholder"
+
+segmentConfig:
+  enabled: false
+  apiKey: "segment_api_key"
 
 baseUrl: https://localhost:8000

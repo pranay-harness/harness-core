@@ -116,7 +116,7 @@ public class WeeklyReportServiceImpl {
   private static final String OVERVIEW_URL = "/account/%s/continuous-efficiency/overview";
 
   public void generateAndSendWeeklyReport() {
-    List<Account> ceEnabledAccounts = cloudToHarnessMappingService.getCCMEnabledAccounts();
+    List<Account> ceEnabledAccounts = cloudToHarnessMappingService.getCeEnabledAccounts();
     List<String> accountIds = ceEnabledAccounts.stream().map(Account::getUuid).collect(Collectors.toList());
 
     String currentWeekStartTime = getStartTime(getStartOfDayTimestamp(0)).toString();

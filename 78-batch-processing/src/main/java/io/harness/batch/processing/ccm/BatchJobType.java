@@ -1,6 +1,7 @@
 package io.harness.batch.processing.ccm;
 
 import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER;
+import static io.harness.batch.processing.ccm.BatchJobBucket.OTHERS;
 import static io.harness.batch.processing.ccm.BatchJobBucket.OUT_OF_CLUSTER;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -25,6 +26,7 @@ public enum BatchJobType {
   INSTANCE_BILLING(600, 1, ChronoUnit.DAYS, Arrays.asList(ECS_UTILIZATION, K8S_UTILIZATION), IN_CLUSTER),
   ACTUAL_IDLE_COST_BILLING(650, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER),
   UNALLOCATED_BILLING(700, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER),
+  CE_SEGMENT_CALL(730, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING, UNALLOCATED_BILLING), OTHERS),
   INSTANCE_BILLING_HOURLY(750, 1, ChronoUnit.HOURS, Arrays.asList(INSTANCE_BILLING), IN_CLUSTER),
   ACTUAL_IDLE_COST_BILLING_HOURLY(800, 1, ChronoUnit.HOURS, singletonList(INSTANCE_BILLING_HOURLY), IN_CLUSTER),
   UNALLOCATED_BILLING_HOURLY(850, 1, ChronoUnit.HOURS, singletonList(INSTANCE_BILLING_HOURLY), IN_CLUSTER);

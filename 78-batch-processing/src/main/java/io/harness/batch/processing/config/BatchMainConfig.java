@@ -1,6 +1,7 @@
 package io.harness.batch.processing.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import lombok.Builder;
@@ -19,5 +20,6 @@ public class BatchMainConfig {
   @JsonProperty("awsS3SyncConfig") private AwsS3SyncConfig awsS3SyncConfig;
   @JsonProperty("billingDataPipelineConfig") private BillingDataPipelineConfig billingDataPipelineConfig;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
+  @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
   @JsonProperty("baseUrl") private String baseUrl;
 }

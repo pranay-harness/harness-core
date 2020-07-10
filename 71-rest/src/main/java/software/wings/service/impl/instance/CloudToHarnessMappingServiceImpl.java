@@ -128,7 +128,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   }
 
   @Override
-  public List<Account> getCCMEnabledAccounts() {
+  public List<Account> getCeEnabledAccounts() {
     List<Account> accounts = new ArrayList<>();
     Query<Account> query = persistence.createQuery(Account.class, excludeAuthority);
     query.or(query.criteria(AccountKeys.cloudCostEnabled).equal(Boolean.TRUE),

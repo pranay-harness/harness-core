@@ -20,6 +20,7 @@ import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.instance.HarnessServiceInfo;
+import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.settings.SettingValue;
 
 import java.time.Instant;
@@ -29,7 +30,7 @@ import java.util.Optional;
 
 public class CloudToHarnessMappingServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private CloudToHarnessMappingServiceImpl cloudToHarnessMappingService;
-  @Mock private DeploymentServiceImpl deploymentService;
+  @Mock private DeploymentService deploymentService;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ECS_SERVICE_NAME = "ecs_service_name";
