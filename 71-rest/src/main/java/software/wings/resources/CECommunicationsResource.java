@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.ResourceType.USER;
 
 import com.google.inject.Inject;
@@ -14,6 +15,7 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 
 import java.util.List;
@@ -30,7 +32,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(USER)
 public class CECommunicationsResource {
-  private CECommunicationsService communicationsService;
+  private final CECommunicationsService communicationsService;
 
   @Inject
   public CECommunicationsResource(CECommunicationsService communicationsService) {
@@ -47,10 +49,11 @@ public class CECommunicationsResource {
   @POST
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = CE_ADMIN)
   public RestResponse update(@QueryParam("accountId") String accountId, @QueryParam("type") CommunicationType type,
       @QueryParam("enable") boolean enable) {
     communicationsService.update(accountId, getUserEmail(), type, enable, true);
-    return new RestResponse();
+    return new RestResponse<>();
   }
 
   @GET
@@ -68,17 +71,18 @@ public class CECommunicationsResource {
   public RestResponse enableViaEmail(@PathParam("accountId") String accountId,
       @QueryParam("type") CommunicationType type, @QueryParam("email") String email) {
     communicationsService.update(accountId, email, type, true, false);
-    return new RestResponse();
+    return new RestResponse<>();
   }
 
   @DELETE
   @Path("{accountId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = CE_ADMIN)
   public RestResponse removeEmail(@PathParam("accountId") String accountId, @QueryParam("type") CommunicationType type,
       @QueryParam("email") String email) {
     communicationsService.delete(accountId, email, type);
-    return new RestResponse();
+    return new RestResponse<>();
   }
 
   @POST

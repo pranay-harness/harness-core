@@ -74,9 +74,7 @@ public class LdapIntegrationTest extends BaseIntegrationTest implements WingsInt
     LdapIntegrationTestConstants.ACCOUNT_ID =
         authenticationUtil.getDefaultAccount(authenticationUtil.getUser(ADMIN_HARNESS_ID)).getUuid();
     LdapIntegrationTestConstants.USER_GROUP_ID =
-        userGroupService.getUserGroupsByAccountId(ACCOUNT_ID, userService.getUserByEmail(ADMIN_HARNESS_ID))
-            .get(0)
-            .getUuid();
+        userGroupService.listByAccountId(ACCOUNT_ID, userService.getUserByEmail(ADMIN_HARNESS_ID)).get(0).getUuid();
     userToken = INVALID_TOKEN;
   }
 

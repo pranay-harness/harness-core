@@ -492,8 +492,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     Set<EnvFilter> envFilters = Sets.newHashSet();
 
-    List<UserGroup> userGroupsByAccountId =
-        userGroupService.getUserGroupsByAccountId(userRequestContext.getAccountId(), user);
+    List<UserGroup> userGroupsByAccountId = userGroupService.listByAccountId(userRequestContext.getAccountId(), user);
     userGroupsByAccountId.forEach(userGroup -> {
       Set<AppPermission> appPermissions = userGroup.getAppPermissions();
       if (isEmpty(appPermissions)) {

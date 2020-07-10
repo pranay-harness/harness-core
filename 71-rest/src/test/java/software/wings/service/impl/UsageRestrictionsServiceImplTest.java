@@ -172,7 +172,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     List<UserGroup> userGroups =
         asList(UserGroup.builder().accountId(ACCOUNT_ID).appPermissions(newHashSet(appPermissions)).build());
     pageResponse = aPageResponse().withResponse(userGroups).build();
-    when(userGroupService.getUserGroupsByAccountId(anyString(), any(User.class))).thenReturn(userGroups);
+    when(userGroupService.listByAccountId(anyString(), any(User.class))).thenReturn(userGroups);
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(pageResponse);
     when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(appIds));
     return userGroups;

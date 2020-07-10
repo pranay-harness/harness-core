@@ -36,6 +36,7 @@ import software.wings.beans.sso.LdapUserSettings;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.graphql.schema.type.permissions.QLGroupPermissions;
 import software.wings.graphql.schema.type.usergroup.QLLDAPSettings;
+import software.wings.graphql.schema.type.usergroup.QLLDAPSettings.QLLDAPSettingsKeys;
 import software.wings.graphql.schema.type.usergroup.QLNotificationSettings;
 import software.wings.graphql.schema.type.usergroup.QLSSOSetting;
 import software.wings.graphql.schema.type.usergroup.QLUserGroup.QLUserGroupKeys;
@@ -252,14 +253,14 @@ public class UserGroupTest extends GraphQLTest {
       final CreateUserGroupResult userGroupResult =
           JsonUtils.convertValue(qlTestObject.getMap(), CreateUserGroupResult.class);
       assertThat(userGroupResult.getUserGroup().getId()).isNotNull();
-      assertThat(userGroupResult.getUserGroup().getName()).isEqualTo("NewUserGroup");
-      assertThat(userGroupResult.getUserGroup().getDescription()).isEqualTo("descc");
-      assertThat(userGroupResult.getUserGroup().getIsSSOLinked()).isEqualTo(true);
-      assertThat(userGroupResult.getUserGroup().getImportedByScim()).isEqualTo(false);
+      assertThat(userGroupResult.getUserGroup())
+          .extracting("name", "description", "isSSOLinked", "importedByScim")
+          .containsExactly("NewUserGroup", "descc", true, false);
+
       QLLDAPSettings ldapSettingsOut = userGroupResult.getUserGroup().getSsoSetting();
-      assertThat(ldapSettingsOut.getGroupDN()).isEqualTo(groupDN);
-      assertThat(ldapSettingsOut.getGroupName()).isEqualTo(groupName);
-      assertThat(ldapSettingsOut.getSsoProviderId()).isEqualTo(ldapSettings.getUuid());
+      assertThat(ldapSettingsOut)
+          .extracting(QLLDAPSettingsKeys.groupDN, QLLDAPSettingsKeys.groupName, QLLDAPSettingsKeys.ssoProviderId)
+          .containsExactly(groupDN, groupName, ldapSettings.getUuid());
     }
   }
 

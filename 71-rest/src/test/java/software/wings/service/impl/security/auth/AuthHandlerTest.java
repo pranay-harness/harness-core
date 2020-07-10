@@ -19,6 +19,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
@@ -1054,8 +1055,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     assertThat(userGroup.getAppPermissions()).isNotNull();
 
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
-    assertThat(accountPermissions.getPermissions()).hasSize(1);
-    assertThat(accountPermissions.getPermissions().contains(AUDIT_VIEWER)).isTrue();
+    assertThat(accountPermissions.getPermissions()).contains(AUDIT_VIEWER).contains(CE_VIEWER);
   }
 
   @Test
@@ -1068,8 +1068,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     assertThat(userGroup.getAppPermissions()).isNotNull();
 
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
-    assertThat(accountPermissions.getPermissions()).hasSize(1);
-    assertThat(accountPermissions.getPermissions().contains(AUDIT_VIEWER)).isTrue();
+    assertThat(accountPermissions.getPermissions()).contains(AUDIT_VIEWER).contains(CE_VIEWER);
   }
 
   @Test
