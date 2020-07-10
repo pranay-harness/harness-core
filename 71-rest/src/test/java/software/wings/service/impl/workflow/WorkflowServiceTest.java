@@ -16,6 +16,7 @@ import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RUSHABH;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -150,6 +151,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructServiceCommand;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructShellScriptTemplateStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructTemplatizedCanaryWorkflow;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructWfWithTrafficShiftSteps;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructWorkflowWithParam;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getEnvTemplateExpression;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.getInfraTemplateExpression;
@@ -319,6 +321,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.TrafficShiftMetadata;
 import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -4825,6 +4828,22 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow).isNotNull();
     assertThat(orchestrationWorkflow.getConcurrencyStrategy()).isNotNull();
     assertThat(orchestrationWorkflow.getConcurrencyStrategy().getUnitType()).isEqualTo(UnitType.NONE);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testLoadTrafficShiftMetadata() {
+    Workflow workflow = workflowService.createWorkflow(constructWfWithTrafficShiftSteps());
+    TrafficShiftMetadata trafficShiftMetadata =
+        workflowService.readWorkflowTrafficShiftMetadata(workflow.getAppId(), workflow.getUuid());
+    assertThat(trafficShiftMetadata).isNotNull();
+    List<String> phaseIds = trafficShiftMetadata.getPhaseIdsWithTrafficShift();
+    assertThat(phaseIds).isNotNull();
+    assertThat(phaseIds.size()).isEqualTo(1);
+    assertThat(phaseIds.get(0))
+        .isEqualTo(
+            ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid());
   }
 
   @Test

@@ -20,6 +20,7 @@ import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
+import software.wings.beans.TrafficShiftMetadata;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowCategorySteps;
@@ -229,4 +230,6 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   void resolveArtifactStreamMetadata(
       String appId, List<ArtifactVariable> artifactVariables, WorkflowExecution workflowExecution);
+
+  TrafficShiftMetadata readWorkflowTrafficShiftMetadata(@NotNull String appId, @NotNull String workflowId);
 }
