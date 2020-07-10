@@ -15,6 +15,7 @@ import io.harness.cvng.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.models.VerificationType;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,11 +33,15 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   private String accountId;
   private String connectorId;
   private String productName;
+  private String groupId;
+  private String serviceInstanceIdentifier;
   @Before
   public void setup() {
     this.accountId = generateUuid();
     this.connectorId = generateUuid();
     this.productName = generateUuid();
+    this.groupId = generateUuid();
+    this.serviceInstanceIdentifier = generateUuid();
   }
 
   @Test
@@ -126,7 +131,7 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   public void testUpdate_withEmptyCVConfigId() {
     CVConfig cvConfig = createCVConfig();
     assertThatThrownBy(() -> cvConfigService.update(Lists.newArrayList(cvConfig)))
-        .isInstanceOf(IllegalArgumentException.class)
+        .isInstanceOf(NullPointerException.class)
         .hasMessage("Trying to update a CVConfig with empty UUID.");
   }
 
@@ -247,13 +252,17 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   }
 
   private void assertCommons(CVConfig actual, CVConfig expected) {
-    assertThat(actual.getType()).isEqualTo(expected.getType());
-    assertThat(actual.getAccountId()).isEqualTo(expected.getAccountId());
-    assertThat(actual.getCategory()).isEqualTo(expected.getCategory());
-    assertThat(actual.getConnectorId()).isEqualTo(expected.getConnectorId());
-    assertThat(actual.getEnvIdentifier()).isEqualTo(expected.getEnvIdentifier());
-    assertThat(actual.getServiceIdentifier()).isEqualTo(expected.getServiceIdentifier());
     assertThat(actual.getName()).isEqualTo(expected.getName());
+    assertThat(actual.getVerificationType()).isEqualTo(expected.getVerificationType());
+    assertThat(actual.getAccountId()).isEqualTo(expected.getAccountId());
+    assertThat(actual.getConnectorId()).isEqualTo(expected.getConnectorId());
+    assertThat(actual.getServiceIdentifier()).isEqualTo(expected.getServiceIdentifier());
+    assertThat(actual.getEnvIdentifier()).isEqualTo(expected.getEnvIdentifier());
+    assertThat(actual.getProjectIdentifier()).isEqualTo(expected.getProjectIdentifier());
+    assertThat(actual.getGroupId()).isEqualTo(expected.getGroupId());
+    assertThat(actual.getCategory()).isEqualTo(expected.getCategory());
+    assertThat(actual.getProductName()).isEqualTo(expected.getProductName());
+    assertThat(actual.getType()).isEqualTo(expected.getType());
   }
 
   public List<CVConfig> createCVConfigs(int n) {
@@ -264,18 +273,22 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
     SplunkCVConfig cvConfig = new SplunkCVConfig();
     fillCommon(cvConfig);
     cvConfig.setQuery("exception");
+    cvConfig.setServiceInstanceIdentifier(serviceInstanceIdentifier);
     cvConfig.setBaseline(
         TimeRange.builder().startTime(Instant.now()).endTime(Instant.now().plus(10, ChronoUnit.DAYS)).build());
     return cvConfig;
   }
 
   private void fillCommon(CVConfig cvConfig) {
-    cvConfig.setConnectorId(connectorId);
-    cvConfig.setCategory(PERFORMANCE_PACK_IDENTIFIER);
-    cvConfig.setAccountId(accountId);
-    cvConfig.setProductName(productName);
-    cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setName("cvConfigName-" + generateUuid());
+    cvConfig.setVerificationType(VerificationType.LOG);
+    cvConfig.setAccountId(accountId);
+    cvConfig.setConnectorId(connectorId);
+    cvConfig.setServiceIdentifier(generateUuid());
+    cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
+    cvConfig.setGroupId(groupId);
+    cvConfig.setCategory(PERFORMANCE_PACK_IDENTIFIER);
+    cvConfig.setProductName(productName);
   }
 }

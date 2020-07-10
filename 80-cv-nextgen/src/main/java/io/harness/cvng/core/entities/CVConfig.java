@@ -1,5 +1,8 @@
 package io.harness.cvng.core.entities;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static io.harness.cvng.util.ErrorMessageUtils.generateErrorMessageFromParam;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -75,6 +78,20 @@ public abstract class CVConfig
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
+
+  public void validate() {
+    checkNotNull(getVerificationType(), generateErrorMessageFromParam(CVConfigKeys.verificationType));
+    checkNotNull(accountId, generateErrorMessageFromParam(CVConfigKeys.accountId));
+    checkNotNull(connectorId, generateErrorMessageFromParam(CVConfigKeys.connectorId));
+    checkNotNull(serviceIdentifier, generateErrorMessageFromParam(CVConfigKeys.serviceIdentifier));
+    checkNotNull(envIdentifier, generateErrorMessageFromParam(CVConfigKeys.envIdentifier));
+    checkNotNull(projectIdentifier, generateErrorMessageFromParam(CVConfigKeys.projectIdentifier));
+    checkNotNull(groupId, generateErrorMessageFromParam(CVConfigKeys.groupId));
+
+    validateParams();
+  }
+
+  protected abstract void validateParams();
 
   public abstract DataSourceType getType();
 

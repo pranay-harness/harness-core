@@ -34,6 +34,7 @@ import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.models.VerificationType;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.StringUtils;
@@ -53,6 +54,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
   private String cvConfigId;
   private String accountId;
+  private String connectorId;
+  private String groupId;
   private Random random;
   private String projectIdentifier;
   @Inject private TimeSeriesService timeSeriesService;
@@ -64,6 +67,9 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
   public void setUp() {
     cvConfigId = generateUuid();
     accountId = generateUuid();
+    connectorId = generateUuid();
+    groupId = generateUuid();
+    projectIdentifier = generateUuid();
     random = new Random(System.currentTimeMillis());
     testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
     hPersistence.registerUserProvider(testUserProvider);
@@ -204,8 +210,18 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
   public void testGetTimeSeriesMetricDefinitions() {
     metricPackService.getMetricPacks(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS);
     AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
+    appDynamicsCVConfig.setName("appDynamics-config");
+    appDynamicsCVConfig.setVerificationType(VerificationType.TIME_SERIES);
     appDynamicsCVConfig.setProjectIdentifier(projectIdentifier);
     appDynamicsCVConfig.setAccountId(accountId);
+    appDynamicsCVConfig.setConnectorId(connectorId);
+    appDynamicsCVConfig.setServiceIdentifier("serviceIdentifier");
+    appDynamicsCVConfig.setEnvIdentifier("environmentIdentifier");
+    appDynamicsCVConfig.setGroupId(groupId);
+    appDynamicsCVConfig.setTierId(1234);
+    appDynamicsCVConfig.setApplicationId(4321);
+    appDynamicsCVConfig.setTierName("tierName");
+    appDynamicsCVConfig.setApplicationName("applicationName");
     appDynamicsCVConfig.setMetricPack(MetricPack.builder()
                                           .identifier(PERFORMANCE_PACK_IDENTIFIER)
                                           .metrics(Sets.newHashSet(MetricPack.MetricDefinition.builder().build()))

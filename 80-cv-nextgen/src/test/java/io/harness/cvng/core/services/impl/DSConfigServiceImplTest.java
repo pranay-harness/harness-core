@@ -85,6 +85,7 @@ public class DSConfigServiceImplTest extends CVNextGenBaseTest {
     appDynamicsDSConfig.setProductName(productName);
     appDynamicsDSConfig.setEnvIdentifier("harnessProd");
     appDynamicsDSConfig.setAccountId(accountId);
+    appDynamicsDSConfig.setProjectIdentifier("projectIdentifier");
     appDynamicsDSConfig.setMetricPacks(
         Sets.newHashSet(MetricPack.builder().accountId(accountId).identifier("appd performance metric pack").build()));
     appDynamicsDSConfig.setServiceMappings(
