@@ -32,6 +32,7 @@ public class CECommunicationsDaoTest extends WingsBaseTest {
                          .emailId(email)
                          .type(CommunicationType.WEEKLY_REPORT)
                          .enabled(enable)
+                         .selfEnabled(false)
                          .build();
   }
 
@@ -90,5 +91,14 @@ public class CECommunicationsDaoTest extends WingsBaseTest {
     String uuid = communicationsDao.save(communications);
     boolean successful = communicationsDao.delete(uuid);
     assertThat(successful).isTrue();
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testGetEntriesEnabledViaEmail() {
+    String uuid = communicationsDao.save(communications);
+    List<CECommunications> enabledEntries = communicationsDao.getEntriesEnabledViaEmail(accountId);
+    assertThat(enabledEntries.size()).isEqualTo(1);
   }
 }

@@ -32,6 +32,7 @@ public class CECommunications implements PersistentEntity, UuidAware, CreatedAtA
   @NotBlank String emailId;
   @NotBlank CommunicationType type;
   boolean enabled;
+  boolean selfEnabled;
   long createdAt;
   long lastUpdatedAt;
 }

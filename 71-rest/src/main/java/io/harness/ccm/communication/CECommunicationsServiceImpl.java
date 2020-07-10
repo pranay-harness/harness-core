@@ -21,10 +21,16 @@ public class CECommunicationsServiceImpl implements CECommunicationsService {
   }
 
   @Override
-  public void update(String accountId, String email, CommunicationType type, boolean enable) {
+  public void update(String accountId, String email, CommunicationType type, boolean enable, boolean selfEnabled) {
     CECommunications entry = get(accountId, email, type);
     if (entry == null) {
-      entry = CECommunications.builder().accountId(accountId).emailId(email).type(type).enabled(enable).build();
+      entry = CECommunications.builder()
+                  .accountId(accountId)
+                  .emailId(email)
+                  .type(type)
+                  .enabled(enable)
+                  .selfEnabled(selfEnabled)
+                  .build();
       ceCommunicationsDao.save(entry);
     } else {
       ceCommunicationsDao.update(accountId, email, type, enable);
@@ -37,6 +43,11 @@ public class CECommunicationsServiceImpl implements CECommunicationsService {
     if (entry != null) {
       ceCommunicationsDao.delete(entry.getUuid());
     }
+  }
+
+  @Override
+  public List<CECommunications> getEntriesEnabledViaEmail(String accountId) {
+    return ceCommunicationsDao.getEntriesEnabledViaEmail(accountId);
   }
 
   public List<CECommunications> getEnabledEntries(String accountId, CommunicationType type) {

@@ -8,7 +8,8 @@ import java.util.List;
 public interface CECommunicationsService {
   CECommunications get(String accountId, String email, CommunicationType type);
   List<CECommunications> list(String accountId, String email);
-  void update(String accountId, String email, CommunicationType type, boolean enable);
+  void update(String accountId, String email, CommunicationType type, boolean enable, boolean selfEnabled);
   List<CECommunications> getEnabledEntries(String accountId, CommunicationType type);
   void delete(String accountId, String email, CommunicationType type);
+  List<CECommunications> getEntriesEnabledViaEmail(String accountId);
 }

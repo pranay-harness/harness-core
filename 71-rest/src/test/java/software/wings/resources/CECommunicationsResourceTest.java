@@ -72,12 +72,23 @@ public class CECommunicationsResourceTest extends CategoryTest {
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
+  public void testGetEnabledEntriesViaEmail() {
+    RESOURCES.client()
+        .target(format("/ceCommunications/%s", accountId))
+        .request()
+        .get(new GenericType<RestResponse<List<CECommunications>>>() {});
+    verify(communicationsService).getEntriesEnabledViaEmail(accountId);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
   public void testAddEmail() {
     RESOURCES.client()
         .target(format("/ceCommunications/%s?type=%s&email=%s", accountId, type, email))
         .request()
         .post(entity(communications, MediaType.APPLICATION_JSON), new GenericType<RestResponse<CECommunications>>() {});
-    verify(communicationsService).update(accountId, email, type, true);
+    verify(communicationsService).update(accountId, email, type, true, false);
   }
 
   @Test
@@ -100,7 +111,7 @@ public class CECommunicationsResourceTest extends CategoryTest {
             "/ceCommunications/%s/internal?type=%s&email=%s&targetAccount=%s", accountId, type, email, accountId2))
         .request()
         .post(entity(communications, MediaType.APPLICATION_JSON), new GenericType<RestResponse<CECommunications>>() {});
-    verify(communicationsService).update(accountId2, email, type, true);
+    verify(communicationsService).update(accountId2, email, type, true, true);
   }
 
   @Test

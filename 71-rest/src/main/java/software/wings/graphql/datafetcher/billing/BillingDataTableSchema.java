@@ -140,10 +140,10 @@ public class BillingDataTableSchema {
     memoryActualIdleCost = billingDataTable.addColumn("memoryactualidlecost", doubleType, null);
     unallocatedCost = billingDataTable.addColumn("unallocatedcost", doubleType, null);
     systemCost = billingDataTable.addColumn("systemcost", doubleType, null);
-    maxCpuUtilizationValue = billingDataTable.addColumn("maxcpuutilizationValue", doubleType, null);
+    maxCpuUtilizationValue = billingDataTable.addColumn("maxcpuutilizationvalue", doubleType, null);
     maxMemoryUtilizationValue = billingDataTable.addColumn("maxmemoryutilizationvalue", doubleType, null);
     avgCpuUtilizationValue = billingDataTable.addColumn("avgcpuutilizationvalue", doubleType, null);
-    avgMemoryUtilizationValue = billingDataTable.addColumn("avgmemoryutilizationValue", doubleType, null);
+    avgMemoryUtilizationValue = billingDataTable.addColumn("avgmemoryutilizationvalue", doubleType, null);
     cpuRequest = billingDataTable.addColumn("cpurequest", doubleType, null);
     memoryRequest = billingDataTable.addColumn("memoryrequest", doubleType, null);
     cpuLimit = billingDataTable.addColumn("cpulimit", doubleType, null);

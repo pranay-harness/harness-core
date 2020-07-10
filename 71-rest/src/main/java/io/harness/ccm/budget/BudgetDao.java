@@ -34,7 +34,8 @@ public class BudgetDao {
                                                     .set(BudgetKeys.name, budget.getName())
                                                     .set(BudgetKeys.scope, budget.getScope())
                                                     .set(BudgetKeys.type, budget.getType())
-                                                    .set(BudgetKeys.budgetAmount, budget.getBudgetAmount());
+                                                    .set(BudgetKeys.budgetAmount, budget.getBudgetAmount())
+                                                    .set(BudgetKeys.notifyOnSlack, budget.isNotifyOnSlack());
 
     if (null != budget.getAlertThresholds()) {
       updateOperations.set(BudgetKeys.alertThresholds, budget.getAlertThresholds());

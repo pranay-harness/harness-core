@@ -72,4 +72,13 @@ public class CECommunicationsDao {
                                         .equal(type);
     return query.asList(new FindOptions());
   }
+
+  public List<CECommunications> getEntriesEnabledViaEmail(String accountId) {
+    Query<CECommunications> query = persistence.createQuery(CECommunications.class)
+                                        .field(CECommunicationsKeys.accountId)
+                                        .equal(accountId)
+                                        .field(CECommunicationsKeys.selfEnabled)
+                                        .equal(false);
+    return query.asList(new FindOptions());
+  }
 }
