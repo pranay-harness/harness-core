@@ -24,7 +24,7 @@ public class ExecutableInvokerFactory {
   @Inject Injector injector;
 
   public ExecutableInvoker obtainInvoker(ExecutionMode mode) {
-    InvokeStrategy invokeStrategy = null;
+    InvokeStrategy invokeStrategy;
     switch (mode) {
       case ASYNC:
         invokeStrategy = new AsyncStrategy();
@@ -46,6 +46,9 @@ public class ExecutableInvokerFactory {
         break;
       case TASK_CHAIN:
         invokeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V1);
+        break;
+      case TASK_CHAIN_V2:
+        invokeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V2);
         break;
       case CHILD_CHAIN:
         invokeStrategy = new ChildChainStrategy();

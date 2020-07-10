@@ -1,5 +1,7 @@
 package io.harness;
 
+import static org.apache.commons.collections4.MapUtils.emptyIfNull;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
@@ -40,7 +42,7 @@ public class ManagerDelegateServiceDriver {
   }
 
   public String sendTaskAsync(String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
-    SendTaskAsyncRequest request = buildSendTaskAsyncRequest(accountId, setupAbstractions, taskData);
+    SendTaskAsyncRequest request = buildSendTaskAsyncRequest(accountId, emptyIfNull(setupAbstractions), taskData);
     SendTaskAsyncResponse response = managerDelegateGrpcClient.sendTaskAsync(request);
     return response.getTaskId().getId();
   }
