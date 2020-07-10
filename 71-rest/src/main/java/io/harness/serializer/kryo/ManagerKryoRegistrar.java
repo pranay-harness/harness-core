@@ -505,7 +505,6 @@ import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParame
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sScaleTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
-import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
 import software.wings.helpers.ext.k8s.request.K8sTrafficSplitTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
@@ -1420,7 +1419,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EcsServiceSetupResponse.class, 7122);
     kryo.register(EcsBGServiceSetupRequest.class, 7123);
     kryo.register(K8sTaskParameters.class, 7124);
-    kryo.register(K8sTaskType.class, 7125);
     kryo.register(K8sRollingDeployTaskParameters.class, 7126);
     kryo.register(K8sTaskResponse.class, 7127);
     kryo.register(K8sClusterConfig.class, 7128);

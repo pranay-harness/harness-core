@@ -43,6 +43,7 @@ import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.aws.LoadBalancerType;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
@@ -137,5 +138,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(KubernetesConnectionTaskResponse.class, 19056);
     kryo.register(KubernetesConnectionTaskParams.class, 19057);
     kryo.register(KubernetesAuthCredentialDTO.class, 19058);
+    kryo.register(K8sTaskType.class, 7125);
   }
 }

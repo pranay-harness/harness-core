@@ -1,5 +1,6 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.delegate.task.k8s.K8sTaskType.APPLY;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -14,7 +15,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
-import static software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType.APPLY;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.K8S_APPLY;
 import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;

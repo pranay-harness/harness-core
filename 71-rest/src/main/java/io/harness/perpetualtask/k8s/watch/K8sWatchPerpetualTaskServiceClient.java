@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType.APPLY;
+import static io.harness.delegate.task.k8s.K8sTaskType.APPLY;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;

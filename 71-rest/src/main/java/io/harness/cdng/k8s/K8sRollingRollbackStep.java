@@ -12,6 +12,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
@@ -24,7 +25,6 @@ import io.harness.state.io.StepResponse;
 import io.harness.tasks.Task;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
-import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.sm.states.k8s.K8sRollingDeployRollback;
 
@@ -57,7 +57,7 @@ public class K8sRollingRollbackStep implements Step, TaskExecutable {
             .releaseName(k8sRollingOutcome.getReleaseName())
             .releaseNumber(k8sRollingOutcome.getReleaseNumber())
             .commandName(K8sRollingDeployRollback.K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
-            .k8sTaskType(K8sTaskParameters.K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
+            .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
             .timeoutIntervalInMin(k8sRollingRollbackStepParameters.getTimeout())
             .k8sClusterConfig(k8sStepHelper.getK8sClusterConfig(infrastructure))
             .accountId(AmbianceHelper.getAccountId(ambiance))
