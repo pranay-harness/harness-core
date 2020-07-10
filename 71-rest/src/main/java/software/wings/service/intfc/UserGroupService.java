@@ -42,6 +42,11 @@ public interface UserGroupService extends OwnedByAccount {
    */
   PageResponse<UserGroup> list(@NotEmpty String accountId, PageRequest<UserGroup> req, boolean loadUsers);
 
+  /**
+   * list user groups by name.
+   */
+  @Nullable List<UserGroup> listByName(@NotEmpty String accountId, @NotEmpty List<String> names);
+
   UserGroup getUserGroupSummary(UserGroup userGroup);
 
   List<UserGroup> getUserGroupSummary(List<UserGroup> userGroupList);
@@ -61,11 +66,6 @@ public interface UserGroupService extends OwnedByAccount {
    * Find by name.
    */
   @Nullable UserGroup getByName(@NotEmpty String accountId, @NotEmpty String name);
-
-  /**
-   * list user groups by name.
-   */
-  @Nullable List<UserGroup> listByName(@NotEmpty String accountId, @NotEmpty List<String> names);
 
   /**
    * Find by uuid with optional loadUsers flag.
@@ -152,9 +152,9 @@ public interface UserGroupService extends OwnedByAccount {
   UserGroup cloneUserGroup(
       @NotEmpty String accountId, @NotEmpty String uuid, @NotEmpty String newName, String newDescription);
 
-  List<UserGroup> getUserGroupsByAccountId(String accountId, User user);
+  List<UserGroup> listByAccountId(String accountId, User user);
 
-  List<UserGroup> getUserGroupsByAccountId(String accountId);
+  List<UserGroup> listByAccountId(String accountId);
 
   List<String> fetchUserGroupsMemberIds(String accountId, List<String> userGroupIds);
 

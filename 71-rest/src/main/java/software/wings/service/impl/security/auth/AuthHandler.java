@@ -18,6 +18,8 @@ import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
@@ -1441,12 +1443,15 @@ public class AuthHandler {
                                       .permissionType(PermissionType.ALL_APP_ENTITIES)
                                       .build();
     appPermissions.add(appPermission);
+    AccountPermissions accountPermissions =
+        AccountPermissions.builder().permissions(Sets.newHashSet(CE_VIEWER)).build();
 
     UserGroupBuilder userGroupBuilder = UserGroup.builder()
                                             .accountId(accountId)
                                             .name(userGroupName)
                                             .isDefault(true)
                                             .appPermissions(appPermissions)
+                                            .accountPermissions(accountPermissions)
                                             .description("Default account admin user group");
     if (user != null) {
       userGroupBuilder.memberIds(asList(user.getUuid()));
@@ -1459,7 +1464,7 @@ public class AuthHandler {
       String accountId, String envFilterType, String userGroupName, String description, boolean isDefault) {
     // For Account level permissions, only add AUDIT_VIEW permission
     AccountPermissions accountPermissions =
-        AccountPermissions.builder().permissions(Sets.newHashSet(AUDIT_VIEWER)).build();
+        AccountPermissions.builder().permissions(Sets.newHashSet(AUDIT_VIEWER, CE_VIEWER)).build();
 
     Set<Action> actions = getAllNonDeploymentActions();
     Set<AppPermission> appPermissions = Sets.newHashSet();
@@ -1537,7 +1542,7 @@ public class AuthHandler {
 
   private Set<PermissionType> getAllAccountPermissions() {
     return Sets.newHashSet(USER_PERMISSION_MANAGEMENT, ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE,
-        TEMPLATE_MANAGEMENT, USER_PERMISSION_READ, AUDIT_VIEWER, TAG_MANAGEMENT);
+        TEMPLATE_MANAGEMENT, USER_PERMISSION_READ, AUDIT_VIEWER, TAG_MANAGEMENT, CE_ADMIN, CE_VIEWER);
   }
 
   private Set<Action> getAllActions() {

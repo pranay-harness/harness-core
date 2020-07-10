@@ -720,7 +720,7 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private List<UserGroup> getUserGroups(String accountId, User user) {
-    List<UserGroup> userGroups = userGroupService.getUserGroupsByAccountId(accountId, user);
+    List<UserGroup> userGroups = userGroupService.listByAccountId(accountId, user);
 
     if (isEmpty(userGroups) && !userService.isUserAssignedToAccount(user, accountId)) {
       // Check if its a harness user

@@ -116,7 +116,7 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> get(
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId) {
-    return getPublicUserGroup(userGroupService.get(accountId, userGroupId));
+    return new RestResponse<>(getPublicUserGroup(userGroupService.get(accountId, userGroupId)));
   }
 
   /**
@@ -133,7 +133,8 @@ public class UserGroupResource {
   public RestResponse<UserGroup> clone(@QueryParam("accountId") String accountId,
       @PathParam("userGroupId") String userGroupId, @QueryParam("newName") String newName,
       @QueryParam("newDescription") String newDescription) {
-    return getPublicUserGroup(userGroupService.cloneUserGroup(accountId, userGroupId, newName, newDescription));
+    return new RestResponse<>(
+        getPublicUserGroup(userGroupService.cloneUserGroup(accountId, userGroupId, newName, newDescription)));
   }
 
   /**
@@ -148,15 +149,16 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> save(@QueryParam("accountId") String accountId, UserGroup userGroup) {
     userGroup.setAccountId(accountId);
-    return getPublicUserGroup(userGroupService.save(userGroup));
+    return new RestResponse<>(getPublicUserGroup(userGroupService.save(userGroup)));
   }
 
-  private RestResponse<UserGroup> getPublicUserGroup(UserGroup userGroup) {
+  private UserGroup getPublicUserGroup(UserGroup userGroup) {
     if (userGroup == null) {
-      return new RestResponse<>();
+      return new UserGroup();
     }
     setUserSummary(userGroup);
-    return new RestResponse<>(userGroup);
+
+    return userGroup;
   }
 
   private RestResponse<PageResponse<UserGroup>> getPublicUserGroups(PageResponse<UserGroup> pageResponse) {
@@ -195,7 +197,7 @@ public class UserGroupResource {
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId, UserGroup userGroup) {
     userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
-    return getPublicUserGroup(userGroupService.updateOverview(userGroup));
+    return new RestResponse<>(getPublicUserGroup(userGroupService.updateOverview(userGroup)));
   }
 
   /**
@@ -228,7 +230,8 @@ public class UserGroupResource {
     if (null != existingGroup.getNotificationSettings()) {
       sendMailToNewMembers = existingGroup.getNotificationSettings().isSendMailToNewMembers();
     }
-    return getPublicUserGroup(userGroupService.updateMembers(userGroup, sendMailToNewMembers, true));
+    return new RestResponse<>(
+        getPublicUserGroup(userGroupService.updateMembers(userGroup, sendMailToNewMembers, true)));
   }
 
   /**
@@ -245,7 +248,8 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> updateNotificationSettings(@QueryParam("accountId") String accountId,
       @PathParam("userGroupId") String userGroupId, NotificationSettings settings) {
-    return getPublicUserGroup(userGroupService.updateNotificationSettings(accountId, userGroupId, settings));
+    return new RestResponse<>(
+        getPublicUserGroup(userGroupService.updateNotificationSettings(accountId, userGroupId, settings)));
   }
 
   /**
@@ -264,7 +268,7 @@ public class UserGroupResource {
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId, UserGroup userGroup) {
     userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
-    return getPublicUserGroup(userGroupService.updatePermissions(userGroup));
+    return new RestResponse<>(getPublicUserGroup(userGroupService.updatePermissions(userGroup)));
   }
 
   /**
@@ -341,8 +345,8 @@ public class UserGroupResource {
   public RestResponse<UserGroup> linkToLdapGroup(@PathParam("userGroupId") String userGroupId,
       @PathParam("ldapId") String ldapId, @QueryParam("accountId") @NotEmpty String accountId,
       @NotNull @Valid LdapLinkGroupRequest groupRequest) {
-    return getPublicUserGroup(userGroupService.linkToSsoGroup(
-        accountId, userGroupId, SSOType.LDAP, ldapId, groupRequest.getLdapGroupDN(), groupRequest.getLdapGroupName()));
+    return new RestResponse<>(getPublicUserGroup(userGroupService.linkToSsoGroup(
+        accountId, userGroupId, SSOType.LDAP, ldapId, groupRequest.getLdapGroupDN(), groupRequest.getLdapGroupName())));
   }
 
   /**
@@ -359,7 +363,8 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> unlinkSsoGroup(@PathParam("userGroupId") String userGroupId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("retainMembers") boolean retainMembers) {
-    return getPublicUserGroup(userGroupService.unlinkSsoGroup(accountId, userGroupId, retainMembers));
+    return new RestResponse<>(
+        getPublicUserGroup(userGroupService.unlinkSsoGroup(accountId, userGroupId, retainMembers)));
   }
 
   /**

@@ -13,12 +13,15 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.elasticsearch.common.util.set.Sets.newHashSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
+import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
@@ -33,6 +36,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.ccm.config.CCMSettingService;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -121,6 +125,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UserGroupDeleteEventHandler userGroupDeleteEventHandler;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private CCMSettingService ccmSettingService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject @Named(RbacFeature.FEATURE_NAME) private UsageLimitedFeature rbacFeature;
 
@@ -144,6 +149,11 @@ public class UserGroupServiceImpl implements UserGroupService {
     notNullCheck("account", account);
     loadUsers(savedUserGroup, account);
     evictUserPermissionInfoCacheForUserGroup(savedUserGroup);
+
+    if (!ccmSettingService.isCloudCostEnabled(savedUserGroup.getAccountId())) {
+      maskCePermissions(savedUserGroup);
+    }
+
     auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, userGroup, Type.CREATE);
     logger.info("Auditing creation of new userGroup={} and account={}", userGroup.getName(), account.getAccountName());
     eventPublishHelper.publishSetupRbacEvent(userGroup.getAccountId(), savedUserGroup.getUuid(), EntityType.USER_GROUP);
@@ -195,6 +205,11 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (loadUsers) {
       loadUsersForUserGroups(res.getResponse(), account);
     }
+
+    if (!ccmSettingService.isCloudCostEnabled(accountId)) {
+      res.getResponse().forEach(userGroup -> { maskCePermissions(userGroup); });
+    }
+
     return res;
   }
 
@@ -263,10 +278,14 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   @Nullable
   public UserGroup getByName(String accountId, String name) {
-    return wingsPersistence.createQuery(UserGroup.class)
-        .filter(UserGroupKeys.accountId, accountId)
-        .filter(UserGroupKeys.name, name)
-        .get();
+    UserGroup userGroup = wingsPersistence.createQuery(UserGroup.class)
+                              .filter(UserGroupKeys.accountId, accountId)
+                              .filter(UserGroupKeys.name, name)
+                              .get();
+    if (userGroup != null && !ccmSettingService.isCloudCostEnabled(userGroup.getAccountId())) {
+      maskCePermissions(userGroup);
+    }
+    return userGroup;
   }
 
   @Nullable
@@ -286,6 +305,9 @@ public class UserGroupServiceImpl implements UserGroupService {
       }
     }
 
+    if (!ccmSettingService.isCloudCostEnabled(accountId)) {
+      userGroups.forEach(userGroup -> { maskCePermissions(userGroup); });
+    }
     return userGroups;
   }
 
@@ -295,12 +317,18 @@ public class UserGroupServiceImpl implements UserGroupService {
                               .filter(UserGroupKeys.accountId, accountId)
                               .filter(UserGroup.ID_KEY, userGroupId)
                               .get();
+    if (userGroup == null) {
+      return null;
+    }
 
-    if (loadUsers && userGroup != null) {
+    if (loadUsers) {
       Account account = accountService.get(accountId);
       loadUsers(userGroup, account);
     }
 
+    if (!ccmSettingService.isCloudCostEnabled(userGroup.getAccountId())) {
+      maskCePermissions(userGroup);
+    }
     return userGroup;
   }
 
@@ -317,6 +345,15 @@ public class UserGroupServiceImpl implements UserGroupService {
       userGroup.setMembers(userList);
     } else {
       userGroup.setMembers(new ArrayList<>());
+    }
+  }
+
+  private void maskCePermissions(UserGroup userGroup) {
+    AccountPermissions accountPermissions = userGroup.getAccountPermissions();
+    if (accountPermissions != null) {
+      Set<PermissionType> accountPermissionSet = accountPermissions.getPermissions();
+      accountPermissionSet.removeAll(newHashSet(CE_ADMIN, CE_VIEWER));
+      userGroup.setAccountPermissions(AccountPermissions.builder().permissions(accountPermissionSet).build());
     }
   }
 
@@ -464,6 +501,9 @@ public class UserGroupServiceImpl implements UserGroupService {
         addDefaultCePermissions(Optional.ofNullable(accountPermissions).orElse(AccountPermissions.builder().build())));
     UserGroup updatedUserGroup = update(userGroup, operations);
     evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
+    if (!ccmSettingService.isCloudCostEnabled(updatedUserGroup.getAccountId())) {
+      maskCePermissions(updatedUserGroup);
+    }
     return updatedUserGroup;
   }
 
@@ -598,18 +638,16 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public List<UserGroup> getUserGroupsByAccountId(String accountId, User user) {
+  public List<UserGroup> listByAccountId(String accountId, User user) {
     PageRequestBuilder pageRequest = aPageRequest()
                                          .addFilter(UserGroupKeys.accountId, Operator.EQ, accountId)
                                          .addFilter(UserGroupKeys.memberIds, Operator.HAS, user.getUuid());
-
     return list(accountId, pageRequest.build(), true).getResponse();
   }
 
   @Override
-  public List<UserGroup> getUserGroupsByAccountId(String accountId) {
+  public List<UserGroup> listByAccountId(String accountId) {
     PageRequestBuilder pageRequest = aPageRequest().addFilter(UserGroupKeys.accountId, Operator.EQ, accountId);
-
     return list(accountId, pageRequest.build(), true).getResponse();
   }
 
@@ -790,7 +828,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public boolean deleteNonAdminUserGroups(String accountId) {
-    return getUserGroupsByAccountId(accountId)
+    return listByAccountId(accountId)
         .stream()
         .filter(userGroup -> !UserGroupUtils.isAdminUserGroup(userGroup))
         .map(userGroup -> delete(accountId, userGroup.getUuid(), false))
@@ -803,7 +841,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       throw new IllegalArgumentException("'userGroupsToRetain' is empty");
     }
 
-    Set<String> userGroupsToDelete = getUserGroupsByAccountId(accountId)
+    Set<String> userGroupsToDelete = listByAccountId(accountId)
                                          .stream()
                                          .filter(userGroup -> !userGroupsToRetain.contains(userGroup.getName()))
                                          .map(UuidAware::getUuid)
