@@ -287,6 +287,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(accountService.getDelegateConfiguration(anyString()))
         .thenReturn(DelegateConfiguration.builder().watcherVersion(VERSION).delegateVersions(asList(VERSION)).build());
     Delegate delegate = createDelegateBuilder().build();
+
     delegate.setAccountId(accountId);
 
     Delegate deletedDelegate = createDelegateBuilder().build();
@@ -299,6 +300,10 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateStatus delegateStatus = delegateService.getDelegateStatus(accountId);
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
     assertThat(delegateStatus.getDelegates()).hasSize(1);
+    assertThat(delegateStatus.getDelegates().get(0).getHostName()).isEqualTo("localhost");
+    assertThat(delegateStatus.getDelegates().get(0).getIp()).isEqualTo("127.0.0.1");
+    assertThat(delegateStatus.getDelegates().get(0).getDelegateName()).isEqualTo("testDelegateName");
+    assertThat(delegateStatus.getDelegates().get(0).getDelegateType()).isEqualTo("dockerType");
     assertThat(delegateStatus.getDelegates().get(0)).hasFieldOrPropertyWithValue("uuid", delegate.getUuid());
     assertThat(delegateStatus.getDelegates().get(0).getConnections()).hasSize(1);
     assertThat(delegateStatus.getDelegates().get(0).getConnections().get(0))
@@ -1848,6 +1853,8 @@ public class DelegateServiceTest extends WingsBaseTest {
         .accountId(ACCOUNT_ID)
         .ip("127.0.0.1")
         .hostName("localhost")
+        .delegateName("testDelegateName")
+        .delegateType("dockerType")
         .version(VERSION)
         .status(Status.ENABLED)
         .lastHeartBeat(System.currentTimeMillis());
