@@ -1,8 +1,9 @@
 package io.harness.cvng.core.services.impl;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.cvng.core.entities.CVConfig;
@@ -21,7 +22,8 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Inject HPersistence hPersistence;
   @Override
   public CVConfig save(CVConfig cvConfig) {
-    Preconditions.checkArgument(cvConfig.getUuid() == null, "UUID should be null when creating CVConfig");
+    checkArgument(cvConfig.getUuid() == null, "UUID should be null when creating CVConfig");
+    cvConfig.validate();
     hPersistence.save(cvConfig);
     return cvConfig;
   }
@@ -39,14 +41,14 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public void update(CVConfig cvConfig) {
-    Preconditions.checkArgument(cvConfig.getUuid() != null, "Trying to update a CVConfig with empty UUID.");
+    checkNotNull(cvConfig.getUuid(), "Trying to update a CVConfig with empty UUID.");
+    cvConfig.validate();
     hPersistence.save(cvConfig);
   }
 
   @Override
   public void update(List<CVConfig> cvConfigs) {
-    Preconditions.checkArgument(cvConfigs.stream().allMatch(cvConfig -> cvConfig.getUuid() != null),
-        "Trying to update a CVConfig with empty UUID.");
+    cvConfigs.forEach(cvConfig -> cvConfig.validate());
     cvConfigs.forEach(this ::update); // TODO: implement batch update
   }
 
@@ -96,8 +98,8 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public List<String> getProductNames(String accountId, String connectorId) {
-    Preconditions.checkNotNull(accountId, "accountId can not be null");
-    Preconditions.checkNotNull(connectorId, "ConnectorId can not be null");
+    checkNotNull(accountId, "accountId can not be null");
+    checkNotNull(connectorId, "ConnectorId can not be null");
     return hPersistence.createQuery(CVConfig.class)
         .filter(CVConfigKeys.connectorId, connectorId)
         .filter(CVConfigKeys.accountId, accountId)

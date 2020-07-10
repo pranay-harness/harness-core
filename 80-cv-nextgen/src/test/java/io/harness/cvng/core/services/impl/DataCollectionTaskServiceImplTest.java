@@ -29,6 +29,7 @@ import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.models.VerificationType;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -343,10 +344,19 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
 
   private AppDynamicsCVConfig getCVConfig() {
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setName("name");
+    cvConfig.setProjectIdentifier("projectIdentifier");
     cvConfig.setUuid(cvConfigId);
     cvConfig.setAccountId(accountId);
     cvConfig.setApplicationId(1234);
     cvConfig.setTierId(1234);
+    cvConfig.setVerificationType(VerificationType.TIME_SERIES);
+    cvConfig.setConnectorId(generateUuid());
+    cvConfig.setServiceIdentifier("serviceIdentifier");
+    cvConfig.setEnvIdentifier("envIdentifier");
+    cvConfig.setGroupId(generateUuid());
+    cvConfig.setApplicationName("applicationName");
+    cvConfig.setTierName("tierName");
     cvConfig.setMetricPack(
         metricPackService.getMetricPacks(accountId, "projectId", DataSourceType.APP_DYNAMICS).get(0));
     return cvConfig;
