@@ -7,6 +7,7 @@ import io.harness.data.Outcome;
 import io.harness.state.Step;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.Wither;
 
 import java.util.List;
 
@@ -14,18 +15,12 @@ import java.util.List;
 @Builder
 public class PipelineInfrastructure implements Outcome {
   private InfrastructureSpec infrastructureSpec;
-  private InfraUseFromStage useFromStage;
+  @Wither private InfraUseFromStage useFromStage;
   private EnvironmentYaml environment;
   private List<Step> steps;
   private List<Step> rollbackSteps;
 
   public PipelineInfrastructure applyUseFromStage(PipelineInfrastructure infrastructureToUseFrom) {
-    PipelineInfrastructureBuilder builder = PipelineInfrastructure.builder();
-    return builder.environment(infrastructureToUseFrom.getEnvironment())
-        .infrastructureSpec(infrastructureToUseFrom.getInfrastructureSpec())
-        .steps(infrastructureToUseFrom.getSteps())
-        .rollbackSteps(infrastructureToUseFrom.getRollbackSteps())
-        .useFromStage(useFromStage)
-        .build();
+    return infrastructureToUseFrom.withUseFromStage(this.useFromStage);
   }
 }

@@ -8,16 +8,21 @@ import com.google.common.hash.Hashing;
 import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
+import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.connector.ConnectorConfig;
 import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
+import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import lombok.experimental.UtilityClass;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class ArtifactUtils {
@@ -28,8 +33,31 @@ public class ArtifactUtils {
     return artifactConfigWrapper.getArtifactType().equals(PRIMARY_ARTIFACT);
   }
 
+  public String getArtifactKey(ArtifactConfigWrapper artifactConfigWrapper) {
+    return isPrimaryArtifact(artifactConfigWrapper)
+        ? artifactConfigWrapper.getIdentifier()
+        : artifactConfigWrapper.getArtifactType() + "." + artifactConfigWrapper.getIdentifier();
+  }
+
   public boolean isPrimaryArtifact(ArtifactOutcome artifactOutcome) {
     return artifactOutcome.getArtifactType().equals(PRIMARY_ARTIFACT);
+  }
+
+  public List<ArtifactConfigWrapper> convertArtifactListIntoArtifacts(ArtifactListConfig artifactListConfig) {
+    List<ArtifactConfigWrapper> artifacts = new LinkedList<>();
+    if (artifactListConfig == null) {
+      return artifacts;
+    }
+    if (artifactListConfig.getPrimary() != null) {
+      artifacts.add(artifactListConfig.getPrimary());
+    }
+    if (EmptyPredicate.isNotEmpty(artifactListConfig.getSidecars())) {
+      artifacts.addAll(artifactListConfig.getSidecars()
+                           .stream()
+                           .map(SidecarArtifactWrapper::getArtifact)
+                           .collect(Collectors.toList()));
+    }
+    return artifacts;
   }
 
   public void appendIfNecessary(StringBuilder keyBuilder, String value) {

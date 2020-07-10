@@ -11,5 +11,6 @@ import java.util.List;
 @Builder
 public class ManifestStepParameters implements StepParameters {
   List<ManifestConfigWrapper> serviceSpecManifests;
+  List<ManifestConfigWrapper> manifestOverrideSets;
   List<ManifestConfigWrapper> stageOverrideManifests;
 }

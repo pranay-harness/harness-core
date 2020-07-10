@@ -36,10 +36,15 @@ public class ArtifactStepPlanCreator implements SupportDefinedExecutorPlanCreato
 
   private PlanNode prepareArtifactStepExecutionNode(ArtifactStepParameters artifactStepParameters) {
     final String artifactStepUid = generateUuid();
-    final String artifactIdentifier = artifactStepParameters.getArtifact().getIdentifier();
-    final String artifactNodeIdentifier = ArtifactUtils.isPrimaryArtifact(artifactStepParameters.getArtifact())
-        ? artifactIdentifier
-        : artifactStepParameters.getArtifact().getArtifactType() + "." + artifactIdentifier;
+    String artifactNodeIdentifier;
+    if (artifactStepParameters.getArtifact() != null) {
+      artifactNodeIdentifier = ArtifactUtils.getArtifactKey(artifactStepParameters.getArtifact());
+    } else if (artifactStepParameters.getArtifactOverrideSet() != null) {
+      artifactNodeIdentifier = ArtifactUtils.getArtifactKey(artifactStepParameters.getArtifactOverrideSet());
+    } else {
+      artifactNodeIdentifier = ArtifactUtils.getArtifactKey(artifactStepParameters.getArtifactStageOverride());
+    }
+
     return PlanNode.builder()
         .uuid(artifactStepUid)
         .name(artifactNodeIdentifier)

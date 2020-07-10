@@ -16,6 +16,7 @@ import java.util.Map;
 public class ServiceOutcome implements Outcome {
   String identifier;
   String displayName;
+  String description;
   String deploymentType;
   ArtifactsOutcome artifacts;
   List<ManifestAttributes> manifests;

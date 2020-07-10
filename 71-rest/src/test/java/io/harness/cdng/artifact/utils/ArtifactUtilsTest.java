@@ -6,10 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
+import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -109,5 +112,35 @@ public class ArtifactUtilsTest extends WingsBaseTest {
     artifactOutcome = DockerArtifactOutcome.builder().artifactType(ArtifactUtils.SIDECAR_ARTIFACT).build();
     primaryArtifact = ArtifactUtils.isPrimaryArtifact(artifactOutcome);
     assertThat(primaryArtifact).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testGetArtifactKey() {
+    DockerHubArtifactConfig artifactConfig =
+        DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.PRIMARY_ARTIFACT).identifier("ARTIFACT1").build();
+    String artifactKey = ArtifactUtils.getArtifactKey(artifactConfig);
+    assertThat(artifactKey).isEqualTo("ARTIFACT1");
+    artifactConfig =
+        DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.SIDECAR_ARTIFACT).identifier("ARTIFACT1").build();
+    artifactKey = ArtifactUtils.getArtifactKey(artifactConfig);
+    assertThat(artifactKey).isEqualTo("sidecars.ARTIFACT1");
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testConvertArtifactListConfig() {
+    DockerHubArtifactConfig primaryArtifact =
+        DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.PRIMARY_ARTIFACT).identifier("ARTIFACT1").build();
+    DockerHubArtifactConfig sidecarArtifact =
+        DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.SIDECAR_ARTIFACT).identifier("ARTIFACT2").build();
+    ArtifactListConfig artifactListConfig = ArtifactListConfig.builder()
+                                                .primary(primaryArtifact)
+                                                .sidecar(SidecarArtifact.builder().artifact(sidecarArtifact).build())
+                                                .build();
+    List<ArtifactConfigWrapper> artifactsList = ArtifactUtils.convertArtifactListIntoArtifacts(artifactListConfig);
+    assertThat(artifactsList).containsOnly(primaryArtifact, sidecarArtifact);
   }
 }

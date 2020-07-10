@@ -7,14 +7,18 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
+import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.steps.ArtifactForkStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters.ArtifactStepParametersBuilder;
+import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.executionplan.CDPlanNodeType;
 import io.harness.cdng.service.ServiceConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
@@ -28,10 +32,12 @@ import io.harness.plan.PlanNode;
 import io.harness.state.core.fork.ForkStepParameters;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class ArtifactForkPlanCreator
@@ -55,6 +61,9 @@ public class ArtifactForkPlanCreator
     List<String> childNodeIds =
         planForArtifacts.stream().map(CreateExecutionPlanResponse::getStartingNodeId).collect(Collectors.toList());
     List<PlanNode> planNodes = getPlanNodes(planForArtifacts);
+    if (EmptyPredicate.isEmpty(planNodes)) {
+      return CreateExecutionPlanResponse.builder().build();
+    }
 
     final PlanNode artifactForkNode = prepareArtifactForkNode(childNodeIds);
     return CreateExecutionPlanResponse.builder()
@@ -68,6 +77,9 @@ public class ArtifactForkPlanCreator
       CreateExecutionPlanContext context, ServiceConfig serviceConfig) {
     List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
         getArtifactsWithCorrespondingOverrides(serviceConfig);
+    if (EmptyPredicate.isEmpty(artifactsWithCorrespondingOverrides)) {
+      return Collections.emptyList();
+    }
     return artifactsWithCorrespondingOverrides.stream()
         .map(artifact -> getPlanCreatorForArtifact(artifact, context).createPlan(artifact, context))
         .collect(Collectors.toList());
@@ -105,47 +117,70 @@ public class ArtifactForkPlanCreator
   private List<ArtifactStepParameters> getArtifactsWithCorrespondingOverrides(ServiceConfig serviceConfig) {
     Map<String, ArtifactStepParametersBuilder> artifactsMap = new HashMap<>();
     ArtifactListConfig artifacts = serviceConfig.getServiceSpec().getArtifacts();
-
     if (artifacts != null) {
       if (artifacts.getPrimary() == null) {
         throw new InvalidArgumentsException("Primary artifact cannot be null.");
       }
-      // Add primary artifact.
-      artifactsMap.put(
-          artifacts.getPrimary().getArtifactType(), ArtifactStepParameters.builder().artifact(artifacts.getPrimary()));
-
-      // Add sidecars.
-      if (EmptyPredicate.isNotEmpty(artifacts.getSidecars())) {
-        artifacts.getSidecars().forEach(sidecarArtifactWrapper -> {
-          String key =
-              sidecarArtifactWrapper.getArtifact().getArtifactType() + "." + sidecarArtifactWrapper.getIdentifier();
-          if (artifactsMap.containsKey(key)) {
-            throw new InvalidArgumentsException("Same identifier sidecar is occurring multiple times in the list.");
-          }
-          artifactsMap.put(key, ArtifactStepParameters.builder().artifact(sidecarArtifactWrapper.getArtifact()));
-        });
-      }
+      // Add service artifacts.
+      List<ArtifactConfigWrapper> serviceSpecArtifacts = ArtifactUtils.convertArtifactListIntoArtifacts(artifacts);
+      mapArtifactsToIdentifier(artifactsMap, serviceSpecArtifacts, ArtifactStepParametersBuilder::artifact);
     }
 
-    // Add Stage Overrides.
-    ArtifactListConfig stageOverrides = serviceConfig.getStageOverrides().getArtifacts();
-    if (stageOverrides != null) {
-      if (stageOverrides.getPrimary() != null) {
-        artifactsMap.get(stageOverrides.getPrimary().getArtifactType())
-            .artifactStageOverride(stageOverrides.getPrimary());
-      }
+    // Add Artifact Override Sets.
+    List<ArtifactConfigWrapper> artifactOverrideSetsApplicable = getArtifactOverrideSetsApplicable(serviceConfig);
+    mapArtifactsToIdentifier(
+        artifactsMap, artifactOverrideSetsApplicable, ArtifactStepParametersBuilder::artifactOverrideSet);
 
-      if (EmptyPredicate.isNotEmpty(stageOverrides.getSidecars())) {
-        stageOverrides.getSidecars().forEach(sidecar -> {
-          String key = sidecar.getArtifact().getArtifactType() + "." + sidecar.getIdentifier();
-          artifactsMap.get(key).artifactStageOverride(sidecar.getArtifact());
-        });
-      }
+    // Add Stage Overrides.
+    if (serviceConfig.getStageOverrides() != null && serviceConfig.getStageOverrides().getArtifacts() != null) {
+      ArtifactListConfig stageOverrides = serviceConfig.getStageOverrides().getArtifacts();
+      List<ArtifactConfigWrapper> stageOverridesArtifacts =
+          ArtifactUtils.convertArtifactListIntoArtifacts(stageOverrides);
+      mapArtifactsToIdentifier(
+          artifactsMap, stageOverridesArtifacts, ArtifactStepParametersBuilder::artifactStageOverride);
     }
 
     List<ArtifactStepParameters> mappedArtifacts = new LinkedList<>();
     artifactsMap.forEach((key, value) -> mappedArtifacts.add(value.build()));
     return mappedArtifacts;
+  }
+
+  private void mapArtifactsToIdentifier(Map<String, ArtifactStepParametersBuilder> artifactsMap,
+      List<ArtifactConfigWrapper> artifactsList,
+      BiConsumer<ArtifactStepParametersBuilder, ArtifactConfigWrapper> consumer) {
+    if (EmptyPredicate.isNotEmpty(artifactsList)) {
+      for (ArtifactConfigWrapper artifact : artifactsList) {
+        String key = ArtifactUtils.getArtifactKey(artifact);
+        if (artifactsMap.containsKey(key)) {
+          consumer.accept(artifactsMap.get(key), artifact);
+        } else {
+          ArtifactStepParametersBuilder builder = ArtifactStepParameters.builder();
+          consumer.accept(builder, artifact);
+          artifactsMap.put(key, builder);
+        }
+      }
+    }
+  }
+
+  private List<ArtifactConfigWrapper> getArtifactOverrideSetsApplicable(ServiceConfig serviceConfig) {
+    List<ArtifactConfigWrapper> artifacts = new LinkedList<>();
+    if (serviceConfig.getStageOverrides() != null
+        && serviceConfig.getStageOverrides().getUseArtifactOverrideSets() != null) {
+      for (String useArtifactOverrideSet : serviceConfig.getStageOverrides().getUseArtifactOverrideSets()) {
+        List<ArtifactOverrideSets> artifactOverrideSetsList =
+            serviceConfig.getServiceSpec()
+                .getArtifactOverrideSets()
+                .stream()
+                .filter(o -> o.getIdentifier().equals(useArtifactOverrideSet))
+                .collect(Collectors.toList());
+        if (artifactOverrideSetsList.size() != 1) {
+          throw new InvalidRequestException("Artifact Override Set is not defined properly.");
+        }
+        ArtifactListConfig artifactListConfig = artifactOverrideSetsList.get(0).getArtifacts();
+        artifacts.addAll(ArtifactUtils.convertArtifactListIntoArtifacts(artifactListConfig));
+      }
+    }
+    return artifacts;
   }
 
   @Override

@@ -33,8 +33,10 @@ public class ArtifactListConfig implements Outcome {
       @JsonProperty("primary") @JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT) ArtifactConfigWrapper primary,
       @JsonProperty("sidecars") List<SidecarArtifactWrapper> sidecars) {
     this.primary = primary;
-    this.primary.setIdentifier("primary");
-    this.primary.setArtifactType(ArtifactUtils.PRIMARY_ARTIFACT);
+    if (primary != null) {
+      this.primary.setIdentifier("primary");
+      this.primary.setArtifactType(ArtifactUtils.PRIMARY_ARTIFACT);
+    }
     this.sidecars = sidecars;
   }
 }

@@ -14,10 +14,12 @@ import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.CDStage;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.service.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
@@ -34,12 +36,11 @@ import io.harness.plan.PlanNode;
 import io.harness.plan.PlanNode.PlanNodeBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -64,15 +65,20 @@ public class ServiceStepPlanCreator
   public CreateExecutionPlanResponse createPlanForSelf(ServiceConfig serviceConfig,
       Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
     ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, context);
-    List<CreateExecutionPlanResponse> planForArtifacts = planForChildrenMap.get("ARTIFACTS");
+    CreateExecutionPlanResponse planForArtifacts = planForChildrenMap.get("ARTIFACTS").get(0);
     CreateExecutionPlanResponse planForManifests = planForChildrenMap.get("MANIFESTS").get(0);
 
     // Add artifactNodes and ManifestNode as children
-    List<String> childNodeIds =
-        planForArtifacts.stream().map(CreateExecutionPlanResponse::getStartingNodeId).collect(Collectors.toList());
-    childNodeIds.add(planForManifests.getStartingNodeId());
+    List<String> childNodeIds = new LinkedList<>();
+    if (EmptyPredicate.isNotEmpty(planForArtifacts.getPlanNodes())) {
+      childNodeIds.add(planForArtifacts.getStartingNodeId());
+    }
+    if (EmptyPredicate.isNotEmpty(planForManifests.getPlanNodes())) {
+      childNodeIds.add(planForManifests.getStartingNodeId());
+    }
 
-    List<PlanNode> planNodes = getPlanNodes(planForArtifacts);
+    List<PlanNode> planNodes = new LinkedList<>();
+    planNodes.addAll(planForArtifacts.getPlanNodes());
     planNodes.addAll(planForManifests.getPlanNodes());
 
     final PlanNode serviceExecutionNode = prepareServiceNode(actualServiceConfig, childNodeIds, context);
@@ -90,6 +96,17 @@ public class ServiceStepPlanCreator
     serviceConfig.setDisplayName(
         StringUtils.defaultIfEmpty(serviceConfig.getDisplayName(), serviceConfig.getIdentifier()));
 
+    ServiceConfig serviceOverrides = null;
+    if (serviceConfig.getUseFromStage() != null) {
+      ServiceUseFromStage.Overrides overrides = serviceConfig.getUseFromStage().getOverrides();
+      if (overrides != null) {
+        serviceOverrides = ServiceConfig.builder()
+                               .displayName(overrides.getDisplayName())
+                               .description(overrides.getDescription())
+                               .build();
+      }
+    }
+
     final String serviceIdentifier = "service";
     PlanNodeBuilder planNodeBuilder =
         PlanNode.builder()
@@ -97,8 +114,11 @@ public class ServiceStepPlanCreator
             .name(serviceIdentifier)
             .identifier(serviceIdentifier)
             .stepType(ServiceStep.STEP_TYPE)
-            .stepParameters(
-                ServiceStepParameters.builder().parallelNodeIds(childNodeIds).service(serviceConfig).build())
+            .stepParameters(ServiceStepParameters.builder()
+                                .parallelNodeIds(childNodeIds)
+                                .service(serviceConfig)
+                                .serviceOverrides(serviceOverrides)
+                                .build())
             .facilitatorObtainment(FacilitatorObtainment.builder()
                                        .type(FacilitatorType.builder().type(FacilitatorType.CHILDREN).build())
                                        .build());
@@ -111,13 +131,6 @@ public class ServiceStepPlanCreator
                                                         .build();
     stepDependencyService.registerStepDependencyInstructor(instructor, context);
     return planNodeBuilder.build();
-  }
-
-  @NotNull
-  private List<PlanNode> getPlanNodes(List<CreateExecutionPlanResponse> planForChild) {
-    return planForChild.stream()
-        .flatMap(createExecutionPlanResponse -> createExecutionPlanResponse.getPlanNodes().stream())
-        .collect(Collectors.toList());
   }
 
   /** Method returns actual Service object by resolving useFromStage if present. */
