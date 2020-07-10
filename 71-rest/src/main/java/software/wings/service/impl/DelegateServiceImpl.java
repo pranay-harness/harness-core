@@ -89,6 +89,7 @@ import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.NoAvaliableDelegatesException;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
@@ -225,7 +226,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
-import javax.ws.rs.ServiceUnavailableException;
 
 @Singleton
 @ValidateOnExecution
@@ -1751,7 +1751,7 @@ public class DelegateServiceImpl implements DelegateService {
       List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
         logger.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(task));
-        throw new ServiceUnavailableException("Delegates are not available");
+        throw new NoAvaliableDelegatesException();
       }
 
       broadcastHelper.rebroadcastDelegateTask(task);

@@ -16,6 +16,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.NoAvaliableDelegatesException;
 import io.harness.exception.WingsException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -38,7 +39,6 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.HashMap;
-import javax.ws.rs.ServiceUnavailableException;
 
 public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
@@ -95,32 +95,12 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
     perpetualTaskRecordHandler.handle(record);
     verify(perpetualTaskService, times(0)).appointDelegate(eq(accountId), anyString(), eq(delegateId), anyLong());
   }
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldNotHandle_ServiceUnavailableExceptionFailedToAssignAnyDelegate() throws InterruptedException {
-    ServiceUnavailableException serviceUnavailableException = new ServiceUnavailableException();
-
-    when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(serviceUnavailableException);
-    perpetualTaskRecordHandler.handle(record);
-    verify(alertService, times(1))
-        .openAlert(eq(accountId), eq(null), eq(AlertType.PerpetualTaskAlert),
-            eq(PerpetualTaskAlert.builder()
-                    .accountId(accountId)
-                    .taskId(taskId)
-                    .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                    .message("Service Unavailable, failed to assign any Delegate to perpetual task")
-                    .build()));
-  }
 
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotHandle_ServiceUnavailableNoDelegateAvailableToHandlePT() throws InterruptedException {
-    ServiceUnavailableException serviceUnavailableException =
-        new ServiceUnavailableException("Delegates are not available");
-
-    when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(serviceUnavailableException);
+    when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new NoAvaliableDelegatesException());
     perpetualTaskRecordHandler.handle(record);
     verify(alertService, times(1))
         .openAlert(eq(accountId), eq(null), eq(AlertType.PerpetualTaskAlert),
