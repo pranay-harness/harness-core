@@ -14,7 +14,7 @@ public class RunStepProtobufSerializer implements ProtobufSerializer<RunStepInfo
     return Base64.encodeBase64String(convertRunStepInfo(object).toByteArray());
   }
 
-  private Step convertRunStepInfo(RunStepInfo stepInfo) {
+  public Step convertRunStepInfo(RunStepInfo stepInfo) {
     RunStepInfo.Run run = stepInfo.getRun();
     RunStep.Builder runStepBuilder = RunStep.newBuilder();
     runStepBuilder.addAllCommands(run.getCommand());

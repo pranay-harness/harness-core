@@ -70,13 +70,17 @@ public class K8BuildSetupUtils {
       final String clusterName = k8PodDetails.getClusterName();
       PodSetupInfo podSetupInfo =
           getPodSetupInfo((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getSetupEnv().getBuildJobEnvInfo());
+
+      Set<String> publishStepConnectorIdentifier =
+          ((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getSetupEnv().getBuildJobEnvInfo())
+              .getPublishStepConnectorIdentifier();
+
       // TODO Use k8 connector from element input
       return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
           buildEnvSetupStepInfo.getSetupEnv().getGitConnectorIdentifier(),
           buildEnvSetupStepInfo.getSetupEnv().getBranchName(),
           getPodParams(podSetupInfo, namespace, SH_COMMAND, Collections.singletonList(SETUP_TASK_ARGS),
-              ((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getSetupEnv().getBuildJobEnvInfo())
-                  .getPublishStepConnectorIdentifier())));
+              publishStepConnectorIdentifier)));
 
     } catch (Exception e) {
       logger.error("build state execution failed", e);
@@ -97,12 +101,15 @@ public class K8BuildSetupUtils {
 
       List<String> command = liteEngineTaskUtils.getLiteEngineCommand();
       List<String> arguments = liteEngineTaskUtils.getLiteEngineArguments(liteEngineTaskStepInfo);
+      Set<String> publishStepConnectorIdentifier =
+          ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getEnvSetup().getBuildJobEnvInfo())
+              .getPublishStepConnectorIdentifier();
 
       // TODO Use k8 connector from element input
       return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
           liteEngineTaskStepInfo.getEnvSetup().getGitConnectorIdentifier(),
           liteEngineTaskStepInfo.getEnvSetup().getBranchName(),
-          getPodParams(podSetupInfo, namespace, command, arguments, Collections.emptySet())));
+          getPodParams(podSetupInfo, namespace, command, arguments, publishStepConnectorIdentifier)));
     } catch (Exception e) {
       logger.error("lite engine task state execution failed", e);
     }

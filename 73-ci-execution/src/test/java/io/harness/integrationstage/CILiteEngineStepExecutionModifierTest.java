@@ -1,11 +1,13 @@
 package io.harness.integrationstage;
 
+import static io.harness.beans.environment.BuildJobEnvInfo.Type.K8;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
@@ -25,12 +27,12 @@ import java.util.Arrays;
 
 public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
-  public static final String POD_NAME = "testPod";
   private StageExecutionModifier stageExecutionModifier;
 
   @Before
   public void setUp() {
-    stageExecutionModifier = CILiteEngineStepExecutionModifier.builder().podName(POD_NAME).build();
+    stageExecutionModifier =
+        CILiteEngineStepExecutionModifier.builder().podName(ciExecutionPlanTestHelper.getPodName()).build();
   }
 
   @Test
@@ -41,8 +43,19 @@ public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
     Execution modifiedExecution = stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage);
     assertThat(modifiedExecution).isNotNull();
     assertThat(modifiedExecution.getSteps()).isNotNull();
-    assertThat(modifiedExecution.getSteps().get(0)).isInstanceOf(LiteEngineTaskStepInfo.class);
+    LiteEngineTaskStepInfo liteEngineTask = (LiteEngineTaskStepInfo) modifiedExecution.getSteps().get(0);
+    assertThat(liteEngineTask).isInstanceOf(LiteEngineTaskStepInfo.class);
+    assertThat(liteEngineTask.getEnvSetup().getBranchName()).isEqualTo("master");
+    assertThat(liteEngineTask.getEnvSetup().getGitConnectorIdentifier()).isEqualTo("testGitConnector");
+    assertThat(liteEngineTask.getEnvSetup().getSteps()).isEqualTo(ciExecutionPlanTestHelper.getExecution());
+    K8BuildJobEnvInfo envInfo = (K8BuildJobEnvInfo) liteEngineTask.getEnvSetup().getBuildJobEnvInfo();
+    assertThat(envInfo.getType()).isEqualTo(K8);
+    assertThat(envInfo.getWorkDir()).isEqualTo(stage.getCi().getWorkingDirectory());
+    assertThat(envInfo.getPublishStepConnectorIdentifier())
+        .isEqualTo(ciExecutionPlanTestHelper.getPublishArtifactConnectorIds());
+    assertThat(envInfo.getPodsSetupInfo()).isEqualTo(ciExecutionPlanTestHelper.getCIPodsSetupInfo());
   }
+
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
@@ -82,9 +95,10 @@ public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void testStageExecutionModifierBuilder() {
-    IntegrationStageExecutionModifier modifier = IntegrationStageExecutionModifier.builder().podName(POD_NAME).build();
+    IntegrationStageExecutionModifier modifier =
+        IntegrationStageExecutionModifier.builder().podName(ciExecutionPlanTestHelper.getPodName()).build();
     assertThat(modifier).isNotNull();
-    assertThat(modifier.getPodName()).isEqualTo(POD_NAME);
+    assertThat(modifier.getPodName()).isEqualTo(ciExecutionPlanTestHelper.getPodName());
     assertThat(modifier.hashCode()).isNotZero();
     assertThat(modifier.toString()).isNotEmpty();
   }

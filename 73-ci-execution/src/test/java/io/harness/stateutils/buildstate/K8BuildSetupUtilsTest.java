@@ -30,6 +30,7 @@ import org.junit.experimental.categories.Category;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.container.ImageDetails;
 
@@ -44,12 +45,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
   @Inject private BuildSetupUtils buildSetupUtils;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
-  private ImageDetails imageDetails = ImageDetails.builder()
-                                          .name("maven")
-                                          .tag("3.6.3-jdk-8")
-                                          .registryUrl("https://index.docker.io/v1/")
-                                          .username("harshjain12")
-                                          .build();
+  private ImageDetails imageDetails = ImageDetails.builder().name("maven").tag("3.6.3-jdk-8").build();
 
   private static final String UUID = "UUID";
   private static final String NAME = "name";
@@ -76,26 +72,35 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     Map<String, EncryptedDataDetail> envSecretVars = new HashMap<>();
     envSecretVars.put(ACCESS_KEY_MINIO_VARIABLE, null);
     envSecretVars.put(SECRET_KEY_MINIO_VARIABLE, null);
+    envSecretVars.putAll(ciExecutionPlanTestHelper.getEncryptedSecrets());
 
     Map<String, String> envVars = new HashMap<>();
     envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
     envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
+    envVars.putAll(ciExecutionPlanTestHelper.getEnvVars());
 
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     assertThat(podParams.getContainerParamsList().get(0))
-        .isEqualTo(
-            CIK8ContainerParams.builder()
-                .name(null)
-                .containerResourceParams(null)
-                .containerType(CIContainerType.STEP_EXECUTOR)
-                .commands(command)
-                .encryptedSecrets(envSecretVars)
-                .envVars(envVars)
-                .args(args)
-                .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
-                .volumeToMountPath(map)
-                .build());
+        .isEqualTo(CIK8ContainerParams.builder()
+                       .name(ciExecutionPlanTestHelper.getPodName())
+                       .containerResourceParams(ContainerResourceParams.builder()
+                                                    .resourceLimitMemoryMiB(1000)
+                                                    .resourceLimitMilliCpu(1000)
+                                                    .resourceRequestMemoryMiB(1000)
+                                                    .resourceRequestMilliCpu(1000)
+                                                    .build())
+                       .containerType(CIContainerType.STEP_EXECUTOR)
+                       .commands(command)
+                       .encryptedSecrets(envSecretVars)
+                       .envVars(envVars)
+                       .args(args)
+                       .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                                      .connectorName("testConnector")
+                                                      .imageDetails(imageDetails)
+                                                      .build())
+                       .volumeToMountPath(map)
+                       .build());
 
     assertThat(podParams.getContainerParamsList().get(1))
         .isEqualTo(InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER));

@@ -31,7 +31,7 @@ public class PublishStepProtobufSerializer implements ProtobufSerializer<Publish
     return Base64.encodeBase64String(convertRestoreCacheStepInfo(stepInfo).toByteArray());
   }
 
-  private Step convertRestoreCacheStepInfo(PublishStepInfo stepInfo) {
+  public Step convertRestoreCacheStepInfo(PublishStepInfo stepInfo) {
     PublishArtifactsStep.Builder publishArtifactsStepBuilder = PublishArtifactsStep.newBuilder();
     stepInfo.getPublishArtifacts().forEach(artifact -> {
       switch (artifact.getType()) {
