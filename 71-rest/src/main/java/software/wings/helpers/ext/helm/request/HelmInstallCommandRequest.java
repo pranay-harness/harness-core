@@ -38,11 +38,11 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
       long timeoutInMillis, Map<String, String> valueOverrides, List<String> variableOverridesYamlFiles,
       String repoName, GitConfig gitConfig, GitFileConfig gitFileConfig, List<EncryptedDataDetail> encryptedDataDetails,
       LogCallback executionLogCallback, String commandFlags, K8sDelegateManifestConfig sourceRepoConfig,
-      HelmVersion helmVersion, String ocPath, String workingDir) {
+      HelmVersion helmVersion, String ocPath, String workingDir, boolean k8SteadyStateCheckEnabled) {
     super(HelmCommandType.INSTALL, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails,
         executionLogCallback, commandFlags, sourceRepoConfig, helmVersion, ocPath, workingDir,
-        variableOverridesYamlFiles, gitFileConfig);
+        variableOverridesYamlFiles, gitFileConfig, k8SteadyStateCheckEnabled);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;
     this.namespace = namespace;

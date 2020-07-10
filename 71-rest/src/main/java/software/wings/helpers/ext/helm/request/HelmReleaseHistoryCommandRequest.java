@@ -27,9 +27,10 @@ public class HelmReleaseHistoryCommandRequest extends HelmCommandRequest {
       String activityId, ContainerServiceParams containerServiceParams, String releaseName, GitConfig gitConfig,
       List<EncryptedDataDetail> encryptedDataDetails, LogCallback executionLogCallback, String commandFlags,
       HelmVersion helmVersion, String ocPath, String workingDir, List<String> variableOverridesYamlFiles,
-      GitFileConfig gitFileConfig) {
+      GitFileConfig gitFileConfig, boolean k8SteadyStateCheckEnabled) {
     super(HelmCommandType.RELEASE_HISTORY, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, null, null, gitConfig, encryptedDataDetails, executionLogCallback,
-        commandFlags, null, helmVersion, ocPath, workingDir, variableOverridesYamlFiles, gitFileConfig);
+        commandFlags, null, helmVersion, ocPath, workingDir, variableOverridesYamlFiles, gitFileConfig,
+        k8SteadyStateCheckEnabled);
   }
 }

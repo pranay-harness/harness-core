@@ -266,8 +266,8 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
     when(kubernetesContainerService.getVersion(kubernetesConfig, new ArrayList<>())).thenReturn(version);
 
-    boolean result =
-        containerDeploymentDelegateHelper.isK8sVersion116OrAbove(containerServiceParams, new ExecutionLogCallback());
+    boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
+        true, containerServiceParams, new ExecutionLogCallback());
     assertThat(result).isTrue();
   }
 
@@ -291,8 +291,8 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
     when(kubernetesContainerService.getVersion(kubernetesConfig, new ArrayList<>())).thenReturn(version);
 
-    boolean result =
-        containerDeploymentDelegateHelper.isK8sVersion116OrAbove(containerServiceParams, new ExecutionLogCallback());
+    boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
+        true, containerServiceParams, new ExecutionLogCallback());
     assertThat(result).isTrue();
   }
 
@@ -316,8 +316,17 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
     when(kubernetesContainerService.getVersion(kubernetesConfig, new ArrayList<>())).thenReturn(version);
 
-    boolean result =
-        containerDeploymentDelegateHelper.isK8sVersion116OrAbove(containerServiceParams, new ExecutionLogCallback());
+    boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
+        true, containerServiceParams, new ExecutionLogCallback());
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testIsK8sVersion116OrAboveWithFeatureFlagDisabled() throws Exception {
+    boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
+        false, ContainerServiceParams.builder().build(), new ExecutionLogCallback());
     assertThat(result).isFalse();
   }
 }

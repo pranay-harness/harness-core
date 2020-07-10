@@ -52,6 +52,7 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
   private String workingDir;
   @Expression private List<String> variableOverridesYamlFiles;
   private GitFileConfig gitFileConfig;
+  private boolean k8SteadyStateCheckEnabled;
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;
