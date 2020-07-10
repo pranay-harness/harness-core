@@ -456,6 +456,7 @@ public class DelegateServiceImpl implements DelegateService {
                            .status(delegate.getStatus())
                            .lastHeartBeat(delegate.getLastHeartBeat())
                            .delegateProfileId(delegate.getDelegateProfileId())
+                           .delegateType(delegate.getDelegateType())
                            .excludeScopes(delegate.getExcludeScopes())
                            .includeScopes(delegate.getIncludeScopes())
                            .tags(delegate.getTags())

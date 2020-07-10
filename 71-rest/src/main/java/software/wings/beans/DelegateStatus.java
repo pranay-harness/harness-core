@@ -32,6 +32,7 @@ public class DelegateStatus {
     private Status status;
     private long lastHeartBeat;
     private String delegateProfileId;
+    private String delegateType;
     private List<DelegateScope> includeScopes;
     private List<DelegateScope> excludeScopes;
     private List<String> tags;
