@@ -11,12 +11,6 @@ import java.util.regex.Pattern;
 @Deprecated
 public interface Constants {
   /**
-   * The constant AMI setup commands
-   */
-  String AMI_SETUP_COMMAND_NAME = "AMI Service Setup";
-
-  String ECS_STEADY_STATE_CHECK = "ECS Steady State Check";
-  /**
    * The constant KUBERNETES_SWAP_SERVICE_SELECTORS.
    */
   String KUBERNETES_SWAP_SERVICE_SELECTORS = "Swap Service Selectors";
@@ -43,8 +37,6 @@ public interface Constants {
    */
   @Deprecated String PROVISION_NODE_NAME = "Provision Nodes";
 
-  String ROLLBACK_TERRAFORM_NAME = "Terraform Rollback";
-
   /**
    * The constant STEP_VALIDATION_MESSAGE.
    */
@@ -68,17 +60,6 @@ public interface Constants {
    */
   String WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE =
       "Some phases %s Service Infrastructure are found to be invalid/incomplete.";
-
-  String PROVISION_CLOUD_FORMATION = "CloudFormation Create Stack";
-  String DE_PROVISION_CLOUD_FORMATION = "CloudFormation Delete Stack";
-  String ROLLBACK_CLOUD_FORMATION = "CloudFormation Rollback Stack";
-
-  String PROVISION_SHELL_SCRIPT = "Shell Script Provision";
-
-  /**
-   * The constant DEFAULT_STEADY_STATE_TIMEOUT.
-   */
-  int DEFAULT_STEADY_STATE_TIMEOUT = 10;
 
   /**
    * The constant EXECUTE_WITH_PREVIOUS_STEPS.

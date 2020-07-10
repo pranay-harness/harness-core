@@ -40,4 +40,5 @@ public interface AwsConstants {
   String DOWN_SCALE_ASG_COMMAND_UNIT = "Downscale AutoScaling Group";
 
   int LAMBDA_SLEEP_SECS = 5;
+  String ECS_STEADY_STATE_CHECK = "ECS Steady State Check";
 }

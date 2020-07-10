@@ -33,12 +33,12 @@ import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.START_SERVICE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
-import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
-import static software.wings.common.Constants.DE_PROVISION_CLOUD_FORMATION;
-import static software.wings.common.Constants.PROVISION_CLOUD_FORMATION;
-import static software.wings.common.Constants.PROVISION_SHELL_SCRIPT;
-import static software.wings.common.Constants.ROLLBACK_CLOUD_FORMATION;
-import static software.wings.common.Constants.ROLLBACK_TERRAFORM_NAME;
+import static software.wings.common.ProvisionerConstants.DE_PROVISION_CLOUD_FORMATION;
+import static software.wings.common.ProvisionerConstants.PROVISION_CLOUD_FORMATION;
+import static software.wings.common.ProvisionerConstants.PROVISION_SHELL_SCRIPT;
+import static software.wings.common.ProvisionerConstants.ROLLBACK_CLOUD_FORMATION;
+import static software.wings.common.ProvisionerConstants.ROLLBACK_TERRAFORM_NAME;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ARTIFACT_COLLECTION_STEP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_CODE_DEPLOY;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_LAMBDA;
@@ -92,6 +92,7 @@ import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
 import software.wings.common.WorkflowConstants;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.impl.aws.model.AwsConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.AppDynamicsState;
@@ -613,8 +614,8 @@ public enum StateType implements StateTypeDescriptor {
           InfrastructureMappingType.GCP_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  ECS_STEADY_STATE_CHECK(EcsSteadyStateCheck.class, ECS, Constants.ECS_STEADY_STATE_CHECK, Lists.newArrayList(AWS_ECS),
-      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+  ECS_STEADY_STATE_CHECK(EcsSteadyStateCheck.class, ECS, AwsConstants.ECS_STEADY_STATE_CHECK,
+      Lists.newArrayList(AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES),
