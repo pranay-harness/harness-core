@@ -26,7 +26,8 @@ public class NgDelegateTaskExecutor implements TaskExecutor {
     if (task instanceof HDelegateTask) {
       HDelegateTask hDelegateTask = (HDelegateTask) task;
       String accountId = hDelegateTask.getAccountId();
-      return managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, hDelegateTask.getData());
+      return managerDelegateServiceDriver.sendTaskAsync(
+          accountId, hDelegateTask.getSetupAbstractions(), hDelegateTask.getData());
     }
     throw new InvalidRequestException(
         "Execution not supported for Task. TaskClass: " + task.getClass().getCanonicalName());
