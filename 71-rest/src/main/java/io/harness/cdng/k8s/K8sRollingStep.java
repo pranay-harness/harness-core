@@ -29,6 +29,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -61,7 +62,6 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig.K8sDelegateManifestConfigBuilder;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
-import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.SettingsService;
@@ -194,7 +194,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
             .releaseName(releaseName)
             .activityId(UUIDGenerator.generateUuid())
             .commandName(K8sRollingDeploy.K8S_ROLLING_DEPLOY_COMMAND_NAME)
-            .k8sTaskType(K8sTaskParameters.K8sTaskType.DEPLOYMENT_ROLLING)
+            .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .localOverrideFeatureFlag(false)
             .timeoutIntervalInMin(stepParameters.getTimeout())
             .valuesYamlList(renderedValuesList)

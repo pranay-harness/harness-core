@@ -45,6 +45,7 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
@@ -76,7 +77,6 @@ import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
-import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
@@ -135,7 +135,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
         .getLatestRevision(any(Kubectl.class), eq(deployment().getResourceId()), any(K8sDelegateTaskParams.class));
 
     spyHandler.executeTaskInternal(
-        K8sBlueGreenDeployTaskParameters.builder().k8sTaskType(K8sTaskParameters.K8sTaskType.BLUE_GREEN_DEPLOY).build(),
+        K8sBlueGreenDeployTaskParameters.builder().k8sTaskType(K8sTaskType.BLUE_GREEN_DEPLOY).build(),
         K8sDelegateTaskParams.builder()
             .workingDirectory("./working-dir")
             .kubectlPath("kubectl")

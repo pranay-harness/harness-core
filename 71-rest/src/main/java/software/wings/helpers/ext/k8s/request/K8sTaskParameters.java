@@ -7,6 +7,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.k8s.K8sTaskType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -52,18 +53,5 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
     return taskParams.getK8sDelegateManifestConfig() != null
         ? taskParams.getK8sDelegateManifestConfig().getKustomizeConfig()
         : null;
-  }
-
-  public enum K8sTaskType {
-    DEPLOYMENT_ROLLING,
-    DEPLOYMENT_ROLLING_ROLLBACK,
-    SCALE,
-    CANARY_DEPLOY,
-    BLUE_GREEN_DEPLOY,
-    INSTANCE_SYNC,
-    DELETE,
-    TRAFFIC_SPLIT,
-    APPLY,
-    VERSION
   }
 }

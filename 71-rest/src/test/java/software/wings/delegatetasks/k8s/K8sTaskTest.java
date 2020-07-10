@@ -19,6 +19,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,17 +60,15 @@ public class K8sTaskTest extends WingsBaseTest {
   @Before
   public void setup() {
     k8sClusterConfig = K8sClusterConfig.builder().build();
-    k8sTaskParameters =
-        new K8sTaskParameters(ACCOUNT_ID, APP_ID, COMMAND_NAME, ACTIVITY_ID, k8sClusterConfig, WORKFLOW_EXECUTION_ID,
-            RELEASE_NAME, TIMEOUT_INTERVAL, K8sTaskParameters.K8sTaskType.INSTANCE_SYNC, HelmConstants.HelmVersion.V2);
+    k8sTaskParameters = new K8sTaskParameters(ACCOUNT_ID, APP_ID, COMMAND_NAME, ACTIVITY_ID, k8sClusterConfig,
+        WORKFLOW_EXECUTION_ID, RELEASE_NAME, TIMEOUT_INTERVAL, K8sTaskType.INSTANCE_SYNC, HelmConstants.HelmVersion.V2);
   }
 
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testRunInstanceSync() {
-    when(k8sCommandTaskTypeToTaskHandlerMap.get(K8sTaskParameters.K8sTaskType.INSTANCE_SYNC.name()))
-        .thenReturn(k8sTaskHandler);
+    when(k8sCommandTaskTypeToTaskHandlerMap.get(K8sTaskType.INSTANCE_SYNC.name())).thenReturn(k8sTaskHandler);
     k8sTask.run(k8sTaskParameters);
     verify(k8sTaskHandler, times(1)).executeTask(k8sTaskParameters, null);
     verify(k8sTaskHandler, times(1)).executeTask(k8sTaskParameters, null);
@@ -79,7 +78,7 @@ public class K8sTaskTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testRunInstanceSyncException() {
-    when(k8sCommandTaskTypeToTaskHandlerMap.get(K8sTaskParameters.K8sTaskType.INSTANCE_SYNC.name())).thenReturn(null);
+    when(k8sCommandTaskTypeToTaskHandlerMap.get(K8sTaskType.INSTANCE_SYNC.name())).thenReturn(null);
     K8sTaskExecutionResponse k8sTaskExecutionResponse = k8sTask.run(k8sTaskParameters);
     assertThat(k8sTaskExecutionResponse.getCommandExecutionStatus())
         .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
@@ -89,14 +88,14 @@ public class K8sTaskTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testRun() {
-    k8sTaskParameters.setCommandType(K8sTaskParameters.K8sTaskType.APPLY);
+    k8sTaskParameters.setCommandType(K8sTaskType.APPLY);
     String kubeconfigFileContent = "kubeconfigFileContent";
     when(containerDeploymentDelegateHelper.getKubeconfigFileContent(any(K8sClusterConfig.class)))
         .thenReturn(kubeconfigFileContent);
-    when(k8sCommandTaskTypeToTaskHandlerMap.get(K8sTaskParameters.K8sTaskType.APPLY.name())).thenReturn(k8sTaskHandler);
+    when(k8sCommandTaskTypeToTaskHandlerMap.get(K8sTaskType.APPLY.name())).thenReturn(k8sTaskHandler);
     k8sTask.run(k8sTaskParameters);
     verify(containerDeploymentDelegateHelper, times(1)).getKubeconfigFileContent(k8sClusterConfig);
-    verify(k8sCommandTaskTypeToTaskHandlerMap, times(1)).get(K8sTaskParameters.K8sTaskType.APPLY.name());
+    verify(k8sCommandTaskTypeToTaskHandlerMap, times(1)).get(K8sTaskType.APPLY.name());
     verify(k8sTaskHandler, times(1)).executeTask(any(K8sTaskParameters.class), any(K8sDelegateTaskParams.class));
   }
 
@@ -104,7 +103,7 @@ public class K8sTaskTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testRunException() {
-    k8sTaskParameters.setCommandType(K8sTaskParameters.K8sTaskType.APPLY);
+    k8sTaskParameters.setCommandType(K8sTaskType.APPLY);
     k8sGlobalConfigService = null;
     K8sTaskExecutionResponse response = k8sTask.run(k8sTaskParameters);
     verify(containerDeploymentDelegateHelper, times(1)).getKubeconfigFileContent(k8sClusterConfig);

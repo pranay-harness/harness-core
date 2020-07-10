@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.k8s.request;
 
+import io.harness.delegate.task.k8s.K8sTaskType;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.k8s.istio.IstioDestinationWeight;
