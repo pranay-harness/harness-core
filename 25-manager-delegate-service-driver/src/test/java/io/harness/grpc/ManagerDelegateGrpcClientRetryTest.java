@@ -1,6 +1,6 @@
 package io.harness.grpc;
 
-import static io.grpc.Status.UNAUTHENTICATED;
+import static io.grpc.Status.UNAVAILABLE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +25,7 @@ import io.harness.delegate.TaskId;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -56,7 +57,7 @@ public class ManagerDelegateGrpcClientRetryTest {
       mock(NgDelegateTaskServiceGrpc.NgDelegateTaskServiceImplBase.class,
           delegatesTo(new NgDelegateTaskServiceGrpc.NgDelegateTaskServiceImplBase() {
             public void sendTask(SendTaskRequest request, StreamObserver<SendTaskResponse> responseObserver) {
-              responseObserver.onError(new StatusRuntimeException(UNAUTHENTICATED));
+              responseObserver.onError(new StatusRuntimeException(UNAVAILABLE));
             }
             public void sendTaskAsync(SendTaskAsyncRequest request,
                 StreamObserver<io.harness.delegate.SendTaskAsyncResponse> responseObserver) {
@@ -113,6 +114,7 @@ public class ManagerDelegateGrpcClientRetryTest {
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
+  @Ignore("Ignoring it mainly due to the logs its creating")
   public void testCircuitBreaker() {
     assertThat(managerDelegateGrpcClient.getCircuitBreakerState()).isEqualTo(CircuitBreaker.State.CLOSED);
     int failureCount = 43;

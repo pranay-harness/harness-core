@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
@@ -19,8 +20,11 @@ import io.harness.delegate.NgDelegateTaskServiceGrpc;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceAuthServerInterceptor;
 import io.harness.grpc.auth.SkippedAuthServerInterceptor;
+import io.harness.grpc.exception.GrpcExceptionMapper;
+import io.harness.grpc.exception.WingsExceptionGrpcMapper;
 import io.harness.grpc.ng.manager.DelegateTaskGrpcServer;
 import io.harness.grpc.pingpong.PingPongService;
+import io.harness.grpc.server.GrpcServerExceptionHandler;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpc;
 import io.harness.security.KeySource;
@@ -53,6 +57,17 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
         ()
             -> new ServiceAuthServerInterceptor(
                 ImmutableMap.of("ng-manager", serviceSecret), ImmutableSet.of(NgDelegateTaskServiceGrpc.SERVICE_NAME)));
+
+    Multibinder<GrpcExceptionMapper> expectionMapperMultibinder =
+        Multibinder.newSetBinder(binder(), GrpcExceptionMapper.class);
+    expectionMapperMultibinder.addBinding().to(WingsExceptionGrpcMapper.class);
+
+    Provider<Set<GrpcExceptionMapper>> grpcExceptionMappersProvider =
+        getProvider(Key.get(new TypeLiteral<Set<GrpcExceptionMapper>>() {}));
+
+    serverInterceptorMultibinder.addBinding().toProvider(
+        () -> new GrpcServerExceptionHandler(grpcExceptionMappersProvider));
+
     serverInterceptorMultibinder.addBinding().toProvider(
         ()
             -> new SkippedAuthServerInterceptor(
