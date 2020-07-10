@@ -2988,7 +2988,7 @@ public class UserServiceImpl implements UserService {
     } else {
       query = getListUserQuery(accountId, true);
     }
-    query.criteria(UserKeys.disabled).equal(false);
+    query.criteria(UserKeys.disabled).notEqual(true);
     applySortFilter(pageRequest, query);
     FindOptions findOptions = new FindOptions().skip(offset).limit(pageSize);
     List<User> userList = query.asList(findOptions);
@@ -3012,6 +3012,7 @@ public class UserServiceImpl implements UserService {
 
   public long getTotalUserCount(String accountId, boolean listPendingUsers) {
     Query<User> query = getListUserQuery(accountId, listPendingUsers);
+    query.criteria(UserKeys.disabled).notEqual(true);
     return query.count();
   }
 
