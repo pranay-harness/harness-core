@@ -125,10 +125,10 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   private WorkflowStandardParams workflowStandardParams =
       Builder.aWorkflowStandardParams()
           .withAppId(APP_ID)
-          .withWorkflowElement(
-              WorkflowElement.builder()
-                  .variables(ImmutableMap.of("sourceCommitHash", "0fcb2caa537745f8228fb081aac2af55765d8e62"))
-                  .build())
+          .withWorkflowElement(WorkflowElement.builder()
+                                   .variables(ImmutableMap.of("sourceCommitHash",
+                                       "0fcb2caa537745f8228fb081aac2af55765d8e62", "buildNo", "1.1"))
+                                   .build())
           .build();
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                               .displayName(StateType.ARTIFACT_COLLECTION.name())
@@ -281,7 +281,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     runtimeValues.put("group", "mygroup");
     runtimeValues.put("artifactId", "todolist");
     artifactCollectionState.setRuntimeValues(runtimeValues);
-    artifactCollectionState.setBuildNo("1.1");
+    artifactCollectionState.setBuildNo("${workflow.variables.buildNo}");
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
     when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(true);
     when(artifactService.getArtifactByBuildNumberAndSourceName(
@@ -297,6 +297,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     artifactCollectionState.execute(executionContext);
     verify(artifactStreamService).get(ARTIFACT_STREAM_ID);
     verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), any());
+    assertThat(runtimeValues.get("buildNo")).isEqualTo("1.1");
   }
 
   @Test
