@@ -69,7 +69,7 @@ public class WeeklyReportServiceImplTest extends CategoryTest {
     when(mockStatement.executeQuery(anyString())).thenReturn(resetCountAndReturnResultSet());
     mockResultSet();
     when(emailNotificationService.send(any())).thenReturn(true);
-    when(cloudToHarnessMappingService.getCCMEnabledAccounts())
+    when(cloudToHarnessMappingService.getCeEnabledAccounts())
         .thenReturn(Arrays.asList(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build()));
     when(ceCommunicationsService.getEnabledEntries(any(), any()))
         .thenReturn(Arrays.asList(CECommunications.builder().emailId("mailId").build()));

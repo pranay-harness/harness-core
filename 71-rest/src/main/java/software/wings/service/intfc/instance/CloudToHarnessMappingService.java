@@ -25,7 +25,7 @@ public interface CloudToHarnessMappingService {
 
   List<HarnessServiceInfo> getHarnessServiceInfoList(List<DeploymentSummary> deploymentSummaryList);
 
-  List<Account> getCCMEnabledAccounts();
+  List<Account> getCeEnabledAccounts();
 
   Account getAccountInfoFromId(String accountId);
 

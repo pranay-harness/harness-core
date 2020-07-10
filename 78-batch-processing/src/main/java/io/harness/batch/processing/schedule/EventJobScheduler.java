@@ -8,6 +8,7 @@ import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportS
 import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.config.GcpScheduledQueryTriggerAction;
+import io.harness.batch.processing.metrics.ProductMetricsService;
 import io.harness.batch.processing.service.impl.BatchJobBucketLogContext;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatusService;
 import io.harness.logging.AccountLogContext;
@@ -36,6 +37,7 @@ public class EventJobScheduler {
   @Autowired private BillingDataServiceImpl billingDataService;
   @Autowired private BillingDataPipelineHealthStatusService billingDataPipelineHealthStatusService;
   @Autowired private GcpScheduledQueryTriggerAction gcpScheduledQueryTriggerAction;
+  @Autowired private ProductMetricsService productMetricsService;
 
   @PostConstruct
   public void orderJobs() {
@@ -52,16 +54,22 @@ public class EventJobScheduler {
     runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER);
   }
 
-  public void runCloudEfficiencyEventJobs(BatchJobBucket batchJobBucket) {
-    cloudToHarnessMappingService.getCCMEnabledAccounts().forEach(account
+  private void runCloudEfficiencyEventJobs(BatchJobBucket batchJobBucket) {
+    cloudToHarnessMappingService.getCeEnabledAccounts().forEach(account
         -> jobs.stream()
                .filter(job -> BatchJobType.fromJob(job).getBatchJobBucket() == batchJobBucket)
                .forEach(job -> runJob(account.getUuid(), job)));
   }
 
+  // this job runs every 4 hours. For debugging, run every minute "* * * ? * *"
+  @Scheduled(cron = "0 0 */4 ? * *")
+  public void sendSegmentEvents() {
+    runCloudEfficiencyEventJobs(BatchJobBucket.OTHERS);
+  }
+
   @Scheduled(cron = "0 * * ? * *")
   public void runGcpScheduledQueryJobs() {
-    cloudToHarnessMappingService.getCCMEnabledAccounts().forEach(
+    cloudToHarnessMappingService.getCeEnabledAccounts().forEach(
         account -> gcpScheduledQueryTriggerAction.execute(account.getUuid()));
   }
 
