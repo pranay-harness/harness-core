@@ -19,14 +19,13 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Transient;
 
 import javax.validation.constraints.NotNull;
 
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigKeys")
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = false, exclude = "dataCollectionDsl")
+@EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "cvConfigs")
 @HarnessEntity(exportable = true)
@@ -51,7 +50,6 @@ public abstract class CVConfig
   private String productName;
   private String groupId;
 
-  @Transient private String dataCollectionDsl;
   @FdIndex private Long analysisOrchestrationIteration;
 
   @Override
@@ -80,8 +78,5 @@ public abstract class CVConfig
 
   public abstract DataSourceType getType();
 
-  @JsonIgnore
-  public String getDataCollectionDsl() {
-    return dataCollectionDsl;
-  }
+  @JsonIgnore public abstract String getDataCollectionDsl();
 }

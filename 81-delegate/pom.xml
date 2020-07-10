@@ -34,7 +34,7 @@
         </dependency>
         <dependency>
             <groupId>io.harness.cv</groupId>
-            <artifactId>DataCollectionDSL</artifactId>
+            <artifactId>data-collection-dsl</artifactId>
         </dependency>
         <dependency>
             <groupId>io.kubernetes</groupId>

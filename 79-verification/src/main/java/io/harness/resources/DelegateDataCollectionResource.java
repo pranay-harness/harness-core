@@ -1,10 +1,11 @@
 package io.harness.resources;
 
+import static software.wings.common.VerificationConstants.DELEGATE_DATA_COLLECTION;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.service.intfc.LogAnalysisService;
@@ -30,8 +31,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Api(CVNextGenConstants.DELEGATE_DATA_COLLECTION)
-@Path("/" + CVNextGenConstants.DELEGATE_DATA_COLLECTION)
+@Api(DELEGATE_DATA_COLLECTION)
+@Path("/" + DELEGATE_DATA_COLLECTION)
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
 @DelegateAuth

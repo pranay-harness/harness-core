@@ -1,6 +1,6 @@
 package io.harness.managerclient;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION;
+import static software.wings.common.VerificationConstants.DELEGATE_DATA_COLLECTION;
 
 import io.harness.rest.RestResponse;
 import retrofit2.Call;

@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 
 /**
  * Created by raghu on 5/19/17.
@@ -26,7 +25,7 @@ import javax.annotation.Nullable;
 @Singleton
 @Slf4j
 public class TimeSeriesDataStoreService {
-  @Nullable @Inject private CVNextGenServiceClient cvNextGenServiceClient;
+  @Inject private CVNextGenServiceClient cvNextGenServiceClient;
   @Inject private TimeLimiter timeLimiter;
 
   @VisibleForTesting

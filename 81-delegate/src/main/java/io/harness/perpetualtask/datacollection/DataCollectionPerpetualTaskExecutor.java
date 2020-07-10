@@ -12,8 +12,10 @@ import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.datacollection.DataCollectionDSLService;
+import io.harness.datacollection.entity.LogDataRecord;
 import io.harness.datacollection.entity.RuntimeParameters;
 import io.harness.datacollection.entity.TimeSeriesRecord;
+import io.harness.delegate.service.LogRecordDataStoreService;
 import io.harness.delegate.service.TimeSeriesDataStoreService;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
@@ -34,15 +36,15 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import javax.annotation.Nullable;
 
 @Slf4j
 public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecutor {
-  @Nullable @Inject private CVNextGenServiceClient cvNextGenServiceClient;
+  @Inject private CVNextGenServiceClient cvNextGenServiceClient;
   @Inject private EncryptionService encryptionService;
 
   @Inject private DelegateLogService delegateLogService;
   @Inject private TimeSeriesDataStoreService timeSeriesDataStoreService;
+  @Inject private LogRecordDataStoreService logRecordDataStoreService;
 
   @Inject private DataCollectionDSLService dataCollectionDSLService;
   @Inject @Named("verificationDataCollectorExecutor") protected ExecutorService dataCollectionService;
@@ -50,12 +52,6 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
-    if (cvNextGenServiceClient == null) {
-      return PerpetualTaskResponse.builder()
-          .perpetualTaskState(PerpetualTaskState.TASK_RUN_FAILED)
-          .responseMessage("The CVNextGenServiceClient is not initialize")
-          .build();
-    }
     DataCollectionPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), DataCollectionPerpetualTaskParams.class);
     logger.info("Executing for !! {} ", taskParams.getCvConfigId());
@@ -115,7 +111,11 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
           timeSeriesDataStoreService.saveTimeSeriesDataRecords(connector.getAccountId(), cvConfigId, timeSeriesRecords);
           break;
         case LOG:
-          // TODO: implement log
+          List<LogDataRecord> logDataRecords = (List<LogDataRecord>) dataCollectionDSLService.execute(
+              dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
+              new ThirdPartyCallHandler(
+                  connector.getAccountId(), dataCollectionTask.getCvConfigId(), delegateLogService));
+          logRecordDataStoreService.save(connector.getAccountId(), dataCollectionTask.getCvConfigId(), logDataRecords);
           break;
         default:
           throw new IllegalArgumentException("Invalid type " + dataCollectionInfo.getVerificationType());

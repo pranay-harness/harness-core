@@ -18,6 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Date;
 
@@ -31,9 +32,8 @@ import java.util.Date;
 public class LogRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id private String uuid;
   @FdIndex private String accountId;
-  @FdIndex private String projectIdentifier;
   @FdIndex private String cvConfigId;
-  @NotEmpty private long timestamp;
+  @NotEmpty private Instant timestamp;
   private String host;
   private long createdAt;
   @JsonIgnore
@@ -41,5 +41,5 @@ public class LogRecord implements PersistentEntity, UuidAware, CreatedAtAware, A
   @Builder.Default
   @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
-  private String message;
+  private String log;
 }
