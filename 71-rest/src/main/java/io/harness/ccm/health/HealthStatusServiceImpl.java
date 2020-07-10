@@ -305,15 +305,21 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         case K8S_PERMISSIONS_MISSING:
           messages.add(K8S_PERMISSIONS_MISSING.getMessage());
           break;
+        case PERPETUAL_TASK_CREATION_FAILURE:
+          logger.warn("The cluster id={} encounters the error {}.", clusterRecord.getUuid(),
+              PERPETUAL_TASK_CREATION_FAILURE.getMessage());
+          break;
         default:
           messages.add("Unexpected error. Please contact Harness support.");
+          logger.warn(
+              "The cluster id={} encounters an unexpected error {}.", clusterRecord.getUuid(), error.getMessage());
           break;
       }
     }
 
     if (isEmpty(messages)) {
       if (lastEventTimestamp <= 0) {
-        messages.add("No events received. The first event will arrive in 5 minutes.");
+        messages.add("No events received. It typically takes 3 to 5 minutes to start receiving events.");
       } else {
         messages.add(String.format(LAST_EVENT_TIMESTAMP_MESSAGE, TIMESTAMP_FORMAT_SPECIFIER));
       }
