@@ -339,11 +339,15 @@ public class ServiceNowServiceImpl implements ServiceNowService {
           .executionStatus(ExecutionStatus.PAUSED)
           .currentState(issueStatus)
           .build();
-    } catch (WingsException we) {
+    } catch (ServiceNowException sne) {
+      logger.error("Exception in servicenow approval", sne);
       ServiceNowExecutionData serviceNowExecutionData =
           ServiceNowExecutionData.builder().executionStatus(ExecutionStatus.FAILED).build();
-      serviceNowExecutionData.setErrorMsg(we.getMessage());
+      serviceNowExecutionData.setErrorMsg(sne.getMessage());
       return serviceNowExecutionData;
+    } catch (WingsException we) {
+      logger.error("Exception in servicenow approval", we);
+      return ServiceNowExecutionData.builder().executionStatus(ExecutionStatus.ERROR).build();
     }
   }
 

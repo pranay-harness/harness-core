@@ -158,9 +158,11 @@ public class ApprovalUtils {
         continuePauseWorkflow(
             stateExecutionService, workflowExecutionId, stateExecutionInstanceId, errorMsg, approvalStateExecutionData);
       } else if (issueStatus == ExecutionStatus.FAILED) {
-        logger.info("Jira delegate task failed with error: " + errorMsg);
+        logger.info("Jira/ServiceNow delegate task failed with error: " + errorMsg);
         failWorkflow(stateExecutionService, waitNotifyEngine, workflowExecutionId, stateExecutionInstanceId, errorMsg,
             approvalStateExecutionData);
+      } else if (issueStatus == ExecutionStatus.ERROR) {
+        logger.info("Jira/ServiceNow delegate task has encountered the following error: " + errorMsg);
       }
     } catch (WingsException exception) {
       exception.addContext(Application.class, appId);
