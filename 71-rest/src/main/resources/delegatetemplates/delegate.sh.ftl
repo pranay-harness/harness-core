@@ -121,6 +121,9 @@ fi
 if ! `grep verificationServiceUrl config-delegate.yml > /dev/null`; then
   echo "verificationServiceUrl: ${managerHostAndPort}/verification/" >> config-delegate.yml
 fi
+if ! `grep cvNextGenUrl config-delegate.yml > /dev/null`; then
+  echo "cvNextGenUrl: ${managerHostAndPort}/cv-nextgen/" >> config-delegate.yml
+fi
 if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`; then
   echo "watcherCheckLocation: ${watcherStorageUrl}/${watcherCheckLocation}" >> config-delegate.yml
 else

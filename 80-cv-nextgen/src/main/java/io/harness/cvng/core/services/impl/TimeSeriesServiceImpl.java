@@ -20,6 +20,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.persistence.HPersistence;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.UpdateOptions;
 
 import java.time.Instant;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class TimeSeriesServiceImpl implements TimeSeriesService {
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
@@ -34,6 +36,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
   @Override
   public boolean save(List<TimeSeriesDataCollectionRecord> dataRecords) {
+    logger.info("Saving {} data records", dataRecords.size());
     UpdateOptions options = new UpdateOptions();
     options.upsert(true);
     TreeBasedTable<Long, String, TimeSeriesRecord> timeSeriesRecordMap = bucketTimeSeriesRecords(dataRecords);

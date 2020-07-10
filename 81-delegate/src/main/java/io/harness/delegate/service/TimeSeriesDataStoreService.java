@@ -73,6 +73,7 @@ public class TimeSeriesDataStoreService {
   public boolean saveTimeSeriesDataRecords(
       String accountId, String cvConfigId, List<TimeSeriesRecord> timeSeriesRecords) {
     if (timeSeriesRecords.isEmpty()) {
+      logger.info("TimeseriesRecords is empty. So we will not be saving anything from the delegate for {}", cvConfigId);
       return true;
     }
     List<TimeSeriesDataCollectionRecord> dataCollectionRecords =

@@ -21,7 +21,7 @@ public class TimeSeriesLearningEngineTask extends LearningEngineTask {
   private String previousAnomaliesUrl;
   private String cumulativeSumsUrl;
   private Set<String> keyTransactions = new HashSet<>();
-  private int tolerance;
+  @Builder.Default private int tolerance = 1;
   @Builder.Default private int dataLength = 5;
   @Builder.Default private int windowSize = 5;
 

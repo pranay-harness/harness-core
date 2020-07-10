@@ -237,11 +237,4 @@ public class OrchestrationServiceTest extends CVNextGenBaseTest {
     verify(mockStateMachineService).getExecutingStateMachine(cvConfigId);
     verify(mockStateMachineService).retryStateMachineAfterFailure(stateMachine);
   }
-
-  @Test(expected = AnalysisOrchestrationException.class)
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testOrchestrate_badCvConfigId() {
-    orchestrationService.orchestrate(cvConfigId + "-bad");
-  }
 }

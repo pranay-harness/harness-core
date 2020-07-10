@@ -11,8 +11,9 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 
 import java.time.Instant;
-import java.util.Set;
-import javax.validation.Valid;
+import java.util.Map;
+import java.util.SortedSet;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -27,12 +28,13 @@ public class HeatMapResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<Set<HeatMapDTO>> getCVConfig(@QueryParam("accountId") @Valid final String accountId,
-      @QueryParam("serviceIdentifier") @Valid final String serviceIdentifier,
-      @QueryParam("envIdentifier") @Valid final String envIdentifier,
-      @QueryParam("category") @Valid final CVMonitoringCategory category,
-      @QueryParam("startTimeMs") @Valid final Long startTimeMs, @QueryParam("endTimeMs") @Valid final Long endTimeMs) {
-    return new RestResponse<>(heatMapService.getHeatMap(accountId, serviceIdentifier, envIdentifier, category,
+  public RestResponse<Map<CVMonitoringCategory, SortedSet<HeatMapDTO>>> getCVConfig(
+      @QueryParam("accountId") @NotNull final String accountId,
+      @QueryParam("serviceIdentifier") @NotNull final String serviceIdentifier,
+      @QueryParam("envIdentifier") @NotNull final String envIdentifier,
+      @QueryParam("startTimeMs") @NotNull final Long startTimeMs,
+      @QueryParam("endTimeMs") @NotNull final Long endTimeMs) {
+    return new RestResponse<>(heatMapService.getHeatMap(accountId, serviceIdentifier, envIdentifier,
         Instant.ofEpochMilli(startTimeMs), Instant.ofEpochMilli(endTimeMs)));
   }
 }

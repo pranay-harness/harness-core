@@ -44,13 +44,17 @@ public class TimeSeriesAnomalousPatterns implements PersistentEntity, UuidAware,
     if (isNotEmpty(txnMetricAnomMap)) {
       List<TimeSeriesAnomalies> anomalyList = new ArrayList<>();
       txnMetricAnomMap.forEach((txn, metricAnomMap) -> {
-        metricAnomMap.forEach((metric, anomalies) -> {
-          anomalies.forEach(anomaly -> {
-            anomaly.setTransactionName(txn);
-            anomaly.setMetricName(metric);
-            anomalyList.add(anomaly);
+        if (isNotEmpty(metricAnomMap)) {
+          metricAnomMap.forEach((metric, anomalies) -> {
+            if (isNotEmpty(anomalies)) {
+              anomalies.forEach(anomaly -> {
+                anomaly.setTransactionName(txn);
+                anomaly.setMetricName(metric);
+                anomalyList.add(anomaly);
+              });
+            }
           });
-        });
+        }
       });
       return anomalyList;
     }

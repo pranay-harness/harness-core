@@ -14,6 +14,7 @@ import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 import java.util.List;
@@ -27,6 +28,7 @@ import javax.ws.rs.QueryParam;
 @Api(TIMESERIES_ANALYSIS_RESOURCE)
 @Path(TIMESERIES_ANALYSIS_RESOURCE)
 @Produces("application/json")
+@Slf4j
 public class TimeSeriesAnalysisResource {
   @Inject TimeSeriesAnalysisService timeSeriesAnalysisService;
 
@@ -92,9 +94,11 @@ public class TimeSeriesAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
-  public void saveServiceGuardAnalysis(@QueryParam("taskId") String taskId, @QueryParam("cvConfigId") String cvConfigId,
-      @QueryParam("analysisStartTime") String epochStartInstant, @QueryParam("analysisEndTime") String epochEndInstant,
-      ServiceGuardMetricAnalysisDTO analysisBody) {
-    timeSeriesAnalysisService.saveAnalysis(analysisBody, cvConfigId, taskId);
+  public RestResponse<Boolean> saveServiceGuardAnalysis(@QueryParam("taskId") String taskId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("analysisStartTime") String epochStartInstant,
+      @QueryParam("analysisEndTime") String epochEndInstant, ServiceGuardMetricAnalysisDTO analysisBody) {
+    timeSeriesAnalysisService.saveAnalysis(
+        analysisBody, cvConfigId, taskId, Instant.parse(epochStartInstant), Instant.parse(epochEndInstant));
+    return new RestResponse<>(true);
   }
 }

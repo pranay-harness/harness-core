@@ -24,6 +24,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @CdIndex(name = "insertionIdx",
@@ -49,7 +52,7 @@ public class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, Persis
   @FdIndex private Instant heatMapBucketStartTime;
   @FdIndex private Instant heatMapBucketEndTime;
   @FdIndex private String accountId;
-  private Set<HeatMapRisk> heatMapRisks;
+  private List<HeatMapRisk> heatMapRisks;
 
   @FdIndex private long createdAt;
 
@@ -58,6 +61,18 @@ public class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, Persis
   @Builder.Default
   @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusDays(31).toInstant());
+
+  public Set<HeatMapRisk> getHeatMapRisks() {
+    Map<HeatMapRisk, Double> risks = new HashMap<>();
+    heatMapRisks.forEach(heatMapRisk -> {
+      if (!risks.containsKey(heatMapRisk)) {
+        risks.put(heatMapRisk, heatMapRisk.riskScore);
+      } else if (heatMapRisk.riskScore > risks.get(heatMapRisk)) {
+        risks.put(heatMapRisk, heatMapRisk.riskScore);
+      }
+    });
+    return risks.keySet();
+  }
 
   @Data
   @Builder

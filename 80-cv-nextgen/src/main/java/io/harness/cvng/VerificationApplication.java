@@ -26,8 +26,9 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import io.harness.cvng.analysis.resource.LearningEngineResource;
+import io.harness.cvng.analysis.resource.LearningEngineTaskResource;
 import io.harness.cvng.client.VerificationManagerClientModule;
+import io.harness.cvng.core.dashboard.resources.HeatMapResource;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
@@ -235,7 +236,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
   private void registerResources(Environment environment, Injector injector) {
     registerResourcesForPackage(DataCollectionResource.class, environment, injector);
-    registerResourcesForPackage(LearningEngineResource.class, environment, injector);
+    registerResourcesForPackage(LearningEngineTaskResource.class, environment, injector);
+    registerResourcesForPackage(HeatMapResource.class, environment, injector);
   }
 
   private void registerResourcesForPackage(Class clazz, Environment environment, Injector injector) {

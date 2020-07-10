@@ -8,10 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface LearningEngineAnalysisService {
+public interface LearningEngineTaskService {
   LearningEngineTask getNextAnalysisTask();
   LearningEngineTask getNextAnalysisTask(List<LearningEngineTaskType> taskType);
   List<String> createLearningEngineTasks(List<LearningEngineTask> tasks);
   Map<String, ExecutionStatus> getTaskStatus(Set<String> taskIds);
   void markCompleted(String taskId);
+  void markFailure(String taskId);
 }

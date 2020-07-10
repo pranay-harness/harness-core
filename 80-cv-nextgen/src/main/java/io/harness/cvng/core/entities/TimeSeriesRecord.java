@@ -54,10 +54,15 @@ public class TimeSeriesRecord implements UuidAware, CreatedAtAware, AccountAcces
   @Builder
   @FieldNameConstants(innerTypeName = "TimeSeriesValueKeys")
   @EqualsAndHashCode(of = {"groupName", "timeStamp"})
-  public static class TimeSeriesGroupValue {
+  public static class TimeSeriesGroupValue implements Comparable<TimeSeriesGroupValue> {
     private String groupName;
     private Instant timeStamp;
     private double metricValue;
     private double riskScore;
+
+    @Override
+    public int compareTo(TimeSeriesGroupValue other) {
+      return timeStamp.compareTo(other.getTimeStamp());
+    }
   }
 }

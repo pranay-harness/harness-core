@@ -1,12 +1,14 @@
 package io.harness.perpetualtask.datacollection;
 
 import io.harness.datacollection.entity.CallDetails;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 
 import java.util.function.Consumer;
 
+@Slf4j
 public class ThirdPartyCallHandler implements Consumer<CallDetails> {
   private String accountId;
   private String cvConfigId;
@@ -20,6 +22,8 @@ public class ThirdPartyCallHandler implements Consumer<CallDetails> {
 
   @Override
   public void accept(CallDetails callDetails) {
+    //    logger.info("Delegate log: " + callDetails.getRequest());
+    //    logger.info("Delegate log response: " + callDetails.getResponse().body().toString());
     final ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder().stateExecutionId(cvConfigId).build();
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name("url")

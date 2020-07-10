@@ -84,9 +84,9 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
   private void orchestrateAtRunningState(AnalysisOrchestrator orchestrator) {
     if (orchestrator == null) {
-      String errMsg = "Invalid orchestrator in orchestrateAtRunningState. Returning";
-      logger.error(errMsg);
-      throw new AnalysisOrchestrationException(errMsg);
+      String errMsg = "No orchestrator available to execute currently.";
+      logger.info(errMsg);
+      return;
     }
 
     AnalysisStateMachine currentlyExecutingStateMachine =
