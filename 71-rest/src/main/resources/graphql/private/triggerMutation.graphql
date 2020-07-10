@@ -16,7 +16,7 @@ input CreateTriggerInput {
 input UpdateTriggerInput {
   triggerId: String!
   clientMutationId: String
-  name: String
+  name: String!
   applicationId: String!
   description: String
   condition: TriggerConditionInput!
