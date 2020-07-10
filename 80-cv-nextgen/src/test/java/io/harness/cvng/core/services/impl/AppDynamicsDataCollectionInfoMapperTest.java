@@ -16,17 +16,16 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class AppDynamicsDataCollectionInfoMapperTest extends CVNextGenBaseTest {
-  @Inject AppDynamicsDataCollectionInfoMapper mapper;
+  @Inject private AppDynamicsDataCollectionInfoMapper mapper;
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void toDataConnectionInfo() {
+  public void testToDataConnectionInfo() {
     MetricPack metricPack = MetricPack.builder().dataCollectionDsl("metric-pack-dsl").build();
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(generateUuid());
     cvConfig.setAccountId(generateUuid());
     cvConfig.setApplicationId(1234);
-    cvConfig.setDataCollectionDsl("data-connection-dsl");
     cvConfig.setMetricPack(metricPack);
     cvConfig.setTierId(123);
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo = mapper.toDataCollectionInfo(cvConfig);

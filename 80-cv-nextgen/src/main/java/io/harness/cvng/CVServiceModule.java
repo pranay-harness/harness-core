@@ -18,6 +18,7 @@ import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.FeatureFlagService;
+import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
@@ -28,8 +29,10 @@ import io.harness.cvng.core.services.impl.CVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
 import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
+import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
+import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesServiceImpl;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
@@ -109,8 +112,12 @@ public class CVServiceModule extends AbstractModule {
       bind(DataCollectionInfoMapper.class)
           .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
           .to(AppDynamicsDataCollectionInfoMapper.class);
+      bind(DataCollectionInfoMapper.class)
+          .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
+          .to(SplunkDataCollectionInfoMapper.class);
       bind(MetricPackService.class).to(MetricPackServiceImpl.class);
       bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
+      bind(LogRecordService.class).to(LogRecordServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

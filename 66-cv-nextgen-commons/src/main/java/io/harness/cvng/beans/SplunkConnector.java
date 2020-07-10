@@ -1,12 +1,14 @@
 package io.harness.cvng.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Builder;
 import lombok.Value;
 
 import java.util.Collections;
 import java.util.Map;
 
 @Value
+@Builder
 public class SplunkConnector implements Connector {
   String accountId;
   String baseUrl;

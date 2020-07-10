@@ -132,9 +132,9 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
 
   protected boolean authenticationExemptedRequests(ContainerRequestContext requestContext) {
     return requestContext.getMethod().equals(OPTIONS) || publicAPI()
-        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
-        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
-        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");
+        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("/version")
+        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
+        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("/swagger.json");
   }
 
   protected boolean isDelegateRequest(ContainerRequestContext requestContext) {

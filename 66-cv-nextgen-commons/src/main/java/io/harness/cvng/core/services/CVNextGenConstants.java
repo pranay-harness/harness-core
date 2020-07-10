@@ -7,6 +7,7 @@ public interface CVNextGenConstants {
   String APPD_TIER_ID_PLACEHOLDER = "__tier_name__";
   String APPD_METRIC_DATA_NOT_FOUND = "METRIC DATA NOT FOUND";
   String DELEGATE_DATA_COLLECTION = "delegate-data-collection";
+  String LOG_RECORD_RESOURCE_PATH = "log-record";
   String DELEGATE_DATA_COLLECTION_TASK = "delegate-data-collection-task";
   String VERIFICATION_SERVICE_SECRET = "VERIFICATION_SERVICE_SECRET";
   String CV_NEXT_GEN_SERVICE_ENDPOINTS_PREFIX = CV_NEXTGEN_RESOURCE_PREFIX + "/service";
