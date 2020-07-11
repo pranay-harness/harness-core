@@ -11,6 +11,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 
 import io.grpc.ManagedChannel;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -29,7 +30,9 @@ import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.grpc.ManagerDelegateGrpcClient;
 import io.harness.rule.Owner;
@@ -118,13 +121,15 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
                             .timeout(TimeUnit.MINUTES.toMillis(1))
                             .parameters(new Object[] {HttpTaskParameters.builder().url("criteria").build()})
                             .build();
-
     SendTaskResponse sendTaskResponse =
-        SendTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
+        SendTaskResponse.newBuilder()
+            .setTaskId(TaskId.newBuilder().setId("test").build())
+            .setResponseData(
+                ByteString.copyFrom(kryoSerializer.asDeflatedBytes(CommandExecutionResult.builder().build())))
+            .build();
     when(managerDelegateGrpcClient.sendTask(any(SendTaskRequest.class), anyLong())).thenReturn(sendTaskResponse);
-    SendTaskResponse taskResponse = managerDelegateServiceDriver.sendTask(ACCOUNT_ID, setupAbstractions, taskData);
-    assertThat(taskResponse).isNotNull();
-    assertThat(taskResponse).isEqualTo(sendTaskResponse);
+    ResponseData responseData = managerDelegateServiceDriver.sendTask(ACCOUNT_ID, setupAbstractions, taskData);
+    assertThat(responseData).isNotNull().isInstanceOf(CommandExecutionResult.class);
   }
 
   @Test
@@ -145,8 +150,7 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
         SendTaskAsyncResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
     when(managerDelegateGrpcClient.sendTaskAsync(any(SendTaskAsyncRequest.class))).thenReturn(sendTaskAsyncResponse);
     String taskResponse = managerDelegateServiceDriver.sendTaskAsync(ACCOUNT_ID, setupAbstractions, taskData);
-    assertThat(taskResponse).isNotNull();
-    assertThat(taskResponse).isEqualTo("test");
+    assertThat(taskResponse).isNotNull().isEqualTo("test");
   }
 
   @Test
@@ -158,7 +162,6 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
         AbortTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.EXECUTING).build();
     when(managerDelegateGrpcClient.abortTask(any(AbortTaskRequest.class))).thenReturn(abortTaskResponse);
     AbortTaskResponse taskResponse = managerDelegateServiceDriver.abortTask(abortTaskRequest);
-    assertThat(taskResponse).isNotNull();
-    assertThat(taskResponse).isEqualTo(abortTaskResponse);
+    assertThat(taskResponse).isNotNull().isEqualTo(abortTaskResponse);
   }
 }

@@ -8,8 +8,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.SendTaskResponse;
-import io.harness.delegate.TaskId;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.remote.NGDelegateClientResource;
 import io.harness.rule.Owner;
@@ -31,12 +30,9 @@ public class NGDelegateClientResourceTest extends BaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testCreate() {
-    String taskId = "test";
-    SendTaskResponse sendTaskResponse =
-        SendTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build();
-
-    when(managerDelegateServiceDriver.sendTask(any(String.class), any(), any())).thenReturn(sendTaskResponse);
-    String returnedTaskId = ngDelegateClientResource.create(generateUuid());
-    assertThat(returnedTaskId).isNotNull();
+    final ResponseData responseData = new ResponseData() {};
+    when(managerDelegateServiceDriver.sendTask(any(String.class), any(), any())).thenReturn(responseData);
+    final ResponseData response = ngDelegateClientResource.create(generateUuid());
+    assertThat(response).isNotNull().isEqualTo(responseData);
   }
 }

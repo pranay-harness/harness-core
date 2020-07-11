@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.ManagerDelegateServiceDriver;
-import io.harness.delegate.SendTaskResponse;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.swagger.annotations.Api;
@@ -34,7 +34,7 @@ public class NGDelegateClientResource {
 
   @GET
   @ApiOperation(value = "Create a delegate tasks", nickname = "postDelegate")
-  public String create(@QueryParam("accountId") @NotBlank String accountId) {
+  public ResponseData create(@QueryParam("accountId") @NotBlank String accountId) {
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
     TaskData taskData =
         TaskData.builder()
@@ -43,8 +43,6 @@ public class NGDelegateClientResource {
             .timeout(TimeUnit.MINUTES.toMillis(1))
             .parameters(new Object[] {HttpTaskParameters.builder().method("GET").url(HTTP_URL_200).build()})
             .build();
-    SendTaskResponse sendTaskResponse =
-        this.managerDelegateServiceDriver.sendTask(accountId, setupAbstractions, taskData);
-    return sendTaskResponse.getTaskId().getId();
+    return this.managerDelegateServiceDriver.sendTask(accountId, setupAbstractions, taskData);
   }
 }
