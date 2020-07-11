@@ -60,7 +60,7 @@ public class YamlGitConfigResource {
 
   @PUT
   @Path("{identifier}/folder/{folderIdentifier}/default")
-  @ApiOperation(value = "Update Git Sync by id", nickname = "putGitSync")
+  @ApiOperation(value = "Update Git Sync default by id", nickname = "putGitSyncDefault")
   public List<GitSyncConfigDTO> updateDefault(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("identifier") @NotEmpty String identifier,
@@ -70,7 +70,7 @@ public class YamlGitConfigResource {
   }
 
   @GET
-  @ApiOperation(value = "Get Git Sync list", nickname = "getGitSyncList")
+  @ApiOperation(value = "Get Git Sync list", nickname = "listGitSync")
   public List<GitSyncConfigDTO> list(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId) {
     List<YamlGitConfigDTO> yamlGitConfigDTOs = yamlGitConfigService.get(projectId, organizationId, accountId);
