@@ -16,6 +16,7 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.spotinst.request.SpotInstGetElastigroupJsonParameters;
@@ -35,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.TaskType;
-import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.List;

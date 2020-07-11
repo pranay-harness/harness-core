@@ -7,10 +7,10 @@ import static java.lang.String.format;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.service.impl.aws.model.AwsResponse;
 
 @Singleton

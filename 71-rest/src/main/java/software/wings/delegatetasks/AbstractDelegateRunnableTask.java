@@ -13,6 +13,7 @@ import io.harness.delegate.beans.DelegateTaskResponse.DelegateTaskResponseBuilde
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.DataCollectionExecutorService;

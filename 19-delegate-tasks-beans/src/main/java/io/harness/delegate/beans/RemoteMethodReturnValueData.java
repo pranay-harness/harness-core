@@ -1,8 +1,7 @@
-package software.wings.delegatetasks;
+package io.harness.delegate.beans;
 
 import com.esotericsoftware.kryo.serializers.FieldSerializer.Bind;
 import com.esotericsoftware.kryo.serializers.JavaSerializer;
-import io.harness.delegate.beans.ResponseData;
 import lombok.Builder;
 import lombok.Value;
 

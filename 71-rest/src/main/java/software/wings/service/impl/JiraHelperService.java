@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.HarnessJiraException;
@@ -28,7 +29,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.approval.ApprovalPollingJobEntity;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.jira.JiraTaskParameters;
-import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.jira.JiraAction;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
