@@ -15,9 +15,11 @@ import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.NoResultFoundException;
 import io.harness.grpc.ManagerDelegateGrpcClient;
 import io.harness.serializer.KryoSerializer;
 
@@ -36,7 +38,8 @@ public class ManagerDelegateServiceDriver {
     this.kryoSerializer = kryoSerializer;
   }
 
-  public SendTaskResponse sendTask(String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
+  public <T extends ResponseData> T sendTask(
+      String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
     TaskDetails taskDetails = buildTaskDetails(taskData);
     SendTaskRequest request =
         SendTaskRequest.newBuilder()
@@ -44,7 +47,11 @@ public class ManagerDelegateServiceDriver {
             .setSetupAbstractions(TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build())
             .setDetails(taskDetails)
             .build();
-    return managerDelegateGrpcClient.sendTask(request, taskData.getTimeout());
+    final SendTaskResponse response = managerDelegateGrpcClient.sendTask(request, taskData.getTimeout());
+    if (!response.getResponseData().isEmpty()) {
+      return (T) kryoSerializer.asInflatedObject(response.getResponseData().toByteArray());
+    }
+    throw NoResultFoundException.newBuilder().message("no response found for sync delegate request").build();
   }
 
   public String sendTaskAsync(String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
