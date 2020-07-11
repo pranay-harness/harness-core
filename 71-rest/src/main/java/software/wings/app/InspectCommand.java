@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -15,11 +16,14 @@ import io.harness.govern.ProviderModule;
 import io.harness.mongo.IndexManager;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.ManagerRegistrars;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.mongodb.morphia.AdvancedDatastore;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class InspectCommand<T extends io.dropwizard.Configuration> extends ConfiguredCommand<T> {
   private final Class<T> configurationClass;
@@ -49,6 +53,13 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
     });
     modules.addAll(new MongoModule().cumulativeDependencies());
     modules.add(new IndexMigratorModule());
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(ManagerRegistrars.kryoRegistrars).build();
+      }
+    });
 
     Injector injector = Guice.createInjector(modules);
     injector.getInstance(Key.get(AdvancedDatastore.class, Names.named("primaryDatastore")));
