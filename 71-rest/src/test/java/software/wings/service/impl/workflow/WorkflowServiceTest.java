@@ -6,7 +6,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -29,15 +28,12 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.assertj.core.util.Lists.newArrayList;
-import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.ECS;
@@ -184,8 +180,6 @@ import static software.wings.sm.StateType.SUB_WORKFLOW;
 import static software.wings.sm.StateType.WAIT;
 import static software.wings.sm.StepType.APPROVAL;
 import static software.wings.sm.StepType.ARTIFACT_COLLECTION;
-import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_SETUP;
-import static software.wings.sm.StepType.AWS_AMI_SERVICE_SETUP;
 import static software.wings.sm.StepType.AZURE_NODE_SELECT;
 import static software.wings.sm.StepType.BAMBOO;
 import static software.wings.sm.StepType.BARRIER;
@@ -389,7 +383,6 @@ import software.wings.stencils.WorkflowStepType;
 import software.wings.utils.WingsTestConstants.MockChecker;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -4670,28 +4663,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
         .contains(tuple(AWS_AMI.name(), AWS_AMI.getDisplayName(),
-            asList(StepType.AWS_AMI_SWITCH_ROUTES.name(), StepType.AWS_AMI_ROLLBACK_SWITCH_ROUTES.name())));
+            asList(StepType.AWS_AMI_SWITCH_ROUTES.name(), StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES.name(),
+                StepType.AWS_AMI_ROLLBACK_SWITCH_ROUTES.name(),
+                StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES.name())));
 
     validateCommonCategories(workflowCategorySteps);
 
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
         .doesNotContain(APM.name(), LOG.name(), ARTIFACT.name());
-  }
-
-  @Test
-  @Owner(developers = ANIL)
-  @Category(UnitTests.class)
-  public void testFilterAsgAmiStepsForTrafficShift() {
-    WorkflowServiceImpl service = spy(WorkflowServiceImpl.class);
-    FeatureFlagService mockFF = mock(FeatureFlagService.class);
-    on(service).set("featureFlagService", mockFF);
-    doReturn(false).when(mockFF).isEnabled(any(), anyString());
-    List<StepType> initialSteps = Arrays.asList(AWS_AMI_SERVICE_SETUP, ASG_AMI_SERVICE_ALB_SHIFT_SETUP);
-    List<StepType> finalSteps = service.filterAsgAmiStepsForTrafficShift(initialSteps, ACCOUNT_ID);
-    assertThat(finalSteps).isNotNull();
-    assertThat(finalSteps.size()).isEqualTo(1);
-    assertThat(finalSteps.get(0)).isEqualTo(AWS_AMI_SERVICE_SETUP);
   }
 
   @Test

@@ -28,7 +28,6 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.FeatureName.ASG_AMI_TRAFFIC_SHIFT;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -2648,16 +2647,15 @@ public class WorkflowServiceHelper {
 
   private void generateNewWfPhaseStepsForAwsAmiBlueGreen(WorkflowCreationFlags creationFlags, String accountId,
       String appId, WorkflowPhase workflowPhase, boolean serviceRepeat, boolean isDynamicInfrastructure) {
-    if (isAsgAmiAlbTrafficShiftType(creationFlags, accountId)) {
+    if (isAsgAmiAlbTrafficShiftType(creationFlags)) {
       generateNewWorkflowPhaseStepsForAsgAmiAlbTrafficShiftBlueGreen(appId, workflowPhase);
     } else {
       generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(appId, workflowPhase, !serviceRepeat, isDynamicInfrastructure);
     }
   }
 
-  private boolean isAsgAmiAlbTrafficShiftType(WorkflowCreationFlags flags, String accountId) {
-    return featureFlagService.isEnabled(ASG_AMI_TRAFFIC_SHIFT, accountId) && flags != null
-        && flags.isAwsTrafficShiftAlbType();
+  private boolean isAsgAmiAlbTrafficShiftType(WorkflowCreationFlags flags) {
+    return flags != null && flags.isAwsTrafficShiftAlbType();
   }
 
   private boolean isAlbTrafficShiftType(WorkflowCreationFlags flags) {
@@ -2728,7 +2726,7 @@ public class WorkflowServiceHelper {
 
   private WorkflowPhase generateRollbackWfPhaseForAwsAmiBlueGreen(
       WorkflowPhase workflowPhase, WorkflowCreationFlags creationFlags, String accountId) {
-    if (isAsgAmiAlbTrafficShiftType(creationFlags, accountId)) {
+    if (isAsgAmiAlbTrafficShiftType(creationFlags)) {
       return generateRollbackWorkflowPhaseForAsgAmiTrafficShiftBlueGreen(workflowPhase);
     } else {
       return generateRollbackWorkflowPhaseForAwsAmiBlueGreen(workflowPhase);
