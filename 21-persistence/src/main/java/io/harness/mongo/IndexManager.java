@@ -30,6 +30,7 @@ public class IndexManager {
     try {
       IndexManagerSession session = new IndexManagerSession(datastore, migrators, mode == null ? MANUAL : mode);
       if (session.ensureIndexes(morphia) && mode == INSPECT) {
+        logger.info("the inspection finished");
         throw new IndexManagerInspectException();
       }
     } catch (IndexManagerReadOnlyException exception) {
