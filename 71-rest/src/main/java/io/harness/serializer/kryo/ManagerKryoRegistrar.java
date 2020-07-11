@@ -404,7 +404,6 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.EcsContainerDetails;
-import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
@@ -1128,7 +1127,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BuildSourceParameters.class, 5618);
     kryo.register(BuildSourceResponse.class, 5619);
     kryo.register(JiraAction.class, 5580);
-    kryo.register(RemoteMethodReturnValueData.class, 5122);
     kryo.register(CloudFormationCommandRequest.CloudFormationCommandType.class, 5333);
     kryo.register(CloudFormationCommandRequest.class, 5332);
     kryo.register(CloudFormationCreateStackRequest.class, 5334);

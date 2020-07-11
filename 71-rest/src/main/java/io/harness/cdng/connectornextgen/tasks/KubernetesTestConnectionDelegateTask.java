@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.cdng.connectornextgen.service.KubernetesConnectorService;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
@@ -12,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
-import software.wings.delegatetasks.RemoteMethodReturnValueData;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;

@@ -17,6 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.NoAvaliableDelegatesException;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.exception.WingsException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -34,7 +35,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.PerpetualTaskAlert;
-import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 

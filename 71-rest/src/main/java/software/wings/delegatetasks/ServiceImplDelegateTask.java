@@ -8,6 +8,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
