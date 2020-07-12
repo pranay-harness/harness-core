@@ -1,36 +1,33 @@
 package software.wings.service.impl.security;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
+import static software.wings.service.intfc.security.SecretManager.HARNESS_DEFAULT_SECRET_MANAGER;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionType;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.SecretManagerConfig;
-import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.security.SecretManagerConfigService;
 
 public class SecretManagerConfigServiceImplTest extends WingsBaseTest {
-  @Mock private WingsPersistence wingsPersistence;
-  private String kmsId = "kmsId";
   private String accountId = "accountId";
-  @Inject @InjectMocks SecretManagerConfigServiceImpl secretManagetConfigServiceImpl;
+  @Inject private SecretManagerConfigService secretManagerConfigService;
 
   @Test(expected = SecretManagementException.class)
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void test_getEncryptionBySecretManagerId_whenNOValuePresent() {
-    when(wingsPersistence.get(any(), any())).thenReturn(null);
-    EncryptionType encryptionType = secretManagetConfigServiceImpl.getEncryptionBySecretManagerId(kmsId, accountId);
+    secretManagerConfigService.getEncryptionBySecretManagerId(UUIDGenerator.generateUuid(), accountId);
   }
 
   @Test
@@ -40,9 +37,59 @@ public class SecretManagerConfigServiceImplTest extends WingsBaseTest {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
     SecretManagerConfig secretManagerConfig =
         new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
-    secretManagerConfig.setEncryptionType(EncryptionType.GCP_KMS);
-    when(wingsPersistence.get(any(), any())).thenReturn(secretManagerConfig);
-    EncryptionType encryptionType = secretManagetConfigServiceImpl.getEncryptionBySecretManagerId(kmsId, accountId);
+    secretManagerConfig.setAccountId(accountId);
+    String configId = secretManagerConfigService.save(secretManagerConfig);
+    EncryptionType encryptionType = secretManagerConfigService.getEncryptionBySecretManagerId(configId, accountId);
     assertThat(encryptionType).isEqualTo(EncryptionType.GCP_KMS);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_getSecretManagerName_GlobalSecretManager() {
+    String secretManagerName = "secretManagerName";
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+    SecretManagerConfig secretManagerConfig =
+        new GcpKmsConfig(secretManagerName, "projectId", "region", "keyRing", "keyName", credentials);
+    secretManagerConfig.setAccountId(GLOBAL_ACCOUNT_ID);
+    String configId = secretManagerConfigService.save(secretManagerConfig);
+    String name = secretManagerConfigService.getSecretManagerName(configId, accountId);
+    assertThat(name).isEqualTo(secretManagerName);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_getSecretManagerName_LocalSecretManager() {
+    String name = secretManagerConfigService.getSecretManagerName(accountId, accountId);
+    assertThat(name).isEqualTo(HARNESS_DEFAULT_SECRET_MANAGER);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_getSecretManagerName_CustomerSecretManager() {
+    String secretManagerName = "secretManagerName";
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+    SecretManagerConfig secretManagerConfig =
+        new GcpKmsConfig(secretManagerName, "projectId", "region", "keyRing", "keyName", credentials);
+    secretManagerConfig.setAccountId(accountId);
+    String configId = secretManagerConfigService.save(secretManagerConfig);
+    String name = secretManagerConfigService.getSecretManagerName(configId, accountId);
+    assertThat(name).isEqualTo(secretManagerName);
+  }
+
+  @Test
+  @Owner(developers = UTKARSH)
+  @Category(UnitTests.class)
+  public void test_getSecretManagerName_shouldReturnNull() {
+    String secretManagerName = "secretManagerName";
+    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
+    SecretManagerConfig secretManagerConfig =
+        new GcpKmsConfig(secretManagerName, "projectId", "region", "keyRing", "keyName", credentials);
+    secretManagerConfig.setAccountId(UUIDGenerator.generateUuid());
+    String configId = secretManagerConfigService.save(secretManagerConfig);
+    String name = secretManagerConfigService.getSecretManagerName(configId, accountId);
+    assertThat(name).isEqualTo(null);
   }
 }

@@ -731,8 +731,8 @@ public class SecretManagerImpl implements SecretManager {
       EncryptedData encryptedData = encryptedDataMap.get(settingAttribute.getUuid());
       if (encryptedData != null) {
         settingAttribute.setEncryptionType(encryptedData.getEncryptionType());
-        settingAttribute.setEncryptedBy(secretManagerConfigService.getSecretManagerName(
-            encryptedData.getKmsId(), encryptedData.getEncryptionType(), accountId));
+        settingAttribute.setEncryptedBy(
+            secretManagerConfigService.getSecretManagerName(encryptedData.getKmsId(), accountId));
         finalList.add(settingAttribute);
       } else if (settingAttribute.getCategory() == SettingCategory.SETTING) {
         finalList.add(settingAttribute);
@@ -2355,8 +2355,8 @@ public class SecretManagerImpl implements SecretManager {
     for (EncryptedData encryptedData : encryptedDataList) {
       String entityId = encryptedData.getUuid();
 
-      encryptedData.setEncryptedBy(secretManagerConfigService.getSecretManagerName(
-          encryptedData.getKmsId(), encryptedData.getEncryptionType(), accountId));
+      encryptedData.setEncryptedBy(
+          secretManagerConfigService.getSecretManagerName(encryptedData.getKmsId(), accountId));
       int secretUsageSize = encryptedData.getParents().size();
       encryptedData.setSetupUsage(secretUsageSize);
 

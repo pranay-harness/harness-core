@@ -1691,7 +1691,7 @@ public class VaultTest extends WingsBaseTest {
     // But the secret manager field will be null instead.
     encryptedData = response.getResponse().get(0);
     assertThat(encryptedData.getName()).isEqualTo(secretName);
-    assertThat(encryptedData.getEncryptedBy()).isNull();
+    assertThat(encryptedData.getEncryptedBy()).isNotEmpty();
   }
 
   @Test

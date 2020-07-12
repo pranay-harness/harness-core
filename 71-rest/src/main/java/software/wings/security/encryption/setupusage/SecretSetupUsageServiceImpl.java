@@ -45,11 +45,11 @@ public class SecretSetupUsageServiceImpl implements SecretSetupUsageService {
       return Collections.emptySet();
     }
 
-    EncryptionDetail encryptionDetail = EncryptionDetail.builder()
-                                            .encryptionType(encryptedData.getEncryptionType())
-                                            .secretManagerName(secretManagerConfigService.getSecretManagerName(
-                                                encryptedData.getKmsId(), encryptedData.getEncryptionType(), accountId))
-                                            .build();
+    EncryptionDetail encryptionDetail =
+        EncryptionDetail.builder()
+            .encryptionType(encryptedData.getEncryptionType())
+            .secretManagerName(secretManagerConfigService.getSecretManagerName(encryptedData.getKmsId(), accountId))
+            .build();
 
     return buildSecretSetupUsageFromParents(accountId, secretTextId, encryptedData.getParents(), encryptionDetail);
   }
