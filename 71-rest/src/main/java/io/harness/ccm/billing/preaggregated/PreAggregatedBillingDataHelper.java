@@ -697,7 +697,7 @@ public class PreAggregatedBillingDataHelper {
             String labelKey = fetchStringValue(row, field);
             String labelValue = fetchStringValue(
                 row, Field.newBuilder(entityConstantGcpLabelValue, StandardSQLTypeName.STRING).build());
-            if (labelKey.equals(nullStringValueConstant)) {
+            if (!labelKey.equals(nullStringValueConstant)) {
               updateLabelsMap(labelsMap, labelKey, labelValue);
             }
             break;
