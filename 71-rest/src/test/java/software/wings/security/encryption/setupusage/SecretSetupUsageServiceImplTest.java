@@ -78,7 +78,7 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
 
     secretSetupUsageBuilder = mock(SecretSetupUsageBuilder.class);
 
-    when(secretManagerConfigService.getSecretManagerName(account.getUuid(), EncryptionType.LOCAL, account.getUuid()))
+    when(secretManagerConfigService.getSecretManagerName(account.getUuid(), account.getUuid()))
         .thenReturn(HARNESS_DEFAULT_SECRET_MANAGER);
 
     when(secretSetupUsageBuilderRegistry.getSecretSetupUsageBuilder(any()))
@@ -170,7 +170,7 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
 
     assertThat(secretSetupUsages).isEqualTo(expectedResponse);
 
-    verify(secretManagerConfigService, times(1)).getSecretManagerName(any(), any(), any());
+    verify(secretManagerConfigService, times(1)).getSecretManagerName(any(), any());
     verify(secretSetupUsageBuilderRegistry, times(1)).getSecretSetupUsageBuilder(SERVICE_VARIABLE);
     verify(secretSetupUsageBuilderRegistry, times(1)).getSecretSetupUsageBuilder(DOCKER);
     verify(secretSetupUsageBuilderRegistry, times(1)).getSecretSetupUsageBuilder(AWS);

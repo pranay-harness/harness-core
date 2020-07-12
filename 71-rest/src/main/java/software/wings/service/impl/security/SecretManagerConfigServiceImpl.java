@@ -1,11 +1,12 @@
 package software.wings.service.impl.security;
 
+import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.CREATED_AT_KEY;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
-import static software.wings.service.intfc.security.SecretManager.HARNESS_DEFAULT_SECRET_MANAGER;
 import static software.wings.service.intfc.security.SecretManager.ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.IS_DEFAULT_KEY;
 
@@ -43,15 +44,16 @@ import software.wings.service.intfc.security.VaultService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * @author marklu on 2019-05-31
  */
+@ValidateOnExecution
 @Singleton
 @Slf4j
 public class SecretManagerConfigServiceImpl implements SecretManagerConfigService {
@@ -87,28 +89,13 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
     return wingsPersistence.save(secretManagerConfig);
   }
 
-  private Map<String, SecretManagerConfig> getSecretManagerMap(String accountId) {
-    Map<String, SecretManagerConfig> result = new HashMap<>();
-    List<SecretManagerConfig> secretManagerConfigs = listSecretManagers(accountId, true, false);
-    for (SecretManagerConfig secretManagerConfig : secretManagerConfigs) {
-      result.put(secretManagerConfig.getUuid(), secretManagerConfig);
-    }
-    List<SecretManagerConfig> globalSecretManagers = getAllGlobalSecretManagers();
-    for (SecretManagerConfig secretManagerConfig : globalSecretManagers) {
-      result.put(secretManagerConfig.getUuid(), secretManagerConfig);
-    }
-    return result;
-  }
-
   @Override
-  public String getSecretManagerName(String kmsId, EncryptionType encryptionType, String accountId) {
-    Map<String, SecretManagerConfig> secretManagerConfigMap = getSecretManagerMap(accountId);
-    if (encryptionType == LOCAL) {
-      return HARNESS_DEFAULT_SECRET_MANAGER;
-    } else if (secretManagerConfigMap.containsKey(kmsId)) {
-      return secretManagerConfigMap.get(kmsId).getName();
+  public String getSecretManagerName(String kmsId, String accountId) {
+    SecretManagerConfig secretManagerConfig = getSecretManagerInternal(accountId, kmsId);
+    if (secretManagerConfig != null) {
+      return secretManagerConfig.getName();
     } else {
-      logger.warn("Secret manager with id {} and type {} can't be resolved.", kmsId, encryptionType);
+      logger.warn("Secret manager with id {} for account {} can't be resolved.", kmsId, accountId);
       return null;
     }
   }
@@ -164,22 +151,25 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
 
   @Override
   public SecretManagerConfig getSecretManager(String accountId, String entityId, boolean maskSecrets) {
-    SecretManagerConfig secretManagerConfig;
-    if (entityId.equals(accountId)) {
-      secretManagerConfig = localEncryptionService.getEncryptionConfig(accountId);
-    } else {
-      secretManagerConfig = wingsPersistence.createQuery(SecretManagerConfig.class)
-                                .field(ACCOUNT_ID_KEY)
-                                .in(Arrays.asList(accountId, GLOBAL_ACCOUNT_ID))
-                                .field(ID_KEY)
-                                .equal(entityId)
-                                .get();
-    }
+    SecretManagerConfig secretManagerConfig = getSecretManagerInternal(accountId, entityId);
     if (secretManagerConfig != null) {
       decryptEncryptionConfigSecrets(accountId, secretManagerConfig, maskSecrets);
       secretManagerConfig.setNumOfEncryptedValue(getEncryptedDataCount(accountId, entityId));
     }
     return secretManagerConfig;
+  }
+
+  private SecretManagerConfig getSecretManagerInternal(String accountId, String entityId) {
+    if (entityId.equals(accountId)) {
+      return localEncryptionService.getEncryptionConfig(accountId);
+    } else {
+      return wingsPersistence.createQuery(SecretManagerConfig.class)
+          .field(ACCOUNT_ID_KEY)
+          .in(Arrays.asList(accountId, GLOBAL_ACCOUNT_ID))
+          .field(ID_KEY)
+          .equal(entityId)
+          .get();
+    }
   }
 
   /**
@@ -243,12 +233,11 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
 
   @Override
   public EncryptionType getEncryptionBySecretManagerId(String kmsId, String accountId) {
-    if (kmsId.equals(accountId)) {
-      return LOCAL;
-    }
-    SecretManagerConfig secretManager = wingsPersistence.get(SecretManagerConfig.class, kmsId);
+    SecretManagerConfig secretManager = getSecretManagerInternal(accountId, kmsId);
     if (secretManager == null) {
-      throw new SecretManagementException("The secret manager Id supplied is wrong");
+      String errorMessage =
+          String.format("Secret manager with id %s for account %s can't be resolved.", kmsId, accountId);
+      throw new SecretManagementException(RESOURCE_NOT_FOUND, errorMessage, USER);
     }
     return secretManager.getEncryptionType();
   }

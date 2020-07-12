@@ -1,6 +1,7 @@
 package software.wings.service.intfc.security;
 
 import io.harness.security.encryption.EncryptionType;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.SecretManagerConfig;
 
 import java.util.List;
@@ -11,11 +12,11 @@ import java.util.List;
 public interface SecretManagerConfigService {
   String save(SecretManagerConfig secretManagerConfig);
 
-  String getSecretManagerName(String kmsId, EncryptionType encryptionType, String accountId);
+  String getSecretManagerName(@NotEmpty String kmsId, @NotEmpty String accountId);
 
-  EncryptionType getEncryptionType(String accountId);
+  EncryptionType getEncryptionType(@NotEmpty String accountId);
 
-  EncryptionType getEncryptionBySecretManagerId(String kmsId, String accountId);
+  EncryptionType getEncryptionBySecretManagerId(@NotEmpty String kmsId, @NotEmpty String accountId);
 
   List<SecretManagerConfig> listSecretManagers(String accountId, boolean maskSecret);
 
