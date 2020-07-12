@@ -26,10 +26,8 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.security.UserGroup;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserGroupService;
 
 import java.util.HashSet;
@@ -49,7 +47,6 @@ public class ExportExecutionsResourceService {
   @Inject private ExportExecutionsFileService exportExecutionsFileService;
   @Inject private ExportExecutionsRequestHelper exportExecutionsRequestHelper;
   @Inject private UserGroupService userGroupService;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private LimitConfigurationService limitConfigurationService;
 
   private final JsonFormatter jsonFormatter = new JsonFormatter();
@@ -57,7 +54,6 @@ public class ExportExecutionsResourceService {
   public ExportExecutionsRequestLimitChecks getLimitChecks(
       @NotNull String accountId, @NotNull Query<WorkflowExecution> query) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      checkFeatureEnabled(accountId);
       return exportExecutionsRequestService.prepareLimitChecks(accountId, query);
     }
   }
@@ -69,7 +65,6 @@ public class ExportExecutionsResourceService {
     // 2. If the request comes from GraphQL we use WingsPersistence::createAuthorizedQuery to create a new query
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       validateUserParams(userParams);
-      checkFeatureEnabled(accountId);
       checkRateLimits(accountId);
       String requestId = exportExecutionsRequestService.queueExportExecutionRequest(accountId, query, userParams);
       try (AutoLogContext ignore2 = new ExportExecutionsRequestLogContext(requestId, OVERRIDE_ERROR)) {
@@ -81,7 +76,6 @@ public class ExportExecutionsResourceService {
   public String getStatusJson(@NotNull String accountId, @NotNull String requestId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ExportExecutionsRequestLogContext(requestId, OVERRIDE_ERROR)) {
-      checkFeatureEnabled(accountId);
       return jsonFormatter.getOutputString(getStatus(accountId, requestId));
     }
   }
@@ -94,7 +88,6 @@ public class ExportExecutionsResourceService {
   public StreamingOutput downloadFile(@NotNull String accountId, @NotNull String requestId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ExportExecutionsRequestLogContext(requestId, OVERRIDE_ERROR)) {
-      checkFeatureEnabled(accountId);
       ExportExecutionsRequest request = exportExecutionsRequestService.get(accountId, requestId);
       switch (request.getStatus()) {
         case QUEUED:
@@ -146,12 +139,6 @@ public class ExportExecutionsResourceService {
     userGroupIdsSet.removeAll(userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toList()));
     if (EmptyPredicate.isNotEmpty(userGroupIdsSet)) {
       throw new InvalidRequestException(format("Invalid user groups: [%s]", String.join(",", userGroupIdsSet)));
-    }
-  }
-
-  private void checkFeatureEnabled(String accountId) {
-    if (!featureFlagService.isEnabled(FeatureName.EXPORT_EXECUTION_LOGS, accountId)) {
-      throw new InvalidRequestException("Export execution logs feature is disabled right now");
     }
   }
 

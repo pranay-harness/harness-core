@@ -9,7 +9,6 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.ExportExecutionsException;
 import io.harness.execution.export.ExportExecutionsRequestLogContext;
 import io.harness.execution.export.request.ExportExecutionsRequest;
 import io.harness.execution.export.request.ExportExecutionsRequest.ExportExecutionsRequestKeys;
@@ -23,8 +22,6 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.beans.FeatureName;
-import software.wings.service.intfc.FeatureFlagService;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -36,7 +33,6 @@ public class ExportExecutionsRequestHandler implements Handler<ExportExecutionsR
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private ExportExecutionsService exportExecutionsService;
   @Inject private ExportExecutionsNotificationHelper exportExecutionsNotificationHelper;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private MorphiaPersistenceProvider<ExportExecutionsRequest> persistenceProvider;
 
   public void registerIterators() {
@@ -69,10 +65,6 @@ public class ExportExecutionsRequestHandler implements Handler<ExportExecutionsR
     try (AutoLogContext ignore1 = new AccountLogContext(request.getAccountId(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ExportExecutionsRequestLogContext(request.getUuid(), OVERRIDE_ERROR)) {
       try {
-        if (!featureFlagService.isEnabled(FeatureName.EXPORT_EXECUTION_LOGS, request.getAccountId())) {
-          throw new ExportExecutionsException("Export execution logs feature is disabled right now");
-        }
-
         exportExecutionsService.export(request);
       } catch (Exception ex) {
         logger.error("Unable to process export executions request", ex);

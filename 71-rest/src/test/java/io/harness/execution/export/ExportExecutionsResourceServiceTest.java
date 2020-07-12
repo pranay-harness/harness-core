@@ -39,10 +39,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mongodb.morphia.query.Query;
-import software.wings.beans.FeatureName;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.security.UserGroup;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserGroupService;
 
 import java.io.ByteArrayOutputStream;
@@ -61,7 +59,6 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
   @Mock private ExportExecutionsFileService exportExecutionsFileService;
   @Mock private ExportExecutionsRequestHelper exportExecutionsRequestHelper;
   @Mock private UserGroupService userGroupService;
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private LimitConfigurationService limitConfigurationService;
   @Inject @InjectMocks private ExportExecutionsResourceService exportExecutionsResourceService;
 
@@ -72,10 +69,6 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetLimitChecks() {
     Query<WorkflowExecution> query = mock(Query.class);
-    assertThatThrownBy(() -> exportExecutionsResourceService.getLimitChecks(ACCOUNT_ID, query))
-        .isInstanceOf(InvalidRequestException.class);
-
-    enableFeatureFlag();
     exportExecutionsResourceService.getLimitChecks(ACCOUNT_ID, query);
     verify(exportExecutionsRequestService, times(1)).prepareLimitChecks(eq(ACCOUNT_ID), eq(query));
   }
@@ -85,11 +78,6 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExport() {
     Query<WorkflowExecution> query = mock(Query.class);
-    assertThatThrownBy(
-        () -> exportExecutionsResourceService.export(ACCOUNT_ID, query, ExportExecutionsUserParams.builder().build()))
-        .isInstanceOf(InvalidRequestException.class);
-
-    enableFeatureFlag();
     when(limitConfigurationService.getOrDefault(eq(ACCOUNT_ID), eq(ActionType.EXPORT_EXECUTIONS_REQUEST)))
         .thenReturn(new ConfiguredLimit(ACCOUNT_ID, new StaticLimit(25), ActionType.EXPORT_EXECUTIONS_REQUEST));
     when(exportExecutionsRequestService.getTotalRequestsInLastDay(ACCOUNT_ID)).thenReturn(5L);
@@ -136,10 +124,6 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testGetStatusJson() throws IOException {
-    assertThatThrownBy(() -> exportExecutionsResourceService.getStatusJson(ACCOUNT_ID, REQUEST_ID))
-        .isInstanceOf(InvalidRequestException.class);
-
-    enableFeatureFlag();
     ExportExecutionsRequest request = RequestTestUtils.prepareExportExecutionsRequest();
     when(exportExecutionsRequestService.get(ACCOUNT_ID, REQUEST_ID)).thenReturn(request);
     when(exportExecutionsRequestHelper.prepareSummary(request))
@@ -158,10 +142,6 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testDownloadFile() throws IOException {
-    assertThatThrownBy(() -> exportExecutionsResourceService.downloadFile(ACCOUNT_ID, REQUEST_ID))
-        .isInstanceOf(InvalidRequestException.class);
-
-    enableFeatureFlag();
     when(exportExecutionsRequestService.get(ACCOUNT_ID, REQUEST_ID))
         .thenReturn(RequestTestUtils.prepareExportExecutionsRequest());
     Throwable throwable = catchThrowable(() -> exportExecutionsResourceService.downloadFile(ACCOUNT_ID, REQUEST_ID));
@@ -196,9 +176,5 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
     assertThat(throwable).isInstanceOf(WebApplicationException.class);
     assertThat(((WebApplicationException) throwable).getResponse().getStatus())
         .isEqualTo(Response.Status.GONE.getStatusCode());
-  }
-
-  private void enableFeatureFlag() {
-    when(featureFlagService.isEnabled(eq(FeatureName.EXPORT_EXECUTION_LOGS), anyString())).thenReturn(true);
   }
 }
