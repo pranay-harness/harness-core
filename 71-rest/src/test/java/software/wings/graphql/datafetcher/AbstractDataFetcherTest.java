@@ -101,6 +101,8 @@ public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   public static final String LAUNCH_TYPE1 = "LAUNCH_TYPE1";
   public static final String CLUSTER_TYPE1 = "CLUSTER_TYPE1";
   public static final String NAMESPACE1 = "NAMESPACE1";
+  public static final String TASK1 = "TASK1";
+  public static final String NODE1 = "NODE1";
   public static final String INSTANCE_TYPE1 = "INSTANCE_TYPE1";
   public static final String LABEL_NAME = "LABEL_NAME";
   public static final String LABEL_VALUE = "LABEL_VALUE";

@@ -1,0 +1,153 @@
+extend type Query {
+  # Beta: Continuous Efficiency export data apis
+  billingData(
+    limit: Int
+    offset: Int
+    filters: [CEFilter]
+    aggregateFunction: [CEAggregation]
+    groupBy: [CEGroupBy]
+    sortCriteria: [CESort]
+  ): BillingData @dataFetcher(name: billingData)
+}
+
+input CEFilter {
+  application: IdFilter
+  service: IdFilter
+  environment: IdFilter
+  cluster: IdFilter
+  ecsService: IdFilter
+  launchType: IdFilter
+  task: IdFilter
+  namespace: IdFilter
+  workload: IdFilter
+  startTime: TimeFilter
+  endTime: TimeFilter
+  node: IdFilter
+  pod: IdFilter
+  instanceType: IdFilter
+  tag: CETagFilter
+  label: CELabelFilter
+}
+
+input CETagFilter {
+  entityType: CETagType
+  tags: [TagInput]
+}
+
+input CELabelFilter {
+  labels: [K8sLabelInput]
+}
+
+input CEAggregation {
+  function: CEAggregationFunction
+  cost: CECost
+}
+
+enum CEAggregationFunction {
+  SUM
+}
+
+enum CECost {
+  TOTALCOST
+  IDLECOST
+  UNALLOCATEDCOST
+}
+
+input CEGroupBy {
+  entity: CEEntityGroupBy
+  time: CETimeAggregation
+  tagAggregation: CETagAggregation
+  labelAggregation: CELabelAggregation
+}
+
+enum CEEntityGroupBy {
+  Application
+  Service
+  Cluster
+  Environment
+  Region
+  EcsService
+  Task
+  LaunchType
+  Workload
+  Namespace
+  Node
+  Pod
+}
+
+input CETimeAggregation {
+  timePeriod: TimeGroupType
+}
+
+input CETagAggregation {
+  entityType: CETagType
+  tagName: String
+}
+
+enum CETagType {
+  APPLICATION
+  SERVICE
+  ENVIRONMENT
+}
+
+input CELabelAggregation {
+  name: String
+}
+
+input CESort {
+  sortType: CESortType
+  order: SortOrder
+}
+
+enum CESortType {
+  Time
+  TotalCost
+  IdleCost
+  UnallocatedCost
+}
+
+type BillingData {
+  data: [BillingDataEntry]
+}
+
+type BillingDataEntry {
+  totalCost: Number
+  idleCost: Number
+  unallocatedCost: Number
+  systemCost: Number
+  maxCpuUtilization: Number
+  maxMemoryUtilization: Number
+  avgCpuUtilization: Number
+  avgMemoryUtilization: Number
+  cpuRequest: Number
+  memoryRequest: Number
+  cpuLimit: Number
+  memoryLimit: Number
+  region: String
+  k8s: CEK8sEntity
+  ecs: CEEcsEntity
+  harness: CEHarnessEntity
+  clusterType: String
+  cluster: String
+  instanceType: String
+  startTime: DateTime
+}
+
+type CEK8sEntity {
+  workload: String
+  namespace: String
+  nodeId: String
+  podId: String
+}
+
+type CEEcsEntity {
+  service: String
+  taskId: String
+  launchType: String
+}
+
+type CEHarnessEntity {
+  service: String
+  application: String
+  environment: String
+}
