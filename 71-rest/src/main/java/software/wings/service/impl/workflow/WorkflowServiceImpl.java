@@ -72,6 +72,8 @@ import static software.wings.sm.StateType.PCF_SETUP;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.values;
+import static software.wings.sm.StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
+import static software.wings.sm.StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_SETUP;
 import static software.wings.sm.StepType.K8S_TRAFFIC_SPLIT;
