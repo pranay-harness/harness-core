@@ -140,4 +140,25 @@ public interface ContainerStateProtoOrBuilder extends
    * @return The totalSamplesCount.
    */
   int getTotalSamplesCount();
+
+  /**
+   * <code>int32 version = 13[json_name = "version"];</code>
+   * @return The version.
+   */
+  int getVersion();
+
+  /**
+   * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+   * @return Whether the memoryPeakTime field is set.
+   */
+  boolean hasMemoryPeakTime();
+  /**
+   * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+   * @return The memoryPeakTime.
+   */
+  com.google.protobuf.Timestamp getMemoryPeakTime();
+  /**
+   * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+   */
+  com.google.protobuf.TimestampOrBuilder getMemoryPeakTimeOrBuilder();
 }

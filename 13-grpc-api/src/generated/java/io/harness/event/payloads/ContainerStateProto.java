@@ -142,6 +142,23 @@ public final class ContainerStateProto extends com.google.protobuf.GeneratedMess
             totalSamplesCount_ = input.readInt32();
             break;
           }
+          case 104: {
+            version_ = input.readInt32();
+            break;
+          }
+          case 114: {
+            com.google.protobuf.Timestamp.Builder subBuilder = null;
+            if (memoryPeakTime_ != null) {
+              subBuilder = memoryPeakTime_.toBuilder();
+            }
+            memoryPeakTime_ = input.readMessage(com.google.protobuf.Timestamp.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(memoryPeakTime_);
+              memoryPeakTime_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -486,6 +503,39 @@ public final class ContainerStateProto extends com.google.protobuf.GeneratedMess
     return totalSamplesCount_;
   }
 
+  public static final int VERSION_FIELD_NUMBER = 13;
+  private int version_;
+  /**
+   * <code>int32 version = 13[json_name = "version"];</code>
+   * @return The version.
+   */
+  public int getVersion() {
+    return version_;
+  }
+
+  public static final int MEMORY_PEAK_TIME_FIELD_NUMBER = 14;
+  private com.google.protobuf.Timestamp memoryPeakTime_;
+  /**
+   * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+   * @return Whether the memoryPeakTime field is set.
+   */
+  public boolean hasMemoryPeakTime() {
+    return memoryPeakTime_ != null;
+  }
+  /**
+   * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+   * @return The memoryPeakTime.
+   */
+  public com.google.protobuf.Timestamp getMemoryPeakTime() {
+    return memoryPeakTime_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : memoryPeakTime_;
+  }
+  /**
+   * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+   */
+  public com.google.protobuf.TimestampOrBuilder getMemoryPeakTimeOrBuilder() {
+    return getMemoryPeakTime();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -537,6 +587,12 @@ public final class ContainerStateProto extends com.google.protobuf.GeneratedMess
     if (totalSamplesCount_ != 0) {
       output.writeInt32(12, totalSamplesCount_);
     }
+    if (version_ != 0) {
+      output.writeInt32(13, version_);
+    }
+    if (memoryPeakTime_ != null) {
+      output.writeMessage(14, getMemoryPeakTime());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -582,6 +638,12 @@ public final class ContainerStateProto extends com.google.protobuf.GeneratedMess
     }
     if (totalSamplesCount_ != 0) {
       size += com.google.protobuf.CodedOutputStream.computeInt32Size(12, totalSamplesCount_);
+    }
+    if (version_ != 0) {
+      size += com.google.protobuf.CodedOutputStream.computeInt32Size(13, version_);
+    }
+    if (memoryPeakTime_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(14, getMemoryPeakTime());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -634,6 +696,14 @@ public final class ContainerStateProto extends com.google.protobuf.GeneratedMess
     }
     if (getTotalSamplesCount() != other.getTotalSamplesCount())
       return false;
+    if (getVersion() != other.getVersion())
+      return false;
+    if (hasMemoryPeakTime() != other.hasMemoryPeakTime())
+      return false;
+    if (hasMemoryPeakTime()) {
+      if (!getMemoryPeakTime().equals(other.getMemoryPeakTime()))
+        return false;
+    }
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -676,6 +746,12 @@ public final class ContainerStateProto extends com.google.protobuf.GeneratedMess
     }
     hash = (37 * hash) + TOTAL_SAMPLES_COUNT_FIELD_NUMBER;
     hash = (53 * hash) + getTotalSamplesCount();
+    hash = (37 * hash) + VERSION_FIELD_NUMBER;
+    hash = (53 * hash) + getVersion();
+    if (hasMemoryPeakTime()) {
+      hash = (37 * hash) + MEMORY_PEAK_TIME_FIELD_NUMBER;
+      hash = (53 * hash) + getMemoryPeakTime().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -825,6 +901,14 @@ public final class ContainerStateProto extends com.google.protobuf.GeneratedMess
       }
       totalSamplesCount_ = 0;
 
+      version_ = 0;
+
+      if (memoryPeakTimeBuilder_ == null) {
+        memoryPeakTime_ = null;
+      } else {
+        memoryPeakTime_ = null;
+        memoryPeakTimeBuilder_ = null;
+      }
       return this;
     }
 
@@ -879,6 +963,12 @@ public final class ContainerStateProto extends com.google.protobuf.GeneratedMess
         result.lastSampleStart_ = lastSampleStartBuilder_.build();
       }
       result.totalSamplesCount_ = totalSamplesCount_;
+      result.version_ = version_;
+      if (memoryPeakTimeBuilder_ == null) {
+        result.memoryPeakTime_ = memoryPeakTime_;
+      } else {
+        result.memoryPeakTime_ = memoryPeakTimeBuilder_.build();
+      }
       onBuilt();
       return result;
     }
@@ -963,6 +1053,12 @@ public final class ContainerStateProto extends com.google.protobuf.GeneratedMess
       }
       if (other.getTotalSamplesCount() != 0) {
         setTotalSamplesCount(other.getTotalSamplesCount());
+      }
+      if (other.getVersion() != 0) {
+        setVersion(other.getVersion());
+      }
+      if (other.hasMemoryPeakTime()) {
+        mergeMemoryPeakTime(other.getMemoryPeakTime());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1870,6 +1966,147 @@ public final class ContainerStateProto extends com.google.protobuf.GeneratedMess
       totalSamplesCount_ = 0;
       onChanged();
       return this;
+    }
+
+    private int version_;
+    /**
+     * <code>int32 version = 13[json_name = "version"];</code>
+     * @return The version.
+     */
+    public int getVersion() {
+      return version_;
+    }
+    /**
+     * <code>int32 version = 13[json_name = "version"];</code>
+     * @param value The version to set.
+     * @return This builder for chaining.
+     */
+    public Builder setVersion(int value) {
+      version_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>int32 version = 13[json_name = "version"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearVersion() {
+      version_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private com.google.protobuf.Timestamp memoryPeakTime_;
+    private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
+        com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> memoryPeakTimeBuilder_;
+    /**
+     * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+     * @return Whether the memoryPeakTime field is set.
+     */
+    public boolean hasMemoryPeakTime() {
+      return memoryPeakTimeBuilder_ != null || memoryPeakTime_ != null;
+    }
+    /**
+     * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+     * @return The memoryPeakTime.
+     */
+    public com.google.protobuf.Timestamp getMemoryPeakTime() {
+      if (memoryPeakTimeBuilder_ == null) {
+        return memoryPeakTime_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : memoryPeakTime_;
+      } else {
+        return memoryPeakTimeBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+     */
+    public Builder setMemoryPeakTime(com.google.protobuf.Timestamp value) {
+      if (memoryPeakTimeBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        memoryPeakTime_ = value;
+        onChanged();
+      } else {
+        memoryPeakTimeBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+     */
+    public Builder setMemoryPeakTime(com.google.protobuf.Timestamp.Builder builderForValue) {
+      if (memoryPeakTimeBuilder_ == null) {
+        memoryPeakTime_ = builderForValue.build();
+        onChanged();
+      } else {
+        memoryPeakTimeBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+     */
+    public Builder mergeMemoryPeakTime(com.google.protobuf.Timestamp value) {
+      if (memoryPeakTimeBuilder_ == null) {
+        if (memoryPeakTime_ != null) {
+          memoryPeakTime_ = com.google.protobuf.Timestamp.newBuilder(memoryPeakTime_).mergeFrom(value).buildPartial();
+        } else {
+          memoryPeakTime_ = value;
+        }
+        onChanged();
+      } else {
+        memoryPeakTimeBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+     */
+    public Builder clearMemoryPeakTime() {
+      if (memoryPeakTimeBuilder_ == null) {
+        memoryPeakTime_ = null;
+        onChanged();
+      } else {
+        memoryPeakTime_ = null;
+        memoryPeakTimeBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+     */
+    public com.google.protobuf.Timestamp.Builder getMemoryPeakTimeBuilder() {
+      onChanged();
+      return getMemoryPeakTimeFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+     */
+    public com.google.protobuf.TimestampOrBuilder getMemoryPeakTimeOrBuilder() {
+      if (memoryPeakTimeBuilder_ != null) {
+        return memoryPeakTimeBuilder_.getMessageOrBuilder();
+      } else {
+        return memoryPeakTime_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : memoryPeakTime_;
+      }
+    }
+    /**
+     * <code>.google.protobuf.Timestamp memory_peak_time = 14[json_name = "memoryPeakTime"];</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
+        com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>
+    getMemoryPeakTimeFieldBuilder() {
+      if (memoryPeakTimeBuilder_ == null) {
+        memoryPeakTimeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
+            com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>(
+            getMemoryPeakTime(), getParentForChildren(), isClean());
+        memoryPeakTime_ = null;
+      }
+      return memoryPeakTimeBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

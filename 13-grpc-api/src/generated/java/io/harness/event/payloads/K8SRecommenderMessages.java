@@ -40,7 +40,7 @@ public final class K8SRecommenderMessages {
         + "WeightsEntryR\rbucketWeights\022!\n\014total_wei"
         + "ght\030\003 \001(\001R\013totalWeight\032@\n\022BucketWeightsE"
         + "ntry\022\020\n\003key\030\001 \001(\005R\003key\022\024\n\005value\030\002 \001(\005R\005v"
-        + "alue:\0028\001\"\276\004\n\023ContainerStateProto\022\035\n\nclus"
+        + "alue:\0028\001\"\236\005\n\023ContainerStateProto\022\035\n\nclus"
         + "ter_id\030\001 \001(\tR\tclusterId\022!\n\014cluster_name\030"
         + "\002 \001(\tR\013clusterName\022*\n\021cloud_provider_id\030"
         + "\003 \001(\tR\017cloudProviderId\022&\n\017kube_system_ui"
@@ -54,7 +54,10 @@ public final class K8SRecommenderMessages {
         + "mestampR\020firstSampleStart\022F\n\021last_sample"
         + "_start\030\013 \001(\0132\032.google.protobuf.Timestamp"
         + "R\017lastSampleStart\022.\n\023total_samples_count"
-        + "\030\014 \001(\005R\021totalSamplesCountB\002P\001b\006proto3"};
+        + "\030\014 \001(\005R\021totalSamplesCount\022\030\n\007version\030\r \001"
+        + "(\005R\007version\022D\n\020memory_peak_time\030\016 \001(\0132\032."
+        + "google.protobuf.TimestampR\016memoryPeakTim"
+        + "eB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.DurationProto.getDescriptor(),
@@ -95,6 +98,8 @@ public final class K8SRecommenderMessages {
                 "FirstSampleStart",
                 "LastSampleStart",
                 "TotalSamplesCount",
+                "Version",
+                "MemoryPeakTime",
             });
     com.google.protobuf.DurationProto.getDescriptor();
     com.google.protobuf.TimestampProto.getDescriptor();
