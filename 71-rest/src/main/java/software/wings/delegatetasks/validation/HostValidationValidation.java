@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import io.harness.beans.DelegateTask;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostValidationTaskParameters;
@@ -80,21 +81,25 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
           long startTime = clock.millis();
           if (connectionSetting.getValue() instanceof WinRmConnectionAttributes) {
             WinRmConnectionAttributes connectionAttributes = (WinRmConnectionAttributes) connectionSetting.getValue();
-            WinRmSessionConfig config = WinRmSessionConfig.builder()
-                                            .hostname(hostName)
-                                            .commandUnitName("HOST_CONNECTION_TEST")
-                                            .domain(connectionAttributes.getDomain())
-                                            .username(connectionAttributes.getUsername())
-                                            .password(String.valueOf(connectionAttributes.getPassword()))
-                                            .authenticationScheme(connectionAttributes.getAuthenticationScheme())
-                                            .port(connectionAttributes.getPort())
-                                            .skipCertChecks(connectionAttributes.isSkipCertChecks())
-                                            .useSSL(connectionAttributes.isUseSSL())
-                                            .useKeyTab(connectionAttributes.isUseKeyTab())
-                                            .keyTabFilePath(connectionAttributes.getKeyTabFilePath())
-                                            .workingDirectory(WINDOWS_HOME_DIR)
-                                            .environment(Collections.emptyMap())
-                                            .build();
+            WinRmSessionConfig config;
+            config =
+                WinRmSessionConfig.builder()
+                    .hostname(hostName)
+                    .commandUnitName("HOST_CONNECTION_TEST")
+                    .domain(connectionAttributes.getDomain())
+                    .username(connectionAttributes.getUsername())
+                    .password(connectionAttributes.isUseKeyTab() ? StringUtils.EMPTY
+                                                                 : String.valueOf(connectionAttributes.getPassword()))
+                    .authenticationScheme(connectionAttributes.getAuthenticationScheme())
+                    .port(connectionAttributes.getPort())
+                    .skipCertChecks(connectionAttributes.isSkipCertChecks())
+                    .useSSL(connectionAttributes.isUseSSL())
+                    .useKeyTab(connectionAttributes.isUseKeyTab())
+                    .keyTabFilePath(connectionAttributes.getKeyTabFilePath())
+                    .workingDirectory(WINDOWS_HOME_DIR)
+                    .environment(Collections.emptyMap())
+                    .build();
+
             logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", config.getHostname(),
                 config.getPort(), config.isUseSSL());
 

@@ -16,6 +16,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
@@ -177,7 +178,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
         .authenticationScheme(winrmConnectionAttributes.getAuthenticationScheme())
         .domain(winrmConnectionAttributes.getDomain())
         .username(winrmConnectionAttributes.getUsername())
-        .password(String.valueOf(winrmConnectionAttributes.getPassword()))
+        .password(winrmConnectionAttributes.isUseKeyTab() ? StringUtils.EMPTY
+                                                          : String.valueOf(winrmConnectionAttributes.getPassword()))
         .port(winrmConnectionAttributes.getPort())
         .useSSL(winrmConnectionAttributes.isUseSSL())
         .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())
