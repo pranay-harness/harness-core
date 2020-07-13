@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.api.CVConfigTransformerTestBase;
+import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.SplunkDSConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.rule.Owner;
@@ -39,13 +40,13 @@ public class SplunkCVConfigTransformerTest extends CVConfigTransformerTestBase {
   public void transformToDSConfig_withSplunkCVConfig() {
     SplunkCVConfig splunkCVConfig = new SplunkCVConfig();
     fillCommonFields(splunkCVConfig);
-    splunkCVConfig.setCategory("QA");
+    splunkCVConfig.setCategory(CVMonitoringCategory.QUALITY);
     splunkCVConfig.setQuery("exception");
     splunkCVConfig.setServiceInstanceIdentifier("host");
     SplunkDSConfig splunkDSConfig =
         splunkCVConfigTransformer.transformToDSConfig(Collections.singletonList(splunkCVConfig));
     assertThat(splunkDSConfig.getQuery()).isEqualTo("exception");
-    assertThat(splunkDSConfig.getEventType()).isEqualTo("QA");
+    assertThat(splunkDSConfig.getEventType()).isEqualTo(CVMonitoringCategory.QUALITY.getDisplayName());
     assertThat(splunkDSConfig.getServiceInstanceIdentifier()).isEqualTo("host");
     assertThat(splunkDSConfig.getServiceIdentifier()).isEqualTo(splunkCVConfig.getServiceIdentifier());
   }

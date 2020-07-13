@@ -1,4 +1,5 @@
 identifier: Quality
+category: Quality
 metrics:
   - name: Errors per Minute
     type: ERROR

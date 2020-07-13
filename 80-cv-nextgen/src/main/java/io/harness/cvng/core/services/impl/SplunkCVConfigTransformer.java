@@ -16,7 +16,7 @@ public class SplunkCVConfigTransformer implements CVConfigTransformer<SplunkCVCo
     SplunkDSConfig splunkDSConfig = new SplunkDSConfig();
     SplunkCVConfig splunkCVConfig = cvConfigs.get(0);
     splunkDSConfig.populateCommonFields(splunkCVConfig);
-    splunkDSConfig.setEventType(splunkCVConfig.getCategory());
+    splunkDSConfig.setEventType(splunkCVConfig.getCategory().getDisplayName());
     splunkDSConfig.setQuery(splunkCVConfig.getQuery());
     splunkDSConfig.setServiceInstanceIdentifier(splunkCVConfig.getServiceInstanceIdentifier());
     splunkDSConfig.setServiceIdentifier(splunkCVConfig.getServiceIdentifier());

@@ -1,5 +1,7 @@
 package io.harness.cvng.analysis.entities;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdIndex;
@@ -84,14 +86,16 @@ public class TimeSeriesShortTermHistory implements PersistentEntity, UuidAware, 
         txnMetricHistoryMap.put(txn, new HashMap<>());
       }
 
-      transactionMetricHistory.getMetricHistoryList().forEach(metricHistory -> {
-        String metricName = metricHistory.getMetricName();
-        if (!txnMetricHistoryMap.get(txn).containsKey(metricName)) {
-          txnMetricHistoryMap.get(txn).put(metricName, new ArrayList<>());
-        }
+      if (isNotEmpty(transactionMetricHistory.getMetricHistoryList())) {
+        transactionMetricHistory.getMetricHistoryList().forEach(metricHistory -> {
+          String metricName = metricHistory.getMetricName();
+          if (!txnMetricHistoryMap.get(txn).containsKey(metricName)) {
+            txnMetricHistoryMap.get(txn).put(metricName, new ArrayList<>());
+          }
 
-        txnMetricHistoryMap.get(txn).get(metricName).addAll(metricHistory.getValue());
-      });
+          txnMetricHistoryMap.get(txn).get(metricName).addAll(metricHistory.getValue());
+        });
+      }
     });
     return txnMetricHistoryMap;
   }

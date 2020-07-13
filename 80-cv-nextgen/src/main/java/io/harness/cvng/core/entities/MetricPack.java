@@ -7,6 +7,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
@@ -52,6 +53,7 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
   @NotEmpty private String projectIdentifier;
   @NotNull private DataSourceType dataSourceType;
   @Trimmed @NotEmpty private String identifier;
+  @NotNull private CVMonitoringCategory category;
   @NotEmpty private Set<MetricDefinition> metrics;
   private String dataCollectionDsl;
   @JsonIgnore

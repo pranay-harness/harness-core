@@ -1,4 +1,5 @@
 identifier: Performance
+category: Performance
 metrics:
   - name: Average Response Time (ms)
     type: RESP_TIME
