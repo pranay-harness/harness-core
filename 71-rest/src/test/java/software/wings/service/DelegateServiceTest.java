@@ -1526,6 +1526,33 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
+  public void shouldGetAllDelegateSelectorsEmptySelectors() {
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_TAGS_EXTENDED, ACCOUNT_ID)).thenReturn(true);
+
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("primary").build();
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .hostName("a.b.c")
+                            .delegateName("testDelegateName1")
+                            .version(VERSION)
+                            .status(Status.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .delegateProfileId(delegateProfile.getUuid())
+                            .build();
+    wingsPersistence.save(delegate);
+
+    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
+    Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
+    assertThat(tags.size()).isEqualTo(3);
+    assertThat(tags).containsExactlyInAnyOrder("testdelegatename1", "a.b.c", "primary");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
   public void shouldRetrieveDelegateSelectors() {
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
