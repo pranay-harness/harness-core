@@ -69,6 +69,7 @@ public class Variable {
         .metadata(isNotEmpty(metadata) ? new HashMap<>(metadata) : new HashMap<>())
         .allowedValues(allowedValues)
         .allowedList(allowedList)
+        .allowMultipleValues(allowMultipleValues)
         .build();
   }
 

@@ -49,6 +49,9 @@ type Variable {
 
   #If a variable id fixed variable.
   fixed: Boolean
+
+  #True if a variable allows multiple values. You need to provide , separated list of values.
+  allowMultipleValues: Boolean
 }
 
 type WorkflowConnection {

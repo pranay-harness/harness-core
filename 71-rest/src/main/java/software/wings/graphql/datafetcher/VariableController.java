@@ -28,6 +28,7 @@ public class VariableController {
                    .required(variable.isMandatory())
                    .description(variable.getDescription())
                    .allowedValues(variable.getAllowedList())
+                   .allowMultipleValues(variable.isAllowMultipleValues())
                    .defaultValue(variable.getValue())
                    .fixed(variable.isFixed())
                    .build())

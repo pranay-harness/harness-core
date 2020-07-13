@@ -275,7 +275,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     TemplateExpression userGroupExp =
         templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), ApprovalStateKeys.userGroups);
 
-    if (userGroupExp != null && userGroupExp.getExpression().length() != 0) {
+    if (userGroupExp != null && isNotEmpty(userGroupExp.getExpression())) {
       String userGroupsString = templateExpressionProcessor.resolveTemplateExpression(context, userGroupExp);
       if (!isEmpty(userGroupsString)) {
         userGroups = Arrays.asList(userGroupsString.split("\\s*,\\s*"));
@@ -290,9 +290,10 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     }
 
     for (String singleUserGroup : userGroups) {
-      UserGroup userGroup = userGroupService.get(executionContext.getApp().getAccountId(), singleUserGroup);
+      String accountId = executionContext.getApp().getAccountId();
+      UserGroup userGroup = userGroupService.get(accountId, singleUserGroup);
       if (userGroup == null) {
-        userGroup = userGroupService.fetchUserGroupByName(executionContext.getApp().getAccountId(), singleUserGroup);
+        userGroup = userGroupService.fetchUserGroupByName(accountId, singleUserGroup);
       }
       if (userGroup == null) {
         throw new ApprovalStateException("User Group provided in Approval Step not found for " + singleUserGroup,

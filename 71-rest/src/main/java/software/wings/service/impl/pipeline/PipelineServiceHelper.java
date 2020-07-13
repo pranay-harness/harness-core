@@ -47,7 +47,7 @@ public class PipelineServiceHelper {
     if (infraValueInPipelineStage.contains(",")) {
       pipelineStage.setLooped(true);
       pipelineStage.setLoopedVarName(infraVarNameInPipelineStage);
-      List<String> infraIdsInLoop = Arrays.asList(infraValueInPipelineStage.split(","));
+      List<String> infraIdsInLoop = Arrays.asList(infraValueInPipelineStage.trim().split("\\s*,\\s*"));
       infraIdsInLoop.stream().filter(infraId -> !infraDefinitionIds.contains(infraId)).forEach(infraDefinitionIds::add);
     }
   }
@@ -63,7 +63,8 @@ public class PipelineServiceHelper {
               || !pipelineStageVariableValues.get(varLooped).contains(",")) {
             throw new InvalidRequestException("Pipeline stage marked as loop, but doesnt have looping config");
           }
-          List<String> loopedValues = Arrays.asList(pipelineStageVariableValues.get(varLooped).split(","));
+          List<String> loopedValues =
+              Arrays.asList(pipelineStageVariableValues.get(varLooped).trim().split("\\s*,\\s*"));
 
           pse.setType(ENV_LOOP_STATE.getType());
           pse.getProperties().put("loopedValues", loopedValues);

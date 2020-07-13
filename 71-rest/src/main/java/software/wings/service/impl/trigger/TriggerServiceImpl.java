@@ -938,7 +938,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private String handleMultiInfra(String appId, String infraEnvId, String infraDefIdOrName) {
-    String[] variableValues = infraDefIdOrName.split(",");
+    String[] variableValues = infraDefIdOrName.trim().split("\\s*,\\s*");
     List<String> finalValues = new ArrayList<>();
     for (String variableValue : variableValues) {
       InfrastructureDefinition infrastructureDefinition = getInfrastructureDefinition(appId, infraEnvId, variableValue);

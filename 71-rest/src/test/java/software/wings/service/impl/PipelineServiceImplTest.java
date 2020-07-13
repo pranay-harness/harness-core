@@ -28,11 +28,12 @@ import static software.wings.beans.EntityType.NEWRELIC_MARKER_APPID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SPLUNK_CONFIGID;
-import static software.wings.beans.EntityType.USER_GROUP;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import static software.wings.utils.WingsTestConstants.mockChecker;
@@ -1013,26 +1014,58 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void setPipelineVariablesApprovalState() {
     HashMap<String, Object> metadata = new HashMap<>();
+    metadata.put("entityType", "USER_GROUP");
+    metadata.put("relatedField", "");
+
+    HashMap<String, Object> expression = new HashMap<>();
+
+    expression.put("metadata", metadata);
+    expression.put("expression", "${User_Group}");
+    expression.put("fieldName", "userGroups");
+
+    List<Map<String, Object>> templateExpressions = new ArrayList<>();
+    templateExpressions.add(expression);
+
+    HashMap<String, Object> properties = new HashMap<>();
+    properties.put("templateExpressions", templateExpressions);
+    PipelineStageElement pse = PipelineStageElement.builder().type("APPROVAL").properties(properties).build();
     PipelineStage pipelineStage = PipelineStage.builder().name("Approval").build();
-    metadata.put(Variable.ENTITY_TYPE, USER_GROUP);
     List<Variable> pipelineVariables = new ArrayList<>();
-    HashMap<String, Object> propertiestest = new HashMap<>();
-    HashMap<String, Object> metadatatest = new HashMap<>();
-    HashMap<String, Object> metadatatestvalue = new HashMap<>();
-    metadatatestvalue.put("entityType", "USER_GROUP");
-    metadatatestvalue.put("relatedField", "");
-    metadatatest.put("metadata", metadatatestvalue);
-    HashMap<String, Object> values = new HashMap<>();
-    values.put("expression", "${User_Group}");
-    values.put("fieldName", "userGroups");
-    values.put("metadata", metadatatest);
-    ArrayList listValues = new ArrayList();
-    listValues.add(values);
-    propertiestest.put("templateExpressions", listValues);
-    PipelineStageElement pse = PipelineStageElement.builder().type("APPROVAL").properties(propertiestest).build();
+
     pipelineServiceImpl.setPipelineVariablesApproval(pse, pipelineVariables, pipelineStage.getName());
 
     assertThat(pipelineVariables).isNotEmpty();
     assertThat(pipelineVariables.get(0).getName()).isEqualTo("User_Group");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testValidateMultipleValues() {
+    Pipeline pipeline = Pipeline.builder().name(PIPELINE_NAME).uuid(PIPELINE_ID).build();
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Variable infraVar =
+        aVariable().name("infraVar").entityType(INFRASTRUCTURE_DEFINITION).allowMultipleValues(false).build();
+    pipelineVariables.add(infraVar);
+    Map<String, String> values = ImmutableMap.of("infraVar", "pcf, pcf2");
+    pipeline.setPipelineVariables(pipelineVariables);
+    pipelineServiceImpl.validateMultipleValuesAllowed(pipeline, values);
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testValidateMultipleValuesValid() {
+    Pipeline pipeline = Pipeline.builder().name(PIPELINE_NAME).uuid(PIPELINE_ID).build();
+    pipeline.setPipelineVariables(new ArrayList<>());
+    pipelineServiceImpl.validateMultipleValuesAllowed(pipeline, new HashMap<>());
+
+    List<Variable> pipelineVariables = new ArrayList<>();
+    Variable infraVar =
+        aVariable().name("infraVar").entityType(INFRASTRUCTURE_DEFINITION).allowMultipleValues(true).build();
+    pipelineVariables.add(infraVar);
+    Map<String, String> values = ImmutableMap.of("infraVar", "pcf, pcf2");
+    pipeline.setPipelineVariables(pipelineVariables);
+    pipelineServiceImpl.validateMultipleValuesAllowed(pipeline, values);
   }
 }
