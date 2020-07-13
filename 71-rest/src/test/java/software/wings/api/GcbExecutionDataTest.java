@@ -43,7 +43,6 @@ public class GcbExecutionDataTest extends CategoryTest {
           .put("activityId", executionDataValue("Activity Id", ACTIVITY_ID))
           .put("buildNumber", executionDataValue("Build Number", BUILD_ID))
           .put("metadata", executionDataValue("Meta-Data", valueOf(METADATA)))
-          .put("jobParameters", executionDataValue("Job Parameters", JOB_PARAMS))
           .put("build", executionDataValue("Build Url", BUILD_URL))
           .put("substitutions", executionDataValue("Substitutions", SUBSTITUTIONS))
           .put("logUrl", executionDataValue("Logs Url", LOGS_URL))
@@ -58,7 +57,6 @@ public class GcbExecutionDataTest extends CategoryTest {
     gcbExecutionData.setErrorMsg("Err");
     gcbExecutionData.setStatus(ExecutionStatus.FAILED);
     gcbExecutionData.setMetadata(METADATA);
-    gcbExecutionData.setJobParameters(JOB_PARAMS);
     gcbExecutionData.setTags(TAGS);
     gcbExecutionData.setBuildUrl(BUILD_URL);
     gcbExecutionData.setSubstitutions(SUBSTITUTIONS);
@@ -97,7 +95,6 @@ public class GcbExecutionDataTest extends CategoryTest {
     assertThat(gcbExecutionData.getBuildId()).isEqualTo(BUILD_ID);
     assertThat(gcbExecutionData.getBuildUrl()).isEqualTo(BUILD_URL);
     assertThat(gcbExecutionData.getMetadata()).isEqualTo(METADATA);
-    assertThat(gcbExecutionData.getJobParameters()).isEqualTo(JOB_PARAMS);
     assertThat(gcbExecutionData.getBuildStatus()).isEqualTo(WORKING);
     assertThat(gcbExecutionData.getTags()).isEqualTo(TAGS);
     assertThat(gcbExecutionData.getLogUrl()).isEqualTo(LOGS_URL);
@@ -110,8 +107,8 @@ public class GcbExecutionDataTest extends CategoryTest {
   @Owner(developers = VGLIJIN)
   @Category(UnitTests.class)
   public void withDelegateResponse() {
-    GcbExecutionData expected = new GcbExecutionData(ACTIVITY_ID, GcbExecutionData.GCB_URL + BUILD_ID, null, null,
-        BUILD_ID, TAGS, WORKING, BUILD_NAME, BUILD_NAME, SUBSTITUTIONS, LOGS_URL);
+    GcbExecutionData expected = new GcbExecutionData(ACTIVITY_ID, GcbExecutionData.GCB_URL + BUILD_ID, null, BUILD_ID,
+        TAGS, WORKING, BUILD_NAME, BUILD_NAME, SUBSTITUTIONS, LOGS_URL);
 
     GcbDelegateResponse delegateResponse =
         gcbDelegateResponseOf(GcbTaskParams.builder().buildId(BUILD_ID).buildName(BUILD_NAME).build(),
@@ -122,9 +119,8 @@ public class GcbExecutionDataTest extends CategoryTest {
                 .substitutions(SUBSTITUTIONS)
                 .logUrl(LOGS_URL)
                 .build());
-    GcbExecutionData actual =
-        new GcbExecutionData(ACTIVITY_ID, null, null, null, null, null, null, null, null, null, null)
-            .withDelegateResponse(delegateResponse);
+    GcbExecutionData actual = new GcbExecutionData(ACTIVITY_ID, null, null, null, null, null, null, null, null, null)
+                                  .withDelegateResponse(delegateResponse);
     assertThat(actual).isEqualTo(expected);
   }
 }

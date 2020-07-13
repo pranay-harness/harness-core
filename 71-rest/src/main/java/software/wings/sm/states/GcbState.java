@@ -7,7 +7,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskData.asyncTaskData;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.TaskType.GCB;
 import static software.wings.beans.command.GcbTaskParams.GcbTaskType.POLL;
@@ -15,11 +14,9 @@ import static software.wings.beans.command.GcbTaskParams.GcbTaskType.START;
 import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.REMOTE;
 import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.TRIGGER;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -69,7 +66,6 @@ import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -80,8 +76,6 @@ import java.util.stream.Stream;
 @OwnedBy(CDC)
 public class GcbState extends State implements SweepingOutputStateMixin {
   public static final String GCB_LOGS = "GCB Output";
-
-  @Getter @Setter private List<ParameterEntry> jobParameters = Lists.newArrayList();
 
   @Getter @Setter private GcbOptions gcbOptions;
   @Getter @Setter private String sweepingOutputName;
@@ -118,15 +112,6 @@ public class GcbState extends State implements SweepingOutputStateMixin {
   }
 
   @Override
-  @SchemaIgnore
-  public List<String> getPatternsForRequiredContextElementType() {
-    return Stream.of(jobParameters)
-        .flatMap(List::stream)
-        .map(ParameterEntry::getValue)
-        .collect(toCollection(LinkedList::new));
-  }
-
-  @Override
   public ExecutionResponse execute(final @NotNull ExecutionContext context) {
     String activityId = createActivity(context);
     return executeInternal(context, activityId);
@@ -149,8 +134,6 @@ public class GcbState extends State implements SweepingOutputStateMixin {
    */
   protected ExecutionResponse executeInternal(
       final @NotNull ExecutionContext context, final @NotNull String activityId) {
-    Map<String, String> evaluatedParameters = evaluate(context, jobParameters);
-
     final Application application = context.fetchRequiredApp();
     final String appId = application.getAppId();
     GcpConfig gcpConfig = null;
@@ -229,8 +212,7 @@ public class GcbState extends State implements SweepingOutputStateMixin {
 
     final String delegateTaskId = delegateService.queueTask(delegateTaskOf(activityId, context, gcbTaskParams));
 
-    GcbExecutionData gcbExecutionData =
-        GcbExecutionData.builder().activityId(activityId).jobParameters(evaluatedParameters).build();
+    GcbExecutionData gcbExecutionData = GcbExecutionData.builder().activityId(activityId).build();
     gcbExecutionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
     return ExecutionResponse.builder()

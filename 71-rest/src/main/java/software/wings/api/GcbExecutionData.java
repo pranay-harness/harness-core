@@ -32,7 +32,6 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
   public static final String GCB_URL = "https://console.cloud.google.com/cloud-build/builds/";
   @NotNull private String activityId;
   @Nullable private String buildUrl;
-  @Nullable private Map<String, String> jobParameters;
   @Nullable private Map<String, String> metadata;
   @Nullable private String buildId;
   @Nullable private List<String> tags;
@@ -86,10 +85,6 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
 
     if (isNotEmpty(logUrl)) {
       executionDetails.put("logUrl", executionDataValue("Logs Url", logUrl));
-    }
-
-    if (isNotEmpty(jobParameters)) {
-      executionDetails.put("jobParameters", executionDataValue("Job Parameters", removeNullValues(jobParameters)));
     }
 
     if (isNotEmpty(substitutions)) {
