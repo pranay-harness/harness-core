@@ -58,7 +58,11 @@ public class AbortHelper {
       if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {
         TaskSpawningExecutableResponse taskExecutableResponse = (TaskSpawningExecutableResponse) executableResponse;
         TaskExecutor executor = taskExecutorMap.get(taskExecutableResponse.getTaskMode().name());
-        executor.abortTask(ambiance.getSetupAbstractions(), taskExecutableResponse.getTaskId());
+        boolean aborted = executor.abortTask(ambiance.getSetupAbstractions(), taskExecutableResponse.getTaskId());
+        if (!aborted) {
+          logger.error("Delegate Task Cannot be aborted : TaskId: {}, NodeExecutionId: {}",
+              taskExecutableResponse.getTaskId(), nodeExecution.getUuid());
+        }
       }
       if (currentState instanceof Abortable) {
         ((Abortable) currentState).handleAbort(ambiance, nodeExecution.getResolvedStepParameters(), executableResponse);
