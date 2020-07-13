@@ -19,6 +19,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostValidationResponse;
@@ -120,22 +121,24 @@ public class HostValidationServiceImpl implements HostValidationService {
                                           .withHostName(hostName)
                                           .withStatus(ExecutionStatus.SUCCESS.name())
                                           .build();
+    WinRmSessionConfig config;
 
-    WinRmSessionConfig config = WinRmSessionConfig.builder()
-                                    .hostname(hostName)
-                                    .commandUnitName("HOST_CONNECTION_TEST")
-                                    .domain(connectionAttributes.getDomain())
-                                    .username(connectionAttributes.getUsername())
-                                    .password(String.valueOf(connectionAttributes.getPassword()))
-                                    .authenticationScheme(connectionAttributes.getAuthenticationScheme())
-                                    .port(connectionAttributes.getPort())
-                                    .skipCertChecks(connectionAttributes.isSkipCertChecks())
-                                    .useSSL(connectionAttributes.isUseSSL())
-                                    .useKeyTab(connectionAttributes.isUseKeyTab())
-                                    .keyTabFilePath(connectionAttributes.getKeyTabFilePath())
-                                    .workingDirectory(WINDOWS_HOME_DIR)
-                                    .environment(Collections.emptyMap())
-                                    .build();
+    config = WinRmSessionConfig.builder()
+                 .hostname(hostName)
+                 .commandUnitName("HOST_CONNECTION_TEST")
+                 .domain(connectionAttributes.getDomain())
+                 .username(connectionAttributes.getUsername())
+                 .password(connectionAttributes.isUseKeyTab() ? StringUtils.EMPTY
+                                                              : String.valueOf(connectionAttributes.getPassword()))
+                 .authenticationScheme(connectionAttributes.getAuthenticationScheme())
+                 .port(connectionAttributes.getPort())
+                 .skipCertChecks(connectionAttributes.isSkipCertChecks())
+                 .useSSL(connectionAttributes.isUseSSL())
+                 .useKeyTab(connectionAttributes.isUseKeyTab())
+                 .keyTabFilePath(connectionAttributes.getKeyTabFilePath())
+                 .workingDirectory(WINDOWS_HOME_DIR)
+                 .environment(Collections.emptyMap())
+                 .build();
 
     try (WinRmSession ignore = new WinRmSession(config)) {
       noop();

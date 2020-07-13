@@ -11,6 +11,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
@@ -59,7 +60,8 @@ public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
         .authenticationScheme(winrmConnectionAttributes.getAuthenticationScheme())
         .domain(winrmConnectionAttributes.getDomain())
         .username(winrmConnectionAttributes.getUsername())
-        .password(String.valueOf(winrmConnectionAttributes.getPassword()))
+        .password(winrmConnectionAttributes.isUseKeyTab() ? StringUtils.EMPTY
+                                                          : String.valueOf(winrmConnectionAttributes.getPassword()))
         .port(winrmConnectionAttributes.getPort())
         .useSSL(winrmConnectionAttributes.isUseSSL())
         .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())

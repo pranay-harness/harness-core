@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -114,6 +115,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
 
   public WinRmSessionConfig winrmSessionConfig(EncryptionService encryptionService) throws IOException {
     encryptionService.decrypt(winrmConnectionAttributes, winrmConnectionEncryptedDataDetails);
+
     return WinRmSessionConfig.builder()
         .accountId(accountId)
         .appId(appId)
@@ -123,7 +125,8 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
         .authenticationScheme(winrmConnectionAttributes.getAuthenticationScheme())
         .domain(winrmConnectionAttributes.getDomain())
         .username(winrmConnectionAttributes.getUsername())
-        .password(String.valueOf(winrmConnectionAttributes.getPassword()))
+        .password(winrmConnectionAttributes.isUseKeyTab() ? StringUtils.EMPTY
+                                                          : String.valueOf(winrmConnectionAttributes.getPassword()))
         .useKeyTab(winrmConnectionAttributes.isUseKeyTab())
         .keyTabFilePath(winrmConnectionAttributes.getKeyTabFilePath())
         .port(winrmConnectionAttributes.getPort())
