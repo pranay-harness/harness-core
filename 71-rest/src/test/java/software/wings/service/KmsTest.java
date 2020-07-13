@@ -2092,7 +2092,7 @@ public class KmsTest extends WingsBaseTest {
       List<EncryptedData> encryptedData = new ArrayList<>();
       assertThat(query.count()).isEqualTo(numOfEncryptedValsForKms + numOfSettingAttributes);
       for (EncryptedData data : query.asList()) {
-        if (data.getKmsId() == null) {
+        if (data.getKmsId().equals(accountId)) {
           continue;
         }
         encryptedData.add(data);
@@ -2114,7 +2114,7 @@ public class KmsTest extends WingsBaseTest {
       assertThat(query.count()).isEqualTo(2 * numOfEncryptedValsForKms + numOfSettingAttributes);
       encryptedData = new ArrayList<>();
       for (EncryptedData data : query.asList()) {
-        if (data.getKmsId() == null) {
+        if (data.getKmsId().equals(accountId)) {
           continue;
         }
         encryptedData.add(data);

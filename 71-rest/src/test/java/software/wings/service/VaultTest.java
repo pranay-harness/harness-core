@@ -1189,7 +1189,7 @@ public class VaultTest extends WingsBaseTest {
       List<EncryptedData> encryptedData = new ArrayList<>();
       assertThat(query.count()).isEqualTo(numOfEncRecords + numOfSettingAttributes);
       for (EncryptedData data : query.asList()) {
-        if (data.getKmsId() == null || data.getType() == SettingVariableTypes.VAULT) {
+        if (data.getKmsId().equals(accountId) || data.getType() == SettingVariableTypes.VAULT) {
           continue;
         }
         encryptedData.add(data);
@@ -1210,7 +1210,7 @@ public class VaultTest extends WingsBaseTest {
       assertThat(query.count()).isEqualTo(numOfEncRecords + 1 + numOfSettingAttributes);
       encryptedData = new ArrayList<>();
       for (EncryptedData data : query.asList()) {
-        if (data.getKmsId() == null || data.getType() == SettingVariableTypes.VAULT) {
+        if (data.getKmsId().equals(accountId) || data.getType() == SettingVariableTypes.VAULT) {
           continue;
         }
         encryptedData.add(data);
@@ -1291,7 +1291,7 @@ public class VaultTest extends WingsBaseTest {
       List<EncryptedData> encryptedDataList = new ArrayList<>();
       assertThat(query.count()).isEqualTo(numOfEncRecords + numOfSettingAttributes);
       for (EncryptedData data : query.asList()) {
-        if (data.getKmsId() == null || data.getType() == SettingVariableTypes.VAULT) {
+        if (data.getKmsId().equals(accountId) || data.getType() == SettingVariableTypes.VAULT) {
           continue;
         }
         encryptedDataList.add(data);
@@ -1331,7 +1331,7 @@ public class VaultTest extends WingsBaseTest {
 
       encryptedDataList.clear();
       for (EncryptedData data : query.asList()) {
-        if (data.getKmsId() == null || data.getType() == SettingVariableTypes.VAULT) {
+        if (data.getKmsId().equals(accountId) || data.getType() == SettingVariableTypes.VAULT) {
           continue;
         }
         encryptedDataList.add(data);
