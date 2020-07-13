@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.presentation.Graph;
@@ -52,7 +53,7 @@ public interface CustomExecutionService {
 
   Interrupt registerInterrupt(String planExecutionId);
 
-  PlanExecution testExecutionPlanCreator(String pipelineYaml, String accountId, String appId);
+  PlanExecution testExecutionPlanCreator(String pipelineYaml, String accountId, String appId, EmbeddedUser user);
 
   PlanExecution testServiceState();
 }

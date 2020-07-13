@@ -6,18 +6,23 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
+import io.harness.presentation.Graph;
+import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionUtils;
 import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import software.wings.beans.Application;
 
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.StreamingOutput;
 
 @Path("/orchestration")
 @Api("/orchestration")
@@ -25,6 +30,7 @@ import javax.ws.rs.QueryParam;
 @Consumes("application/json")
 public class NgOrchestrationResource {
   @Inject private OrchestrationService orchestrationService;
+  @Inject private CustomExecutionService customExecutionService;
 
   private static final EmbeddedUser EMBEDDED_USER =
       EmbeddedUser.builder().uuid("lv0euRhKRCyiXWzS7pOg6g").email("admin@harness.io").name("Admin").build();
@@ -37,6 +43,31 @@ public class NgOrchestrationResource {
     PlanExecution execution = orchestrationService.startExecution(
         CustomExecutionUtils.provideHttpSwitchPlanV2(), getAbstractions(accountId, appId), EMBEDDED_USER);
     return new RestResponse<>(execution);
+  }
+
+  @POST
+  @Path("/test-execution-plan")
+  @Consumes("text/plain")
+  @Produces("application/json")
+  @ApiOperation(value = "create and run an execution plan", nickname = "test-execution-plan")
+  public RestResponse<PlanExecution> testExecutionPlan(@QueryParam("accountId") String accountId, String pipelineYaml) {
+    return new RestResponse<>(customExecutionService.testExecutionPlanCreator(
+        pipelineYaml, accountId, Application.GLOBAL_APP_ID, EMBEDDED_USER));
+  }
+
+  @GET
+  @Path("/get-graph")
+  @ApiOperation(value = "generate graph for plan execution", nickname = "get-graph")
+  public RestResponse<Graph> getGraph(@QueryParam("planExecutionId") String planExecutionId) {
+    return new RestResponse<>(customExecutionService.getGraph(planExecutionId));
+  }
+
+  @GET
+  @Path("/get-graph-visualization")
+  @Produces("image/png")
+  @ApiOperation(value = "generate graph execution visualization", nickname = "get-graph-visualization")
+  public StreamingOutput getGraphVisualization(@QueryParam("planExecutionId") String planExecutionId) {
+    return output -> customExecutionService.getGraphVisualization(planExecutionId, output);
   }
 
   private Map<String, String> getAbstractions(String accountId, String appId) {

@@ -1,27 +1,26 @@
 package io.harness.cdng.artifact.steps;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.beans.DelegateTask;
-import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.cdng.common.AmbianceHelper;
+import io.harness.cdng.orchestration.StepUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
+import io.harness.facilitator.modes.taskv2.TaskV2Executable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
@@ -41,7 +40,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class ArtifactStep implements Step, TaskExecutable {
+public class ArtifactStep implements Step, TaskExecutable, TaskV2Executable {
   public static final StepType STEP_TYPE = StepType.builder().type("ARTIFACT_STEP").build();
 
   // Default timeout of 1 minute.
@@ -52,22 +51,19 @@ public class ArtifactStep implements Step, TaskExecutable {
     ArtifactStepParameters parameters = (ArtifactStepParameters) stepParameters;
     logger.info("Executing deployment stage with params [{}]", parameters);
     ArtifactConfigWrapper finalArtifact = applyArtifactsOverlay(parameters);
-    ArtifactSource artifactSource = getArtifactSource(finalArtifact, ambiance.getSetupAbstractions().get("accountId"));
+    ArtifactSource artifactSource = getArtifactSource(finalArtifact, AmbianceHelper.getAccountId(ambiance));
 
-    String waitId = generateUuid();
-    ArtifactTaskParameters taskParameters =
+    final ArtifactTaskParameters taskParameters =
         ArtifactUtils.getArtifactTaskParameters(artifactSource.getAccountId(), finalArtifact.getSourceAttributes());
-    final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.ARTIFACT_COLLECT_TASK.name());
-    DelegateTaskBuilder delegateTaskBuilder =
-        DelegateTask.builder()
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, artifactSource.getAccountId())
-            .waitId(waitId);
+    final TaskData taskData = TaskData.builder()
+                                  .async(true)
+                                  .taskType(TaskType.ARTIFACT_COLLECT_TASK.name())
+                                  .parameters(new Object[] {taskParameters})
+                                  .timeout(DEFAULT_TIMEOUT)
+                                  .build();
 
-    // Set timeout.
-    dataBuilder.parameters(new Object[] {taskParameters}).timeout(DEFAULT_TIMEOUT);
-    delegateTaskBuilder.accountId(artifactSource.getAccountId());
-    delegateTaskBuilder.data(dataBuilder.build());
-    return delegateTaskBuilder.build();
+    return StepUtils.prepareDelegateTaskInput(artifactSource.getAccountId(), taskData,
+        ImmutableMap.of(Cd1SetupFields.APP_ID_FIELD, artifactSource.getAccountId()));
   }
 
   @Override

@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
+import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
@@ -52,7 +53,9 @@ public class ArtifactStepPlanCreator implements SupportDefinedExecutorPlanCreato
         .stepType(ArtifactStep.STEP_TYPE)
         .stepParameters(artifactStepParameters)
         .facilitatorObtainment(
-            FacilitatorObtainment.builder().type(FacilitatorType.builder().type(FacilitatorType.TASK).build()).build())
+            FacilitatorObtainment.builder()
+                .type(FacilitatorType.builder().type(PlanCreatorFacilitatorUtils.decideTaskFacilitatorType()).build())
+                .build())
         .build();
   }
 

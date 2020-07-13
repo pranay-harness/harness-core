@@ -2,6 +2,7 @@ package io.harness.cdng;
 
 import io.harness.cdng.artifact.service.ArtifactSourceService;
 import io.harness.cdng.artifact.service.impl.ArtifactSourceServiceImpl;
+import io.harness.cdng.common.MiscUtils;
 import io.harness.cdng.connectornextgen.impl.ConnectorValidationServiceImpl;
 import io.harness.cdng.connectornextgen.impl.KubernetesConnectorServiceImpl;
 import io.harness.cdng.connectornextgen.service.ConnectorValidationService;
@@ -11,19 +12,18 @@ import io.harness.cdng.environment.EnvironmentServiceImpl;
 import io.harness.connector.impl.ConnectorServiceImpl;
 import io.harness.connector.services.ConnectorService;
 import io.harness.govern.DependencyModule;
-import software.wings.service.impl.artifact.ArtifactServiceImpl;
-import software.wings.service.intfc.ArtifactService;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class NGModule extends DependencyModule {
-  private static volatile NGModule instance;
+  private static final AtomicReference<NGModule> instanceRef = new AtomicReference<>();
 
   public static NGModule getInstance() {
-    if (instance == null) {
-      instance = new NGModule();
+    if (instanceRef.get() == null) {
+      instanceRef.compareAndSet(null, new NGModule());
     }
-    return instance;
+    return instanceRef.get();
   }
 
   @Override
@@ -34,10 +34,12 @@ public class NGModule extends DependencyModule {
   @Override
   protected void configure() {
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);
-    bind(ArtifactService.class).to(ArtifactServiceImpl.class);
     bind(EnvironmentService.class).to(EnvironmentServiceImpl.class);
-    bind(ConnectorService.class).to(ConnectorServiceImpl.class);
-    bind(ConnectorValidationService.class).to(ConnectorValidationServiceImpl.class);
-    bind(KubernetesConnectorService.class).to(KubernetesConnectorServiceImpl.class);
+    if (!MiscUtils.isNextGenApplication()) {
+      // TODO @rk: 12/07/20 : deepak would be removing this, so commenting for now
+      bind(ConnectorService.class).to(ConnectorServiceImpl.class);
+      bind(ConnectorValidationService.class).to(ConnectorValidationServiceImpl.class);
+      bind(KubernetesConnectorService.class).to(KubernetesConnectorServiceImpl.class);
+    }
   }
 }

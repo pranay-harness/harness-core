@@ -8,9 +8,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
-import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import lombok.AllArgsConstructor;
@@ -33,8 +31,8 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "ArtifactSourceKeys")
 @Entity(value = "artifactSourceNG")
 @HarnessEntity(exportable = true)
-public abstract class ArtifactSource implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
-                                                UpdatedAtAware, UpdatedByAware, AccountAccess {
+public abstract class ArtifactSource
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedByAware, AccountAccess {
   @Id private String uuid;
   @NotNull private String accountId;
   @SchemaIgnore private EmbeddedUser createdBy;

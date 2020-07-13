@@ -1,14 +1,13 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.cdng.orchestration.StepUtils.prepareDelegateTaskInput;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.beans.DelegateTask;
 import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.yaml.Infrastructure;
@@ -46,6 +45,7 @@ import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
+import io.harness.tasks.Task;
 import io.harness.validation.Validator;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
@@ -145,20 +145,14 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
     GitFetchRequest gitFetchRequest =
         GitFetchRequest.builder().gitFetchFilesConfigs(gitFetchFilesConfigs).accountId(accountId).build();
 
-    String waitId = generateUuid();
-    TaskData taskData = TaskData.builder()
-                            .async(true)
-                            .timeout(k8sRollingStepParameters.getTimeout())
-                            .taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name())
-                            .parameters(new Object[] {gitFetchRequest})
-                            .build();
+    final TaskData taskData = TaskData.builder()
+                                  .async(true)
+                                  .timeout(k8sRollingStepParameters.getTimeout())
+                                  .taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name())
+                                  .parameters(new Object[] {gitFetchRequest})
+                                  .build();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(accountId)
-                                    .waitId(waitId)
-                                    .data(taskData)
-                                    .setupAbstractions(ambiance.getSetupAbstractions())
-                                    .build();
+    final Task delegateTask = prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractions());
 
     K8sRollingStepPassThroughData k8sRollingStepPassThroughData = K8sRollingStepPassThroughData.builder()
                                                                       .k8sManifest(k8sManifest)
@@ -186,6 +180,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
     K8sClusterConfig k8sClusterConfig = k8sStepHelper.getK8sClusterConfig(infrastructure);
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
 
+    final String accountId = AmbianceHelper.getAccountId(ambiance);
     K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters =
         K8sRollingDeployTaskParameters.builder()
             .skipDryRun(stepParameters.isSkipDryRun())
@@ -198,7 +193,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
             .localOverrideFeatureFlag(false)
             .timeoutIntervalInMin(stepParameters.getTimeout())
             .valuesYamlList(renderedValuesList)
-            .accountId(AmbianceHelper.getAccountId(ambiance))
+            .accountId(accountId)
             .k8sClusterConfig(k8sClusterConfig)
             .activityId(UUIDGenerator.generateUuid())
             .build();
@@ -210,12 +205,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
                             .async(true)
                             .build();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .data(taskData)
-                                    .accountId(AmbianceHelper.getAccountId(ambiance))
-                                    .waitId(UUIDGenerator.generateUuid())
-                                    .setupAbstractions(ambiance.getSetupAbstractions())
-                                    .build();
+    final Task delegateTask = prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractions());
 
     return TaskChainResponse.builder().task(delegateTask).chainEnd(true).passThroughData(infrastructure).build();
   }

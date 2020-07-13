@@ -121,7 +121,7 @@ public class CustomExecutionResource {
   @Produces("application/json")
   public RestResponse<PlanExecution> testExecutionPlan(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, String pipelineYaml) {
-    return new RestResponse<>(customExecutionService.testExecutionPlanCreator(pipelineYaml, accountId, appId));
+    return new RestResponse<>(customExecutionService.testExecutionPlanCreator(pipelineYaml, accountId, appId, null));
   }
 
   @GET

@@ -11,7 +11,8 @@ import io.harness.cdng.common.beans.Tag;
 import io.harness.cdng.environment.beans.Environment;
 import io.harness.cdng.environment.beans.Environment.EnvironmentKeys;
 import io.harness.exception.InvalidRequestException;
-import software.wings.dl.WingsPersistence;
+import io.harness.persistence.HPersistence;
+import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,14 +22,14 @@ import javax.annotation.Nonnull;
 
 @Singleton
 public class EnvironmentServiceImpl implements EnvironmentService {
-  @Inject WingsPersistence wingsPersistence;
+  @Inject HPersistence hPersistence;
 
   public void save(Environment environment) {
     validate(environment);
     if (isEmpty(environment.getDisplayName())) {
       environment.setDisplayName(environment.getIdentifier());
     }
-    wingsPersistence.save(environment);
+    hPersistence.save(environment);
   }
 
   private void validate(Environment environment) {
@@ -52,7 +53,10 @@ public class EnvironmentServiceImpl implements EnvironmentService {
     }
 
     if (isNotEmpty(updateValues)) {
-      wingsPersistence.updateFields(Environment.class, savedEnvironment.getUuid(), updateValues);
+      UpdateOperations<Environment> updateOperations = hPersistence.createUpdateOperations(Environment.class);
+      updateValues.forEach(updateOperations::addToSet);
+
+      hPersistence.update(environment, updateOperations);
     }
   }
 
@@ -76,7 +80,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
 
   @Override
   public void upsert(@Nonnull Environment environment) {
-    Environment savedEnvironment = wingsPersistence.createQuery(Environment.class)
+    Environment savedEnvironment = hPersistence.createQuery(Environment.class)
                                        .filter(EnvironmentKeys.accountId, environment.getAccountId())
                                        .filter(EnvironmentKeys.orgId, environment.getOrgId())
                                        .filter(EnvironmentKeys.projectId, environment.getProjectId())
