@@ -82,6 +82,7 @@ public class AppDynamicsDSConfig extends DSConfig {
       appDynamicsCVConfig.setTierName(serviceMapping.getTierName());
       appDynamicsCVConfig.setServiceIdentifier(serviceMapping.serviceIdentifier);
       appDynamicsCVConfig.setMetricPack(metricPack);
+      appDynamicsCVConfig.setCategory(metricPack.getCategory());
       cvConfigs.add(appDynamicsCVConfig);
     }));
     return cvConfigs;

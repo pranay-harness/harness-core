@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
-import io.harness.cvng.core.dashboard.beans.HeatMapDTO;
+import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapKeys;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;

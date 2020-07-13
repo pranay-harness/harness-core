@@ -37,7 +37,9 @@ import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesServiceImpl;
+import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
+import io.harness.cvng.dashboard.services.impl.AnomalyServiceImpl;
 import io.harness.cvng.dashboard.services.impl.HeatMapServiceImpl;
 import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
 import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
@@ -120,6 +122,7 @@ public class CVServiceModule extends AbstractModule {
           .to(SplunkDataCollectionInfoMapper.class);
       bind(MetricPackService.class).to(MetricPackServiceImpl.class);
       bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
+      bind(AnomalyService.class).to(AnomalyServiceImpl.class);
       bind(LogRecordService.class).to(LogRecordServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);

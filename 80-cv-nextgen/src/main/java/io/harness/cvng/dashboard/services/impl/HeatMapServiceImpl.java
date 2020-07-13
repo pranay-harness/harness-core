@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.model.DBCollectionUpdateOptions;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
-import io.harness.cvng.core.dashboard.beans.HeatMapDTO;
+import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapKeys;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
@@ -54,7 +54,7 @@ public class HeatMapServiceImpl implements HeatMapService {
       hPersistence.getDatastore(HeatMap.class)
           .update(heatMapQuery,
               hPersistence.createUpdateOperations(HeatMap.class)
-                  .set(HeatMapKeys.accountId, accountId)
+                  .setOnInsert(HeatMapKeys.accountId, accountId)
                   .addToSet(HeatMapKeys.heatMapRisks,
                       HeatMapRisk.builder()
                           .riskScore(riskScore)

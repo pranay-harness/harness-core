@@ -44,7 +44,7 @@ public class SplunkDSConfig extends DSConfig {
     fillCommonFields(splunkCVConfig);
     splunkCVConfig.setQuery(this.query);
     splunkCVConfig.setServiceInstanceIdentifier(this.serviceInstanceIdentifier);
-    splunkCVConfig.setCategory(eventType);
+    splunkCVConfig.setCategory(CVMonitoringCategory.fromDisplayName(eventType));
     splunkCVConfig.setServiceIdentifier(serviceIdentifier);
     return splunkCVConfig;
   }

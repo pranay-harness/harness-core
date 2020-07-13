@@ -27,7 +27,7 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
     fillCommonFields(splunkDSConfig);
     splunkDSConfig.setQuery("exception");
     splunkDSConfig.setServiceInstanceIdentifier("host");
-    splunkDSConfig.setEventType("QA");
+    splunkDSConfig.setEventType("Quality");
     splunkDSConfig.setServiceIdentifier("harness");
   }
   @Test
@@ -43,7 +43,8 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
     assertCommon(splunkCVConfig, splunkDSConfig);
     assertThat(splunkCVConfig.getUuid()).isNull();
     assertThat(splunkCVConfig.getQuery()).isEqualTo(splunkDSConfig.getQuery());
-    assertThat(splunkCVConfig.getCategory()).isEqualTo(splunkDSConfig.getEventType());
+    assertThat(splunkCVConfig.getCategory())
+        .isEqualTo(CVMonitoringCategory.fromDisplayName(splunkDSConfig.getEventType()));
     assertThat(splunkCVConfig.getServiceInstanceIdentifier()).isEqualTo(splunkDSConfig.getServiceInstanceIdentifier());
     assertThat(splunkCVConfig.getServiceIdentifier()).isEqualTo(splunkDSConfig.getServiceIdentifier());
   }
@@ -62,7 +63,8 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
     assertCommon(splunkCVConfig, splunkDSConfig);
     assertThat(splunkCVConfig.getUuid()).isNotNull();
     assertThat(splunkCVConfig.getQuery()).isEqualTo(splunkDSConfig.getQuery());
-    assertThat(splunkCVConfig.getCategory()).isEqualTo(splunkDSConfig.getEventType());
+    assertThat(splunkCVConfig.getCategory())
+        .isEqualTo(CVMonitoringCategory.fromDisplayName(splunkDSConfig.getEventType()));
     assertThat(splunkCVConfig.getServiceInstanceIdentifier()).isEqualTo(splunkDSConfig.getServiceInstanceIdentifier());
     assertThat(splunkCVConfig.getServiceIdentifier()).isEqualTo(splunkDSConfig.getServiceIdentifier());
   }
@@ -73,7 +75,7 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
     splunkCVConfig.setUuid(generateUuid());
     splunkCVConfig.setQuery("old query");
     splunkCVConfig.setServiceInstanceIdentifier("host123");
-    splunkCVConfig.setCategory("QA");
+    splunkCVConfig.setCategory(CVMonitoringCategory.QUALITY);
     return splunkCVConfig;
   }
 }

@@ -73,6 +73,7 @@ public class MetricPackServiceImplTest extends CVNextGenBaseTest {
       assertThat(metricPack.getIdentifier()).isNotEmpty();
       assertThat(metricPack.getDataSourceType()).isEqualTo(DataSourceType.APP_DYNAMICS);
       assertThat(metricPack.getMetrics().size()).isGreaterThan(0);
+      assertThat(metricPack.getCategory()).isNotNull();
       metricPack.getMetrics().forEach(metricDefinition -> {
         assertThat(metricDefinition.getName()).isNotEmpty();
         assertThat(metricDefinition.getPath()).isNotEmpty();

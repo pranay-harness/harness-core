@@ -1,6 +1,5 @@
 package io.harness.cvng.core.entities;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -8,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.TimeRange;
+import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.models.VerificationType;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -61,7 +61,7 @@ public class LogCVConfigTest extends CategoryTest {
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
     cvConfig.setGroupId(groupId);
-    cvConfig.setCategory(PERFORMANCE_PACK_IDENTIFIER);
+    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
   }
 }

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.models.VerificationType;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
@@ -48,8 +49,8 @@ public abstract class CVConfig
   @NotNull private String serviceIdentifier;
   @NotNull private String envIdentifier;
   @NotNull private String projectIdentifier;
+  @NotNull private CVMonitoringCategory category;
   private String dataCollectionTaskId;
-  private String category;
   private String productName;
   private String groupId;
 

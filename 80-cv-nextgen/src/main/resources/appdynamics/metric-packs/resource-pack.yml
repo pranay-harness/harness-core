@@ -1,4 +1,5 @@
 identifier: Resources
+category: Resources
 metrics:
   - name: CPU.%Busy
     type: INFRA

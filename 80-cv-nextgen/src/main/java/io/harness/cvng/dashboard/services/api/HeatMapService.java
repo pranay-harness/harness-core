@@ -1,7 +1,7 @@
 package io.harness.cvng.dashboard.services.api;
 
 import io.harness.cvng.core.beans.CVMonitoringCategory;
-import io.harness.cvng.core.dashboard.beans.HeatMapDTO;
+import io.harness.cvng.dashboard.beans.HeatMapDTO;
 
 import java.time.Instant;
 import java.util.Map;

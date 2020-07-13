@@ -1,4 +1,4 @@
-package io.harness.cvng.core.dashboard.beans;
+package io.harness.cvng.dashboard.beans;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;

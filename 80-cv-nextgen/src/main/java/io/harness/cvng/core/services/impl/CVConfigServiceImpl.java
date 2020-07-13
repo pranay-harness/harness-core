@@ -9,17 +9,21 @@ import com.google.inject.Inject;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 public class CVConfigServiceImpl implements CVConfigService {
-  @Inject HPersistence hPersistence;
+  @Inject private HPersistence hPersistence;
+  @Inject private AnomalyService anomalyService;
+
   @Override
   public CVConfig save(CVConfig cvConfig) {
     checkArgument(cvConfig.getUuid() == null, "UUID should be null when creating CVConfig");
@@ -54,6 +58,11 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public void delete(@NotNull String cvConfigId) {
+    CVConfig cvConfig = get(cvConfigId);
+    if (cvConfig == null) {
+      return;
+    }
+    anomalyService.closeAnomaly(cvConfig.getAccountId(), cvConfigId, Instant.now());
     hPersistence.delete(CVConfig.class, cvConfigId);
   }
 

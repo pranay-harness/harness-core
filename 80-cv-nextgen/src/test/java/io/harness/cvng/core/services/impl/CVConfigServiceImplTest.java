@@ -1,6 +1,5 @@
 package io.harness.cvng.core.services.impl;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
 import io.harness.cvng.beans.TimeRange;
+import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -280,7 +280,6 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   }
 
   private void fillCommon(CVConfig cvConfig) {
-    cvConfig.setName("cvConfigName-" + generateUuid());
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
     cvConfig.setConnectorId(connectorId);
@@ -288,7 +287,7 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
     cvConfig.setGroupId(groupId);
-    cvConfig.setCategory(PERFORMANCE_PACK_IDENTIFIER);
+    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
   }
 }
