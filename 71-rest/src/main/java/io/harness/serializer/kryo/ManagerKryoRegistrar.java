@@ -269,6 +269,8 @@ import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
+import software.wings.beans.ci.pod.ContainerSecrets;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.PodParams;
 import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
@@ -1735,5 +1737,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ImageDetailsWithConnector.class, 7451);
     kryo.register(ServiceNowFieldType.class, 7452);
     kryo.register(io.harness.dashboard.Action.class, 7453);
+    kryo.register(EncryptedVariableWithType.class, 7454);
+    kryo.register(EncryptedVariableWithType.Type.class, 7455);
+    kryo.register(ContainerSecrets.class, 7456);
   }
 }

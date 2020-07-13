@@ -23,7 +23,9 @@ import static software.wings.common.CICommonPodConstants.STEP_EXEC;
 import lombok.experimental.UtilityClass;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
+import software.wings.beans.ci.pod.CIK8ContainerParams.CIK8ContainerParamsBuilder;
 import software.wings.beans.ci.pod.ContainerResourceParams;
+import software.wings.beans.ci.pod.ContainerSecrets;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,7 +41,7 @@ import java.util.Map;
 public class InternalContainerParamsProvider {
   public enum ContainerKind { ADDON_CONTAINER, LITE_ENGINE_CONTAINER }
 
-  public CIK8ContainerParams getContainerParams(ContainerKind kind) {
+  public CIK8ContainerParamsBuilder getContainerParams(ContainerKind kind) {
     if (kind == null) {
       return null;
     }
@@ -54,7 +56,7 @@ public class InternalContainerParamsProvider {
     return null;
   }
 
-  private CIK8ContainerParams getLiteEngineContainerParams() {
+  private CIK8ContainerParamsBuilder getLiteEngineContainerParams() {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     List<String> args = new ArrayList<>(Collections.singletonList(LITE_ENGINE_ARGS));
@@ -63,13 +65,13 @@ public class InternalContainerParamsProvider {
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerType(CIContainerType.LITE_ENGINE)
         .imageDetailsWithConnector(InternalImageDetailsProvider.getImageDetails(LITE_ENGINE_IMAGE))
+        .containerSecrets(ContainerSecrets.builder().build())
         .volumeToMountPath(map)
         .commands(SH_COMMAND)
-        .args(args)
-        .build();
+        .args(args);
   }
 
-  private CIK8ContainerParams getAddonContainerParams() {
+  private CIK8ContainerParamsBuilder getAddonContainerParams() {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
     map.put(ADDON_VOLUME, ADDON_PATH);
@@ -83,8 +85,7 @@ public class InternalContainerParamsProvider {
         .volumeToMountPath(map)
         .commands(SH_COMMAND)
         .args(args)
-        .ports(Collections.singletonList(ADDON_PORT))
-        .build();
+        .ports(Collections.singletonList(ADDON_PORT));
   }
 
   private Map<String, String> getAddonEnvVars() {

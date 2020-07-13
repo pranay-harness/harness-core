@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.ci.pod.SecretParams.Type.FILE;
+import static software.wings.beans.ci.pod.SecretParams.Type.TEXT;
 import static software.wings.utils.KubernetesConvention.getKubernetesGitSecretName;
 import static software.wings.utils.KubernetesConvention.getKubernetesRegistrySecretName;
 
@@ -23,10 +25,13 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.ci.pod.SecretParams;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.container.ImageDetails;
 import software.wings.service.intfc.security.EncryptionService;
@@ -64,6 +69,7 @@ public class SecretSpecBuilder {
   private static final String ENDPOINT_PREFIX = "ENDPOINT_";
   private static final String ACCESS_KEY_PREFIX = "ACCESS_KEY_";
   private static final String SECRET_KEY_PREFIX = "SECRET_KEY_";
+  private static final String SECRET_PATH_PREFIX = "SECRET_PATH_";
 
   @Inject private EncryptionService encryptionService;
 
@@ -109,13 +115,34 @@ public class SecretSpecBuilder {
         .build();
   }
 
-  public Map<String, String> decryptCustomSecretVariables(Map<String, EncryptedDataDetail> encryptedSecrets) {
-    Map<String, String> data = new HashMap<>();
+  public Map<String, SecretParams> decryptCustomSecretVariables(
+      Map<String, EncryptedVariableWithType> encryptedSecrets) {
+    Map<String, SecretParams> data = new HashMap<>();
     if (isNotEmpty(encryptedSecrets)) {
-      for (Map.Entry<String, EncryptedDataDetail> encryptedVariable : encryptedSecrets.entrySet()) {
+      for (Map.Entry<String, EncryptedVariableWithType> encryptedVariable : encryptedSecrets.entrySet()) {
         try {
-          String value = String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue()));
-          data.put(SECRET_KEY + encryptedVariable.getKey(), encodeBase64(value));
+          String value = String.valueOf(
+              encryptionService.getDecryptedValue(encryptedVariable.getValue().getEncryptedDataDetail()));
+          switch (encryptedVariable.getValue().getType()) {
+            case FILE:
+              data.put(encryptedVariable.getKey(),
+                  SecretParams.builder()
+                      .secretKey(SECRET_KEY + encryptedVariable.getKey())
+                      .type(FILE)
+                      .value(encodeBase64(value))
+                      .build());
+              break;
+            case TEXT:
+              data.put(encryptedVariable.getKey(),
+                  SecretParams.builder()
+                      .secretKey(SECRET_KEY + encryptedVariable.getKey())
+                      .type(TEXT)
+                      .value(encodeBase64(value))
+                      .build());
+              break;
+            default:
+              unhandled(encryptedVariable.getValue().getType());
+          }
         } catch (IOException e) {
           throw new WingsException("Error occurred while decrypting encrypted variables", e);
         }
@@ -125,9 +152,9 @@ public class SecretSpecBuilder {
     return data;
   }
 
-  public Map<String, String> decryptPublishArtifactSecretVariables(
+  public Map<String, SecretParams> decryptPublishArtifactSecretVariables(
       Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues) {
-    Map<String, String> data = new HashMap<>();
+    Map<String, SecretParams> secretData = new HashMap<>();
     if (isNotEmpty(publishArtifactEncryptedValues)) {
       for (Map.Entry<String, EncryptableSettingWithEncryptionDetails> encryptedVariable :
           publishArtifactEncryptedValues.entrySet()) {
@@ -149,25 +176,39 @@ public class SecretSpecBuilder {
                 String username = dockerConfig.getUsername();
                 String password = String.valueOf(dockerConfig.getPassword());
 
-                data.put(USERNAME_PREFIX + encryptedVariable.getKey(), encodeBase64(username));
-                data.put(PASSWORD_PREFIX + encryptedVariable.getKey(), encodeBase64(password));
-                data.put(ENDPOINT_PREFIX + encryptedVariable.getKey(), encodeBase64(registryUrl));
+                secretData.put(USERNAME_PREFIX + encryptedVariable.getKey(),
+                    getVariableSecret(USERNAME_PREFIX + encryptedVariable.getKey(), username));
+                secretData.put(PASSWORD_PREFIX + encryptedVariable.getKey(),
+                    getVariableSecret(PASSWORD_PREFIX + encryptedVariable.getKey(), password));
+                secretData.put(ENDPOINT_PREFIX + encryptedVariable.getKey(),
+                    getVariableSecret(ENDPOINT_PREFIX + encryptedVariable.getKey(), registryUrl));
+
                 break;
               case AWS:
                 AwsConfig awsConfig = (AwsConfig) encryptableSetting;
                 String accessKey = awsConfig.getAccessKey();
                 String secretKey = String.valueOf(awsConfig.getSecretKey());
 
-                data.put(ACCESS_KEY_PREFIX + encryptedVariable.getKey(), encodeBase64(accessKey));
-                data.put(SECRET_KEY_PREFIX + encryptedVariable.getKey(), encodeBase64(secretKey));
+                secretData.put(ACCESS_KEY_PREFIX + encryptedVariable.getKey(),
+                    getVariableSecret(ACCESS_KEY_PREFIX + encryptedVariable.getKey(), accessKey));
+                secretData.put(SECRET_KEY_PREFIX + encryptedVariable.getKey(),
+                    getVariableSecret(SECRET_KEY_PREFIX + encryptedVariable.getKey(), secretKey));
                 break;
               case ARTIFACTORY:
                 ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) encryptableSetting;
                 String artifactoryConfigUsername = artifactoryConfig.getUsername();
                 String artifactoryConfigPassword = String.valueOf(artifactoryConfig.getPassword());
 
-                data.put(USERNAME_PREFIX + encryptedVariable.getKey(), encodeBase64(artifactoryConfigUsername));
-                data.put(PASSWORD_PREFIX + encryptedVariable.getKey(), encodeBase64(artifactoryConfigPassword));
+                secretData.put(USERNAME_PREFIX + encryptedVariable.getKey(),
+                    getVariableSecret(USERNAME_PREFIX + encryptedVariable.getKey(), artifactoryConfigUsername));
+                secretData.put(PASSWORD_PREFIX + encryptedVariable.getKey(),
+                    getVariableSecret(PASSWORD_PREFIX + encryptedVariable.getKey(), artifactoryConfigPassword));
+                break;
+              case GCP:
+                GcpConfig gcpConfig = (GcpConfig) encryptableSetting;
+                String serviceAccountKeyFileContent = String.valueOf(gcpConfig.getServiceAccountKeyFileContent());
+                secretData.put(SECRET_PATH_PREFIX + encryptedVariable.getKey(),
+                    getFileSecret(SECRET_PATH_PREFIX + encryptedVariable.getKey(), serviceAccountKeyFileContent));
                 break;
               default:
                 unhandled(settingType);
@@ -177,7 +218,14 @@ public class SecretSpecBuilder {
       }
     }
 
-    return data;
+    return secretData;
+  }
+  private SecretParams getVariableSecret(String key, String secret) {
+    return SecretParams.builder().secretKey(key).value(encodeBase64(secret)).type(TEXT).build();
+  }
+
+  private SecretParams getFileSecret(String key, String secret) {
+    return SecretParams.builder().secretKey(key).value(encodeBase64(secret)).type(FILE).build();
   }
 
   public Secret createSecret(String secretName, String namespace, Map<String, String> data) {

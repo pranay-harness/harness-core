@@ -20,7 +20,9 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.threading.Sleeper;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitConfig;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.ci.pod.SecretParams;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
@@ -47,11 +49,12 @@ public class CIK8CtlHandler {
     }
   }
 
-  public Map<String, String> fetchCustomVariableSecretKeyMap(Map<String, EncryptedDataDetail> encryptedSecrets) {
+  public Map<String, SecretParams> fetchCustomVariableSecretKeyMap(
+      Map<String, EncryptedVariableWithType> encryptedSecrets) {
     return secretSpecBuilder.decryptCustomSecretVariables(encryptedSecrets);
   }
 
-  public Map<String, String> fetchPublishArtifactSecretKeyMap(
+  public Map<String, SecretParams> fetchPublishArtifactSecretKeyMap(
       Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues) {
     return secretSpecBuilder.decryptPublishArtifactSecretVariables(publishArtifactEncryptedValues);
   }

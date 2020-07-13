@@ -1,12 +1,12 @@
 package io.harness.beans.environment.pod.container;
 
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.ContainerResourceParams;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 
 import java.util.List;
 import java.util.Map;
@@ -28,5 +28,5 @@ public class ContainerDefinitionInfo {
   private List<Integer> ports;
   private Map<String, String> volumeToMountPath;
   Map<String, String> envVars;
-  Map<String, EncryptedDataDetail> encryptedSecrets;
+  Map<String, EncryptedVariableWithType> encryptedSecrets;
 }

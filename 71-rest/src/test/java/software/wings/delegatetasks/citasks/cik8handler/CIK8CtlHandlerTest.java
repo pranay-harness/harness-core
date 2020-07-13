@@ -11,9 +11,11 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getDecryptedSecret;
-import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getEncryptableSettingWithEncryptionDetails;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getCustomVarSecret;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getDockerSecret;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getEncryptedDetails;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getPublishArtifactSecrets;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getPublishArtifactSettings;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_PENDING_PHASE;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.POD_RUNNING_PHASE;
@@ -53,7 +55,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.ci.pod.SecretParams;
 import software.wings.beans.container.ImageDetails;
 
 import java.io.InputStream;
@@ -65,6 +69,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class CIK8CtlHandlerTest extends WingsBaseTest {
   @Mock private SecretSpecBuilder mockSecretSpecBuilder;
@@ -411,30 +416,31 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldFetchCustomVariableSecretKeyMap() {
-    Map<String, EncryptedDataDetail> encryptedDetails = getEncryptedDetails();
-    when(mockSecretSpecBuilder.decryptCustomSecretVariables(encryptedDetails)).thenReturn(getDecryptedSecret());
-    Map<String, String> secretKeyMap = cik8CtlHandler.fetchCustomVariableSecretKeyMap(encryptedDetails);
-    assertThat(secretKeyMap).isEqualTo(getDecryptedSecret());
+    Map<String, EncryptedVariableWithType> encryptedDetails = getEncryptedDetails();
+    when(mockSecretSpecBuilder.decryptCustomSecretVariables(encryptedDetails)).thenReturn(getCustomVarSecret());
+    Map<String, SecretParams> secretKeyMap = cik8CtlHandler.fetchCustomVariableSecretKeyMap(encryptedDetails);
+    assertThat(secretKeyMap).isEqualTo(getCustomVarSecret());
   }
 
   @Test()
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldFetchPublishArtifactSecretKeyMap() {
-    Map<String, EncryptableSettingWithEncryptionDetails> encryptableSettingWithEncryptionDetails =
-        getEncryptableSettingWithEncryptionDetails();
-    when(mockSecretSpecBuilder.decryptPublishArtifactSecretVariables(encryptableSettingWithEncryptionDetails))
-        .thenReturn(getDecryptedSecret());
-    Map<String, String> secretKeyMap =
-        cik8CtlHandler.fetchPublishArtifactSecretKeyMap(encryptableSettingWithEncryptionDetails);
-    assertThat(secretKeyMap).isEqualTo(getDecryptedSecret());
+    Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactSettings = getPublishArtifactSettings();
+    when(mockSecretSpecBuilder.decryptPublishArtifactSecretVariables(publishArtifactSettings))
+        .thenReturn(getPublishArtifactSecrets());
+
+    Map<String, SecretParams> secretParams = cik8CtlHandler.fetchPublishArtifactSecretKeyMap(publishArtifactSettings);
+    assertThat(secretParams).isEqualTo(getPublishArtifactSecrets());
   }
 
   @Test()
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldCreateSecret() {
-    Map<String, String> decryptedSecret = getDecryptedSecret();
+    Map<String, SecretParams> dockerSecret = getDockerSecret();
+    Map<String, String> decryptedSecret =
+        dockerSecret.values().stream().collect(Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
     Secret secret = new SecretBuilder()
                         .withNewMetadata()
                         .withName("secret-name")
