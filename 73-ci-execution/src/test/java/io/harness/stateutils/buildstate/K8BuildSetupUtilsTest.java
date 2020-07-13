@@ -22,7 +22,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +30,8 @@ import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
+import software.wings.beans.ci.pod.ContainerSecrets;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.container.ImageDetails;
 
@@ -69,7 +70,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     CIK8PodParams<CIK8ContainerParams> podParams =
         k8BuildSetupUtils.getPodParams(podsSetupInfo.getPodSetupInfoList().get(0), "default", command, args, null);
 
-    Map<String, EncryptedDataDetail> envSecretVars = new HashMap<>();
+    Map<String, EncryptedVariableWithType> envSecretVars = new HashMap<>();
     envSecretVars.put(ACCESS_KEY_MINIO_VARIABLE, null);
     envSecretVars.put(SECRET_KEY_MINIO_VARIABLE, null);
     envSecretVars.putAll(ciExecutionPlanTestHelper.getEncryptedSecrets());
@@ -92,7 +93,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
                                                     .build())
                        .containerType(CIContainerType.STEP_EXECUTOR)
                        .commands(command)
-                       .encryptedSecrets(envSecretVars)
+                       .containerSecrets(ContainerSecrets.builder().encryptedSecrets(envSecretVars).build())
                        .envVars(envVars)
                        .args(args)
                        .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
@@ -103,6 +104,8 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
                        .build());
 
     assertThat(podParams.getContainerParamsList().get(1))
-        .isEqualTo(InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER));
+        .isEqualTo(InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER)
+                       .containerSecrets(ContainerSecrets.builder().build())
+                       .build());
   }
 }

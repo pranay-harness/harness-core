@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.citasks.cik8handler.container;
 
+import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.SHUBHAM;
 import static junit.framework.TestCase.assertEquals;
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.basicCreateSpecInput;
@@ -12,6 +13,8 @@ import static software.wings.delegatetasks.citasks.cik8handler.container.Contain
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.createSpecWithImageCredResponse;
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.createSpecWithResourcesCredInput;
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.createSpecWithResourcesResponse;
+import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.createSpecWithSecretVolumes;
+import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.createSpecWithSecretVolumesResponse;
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.createSpecWithVolumeMountInput;
 import static software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderTestHelper.createSpecWithVolumeMountResponse;
 
@@ -97,6 +100,19 @@ public class ContainerSpecBuilderTest extends WingsBaseTest {
   public void createSpecWithPortWorkingDirSecretEnv() {
     CIK8ContainerParams containerParams = basicCreateSpecWithSecretEnvPortWorkingDir();
     ContainerSpecBuilderResponse expectedResponse = basicCreateSpecWithSecretEnvPortWorkingDirResponse();
+
+    ContainerSpecBuilderResponse response = containerSpecBuilder.createSpec(containerParams);
+    assertEquals(expectedResponse.getContainerBuilder().build(), response.getContainerBuilder().build());
+    assertEquals(expectedResponse.getVolumes(), response.getVolumes());
+    assertEquals(expectedResponse.getImageSecret(), response.getImageSecret());
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void createSpecWithSecretVolume() {
+    CIK8ContainerParams containerParams = createSpecWithSecretVolumes();
+    ContainerSpecBuilderResponse expectedResponse = createSpecWithSecretVolumesResponse();
 
     ContainerSpecBuilderResponse response = containerSpecBuilder.createSpec(containerParams);
     assertEquals(expectedResponse.getContainerBuilder().build(), response.getContainerBuilder().build());

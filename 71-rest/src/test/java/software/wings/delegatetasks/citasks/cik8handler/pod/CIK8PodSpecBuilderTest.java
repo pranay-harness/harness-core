@@ -3,6 +3,7 @@ package software.wings.delegatetasks.citasks.cik8handler.pod;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.SHUBHAM;
 import static junit.framework.TestCase.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
@@ -112,7 +113,7 @@ public class CIK8PodSpecBuilderTest extends WingsBaseTest {
                         .build());
     when(gitCloneContainerSpecBuilder.createGitCloneSpec(any())).thenReturn(null);
     PodBuilder responsePodBuilder = cik8PodSpecBuilder.createSpec((PodParams) podParams);
-    assertEquals(responsePodBuilder.build(), expectedPod);
+    assertThat(responsePodBuilder.build()).isEqualTo(expectedPod);
   }
 
   @Test

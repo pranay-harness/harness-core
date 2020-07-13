@@ -25,7 +25,6 @@ import io.harness.beans.yaml.extended.artifact.DockerHubArtifactStreamYaml;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.yaml.core.Artifact;
 import io.harness.yaml.core.Execution;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
@@ -34,6 +33,7 @@ import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.intfc.Infrastructure;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.ci.pod.ContainerResourceParams;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.container.ImageDetails;
 
 import java.util.ArrayList;
@@ -228,10 +228,10 @@ public class CIExecutionPlanTestHelper {
     return envVars;
   }
 
-  public Map<String, EncryptedDataDetail> getEncryptedSecrets() {
-    Map<String, EncryptedDataDetail> envVars = new HashMap<>();
-    envVars.put("VAR1", EncryptedDataDetail.builder().build());
-    envVars.put("VAR2", EncryptedDataDetail.builder().build());
+  public Map<String, EncryptedVariableWithType> getEncryptedSecrets() {
+    Map<String, EncryptedVariableWithType> envVars = new HashMap<>();
+    envVars.put("VAR1", EncryptedVariableWithType.builder().build());
+    envVars.put("VAR2", EncryptedVariableWithType.builder().build());
     return envVars;
   }
 }

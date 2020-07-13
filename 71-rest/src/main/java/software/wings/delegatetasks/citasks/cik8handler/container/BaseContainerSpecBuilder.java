@@ -10,6 +10,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.SECRET_FILE_MODE;
+import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.SECRET_VOLUME_NAME;
 import static software.wings.utils.KubernetesConvention.getKubernetesRegistrySecretName;
 
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -23,11 +25,14 @@ import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
+import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.Volume;
+import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
-import software.wings.beans.ci.pod.SecretKeyParams;
+import software.wings.beans.ci.pod.SecretVarParams;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 
@@ -59,11 +64,28 @@ public abstract class BaseContainerSpecBuilder {
     }
 
     List<VolumeMount> volumeMounts = new ArrayList<>();
+    List<Volume> volumes = new ArrayList<>();
     if (containerParams.getVolumeToMountPath() != null) {
       containerParams.getVolumeToMountPath().forEach(
           (volumeName, volumeMountPath)
               -> volumeMounts.add(
                   new VolumeMountBuilder().withName(volumeName).withMountPath(volumeMountPath).build()));
+    }
+    if (containerParams.getSecretVolumes() != null) {
+      containerParams.getSecretVolumes().forEach((key, secretVolumeParams) -> {
+        volumeMounts.add(new VolumeMountBuilder()
+                             .withName(SECRET_VOLUME_NAME)
+                             .withMountPath(secretVolumeParams.getMountPath())
+                             .build());
+        volumes.add(new VolumeBuilder()
+                        .withName(SECRET_VOLUME_NAME)
+                        .withSecret(new SecretVolumeSourceBuilder()
+                                        .withSecretName(secretVolumeParams.getSecretName())
+                                        .addNewItem(secretVolumeParams.getSecretKey(), SECRET_FILE_MODE,
+                                            secretVolumeParams.getSecretKey())
+                                        .build())
+                        .build());
+      });
     }
 
     LocalObjectReference imageSecret = null;
@@ -90,7 +112,11 @@ public abstract class BaseContainerSpecBuilder {
       containerBuilder.withWorkingDir(containerParams.getWorkingDir());
     }
 
-    return ContainerSpecBuilderResponse.builder().containerBuilder(containerBuilder).imageSecret(imageSecret).build();
+    return ContainerSpecBuilderResponse.builder()
+        .containerBuilder(containerBuilder)
+        .imageSecret(imageSecret)
+        .volumes(volumes)
+        .build();
   }
 
   private ResourceRequirements getResourceRequirements(ContainerResourceParams containerResourceParams) {
@@ -123,7 +149,7 @@ public abstract class BaseContainerSpecBuilder {
     return builder.build();
   }
 
-  private List<EnvVar> getContainerEnvVars(Map<String, String> envVars, Map<String, SecretKeyParams> secretEnvVars) {
+  private List<EnvVar> getContainerEnvVars(Map<String, String> envVars, Map<String, SecretVarParams> secretEnvVars) {
     List<EnvVar> ctrEnvVars = new ArrayList<>();
     if (envVars != null) {
       envVars.forEach((name, val) -> ctrEnvVars.add(new EnvVarBuilder().withName(name).withValue(val).build()));
@@ -135,7 +161,7 @@ public abstract class BaseContainerSpecBuilder {
                                     .withName(name)
                                     .withValueFrom(new EnvVarSourceBuilder()
                                                        .withSecretKeyRef(new SecretKeySelectorBuilder()
-                                                                             .withKey(secretKeyParam.getKey())
+                                                                             .withKey(secretKeyParam.getSecretKey())
                                                                              .withName(secretKeyParam.getSecretName())
                                                                              .build())
                                                        .build())

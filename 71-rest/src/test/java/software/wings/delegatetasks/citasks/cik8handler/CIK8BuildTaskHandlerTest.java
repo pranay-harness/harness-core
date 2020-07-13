@@ -10,8 +10,9 @@ import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHand
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildImageSecretErrorTaskParams;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildPodCreateErrorTaskParams;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildTaskParams;
-import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getDecryptedSecret;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getCustomVarSecret;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getEncryptedDetails;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getPublishArtifactSecrets;
 
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -157,7 +158,11 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
 
     CIK8BuildTaskParams cik8BuildTaskParams = buildTaskParams();
     Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues =
-        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getPublishArtifactEncryptedValues();
+        cik8BuildTaskParams.getCik8PodParams()
+            .getContainerParamsList()
+            .get(0)
+            .getContainerSecrets()
+            .getPublishArtifactEncryptedValues();
     KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesConfig();
     List<EncryptedDataDetail> encryptionDetails = cik8BuildTaskParams.getEncryptionDetails();
     GitConfig gitConfig = cik8BuildTaskParams.getGitFetchFilesConfig().getGitConfig();
@@ -168,9 +173,9 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     when(kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptionDetails)).thenReturn(kubernetesClient);
     doNothing().when(kubeCtlHandler).createGitSecret(kubernetesClient, namespace, gitConfig, encryptionDetails);
     doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
-    when(kubeCtlHandler.fetchCustomVariableSecretKeyMap(getEncryptedDetails())).thenReturn(getDecryptedSecret());
+    when(kubeCtlHandler.fetchCustomVariableSecretKeyMap(getEncryptedDetails())).thenReturn(getCustomVarSecret());
     when(kubeCtlHandler.fetchPublishArtifactSecretKeyMap(publishArtifactEncryptedValues))
-        .thenReturn(getDecryptedSecret());
+        .thenReturn(getPublishArtifactSecrets());
     when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
     when(kubeCtlHandler.waitUntilPodIsReady(

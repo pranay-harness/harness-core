@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.citasks.cik8handler.pod;
 
+import static software.wings.beans.ci.pod.EncryptedVariableWithType.Type.TEXT;
+
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
@@ -15,6 +17,8 @@ import io.harness.security.encryption.EncryptionType;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.ContainerSecrets;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
@@ -60,21 +64,27 @@ public class CIK8PodSpecBuilderTestHelper {
   }
 
   public static CIK8ContainerParams containerParamsWithSecretEnvVar() {
-    Map<String, EncryptedDataDetail> encryptedVariables = new HashMap<>();
-
-    EncryptedDataDetail encryptedDataDetail =
-        EncryptedDataDetail.builder()
-            .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
-            .encryptionConfig(KmsConfig.builder()
-                                  .accessKey("accessKey")
-                                  .region("us-east-1")
-                                  .secretKey("secretKey")
-                                  .kmsArn("kmsArn")
-                                  .build())
+    Map<String, EncryptedVariableWithType> encryptedVariables = new HashMap<>();
+    EncryptedVariableWithType encryptedVariableWithType =
+        EncryptedVariableWithType.builder()
+            .type(TEXT)
+            .encryptedDataDetail(
+                EncryptedDataDetail.builder()
+                    .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
+                    .encryptionConfig(KmsConfig.builder()
+                                          .accessKey("accessKey")
+                                          .region("us-east-1")
+                                          .secretKey("secretKey")
+                                          .kmsArn("kmsArn")
+                                          .build())
+                    .build())
             .build();
 
-    encryptedVariables.put("abc", encryptedDataDetail);
-    return CIK8ContainerParams.builder().encryptedSecrets(encryptedVariables).name(containerName1).build();
+    encryptedVariables.put("abc", encryptedVariableWithType);
+    return CIK8ContainerParams.builder()
+        .containerSecrets(ContainerSecrets.builder().encryptedSecrets(encryptedVariables).build())
+        .name(containerName1)
+        .build();
   }
 
   public static CIK8ContainerParams basicContainerParamsWithImageCred() {
@@ -93,7 +103,6 @@ public class CIK8PodSpecBuilderTestHelper {
   public static CIK8ContainerParams containerParamsWithVoluemMount() {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(volume1, mountPath1);
-    volumeToMountPath.put(volume2, mountPath2);
     ImageDetails imageDetailsWithCred = ImageDetails.builder()
                                             .name(imageName)
                                             .tag(tag)
@@ -115,7 +124,6 @@ public class CIK8PodSpecBuilderTestHelper {
   public static ContainerBuilder containerBuilderWithVolumeMount() {
     List<VolumeMount> ctrVolumeMounts = new ArrayList<>();
     ctrVolumeMounts.add(new VolumeMountBuilder().withName(volume1).withMountPath(mountPath1).build());
-    ctrVolumeMounts.add(new VolumeMountBuilder().withName(volume2).withMountPath(mountPath2).build());
     return new ContainerBuilder().withName(containerName1).withImage(imageCtrName).withVolumeMounts(ctrVolumeMounts);
   }
 
@@ -194,7 +202,6 @@ public class CIK8PodSpecBuilderTestHelper {
   public static Pod basicExpectedPodWithVolumeMount() {
     List<Volume> volumes = new ArrayList<>();
     volumes.add(new VolumeBuilder().withName(volume1).withEmptyDir(new EmptyDirVolumeSourceBuilder().build()).build());
-    volumes.add(new VolumeBuilder().withName(volume2).withEmptyDir(new EmptyDirVolumeSourceBuilder().build()).build());
     return new PodBuilder()
         .withNewMetadata()
         .withName(podName)

@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.CICommonPodConstants.STEP_EXEC;
+import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
 
 import com.google.inject.Inject;
 
@@ -29,6 +31,7 @@ import software.wings.beans.ci.K8ExecCommandParams;
 import software.wings.beans.ci.K8ExecuteCommandTaskParams;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.security.encryption.EncryptedData;
@@ -243,16 +246,17 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     List<CIK8ContainerParams> cik8ContainerParamsList = podParams.getContainerParamsList();
 
     cik8ContainerParamsList.forEach(cik8ContainerParams -> {
-      if (isNotEmpty(cik8ContainerParams.getEncryptedSecrets())) {
-        Map<String, EncryptedDataDetail> secrets = new HashMap<>();
-        for (Map.Entry<String, EncryptedDataDetail> entry : cik8ContainerParams.getEncryptedSecrets().entrySet()) {
-          getEncryptedDataDetails(ACCOUNT_ID, entry.getKey())
-              .ifPresent(encryptedDataDetail -> secrets.put(entry.getKey(), encryptedDataDetail));
+      if (isNotEmpty(cik8ContainerParams.getContainerSecrets().getEncryptedSecrets())) {
+        Map<String, EncryptedVariableWithType> secrets = new HashMap<>();
+        for (Map.Entry<String, EncryptedVariableWithType> entry :
+            cik8ContainerParams.getContainerSecrets().getEncryptedSecrets().entrySet()) {
+          getEncryptedSecretWithType(ACCOUNT_ID, entry.getKey())
+              .ifPresent(encryptedSecretWithType -> secrets.put(entry.getKey(), encryptedSecretWithType));
         }
-        cik8ContainerParams.setEncryptedSecrets(secrets);
+        cik8ContainerParams.getContainerSecrets().setEncryptedSecrets(secrets);
       }
 
-      if (isNotEmpty(cik8ContainerParams.getPublishArtifactEncryptedValues())) {
+      if (isNotEmpty(cik8ContainerParams.getContainerSecrets().getPublishArtifactEncryptedValues())) {
         setPublishImageEncryptedInfo(cik8ContainerParams);
       }
     });
@@ -261,7 +265,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
   private void setPublishImageEncryptedInfo(CIK8ContainerParams cik8ContainerParams) {
     Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues = new HashMap<>();
     for (Map.Entry<String, EncryptableSettingWithEncryptionDetails> entry :
-        cik8ContainerParams.getPublishArtifactEncryptedValues().entrySet()) {
+        cik8ContainerParams.getContainerSecrets().getPublishArtifactEncryptedValues().entrySet()) {
       String connectorIdentifier = entry.getKey();
 
       SettingAttribute publishImageSettingsAttribute =
@@ -279,15 +283,31 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
         publishArtifactEncryptedValues.put(connectorIdentifier, encryptableSettingWithEncryptionDetails);
       }
     }
-    cik8ContainerParams.setPublishArtifactEncryptedValues(publishArtifactEncryptedValues);
+    cik8ContainerParams.getContainerSecrets().setPublishArtifactEncryptedValues(publishArtifactEncryptedValues);
   }
 
-  private Optional<EncryptedDataDetail> getEncryptedDataDetails(String accountId, String secretName) {
+  private Optional<EncryptedVariableWithType> getEncryptedSecretWithType(String accountId, String secretName) {
     EncryptedData secretByName = secretManager.getSecretByName(accountId, secretName);
     if (secretByName != null) {
-      return secretManager.encryptedDataDetails(accountId, secretName, secretByName.getUuid());
+      Optional<EncryptedDataDetail> encryptedDataDetail =
+          secretManager.encryptedDataDetails(accountId, secretName, secretByName.getUuid());
+      if (encryptedDataDetail.isPresent()) {
+        if (secretByName.getType() == CONFIG_FILE) {
+          return Optional.of(EncryptedVariableWithType.builder()
+                                 .encryptedDataDetail(encryptedDataDetail.get())
+                                 .type(EncryptedVariableWithType.Type.FILE)
+                                 .build());
+        }
+        if (secretByName.getType() == SECRET_TEXT) {
+          return Optional.of(EncryptedVariableWithType.builder()
+                                 .encryptedDataDetail(encryptedDataDetail.get())
+                                 .type(EncryptedVariableWithType.Type.TEXT)
+                                 .build());
+        }
+      }
     } else {
       return Optional.empty();
     }
+    return Optional.empty();
   }
 }

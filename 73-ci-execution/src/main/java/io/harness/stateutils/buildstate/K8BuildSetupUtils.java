@@ -35,13 +35,15 @@ import io.harness.network.SafeHttpCall;
 import io.harness.references.SweepingOutputRefObject;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
+import software.wings.beans.ci.pod.CIK8ContainerParams.CIK8ContainerParamsBuilder;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.ContainerSecrets;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
@@ -121,7 +123,7 @@ public class K8BuildSetupUtils {
     Map<String, String> map = new HashMap<>();
     map.put(STEP_EXEC, MOUNT_PATH);
 
-    // user input container with custom entrypoint
+    // user input container with custom entry point
     List<CIK8ContainerParams> containerParams =
         podSetupInfo.getPodSetupParams()
             .getContainerDefinitionInfos()
@@ -132,7 +134,9 @@ public class K8BuildSetupUtils {
                        .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
                        .containerType(CIContainerType.STEP_EXECUTOR)
                        .envVars(getCIExecutorEnvVariables(containerDefinitionInfo))
-                       .encryptedSecrets(getSecretEnvVars(containerDefinitionInfo))
+                       .containerSecrets(ContainerSecrets.builder()
+                                             .encryptedSecrets(getSecretEnvVars(containerDefinitionInfo))
+                                             .build())
                        .commands(commands)
                        .args(args)
                        .imageDetailsWithConnector(
@@ -145,20 +149,15 @@ public class K8BuildSetupUtils {
                        .build())
             .collect(toList());
 
-    CIK8ContainerParams addOnCik8ContainerParams = InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER);
-    Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues = null;
+    CIK8ContainerParamsBuilder addOnCik8ContainerParamsBuilder =
+        InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER);
 
-    if (isNotEmpty(publishStepConnectorIdentifier)) {
-      publishArtifactEncryptedValues = new HashMap<>();
-      // TODO Harsh Fetch connector encrypted values once connector APIs will be ready
-      for (String connectorIdentifier : publishStepConnectorIdentifier) {
-        publishArtifactEncryptedValues.put(connectorIdentifier, null);
-      }
-    }
-
-    addOnCik8ContainerParams.setPublishArtifactEncryptedValues(publishArtifactEncryptedValues);
+    addOnCik8ContainerParamsBuilder.containerSecrets(
+        ContainerSecrets.builder()
+            .publishArtifactEncryptedValues(getPublishArtifactEncryptedValues(publishStepConnectorIdentifier))
+            .build());
     // include addon container
-    containerParams.add(addOnCik8ContainerParams);
+    containerParams.add(addOnCik8ContainerParamsBuilder.build());
 
     return CIK8PodParams.<CIK8ContainerParams>builder()
         .name(podSetupInfo.getName())
@@ -166,9 +165,22 @@ public class K8BuildSetupUtils {
         .stepExecVolumeName(STEP_EXEC)
         .stepExecWorkingDir(STEP_EXEC_WORKING_DIR)
         .containerParamsList(containerParams)
-        .initContainerParamsList(
-            Collections.singletonList(InternalContainerParamsProvider.getContainerParams(LITE_ENGINE_CONTAINER)))
+        .initContainerParamsList(Collections.singletonList(
+            InternalContainerParamsProvider.getContainerParams(LITE_ENGINE_CONTAINER).build()))
         .build();
+  }
+
+  private Map<String, EncryptableSettingWithEncryptionDetails> getPublishArtifactEncryptedValues(
+      Set<String> publishStepConnectorIdentifier) {
+    Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues = new HashMap<>();
+
+    if (isNotEmpty(publishStepConnectorIdentifier)) {
+      // TODO Harsh Fetch connector encrypted values once connector APIs will be ready
+      for (String connectorIdentifier : publishStepConnectorIdentifier) {
+        publishArtifactEncryptedValues.put(connectorIdentifier, null);
+      }
+    }
+    return publishArtifactEncryptedValues;
   }
 
   @NotNull
@@ -183,8 +195,8 @@ public class K8BuildSetupUtils {
   }
 
   @NotNull
-  private Map<String, EncryptedDataDetail> getSecretEnvVars(ContainerDefinitionInfo containerDefinitionInfo) {
-    Map<String, EncryptedDataDetail> envSecretVars = new HashMap<>();
+  private Map<String, EncryptedVariableWithType> getSecretEnvVars(ContainerDefinitionInfo containerDefinitionInfo) {
+    Map<String, EncryptedVariableWithType> envSecretVars = new HashMap<>();
     if (isNotEmpty(containerDefinitionInfo.getEncryptedSecrets())) {
       envSecretVars.putAll(containerDefinitionInfo.getEncryptedSecrets()); // Put customer input env variables
     }

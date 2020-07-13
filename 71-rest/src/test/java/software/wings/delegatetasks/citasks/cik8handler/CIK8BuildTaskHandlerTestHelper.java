@@ -2,6 +2,8 @@ package software.wings.delegatetasks.citasks.cik8handler;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static org.mockito.Mockito.mock;
+import static software.wings.beans.ci.pod.SecretParams.Type.FILE;
+import static software.wings.beans.ci.pod.SecretParams.Type.TEXT;
 import static software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder.SECRET_KEY;
 
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
@@ -9,6 +11,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.KmsConfig;
@@ -17,7 +20,10 @@ import software.wings.beans.ci.CIK8BuildTaskParams;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
+import software.wings.beans.ci.pod.ContainerSecrets;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.ci.pod.SecretParams;
 import software.wings.beans.container.ImageDetails;
 
 import java.util.ArrayList;
@@ -135,11 +141,12 @@ public class CIK8BuildTaskHandlerTestHelper {
             .name(containerName1)
             .containerType(CIContainerType.ADD_ON)
             .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
-            .publishArtifactEncryptedValues(getEncryptableSettingWithEncryptionDetails())
+            .containerSecrets(
+                ContainerSecrets.builder().publishArtifactEncryptedValues(getPublishArtifactSettings()).build())
             .build());
     containerParamsList.add(
         CIK8ContainerParams.builder()
-            .encryptedSecrets(getEncryptedDetails())
+            .containerSecrets(ContainerSecrets.builder().encryptedSecrets(getEncryptedDetails()).build())
             .name(containerName2)
             .containerType(CIContainerType.STEP_EXECUTOR)
             .imageDetailsWithConnector(
@@ -160,32 +167,11 @@ public class CIK8BuildTaskHandlerTestHelper {
         .build();
   }
 
-  public static Map<String, EncryptableSettingWithEncryptionDetails> getEncryptableSettingWithEncryptionDetails() {
-    Map<String, EncryptableSettingWithEncryptionDetails> encryptedSettings = new HashMap<>();
-
-    EncryptableSettingWithEncryptionDetails encryptedDataDetail =
-        EncryptableSettingWithEncryptionDetails.builder()
-            .encryptedDataDetails(Collections.singletonList(
-                EncryptedDataDetail.builder()
-                    .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
-                    .encryptionConfig(KmsConfig.builder()
-                                          .accessKey("accessKey")
-                                          .region("us-east-1")
-                                          .secretKey("secretKey")
-                                          .kmsArn("kmsArn")
-                                          .build())
-                    .build()))
-            .encryptableSetting(DockerConfig.builder()
-                                    .dockerRegistryUrl("https://index.docker.io/v1/")
-                                    .username("uName")
-                                    .password("pWord".toCharArray())
-                                    .encryptedPassword("*****")
-                                    .accountId("acctId")
-                                    .build())
-            .build();
-
-    encryptedSettings.put("abc", encryptedDataDetail);
-    return encryptedSettings;
+  public static Map<String, EncryptableSettingWithEncryptionDetails> getPublishArtifactSettings() {
+    Map<String, EncryptableSettingWithEncryptionDetails> map = new HashMap<>();
+    map.putAll(getDockerSettingWithEncryptionDetails());
+    map.putAll(getGCPSettingWithEncryptionDetails());
+    return map;
   }
 
   public static Map<String, EncryptableSettingWithEncryptionDetails> getDockerSettingWithEncryptionDetails() {
@@ -212,31 +198,81 @@ public class CIK8BuildTaskHandlerTestHelper {
                                     .build())
             .build();
 
-    encryptedSettings.put("abc", encryptedDataDetail);
+    encryptedSettings.put("docker", encryptedDataDetail);
     return encryptedSettings;
   }
 
-  public static Map<String, EncryptedDataDetail> getEncryptedDetails() {
-    Map<String, EncryptedDataDetail> encryptedVariables = new HashMap<>();
+  public static Map<String, EncryptableSettingWithEncryptionDetails> getGCPSettingWithEncryptionDetails() {
+    Map<String, EncryptableSettingWithEncryptionDetails> encryptedSettings = new HashMap<>();
 
-    EncryptedDataDetail encryptedDataDetail =
-        EncryptedDataDetail.builder()
-            .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
-            .encryptionConfig(KmsConfig.builder()
-                                  .accessKey("accessKey")
-                                  .region("us-east-1")
-                                  .secretKey("secretKey")
-                                  .kmsArn("kmsArn")
-                                  .build())
+    EncryptableSettingWithEncryptionDetails encryptedDataDetail =
+        EncryptableSettingWithEncryptionDetails.builder()
+            .encryptedDataDetails(Collections.singletonList(
+                EncryptedDataDetail.builder()
+                    .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
+                    .encryptionConfig(KmsConfig.builder()
+                                          .accessKey("accessKey")
+                                          .region("us-east-1")
+                                          .secretKey("secretKey")
+                                          .kmsArn("kmsArn")
+                                          .build())
+                    .build()))
+            .encryptableSetting(GcpConfig.builder().encryptedServiceAccountKeyFileContent("****").build())
             .build();
 
-    encryptedVariables.put("abc", encryptedDataDetail);
+    encryptedSettings.put("gcp", encryptedDataDetail);
+    return encryptedSettings;
+  }
+
+  public static Map<String, EncryptedVariableWithType> getEncryptedDetails() {
+    Map<String, EncryptedVariableWithType> encryptedVariables = new HashMap<>();
+
+    EncryptedVariableWithType encryptedVariableWithType =
+        EncryptedVariableWithType.builder()
+            .type(EncryptedVariableWithType.Type.TEXT)
+            .encryptedDataDetail(
+                EncryptedDataDetail.builder()
+                    .encryptedData(EncryptedRecordData.builder().encryptionType(EncryptionType.KMS).build())
+                    .encryptionConfig(KmsConfig.builder()
+                                          .accessKey("accessKey")
+                                          .region("us-east-1")
+                                          .secretKey("secretKey")
+                                          .kmsArn("kmsArn")
+                                          .build())
+                    .build())
+            .build();
+
+    encryptedVariables.put("abc", encryptedVariableWithType);
     return encryptedVariables;
   }
 
-  public static Map<String, String> getDecryptedSecret() {
-    Map<String, String> decryptedSecrets = new HashMap<>();
-    decryptedSecrets.put(SECRET_KEY + "abc", encodeBase64("pass"));
+  public static Map<String, SecretParams> getCustomVarSecret() {
+    Map<String, SecretParams> decryptedSecrets = new HashMap<>();
+    decryptedSecrets.put("docker",
+        SecretParams.builder().type(TEXT).secretKey(SECRET_KEY + "docker").value(encodeBase64("pass")).build());
+    return decryptedSecrets;
+  }
+
+  public static Map<String, SecretParams> getGcpSecret() {
+    Map<String, SecretParams> decryptedSecrets = new HashMap<>();
+    decryptedSecrets.put("SECRET_PATH_gcp",
+        SecretParams.builder().type(FILE).secretKey("SECRET_PATH_gcp").value(encodeBase64("configFile:{}")).build());
+    return decryptedSecrets;
+  }
+  public static Map<String, SecretParams> getDockerSecret() {
+    Map<String, SecretParams> decryptedSecrets = new HashMap<>();
+    decryptedSecrets.put("USERNAME_docker",
+        SecretParams.builder().type(TEXT).secretKey("USERNAME_docker").value(encodeBase64("uname")).build());
+    decryptedSecrets.put("PASSWORD_docker",
+        SecretParams.builder().type(TEXT).secretKey("PASSWORD_docker").value(encodeBase64("passw")).build());
+    decryptedSecrets.put("ENDPOINT_docker",
+        SecretParams.builder().type(TEXT).secretKey("ENDPOINT_docker").value(encodeBase64("endpoint")).build());
+    return decryptedSecrets;
+  }
+  public static Map<String, SecretParams> getPublishArtifactSecrets() {
+    Map<String, SecretParams> decryptedSecrets = new HashMap<>();
+    decryptedSecrets.putAll(getDockerSecret());
+    decryptedSecrets.putAll(getGcpSecret());
     return decryptedSecrets;
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.citasks.cik8handler.container;
 
 import static java.lang.String.format;
+import static software.wings.beans.ci.pod.EncryptedVariableWithType.Type.TEXT;
 
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -13,13 +14,19 @@ import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
+import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.Volume;
+import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.ContainerResourceParams;
+import software.wings.beans.ci.pod.ContainerSecrets;
+import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
-import software.wings.beans.ci.pod.SecretKeyParams;
+import software.wings.beans.ci.pod.SecretVarParams;
+import software.wings.beans.ci.pod.SecretVolumeParams;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 
@@ -64,6 +71,9 @@ public class ContainerSpecBuilderTestHelper {
   private static Integer requestMilliCpu = 100;
   private static Integer limitMilliCpu = 200;
 
+  private static String secretVolumeMountPath = "/etc/secret";
+  private static String secretsVolumeName = "secrets";
+
   public static CIK8ContainerParams basicCreateSpecInput() {
     ImageDetails imageDetailsWithoutCred =
         ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
@@ -78,7 +88,7 @@ public class ContainerSpecBuilderTestHelper {
   public static ContainerSpecBuilderResponse basicCreateSpecResponse() {
     ContainerBuilder builder =
         new ContainerBuilder().withName(containerName).withArgs(args).withCommand(commands).withImage(imageCtrName);
-    return ContainerSpecBuilderResponse.builder().containerBuilder(builder).build();
+    return ContainerSpecBuilderResponse.builder().containerBuilder(builder).volumes(new ArrayList<>()).build();
   }
 
   public static CIK8ContainerParams basicCreateSpecWithEnvInput() {
@@ -109,12 +119,12 @@ public class ContainerSpecBuilderTestHelper {
                                    .withCommand(commands)
                                    .withImage(imageCtrName)
                                    .withEnv(ctrEnvVars);
-    return ContainerSpecBuilderResponse.builder().containerBuilder(builder).build();
+    return ContainerSpecBuilderResponse.builder().containerBuilder(builder).volumes(new ArrayList<>()).build();
   }
 
-  public static Map<String, SecretKeyParams> createSecretKeyParams() {
-    Map<String, SecretKeyParams> secretEnvVars = new HashMap<>();
-    secretEnvVars.put(secretVar, SecretKeyParams.builder().key(secretKey).secretName(secretName).build());
+  public static Map<String, SecretVarParams> createSecretKeyParams() {
+    Map<String, SecretVarParams> secretEnvVars = new HashMap<>();
+    secretEnvVars.put(secretVar, SecretVarParams.builder().secretKey(secretKey).secretName(secretName).build());
     return secretEnvVars;
   }
 
@@ -124,11 +134,15 @@ public class ContainerSpecBuilderTestHelper {
     envVars.put(var1, value1);
     envVars.put(var2, value2);
 
-    Map<String, EncryptedDataDetail> encryptedEnvVars = new HashMap<>();
-    encryptedEnvVars.put(secretVar, EncryptedDataDetail.builder().fieldName("abc").build());
+    Map<String, EncryptedVariableWithType> encryptedEnvVars = new HashMap<>();
+    encryptedEnvVars.put(secretVar,
+        EncryptedVariableWithType.builder()
+            .type(TEXT)
+            .encryptedDataDetail(EncryptedDataDetail.builder().fieldName("abc").build())
+            .build());
 
-    Map<String, SecretKeyParams> secretEnvVars = new HashMap<>();
-    secretEnvVars.put(secretVar, SecretKeyParams.builder().key(secretKey).secretName(secretName).build());
+    Map<String, SecretVarParams> secretEnvVars = new HashMap<>();
+    secretEnvVars.put(secretVar, SecretVarParams.builder().secretKey(secretKey).secretName(secretName).build());
     return CIK8ContainerParams.builder()
         .name(containerName)
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageWithoutCred).build())
@@ -137,7 +151,7 @@ public class ContainerSpecBuilderTestHelper {
         .envVars(envVars)
         .workingDir(workingDir)
         .ports(Arrays.asList(port))
-        .encryptedSecrets(encryptedEnvVars)
+        .containerSecrets(ContainerSecrets.builder().encryptedSecrets(encryptedEnvVars).build())
         .secretEnvVars(secretEnvVars)
         .build();
   }
@@ -167,7 +181,7 @@ public class ContainerSpecBuilderTestHelper {
                                    .withEnv(ctrEnvVars)
                                    .withWorkingDir(workingDir)
                                    .withPorts(Arrays.asList(containerPort));
-    return ContainerSpecBuilderResponse.builder().containerBuilder(builder).build();
+    return ContainerSpecBuilderResponse.builder().containerBuilder(builder).volumes(new ArrayList<>()).build();
   }
 
   public static CIK8ContainerParams createSpecWithVolumeMountInput() {
@@ -208,7 +222,7 @@ public class ContainerSpecBuilderTestHelper {
                                    .withImage(imageCtrName)
                                    .withEnv(ctrEnvVars)
                                    .withVolumeMounts(ctrVolumeMounts);
-    return ContainerSpecBuilderResponse.builder().containerBuilder(builder).build();
+    return ContainerSpecBuilderResponse.builder().containerBuilder(builder).volumes(new ArrayList<>()).build();
   }
 
   public static CIK8ContainerParams createSpecWithImageCredInput() {
@@ -257,6 +271,7 @@ public class ContainerSpecBuilderTestHelper {
     return ContainerSpecBuilderResponse.builder()
         .containerBuilder(builder)
         .imageSecret(new LocalObjectReference(registrySecretName))
+        .volumes(new ArrayList<>())
         .build();
   }
 
@@ -326,6 +341,77 @@ public class ContainerSpecBuilderTestHelper {
     return ContainerSpecBuilderResponse.builder()
         .containerBuilder(builder)
         .imageSecret(new LocalObjectReference(registrySecretName))
+        .volumes(new ArrayList<>())
+        .build();
+  }
+
+  public static CIK8ContainerParams createSpecWithSecretVolumes() {
+    Map<String, String> envVars = new HashMap<>();
+    envVars.put(var1, value1);
+    envVars.put(var2, value2);
+    ImageDetails imageDetailsWithCred = ImageDetails.builder()
+                                            .name(imageName)
+                                            .tag(tag)
+                                            .registryUrl(registryUrl)
+                                            .username(userName)
+                                            .password(password)
+                                            .build();
+    Map<String, String> volumeToMountPath = new HashMap<>();
+    volumeToMountPath.put(volume1, mountPath1);
+    volumeToMountPath.put(volume2, mountPath2);
+
+    Map<String, SecretVolumeParams> secretVolumes = new HashMap<>();
+    secretVolumes.put(secretKey,
+        SecretVolumeParams.builder()
+            .mountPath(secretVolumeMountPath)
+            .secretKey(secretKey)
+            .secretName(secretName)
+            .build());
+
+    return CIK8ContainerParams.builder()
+        .name(containerName)
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithCred).build())
+        .secretVolumes(secretVolumes)
+        .commands(commands)
+        .args(args)
+        .envVars(envVars)
+        .volumeToMountPath(volumeToMountPath)
+        .build();
+  }
+
+  public static ContainerSpecBuilderResponse createSpecWithSecretVolumesResponse() {
+    Map<String, String> envVars = new HashMap<>();
+    List<EnvVar> ctrEnvVars = new ArrayList<>();
+    envVars.put(var1, value1);
+    envVars.put(var2, value2);
+    envVars.forEach((name, val) -> ctrEnvVars.add(new EnvVarBuilder().withName(name).withValue(val).build()));
+
+    List<VolumeMount> ctrVolumeMounts = new ArrayList<>();
+    ctrVolumeMounts.add(new VolumeMountBuilder().withName(volume1).withMountPath(mountPath1).build());
+    ctrVolumeMounts.add(new VolumeMountBuilder().withName(volume2).withMountPath(mountPath2).build());
+    ctrVolumeMounts.add(
+        new VolumeMountBuilder().withName(secretsVolumeName).withMountPath(secretVolumeMountPath).build());
+
+    List<Volume> ctrVolumes = new ArrayList<>();
+    ctrVolumes.add(new VolumeBuilder()
+                       .withName(secretsVolumeName)
+                       .withSecret(new SecretVolumeSourceBuilder()
+                                       .withSecretName(secretName)
+                                       .addNewItem(secretKey, 256, secretKey)
+                                       .build())
+                       .build());
+
+    ContainerBuilder builder = new ContainerBuilder()
+                                   .withName(containerName)
+                                   .withArgs(args)
+                                   .withCommand(commands)
+                                   .withImage(imageCtrName)
+                                   .withEnv(ctrEnvVars)
+                                   .withVolumeMounts(ctrVolumeMounts);
+    return ContainerSpecBuilderResponse.builder()
+        .containerBuilder(builder)
+        .imageSecret(new LocalObjectReference(registrySecretName))
+        .volumes(ctrVolumes)
         .build();
   }
 }

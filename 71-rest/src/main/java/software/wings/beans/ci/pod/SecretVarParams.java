@@ -1,13 +1,13 @@
 package software.wings.beans.ci.pod;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 
 import javax.validation.constraints.NotNull;
 
-@Data
+@Value
 @Builder
-public class SecretKeyParams {
+public class SecretVarParams {
   @NotNull private String secretName; // Name of the secret
-  @NotNull private String key; // Name of key in the secret
+  @NotNull private String secretKey; // Name of key in the secret
 }

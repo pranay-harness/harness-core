@@ -13,21 +13,22 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
+import software.wings.beans.ci.pod.CIK8ContainerParams.CIK8ContainerParamsBuilder;
 
 public class InternalContainerParamsProviderTest extends CIExecutionTest {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetContainerParams() {
-    CIK8ContainerParams containerParams = InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER);
+    CIK8ContainerParams containerParams = InternalContainerParamsProvider.getContainerParams(ADDON_CONTAINER).build();
     assertThat(containerParams).isNotNull();
     assertThat(containerParams.getName()).isEqualTo(ADDON_CONTAINER_NAME);
 
-    containerParams = InternalContainerParamsProvider.getContainerParams(LITE_ENGINE_CONTAINER);
+    containerParams = InternalContainerParamsProvider.getContainerParams(LITE_ENGINE_CONTAINER).build();
     assertThat(containerParams).isNotNull();
     assertThat(containerParams.getName()).isEqualTo(LITE_ENGINE_CONTAINER_NAME);
 
-    containerParams = InternalContainerParamsProvider.getContainerParams(null);
-    assertThat(containerParams).isNull();
+    CIK8ContainerParamsBuilder containerParamsBuilder = InternalContainerParamsProvider.getContainerParams(null);
+    assertThat(containerParamsBuilder).isNull();
   }
 }

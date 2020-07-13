@@ -1,10 +1,5 @@
 package software.wings.delegatetasks.citasks.cik8handler.pod;
 
-/**
- * An abstract class to generate K8 pod spec based on parameters provided to it. It builds a minimal pod spec essential
- * for creating a pod. This class can be extended to generate a generic pod spec.
- */
-
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.Container;
@@ -26,6 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * An abstract class to generate K8 pod spec based on parameters provided to it. It builds a minimal pod spec essential
+ * for creating a pod. This class can be extended to generate a generic pod spec.
+ */
 public abstract class BasePodSpecBuilder {
   @Inject private ContainerSpecBuilder containerSpecBuilder;
 
@@ -44,18 +43,13 @@ public abstract class BasePodSpecBuilder {
   private PodFluent.SpecNested<PodBuilder> getBaseSpec(PodParams<ContainerParams> podParams) {
     List<LocalObjectReference> imageSecrets = new ArrayList<>();
 
-    Set<String> volumesToCreate = new HashSet<>();
+    Set<Volume> volumesToCreate = new HashSet<>();
     Map<String, LocalObjectReference> imageSecretByName = new HashMap<>();
     List<Container> containers = getContainers(podParams.getContainerParamsList(), volumesToCreate, imageSecretByName);
     List<Container> initContainers =
         getContainers(podParams.getInitContainerParamsList(), volumesToCreate, imageSecretByName);
 
     imageSecretByName.forEach((imageName, imageSecret) -> imageSecrets.add(imageSecret));
-
-    List<Volume> volumes = new ArrayList<>();
-    volumesToCreate.forEach(volumeName
-        -> volumes.add(
-            new VolumeBuilder().withName(volumeName).withEmptyDir(new EmptyDirVolumeSourceBuilder().build()).build()));
 
     return new PodBuilder()
         .withNewMetadata()
@@ -67,10 +61,10 @@ public abstract class BasePodSpecBuilder {
         .withContainers(containers)
         .withInitContainers(initContainers)
         .withImagePullSecrets(imageSecrets)
-        .withVolumes(volumes);
+        .withVolumes(new ArrayList<>(volumesToCreate));
   }
 
-  private List<Container> getContainers(List<ContainerParams> containerParamsList, Set<String> volumesToCreate,
+  private List<Container> getContainers(List<ContainerParams> containerParamsList, Set<Volume> volumesToCreate,
       Map<String, LocalObjectReference> imageSecretByName) {
     List<Container> containers = new ArrayList<>();
     if (containerParamsList == null) {
@@ -80,7 +74,11 @@ public abstract class BasePodSpecBuilder {
     for (ContainerParams containerParams : containerParamsList) {
       if (containerParams.getVolumeToMountPath() != null) {
         containerParams.getVolumeToMountPath().forEach(
-            (volumeName, volumeMountPath) -> volumesToCreate.add(volumeName));
+            (volumeName, volumeMountPath)
+                -> volumesToCreate.add(new VolumeBuilder()
+                                           .withName(volumeName)
+                                           .withEmptyDir(new EmptyDirVolumeSourceBuilder().build())
+                                           .build()));
       }
 
       ContainerSpecBuilderResponse containerSpecBuilderResponse = containerSpecBuilder.createSpec(containerParams);
@@ -88,6 +86,10 @@ public abstract class BasePodSpecBuilder {
       if (containerSpecBuilderResponse.getImageSecret() != null) {
         LocalObjectReference imageSecret = containerSpecBuilderResponse.getImageSecret();
         imageSecretByName.put(imageSecret.getName(), imageSecret);
+      }
+      if (containerSpecBuilderResponse.getVolumes() != null) {
+        List<Volume> volumes = containerSpecBuilderResponse.getVolumes();
+        volumesToCreate.addAll(volumes);
       }
     }
     return containers;

@@ -1,7 +1,5 @@
 package software.wings.beans.ci.pod;
 
-import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -17,12 +15,11 @@ public class CIK8ContainerParams extends ContainerParams {
   @Builder
   public CIK8ContainerParams(CIContainerType containerType, String name,
       ImageDetailsWithConnector imageDetailsWithConnector, List<String> commands, List<String> args, String workingDir,
-      List<Integer> ports, Map<String, String> envVars, Map<String, EncryptedDataDetail> encryptedSecrets,
-      Map<String, SecretKeyParams> secretEnvVars,
-      Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues,
-      Map<String, String> volumeToMountPath, ContainerResourceParams containerResourceParams) {
-    super(name, imageDetailsWithConnector, commands, args, workingDir, ports, envVars, encryptedSecrets, secretEnvVars,
-        publishArtifactEncryptedValues, volumeToMountPath, containerResourceParams);
+      List<Integer> ports, Map<String, String> envVars, Map<String, SecretVarParams> secretEnvVars,
+      Map<String, SecretVolumeParams> secretVolumes, Map<String, String> volumeToMountPath,
+      ContainerResourceParams containerResourceParams, ContainerSecrets containerSecrets) {
+    super(name, imageDetailsWithConnector, commands, args, workingDir, ports, envVars, secretEnvVars, secretVolumes,
+        volumeToMountPath, containerResourceParams, containerSecrets);
     this.containerType = containerType;
   }
 
