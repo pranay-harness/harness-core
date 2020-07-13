@@ -9,6 +9,8 @@ import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AccessLevel;
@@ -73,5 +75,15 @@ public class ConnectorResource {
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
       @PathParam("connectorIdentifier") String connectorIdentifier) {
     return connectorService.delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+  }
+
+  @POST
+  @Path("validate")
+  @ApiOperation(value = "Get the connectivity status of the Connector", nickname = "getConnectorStatus")
+  public RestResponse<ConnectorValidationResult> validate(
+      ConnectorRequestDTO connectorDTO, @QueryParam("accountId") String accountId) {
+    return RestResponse.Builder.aRestResponse()
+        .withResource(connectorService.validate(connectorDTO, accountId))
+        .build();
   }
 }

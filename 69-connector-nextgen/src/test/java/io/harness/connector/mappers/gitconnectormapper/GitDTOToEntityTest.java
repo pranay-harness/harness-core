@@ -6,10 +6,8 @@ import static io.harness.delegate.beans.connector.gitconnector.GitConnectionType
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.ConnectorsBaseTest;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication;
@@ -19,12 +17,19 @@ import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO
 import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitSyncConfig;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
 
-public class GitDTOToEntityTest extends ConnectorsBaseTest {
-  @Inject @InjectMocks GitDTOToEntity gitDTOToEntity;
+public class GitDTOToEntityTest extends CategoryTest {
+  @InjectMocks GitDTOToEntity gitDTOToEntity;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = DEEPAK)

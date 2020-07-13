@@ -2,22 +2,27 @@ package io.harness.connector.mappers.kubernetesMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.ConnectorsBaseTest;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
 
-public class KubernetesConfigCastHelperTest extends ConnectorsBaseTest {
-  @Inject @InjectMocks KubernetesConfigCastHelper kubernetesConfigCastHelper;
+public class KubernetesConfigCastHelperTest extends CategoryTest {
+  @InjectMocks KubernetesConfigCastHelper kubernetesConfigCastHelper;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = OwnerRule.DEEPAK)

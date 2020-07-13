@@ -9,7 +9,7 @@ import static org.mockito.Mockito.verify;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.connectornextgen.impl.KubernetesConnectorServiceImpl;
+import io.harness.cdng.connectornextgen.impl.KubernetesConnectorDelegateServiceImpl;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -22,9 +22,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 
-public class KubernetesConnectorServiceImplTest extends WingsBaseTest {
+public class KubernetesConnectorDelegateServiceImplTest extends WingsBaseTest {
   @Mock KubernetesValidationHelper kubernetesValidationHelper;
-  @Inject @InjectMocks KubernetesConnectorServiceImpl kubernetesConnectorServiceImpl;
+  @Inject @InjectMocks KubernetesConnectorDelegateServiceImpl kubernetesConnectorServiceImpl;
 
   @Test
   @Owner(developers = DEEPAK)

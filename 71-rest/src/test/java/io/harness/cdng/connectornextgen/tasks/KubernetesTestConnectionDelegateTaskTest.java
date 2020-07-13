@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.connectornextgen.service.KubernetesConnectorService;
+import io.harness.cdng.connectornextgen.service.KubernetesConnectorDelegateService;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
@@ -22,7 +22,7 @@ import software.wings.beans.DelegateTaskPackage;
 import software.wings.beans.TaskType;
 
 public class KubernetesTestConnectionDelegateTaskTest extends WingsBaseTest {
-  @Mock KubernetesConnectorService kubernetesConnectorService;
+  @Mock KubernetesConnectorDelegateService kubernetesConnectorDelegateService;
 
   @InjectMocks
   private KubernetesTestConnectionDelegateTask kubernetesTestConnectionDelegateTask =
@@ -45,6 +45,6 @@ public class KubernetesTestConnectionDelegateTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void run() {
     kubernetesTestConnectionDelegateTask.run();
-    verify(kubernetesConnectorService, times(1)).validate(any());
+    verify(kubernetesConnectorDelegateService, times(1)).validate(any());
   }
 }

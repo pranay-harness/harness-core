@@ -4,6 +4,7 @@ import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import org.springframework.data.domain.Page;
 
 import java.util.Optional;
@@ -19,4 +20,6 @@ public interface ConnectorService {
   ConnectorDTO update(ConnectorRequestDTO connectorRequestDTO);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
+
+  ConnectorValidationResult validate(ConnectorRequestDTO connector, String accountId);
 }

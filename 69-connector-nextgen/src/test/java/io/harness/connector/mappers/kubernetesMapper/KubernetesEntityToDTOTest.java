@@ -3,11 +3,11 @@ package io.harness.connector.mappers.kubernetesMapper;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.ConnectorsBaseTest;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.kubernetescluster.ClientKeyCertK8;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
@@ -24,12 +24,23 @@ import io.harness.delegate.beans.connector.k8Connector.OpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-public class KubernetesEntityToDTOTest extends ConnectorsBaseTest {
-  @Inject @InjectMocks KubernetesEntityToDTO kubernetesEntityToDTO;
+public class KubernetesEntityToDTOTest extends CategoryTest {
+  @InjectMocks KubernetesEntityToDTO kubernetesEntityToDTO;
+  @Mock KubernetesConfigCastHelper kubernetesConfigCastHelper;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    when(kubernetesConfigCastHelper.castToKubernetesDelegateCredential(any())).thenCallRealMethod();
+    when(kubernetesConfigCastHelper.castToManualKubernetesCredentials(any())).thenCallRealMethod();
+  }
 
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
