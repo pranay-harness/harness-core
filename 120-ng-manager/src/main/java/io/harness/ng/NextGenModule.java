@@ -9,8 +9,10 @@ import com.google.inject.multibindings.MapBinder;
 import io.harness.ManagerDelegateServiceDriverModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.cdng.NGModule;
 import io.harness.connector.ConnectorModule;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.govern.DependencyModule;
 import io.harness.govern.ProviderModule;
@@ -20,6 +22,8 @@ import io.harness.ng.core.NgManagerGrpcServerModule;
 import io.harness.ng.core.SecretManagementModule;
 import io.harness.ng.orchestration.NgDelegateTaskExecutor;
 import io.harness.queue.QueueController;
+import io.harness.redesign.services.CustomExecutionService;
+import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.registrar.NgStepRegistrar;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.serializer.KryoRegistrar;
@@ -65,6 +69,7 @@ public class NextGenModule extends DependencyModule {
          return appConfig.getSecondaryMongoConfig();
        }
      });*/
+    bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V2.name()).to(NgDelegateTaskExecutor.class);
@@ -102,7 +107,6 @@ public class NextGenModule extends DependencyModule {
         });
       }
     });
-
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     stepRegistrarMapBinder.addBinding(NgStepRegistrar.class.getName()).to(NgStepRegistrar.class);
@@ -121,6 +125,7 @@ public class NextGenModule extends DependencyModule {
         OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
-                                            .build()));
+                                            .build()),
+        ExecutionPlanModule.getInstance(), NGModule.getInstance());
   }
 }

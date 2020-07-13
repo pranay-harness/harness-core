@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -18,6 +19,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
@@ -31,11 +33,13 @@ import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
+import io.harness.yaml.core.jsontype.AnnotationAwareJsonSubtypeResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import software.wings.app.CharsetResponseFilter;
+import software.wings.jersey.JsonViews;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -68,12 +72,17 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
+    configureObjectMapper(bootstrap.getObjectMapper());
     bootstrap.addBundle(new SwaggerBundle<NextGenConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(NextGenConfiguration appConfig) {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
+  }
+  public static void configureObjectMapper(final ObjectMapper mapper) {
+    mapper.setSubtypeResolver(AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver()));
+    mapper.setConfig(mapper.getSerializationConfig().withView(JsonViews.Public.class));
   }
 
   @Override
@@ -95,6 +104,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
     registerQueueListeners(injector);
+    registerExecutionPlanCreators(injector);
     MaintenanceController.forceMaintenance(false);
 
     logger.info("Initializing gRPC server...");
@@ -163,5 +173,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
+  }
+
+  private void registerExecutionPlanCreators(Injector injector) {
+    injector.getInstance(ExecutionPlanCreatorRegistrar.class).register();
   }
 }

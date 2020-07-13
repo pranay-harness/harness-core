@@ -161,13 +161,14 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
-  public PlanExecution testExecutionPlanCreator(String pipelineYaml, String accountId, String appId) {
+  public PlanExecution testExecutionPlanCreator(
+      String pipelineYaml, String accountId, String appId, EmbeddedUser user) {
     final CDPipeline cdPipeline;
     try {
       cdPipeline = YamlPipelineUtils.read(pipelineYaml, CDPipeline.class);
       final Plan planForPipeline = executionPlanCreatorService.createPlanForPipeline(cdPipeline, accountId);
-      return orchestrationService.startExecution(
-          planForPipeline, ImmutableMap.of("accountId", accountId, "appId", appId), getEmbeddedUser());
+      return orchestrationService.startExecution(planForPipeline,
+          ImmutableMap.of("accountId", accountId, "appId", appId), user != null ? user : getEmbeddedUser());
     } catch (IOException e) {
       throw new GeneralException("error while testing execution plan", e);
     }

@@ -2,9 +2,9 @@ package io.harness.cdng.pipeline.stepinfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
-import io.harness.facilitator.FacilitatorType;
 import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.state.StepType;
@@ -40,6 +40,6 @@ public class ShellScriptStepInfo implements CDStepInfo, GenericStepInfo {
   @Override
   @JsonIgnore
   public String getFacilitatorType() {
-    return FacilitatorType.TASK;
+    return PlanCreatorFacilitatorUtils.decideTaskFacilitatorType();
   }
 }

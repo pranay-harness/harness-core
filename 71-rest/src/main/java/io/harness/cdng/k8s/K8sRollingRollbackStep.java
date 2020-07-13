@@ -3,10 +3,10 @@ package io.harness.cdng.k8s;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.beans.DelegateTask;
 import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.orchestration.StepUtils;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ResponseData;
@@ -17,6 +17,7 @@ import io.harness.execution.status.Status;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.facilitator.modes.task.TaskExecutable;
+import io.harness.facilitator.modes.taskv2.TaskV2Executable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
@@ -30,7 +31,7 @@ import software.wings.sm.states.k8s.K8sRollingDeployRollback;
 
 import java.util.Map;
 
-public class K8sRollingRollbackStep implements Step, TaskExecutable {
+public class K8sRollingRollbackStep implements Step, TaskExecutable, TaskV2Executable {
   public static final StepType STEP_TYPE = StepType.builder().type("K8S_ROLLBACK_ROLLING").build();
 
   @Inject K8sStepHelper k8sStepHelper;
@@ -63,17 +64,14 @@ public class K8sRollingRollbackStep implements Step, TaskExecutable {
             .accountId(AmbianceHelper.getAccountId(ambiance))
             .build();
 
-    return DelegateTask.builder()
-        .waitId(UUIDGenerator.generateUuid())
-        .accountId(AmbianceHelper.getAccountId(ambiance))
-        .data(TaskData.builder()
-                  .async(true)
-                  .timeout(k8sRollingRollbackStepParameters.getTimeout())
-                  .taskType(TaskType.K8S_COMMAND_TASK.name())
-                  .parameters(new Object[] {taskParameters})
-                  .build())
-        .setupAbstractions(ambiance.getSetupAbstractions())
-        .build();
+    return StepUtils.prepareDelegateTaskInput(AmbianceHelper.getAccountId(ambiance),
+        TaskData.builder()
+            .async(true)
+            .timeout(k8sRollingRollbackStepParameters.getTimeout())
+            .taskType(TaskType.K8S_COMMAND_TASK.name())
+            .parameters(new Object[] {taskParameters})
+            .build(),
+        ambiance.getSetupAbstractions());
   }
 
   @Override

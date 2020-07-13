@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
+import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
@@ -11,7 +12,6 @@ import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
-import io.harness.facilitator.FacilitatorType;
 import io.harness.state.StepType;
 import lombok.Builder;
 import lombok.Data;
@@ -40,7 +40,7 @@ public class K8sRollingStepInfo implements CDStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return FacilitatorType.TASK_CHAIN;
+    return PlanCreatorFacilitatorUtils.decideTaskChainFacilitatorType();
   }
 
   @Override

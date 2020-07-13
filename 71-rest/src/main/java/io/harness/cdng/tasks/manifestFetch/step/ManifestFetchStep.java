@@ -10,9 +10,9 @@ import static java.util.stream.Collectors.toList;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.beans.DelegateTask;
-import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.ExecutionStatus;
+import io.harness.cdng.common.AmbianceHelper;
+import io.harness.cdng.orchestration.StepUtils;
 import io.harness.cdng.tasks.manifestFetch.ManifestFetchHelper;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
@@ -22,6 +22,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.task.TaskExecutable;
+import io.harness.facilitator.modes.taskv2.TaskV2Executable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
@@ -42,7 +43,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class ManifestFetchStep implements Step, TaskExecutable {
+public class ManifestFetchStep implements Step, TaskExecutable, TaskV2Executable {
   public static final StepType STEP_TYPE = StepType.builder().type("MANIFEST_FETCH").build();
   @Inject ManifestFetchHelper manifestFetchHelper;
 
@@ -55,22 +56,21 @@ public class ManifestFetchStep implements Step, TaskExecutable {
 
     List<GitFetchFilesConfig> gitFetchFilesConfigs =
         manifestFetchHelper.generateFetchFilesConfigForManifests(manifestFetchStepParameters);
-    String waitId = generateUuid();
+    final String activityId = generateUuid();
+    final String accountId = AmbianceHelper.getAccountId(ambiance);
     GitFetchRequest gitFetchRequest = GitFetchRequest.builder()
-                                          .activityId(waitId)
-                                          .accountId("kmpySmUISimoRrJL6NL73w")
+                                          .activityId(activityId)
+                                          .accountId(accountId)
                                           .gitFetchFilesConfigs(gitFetchFilesConfigs)
                                           .build();
 
-    final TaskDataBuilder dataBuilder =
-        TaskData.builder().async(true).taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name());
-    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().accountId("kmpySmUISimoRrJL6NL73w").waitId(waitId);
+    final TaskDataBuilder dataBuilder = TaskData.builder()
+                                            .async(true)
+                                            .taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name())
+                                            .parameters(new Object[] {gitFetchRequest})
+                                            .timeout(DEFAULT_TIMEOUT);
 
-    // Set timeout.
-    dataBuilder.parameters(new Object[] {gitFetchRequest}).timeout(DEFAULT_TIMEOUT);
-    delegateTaskBuilder.accountId("kmpySmUISimoRrJL6NL73w");
-    delegateTaskBuilder.data(dataBuilder.build());
-    return delegateTaskBuilder.build();
+    return StepUtils.prepareDelegateTaskInput(accountId, dataBuilder.build(), ambiance.getSetupAbstractions());
   }
 
   @Override

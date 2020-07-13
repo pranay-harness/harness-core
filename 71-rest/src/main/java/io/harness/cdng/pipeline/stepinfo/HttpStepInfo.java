@@ -1,8 +1,8 @@
 package io.harness.cdng.pipeline.stepinfo;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.facilitator.FacilitatorType;
 import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.state.StepType;
@@ -31,7 +31,7 @@ public class HttpStepInfo implements CDStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return FacilitatorType.TASK;
+    return PlanCreatorFacilitatorUtils.decideTaskFacilitatorType();
   }
 
   @Override

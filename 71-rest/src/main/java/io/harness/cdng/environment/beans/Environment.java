@@ -5,10 +5,8 @@ import io.harness.cdng.common.beans.Tag;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.CreatedAtAware;
-import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
-import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
@@ -27,8 +25,7 @@ import java.util.List;
                                   , @Field("orgId"), @Field("projectId"), @Field("identifier") })
 @Entity("environmentsNG")
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
-public class Environment
-    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, CreatedByAware, UpdatedByAware {
+public class Environment implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @NonFinal @Id private String uuid;
   @NonFinal private String displayName;
   @NotEmpty private String identifier;
