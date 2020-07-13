@@ -23,14 +23,6 @@ public final class PerpetualTaskClient {
       .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskClientEntrypoint_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskClientEntrypoint_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors
-      .Descriptor internal_static_io_harness_perpetualtask_HttpsPerpetualTaskClientEntrypoint_descriptor;
-  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_io_harness_perpetualtask_HttpsPerpetualTaskClientEntrypoint_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors
-      .Descriptor internal_static_io_harness_perpetualtask_BasicAuthCredentials_descriptor;
-  static final com.google.protobuf.GeneratedMessageV3
-      .FieldAccessorTable internal_static_io_harness_perpetualtask_BasicAuthCredentials_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -39,29 +31,24 @@ public final class PerpetualTaskClient {
   static {
     java.lang.String[] descriptorData = {"\n4io/harness/perpetualtask/perpetual_tas"
         + "k_client.proto\022\030io.harness.perpetualtask"
-        + "\032\037google/protobuf/timestamp.proto\"\267\002\n!Pe"
-        + "rpetualTaskClientContextDetails\022\177\n\022task_"
-        + "client_params\030\001 \003(\0132Q.io.harness.perpetu"
-        + "altask.PerpetualTaskClientContextDetails"
-        + ".TaskClientParamsEntryR\020taskClientParams"
-        + "\022L\n\024last_context_updated\030\002 \001(\0132\032.google."
-        + "protobuf.TimestampR\022lastContextUpdated\032C"
-        + "\n\025TaskClientParamsEntry\022\020\n\003key\030\001 \001(\tR\003ke"
-        + "y\022\024\n\005value\030\002 \001(\tR\005value:\0028\001\"\231\001\n\035Perpetua"
-        + "lTaskClientEntrypoint\022i\n\020https_entrypoin"
-        + "t\030\001 \001(\0132<.io.harness.perpetualtask.Https"
-        + "PerpetualTaskClientEntrypointH\000R\017httpsEn"
-        + "trypointB\r\n\013entrypoints\"\255\001\n\"HttpsPerpetu"
-        + "alTaskClientEntrypoint\022\020\n\003url\030\001 \001(\tR\003url"
-        + "\022f\n\026basic_auth_credentials\030\002 \001(\0132..io.ha"
-        + "rness.perpetualtask.BasicAuthCredentials"
-        + "H\000R\024basicAuthCredentialsB\r\n\013credentials\""
-        + "N\n\024BasicAuthCredentials\022\032\n\010username\030\001 \001("
-        + "\tR\010username\022\032\n\010password\030\002 \001(\tR\010passwordB"
-        + "\002P\001b\006proto3"};
+        + "\032\037google/protobuf/timestamp.proto\032$io/ha"
+        + "rness/callback/entrypoint.proto\"\267\002\n!Perp"
+        + "etualTaskClientContextDetails\022\177\n\022task_cl"
+        + "ient_params\030\001 \003(\0132Q.io.harness.perpetual"
+        + "task.PerpetualTaskClientContextDetails.T"
+        + "askClientParamsEntryR\020taskClientParams\022L"
+        + "\n\024last_context_updated\030\002 \001(\0132\032.google.pr"
+        + "otobuf.TimestampR\022lastContextUpdated\032C\n\025"
+        + "TaskClientParamsEntry\022\020\n\003key\030\001 \001(\tR\003key\022"
+        + "\024\n\005value\030\002 \001(\tR\005value:\0028\001\"\207\001\n\035PerpetualT"
+        + "askClientEntrypoint\022W\n\020https_entrypoint\030"
+        + "\001 \001(\0132*.io.harness.callback.HttpsClientE"
+        + "ntrypointH\000R\017httpsEntrypointB\r\n\013entrypoi"
+        + "ntsB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.TimestampProto.getDescriptor(),
+            io.harness.callback.Entrypoint.getDescriptor(),
         });
     internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_descriptor =
         getDescriptor().getMessageTypes().get(0);
@@ -90,25 +77,8 @@ public final class PerpetualTaskClient {
                 "HttpsEntrypoint",
                 "Entrypoints",
             });
-    internal_static_io_harness_perpetualtask_HttpsPerpetualTaskClientEntrypoint_descriptor =
-        getDescriptor().getMessageTypes().get(2);
-    internal_static_io_harness_perpetualtask_HttpsPerpetualTaskClientEntrypoint_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_io_harness_perpetualtask_HttpsPerpetualTaskClientEntrypoint_descriptor,
-            new java.lang.String[] {
-                "Url",
-                "BasicAuthCredentials",
-                "Credentials",
-            });
-    internal_static_io_harness_perpetualtask_BasicAuthCredentials_descriptor = getDescriptor().getMessageTypes().get(3);
-    internal_static_io_harness_perpetualtask_BasicAuthCredentials_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_io_harness_perpetualtask_BasicAuthCredentials_descriptor,
-            new java.lang.String[] {
-                "Username",
-                "Password",
-            });
     com.google.protobuf.TimestampProto.getDescriptor();
+    io.harness.callback.Entrypoint.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

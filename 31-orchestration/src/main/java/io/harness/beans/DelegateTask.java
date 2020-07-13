@@ -66,6 +66,8 @@ public class DelegateTask
 
   @Id private String uuid;
   @NotEmpty private String accountId;
+  private String driverId;
+
   private String description;
   private boolean selectionLogsTrackingEnabled;
 

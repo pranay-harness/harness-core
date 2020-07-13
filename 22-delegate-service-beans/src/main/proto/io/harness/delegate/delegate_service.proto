@@ -8,28 +8,33 @@ import "io/harness/delegate/account.proto";
 import "io/harness/delegate/task.proto";
 import "io/harness/delegate/progress.proto";
 
+import "io/harness/callback/entrypoint.proto";
+
 import "io/harness/delegate/capability.proto";
 import "io/harness/perpetualtask/perpetual_task.proto";
 import "io/harness/perpetualtask/perpetual_task_client.proto";
 
 service DelegateService {
+  rpc RegisterCallback(RegisterCallbackRequest) returns (RegisterCallbackResponse);
+
   rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskResponse);
   rpc CancelTask(CancelTaskRequest) returns (CancelTaskResponse);
   rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
   rpc TaskProgressUpdates(TaskProgressUpdatesRequest) returns (stream TaskProgressUpdatesResponse);
 
-  rpc RegisterPerpetualTaskClientEntrypoint(RegisterPerpetualTaskClientEntrypointRequest)
-      returns (RegisterPerpetualTaskClientEntrypointResponse);
   rpc CreatePerpetualTask(CreatePerpetualTaskRequest) returns (CreatePerpetualTaskResponse);
   rpc DeletePerpetualTask(DeletePerpetualTaskRequest) returns (DeletePerpetualTaskResponse);
   rpc ResetPerpetualTask(ResetPerpetualTaskRequest) returns (ResetPerpetualTaskResponse);
 }
 
 message SubmitTaskRequest {
-  AccountId account_id = 1;
-  TaskSetupAbstractions setup_abstractions = 2;
-  TaskDetails details = 3;
-  repeated Capability capabilities = 4;
+  callback.CallbackToken callback_token = 1;
+
+  AccountId account_id = 2;
+
+  TaskSetupAbstractions setup_abstractions = 3;
+  TaskDetails details = 4;
+  repeated Capability capabilities = 5;
 }
 
 message SubmitTaskResponse {
@@ -63,12 +68,12 @@ message TaskProgressUpdatesResponse {
   TaskExecutionStage currently_at_stage = 1;
 }
 
-message RegisterPerpetualTaskClientEntrypointRequest {
+message RegisterCallbackRequest {
   string type = 1;
-  perpetualtask.PerpetualTaskClientEntrypoint perpetual_task_client_entrypoint = 2;
 }
 
-message RegisterPerpetualTaskClientEntrypointResponse {
+message RegisterCallbackResponse {
+  callback.CallbackToken callback_token = 1;
 }
 
 message CreatePerpetualTaskRequest {

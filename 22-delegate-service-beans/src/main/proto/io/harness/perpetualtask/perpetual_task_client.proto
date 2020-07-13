@@ -6,6 +6,8 @@ option java_multiple_files = true;
 
 import "google/protobuf/timestamp.proto";
 
+import "io/harness/callback/entrypoint.proto";
+
 message PerpetualTaskClientContextDetails {
   map<string, string> task_client_params = 1;
   google.protobuf.Timestamp last_context_updated = 2;
@@ -14,18 +16,6 @@ message PerpetualTaskClientContextDetails {
 // TODO: define what is needed to make a callback to the client entry-point
 message PerpetualTaskClientEntrypoint {
   oneof entrypoints {
-    HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1;
+    callback.HttpsClientEntrypoint https_entrypoint = 1;
   }
-}
-
-message HttpsPerpetualTaskClientEntrypoint {
-  string url = 1;
-  oneof credentials {
-    BasicAuthCredentials basic_auth_credentials = 2;
-  }
-}
-
-message BasicAuthCredentials {
-  string username = 1;
-  string password = 2;
 }

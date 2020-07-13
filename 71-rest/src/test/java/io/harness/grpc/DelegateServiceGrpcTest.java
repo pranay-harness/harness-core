@@ -35,15 +35,11 @@ import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.shell.ScriptType;
-import io.harness.perpetualtask.BasicAuthCredentials;
-import io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
-import io.harness.perpetualtask.PerpetualTaskClientEntrypoint;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -70,7 +66,6 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
   private DelegateServiceGrpcClient delegateServiceGrpcClient;
   private io.harness.grpc.DelegateServiceGrpc delegateServiceGrpc;
 
-  private PerpetualTaskServiceClientRegistry perpetualTaskServiceClientRegistry;
   private PerpetualTaskService perpetualTaskService;
   private DelegateService delegateService;
   @Inject private KryoSerializer kryoSerializer;
@@ -93,11 +88,10 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
         DelegateServiceGrpc.newBlockingStub(channel);
     delegateServiceGrpcClient = new DelegateServiceGrpcClient(delegateServiceBlockingStub, kryoSerializer);
 
-    perpetualTaskServiceClientRegistry = mock(PerpetualTaskServiceClientRegistry.class);
     perpetualTaskService = mock(PerpetualTaskService.class);
     delegateService = mock(DelegateService.class);
-    delegateServiceGrpc = new io.harness.grpc.DelegateServiceGrpc(
-        perpetualTaskServiceClientRegistry, perpetualTaskService, delegateService, kryoSerializer);
+    delegateServiceGrpc =
+        new io.harness.grpc.DelegateServiceGrpc(perpetualTaskService, delegateService, kryoSerializer);
 
     server =
         InProcessServerBuilder.forName(serverName).directExecutor().addService(delegateServiceGrpc).build().start();
@@ -218,15 +212,15 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
   @Category(UnitTests.class)
   public void testRegisterPerpetualTaskClientEntrypoint() {
     try {
-      delegateServiceGrpcClient.registerPerpetualTaskClientEntrypoint(PerpetualTaskType.SAMPLE,
-          PerpetualTaskClientEntrypoint.newBuilder()
-              .setHttpsEntrypoint(
-                  HttpsPerpetualTaskClientEntrypoint.newBuilder()
-                      .setUrl("https://localhost:9999")
-                      .setBasicAuthCredentials(
-                          BasicAuthCredentials.newBuilder().setUsername("test@harness.io").setPassword("test").build())
-                      .build())
-              .build());
+      //      delegateServiceGrpcClient.registerCalback(PerpetualTaskType.SAMPLE,
+      //          PerpetualTaskClientEntrypoint.newBuilder()
+      //              .setHttpsEntrypoint(
+      //                  HttpsClientEntrypoint.newBuilder()
+      //                      .setUrl("https://localhost:9999")
+      //                      .setBasicAuthCredentials(
+      //                          BasicAuthCredentials.newBuilder().setUsername("test@harness.io").setPassword("test").build())
+      //                      .build())
+      //              .build());
     } catch (Exception e) {
       fail("Should not have thrown any exception");
     }

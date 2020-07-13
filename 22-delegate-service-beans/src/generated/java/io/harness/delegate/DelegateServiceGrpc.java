@@ -25,6 +25,41 @@ public final class DelegateServiceGrpc {
   public static final String SERVICE_NAME = "io.harness.delegate.DelegateService";
 
   // Static method descriptors that strictly reflect the proto.
+  private static volatile io.grpc.MethodDescriptor<io.harness.delegate.RegisterCallbackRequest,
+      io.harness.delegate.RegisterCallbackResponse> getRegisterCallbackMethod;
+
+  @io.grpc.stub.annotations
+      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "RegisterCallback",
+          requestType = io.harness.delegate.RegisterCallbackRequest.class,
+          responseType = io.harness.delegate.RegisterCallbackResponse.class,
+          methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+      public static io.grpc
+      .MethodDescriptor<io.harness.delegate.RegisterCallbackRequest, io.harness.delegate.RegisterCallbackResponse>
+      getRegisterCallbackMethod() {
+    io.grpc.MethodDescriptor<io.harness.delegate.RegisterCallbackRequest, io.harness.delegate.RegisterCallbackResponse>
+        getRegisterCallbackMethod;
+    if ((getRegisterCallbackMethod = DelegateServiceGrpc.getRegisterCallbackMethod) == null) {
+      synchronized (DelegateServiceGrpc.class) {
+        if ((getRegisterCallbackMethod = DelegateServiceGrpc.getRegisterCallbackMethod) == null) {
+          DelegateServiceGrpc.getRegisterCallbackMethod = getRegisterCallbackMethod =
+              io.grpc.MethodDescriptor
+                  .<io.harness.delegate.RegisterCallbackRequest,
+                      io.harness.delegate.RegisterCallbackResponse>newBuilder()
+                  .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "RegisterCallback"))
+                  .setSampledToLocalTracing(true)
+                  .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.delegate.RegisterCallbackRequest.getDefaultInstance()))
+                  .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.delegate.RegisterCallbackResponse.getDefaultInstance()))
+                  .setSchemaDescriptor(new DelegateServiceMethodDescriptorSupplier("RegisterCallback"))
+                  .build();
+        }
+      }
+    }
+    return getRegisterCallbackMethod;
+  }
+
   private static volatile io.grpc.MethodDescriptor<io.harness.delegate.SubmitTaskRequest,
       io.harness.delegate.SubmitTaskResponse> getSubmitTaskMethod;
 
@@ -162,48 +197,6 @@ public final class DelegateServiceGrpc {
     return getTaskProgressUpdatesMethod;
   }
 
-  private static volatile io.grpc.MethodDescriptor<io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest,
-      io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse> getRegisterPerpetualTaskClientEntrypointMethod;
-
-  @io.grpc.stub.annotations
-      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "RegisterPerpetualTaskClientEntrypoint",
-          requestType = io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest.class,
-          responseType = io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse.class,
-          methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-      public static io.grpc.MethodDescriptor<io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest,
-          io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse>
-      getRegisterPerpetualTaskClientEntrypointMethod() {
-    io.grpc.MethodDescriptor<io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest,
-        io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse>
-        getRegisterPerpetualTaskClientEntrypointMethod;
-    if ((getRegisterPerpetualTaskClientEntrypointMethod =
-                DelegateServiceGrpc.getRegisterPerpetualTaskClientEntrypointMethod)
-        == null) {
-      synchronized (DelegateServiceGrpc.class) {
-        if ((getRegisterPerpetualTaskClientEntrypointMethod =
-                    DelegateServiceGrpc.getRegisterPerpetualTaskClientEntrypointMethod)
-            == null) {
-          DelegateServiceGrpc.getRegisterPerpetualTaskClientEntrypointMethod =
-              getRegisterPerpetualTaskClientEntrypointMethod =
-                  io.grpc.MethodDescriptor
-                      .<io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest,
-                          io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse>newBuilder()
-                      .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-                      .setFullMethodName(generateFullMethodName(SERVICE_NAME, "RegisterPerpetualTaskClientEntrypoint"))
-                      .setSampledToLocalTracing(true)
-                      .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                          io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest.getDefaultInstance()))
-                      .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                          io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse.getDefaultInstance()))
-                      .setSchemaDescriptor(
-                          new DelegateServiceMethodDescriptorSupplier("RegisterPerpetualTaskClientEntrypoint"))
-                      .build();
-        }
-      }
-    }
-    return getRegisterPerpetualTaskClientEntrypointMethod;
-  }
-
   private static volatile io.grpc.MethodDescriptor<io.harness.delegate.CreatePerpetualTaskRequest,
       io.harness.delegate.CreatePerpetualTaskResponse> getCreatePerpetualTaskMethod;
 
@@ -335,6 +328,13 @@ public final class DelegateServiceGrpc {
   public static abstract class DelegateServiceImplBase implements io.grpc.BindableService {
     /**
      */
+    public void registerCallback(io.harness.delegate.RegisterCallbackRequest request,
+        io.grpc.stub.StreamObserver<io.harness.delegate.RegisterCallbackResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getRegisterCallbackMethod(), responseObserver);
+    }
+
+    /**
+     */
     public void submitTask(io.harness.delegate.SubmitTaskRequest request,
         io.grpc.stub.StreamObserver<io.harness.delegate.SubmitTaskResponse> responseObserver) {
       asyncUnimplementedUnaryCall(getSubmitTaskMethod(), responseObserver);
@@ -363,15 +363,6 @@ public final class DelegateServiceGrpc {
 
     /**
      */
-    public void registerPerpetualTaskClientEntrypoint(
-        io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest request,
-        io.grpc.stub
-            .StreamObserver<io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse> responseObserver) {
-      asyncUnimplementedUnaryCall(getRegisterPerpetualTaskClientEntrypointMethod(), responseObserver);
-    }
-
-    /**
-     */
     public void createPerpetualTask(io.harness.delegate.CreatePerpetualTaskRequest request,
         io.grpc.stub.StreamObserver<io.harness.delegate.CreatePerpetualTaskResponse> responseObserver) {
       asyncUnimplementedUnaryCall(getCreatePerpetualTaskMethod(), responseObserver);
@@ -395,6 +386,9 @@ public final class DelegateServiceGrpc {
     lang.Override
     public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
+          .addMethod(getRegisterCallbackMethod(),
+              asyncUnaryCall(new MethodHandlers<io.harness.delegate.RegisterCallbackRequest,
+                  io.harness.delegate.RegisterCallbackResponse>(this, METHODID_REGISTER_CALLBACK)))
           .addMethod(getSubmitTaskMethod(),
               asyncUnaryCall(
                   new MethodHandlers<io.harness.delegate.SubmitTaskRequest, io.harness.delegate.SubmitTaskResponse>(
@@ -410,10 +404,6 @@ public final class DelegateServiceGrpc {
           .addMethod(getTaskProgressUpdatesMethod(),
               asyncServerStreamingCall(new MethodHandlers<io.harness.delegate.TaskProgressUpdatesRequest,
                   io.harness.delegate.TaskProgressUpdatesResponse>(this, METHODID_TASK_PROGRESS_UPDATES)))
-          .addMethod(getRegisterPerpetualTaskClientEntrypointMethod(),
-              asyncUnaryCall(new MethodHandlers<io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest,
-                  io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse>(
-                  this, METHODID_REGISTER_PERPETUAL_TASK_CLIENT_ENTRYPOINT)))
           .addMethod(getCreatePerpetualTaskMethod(),
               asyncUnaryCall(new MethodHandlers<io.harness.delegate.CreatePerpetualTaskRequest,
                   io.harness.delegate.CreatePerpetualTaskResponse>(this, METHODID_CREATE_PERPETUAL_TASK)))
@@ -445,6 +435,13 @@ public final class DelegateServiceGrpc {
 
     /**
      */
+    public void registerCallback(io.harness.delegate.RegisterCallbackRequest request,
+        io.grpc.stub.StreamObserver<io.harness.delegate.RegisterCallbackResponse> responseObserver) {
+      asyncUnaryCall(getChannel().newCall(getRegisterCallbackMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
     public void submitTask(io.harness.delegate.SubmitTaskRequest request,
         io.grpc.stub.StreamObserver<io.harness.delegate.SubmitTaskResponse> responseObserver) {
       asyncUnaryCall(getChannel().newCall(getSubmitTaskMethod(), getCallOptions()), request, responseObserver);
@@ -470,16 +467,6 @@ public final class DelegateServiceGrpc {
         io.grpc.stub.StreamObserver<io.harness.delegate.TaskProgressUpdatesResponse> responseObserver) {
       asyncServerStreamingCall(
           getChannel().newCall(getTaskProgressUpdatesMethod(), getCallOptions()), request, responseObserver);
-    }
-
-    /**
-     */
-    public void registerPerpetualTaskClientEntrypoint(
-        io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest request,
-        io.grpc.stub
-            .StreamObserver<io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse> responseObserver) {
-      asyncUnaryCall(getChannel().newCall(getRegisterPerpetualTaskClientEntrypointMethod(), getCallOptions()), request,
-          responseObserver);
     }
 
     /**
@@ -522,6 +509,13 @@ public final class DelegateServiceGrpc {
 
     /**
      */
+    public io.harness.delegate.RegisterCallbackResponse registerCallback(
+        io.harness.delegate.RegisterCallbackRequest request) {
+      return blockingUnaryCall(getChannel(), getRegisterCallbackMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
     public io.harness.delegate.SubmitTaskResponse submitTask(io.harness.delegate.SubmitTaskRequest request) {
       return blockingUnaryCall(getChannel(), getSubmitTaskMethod(), getCallOptions(), request);
     }
@@ -543,14 +537,6 @@ public final class DelegateServiceGrpc {
     public java.util.Iterator<io.harness.delegate.TaskProgressUpdatesResponse> taskProgressUpdates(
         io.harness.delegate.TaskProgressUpdatesRequest request) {
       return blockingServerStreamingCall(getChannel(), getTaskProgressUpdatesMethod(), getCallOptions(), request);
-    }
-
-    /**
-     */
-    public io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse registerPerpetualTaskClientEntrypoint(
-        io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest request) {
-      return blockingUnaryCall(
-          getChannel(), getRegisterPerpetualTaskClientEntrypointMethod(), getCallOptions(), request);
     }
 
     /**
@@ -593,6 +579,13 @@ public final class DelegateServiceGrpc {
 
     /**
      */
+    public com.google.common.util.concurrent.ListenableFuture<io.harness.delegate.RegisterCallbackResponse>
+    registerCallback(io.harness.delegate.RegisterCallbackRequest request) {
+      return futureUnaryCall(getChannel().newCall(getRegisterCallbackMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
     public com.google.common.util.concurrent.ListenableFuture<io.harness.delegate.SubmitTaskResponse> submitTask(
         io.harness.delegate.SubmitTaskRequest request) {
       return futureUnaryCall(getChannel().newCall(getSubmitTaskMethod(), getCallOptions()), request);
@@ -610,16 +603,6 @@ public final class DelegateServiceGrpc {
     public com.google.common.util.concurrent.ListenableFuture<io.harness.delegate.TaskProgressResponse> taskProgress(
         io.harness.delegate.TaskProgressRequest request) {
       return futureUnaryCall(getChannel().newCall(getTaskProgressMethod(), getCallOptions()), request);
-    }
-
-    /**
-     */
-    public com.google.common.util.concurrent
-        .ListenableFuture<io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse>
-        registerPerpetualTaskClientEntrypoint(
-            io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest request) {
-      return futureUnaryCall(
-          getChannel().newCall(getRegisterPerpetualTaskClientEntrypointMethod(), getCallOptions()), request);
     }
 
     /**
@@ -644,11 +627,11 @@ public final class DelegateServiceGrpc {
     }
   }
 
-  private static final int METHODID_SUBMIT_TASK = 0;
-  private static final int METHODID_CANCEL_TASK = 1;
-  private static final int METHODID_TASK_PROGRESS = 2;
-  private static final int METHODID_TASK_PROGRESS_UPDATES = 3;
-  private static final int METHODID_REGISTER_PERPETUAL_TASK_CLIENT_ENTRYPOINT = 4;
+  private static final int METHODID_REGISTER_CALLBACK = 0;
+  private static final int METHODID_SUBMIT_TASK = 1;
+  private static final int METHODID_CANCEL_TASK = 2;
+  private static final int METHODID_TASK_PROGRESS = 3;
+  private static final int METHODID_TASK_PROGRESS_UPDATES = 4;
   private static final int METHODID_CREATE_PERPETUAL_TASK = 5;
   private static final int METHODID_DELETE_PERPETUAL_TASK = 6;
   private static final int METHODID_RESET_PERPETUAL_TASK = 7;
@@ -671,6 +654,10 @@ public final class DelegateServiceGrpc {
     @java.lang.SuppressWarnings("unchecked")
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
+        case METHODID_REGISTER_CALLBACK:
+          serviceImpl.registerCallback((io.harness.delegate.RegisterCallbackRequest) request,
+              (io.grpc.stub.StreamObserver<io.harness.delegate.RegisterCallbackResponse>) responseObserver);
+          break;
         case METHODID_SUBMIT_TASK:
           serviceImpl.submitTask((io.harness.delegate.SubmitTaskRequest) request,
               (io.grpc.stub.StreamObserver<io.harness.delegate.SubmitTaskResponse>) responseObserver);
@@ -686,12 +673,6 @@ public final class DelegateServiceGrpc {
         case METHODID_TASK_PROGRESS_UPDATES:
           serviceImpl.taskProgressUpdates((io.harness.delegate.TaskProgressUpdatesRequest) request,
               (io.grpc.stub.StreamObserver<io.harness.delegate.TaskProgressUpdatesResponse>) responseObserver);
-          break;
-        case METHODID_REGISTER_PERPETUAL_TASK_CLIENT_ENTRYPOINT:
-          serviceImpl.registerPerpetualTaskClientEntrypoint(
-              (io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest) request,
-              (io.grpc.stub.StreamObserver<io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse>)
-                  responseObserver);
           break;
         case METHODID_CREATE_PERPETUAL_TASK:
           serviceImpl.createPerpetualTask((io.harness.delegate.CreatePerpetualTaskRequest) request,
@@ -768,11 +749,11 @@ public final class DelegateServiceGrpc {
         if (result == null) {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)
                                            .setSchemaDescriptor(new DelegateServiceFileDescriptorSupplier())
+                                           .addMethod(getRegisterCallbackMethod())
                                            .addMethod(getSubmitTaskMethod())
                                            .addMethod(getCancelTaskMethod())
                                            .addMethod(getTaskProgressMethod())
                                            .addMethod(getTaskProgressUpdatesMethod())
-                                           .addMethod(getRegisterPerpetualTaskClientEntrypointMethod())
                                            .addMethod(getCreatePerpetualTaskMethod())
                                            .addMethod(getDeletePerpetualTaskMethod())
                                            .addMethod(getResetPerpetualTaskMethod())

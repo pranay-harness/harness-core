@@ -9,22 +9,19 @@ public interface PerpetualTaskClientEntrypointOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskClientEntrypoint)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-   * "httpsEntrypoint"];</code>
+   * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
    * @return Whether the httpsEntrypoint field is set.
    */
   boolean hasHttpsEntrypoint();
   /**
-   * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-   * "httpsEntrypoint"];</code>
+   * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
    * @return The httpsEntrypoint.
    */
-  io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint getHttpsEntrypoint();
+  io.harness.callback.HttpsClientEntrypoint getHttpsEntrypoint();
   /**
-   * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-   * "httpsEntrypoint"];</code>
+   * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
    */
-  io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypointOrBuilder getHttpsEntrypointOrBuilder();
+  io.harness.callback.HttpsClientEntrypointOrBuilder getHttpsEntrypointOrBuilder();
 
   public io.harness.perpetualtask.PerpetualTaskClientEntrypoint.EntrypointsCase getEntrypointsCase();
 }

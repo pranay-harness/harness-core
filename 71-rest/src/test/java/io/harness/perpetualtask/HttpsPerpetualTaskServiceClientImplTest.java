@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.api.client.util.Base64;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.harness.callback.BasicAuthCredentials;
+import io.harness.callback.HttpsClientEntrypoint;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.https.HttpsPerpetualTaskParams;
 import io.harness.rule.Owner;
@@ -35,8 +37,8 @@ public class HttpsPerpetualTaskServiceClientImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    HttpsPerpetualTaskClientEntrypoint entrypoint =
-        HttpsPerpetualTaskClientEntrypoint.newBuilder()
+    HttpsClientEntrypoint entrypoint =
+        HttpsClientEntrypoint.newBuilder()
             .setUrl("https://localhost:9999")
             .setBasicAuthCredentials(
                 BasicAuthCredentials.newBuilder().setUsername(USERNAME).setPassword(PASSWORD).build())
