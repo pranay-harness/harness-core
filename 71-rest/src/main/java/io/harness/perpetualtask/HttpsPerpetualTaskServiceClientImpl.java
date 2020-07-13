@@ -7,6 +7,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
 import io.harness.beans.DelegateTask;
+import io.harness.callback.HttpsClientEntrypoint;
 import io.harness.network.Http;
 import io.harness.perpetualtask.https.HttpsPerpetualTaskParams;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ import java.util.Map;
 public class HttpsPerpetualTaskServiceClientImpl implements HttpsPerpetualTaskServiceClient {
   private HttpsClient httpsClient;
 
-  public HttpsPerpetualTaskServiceClientImpl(HttpsPerpetualTaskClientEntrypoint entryPoint) {
+  public HttpsPerpetualTaskServiceClientImpl(HttpsClientEntrypoint entryPoint) {
     this.httpsClient = buildHttpsClient(entryPoint);
   }
 
@@ -70,7 +71,7 @@ public class HttpsPerpetualTaskServiceClientImpl implements HttpsPerpetualTaskSe
     @FormUrlEncoded @POST("/") Call<ResponseBody> getTaskParams(@FieldMap Map<String, String> body);
   }
 
-  private HttpsClient buildHttpsClient(HttpsPerpetualTaskClientEntrypoint entrypoint) {
+  private HttpsClient buildHttpsClient(HttpsClientEntrypoint entrypoint) {
     OkHttpClient client =
         Http.getUnsafeOkHttpClientBuilder(entrypoint.getUrl(), 15, 15)
             .connectionPool(new ConnectionPool())

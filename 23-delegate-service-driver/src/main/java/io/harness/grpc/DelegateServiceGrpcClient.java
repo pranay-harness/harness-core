@@ -14,7 +14,6 @@ import io.harness.delegate.CreatePerpetualTaskRequest;
 import io.harness.delegate.CreatePerpetualTaskResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
 import io.harness.delegate.DeletePerpetualTaskRequest;
-import io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest;
 import io.harness.delegate.ResetPerpetualTaskRequest;
 import io.harness.delegate.SubmitTaskRequest;
 import io.harness.delegate.SubmitTaskResponse;
@@ -28,7 +27,6 @@ import io.harness.delegate.TaskProgressUpdatesResponse;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
-import io.harness.perpetualtask.PerpetualTaskClientEntrypoint;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.serializer.KryoSerializer;
@@ -96,14 +94,6 @@ public class DelegateServiceGrpcClient {
     while (responseIterator.hasNext()) {
       taskExecutionStageConsumer.accept(responseIterator.next().getCurrentlyAtStage());
     }
-  }
-
-  public void registerPerpetualTaskClientEntrypoint(String type, PerpetualTaskClientEntrypoint entrypoint) {
-    delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
-        .registerPerpetualTaskClientEntrypoint(RegisterPerpetualTaskClientEntrypointRequest.newBuilder()
-                                                   .setType(type)
-                                                   .setPerpetualTaskClientEntrypoint(entrypoint)
-                                                   .build());
   }
 
   public PerpetualTaskId createPerpetualTask(AccountId accountId, String type, PerpetualTaskSchedule schedule,

@@ -46,14 +46,13 @@ public final class PerpetualTaskClientEntrypoint extends com.google.protobuf.Gen
             done = true;
             break;
           case 10: {
-            io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.Builder subBuilder = null;
+            io.harness.callback.HttpsClientEntrypoint.Builder subBuilder = null;
             if (entrypointsCase_ == 1) {
-              subBuilder = ((io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint) entrypoints_).toBuilder();
+              subBuilder = ((io.harness.callback.HttpsClientEntrypoint) entrypoints_).toBuilder();
             }
-            entrypoints_ = input.readMessage(
-                io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.parser(), extensionRegistry);
+            entrypoints_ = input.readMessage(io.harness.callback.HttpsClientEntrypoint.parser(), extensionRegistry);
             if (subBuilder != null) {
-              subBuilder.mergeFrom((io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint) entrypoints_);
+              subBuilder.mergeFrom((io.harness.callback.HttpsClientEntrypoint) entrypoints_);
               entrypoints_ = subBuilder.buildPartial();
             }
             entrypointsCase_ = 1;
@@ -130,33 +129,30 @@ public final class PerpetualTaskClientEntrypoint extends com.google.protobuf.Gen
 
   public static final int HTTPS_ENTRYPOINT_FIELD_NUMBER = 1;
   /**
-   * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-   * "httpsEntrypoint"];</code>
+   * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
    * @return Whether the httpsEntrypoint field is set.
    */
   public boolean hasHttpsEntrypoint() {
     return entrypointsCase_ == 1;
   }
   /**
-   * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-   * "httpsEntrypoint"];</code>
+   * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
    * @return The httpsEntrypoint.
    */
-  public io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint getHttpsEntrypoint() {
+  public io.harness.callback.HttpsClientEntrypoint getHttpsEntrypoint() {
     if (entrypointsCase_ == 1) {
-      return (io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint) entrypoints_;
+      return (io.harness.callback.HttpsClientEntrypoint) entrypoints_;
     }
-    return io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.getDefaultInstance();
+    return io.harness.callback.HttpsClientEntrypoint.getDefaultInstance();
   }
   /**
-   * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-   * "httpsEntrypoint"];</code>
+   * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
    */
-  public io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypointOrBuilder getHttpsEntrypointOrBuilder() {
+  public io.harness.callback.HttpsClientEntrypointOrBuilder getHttpsEntrypointOrBuilder() {
     if (entrypointsCase_ == 1) {
-      return (io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint) entrypoints_;
+      return (io.harness.callback.HttpsClientEntrypoint) entrypoints_;
     }
-    return io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.getDefaultInstance();
+    return io.harness.callback.HttpsClientEntrypoint.getDefaultInstance();
   }
 
   private byte memoizedIsInitialized = -1;
@@ -175,7 +171,7 @@ public final class PerpetualTaskClientEntrypoint extends com.google.protobuf.Gen
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
     if (entrypointsCase_ == 1) {
-      output.writeMessage(1, (io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint) entrypoints_);
+      output.writeMessage(1, (io.harness.callback.HttpsClientEntrypoint) entrypoints_);
     }
     unknownFields.writeTo(output);
   }
@@ -189,7 +185,7 @@ public final class PerpetualTaskClientEntrypoint extends com.google.protobuf.Gen
     size = 0;
     if (entrypointsCase_ == 1) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(
-          1, (io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint) entrypoints_);
+          1, (io.harness.callback.HttpsClientEntrypoint) entrypoints_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -482,40 +478,37 @@ public final class PerpetualTaskClientEntrypoint extends com.google.protobuf.Gen
       return this;
     }
 
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint,
-        io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.Builder,
-        io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypointOrBuilder> httpsEntrypointBuilder_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.HttpsClientEntrypoint,
+        io.harness.callback.HttpsClientEntrypoint.Builder, io.harness.callback.HttpsClientEntrypointOrBuilder>
+        httpsEntrypointBuilder_;
     /**
-     * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-     * "httpsEntrypoint"];</code>
+     * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
      * @return Whether the httpsEntrypoint field is set.
      */
     public boolean hasHttpsEntrypoint() {
       return entrypointsCase_ == 1;
     }
     /**
-     * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-     * "httpsEntrypoint"];</code>
+     * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
      * @return The httpsEntrypoint.
      */
-    public io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint getHttpsEntrypoint() {
+    public io.harness.callback.HttpsClientEntrypoint getHttpsEntrypoint() {
       if (httpsEntrypointBuilder_ == null) {
         if (entrypointsCase_ == 1) {
-          return (io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint) entrypoints_;
+          return (io.harness.callback.HttpsClientEntrypoint) entrypoints_;
         }
-        return io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.getDefaultInstance();
+        return io.harness.callback.HttpsClientEntrypoint.getDefaultInstance();
       } else {
         if (entrypointsCase_ == 1) {
           return httpsEntrypointBuilder_.getMessage();
         }
-        return io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.getDefaultInstance();
+        return io.harness.callback.HttpsClientEntrypoint.getDefaultInstance();
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-     * "httpsEntrypoint"];</code>
+     * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
      */
-    public Builder setHttpsEntrypoint(io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint value) {
+    public Builder setHttpsEntrypoint(io.harness.callback.HttpsClientEntrypoint value) {
       if (httpsEntrypointBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -529,11 +522,9 @@ public final class PerpetualTaskClientEntrypoint extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-     * "httpsEntrypoint"];</code>
+     * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
      */
-    public Builder setHttpsEntrypoint(
-        io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.Builder builderForValue) {
+    public Builder setHttpsEntrypoint(io.harness.callback.HttpsClientEntrypoint.Builder builderForValue) {
       if (httpsEntrypointBuilder_ == null) {
         entrypoints_ = builderForValue.build();
         onChanged();
@@ -544,15 +535,13 @@ public final class PerpetualTaskClientEntrypoint extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-     * "httpsEntrypoint"];</code>
+     * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
      */
-    public Builder mergeHttpsEntrypoint(io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint value) {
+    public Builder mergeHttpsEntrypoint(io.harness.callback.HttpsClientEntrypoint value) {
       if (httpsEntrypointBuilder_ == null) {
-        if (entrypointsCase_ == 1
-            && entrypoints_ != io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.getDefaultInstance()) {
-          entrypoints_ = io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint
-                             .newBuilder((io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint) entrypoints_)
+        if (entrypointsCase_ == 1 && entrypoints_ != io.harness.callback.HttpsClientEntrypoint.getDefaultInstance()) {
+          entrypoints_ = io.harness.callback.HttpsClientEntrypoint
+                             .newBuilder((io.harness.callback.HttpsClientEntrypoint) entrypoints_)
                              .mergeFrom(value)
                              .buildPartial();
         } else {
@@ -569,8 +558,7 @@ public final class PerpetualTaskClientEntrypoint extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-     * "httpsEntrypoint"];</code>
+     * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
      */
     public Builder clearHttpsEntrypoint() {
       if (httpsEntrypointBuilder_ == null) {
@@ -589,44 +577,38 @@ public final class PerpetualTaskClientEntrypoint extends com.google.protobuf.Gen
       return this;
     }
     /**
-     * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-     * "httpsEntrypoint"];</code>
+     * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
      */
-    public io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.Builder getHttpsEntrypointBuilder() {
+    public io.harness.callback.HttpsClientEntrypoint.Builder getHttpsEntrypointBuilder() {
       return getHttpsEntrypointFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-     * "httpsEntrypoint"];</code>
+     * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
      */
-    public io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypointOrBuilder getHttpsEntrypointOrBuilder() {
+    public io.harness.callback.HttpsClientEntrypointOrBuilder getHttpsEntrypointOrBuilder() {
       if ((entrypointsCase_ == 1) && (httpsEntrypointBuilder_ != null)) {
         return httpsEntrypointBuilder_.getMessageOrBuilder();
       } else {
         if (entrypointsCase_ == 1) {
-          return (io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint) entrypoints_;
+          return (io.harness.callback.HttpsClientEntrypoint) entrypoints_;
         }
-        return io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.getDefaultInstance();
+        return io.harness.callback.HttpsClientEntrypoint.getDefaultInstance();
       }
     }
     /**
-     * <code>.io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint https_entrypoint = 1[json_name =
-     * "httpsEntrypoint"];</code>
+     * <code>.io.harness.callback.HttpsClientEntrypoint https_entrypoint = 1[json_name = "httpsEntrypoint"];</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint,
-        io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.Builder,
-        io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypointOrBuilder>
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.HttpsClientEntrypoint,
+        io.harness.callback.HttpsClientEntrypoint.Builder, io.harness.callback.HttpsClientEntrypointOrBuilder>
     getHttpsEntrypointFieldBuilder() {
       if (httpsEntrypointBuilder_ == null) {
         if (!(entrypointsCase_ == 1)) {
-          entrypoints_ = io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.getDefaultInstance();
+          entrypoints_ = io.harness.callback.HttpsClientEntrypoint.getDefaultInstance();
         }
         httpsEntrypointBuilder_ =
-            new com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint,
-                io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint.Builder,
-                io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypointOrBuilder>(
-                (io.harness.perpetualtask.HttpsPerpetualTaskClientEntrypoint) entrypoints_, getParentForChildren(),
-                isClean());
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.HttpsClientEntrypoint,
+                io.harness.callback.HttpsClientEntrypoint.Builder, io.harness.callback.HttpsClientEntrypointOrBuilder>(
+                (io.harness.callback.HttpsClientEntrypoint) entrypoints_, getParentForChildren(), isClean());
         entrypoints_ = null;
       }
       entrypointsCase_ = 1;

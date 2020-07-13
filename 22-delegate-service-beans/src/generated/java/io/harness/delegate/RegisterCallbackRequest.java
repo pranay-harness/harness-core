@@ -4,26 +4,26 @@
 package io.harness.delegate;
 
 /**
- * Protobuf type {@code io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse}
+ * Protobuf type {@code io.harness.delegate.RegisterCallbackRequest}
  */
-@javax.annotation.
-Generated(value = "protoc", comments = "annotations:RegisterPerpetualTaskClientEntrypointResponse.java.pb.meta")
-public final class RegisterPerpetualTaskClientEntrypointResponse extends com.google.protobuf
-                                                                             .GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse)
-    RegisterPerpetualTaskClientEntrypointResponseOrBuilder {
+@javax.annotation.Generated(value = "protoc", comments = "annotations:RegisterCallbackRequest.java.pb.meta")
+public final class RegisterCallbackRequest extends com.google.protobuf.GeneratedMessageV3 implements
+    // @@protoc_insertion_point(message_implements:io.harness.delegate.RegisterCallbackRequest)
+    RegisterCallbackRequestOrBuilder {
   private static final long serialVersionUID = 0L;
-  // Use RegisterPerpetualTaskClientEntrypointResponse.newBuilder() to construct.
-  private RegisterPerpetualTaskClientEntrypointResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+  // Use RegisterCallbackRequest.newBuilder() to construct.
+  private RegisterCallbackRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private RegisterPerpetualTaskClientEntrypointResponse() {}
+  private RegisterCallbackRequest() {
+    type_ = "";
+  }
 
   @java.
   lang.Override
   @SuppressWarnings({"unused"})
   protected java.lang.Object newInstance(UnusedPrivateParameter unused) {
-    return new RegisterPerpetualTaskClientEntrypointResponse();
+    return new RegisterCallbackRequest();
   }
 
   @java.
@@ -31,7 +31,7 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
   public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
     return this.unknownFields;
   }
-  private RegisterPerpetualTaskClientEntrypointResponse(
+  private RegisterCallbackRequest(
       com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     this();
@@ -47,6 +47,12 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
           case 0:
             done = true;
             break;
+          case 10: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            type_ = s;
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -66,16 +72,48 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
   }
   public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
     return io.harness.delegate.DelegateServiceOuterClass
-        .internal_static_io_harness_delegate_RegisterPerpetualTaskClientEntrypointResponse_descriptor;
+        .internal_static_io_harness_delegate_RegisterCallbackRequest_descriptor;
   }
 
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
     return io.harness.delegate.DelegateServiceOuterClass
-        .internal_static_io_harness_delegate_RegisterPerpetualTaskClientEntrypointResponse_fieldAccessorTable
-        .ensureFieldAccessorsInitialized(io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse.class,
-            io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse.Builder.class);
+        .internal_static_io_harness_delegate_RegisterCallbackRequest_fieldAccessorTable.ensureFieldAccessorsInitialized(
+            io.harness.delegate.RegisterCallbackRequest.class,
+            io.harness.delegate.RegisterCallbackRequest.Builder.class);
+  }
+
+  public static final int TYPE_FIELD_NUMBER = 1;
+  private volatile java.lang.Object type_;
+  /**
+   * <code>string type = 1[json_name = "type"];</code>
+   * @return The type.
+   */
+  public java.lang.String getType() {
+    java.lang.Object ref = type_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      type_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string type = 1[json_name = "type"];</code>
+   * @return The bytes for type.
+   */
+  public com.google.protobuf.ByteString getTypeBytes() {
+    java.lang.Object ref = type_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      type_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
   }
 
   private byte memoizedIsInitialized = -1;
@@ -93,6 +131,9 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+    if (!getTypeBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, type_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -103,6 +144,9 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
       return size;
 
     size = 0;
+    if (!getTypeBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, type_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -113,12 +157,13 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
     if (obj == this) {
       return true;
     }
-    if (!(obj instanceof io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse)) {
+    if (!(obj instanceof io.harness.delegate.RegisterCallbackRequest)) {
       return super.equals(obj);
     }
-    io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse other =
-        (io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse) obj;
+    io.harness.delegate.RegisterCallbackRequest other = (io.harness.delegate.RegisterCallbackRequest) obj;
 
+    if (!getType().equals(other.getType()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -131,62 +176,62 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
+    hash = (37 * hash) + TYPE_FIELD_NUMBER;
+    hash = (53 * hash) + getType().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
   }
 
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseFrom(java.nio.ByteBuffer data)
+  public static io.harness.delegate.RegisterCallbackRequest parseFrom(java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseFrom(
+  public static io.harness.delegate.RegisterCallbackRequest parseFrom(
       java.nio.ByteBuffer data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseFrom(
-      com.google.protobuf.ByteString data) throws com.google.protobuf.InvalidProtocolBufferException {
+  public static io.harness.delegate.RegisterCallbackRequest parseFrom(com.google.protobuf.ByteString data)
+      throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseFrom(
+  public static io.harness.delegate.RegisterCallbackRequest parseFrom(
       com.google.protobuf.ByteString data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseFrom(byte[] data)
+  public static io.harness.delegate.RegisterCallbackRequest parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseFrom(
+  public static io.harness.delegate.RegisterCallbackRequest parseFrom(
       byte[] data, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseFrom(java.io.InputStream input)
+  public static io.harness.delegate.RegisterCallbackRequest parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
   }
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseFrom(java.io.InputStream input,
+  public static io.harness.delegate.RegisterCallbackRequest parseFrom(java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseDelimitedFrom(
-      java.io.InputStream input) throws java.io.IOException {
+  public static io.harness.delegate.RegisterCallbackRequest parseDelimitedFrom(java.io.InputStream input)
+      throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
   }
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseDelimitedFrom(
-      java.io.InputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-      throws java.io.IOException {
+  public static io.harness.delegate.RegisterCallbackRequest parseDelimitedFrom(java.io.InputStream input,
+      com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseFrom(
-      com.google.protobuf.CodedInputStream input) throws java.io.IOException {
+  public static io.harness.delegate.RegisterCallbackRequest parseFrom(com.google.protobuf.CodedInputStream input)
+      throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
   }
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parseFrom(
-      com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-      throws java.io.IOException {
+  public static io.harness.delegate.RegisterCallbackRequest parseFrom(com.google.protobuf.CodedInputStream input,
+      com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
   }
 
@@ -197,7 +242,7 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse prototype) {
+  public static Builder newBuilder(io.harness.delegate.RegisterCallbackRequest prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -211,26 +256,26 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
     return builder;
   }
   /**
-   * Protobuf type {@code io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse}
+   * Protobuf type {@code io.harness.delegate.RegisterCallbackRequest}
    */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse)
-      io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponseOrBuilder {
+      // @@protoc_insertion_point(builder_implements:io.harness.delegate.RegisterCallbackRequest)
+      io.harness.delegate.RegisterCallbackRequestOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
       return io.harness.delegate.DelegateServiceOuterClass
-          .internal_static_io_harness_delegate_RegisterPerpetualTaskClientEntrypointResponse_descriptor;
+          .internal_static_io_harness_delegate_RegisterCallbackRequest_descriptor;
     }
 
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
       return io.harness.delegate.DelegateServiceOuterClass
-          .internal_static_io_harness_delegate_RegisterPerpetualTaskClientEntrypointResponse_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse.class,
-              io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse.Builder.class);
+          .internal_static_io_harness_delegate_RegisterCallbackRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(io.harness.delegate.RegisterCallbackRequest.class,
+              io.harness.delegate.RegisterCallbackRequest.Builder.class);
     }
 
-    // Construct using io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse.newBuilder()
+    // Construct using io.harness.delegate.RegisterCallbackRequest.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -246,6 +291,8 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
     @java.lang.Override
     public Builder clear() {
       super.clear();
+      type_ = "";
+
       return this;
     }
 
@@ -253,19 +300,19 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
     lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
       return io.harness.delegate.DelegateServiceOuterClass
-          .internal_static_io_harness_delegate_RegisterPerpetualTaskClientEntrypointResponse_descriptor;
+          .internal_static_io_harness_delegate_RegisterCallbackRequest_descriptor;
     }
 
     @java.
     lang.Override
-    public io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse getDefaultInstanceForType() {
-      return io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse.getDefaultInstance();
+    public io.harness.delegate.RegisterCallbackRequest getDefaultInstanceForType() {
+      return io.harness.delegate.RegisterCallbackRequest.getDefaultInstance();
     }
 
     @java.
     lang.Override
-    public io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse build() {
-      io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse result = buildPartial();
+    public io.harness.delegate.RegisterCallbackRequest build() {
+      io.harness.delegate.RegisterCallbackRequest result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -274,9 +321,9 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
 
     @java.
     lang.Override
-    public io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse buildPartial() {
-      io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse result =
-          new io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse(this);
+    public io.harness.delegate.RegisterCallbackRequest buildPartial() {
+      io.harness.delegate.RegisterCallbackRequest result = new io.harness.delegate.RegisterCallbackRequest(this);
+      result.type_ = type_;
       onBuilt();
       return result;
     }
@@ -308,17 +355,21 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse) {
-        return mergeFrom((io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse) other);
+      if (other instanceof io.harness.delegate.RegisterCallbackRequest) {
+        return mergeFrom((io.harness.delegate.RegisterCallbackRequest) other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse other) {
-      if (other == io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse.getDefaultInstance())
+    public Builder mergeFrom(io.harness.delegate.RegisterCallbackRequest other) {
+      if (other == io.harness.delegate.RegisterCallbackRequest.getDefaultInstance())
         return this;
+      if (!other.getType().isEmpty()) {
+        type_ = other.type_;
+        onChanged();
+      }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
@@ -332,17 +383,86 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry) throws java.io.IOException {
-      io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse parsedMessage = null;
+      io.harness.delegate.RegisterCallbackRequest parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse) e.getUnfinishedMessage();
+        parsedMessage = (io.harness.delegate.RegisterCallbackRequest) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
           mergeFrom(parsedMessage);
         }
       }
+      return this;
+    }
+
+    private java.lang.Object type_ = "";
+    /**
+     * <code>string type = 1[json_name = "type"];</code>
+     * @return The type.
+     */
+    public java.lang.String getType() {
+      java.lang.Object ref = type_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        type_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string type = 1[json_name = "type"];</code>
+     * @return The bytes for type.
+     */
+    public com.google.protobuf.ByteString getTypeBytes() {
+      java.lang.Object ref = type_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        type_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string type = 1[json_name = "type"];</code>
+     * @param value The type to set.
+     * @return This builder for chaining.
+     */
+    public Builder setType(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      type_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string type = 1[json_name = "type"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearType() {
+      type_ = getDefaultInstance().getType();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string type = 1[json_name = "type"];</code>
+     * @param value The bytes for type to set.
+     * @return This builder for chaining.
+     */
+    public Builder setTypeBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      type_ = value;
+      onChanged();
       return this;
     }
     @java.lang.Override
@@ -355,42 +475,42 @@ public final class RegisterPerpetualTaskClientEntrypointResponse extends com.goo
       return super.mergeUnknownFields(unknownFields);
     }
 
-    // @@protoc_insertion_point(builder_scope:io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse)
+    // @@protoc_insertion_point(builder_scope:io.harness.delegate.RegisterCallbackRequest)
   }
 
-  // @@protoc_insertion_point(class_scope:io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse)
-  private static final io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:io.harness.delegate.RegisterCallbackRequest)
+  private static final io.harness.delegate.RegisterCallbackRequest DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse();
+    DEFAULT_INSTANCE = new io.harness.delegate.RegisterCallbackRequest();
   }
 
-  public static io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse getDefaultInstance() {
+  public static io.harness.delegate.RegisterCallbackRequest getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<RegisterPerpetualTaskClientEntrypointResponse> PARSER =
-      new com.google.protobuf.AbstractParser<RegisterPerpetualTaskClientEntrypointResponse>() {
+  private static final com.google.protobuf.Parser<RegisterCallbackRequest> PARSER =
+      new com.google.protobuf.AbstractParser<RegisterCallbackRequest>() {
         @java.lang.Override
-        public RegisterPerpetualTaskClientEntrypointResponse parsePartialFrom(
+        public RegisterCallbackRequest parsePartialFrom(
             com.google.protobuf.CodedInputStream input, com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws com.google.protobuf.InvalidProtocolBufferException {
-          return new RegisterPerpetualTaskClientEntrypointResponse(input, extensionRegistry);
+          return new RegisterCallbackRequest(input, extensionRegistry);
         }
       };
 
-  public static com.google.protobuf.Parser<RegisterPerpetualTaskClientEntrypointResponse> parser() {
+  public static com.google.protobuf.Parser<RegisterCallbackRequest> parser() {
     return PARSER;
   }
 
   @java.
   lang.Override
-  public com.google.protobuf.Parser<RegisterPerpetualTaskClientEntrypointResponse> getParserForType() {
+  public com.google.protobuf.Parser<RegisterCallbackRequest> getParserForType() {
     return PARSER;
   }
 
   @java.
   lang.Override
-  public io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse getDefaultInstanceForType() {
+  public io.harness.delegate.RegisterCallbackRequest getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 }

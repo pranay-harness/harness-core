@@ -18,8 +18,8 @@ import io.harness.delegate.CreatePerpetualTaskResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceImplBase;
 import io.harness.delegate.DeletePerpetualTaskRequest;
 import io.harness.delegate.DeletePerpetualTaskResponse;
-import io.harness.delegate.RegisterPerpetualTaskClientEntrypointRequest;
-import io.harness.delegate.RegisterPerpetualTaskClientEntrypointResponse;
+import io.harness.delegate.RegisterCallbackRequest;
+import io.harness.delegate.RegisterCallbackResponse;
 import io.harness.delegate.ResetPerpetualTaskRequest;
 import io.harness.delegate.ResetPerpetualTaskResponse;
 import io.harness.delegate.SubmitTaskRequest;
@@ -33,12 +33,9 @@ import io.harness.delegate.TaskProgressUpdatesRequest;
 import io.harness.delegate.TaskProgressUpdatesResponse;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.perpetualtask.HttpsPerpetualTaskServiceClient;
-import io.harness.perpetualtask.HttpsPerpetualTaskServiceClientImpl;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.serializer.KryoSerializer;
 import software.wings.service.intfc.DelegateService;
 
@@ -49,15 +46,13 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class DelegateServiceGrpc extends DelegateServiceImplBase {
-  private PerpetualTaskServiceClientRegistry perpetualTaskServiceClientRegistry;
   private PerpetualTaskService perpetualTaskService;
   private DelegateService delegateService;
   private KryoSerializer kryoSerializer;
 
   @Inject
-  public DelegateServiceGrpc(PerpetualTaskServiceClientRegistry perpetualTaskServiceClientRegistry,
+  public DelegateServiceGrpc(
       PerpetualTaskService perpetualTaskService, DelegateService delegateService, KryoSerializer kryoSerializer) {
-    this.perpetualTaskServiceClientRegistry = perpetualTaskServiceClientRegistry;
     this.perpetualTaskService = perpetualTaskService;
     this.delegateService = delegateService;
     this.kryoSerializer = kryoSerializer;
@@ -179,14 +174,9 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
   }
 
   @Override
-  public void registerPerpetualTaskClientEntrypoint(RegisterPerpetualTaskClientEntrypointRequest request,
-      StreamObserver<RegisterPerpetualTaskClientEntrypointResponse> responseObserver) {
-    HttpsPerpetualTaskServiceClient httpsClient =
-        new HttpsPerpetualTaskServiceClientImpl(request.getPerpetualTaskClientEntrypoint().getHttpsEntrypoint());
-
-    perpetualTaskServiceClientRegistry.registerClient(request.getType(), httpsClient);
-
-    responseObserver.onNext(RegisterPerpetualTaskClientEntrypointResponse.newBuilder().build());
+  public void registerCallback(
+      RegisterCallbackRequest request, StreamObserver<RegisterCallbackResponse> responseObserver) {
+    // TODO: implemenet the callback
     responseObserver.onCompleted();
   }
 
