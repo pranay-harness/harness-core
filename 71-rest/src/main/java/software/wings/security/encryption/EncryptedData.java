@@ -2,6 +2,7 @@ package software.wings.security.encryption;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.security.encryption.EncryptionType.LOCAL;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -129,6 +130,13 @@ public class EncryptedData
   @SchemaIgnore @Transient private transient int changeLog;
 
   @SchemaIgnore @FdIndex private List<String> keywords;
+
+  public String getKmsId() {
+    if (encryptionType == LOCAL) {
+      return accountId;
+    }
+    return kmsId;
+  }
 
   public void addParent(@NotNull EncryptedDataParent encryptedDataParent) {
     parents.add(encryptedDataParent);
