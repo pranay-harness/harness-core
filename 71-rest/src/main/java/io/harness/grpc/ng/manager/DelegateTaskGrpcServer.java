@@ -9,6 +9,7 @@ import com.google.protobuf.util.Durations;
 
 import io.grpc.stub.StreamObserver;
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.AbortTaskRequest;
 import io.harness.delegate.AbortTaskResponse;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
 import io.harness.delegate.SendTaskAsyncRequest;
@@ -21,6 +22,7 @@ import io.harness.delegate.TaskId;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.grpc.DelegateTaskGrpcUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.waiter.WaitNotifyEngine;
 import software.wings.service.intfc.DelegateService;
@@ -73,16 +75,20 @@ public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegate
   }
 
   @Override
-  public void abortTask(io.harness.delegate.AbortTaskRequest request,
-      io.grpc.stub.StreamObserver<io.harness.delegate.AbortTaskResponse> responseObserver) {
-    try {
-      AbortTaskResponse abortTaskResponse =
-          AbortTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.EXECUTING).build();
-      responseObserver.onNext(abortTaskResponse);
+  public void abortTask(
+      AbortTaskRequest request, StreamObserver<io.harness.delegate.AbortTaskResponse> responseObserver) {
+    DelegateTask task = delegateService.abortTask(request.getAccountId().getId(), request.getTaskId().getId());
+    if (task != null) {
+      responseObserver.onNext(
+          AbortTaskResponse.newBuilder()
+              .setCanceledAtStage(DelegateTaskGrpcUtils.mapTaskStatusToTaskExecutionStage(task.getStatus()))
+              .build());
       responseObserver.onCompleted();
-    } catch (Exception ex) {
-      responseObserver.onError(ex);
+      return;
     }
+    responseObserver.onNext(
+        AbortTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.TYPE_UNSPECIFIED).build());
+    responseObserver.onCompleted();
   }
 
   private DelegateTask extractDelegateTask(SendTaskRequest request) {

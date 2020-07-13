@@ -21,7 +21,7 @@ public class DummyTaskExecutor implements TaskExecutor {
   }
 
   @Override
-  public void abortTask(Map<String, String> setupAbstractions, String taskId) {
-    // Just a placeholder
+  public boolean abortTask(Map<String, String> setupAbstractions, String taskId) {
+    return false;
   }
 }

@@ -7,5 +7,5 @@ public interface TaskExecutor {
 
   void expireTask(Map<String, String> setupAbstractions, String taskId);
 
-  void abortTask(Map<String, String> setupAbstractions, String taskId);
+  boolean abortTask(Map<String, String> setupAbstractions, String taskId);
 }

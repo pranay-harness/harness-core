@@ -110,9 +110,10 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
     DelegateTask preAbortedTask =
         delegateService.abortTask(request.getAccountId().getId(), request.getTaskId().getId());
     if (preAbortedTask != null) {
-      responseObserver.onNext(CancelTaskResponse.newBuilder()
-                                  .setCanceledAtStage(mapTaskStatusToTaskExecutionStage(preAbortedTask.getStatus()))
-                                  .build());
+      responseObserver.onNext(
+          CancelTaskResponse.newBuilder()
+              .setCanceledAtStage(DelegateTaskGrpcUtils.mapTaskStatusToTaskExecutionStage(preAbortedTask.getStatus()))
+              .build());
       responseObserver.onCompleted();
       return;
     }
@@ -128,10 +129,10 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
         delegateService.fetchDelegateTask(request.getAccountId().getId(), request.getTaskId().getId());
 
     if (delegateTaskOptional.isPresent()) {
-      responseObserver.onNext(
-          TaskProgressResponse.newBuilder()
-              .setCurrentlyAtStage(mapTaskStatusToTaskExecutionStage(delegateTaskOptional.get().getStatus()))
-              .build());
+      responseObserver.onNext(TaskProgressResponse.newBuilder()
+                                  .setCurrentlyAtStage(DelegateTaskGrpcUtils.mapTaskStatusToTaskExecutionStage(
+                                      delegateTaskOptional.get().getStatus()))
+                                  .build());
       responseObserver.onCompleted();
       return;
     }
@@ -149,18 +150,18 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
 
     while (delegateTaskOptional.isPresent()) {
       if (Status.isFinalStatus(delegateTaskOptional.get().getStatus())) {
-        responseObserver.onNext(
-            TaskProgressUpdatesResponse.newBuilder()
-                .setCurrentlyAtStage(mapTaskStatusToTaskExecutionStage(delegateTaskOptional.get().getStatus()))
-                .build());
+        responseObserver.onNext(TaskProgressUpdatesResponse.newBuilder()
+                                    .setCurrentlyAtStage(DelegateTaskGrpcUtils.mapTaskStatusToTaskExecutionStage(
+                                        delegateTaskOptional.get().getStatus()))
+                                    .build());
         responseObserver.onCompleted();
         return;
       }
 
-      responseObserver.onNext(
-          TaskProgressUpdatesResponse.newBuilder()
-              .setCurrentlyAtStage(mapTaskStatusToTaskExecutionStage(delegateTaskOptional.get().getStatus()))
-              .build());
+      responseObserver.onNext(TaskProgressUpdatesResponse.newBuilder()
+                                  .setCurrentlyAtStage(DelegateTaskGrpcUtils.mapTaskStatusToTaskExecutionStage(
+                                      delegateTaskOptional.get().getStatus()))
+                                  .build());
 
       try {
         Thread.sleep(3000L);
@@ -224,20 +225,5 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
 
     responseObserver.onNext(ResetPerpetualTaskResponse.newBuilder().build());
     responseObserver.onCompleted();
-  }
-
-  private TaskExecutionStage mapTaskStatusToTaskExecutionStage(DelegateTask.Status taskStatus) {
-    switch (taskStatus) {
-      case QUEUED:
-        return TaskExecutionStage.QUEUEING;
-      case STARTED:
-        return TaskExecutionStage.EXECUTING;
-      case ERROR:
-        return TaskExecutionStage.FAILED;
-      case ABORTED:
-        return TaskExecutionStage.ABORTED;
-      default:
-        return TaskExecutionStage.TYPE_UNSPECIFIED;
-    }
   }
 }

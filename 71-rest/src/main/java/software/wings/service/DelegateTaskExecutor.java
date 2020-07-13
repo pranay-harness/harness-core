@@ -33,8 +33,9 @@ public class DelegateTaskExecutor implements TaskExecutor {
   }
 
   @Override
-  public void abortTask(@NonNull Map<String, String> setupAbstractions, @NonNull String taskId) {
+  public boolean abortTask(@NonNull Map<String, String> setupAbstractions, @NonNull String taskId) {
     String accountId = setupAbstractions.get("accountId");
-    delegateService.abortTask(accountId, taskId);
+    DelegateTask task = delegateService.abortTask(accountId, taskId);
+    return task != null;
   }
 }

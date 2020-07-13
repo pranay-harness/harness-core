@@ -157,11 +157,10 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testAbortTask() {
-    AbortTaskRequest abortTaskRequest = AbortTaskRequest.newBuilder().build();
     AbortTaskResponse abortTaskResponse =
         AbortTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.EXECUTING).build();
     when(managerDelegateGrpcClient.abortTask(any(AbortTaskRequest.class))).thenReturn(abortTaskResponse);
-    AbortTaskResponse taskResponse = managerDelegateServiceDriver.abortTask(abortTaskRequest);
-    assertThat(taskResponse).isNotNull().isEqualTo(abortTaskResponse);
+    boolean aborted = managerDelegateServiceDriver.abortTask(ACCOUNT_ID, generateUuid());
+    assertThat(aborted).isEqualTo(true);
   }
 }

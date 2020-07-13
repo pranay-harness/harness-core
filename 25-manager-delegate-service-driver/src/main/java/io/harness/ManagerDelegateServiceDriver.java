@@ -7,12 +7,16 @@ import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 
+import io.harness.delegate.AbortTaskRequest;
+import io.harness.delegate.AbortTaskResponse;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
 import io.harness.delegate.TaskDetails;
+import io.harness.delegate.TaskExecutionStage;
+import io.harness.delegate.TaskId;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.ResponseData;
@@ -22,11 +26,13 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.grpc.ManagerDelegateGrpcClient;
 import io.harness.serializer.KryoSerializer;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Singleton
+@Slf4j
 public class ManagerDelegateServiceDriver {
   private final KryoSerializer kryoSerializer;
   private final ManagerDelegateGrpcClient managerDelegateGrpcClient;
@@ -60,8 +66,18 @@ public class ManagerDelegateServiceDriver {
     return response.getTaskId().getId();
   }
 
-  public io.harness.delegate.AbortTaskResponse abortTask(io.harness.delegate.AbortTaskRequest request) {
-    return managerDelegateGrpcClient.abortTask(request);
+  public boolean abortTask(String accountId, String taskId) {
+    try {
+      AbortTaskRequest abortTaskRequest = AbortTaskRequest.newBuilder()
+                                              .setTaskId(TaskId.newBuilder().setId(taskId).build())
+                                              .setAccountId(AccountId.newBuilder().setId(accountId).build())
+                                              .build();
+      AbortTaskResponse response = managerDelegateGrpcClient.abortTask(abortTaskRequest);
+      return response.getCanceledAtStage() != TaskExecutionStage.TYPE_UNSPECIFIED;
+    } catch (RuntimeException ex) {
+      logger.error("Failed to Abort Task: {}", ex.getMessage());
+      return false;
+    }
   }
 
   private SendTaskAsyncRequest buildSendTaskAsyncRequest(

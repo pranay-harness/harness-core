@@ -14,6 +14,7 @@ import com.google.protobuf.Duration;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AbortTaskRequest;
 import io.harness.delegate.AbortTaskResponse;
@@ -74,6 +75,8 @@ public class DelegateTaskGrpcServerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAbortTask() {
     String taskId = generateUuid();
+    when(delegateService.abortTask(any(), any()))
+        .thenReturn(DelegateTask.builder().status(DelegateTask.Status.STARTED).build());
     AbortTaskResponse abortTaskResponse = ngDelegateTaskServiceBlockingStub.abortTask(
         AbortTaskRequest.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build());
     assertThat(abortTaskResponse).isNotNull();
