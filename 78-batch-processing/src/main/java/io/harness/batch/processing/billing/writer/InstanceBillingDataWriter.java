@@ -33,8 +33,10 @@ import software.wings.beans.instance.HarnessServiceInfo;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -68,7 +70,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
         instanceDataLists.stream().collect(Collectors.groupingBy(InstanceData::getClusterId));
     String awsDataSetId = customBillingMetaDataService.getAwsDataSetId(accountId);
     if (awsDataSetId != null) {
-      List<String> resourceIds = new ArrayList<>();
+      Set<String> resourceIds = new HashSet<>();
       instanceDataLists.forEach(instanceData -> {
         String resourceId =
             getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData);
@@ -79,7 +81,8 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
         }
       });
       if (isNotEmpty(resourceIds)) {
-        awsCustomBillingService.updateAwsEC2BillingDataCache(resourceIds, startTime, endTime, awsDataSetId);
+        awsCustomBillingService.updateAwsEC2BillingDataCache(
+            new ArrayList<>(resourceIds), startTime, endTime, awsDataSetId);
       }
     }
 

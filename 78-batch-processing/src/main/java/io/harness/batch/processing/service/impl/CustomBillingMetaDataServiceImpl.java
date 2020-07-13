@@ -5,14 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.batch.processing.entities.InstanceData;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
-import io.harness.batch.processing.processor.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
-import io.harness.batch.processing.service.intfc.InstanceDataService;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -25,7 +20,6 @@ import software.wings.settings.SettingValue;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataService {
   private final CloudToHarnessMappingService cloudToHarnessMappingService;
   private final BillingDataPipelineRecordDao billingDataPipelineRecordDao;
-  private final InstanceDataService instanceDataService;
   private final BigQueryHelperService bigQueryHelperService;
 
   private LoadingCache<String, String> awsBillingMetaDataCache =
@@ -55,11 +48,9 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   }
   @Autowired
   public CustomBillingMetaDataServiceImpl(CloudToHarnessMappingService cloudToHarnessMappingService,
-      BillingDataPipelineRecordDao billingDataPipelineRecordDao, InstanceDataService instanceDataService,
-      BigQueryHelperService bigQueryHelperService) {
+      BillingDataPipelineRecordDao billingDataPipelineRecordDao, BigQueryHelperService bigQueryHelperService) {
     this.cloudToHarnessMappingService = cloudToHarnessMappingService;
     this.billingDataPipelineRecordDao = billingDataPipelineRecordDao;
-    this.instanceDataService = instanceDataService;
     this.bigQueryHelperService = bigQueryHelperService;
   }
 
@@ -77,16 +68,10 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   private Boolean getPipelineJobStatus(String accountId, Instant startTime, Instant endTime) {
     String awsDataSetId = getAwsDataSetId(accountId);
     if (awsDataSetId != null) {
-      InstanceData activeInstance =
-          instanceDataService.getActiveInstance(accountId, startTime, endTime, CloudProvider.AWS);
-      if (null != activeInstance) {
-        Instant startAt = endTime.minus(1, ChronoUnit.HOURS);
-        String resourceId = InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
-            InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, activeInstance);
-        Map<String, VMInstanceBillingData> awsEC2BillingData = bigQueryHelperService.getAwsEC2BillingData(
-            Collections.singletonList(resourceId), startAt, endTime, awsDataSetId);
-        return isNotEmpty(awsEC2BillingData);
-      }
+      Instant startAt = endTime.minus(1, ChronoUnit.HOURS);
+      Map<String, VMInstanceBillingData> awsEC2BillingData =
+          bigQueryHelperService.getAwsBillingData(startAt, endTime, awsDataSetId);
+      return isNotEmpty(awsEC2BillingData);
     }
     return Boolean.TRUE;
   }

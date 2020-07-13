@@ -6,12 +6,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.batch.processing.entities.InstanceData;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
-import io.harness.batch.processing.service.intfc.InstanceDataService;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.rule.Owner;
@@ -35,15 +31,14 @@ import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CustomBillingMetaDataServiceImplTest extends CategoryTest {
-  @Mock private InstanceDataService instanceDataService;
   @Mock private BigQueryHelperService bigQueryHelperService;
   @Mock private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Mock private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @InjectMocks private CustomBillingMetaDataServiceImpl customBillingMetaDataService;
 
   private static final String ACCOUNT_ID = "zEaak-FLS425IEO7OLzMUg";
-  private static final String SETTING_ID = "settingID";
   private static final String RESOURCE_ID = "resourceId";
+  private static final String SETTING_ID = "settingID";
   private static final String AWS_DATA_SETID = "dataSetId";
 
   private final Instant NOW = Instant.now().truncatedTo(ChronoUnit.HOURS);
@@ -72,14 +67,7 @@ public class CustomBillingMetaDataServiceImplTest extends CategoryTest {
         .thenReturn(ceConnectorSettingAttribute());
     when(billingDataPipelineRecordDao.getBySettingId(ACCOUNT_ID, SETTING_ID))
         .thenReturn(BillingDataPipelineRecord.builder().dataSetId(AWS_DATA_SETID).build());
-    Map<String, String> metaData = new HashMap<>();
-    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, RESOURCE_ID);
-    InstanceData instanceData = InstanceData.builder().metaData(metaData).build();
-    when(instanceDataService.getActiveInstance(ACCOUNT_ID, START_TIME, END_TIME, CloudProvider.AWS))
-        .thenReturn(instanceData);
-    when(bigQueryHelperService.getAwsEC2BillingData(
-             Collections.singletonList(RESOURCE_ID), START_TIME, END_TIME, AWS_DATA_SETID))
-        .thenReturn(null);
+    when(bigQueryHelperService.getAwsBillingData(START_TIME, END_TIME, AWS_DATA_SETID)).thenReturn(null);
     Boolean jobFinished = customBillingMetaDataService.checkPipelineJobFinished(ACCOUNT_ID, START_TIME, END_TIME);
     assertThat(jobFinished).isFalse();
   }
@@ -97,13 +85,7 @@ public class CustomBillingMetaDataServiceImplTest extends CategoryTest {
         .thenReturn(ceConnectorSettingAttribute());
     when(billingDataPipelineRecordDao.getBySettingId(ACCOUNT_ID, SETTING_ID))
         .thenReturn(BillingDataPipelineRecord.builder().dataSetId(AWS_DATA_SETID).build());
-    Map<String, String> metaData = new HashMap<>();
-    metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, RESOURCE_ID);
-    InstanceData instanceData = InstanceData.builder().metaData(metaData).build();
-    when(instanceDataService.getActiveInstance(ACCOUNT_ID, START_TIME, END_TIME, CloudProvider.AWS))
-        .thenReturn(instanceData);
-    when(bigQueryHelperService.getAwsEC2BillingData(
-             Collections.singletonList(RESOURCE_ID), START_TIME, END_TIME, AWS_DATA_SETID))
+    when(bigQueryHelperService.getAwsBillingData(START_TIME, END_TIME, AWS_DATA_SETID))
         .thenReturn(vmInstanceBillingDataMap);
     Boolean jobFinished = customBillingMetaDataService.checkPipelineJobFinished(ACCOUNT_ID, START_TIME, END_TIME);
     assertThat(jobFinished).isTrue();

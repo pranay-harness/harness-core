@@ -1,6 +1,7 @@
 package io.harness.batch.processing.processor;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceCategory;
@@ -46,7 +47,8 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
     String nodeUid = nodeInfo.getNodeUid();
 
     InstanceData existingInstanceData = instanceDataService.fetchInstanceData(accountId, clusterId, nodeUid);
-    if (null != existingInstanceData) {
+    if (null != existingInstanceData
+        && !ImmutableSet.of("kmpySmUISimoRrJL6NL73w", "ng2HGKFpStaPsVqGr3B3gA").contains(accountId)) {
       return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
     }
 

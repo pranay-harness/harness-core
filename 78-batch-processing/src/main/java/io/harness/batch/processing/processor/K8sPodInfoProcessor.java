@@ -2,6 +2,8 @@ package io.harness.batch.processing.processor;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.collect.ImmutableSet;
+
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.ccm.InstanceState;
@@ -42,7 +44,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
     String clusterId = podInfo.getClusterId();
 
     InstanceData existingInstanceData = instanceDataService.fetchInstanceData(accountId, clusterId, podUid);
-    if (null != existingInstanceData) {
+    if (null != existingInstanceData
+        && !ImmutableSet.of("kmpySmUISimoRrJL6NL73w", "ng2HGKFpStaPsVqGr3B3gA").contains(accountId)) {
       return InstanceInfo.builder().metaData(Collections.emptyMap()).build();
     }
 

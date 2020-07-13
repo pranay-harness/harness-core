@@ -57,16 +57,13 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
   public Map<String, VMInstanceBillingData> getAwsEC2BillingData(
       List<String> resourceId, Instant startTime, Instant endTime, String dataSetId) {
     String query = BigQueryConstants.AWS_EC2_BILLING_QUERY;
-    Date date = Date.from(startTime);
-    SimpleDateFormat monthFormatter = new SimpleDateFormat("MM");
-    String month = monthFormatter.format(date);
-    SimpleDateFormat yearFormatter = new SimpleDateFormat("yyyy");
-    String year = yearFormatter.format(date);
     String resourceIds = String.join("','", resourceId);
-    String tableName = format(AWS_CUR_TABLE_NAME, year, month);
-    BillingDataPipelineConfig billingDataPipelineConfig = mainConfig.getBillingDataPipelineConfig();
-    String projectTableName = format("%s.%s.%s", billingDataPipelineConfig.getGcpProjectId(), dataSetId, tableName);
+    String projectTableName = getAwsProjectTableName(startTime, dataSetId);
     String formattedQuery = format(query, projectTableName, resourceIds, startTime, endTime);
+    return query(formattedQuery);
+  }
+
+  private Map<String, VMInstanceBillingData> query(String formattedQuery) {
     logger.info("Formatted query {}", formattedQuery);
     BigQuery bigQueryService = getBigQueryService();
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(formattedQuery).build();
@@ -79,6 +76,29 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       Thread.currentThread().interrupt();
     }
     return Collections.emptyMap();
+  }
+
+  private String getAwsCurTableName(Instant startTime) {
+    Date date = Date.from(startTime);
+    SimpleDateFormat monthFormatter = new SimpleDateFormat("MM");
+    String month = monthFormatter.format(date);
+    SimpleDateFormat yearFormatter = new SimpleDateFormat("yyyy");
+    String year = yearFormatter.format(date);
+    return format(AWS_CUR_TABLE_NAME, year, month);
+  }
+
+  private String getAwsProjectTableName(Instant startTime, String dataSetId) {
+    String tableName = getAwsCurTableName(startTime);
+    BillingDataPipelineConfig billingDataPipelineConfig = mainConfig.getBillingDataPipelineConfig();
+    return format("%s.%s.%s", billingDataPipelineConfig.getGcpProjectId(), dataSetId, tableName);
+  }
+
+  @Override
+  public Map<String, VMInstanceBillingData> getAwsBillingData(Instant startTime, Instant endTime, String dataSetId) {
+    String query = BigQueryConstants.AWS_BILLING_DATA;
+    String projectTableName = getAwsProjectTableName(startTime, dataSetId);
+    String formattedQuery = format(query, projectTableName, startTime, endTime);
+    return query(formattedQuery);
   }
 
   public FieldList getFieldList(TableResult result) {

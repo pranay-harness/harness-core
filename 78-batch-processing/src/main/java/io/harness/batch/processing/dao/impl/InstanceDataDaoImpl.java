@@ -27,6 +27,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Repository
@@ -140,6 +141,16 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
     } else {
       logger.trace("Instance data found {} ", instanceData);
+      Map<String, String> instanceDataMetaData = instanceData.getMetaData();
+      Map<String, String> metaData = instanceInfo.getMetaData();
+      String cloudProviderInstanceId = InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
+          InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, metaData);
+      if (null != cloudProviderInstanceId) {
+        instanceDataMetaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, cloudProviderInstanceId);
+        UpdateOperations<InstanceData> updateOperations = hPersistence.createUpdateOperations(InstanceData.class);
+        updateOperations.set(InstanceDataKeys.metaData, instanceDataMetaData);
+        hPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
+      }
     }
     return instanceData;
   }
