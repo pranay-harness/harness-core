@@ -64,7 +64,7 @@ public class BatchJobRunner {
     while (batchJobScheduleTimeProvider.hasNext()) {
       Instant endInstant = batchJobScheduleTimeProvider.next();
       if (null != endInstant && checkDependentJobFinished(accountId, startInstant, dependentBatchJobs)
-          && checkOutOfClusterDependentJobs(accountId, startAt, endAt, batchJobType)) {
+          && checkOutOfClusterDependentJobs(accountId, startInstant, endInstant, batchJobType)) {
         JobParameters params =
             new JobParametersBuilder()
                 .addString(CCMJobConstants.JOB_ID, String.valueOf(System.currentTimeMillis()))

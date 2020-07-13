@@ -9,4 +9,6 @@ import java.util.Map;
 public interface BigQueryHelperService {
   Map<String, VMInstanceBillingData> getAwsEC2BillingData(
       List<String> resourceId, Instant startTime, Instant endTime, String dataSetId);
+
+  Map<String, VMInstanceBillingData> getAwsBillingData(Instant startTime, Instant endTime, String dataSetId);
 }

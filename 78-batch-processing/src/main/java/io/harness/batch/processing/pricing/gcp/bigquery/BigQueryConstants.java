@@ -11,6 +11,11 @@ public class BigQueryConstants {
       + "usagestartdate  >= '%s' AND usagestartdate < '%s' "
       + "GROUP BY  resourceid, servicecode, productfamily; ";
 
+  public static final String AWS_BILLING_DATA = "SELECT resourceid, productfamily  "
+      + "FROM `%s` "
+      + "WHERE  "
+      + "usagestartdate  >= '%s' AND usagestartdate < '%s' LIMIT 1";
+
   public static final String cost = "cost";
   public static final String resourceId = "resourceid";
   public static final String serviceCode = "servicecode";
