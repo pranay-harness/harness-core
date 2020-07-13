@@ -431,8 +431,7 @@ public class PipelineResumeUtils {
    * differ.
    */
   @VisibleForTesting
-  void checkStageAndStageExecutions(PipelineStage stage, List<PipelineStageExecution> stageExecutions)
-      throws InvalidRequestException {
+  void checkStageAndStageExecutions(PipelineStage stage, List<PipelineStageExecution> stageExecutions) {
     if (isEmpty(stageExecutions)) {
       throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
     }
@@ -467,24 +466,29 @@ public class PipelineResumeUtils {
     if (isEmpty(oldWorkflowIdSet)) {
       if (isNotEmpty(newWorkflowId)) {
         throw new InvalidRequestException(format(
-            "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been added.",
-            stage.getName(), newWorkflowId));
+            "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow has been added.",
+            stage.getName()));
       } else {
         return;
       }
     }
 
-    if (isEmpty(newWorkflowId) && isNotEmpty(oldWorkflowIdSet)) {
-      String workflowName = workflowExecutions.get(0).getName();
-      throw new InvalidRequestException(format(
-          "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been removed.",
-          stage.getName(), isEmpty(workflowName) ? oldWorkflowIdSet.iterator().next() : workflowName));
+    if (isEmpty(newWorkflowId)) {
+      if (isNotEmpty(oldWorkflowIdSet)) {
+        String workflowName = workflowExecutions.get(0).getName();
+        throw new InvalidRequestException(format(
+            "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been removed.",
+            stage.getName(), isEmpty(workflowName) ? oldWorkflowIdSet.iterator().next() : workflowName));
+      } else {
+        return;
+      }
     }
 
     if (!newWorkflowId.equals(oldWorkflowIdSet.iterator().next())) {
+      String workflowName = workflowExecutions.get(0).getName();
       throw new InvalidRequestException(format(
           "You cannot resume a pipeline which has been modified. Pipeline stage [%s] modified and a workflow [%s] has been changed.",
-          stage.getName(), newWorkflowId));
+          stage.getName(), workflowName));
     }
   }
 
