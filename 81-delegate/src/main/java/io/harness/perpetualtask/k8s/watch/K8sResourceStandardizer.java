@@ -16,10 +16,14 @@ public class K8sResourceStandardizer {
 
   // Standardize cpu as nanocores (as usage is given in nanocore precision)
   public long getCpuNano(String cpu) {
+    return getCpuCores(cpu).multiply(SCALE_TO_NANO).longValue();
+  }
+
+  public BigDecimal getCpuCores(String cpu) {
     if (isEmpty(cpu)) {
-      return 0L;
+      return BigDecimal.ZERO;
     }
-    return Quantity.fromString(cpu).getNumber().multiply(SCALE_TO_NANO).longValue();
+    return Quantity.fromString(cpu).getNumber();
   }
 
   // Standardize memory as bytes

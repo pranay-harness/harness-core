@@ -8,10 +8,10 @@ import com.google.common.collect.ImmutableMap;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.ccm.health.HealthStatusService;
+import io.harness.ccm.recommender.k8sworkload.RecommenderUtils;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.ContainerStateProto;
-import io.harness.event.payloads.HistogramProto;
 import io.harness.event.payloads.NodeMetric;
 import io.harness.event.payloads.PodMetric;
 import io.harness.grpc.utils.HDurations;
@@ -97,10 +97,10 @@ public class K8sMetricCollector {
         long podCpuNano = 0;
         long podMemoryBytes = 0;
         for (PodMetrics.Container container : podMetrics.getContainers()) {
-          long cpuNano = K8sResourceStandardizer.getCpuNano(container.getUsage().getCpu());
-          podCpuNano += cpuNano;
-          long memoryByte = K8sResourceStandardizer.getMemoryByte(container.getUsage().getMemory());
-          podMemoryBytes += memoryByte;
+          long containerCpuNano = K8sResourceStandardizer.getCpuNano(container.getUsage().getCpu());
+          podCpuNano += containerCpuNano;
+          long containerMemoryBytes = K8sResourceStandardizer.getMemoryByte(container.getUsage().getMemory());
+          podMemoryBytes += containerMemoryBytes;
 
           ContainerState containerState =
               requireNonNull(containerStatesCache.get(CacheKey.builder()
@@ -109,8 +109,9 @@ public class K8sMetricCollector {
                                                           .containerName(container.getName())
                                                           .build(),
                   key -> new ContainerState(key.namespace, key.name, key.containerName)));
-          containerState.addCpuSample(cpuNano, podMetrics.getTimestamp());
-          containerState.addMemorySample(memoryByte);
+          double containerCpuCores = K8sResourceStandardizer.getCpuCores(container.getUsage().getCpu()).doubleValue();
+          containerState.addCpuSample(containerCpuCores, podMetrics.getTimestamp());
+          containerState.addMemorySample(containerMemoryBytes, podMetrics.getTimestamp());
         }
         requireNonNull(podMetricsCache.get(CacheKey.builder()
                                                .name(podMetrics.getMetadata().getName())
@@ -192,15 +193,12 @@ public class K8sMetricCollector {
               .setPodName(e.getKey().getName())
               .setContainerName(e.getKey().getContainerName())
               .setMemoryPeak(containerState.getMemoryPeak())
-              .setCpuHistogram(
-                  HistogramProto.newBuilder()
-                      .setReferenceTimestamp(HTimestamps.fromInstant(histogramCheckpoint.getReferenceTimestamp()))
-                      .putAllBucketWeights(histogramCheckpoint.getBucketWeights())
-                      .setTotalWeight(histogramCheckpoint.getTotalWeight())
-                      .build())
+              .setMemoryPeakTime(HTimestamps.fromInstant(containerState.getMemoryPeakTime()))
+              .setCpuHistogram(RecommenderUtils.checkpointToProto(histogramCheckpoint))
               .setFirstSampleStart(HTimestamps.fromInstant(containerState.getFirstSampleStart()))
               .setLastSampleStart(HTimestamps.fromInstant(containerState.getLastSampleStart()))
               .setTotalSamplesCount(containerState.getTotalSamplesCount())
+              .setVersion(1)
               .build();
         })
         .forEach(containerStateProto

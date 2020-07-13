@@ -89,4 +89,12 @@ public class K8sResourceStandardizerTest extends CategoryTest {
     assertThat(K8sResourceStandardizer.getMemoryByte("")).isEqualTo(0);
     assertThat(K8sResourceStandardizer.getMemoryByte(null)).isEqualTo(0);
   }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testCpuCore() throws Exception {
+    assertThat(K8sResourceStandardizer.getCpuCores("250000000n").doubleValue()).isEqualTo(0.25);
+    assertThat(K8sResourceStandardizer.getCpuCores("1250000000n").doubleValue()).isEqualTo(1.25);
+  }
 }

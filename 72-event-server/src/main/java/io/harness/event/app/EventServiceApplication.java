@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
+import io.harness.morphia.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.serializer.YamlUtils;
@@ -78,7 +79,8 @@ public class EventServiceApplication {
       }
     });
 
-    modules.addAll(new MongoModule().cumulativeDependencies());
+    modules.add(new MongoModule());
+    modules.add(new MorphiaModule());
     modules.add(new EventServiceModule(config));
 
     Injector injector = Guice.createInjector(modules);

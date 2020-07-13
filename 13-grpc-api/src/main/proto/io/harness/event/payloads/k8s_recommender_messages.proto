@@ -29,4 +29,11 @@ message ContainerStateProto {
   google.protobuf.Timestamp first_sample_start = 10;
   google.protobuf.Timestamp last_sample_start = 11;
   int32 total_samples_count = 12;
+
+  // change this when changing semantics (eg: parameters of the histogram)
+  // to not mix-up different histograms on the server side
+  int32 version = 13;
+
+  // timestamp of the memory_peak observation
+  google.protobuf.Timestamp memory_peak_time = 14;
 }
