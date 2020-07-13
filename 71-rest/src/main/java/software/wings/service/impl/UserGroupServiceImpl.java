@@ -9,6 +9,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.validation.Validator.unEqualCheck;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -351,7 +352,8 @@ public class UserGroupServiceImpl implements UserGroupService {
   private void maskCePermissions(UserGroup userGroup) {
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
     if (accountPermissions != null) {
-      Set<PermissionType> accountPermissionSet = accountPermissions.getPermissions();
+      Set<PermissionType> accountPermissionSet =
+          Optional.ofNullable(accountPermissions.getPermissions()).orElse(emptySet());
       accountPermissionSet.removeAll(newHashSet(CE_ADMIN, CE_VIEWER));
       userGroup.setAccountPermissions(AccountPermissions.builder().permissions(accountPermissionSet).build());
     }
