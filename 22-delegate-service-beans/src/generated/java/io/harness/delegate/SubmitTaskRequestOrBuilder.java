@@ -8,19 +8,19 @@ public interface SubmitTaskRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.SubmitTaskRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+   * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
    * @return Whether the callbackToken field is set.
    */
   boolean hasCallbackToken();
   /**
-   * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+   * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
    * @return The callbackToken.
    */
-  io.harness.callback.CallbackToken getCallbackToken();
+  io.harness.callback.DelegateCallbackToken getCallbackToken();
   /**
-   * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+   * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
    */
-  io.harness.callback.CallbackTokenOrBuilder getCallbackTokenOrBuilder();
+  io.harness.callback.DelegateCallbackTokenOrBuilder getCallbackTokenOrBuilder();
 
   /**
    * <code>.io.harness.delegate.AccountId account_id = 2[json_name = "accountId"];</code>

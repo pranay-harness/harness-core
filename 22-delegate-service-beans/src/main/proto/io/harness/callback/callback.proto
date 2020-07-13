@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package io.harness.callback;
+
+option java_multiple_files = true;
+
+import "io/harness/callback/http_entrypoint.proto";
+import "io/harness/callback/mongodb.proto";
+
+message DelegateCallbackToken {
+  string token = 1;
+}
+
+message DelegateCallback {
+  oneof type {
+    HttpsClientEntrypoint https_client_entrypoint = 1;
+    MongoDatabase mongo_database = 2;
+  }
+}

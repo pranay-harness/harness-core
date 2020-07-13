@@ -8,13 +8,17 @@ public interface RegisterCallbackRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.RegisterCallbackRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string type = 1[json_name = "type"];</code>
-   * @return The type.
+   * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+   * @return Whether the callback field is set.
    */
-  java.lang.String getType();
+  boolean hasCallback();
   /**
-   * <code>string type = 1[json_name = "type"];</code>
-   * @return The bytes for type.
+   * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+   * @return The callback.
    */
-  com.google.protobuf.ByteString getTypeBytes();
+  io.harness.callback.DelegateCallback getCallback();
+  /**
+   * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+   */
+  io.harness.callback.DelegateCallbackOrBuilder getCallbackOrBuilder();
 }

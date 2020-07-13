@@ -15,9 +15,7 @@ public final class RegisterCallbackRequest extends com.google.protobuf.Generated
   private RegisterCallbackRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private RegisterCallbackRequest() {
-    type_ = "";
-  }
+  private RegisterCallbackRequest() {}
 
   @java.
   lang.Override
@@ -48,9 +46,16 @@ public final class RegisterCallbackRequest extends com.google.protobuf.Generated
             done = true;
             break;
           case 10: {
-            java.lang.String s = input.readStringRequireUtf8();
+            io.harness.callback.DelegateCallback.Builder subBuilder = null;
+            if (callback_ != null) {
+              subBuilder = callback_.toBuilder();
+            }
+            callback_ = input.readMessage(io.harness.callback.DelegateCallback.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(callback_);
+              callback_ = subBuilder.buildPartial();
+            }
 
-            type_ = s;
             break;
           }
           default: {
@@ -84,36 +89,27 @@ public final class RegisterCallbackRequest extends com.google.protobuf.Generated
             io.harness.delegate.RegisterCallbackRequest.Builder.class);
   }
 
-  public static final int TYPE_FIELD_NUMBER = 1;
-  private volatile java.lang.Object type_;
+  public static final int CALLBACK_FIELD_NUMBER = 1;
+  private io.harness.callback.DelegateCallback callback_;
   /**
-   * <code>string type = 1[json_name = "type"];</code>
-   * @return The type.
+   * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+   * @return Whether the callback field is set.
    */
-  public java.lang.String getType() {
-    java.lang.Object ref = type_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      type_ = s;
-      return s;
-    }
+  public boolean hasCallback() {
+    return callback_ != null;
   }
   /**
-   * <code>string type = 1[json_name = "type"];</code>
-   * @return The bytes for type.
+   * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+   * @return The callback.
    */
-  public com.google.protobuf.ByteString getTypeBytes() {
-    java.lang.Object ref = type_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-      type_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
+  public io.harness.callback.DelegateCallback getCallback() {
+    return callback_ == null ? io.harness.callback.DelegateCallback.getDefaultInstance() : callback_;
+  }
+  /**
+   * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+   */
+  public io.harness.callback.DelegateCallbackOrBuilder getCallbackOrBuilder() {
+    return getCallback();
   }
 
   private byte memoizedIsInitialized = -1;
@@ -131,8 +127,8 @@ public final class RegisterCallbackRequest extends com.google.protobuf.Generated
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (!getTypeBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, type_);
+    if (callback_ != null) {
+      output.writeMessage(1, getCallback());
     }
     unknownFields.writeTo(output);
   }
@@ -144,8 +140,8 @@ public final class RegisterCallbackRequest extends com.google.protobuf.Generated
       return size;
 
     size = 0;
-    if (!getTypeBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, type_);
+    if (callback_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getCallback());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -162,8 +158,12 @@ public final class RegisterCallbackRequest extends com.google.protobuf.Generated
     }
     io.harness.delegate.RegisterCallbackRequest other = (io.harness.delegate.RegisterCallbackRequest) obj;
 
-    if (!getType().equals(other.getType()))
+    if (hasCallback() != other.hasCallback())
       return false;
+    if (hasCallback()) {
+      if (!getCallback().equals(other.getCallback()))
+        return false;
+    }
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -176,8 +176,10 @@ public final class RegisterCallbackRequest extends com.google.protobuf.Generated
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + TYPE_FIELD_NUMBER;
-    hash = (53 * hash) + getType().hashCode();
+    if (hasCallback()) {
+      hash = (37 * hash) + CALLBACK_FIELD_NUMBER;
+      hash = (53 * hash) + getCallback().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -291,8 +293,12 @@ public final class RegisterCallbackRequest extends com.google.protobuf.Generated
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      type_ = "";
-
+      if (callbackBuilder_ == null) {
+        callback_ = null;
+      } else {
+        callback_ = null;
+        callbackBuilder_ = null;
+      }
       return this;
     }
 
@@ -323,7 +329,11 @@ public final class RegisterCallbackRequest extends com.google.protobuf.Generated
     lang.Override
     public io.harness.delegate.RegisterCallbackRequest buildPartial() {
       io.harness.delegate.RegisterCallbackRequest result = new io.harness.delegate.RegisterCallbackRequest(this);
-      result.type_ = type_;
+      if (callbackBuilder_ == null) {
+        result.callback_ = callback_;
+      } else {
+        result.callback_ = callbackBuilder_.build();
+      }
       onBuilt();
       return result;
     }
@@ -366,9 +376,8 @@ public final class RegisterCallbackRequest extends com.google.protobuf.Generated
     public Builder mergeFrom(io.harness.delegate.RegisterCallbackRequest other) {
       if (other == io.harness.delegate.RegisterCallbackRequest.getDefaultInstance())
         return this;
-      if (!other.getType().isEmpty()) {
-        type_ = other.type_;
-        onChanged();
+      if (other.hasCallback()) {
+        mergeCallback(other.getCallback());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -397,73 +406,117 @@ public final class RegisterCallbackRequest extends com.google.protobuf.Generated
       return this;
     }
 
-    private java.lang.Object type_ = "";
+    private io.harness.callback.DelegateCallback callback_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.DelegateCallback,
+        io.harness.callback.DelegateCallback.Builder, io.harness.callback.DelegateCallbackOrBuilder> callbackBuilder_;
     /**
-     * <code>string type = 1[json_name = "type"];</code>
-     * @return The type.
+     * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+     * @return Whether the callback field is set.
      */
-    public java.lang.String getType() {
-      java.lang.Object ref = type_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        type_ = s;
-        return s;
+    public boolean hasCallback() {
+      return callbackBuilder_ != null || callback_ != null;
+    }
+    /**
+     * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+     * @return The callback.
+     */
+    public io.harness.callback.DelegateCallback getCallback() {
+      if (callbackBuilder_ == null) {
+        return callback_ == null ? io.harness.callback.DelegateCallback.getDefaultInstance() : callback_;
       } else {
-        return (java.lang.String) ref;
+        return callbackBuilder_.getMessage();
       }
     }
     /**
-     * <code>string type = 1[json_name = "type"];</code>
-     * @return The bytes for type.
+     * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
      */
-    public com.google.protobuf.ByteString getTypeBytes() {
-      java.lang.Object ref = type_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        type_ = b;
-        return b;
+    public Builder setCallback(io.harness.callback.DelegateCallback value) {
+      if (callbackBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        callback_ = value;
+        onChanged();
       } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string type = 1[json_name = "type"];</code>
-     * @param value The type to set.
-     * @return This builder for chaining.
-     */
-    public Builder setType(java.lang.String value) {
-      if (value == null) {
-        throw new NullPointerException();
+        callbackBuilder_.setMessage(value);
       }
 
-      type_ = value;
-      onChanged();
       return this;
     }
     /**
-     * <code>string type = 1[json_name = "type"];</code>
-     * @return This builder for chaining.
+     * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
      */
-    public Builder clearType() {
-      type_ = getDefaultInstance().getType();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string type = 1[json_name = "type"];</code>
-     * @param value The bytes for type to set.
-     * @return This builder for chaining.
-     */
-    public Builder setTypeBytes(com.google.protobuf.ByteString value) {
-      if (value == null) {
-        throw new NullPointerException();
+    public Builder setCallback(io.harness.callback.DelegateCallback.Builder builderForValue) {
+      if (callbackBuilder_ == null) {
+        callback_ = builderForValue.build();
+        onChanged();
+      } else {
+        callbackBuilder_.setMessage(builderForValue.build());
       }
-      checkByteStringIsUtf8(value);
 
-      type_ = value;
-      onChanged();
       return this;
+    }
+    /**
+     * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+     */
+    public Builder mergeCallback(io.harness.callback.DelegateCallback value) {
+      if (callbackBuilder_ == null) {
+        if (callback_ != null) {
+          callback_ = io.harness.callback.DelegateCallback.newBuilder(callback_).mergeFrom(value).buildPartial();
+        } else {
+          callback_ = value;
+        }
+        onChanged();
+      } else {
+        callbackBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+     */
+    public Builder clearCallback() {
+      if (callbackBuilder_ == null) {
+        callback_ = null;
+        onChanged();
+      } else {
+        callback_ = null;
+        callbackBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+     */
+    public io.harness.callback.DelegateCallback.Builder getCallbackBuilder() {
+      onChanged();
+      return getCallbackFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+     */
+    public io.harness.callback.DelegateCallbackOrBuilder getCallbackOrBuilder() {
+      if (callbackBuilder_ != null) {
+        return callbackBuilder_.getMessageOrBuilder();
+      } else {
+        return callback_ == null ? io.harness.callback.DelegateCallback.getDefaultInstance() : callback_;
+      }
+    }
+    /**
+     * <code>.io.harness.callback.DelegateCallback callback = 1[json_name = "callback"];</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.DelegateCallback,
+        io.harness.callback.DelegateCallback.Builder, io.harness.callback.DelegateCallbackOrBuilder>
+    getCallbackFieldBuilder() {
+      if (callbackBuilder_ == null) {
+        callbackBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.DelegateCallback,
+            io.harness.callback.DelegateCallback.Builder, io.harness.callback.DelegateCallbackOrBuilder>(
+            getCallback(), getParentForChildren(), isClean());
+        callback_ = null;
+      }
+      return callbackBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

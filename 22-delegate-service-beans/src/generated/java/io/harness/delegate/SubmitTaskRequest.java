@@ -49,11 +49,11 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
             done = true;
             break;
           case 10: {
-            io.harness.callback.CallbackToken.Builder subBuilder = null;
+            io.harness.callback.DelegateCallbackToken.Builder subBuilder = null;
             if (callbackToken_ != null) {
               subBuilder = callbackToken_.toBuilder();
             }
-            callbackToken_ = input.readMessage(io.harness.callback.CallbackToken.parser(), extensionRegistry);
+            callbackToken_ = input.readMessage(io.harness.callback.DelegateCallbackToken.parser(), extensionRegistry);
             if (subBuilder != null) {
               subBuilder.mergeFrom(callbackToken_);
               callbackToken_ = subBuilder.buildPartial();
@@ -143,25 +143,25 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
   }
 
   public static final int CALLBACK_TOKEN_FIELD_NUMBER = 1;
-  private io.harness.callback.CallbackToken callbackToken_;
+  private io.harness.callback.DelegateCallbackToken callbackToken_;
   /**
-   * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+   * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
    * @return Whether the callbackToken field is set.
    */
   public boolean hasCallbackToken() {
     return callbackToken_ != null;
   }
   /**
-   * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+   * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
    * @return The callbackToken.
    */
-  public io.harness.callback.CallbackToken getCallbackToken() {
-    return callbackToken_ == null ? io.harness.callback.CallbackToken.getDefaultInstance() : callbackToken_;
+  public io.harness.callback.DelegateCallbackToken getCallbackToken() {
+    return callbackToken_ == null ? io.harness.callback.DelegateCallbackToken.getDefaultInstance() : callbackToken_;
   }
   /**
-   * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+   * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
    */
-  public io.harness.callback.CallbackTokenOrBuilder getCallbackTokenOrBuilder() {
+  public io.harness.callback.DelegateCallbackTokenOrBuilder getCallbackTokenOrBuilder() {
     return getCallbackToken();
   }
 
@@ -705,31 +705,32 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
     }
     private int bitField0_;
 
-    private io.harness.callback.CallbackToken callbackToken_;
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.CallbackToken,
-        io.harness.callback.CallbackToken.Builder, io.harness.callback.CallbackTokenOrBuilder> callbackTokenBuilder_;
+    private io.harness.callback.DelegateCallbackToken callbackToken_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.DelegateCallbackToken,
+        io.harness.callback.DelegateCallbackToken.Builder, io.harness.callback.DelegateCallbackTokenOrBuilder>
+        callbackTokenBuilder_;
     /**
-     * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+     * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
      * @return Whether the callbackToken field is set.
      */
     public boolean hasCallbackToken() {
       return callbackTokenBuilder_ != null || callbackToken_ != null;
     }
     /**
-     * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+     * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
      * @return The callbackToken.
      */
-    public io.harness.callback.CallbackToken getCallbackToken() {
+    public io.harness.callback.DelegateCallbackToken getCallbackToken() {
       if (callbackTokenBuilder_ == null) {
-        return callbackToken_ == null ? io.harness.callback.CallbackToken.getDefaultInstance() : callbackToken_;
+        return callbackToken_ == null ? io.harness.callback.DelegateCallbackToken.getDefaultInstance() : callbackToken_;
       } else {
         return callbackTokenBuilder_.getMessage();
       }
     }
     /**
-     * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+     * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
      */
-    public Builder setCallbackToken(io.harness.callback.CallbackToken value) {
+    public Builder setCallbackToken(io.harness.callback.DelegateCallbackToken value) {
       if (callbackTokenBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -743,9 +744,9 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
       return this;
     }
     /**
-     * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+     * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
      */
-    public Builder setCallbackToken(io.harness.callback.CallbackToken.Builder builderForValue) {
+    public Builder setCallbackToken(io.harness.callback.DelegateCallbackToken.Builder builderForValue) {
       if (callbackTokenBuilder_ == null) {
         callbackToken_ = builderForValue.build();
         onChanged();
@@ -756,12 +757,13 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
       return this;
     }
     /**
-     * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+     * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
      */
-    public Builder mergeCallbackToken(io.harness.callback.CallbackToken value) {
+    public Builder mergeCallbackToken(io.harness.callback.DelegateCallbackToken value) {
       if (callbackTokenBuilder_ == null) {
         if (callbackToken_ != null) {
-          callbackToken_ = io.harness.callback.CallbackToken.newBuilder(callbackToken_).mergeFrom(value).buildPartial();
+          callbackToken_ =
+              io.harness.callback.DelegateCallbackToken.newBuilder(callbackToken_).mergeFrom(value).buildPartial();
         } else {
           callbackToken_ = value;
         }
@@ -773,7 +775,7 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
       return this;
     }
     /**
-     * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+     * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
      */
     public Builder clearCallbackToken() {
       if (callbackTokenBuilder_ == null) {
@@ -787,31 +789,31 @@ public final class SubmitTaskRequest extends com.google.protobuf.GeneratedMessag
       return this;
     }
     /**
-     * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+     * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
      */
-    public io.harness.callback.CallbackToken.Builder getCallbackTokenBuilder() {
+    public io.harness.callback.DelegateCallbackToken.Builder getCallbackTokenBuilder() {
       onChanged();
       return getCallbackTokenFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+     * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
      */
-    public io.harness.callback.CallbackTokenOrBuilder getCallbackTokenOrBuilder() {
+    public io.harness.callback.DelegateCallbackTokenOrBuilder getCallbackTokenOrBuilder() {
       if (callbackTokenBuilder_ != null) {
         return callbackTokenBuilder_.getMessageOrBuilder();
       } else {
-        return callbackToken_ == null ? io.harness.callback.CallbackToken.getDefaultInstance() : callbackToken_;
+        return callbackToken_ == null ? io.harness.callback.DelegateCallbackToken.getDefaultInstance() : callbackToken_;
       }
     }
     /**
-     * <code>.io.harness.callback.CallbackToken callback_token = 1[json_name = "callbackToken"];</code>
+     * <code>.io.harness.callback.DelegateCallbackToken callback_token = 1[json_name = "callbackToken"];</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.CallbackToken,
-        io.harness.callback.CallbackToken.Builder, io.harness.callback.CallbackTokenOrBuilder>
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.DelegateCallbackToken,
+        io.harness.callback.DelegateCallbackToken.Builder, io.harness.callback.DelegateCallbackTokenOrBuilder>
     getCallbackTokenFieldBuilder() {
       if (callbackTokenBuilder_ == null) {
-        callbackTokenBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.CallbackToken,
-            io.harness.callback.CallbackToken.Builder, io.harness.callback.CallbackTokenOrBuilder>(
+        callbackTokenBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.callback.DelegateCallbackToken,
+            io.harness.callback.DelegateCallbackToken.Builder, io.harness.callback.DelegateCallbackTokenOrBuilder>(
             getCallbackToken(), getParentForChildren(), isClean());
         callbackToken_ = null;
       }
