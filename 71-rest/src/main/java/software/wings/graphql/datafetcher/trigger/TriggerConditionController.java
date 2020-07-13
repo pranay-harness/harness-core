@@ -29,6 +29,7 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
+import software.wings.graphql.schema.type.trigger.QLGitHubAction;
 import software.wings.graphql.schema.type.trigger.QLOnNewArtifact;
 import software.wings.graphql.schema.type.trigger.QLOnPipelineCompletion;
 import software.wings.graphql.schema.type.trigger.QLOnSchedule;
@@ -112,32 +113,19 @@ public class TriggerConditionController {
                                        .payload(webHookTriggerCondition.getWebHookToken().getPayload())
                                        .build();
 
-        String eventType = null;
-        String action = null;
+        QLWebhookEvent event = null;
         switch (webhookSource) {
           case GITHUB:
-            eventType = ((WebHookTriggerCondition) trigger.getCondition()).getEventTypes().get(0).getValue();
-
-            if (GitHubEventType.PULL_REQUEST.getValue().equals(eventType)
-                || (GitHubEventType.PACKAGE.getValue().equals(eventType))) {
-              action = ((WebHookTriggerCondition) trigger.getCondition()).getActions().get(0).getValue();
-            } else if (GitHubEventType.RELEASE.getValue().equals(eventType)) {
-              action = ((WebHookTriggerCondition) trigger.getCondition()).getReleaseActions().get(0).getValue();
-            }
+            event = populateGithubEvent(trigger.getCondition());
             break;
           case GITLAB:
-            eventType = ((WebHookTriggerCondition) trigger.getCondition()).getEventTypes().get(0).getValue();
+            event = populateGitlabEvent(trigger.getCondition());
             break;
           case BITBUCKET:
-            String[] eventAndAction =
-                ((WebHookTriggerCondition) trigger.getCondition()).getBitBucketEvents().get(0).getValue().split(":");
-            eventType = eventAndAction[0];
-            action = eventAndAction[1];
+            event = populateBitbucketEvent(trigger.getCondition());
             break;
           default:
         }
-
-        QLWebhookEvent event = QLWebhookEvent.builder().action(action).event(eventType).build();
 
         SettingAttribute gitConfig = settingsService.get(webHookTriggerCondition.getGitConnectorId());
         String gitConnectorName = gitConfig != null ? gitConfig.getName() : null;
@@ -160,6 +148,42 @@ public class TriggerConditionController {
       default:
     }
     return condition;
+  }
+
+  private QLWebhookEvent populateGithubEvent(TriggerCondition triggerCondition) {
+    String action = null;
+    String eventType = ((WebHookTriggerCondition) triggerCondition).getEventTypes().get(0).getValue();
+
+    if (GitHubEventType.PULL_REQUEST.getValue().equals(eventType)
+        || (GitHubEventType.PACKAGE.getValue().equals(eventType))) {
+      action = ((WebHookTriggerCondition) triggerCondition).getActions().get(0).getValue();
+    } else if (GitHubEventType.RELEASE.getValue().equals(eventType)) {
+      action = ((WebHookTriggerCondition) triggerCondition).getReleaseActions().get(0).getValue();
+    }
+
+    return QLWebhookEvent.builder().action(action).event(eventType).build();
+  }
+
+  private QLWebhookEvent populateGitlabEvent(TriggerCondition triggerCondition) {
+    return QLWebhookEvent.builder()
+        .event(((WebHookTriggerCondition) triggerCondition).getEventTypes().get(0).getValue())
+        .build();
+  }
+
+  private QLWebhookEvent populateBitbucketEvent(TriggerCondition triggerCondition) {
+    String eventType;
+    String action = null;
+    BitBucketEventType bitBucketEventType = ((WebHookTriggerCondition) triggerCondition).getBitBucketEvents().get(0);
+
+    if (bitBucketEventType == BitBucketEventType.ANY || bitBucketEventType == BitBucketEventType.PING) {
+      eventType = bitBucketEventType.getValue();
+    } else {
+      String[] eventAndAction = bitBucketEventType.getValue().split(":");
+      eventType = eventAndAction[0];
+      action = eventAndAction[1];
+    }
+
+    return QLWebhookEvent.builder().action(action).event(eventType).build();
   }
 
   public TriggerCondition resolveTriggerCondition(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
@@ -315,8 +339,8 @@ public class TriggerConditionController {
     GithubAction gitHubAction = null;
     switch (qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getEvent()) {
       case PULL_REQUEST:
-        gitHubAction = GithubAction.find(
-            qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getAction().name().toLowerCase());
+        gitHubAction = GithubAction.valueOf(
+            qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getAction().name());
 
         if (gitHubAction == GithubAction.PACKAGE_PUBLISHED) {
           throw new InvalidRequestException("Unsupported GitHub Action", USER);
@@ -324,17 +348,21 @@ public class TriggerConditionController {
         githubActions = Arrays.asList(gitHubAction);
         break;
       case RELEASE:
-        ReleaseAction releaseAction = ReleaseAction.find(
-            qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getAction().name().toLowerCase());
+        QLGitHubAction qlGitHubAction = qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getAction();
+        List<QLGitHubAction> supportedActions =
+            Arrays.asList(QLGitHubAction.CREATED, QLGitHubAction.PUBLISHED, QLGitHubAction.RELEASED,
+                QLGitHubAction.UNPUBLISHED, QLGitHubAction.EDITED, QLGitHubAction.PRE_RELEASED, QLGitHubAction.DELETED);
+
+        if (!supportedActions.contains(qlGitHubAction)) {
+          throw new InvalidRequestException("Unsupported GitHub Release Action", USER);
+        }
+        ReleaseAction releaseAction = ReleaseAction.valueOf(
+            qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getAction().name());
         releaseActions = Arrays.asList(releaseAction);
         break;
       case PACKAGE:
-        gitHubAction = GithubAction.find(qlTriggerConditionInput.getWebhookConditionInput()
-                                             .getGithubEvent()
-                                             .getAction()
-                                             .name()
-                                             .toLowerCase()
-                                             .replace("_", ":"));
+        gitHubAction = GithubAction.valueOf(
+            qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getAction().name());
 
         if (gitHubAction != GithubAction.PACKAGE_PUBLISHED) {
           throw new InvalidRequestException("Unsupported GitHub Action", USER);
@@ -353,8 +381,8 @@ public class TriggerConditionController {
     if (qlTriggerConditionInput.getWebhookConditionInput().getGitlabEvent() == null) {
       throw new InvalidRequestException("Gitlab event must not be null", USER);
     }
-    List<WebhookEventType> eventTypes = Arrays.asList(WebhookEventType.find(
-        qlTriggerConditionInput.getWebhookConditionInput().getGitlabEvent().name().toLowerCase()));
+    List<WebhookEventType> eventTypes = Arrays.asList(
+        WebhookEventType.valueOf(qlTriggerConditionInput.getWebhookConditionInput().getGitlabEvent().name()));
 
     builder.eventTypes(eventTypes);
   }
@@ -366,13 +394,9 @@ public class TriggerConditionController {
     }
     BitBucketEventType bitBucketEventType =
         BitBucketEventType.valueOf(qlTriggerConditionInput.getWebhookConditionInput().getBitbucketEvent().name());
-    String webhookEvent = null;
-    if (bitBucketEventType.getValue().split(":")[0].equals("pullrequest")) {
-      webhookEvent = "pull_request";
-    } else {
-      webhookEvent = bitBucketEventType.getValue().split(":")[0];
-    }
-    builder.eventTypes(Arrays.asList(WebhookEventType.find(webhookEvent)));
+    String webhookEventType = bitBucketEventType.getEventType().getValue();
+
+    builder.eventTypes(Arrays.asList(WebhookEventType.find(webhookEventType)));
     builder.bitBucketEvents(Arrays.asList(bitBucketEventType));
   }
 }
