@@ -2,9 +2,8 @@ package io.harness.cdng.connectornextgen.tasks;
 
 import com.google.inject.Inject;
 
-import io.harness.cdng.connectornextgen.service.KubernetesConnectorService;
+import io.harness.cdng.connectornextgen.service.KubernetesConnectorDelegateService;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
@@ -19,7 +18,8 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnableTask {
-  @Inject private KubernetesConnectorService kubernetesConnectorService;
+  @Inject private KubernetesConnectorDelegateService kubernetesConnectorDelegateService;
+  private static final String EMPTY_STR = "";
 
   public KubernetesTestConnectionDelegateTask(
       DelegateTaskPackage delegateTaskPackage, Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -33,19 +33,19 @@ public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnab
     Exception execptionInProcessing = null;
     boolean validCredentials = false;
     try {
-      validCredentials = kubernetesConnectorService.validate(kubernetesClusterConfig);
+      validCredentials = kubernetesConnectorDelegateService.validate(kubernetesClusterConfig);
     } catch (Exception ex) {
       logger.info("Exception while validating kubernetes credentials", ex);
       execptionInProcessing = ex;
     }
     return KubernetesConnectionTaskResponse.builder()
         .connectionSuccessFul(validCredentials)
-        .exception(execptionInProcessing)
+        .errorMessage(execptionInProcessing != null ? execptionInProcessing.getMessage() : EMPTY_STR)
         .build();
   }
 
   @Override
-  public RemoteMethodReturnValueData run(Object[] parameters) {
+  public KubernetesConnectionTaskResponse run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
   }
 }

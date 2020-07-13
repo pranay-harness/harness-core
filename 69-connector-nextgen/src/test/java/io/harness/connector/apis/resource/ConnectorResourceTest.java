@@ -7,14 +7,12 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.ConnectorsBaseTest;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
-import io.harness.connector.services.ConnectorService;
+import io.harness.connector.impl.ConnectorServiceImpl;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
@@ -33,11 +31,12 @@ import org.springframework.data.domain.PageImpl;
 import java.util.Arrays;
 import java.util.Optional;
 
-public class ConnectorResourceTest extends ConnectorsBaseTest {
-  @Mock public ConnectorService connectorService;
-  @InjectMocks @Inject public ConnectorResource connectorResource;
+public class ConnectorResourceTest extends CategoryTest {
+  @Mock private ConnectorServiceImpl connectorService;
+  @InjectMocks private ConnectorResource connectorResource;
   ConnectorDTO connectorDTO;
   ConnectorRequestDTO randomConnectorRequestDTO;
+
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);

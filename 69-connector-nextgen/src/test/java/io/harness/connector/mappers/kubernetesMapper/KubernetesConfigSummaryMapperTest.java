@@ -3,11 +3,11 @@ package io.harness.connector.mappers.kubernetesMapper;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.ConnectorsBaseTest;
 import io.harness.connector.apis.dto.k8connector.KubernetesConfigSummaryDTO;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
@@ -16,12 +16,23 @@ import io.harness.connector.entities.embedded.kubernetescluster.UserNamePassword
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-public class KubernetesConfigSummaryMapperTest extends ConnectorsBaseTest {
-  @Inject @InjectMocks KubernetesConfigSummaryMapper kubernetesConfigSummaryMapper;
+public class KubernetesConfigSummaryMapperTest extends CategoryTest {
+  @InjectMocks KubernetesConfigSummaryMapper kubernetesConfigSummaryMapper;
+  @Mock KubernetesConfigCastHelper kubernetesConfigCastHelper;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    when(kubernetesConfigCastHelper.castToKubernetesDelegateCredential(any())).thenCallRealMethod();
+    when(kubernetesConfigCastHelper.castToManualKubernetesCredentials(any())).thenCallRealMethod();
+  }
 
   @Test
   @Owner(developers = OwnerRule.DEEPAK)

@@ -8,10 +8,8 @@ import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredenti
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Inject;
-
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.ConnectorsBaseTest;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.kubernetescluster.ClientKeyCertK8;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
@@ -31,12 +29,19 @@ import io.harness.delegate.beans.connector.k8Connector.ServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
 
-public class KubernetesDTOToEntityTest extends ConnectorsBaseTest {
-  @Inject @InjectMocks KubernetesDTOToEntity kubernetesDTOToEntity;
+public class KubernetesDTOToEntityTest extends CategoryTest {
+  @InjectMocks KubernetesDTOToEntity kubernetesDTOToEntity;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = OwnerRule.DEEPAK)

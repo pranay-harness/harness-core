@@ -10,6 +10,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.ClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
@@ -141,5 +142,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(KubernetesConnectionTaskParams.class, 19057);
     kryo.register(KubernetesAuthCredentialDTO.class, 19058);
     kryo.register(K8sTaskType.class, 7125);
+    kryo.register(ConnectorValidationResult.class, 19059);
   }
 }

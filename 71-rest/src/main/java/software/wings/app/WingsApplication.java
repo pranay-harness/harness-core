@@ -55,7 +55,6 @@ import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
-import io.harness.cdng.resource.connectors.ConnectorResource;
 import io.harness.commandlibrary.client.CommandLibraryServiceClientModule;
 import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
@@ -850,9 +849,10 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerCDNextGenResources(Environment environment, Injector injector) {
+    final String NG_RESOURCE_PACKAGE = "io.harness.cdng.resource";
     final FeatureFlagService featureFlagService = injector.getInstance(FeatureFlagService.class);
     if (featureFlagService.isGlobalEnabled(FeatureName.ENABLE_CDNG_RESOURCES)) {
-      Reflections reflections = new Reflections(ConnectorResource.class.getPackage().getName());
+      Reflections reflections = new Reflections(NG_RESOURCE_PACKAGE);
       Set<Class<?>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
       for (Class<?> resource : resourceClasses) {
         if (Resource.isAcceptable(resource)) {

@@ -13,5 +13,4 @@ public class KubernetesConnectionTaskResponse implements DelegateTaskNotifyRespo
   private String errorMessage;
   private ErrorCode errorCode;
   private DelegateMetaInfo delegateMetaInfo;
-  private Exception exception;
 }

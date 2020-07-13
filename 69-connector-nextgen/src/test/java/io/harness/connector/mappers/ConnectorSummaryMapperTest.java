@@ -4,29 +4,43 @@ import static io.harness.delegate.beans.connector.ConnectorCategory.CLOUD_PROVID
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
-import com.google.inject.Inject;
-
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.ConnectorsBaseTest;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
+import io.harness.connector.apis.dto.k8connector.KubernetesConfigSummaryDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
+import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class ConnectorSummaryMapperTest extends ConnectorsBaseTest {
-  @Inject @InjectMocks ConnectorSummaryMapper connectorSummaryMapper;
+public class ConnectorSummaryMapperTest extends CategoryTest {
+  @InjectMocks ConnectorSummaryMapper connectorSummaryMapper;
+  @Mock KubernetesConfigSummaryMapper kubernetesConfigSummaryMapper;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    KubernetesConfigSummaryDTO kubernetesSummary =
+        KubernetesConfigSummaryDTO.builder().masterURL("masterURL").delegateName(null).build();
+    when(kubernetesConfigSummaryMapper.createKubernetesConfigSummaryDTO(any())).thenReturn(kubernetesSummary);
+  }
 
   @Test
   @Owner(developers = OwnerRule.DEEPAK)

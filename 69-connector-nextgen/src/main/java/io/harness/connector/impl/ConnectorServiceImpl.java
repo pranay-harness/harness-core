@@ -15,6 +15,9 @@ import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.mappers.ConnectorSummaryMapper;
 import io.harness.connector.repositories.ConnectorRepository;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import lombok.AccessLevel;
@@ -42,6 +45,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final MongoTemplate mongoTemplate;
   private final ConnectorFilterHelper connectorFilterHelper;
   private final ConnectorSummaryMapper connectorSummaryMapper;
+  private final KubernetesConnectionValidator kubernetesConnectionValidator;
 
   @Override
   public Optional<ConnectorDTO> get(
@@ -113,5 +117,16 @@ public class ConnectorServiceImpl implements ConnectorService {
   static Connector applyUpdateToConnector(Connector connector, ConnectorRequestDTO updateConnector) {
     String jsonString = new ObjectMapper().writer().writeValueAsString(updateConnector);
     return new ObjectMapper().readerForUpdating(connector).readValue(jsonString);
+  }
+
+  public ConnectorValidationResult validate(ConnectorRequestDTO connectorDTO, String accountId) {
+    ConnectorType connectorType = connectorDTO.getConnectorType();
+    switch (connectorType) {
+      case KUBERNETES_CLUSTER:
+        return kubernetesConnectionValidator.validate(
+            (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig(), accountId);
+      default:
+        throw new UnsupportedOperationException(String.format("The connector type %s is invalid", connectorType));
+    }
   }
 }

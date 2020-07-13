@@ -25,7 +25,7 @@ public class GitEntityToDTO {
   }
 
   private GitAuthenticationDTO createGitAuthenticationDTO(GitConfig gitConfig) {
-    // todo deepak: Change the design pattern to remove the swich case
+    // todo deepak: Change the design patterns to remove the swich case
     switch (gitConfig.getAuthType()) {
       case HTTP:
         return createHTTPAuthenticationDTO(gitConfig);
