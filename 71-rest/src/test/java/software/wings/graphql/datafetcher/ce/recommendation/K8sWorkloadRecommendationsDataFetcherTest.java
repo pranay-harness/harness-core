@@ -9,6 +9,8 @@ import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingFieldSelectionSet;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.entities.ClusterRecord;
+import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -78,37 +80,42 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldFetchRecommendation() throws Exception {
-    K8sWorkloadRecommendation recommendation =
-        K8sWorkloadRecommendation.builder()
-            .accountId(ACCOUNT1_ID)
-            .clusterId(CLUSTER1_ID)
-            .namespace("default")
-            .workloadType("Deployment")
-            .workloadName("my-nginx")
-            .containerRecommendation(ContainerRecommendation.builder()
-                                         .containerName("nginx")
-                                         .current(ResourceRequirement.builder()
-                                                      .request("cpu", "1")
-                                                      .request("memory", "1Gi")
-                                                      .limit("cpu", "1")
-                                                      .limit("memory", "1Gi")
-                                                      .build())
-                                         .burstable(ResourceRequirement.builder()
-                                                        .request("cpu", "50m")
-                                                        .request("memory", "10Mi")
-                                                        .limit("cpu", "200m")
-                                                        .limit("memory", "40Mi")
-                                                        .build())
-                                         .guaranteed(ResourceRequirement.builder()
-                                                         .request("cpu", "200m")
-                                                         .request("memory", "40Mi")
-                                                         .limit("cpu", "200m")
-                                                         .limit("memory", "40Mi")
-                                                         .build())
-                                         .build())
-            .estimatedSavings(100.0)
-            .build();
+    K8sWorkloadRecommendation recommendation = K8sWorkloadRecommendation.builder()
+                                                   .accountId(ACCOUNT1_ID)
+                                                   .clusterId(CLUSTER1_ID)
+                                                   .namespace("default")
+                                                   .workloadType("Deployment")
+                                                   .workloadName("my-nginx")
+                                                   .containerRecommendation("nginx",
+                                                       ContainerRecommendation.builder()
+                                                           .containerName("nginx")
+                                                           .current(ResourceRequirement.builder()
+                                                                        .request("cpu", "1")
+                                                                        .request("memory", "1Gi")
+                                                                        .limit("cpu", "1")
+                                                                        .limit("memory", "1Gi")
+                                                                        .build())
+                                                           .burstable(ResourceRequirement.builder()
+                                                                          .request("cpu", "50m")
+                                                                          .request("memory", "10Mi")
+                                                                          .limit("cpu", "200m")
+                                                                          .limit("memory", "40Mi")
+                                                                          .build())
+                                                           .guaranteed(ResourceRequirement.builder()
+                                                                           .request("cpu", "200m")
+                                                                           .request("memory", "40Mi")
+                                                                           .limit("cpu", "200m")
+                                                                           .limit("memory", "40Mi")
+                                                                           .build())
+                                                           .numDays(7)
+                                                           .build())
+                                                   .estimatedSavings(100.0)
+                                                   .build();
     hPersistence.save(recommendation);
+    hPersistence.save(ClusterRecord.builder()
+                          .uuid(CLUSTER1_ID)
+                          .cluster(DirectKubernetesCluster.builder().clusterName("cluster-1-name").build())
+                          .build());
     List<QLK8sWorkloadFilter> filters = ImmutableList.of(
         QLK8sWorkloadFilter.builder()
             .cluster(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {CLUSTER1_ID}).build())
@@ -130,6 +137,8 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
     List<QLK8sWorkloadRecommendation> nodes = qlk8SWorkloadRecommendationConnection.getNodes();
     assertThat(nodes.get(0))
         .isEqualTo(QLK8sWorkloadRecommendation.builder()
+                       .clusterId(CLUSTER1_ID)
+                       .clusterName("cluster-1-name")
                        .namespace("default")
                        .workloadType("Deployment")
                        .workloadName("my-nginx")
@@ -172,8 +181,10 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
                                                                         + "  memory: 40Mi\n"
                                                                         + "  cpu: 200m\n")
                                                                     .build())
+                                                    .numDays(7)
                                                     .build())
                        .estimatedSavings(100.0)
+                       .numDays(7)
                        .build());
   }
 }

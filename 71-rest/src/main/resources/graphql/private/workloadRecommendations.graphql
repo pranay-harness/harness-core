@@ -16,11 +16,14 @@ type WorkloadRecommendationConnection {
 }
 
 type WorkloadRecommendation {
+  clusterId: String
+  clusterName: String
   namespace: String
   workloadType: String
   workloadName: String
   containerRecommendations: [ContainerRecommendation]
   estimatedSavings: Number
+  numDays: Int
 }
 
 type ContainerRecommendation {
@@ -28,6 +31,7 @@ type ContainerRecommendation {
   current: ResourceRequirements
   burstable: ResourceRequirements
   guaranteed: ResourceRequirements
+  numDays: Int
 }
 
 type ResourceRequirements {

@@ -15,6 +15,9 @@ public class QLK8sWorkloadRecommendation {
   String namespace;
   String workloadType;
   String workloadName;
+  String clusterId;
+  String clusterName;
   @Singular List<QLContainerRecommendation> containerRecommendations;
   Double estimatedSavings;
+  int numDays;
 }

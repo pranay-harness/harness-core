@@ -11,4 +11,5 @@ public class QLContainerRecommendation implements QLObject {
   QLResourceRequirement current;
   QLResourceRequirement burstable;
   QLResourceRequirement guaranteed;
+  int numDays;
 }

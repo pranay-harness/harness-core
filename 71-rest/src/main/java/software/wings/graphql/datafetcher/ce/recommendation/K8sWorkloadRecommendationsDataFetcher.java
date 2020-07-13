@@ -2,7 +2,10 @@ package software.wings.graphql.datafetcher.ce.recommendation;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import graphql.schema.DataFetchingEnvironment;
+import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1ResourceRequirementsBuilder;
@@ -31,15 +34,27 @@ import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2DataFetcher<QLK8sWorkloadFilter,
     QLNoOpSortCriteria, QLK8SWorkloadRecommendationConnection> {
+  private final LoadingCache<String, String> clusterNameCache =
+      Caffeine.newBuilder()
+          .expireAfterWrite(Duration.ofMinutes(5))
+          .maximumSize(1000)
+          .build(clusterId
+              -> Optional.ofNullable(wingsPersistence.get(ClusterRecord.class, clusterId))
+                     .map(ClusterRecord::getCluster)
+                     .map(s -> s.getClusterName())
+                     .orElse(""));
+
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLK8SWorkloadRecommendationConnection fetchConnection(List<QLK8sWorkloadFilter> filters,
@@ -48,28 +63,35 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
         populateFilters(wingsPersistence, filters, K8sWorkloadRecommendation.class, true)
             .order(Sort.descending(K8sWorkloadRecommendationKeys.estimatedSavings));
     QLK8SWorkloadRecommendationConnectionBuilder connectionBuilder = QLK8SWorkloadRecommendationConnection.builder();
-    connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query,
-        k8sWorkloadRecommendation
-        -> connectionBuilder.node(
-            QLK8sWorkloadRecommendation.builder()
-                .containerRecommendations(entityToDto(k8sWorkloadRecommendation.getContainerRecommendations()))
-                .namespace(k8sWorkloadRecommendation.getNamespace())
-                .workloadName(k8sWorkloadRecommendation.getWorkloadName())
-                .workloadType(k8sWorkloadRecommendation.getWorkloadType())
-                .estimatedSavings(k8sWorkloadRecommendation.getEstimatedSavings())
-                .build())));
+    connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, k8sWorkloadRecommendation -> {
+      Collection<? extends QLContainerRecommendation> containerRecommendations =
+          entityToDtoCr(k8sWorkloadRecommendation.getContainerRecommendations());
+      int numDays = containerRecommendations.stream().mapToInt(QLContainerRecommendation::getNumDays).max().orElse(0);
+      connectionBuilder.node(QLK8sWorkloadRecommendation.builder()
+                                 .clusterId(k8sWorkloadRecommendation.getClusterId())
+                                 .clusterName(clusterNameCache.get(k8sWorkloadRecommendation.getClusterId()))
+                                 .containerRecommendations(containerRecommendations)
+                                 .namespace(k8sWorkloadRecommendation.getNamespace())
+                                 .workloadName(k8sWorkloadRecommendation.getWorkloadName())
+                                 .workloadType(k8sWorkloadRecommendation.getWorkloadType())
+                                 .estimatedSavings(k8sWorkloadRecommendation.getEstimatedSavings())
+                                 .numDays(numDays)
+                                 .build());
+    }));
     return connectionBuilder.build();
   }
 
-  private Collection<? extends QLContainerRecommendation> entityToDto(
-      List<ContainerRecommendation> containerRecommendations) {
-    return containerRecommendations.stream()
+  private Collection<? extends QLContainerRecommendation> entityToDtoCr(
+      Map<String, ContainerRecommendation> containerRecommendations) {
+    return containerRecommendations.values()
+        .stream()
         .map(containerRecommendation
             -> QLContainerRecommendation.builder()
                    .containerName(containerRecommendation.getContainerName())
                    .current(entityToDto(containerRecommendation.getCurrent()))
                    .burstable(entityToDto(containerRecommendation.getBurstable()))
                    .guaranteed(entityToDto(containerRecommendation.getGuaranteed()))
+                   .numDays(containerRecommendation.getNumDays())
                    .build())
         .collect(Collectors.toList());
   }
