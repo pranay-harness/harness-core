@@ -43,6 +43,7 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.tasks.Cd1SetupFields;
 import org.junit.Before;
 import org.junit.Rule;
@@ -68,6 +69,7 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
 
   private PerpetualTaskService perpetualTaskService;
   private DelegateService delegateService;
+  @Inject private DelegateCallbackRegistry delegateCallbackRegistry;
   @Inject private KryoSerializer kryoSerializer;
 
   private Server server;
@@ -90,8 +92,8 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
 
     perpetualTaskService = mock(PerpetualTaskService.class);
     delegateService = mock(DelegateService.class);
-    delegateServiceGrpc =
-        new io.harness.grpc.DelegateServiceGrpc(perpetualTaskService, delegateService, kryoSerializer);
+    delegateServiceGrpc = new io.harness.grpc.DelegateServiceGrpc(
+        delegateCallbackRegistry, perpetualTaskService, delegateService, kryoSerializer);
 
     server =
         InProcessServerBuilder.forName(serverName).directExecutor().addService(delegateServiceGrpc).build().start();

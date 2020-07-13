@@ -4,10 +4,6 @@ package io.harness.callback;
 
 option java_multiple_files = true;
 
-message CallbackToken {
-  string token = 1;
-}
-
 message BasicAuthCredentials {
   string username = 1;
   string password = 2;

@@ -11,6 +11,7 @@ import io.grpc.stub.StreamObserver;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.Status;
+import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.CancelTaskRequest;
 import io.harness.delegate.CancelTaskResponse;
 import io.harness.delegate.CreatePerpetualTaskRequest;
@@ -37,6 +38,7 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.intfc.DelegateCallbackRegistry;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.List;
@@ -46,13 +48,15 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class DelegateServiceGrpc extends DelegateServiceImplBase {
+  private DelegateCallbackRegistry delegateCallbackRegistry;
   private PerpetualTaskService perpetualTaskService;
   private DelegateService delegateService;
   private KryoSerializer kryoSerializer;
 
   @Inject
-  public DelegateServiceGrpc(
+  public DelegateServiceGrpc(DelegateCallbackRegistry delegateCallbackRegistry,
       PerpetualTaskService perpetualTaskService, DelegateService delegateService, KryoSerializer kryoSerializer) {
+    this.delegateCallbackRegistry = delegateCallbackRegistry;
     this.perpetualTaskService = perpetualTaskService;
     this.delegateService = delegateService;
     this.kryoSerializer = kryoSerializer;
@@ -176,7 +180,10 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
   @Override
   public void registerCallback(
       RegisterCallbackRequest request, StreamObserver<RegisterCallbackResponse> responseObserver) {
-    // TODO: implemenet the callback
+    String token = delegateCallbackRegistry.ensureCallback(request.getCallback());
+    responseObserver.onNext(RegisterCallbackResponse.newBuilder()
+                                .setCallbackToken(DelegateCallbackToken.newBuilder().setToken(token))
+                                .build());
     responseObserver.onCompleted();
   }
 

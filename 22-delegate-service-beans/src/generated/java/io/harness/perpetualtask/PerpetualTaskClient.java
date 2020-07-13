@@ -31,24 +31,24 @@ public final class PerpetualTaskClient {
   static {
     java.lang.String[] descriptorData = {"\n4io/harness/perpetualtask/perpetual_tas"
         + "k_client.proto\022\030io.harness.perpetualtask"
-        + "\032\037google/protobuf/timestamp.proto\032$io/ha"
-        + "rness/callback/entrypoint.proto\"\267\002\n!Perp"
-        + "etualTaskClientContextDetails\022\177\n\022task_cl"
-        + "ient_params\030\001 \003(\0132Q.io.harness.perpetual"
-        + "task.PerpetualTaskClientContextDetails.T"
-        + "askClientParamsEntryR\020taskClientParams\022L"
-        + "\n\024last_context_updated\030\002 \001(\0132\032.google.pr"
-        + "otobuf.TimestampR\022lastContextUpdated\032C\n\025"
-        + "TaskClientParamsEntry\022\020\n\003key\030\001 \001(\tR\003key\022"
-        + "\024\n\005value\030\002 \001(\tR\005value:\0028\001\"\207\001\n\035PerpetualT"
-        + "askClientEntrypoint\022W\n\020https_entrypoint\030"
-        + "\001 \001(\0132*.io.harness.callback.HttpsClientE"
-        + "ntrypointH\000R\017httpsEntrypointB\r\n\013entrypoi"
-        + "ntsB\002P\001b\006proto3"};
+        + "\032\037google/protobuf/timestamp.proto\032)io/ha"
+        + "rness/callback/http_entrypoint.proto\"\267\002\n"
+        + "!PerpetualTaskClientContextDetails\022\177\n\022ta"
+        + "sk_client_params\030\001 \003(\0132Q.io.harness.perp"
+        + "etualtask.PerpetualTaskClientContextDeta"
+        + "ils.TaskClientParamsEntryR\020taskClientPar"
+        + "ams\022L\n\024last_context_updated\030\002 \001(\0132\032.goog"
+        + "le.protobuf.TimestampR\022lastContextUpdate"
+        + "d\032C\n\025TaskClientParamsEntry\022\020\n\003key\030\001 \001(\tR"
+        + "\003key\022\024\n\005value\030\002 \001(\tR\005value:\0028\001\"\207\001\n\035Perpe"
+        + "tualTaskClientEntrypoint\022W\n\020https_entryp"
+        + "oint\030\001 \001(\0132*.io.harness.callback.HttpsCl"
+        + "ientEntrypointH\000R\017httpsEntrypointB\r\n\013ent"
+        + "rypointsB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.TimestampProto.getDescriptor(),
-            io.harness.callback.Entrypoint.getDescriptor(),
+            io.harness.callback.HttpEntrypoint.getDescriptor(),
         });
     internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_descriptor =
         getDescriptor().getMessageTypes().get(0);
@@ -78,7 +78,7 @@ public final class PerpetualTaskClient {
                 "Entrypoints",
             });
     com.google.protobuf.TimestampProto.getDescriptor();
-    io.harness.callback.Entrypoint.getDescriptor();
+    io.harness.callback.HttpEntrypoint.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
