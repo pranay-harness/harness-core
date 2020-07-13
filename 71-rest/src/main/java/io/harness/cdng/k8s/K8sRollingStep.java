@@ -64,8 +64,6 @@ import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig.K8sDeleg
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.k8s.K8sRollingDeploy;
 
 import java.util.ArrayList;
@@ -77,8 +75,6 @@ import java.util.stream.Collectors;
 public class K8sRollingStep implements Step, TaskChainExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("K8S_ROLLING").build();
 
-  @Inject private SecretManager secretManager;
-  @Inject private SettingsService settingsService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private K8sStepHelper k8sStepHelper;
   @Inject private StepDependencyService stepDependencyService;

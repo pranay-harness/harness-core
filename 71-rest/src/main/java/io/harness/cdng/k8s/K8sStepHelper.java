@@ -5,21 +5,33 @@ import com.google.inject.Singleton;
 
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.GitConfig;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.KubernetesClusterAuthType;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig.K8sClusterConfigBuilder;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.SecretManager;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import javax.validation.constraints.NotNull;
 
 @Singleton
 public class K8sStepHelper {
-  @Inject private SettingsService settingsService;
-  @Inject private SecretManager secretManager;
+  @Inject private ConnectorService connectorService;
 
   String getReleaseName(Infrastructure infrastructure) {
     switch (infrastructure.getKind()) {
@@ -32,14 +44,18 @@ public class K8sStepHelper {
     }
   }
 
-  SettingAttribute getSettingAttribute(String connectorId) {
-    // TODO: change when Connectors NG comes up
-    return settingsService.get(connectorId);
+  private ConnectorDTO getConnector(String connectorId) {
+    Optional<ConnectorDTO> connectorDTO = connectorService.get(null, null, null, connectorId);
+    if (!connectorDTO.isPresent()) {
+      throw new InvalidRequestException(
+          String.format("Connector not found for identifier : [%s]", connectorId), WingsException.USER);
+    }
+    return connectorDTO.get();
   }
 
   List<EncryptedDataDetail> getEncryptedDataDetails(EncryptableSetting encryptableSetting) {
-    // TODO: move to new secret manager apis without app and workflowIds
-    return secretManager.getEncryptionDetails(encryptableSetting, "", null);
+    // TODO: move to new secret manager apis when available, bypassing decryption at delegate for now
+    return Collections.emptyList();
   }
 
   K8sClusterConfig getK8sClusterConfig(Infrastructure infrastructure) {
@@ -60,5 +76,45 @@ public class K8sStepHelper {
         throw new UnsupportedOperationException(
             String.format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
     }
+  }
+
+  private SettingAttribute getSettingAttribute(@NotNull ConnectorDTO connectorDTO) {
+    SettingAttribute.Builder builder = SettingAttribute.Builder.aSettingAttribute()
+                                           .withAccountId(connectorDTO.getAccountIdentifier())
+                                           .withName(connectorDTO.getName());
+    switch (connectorDTO.getConnectorType()) {
+      case KUBERNETES_CLUSTER:
+        KubernetesClusterConfigDTO connectorConfig = (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig();
+        KubernetesClusterDetailsDTO config = (KubernetesClusterDetailsDTO) connectorConfig.getConfig();
+        UserNamePasswordDTO auth = (UserNamePasswordDTO) config.getAuth().getCredentials();
+        KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder()
+                                                              .authType(KubernetesClusterAuthType.USER_PASSWORD)
+                                                              .masterUrl(config.getMasterUrl())
+                                                              .username(auth.getUsername())
+                                                              .password(auth.getPassword().toCharArray())
+                                                              .build();
+        builder.withValue(kubernetesClusterConfig);
+        break;
+      case GIT:
+        GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorConfig();
+        GitHTTPAuthenticationDTO gitAuth = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
+        GitConfig gitConfig = GitConfig.builder()
+                                  .repoUrl(gitAuth.getUrl())
+                                  .username(gitAuth.getUsername())
+                                  .password(gitAuth.getPasswordReference().toCharArray())
+                                  .branch(gitAuth.getBranchName())
+                                  .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
+                                  .accountId(connectorDTO.getAccountIdentifier())
+                                  .build();
+        builder.withValue(gitConfig);
+        break;
+      default:
+    }
+    return builder.build();
+  }
+
+  SettingAttribute getSettingAttribute(String connectorId) {
+    ConnectorDTO connectorDTO = getConnector(connectorId);
+    return getSettingAttribute(connectorDTO);
   }
 }

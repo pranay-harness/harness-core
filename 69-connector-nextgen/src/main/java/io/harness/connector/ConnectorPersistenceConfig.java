@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
-@EnableMongoRepositories(
-    basePackages = {"io.harness.connector"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
+@EnableMongoRepositories(basePackages = {"io.harness.connector"},
+    includeFilters = @ComponentScan.Filter(HarnessRepo.class), mongoTemplateRef = "connectorMongoTemplate")
 public class ConnectorPersistenceConfig extends SpringPersistenceConfig {
   @Inject
   public ConnectorPersistenceConfig(Injector injector) {
