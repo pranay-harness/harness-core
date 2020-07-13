@@ -44,7 +44,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -274,7 +273,7 @@ public class TriggerActionController {
   Map<String, String> validateAndResolvePipelineVariables(
       List<QLVariableInput> qlVariables, Pipeline pipeline, String envId) {
     if (qlVariables == null) {
-      return new HashMap<>();
+      qlVariables = new ArrayList<>();
     }
     return pipelineExecutionController.validateAndResolvePipelineVariables(
         pipeline, qlVariables, envId, new ArrayList<>(), true);
@@ -283,7 +282,7 @@ public class TriggerActionController {
   Map<String, String> validateAndResolveWorkflowVariables(
       List<QLVariableInput> qlVariables, Workflow workflow, String envId) {
     if (qlVariables == null) {
-      return new HashMap<>();
+      qlVariables = new ArrayList<>();
     }
 
     return workflowExecutionController.validateAndResolveWorkflowVariables(

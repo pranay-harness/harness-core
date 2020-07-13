@@ -306,7 +306,7 @@ public class PipelineExecutionController {
           if (isNotEmpty(envIdForInfra)) {
             if (value.contains(",")
                 && featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-              return handleMultiInfra(appId, envIdForInfra, value);
+              return handleMultiInfra(appId, envIdForInfra, value, variable);
             }
             InfrastructureDefinition infrastructureDefinition =
                 infrastructureDefinitionService.getInfraDefByName(appId, envIdForInfra, value);
@@ -324,8 +324,11 @@ public class PipelineExecutionController {
     return value;
   }
 
-  private String handleMultiInfra(String appId, String envIdForInfra, String value) {
-    String[] values = value.split(",");
+  private String handleMultiInfra(String appId, String envIdForInfra, String value, Variable variable) {
+    if (!variable.isAllowMultipleValues()) {
+      throw new InvalidRequestException("Variable " + variable.getName() + " doesnt allow multiple values");
+    }
+    String[] values = value.trim().split("\\s*,\\s*");
     List<String> infraValues = new ArrayList<>();
     for (String val : values) {
       InfrastructureDefinition infrastructureDefinition =

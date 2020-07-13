@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.USER_GROUP;
 import static software.wings.beans.EntityType.valueOf;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.ENTITY;
@@ -237,6 +238,7 @@ public abstract class OrchestrationWorkflow {
         // Set the description
         variable = variableBuilder.build();
         setVariableDescription(variable, name);
+        checkMultiValuesAllowed(variable, entityType);
         if (getUserVariables() == null) {
           return;
         }
@@ -258,6 +260,7 @@ public abstract class OrchestrationWorkflow {
           variableMetadata.put(Variable.STATE_TYPE, stateType);
         }
         variable.setMandatory(entityType != null);
+        checkMultiValuesAllowed(variable, entityType);
         if (isEmpty(parentTemplateFields)) {
           variableMetadata.remove(Variable.PARENT_FIELDS);
         } else {
@@ -266,6 +269,12 @@ public abstract class OrchestrationWorkflow {
         setVariableDescription(variable, name);
       }
       getTemplateVariables().add(expression);
+    }
+  }
+
+  private void checkMultiValuesAllowed(Variable variable, EntityType entityType) {
+    if (USER_GROUP == entityType) {
+      variable.setAllowMultipleValues(true);
     }
   }
 

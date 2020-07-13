@@ -607,6 +607,9 @@ public class PipelineServiceImpl implements PipelineService {
     List<String> infraMappingIds = new ArrayList<>();
     List<String> infraDefinitionIds = new ArrayList<>();
     Set<String> invalidStages = new HashSet<>();
+    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
+      validateMultipleValuesAllowed(pipeline, pipelineVariables);
+    }
 
     if (workflowCache == null) {
       workflowCache = new HashMap<>();
@@ -678,6 +681,23 @@ public class PipelineServiceImpl implements PipelineService {
     pipeline.setInfraMappingIds(infraMappingIds);
     pipeline.setInfraDefinitionIds(infraDefinitionIds);
     pipeline.setWorkflowIds(workflowIds);
+  }
+
+  @VisibleForTesting
+  void validateMultipleValuesAllowed(Pipeline pipeline, Map<String, String> variableValues) {
+    List<Variable> variables = pipeline.getPipelineVariables();
+    if (isEmpty(variables)) {
+      return;
+    }
+    for (Variable variable : variables) {
+      if (variableValues.containsKey(variable.getName())) {
+        String variableValue = variableValues.get(variable.getName());
+        if (isNotEmpty(variableValue) && variableValue.contains(",") && !variable.isAllowMultipleValues()
+            && variable.obtainEntityType() != null) {
+          throw new InvalidRequestException(format("variable %s cannot take multiple values", variable.getName()));
+        }
+      }
+    }
   }
 
   private List<Service> resolveServices(
@@ -995,18 +1015,20 @@ public class PipelineServiceImpl implements PipelineService {
   private void addToUserVariablePipelineApproval(List<Map<String, Object>> templateExpressions,
       List<Variable> pipelineVariables, String stageName, String stateType) {
     for (Map<String, Object> templateExpression : templateExpressions) {
-      EntityType entityType = EntityType.USER_GROUP;
+      EntityType entityType = null;
       Map<String, Object> metadata = (Map<String, Object>) templateExpression.get("metadata");
       if (metadata != null) {
-        if (metadata.get("entityType") != null && entityType == USER_GROUP) {
+        if (metadata.get("entityType") != null) {
           entityType = valueOf((String) metadata.get(Variable.ENTITY_TYPE));
         }
+      }
+      if (USER_GROUP != entityType) {
+        throw new InvalidRequestException("Approval can only have User Group template expression");
       }
       String expression = (String) templateExpression.get("expression");
       Matcher matcher = ManagerExpressionEvaluator.wingsVariablePattern.matcher(expression);
       if (matcher.matches()) {
-        expression =
-            validateAndGetVariablePipeLine(matcher.group(0).substring(2, matcher.group(0).length() - 1), entityType);
+        expression = validateAndGetVariablePipeLine(matcher.group(0).substring(2, matcher.group(0).length() - 1));
       }
       Variable variable = getContainedVariable(pipelineVariables, expression);
 
@@ -1015,6 +1037,7 @@ public class PipelineServiceImpl implements PipelineService {
                                               .name(expression)
                                               .entityType(entityType)
                                               .type(entityType != null ? ENTITY : TEXT)
+                                              .allowMultipleValues(entityType == USER_GROUP)
                                               .mandatory(entityType != null);
 
         if (isNotEmpty(stateType)) {
@@ -1028,14 +1051,12 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
-  private String validateAndGetVariablePipeLine(String substring, EntityType entityType) {
+  private String validateAndGetVariablePipeLine(String substring) {
     Matcher matcher = ManagerExpressionEvaluator.variableNamePattern.matcher(substring);
-    if (entityType != null) {
-      if (!matcher.matches()) {
-        throw new InvalidRequestException("Template variable:[" + substring
-                + "] not in proper format ,should start with ${ and end with }, only a-zA-Z0-9_ - allowed",
-            USER);
-      }
+    if (!matcher.matches()) {
+      throw new InvalidRequestException("Template variable:[" + substring
+              + "] not in proper format ,should start with ${ and end with }, only a-zA-Z0-9_ - allowed",
+          USER);
     }
     return substring;
   }
