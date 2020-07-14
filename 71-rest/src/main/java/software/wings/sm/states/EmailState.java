@@ -85,6 +85,7 @@ public class EmailState extends State {
                                         .subject(evaluatedSubject)
                                         .body(evaluatedBody)
                                         .accountId(context.getAccountId())
+                                        .workflowExecutionId(context.getWorkflowExecutionId())
                                         .build());
       executionResponseBuilder.executionStatus(ExecutionStatus.SUCCESS);
     } catch (Exception e) {
