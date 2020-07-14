@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -100,6 +101,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
   @Override
   public LoginSettings updatePasswordExpirationPolicy(
       String accountId, PasswordExpirationPolicy newPasswordExpirationPolicy) {
+    validatePasswordExpirationPolicy(newPasswordExpirationPolicy);
     UpdateOperations<LoginSettings> operations = wingsPersistence.createUpdateOperations(LoginSettings.class);
     setUnset(operations, LoginSettingKeys.passwordExpirationPolicy, newPasswordExpirationPolicy);
     LoginSettings loginSettings = updateAndGetLoginSettings(accountId, operations);
@@ -110,6 +112,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
 
   @Override
   public LoginSettings updatePasswordStrengthPolicy(String accountId, PasswordStrengthPolicy passwordStrengthPolicy) {
+    validatePasswordStrengthPolicy(passwordStrengthPolicy);
     UpdateOperations<LoginSettings> operations = wingsPersistence.createUpdateOperations(LoginSettings.class);
     setUnset(operations, LoginSettingKeys.passwordStrengthPolicy, passwordStrengthPolicy);
     LoginSettings loginSettings = updateAndGetLoginSettings(accountId, operations);
@@ -136,6 +139,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
 
   @Override
   public LoginSettings updateUserLockoutPolicy(String accountId, UserLockoutPolicy newUserLockoutPolicy) {
+    validateUserLockoutPolicy(newUserLockoutPolicy);
     UpdateOperations<LoginSettings> operations = wingsPersistence.createUpdateOperations(LoginSettings.class);
     setUnset(operations, LoginSettingKeys.userLockoutPolicy, newUserLockoutPolicy);
     return updateAndGetLoginSettings(accountId, operations);
@@ -309,5 +313,35 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
             String.format("Password validation for check %s failed.", passwordStrengthChecks), WingsException.USER);
       }
     });
+  }
+
+  private void validatePasswordExpirationPolicy(PasswordExpirationPolicy passwordExpirationPolicy) {
+    if (passwordExpirationPolicy.isEnabled()) {
+      if (passwordExpirationPolicy.getDaysBeforePasswordExpires() <= 0) {
+        throw new InvalidArgumentsException("Days before password expires must be greater than 0.");
+      }
+      if (passwordExpirationPolicy.getDaysBeforeUserNotifiedOfPasswordExpiration() <= 0) {
+        throw new InvalidArgumentsException(
+            "Days before user is notified of password expiration must be greater than 0.");
+      }
+    }
+  }
+
+  private void validatePasswordStrengthPolicy(PasswordStrengthPolicy passwordStrengthPolicy) {
+    if (passwordStrengthPolicy.isEnabled()) {
+      if (passwordStrengthPolicy.getMinNumberOfCharacters() <= 0) {
+        throw new InvalidArgumentsException("Minimum length must be greater than 0.");
+      }
+    }
+  }
+
+  private void validateUserLockoutPolicy(UserLockoutPolicy newUserLockoutPolicy) {
+    if (newUserLockoutPolicy.isEnableLockoutPolicy()) {
+      if (newUserLockoutPolicy.getLockOutPeriod() <= 0
+          || newUserLockoutPolicy.getNumberOfFailedAttemptsBeforeLockout() <= 0) {
+        throw new InvalidArgumentsException(
+            "Lockout period and number of failed attempts before lockout must be greater than 0.");
+      }
+    }
   }
 }
