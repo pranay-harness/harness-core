@@ -55,6 +55,7 @@ import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
@@ -188,6 +189,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class AccountServiceImpl implements AccountService {
   private static final SecureRandom random = new SecureRandom();
   private static final int SIZE_PER_SERVICES_REQUEST = 25;
+  private static final int NUM_OF_RETRIES_TO_GENERATE_UNIQUE_ACCOUNT_NAME = 20;
   private static final String UNLIMITED_PAGE_SIZE = "UNLIMITED";
   private static final String ILLEGAL_ACCOUNT_NAME_CHARACTERS = "[~!@#$%^*\\[\\]{}<>'\"/:;\\\\]";
   private static final int MAX_ACCOUNT_NAME_LENGTH = 50;
@@ -323,15 +325,8 @@ public class AccountServiceImpl implements AccountService {
         throw new InvalidRequestException("Account Name '" + accountName + "' contains illegal characters", USER);
       }
     }
-
-    if (checkDuplicateAccountName(accountName)) {
-      String suggestedAccountName = suggestAccountName(accountName);
-      if (suggestedAccountName == null) {
-        throw new InvalidRequestException("Account Name '" + accountName + "' already exists", USER);
-      } else {
-        account.setAccountName(suggestedAccountName);
-      }
-    }
+    String suggestedAccountName = suggestAccountName(accountName);
+    account.setAccountName(suggestedAccountName);
   }
 
   @Override
@@ -592,23 +587,28 @@ public class AccountServiceImpl implements AccountService {
 
   /**
    * Takes a valid account name and checks database for duplicates, if duplicate exists appends
-   * "-x" (where x is a random number between 0 and 1000) to the name and repeats the process until it generates a
+   * "-x" (where x is a random number between 1000 and 9999) to the name and repeats the process until it generates a
    * unique account name
    *
    * @param accountName user input account name
    * @return uniqueAccountName
    */
   @Override
-  public String suggestAccountName(String accountName) {
+  public String suggestAccountName(@NotNull String accountName) {
+    if (!isDuplicateAccountName(accountName)) {
+      return accountName;
+    }
+    logger.debug("Account name '{}' already in use, generating new unique account name", accountName);
     int count = 0;
-    while (count < 20) {
+    while (count < NUM_OF_RETRIES_TO_GENERATE_UNIQUE_ACCOUNT_NAME) {
       String newAccountName = accountName + "-" + (1000 + random.nextInt(9000));
-      if (!checkDuplicateAccountName(newAccountName)) {
+      if (!isDuplicateAccountName(newAccountName)) {
         return newAccountName;
       }
       count++;
     }
-    return null;
+    throw new GeneralException(
+        String.format("Failed to generate unique Account Name for initial accountName=%s", accountName));
   }
 
   /**
@@ -617,7 +617,7 @@ public class AccountServiceImpl implements AccountService {
    * @param accountName account name
    * @return Returns true if duplicate is found else false
    */
-  private Boolean checkDuplicateAccountName(@NotNull String accountName) {
+  private Boolean isDuplicateAccountName(@NotNull String accountName) {
     return wingsPersistence.createQuery(Account.class, excludeAuthority)
                .field(AccountKeys.accountName)
                .equalIgnoreCase(accountName)
