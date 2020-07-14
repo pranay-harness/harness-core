@@ -212,7 +212,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
         }
         Long nextIteration = entity.obtainNextIteration(fieldName);
         if (schedulingType == REGULAR) {
-          ((PersistentRegularIterable) entity).updateNextIteration(fieldName, null);
+          ((PersistentRegularIterable) entity).updateNextIteration(fieldName, 0L);
         }
 
         long delay = nextIteration == null || nextIteration == 0 ? 0 : startTime - nextIteration;

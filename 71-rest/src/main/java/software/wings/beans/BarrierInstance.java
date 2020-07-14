@@ -52,7 +52,7 @@ public class BarrierInstance implements PersistentEntity, UuidAware, PersistentR
   }
 
   @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     this.nextIteration = nextIteration;
   }
 

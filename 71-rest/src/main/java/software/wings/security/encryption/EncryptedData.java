@@ -152,7 +152,7 @@ public class EncryptedData
   }
 
   @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     if (EncryptedDataKeys.nextMigrationIteration.equals(fieldName)) {
       this.nextMigrationIteration = nextIteration;
       return;

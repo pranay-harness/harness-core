@@ -84,7 +84,7 @@ public class ExportExecutionsRequest
     throw new IllegalStateException(format("Unknown field name for iteration: %s", fieldName));
   }
 
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     if (ExportExecutionsRequestKeys.nextCleanupIteration.equals(fieldName)) {
       this.nextCleanupIteration = nextIteration;
       return;

@@ -196,7 +196,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
   }
 
   @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     if (AnalysisContextKeys.timeSeriesAnalysisIteration.equals(fieldName)) {
       this.timeSeriesAnalysisIteration = nextIteration;
       return;

@@ -356,7 +356,7 @@ public class Account extends Base implements PersistentRegularIterable {
   }
 
   @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     if (AccountKeys.serviceGuardDataCollectionIteration.equals(fieldName)) {
       this.serviceGuardDataCollectionIteration = nextIteration;
       return;

@@ -190,13 +190,13 @@ public abstract class ArtifactStream
   }
 
   @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     if (ArtifactStreamKeys.nextCleanupIteration.equals(fieldName)) {
-      this.nextCleanupIteration = nextIteration == null ? 0L : nextIteration;
+      this.nextCleanupIteration = nextIteration;
       return;
     }
 
-    this.nextIteration = nextIteration == null ? 0L : nextIteration;
+    this.nextIteration = nextIteration;
   }
 
   @Override

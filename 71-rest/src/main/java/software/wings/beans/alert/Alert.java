@@ -79,7 +79,7 @@ public class Alert
   @FdIndex private Long cvCleanUpIteration;
 
   @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     if (AlertKeys.cvCleanUpIteration.equals(fieldName)) {
       this.cvCleanUpIteration = nextIteration;
       return;
