@@ -99,4 +99,20 @@ public interface K8sTestConstants {
       + "    protocol: TCP\n"
       + "  selector:\n"
       + "    app: test";
+
+  String CONFIG_MAP_YAML = "apiVersion: v1\n"
+      + "kind: ConfigMap\n"
+      + "metadata:\n"
+      + "  name: mycm\n"
+      + "data:\n"
+      + "  hello: world";
+
+  String SECRET_YAML = "apiVersion: v1\n"
+      + "kind: Secret\n"
+      + "metadata:\n"
+      + "  name: mysecret\n"
+      + "type: Opaque\n"
+      + "data:\n"
+      + "  username: YWRtaW4=\n"
+      + "  password: MWYyZDFlMmU2N2Rm";
 }

@@ -271,7 +271,10 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   private boolean prepareForRolling(K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
     try {
-      markVersionedResources(resources);
+      managedWorkloads = getWorkloads(resources);
+      if (isNotEmpty(managedWorkloads)) {
+        markVersionedResources(resources);
+      }
 
       executionLogCallback.saveExecutionLog(
           "Manifests processed. Found following resources: \n" + k8sTaskHelper.getResourcesInTableFormat(resources));
@@ -287,8 +290,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog("\nCurrent release number is: " + release.getNumber());
 
       k8sTaskHelper.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);
-
-      managedWorkloads = getWorkloads(resources);
 
       if (isEmpty(managedWorkloads)) {
         executionLogCallback.saveExecutionLog(color("\nNo Managed Workload found.", Yellow, Bold));
