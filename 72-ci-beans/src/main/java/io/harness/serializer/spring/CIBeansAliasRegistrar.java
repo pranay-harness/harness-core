@@ -17,6 +17,15 @@ import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.beans.steps.stepinfo.TestStepInfo;
+import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
+import io.harness.beans.steps.stepinfo.publish.artifact.DockerImageArtifact;
+import io.harness.beans.steps.stepinfo.publish.artifact.FilePatternArtifact;
+import io.harness.beans.steps.stepinfo.publish.artifact.connectors.ArtifactoryConnector;
+import io.harness.beans.steps.stepinfo.publish.artifact.connectors.DockerhubConnector;
+import io.harness.beans.steps.stepinfo.publish.artifact.connectors.EcrConnector;
+import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
+import io.harness.beans.steps.stepinfo.publish.artifact.connectors.NexusConnector;
+import io.harness.beans.steps.stepinfo.publish.artifact.connectors.S3Connector;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
@@ -65,5 +74,14 @@ public class CIBeansAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("k8sDirectInfraYaml", K8sDirectInfraYaml.class);
     orchestrationElements.put("k8BuildJobEnvInfo", K8BuildJobEnvInfo.class);
     orchestrationElements.put("gitConnectorYaml", GitConnectorYaml.class);
+    orchestrationElements.put("dockerFileArtifact", DockerFileArtifact.class);
+    orchestrationElements.put("dockerImageArtifact", DockerImageArtifact.class);
+    orchestrationElements.put("filePatternArtifact", FilePatternArtifact.class);
+    orchestrationElements.put("artifactoryConnector", ArtifactoryConnector.class);
+    orchestrationElements.put("dockerhubConnector", DockerhubConnector.class);
+    orchestrationElements.put("ecrConnector", EcrConnector.class);
+    orchestrationElements.put("gcrConnector", GcrConnector.class);
+    orchestrationElements.put("nexusConnector", NexusConnector.class);
+    orchestrationElements.put("s3Connector", S3Connector.class);
   }
 }
