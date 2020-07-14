@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.LAZAR;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -744,6 +745,23 @@ public class AccountServiceTest extends WingsBaseTest {
     String suggestion2 = accountService.suggestAccountName(HARNESS_NAME);
     assertThat(suggestion2).isNotEqualTo(HARNESS_NAME);
     assertThat(suggestion2).isNotEqualTo(suggestion1);
+  }
+
+  @Test
+  @Owner(developers = LAZAR)
+  @Category(UnitTests.class)
+  public void testSuggestedAccountName_alreadyUnique() {
+    final String UNIQUE_NAME = HARNESS_NAME + "_UNIQUE";
+    // Add account
+    wingsPersistence.save(anAccount()
+                              .withUuid(UUID.randomUUID().toString())
+                              .withCompanyName(HARNESS_NAME)
+                              .withAccountName(HARNESS_NAME)
+                              .build());
+
+    // Check unique suggested account name
+    String suggestion1 = accountService.suggestAccountName(UNIQUE_NAME);
+    assertThat(suggestion1).isEqualTo(UNIQUE_NAME);
   }
 
   @Test
