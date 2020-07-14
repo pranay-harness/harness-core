@@ -623,3 +623,10 @@ if [[ "" != "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE commandLibraryServiceConfig.managerToCommandLibraryServiceSecret "$MANAGER_TO_COMMAND_LIBRARY_SERVICE_SECRET"
 fi
 
+if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE grpcClientConfig.authority "$NG_MANAGER_AUTHORITY"
+fi
+
+if [[ "" != "$NG_MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE grpcClientConfig.target "$NG_MANAGER_TARGET"
+fi
