@@ -5,7 +5,7 @@ CONFIG_FILE=/opt/harness/config.yml
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
-yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
+yq delete -i $CONFIG_FILE grpcServer.connectors[0]
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
@@ -69,6 +69,6 @@ if [[ "" != "$MANAGER_AUTHORITY" ]]; then
 fi
 
 if [[ "" != "$GRPC_SERVER_PORT" ]]; then
-  yq write -i $CONFIG_FILE grpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
+  yq write -i $CONFIG_FILE grpcServer.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
