@@ -1,5 +1,6 @@
 package io.harness.gitsync.common.remote;
 
+import static io.fabric8.utils.Strings.nullIfEmpty;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.gitsync.common.ScopeHelper.getScope;
 
@@ -24,9 +25,9 @@ public class YamlGitConfigMapper {
   public static final YamlGitConfig toYamlGitConfig(YamlGitConfigDTO yamlGitConfigDTO) {
     return YamlGitConfig.builder()
         .accountId(yamlGitConfigDTO.getAccountId())
-        .organizationId(yamlGitConfigDTO.getOrganizationId())
-        .uuid(yamlGitConfigDTO.getIdentifier())
-        .projectId(yamlGitConfigDTO.getProjectId())
+        .organizationId(nullIfEmpty(yamlGitConfigDTO.getOrganizationId()))
+        .uuid(nullIfEmpty(yamlGitConfigDTO.getIdentifier()))
+        .projectId(nullIfEmpty(yamlGitConfigDTO.getProjectId()))
         .branch(yamlGitConfigDTO.getBranch())
         .repo(yamlGitConfigDTO.getRepo())
         .gitConnectorId(yamlGitConfigDTO.getGitConnectorId())
@@ -41,9 +42,9 @@ public class YamlGitConfigMapper {
           YamlGitFolderConfigBuilder yamlGitFolderConfigBuilder =
               YamlGitFolderConfig.builder()
                   .accountId(yamlGitConfigDTO.getAccountId())
-                  .organizationId(yamlGitConfigDTO.getOrganizationId())
-                  .uuid(rootFolder.getIdentifier())
-                  .projectId(yamlGitConfigDTO.getProjectId())
+                  .organizationId(nullIfEmpty(yamlGitConfigDTO.getOrganizationId()))
+                  .uuid(nullIfEmpty(rootFolder.getIdentifier()))
+                  .projectId(nullIfEmpty(yamlGitConfigDTO.getProjectId()))
                   .branch(yamlGitConfigDTO.getBranch())
                   .repo(yamlGitConfigDTO.getRepo())
                   .gitConnectorId(yamlGitConfigDTO.getGitConnectorId())

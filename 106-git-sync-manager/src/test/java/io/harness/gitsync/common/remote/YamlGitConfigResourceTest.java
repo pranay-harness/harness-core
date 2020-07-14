@@ -46,7 +46,7 @@ public class YamlGitConfigResourceTest extends GitSyncBaseTest {
                                             .build();
     GitSyncConfigDTO gitSyncConfigDTO =
         buildGitSyncDTO(Collections.singletonList(rootFolder), CONNECTOR_ID, REPO, BRANCH, IDENTIFIER);
-    GitSyncConfigDTO ret = yamlGitConfigResource.create(gitSyncConfigDTO);
+    GitSyncConfigDTO ret = yamlGitConfigResource.create(PROJECT_ID, ORG_ID, ACCOUNT_ID, gitSyncConfigDTO);
     assertThat(ret).isEqualTo(gitSyncConfigDTO);
   }
 
@@ -170,6 +170,6 @@ public class YamlGitConfigResourceTest extends GitSyncBaseTest {
   private GitSyncConfigDTO saveYamlGitConfig(
       List<GitSyncFolderConfigDTO> rootFolder, String connectorId, String repo, String branch, String identifier) {
     GitSyncConfigDTO gitSyncConfigDTO = buildGitSyncDTO(rootFolder, connectorId, repo, branch, identifier);
-    return yamlGitConfigResource.create(gitSyncConfigDTO);
+    return yamlGitConfigResource.create(PROJECT_ID, ORG_ID, ACCOUNT_ID, gitSyncConfigDTO);
   }
 }
