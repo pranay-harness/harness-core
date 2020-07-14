@@ -14,7 +14,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -100,12 +99,13 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void noTestNodes() {
     SplunkV2State spyState = spy(splunkState);
-    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
-    doReturn(Collections.emptyMap()).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(AbstractAnalysisState.NodePair.builder()
+                 .testNodes(Collections.emptySet())
+                 .controlNodes(Collections.emptySet())
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyState)
         .getControlAndTestNodes(any());
 
@@ -131,14 +131,13 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   public void noControlNodesCompareWithCurrent() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     SplunkV2State spyState = spy(splunkState);
-    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
-    doReturn(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME))
-        .when(spyState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(AbstractAnalysisState.NodePair.builder()
+                 .controlNodes(Collections.emptySet())
+                 .testNodes(Collections.singleton("some-host"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyState)
         .getControlAndTestNodes(any());
 
@@ -164,18 +163,15 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
   public void compareWithCurrentSameTestAndControlNodes() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     SplunkV2State spyState = spy(splunkState);
-    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
-    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
-        .when(spyState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
-        .when(spyState)
-        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     Logger activityLogger = mock(Logger.class);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
-    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(AbstractAnalysisState.NodePair.builder()
+                 .testNodes(Collections.singleton("some-host"))
+                 .controlNodes(Collections.emptySet())
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyState)
         .getControlAndTestNodes(any());
 
@@ -203,18 +199,15 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS.name());
     splunkState.setHostnameTemplate("${some-expression}");
     SplunkV2State spyState = spy(splunkState);
-    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
-    doReturn(new HashMap<>(Collections.singletonMap("${some-expression}", DEFAULT_GROUP_NAME)))
-        .when(spyState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
-        .when(spyState)
-        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     Logger activityLogger = mock(Logger.class);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
-    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(AbstractAnalysisState.NodePair.builder()
+                 .controlNodes(Collections.singleton("${some-expression}"))
+                 .testNodes(Collections.singleton("some-host"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyState)
         .getControlAndTestNodes(any());
 
@@ -231,16 +224,13 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     splunkState.setHostnameTemplate("${some-expression}");
     SplunkV2State spyState = spy(splunkState);
-    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
-    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
-        .when(spyState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(new HashMap<>(Collections.singletonMap("${some-expression}", DEFAULT_GROUP_NAME)))
-        .when(spyState)
-        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(AbstractAnalysisState.NodePair.builder()
+                 .controlNodes(Collections.singleton("${some-expression}"))
+                 .testNodes(Collections.singleton("some-host"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyState)
         .getControlAndTestNodes(any());
 
@@ -308,12 +298,13 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     responseMap.put("somekey", response);
 
     SplunkV2State spyState = spy(splunkState);
-    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+    doReturn(AbstractAnalysisState.NodePair.builder()
+                 .controlNodes(Collections.singleton("control"))
+                 .testNodes(Collections.singleton("test"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
-        .when(spyState)
-        .getLastExecutionNodes(executionContext);
+        .getControlAndTestNodes(any());
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 

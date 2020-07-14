@@ -409,25 +409,13 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   }
 
   private AnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {
-    Map<String, String> controlNodes = new HashMap<>();
-    Map<String, String> testNodes = new HashMap<>();
-    if (isNewInstanceFieldPopulated(context)) {
-      populateNewAndOldHostNames(context, controlNodes, testNodes);
-    } else {
-      controlNodes =
-          getComparisonStrategy() == COMPARE_WITH_PREVIOUS ? Collections.emptyMap() : getLastExecutionNodes(context);
-      testNodes = getCanaryNewHostNames(context);
-    }
-    testNodes.keySet().forEach(controlNodes::remove);
-    campareAndLogNodesUsingNewInstanceAPI(context, testNodes, controlNodes);
-
     NodePair nodePair = getControlAndTestNodes(context);
-    if (featureFlagService.isEnabled(FeatureName.CV_NEW_INSTANCE_API, context.getAccountId())) {
-      getLogger().info("Using new instance API");
-      testNodes = nodePair.getTestNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
-      controlNodes =
-          nodePair.getControlNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
-    }
+    getLogger().info("Using new instance API");
+    Map<String, String> testNodes =
+        nodePair.getTestNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+    Map<String, String> controlNodes =
+        nodePair.getControlNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+
     renderedQuery = context.renderExpression(query);
 
     String accountId = this.appService.get(context.getAppId()).getAccountId();

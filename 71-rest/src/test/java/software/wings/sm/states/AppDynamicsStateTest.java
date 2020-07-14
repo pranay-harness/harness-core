@@ -26,7 +26,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -169,7 +168,11 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void shouldTestNonTemplatized() {
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
-    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(NodePair.builder()
+                 .controlNodes(Collections.emptySet())
+                 .testNodes(Collections.singleton("node"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyAppDynamicsState)
         .getControlAndTestNodes(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
@@ -185,7 +188,11 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     String applicationIdExpression = "${workflow.variables.applicationId}";
     appDynamicsState.setApplicationId(applicationIdExpression);
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
-    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(NodePair.builder()
+                 .controlNodes(Collections.emptySet())
+                 .testNodes(Collections.singleton("node"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyAppDynamicsState)
         .getControlAndTestNodes(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
@@ -206,7 +213,11 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn(applicationName);
     when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
-    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(NodePair.builder()
+                 .controlNodes(Collections.emptySet())
+                 .testNodes(Collections.singleton("node"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyAppDynamicsState)
         .getControlAndTestNodes(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
@@ -227,7 +238,11 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
     when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn("tierName");
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
-    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(NodePair.builder()
+                 .controlNodes(Collections.emptySet())
+                 .testNodes(Collections.singleton("node"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyAppDynamicsState)
         .getControlAndTestNodes(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
@@ -251,7 +266,11 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn(applicationName);
     when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
     when(appdynamicsService.getTierByName(any(), any(), eq(tierName), any())).thenReturn(tierId);
-    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(NodePair.builder()
+                 .controlNodes(Collections.emptySet())
+                 .testNodes(Collections.singleton("node"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyAppDynamicsState)
         .getControlAndTestNodes(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
@@ -277,12 +296,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
       appDynamicsState.setTierId("123aa");
     }
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
-    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+    doReturn(NodePair.builder()
+                 .controlNodes(Collections.singleton("control"))
+                 .testNodes(Collections.singleton("test"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyAppDynamicsState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
-        .when(spyAppDynamicsState)
-        .getLastExecutionNodes(executionContext);
+        .getControlAndTestNodes(any());
     doReturn(workflowId).when(spyAppDynamicsState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())
@@ -300,7 +320,11 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void shouldTestNonTemplatizedBadTier() {
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(true);
-    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(NodePair.builder()
+                 .controlNodes(Collections.emptySet())
+                 .testNodes(Collections.singleton("node"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyAppDynamicsState)
         .getControlAndTestNodes(any());
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
@@ -345,15 +369,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
             .build()));
 
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
-    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(NodePair.builder()
+                 .controlNodes(Collections.singleton("control"))
+                 .testNodes(Collections.singleton("test"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyAppDynamicsState)
         .getControlAndTestNodes(any());
-    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
-        .when(spyAppDynamicsState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
-        .when(spyAppDynamicsState)
-        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyAppDynamicsState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
 
@@ -638,12 +660,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .when(spyAppDynamicsState)
         .getTemplateExpressions();
 
-    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+    doReturn(NodePair.builder()
+                 .controlNodes(Collections.singleton("control"))
+                 .testNodes(Collections.singleton("test"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyAppDynamicsState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
-        .when(spyAppDynamicsState)
-        .getLastExecutionNodes(executionContext);
+        .getControlAndTestNodes(any());
     doReturn(workflowId).when(spyAppDynamicsState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
 
@@ -659,7 +682,11 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .getEnv();
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
-    doReturn(NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(NodePair.builder()
+                 .controlNodes(Collections.emptySet())
+                 .testNodes(Collections.singleton("node"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyAppDynamicsState)
         .getControlAndTestNodes(any());
 

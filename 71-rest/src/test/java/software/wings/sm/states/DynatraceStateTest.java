@@ -144,16 +144,13 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(settingAttribute);
     dynatraceState.setAnalysisServerConfigId(settingAttribute.getUuid());
     DynatraceState spyState = spy(dynatraceState);
-    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(AbstractAnalysisState.NodePair.builder()
+                 .controlNodes(Collections.singleton("control"))
+                 .testNodes(Collections.singleton("test"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyState)
         .getControlAndTestNodes(any());
-    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
-    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
-        .when(spyState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
-        .when(spyState)
-        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())
@@ -280,13 +277,13 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
         .when(spyState)
         .getControlAndTestNodes(any());
-    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
-    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+    doReturn(AbstractAnalysisState.NodePair.builder()
+                 .controlNodes(Collections.singleton("control"))
+                 .testNodes(Collections.singleton("test"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
-        .when(spyState)
-        .getLastExecutionNodes(executionContext);
+        .getControlAndTestNodes(any());
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv())
