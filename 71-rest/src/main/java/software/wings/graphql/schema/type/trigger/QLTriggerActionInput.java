@@ -15,8 +15,9 @@ import java.util.List;
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QLTriggerActionInput {
-  private QLExecutionType executionType;
-  private String entityId;
-  private List<QLVariableInput> variables;
-  private List<QLArtifactSelectionInput> artifactSelections;
+  QLExecutionType executionType;
+  String entityId;
+  List<QLVariableInput> variables;
+  List<QLArtifactSelectionInput> artifactSelections;
+  Boolean excludeHostsWithSameArtifact;
 }

@@ -84,13 +84,18 @@ public class TriggerController {
     triggerBuilder.appId(qlCreateOrUpdateTriggerInput.getApplicationId());
     triggerBuilder.description(qlCreateOrUpdateTriggerInput.getDescription());
     triggerBuilder.workflowId(qlCreateOrUpdateTriggerInput.getAction().getEntityId());
+    triggerBuilder.workflowType(triggerActionController.resolveWorkflowType(qlCreateOrUpdateTriggerInput));
+
+    Boolean excludeHostsWithSameArtifact = qlCreateOrUpdateTriggerInput.getAction().getExcludeHostsWithSameArtifact();
+    if (excludeHostsWithSameArtifact != null) {
+      triggerBuilder.excludeHostsWithSameArtifact(excludeHostsWithSameArtifact);
+    }
 
     String envId = null;
     Map<String, String> resolvedWorkflowVariables = null;
     String appId = qlCreateOrUpdateTriggerInput.getApplicationId();
     List<QLVariableInput> variables = qlCreateOrUpdateTriggerInput.getAction().getVariables();
 
-    triggerBuilder.workflowType(triggerActionController.resolveWorkflowType(qlCreateOrUpdateTriggerInput));
     switch (qlCreateOrUpdateTriggerInput.getAction().getExecutionType()) {
       case WORKFLOW:
         String workflowId = qlCreateOrUpdateTriggerInput.getAction().getEntityId();
