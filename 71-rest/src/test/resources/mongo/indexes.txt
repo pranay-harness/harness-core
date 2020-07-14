@@ -473,6 +473,9 @@ pipelines {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "c
 pipelines {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "appId_1", "background": true} {"appId": 1}
 pipelines {"name": "createdAt_1", "background": true} {"createdAt": 1}
+pipelinesNG {"name": "accountIdentifierIndex", "background": true} {"accountId": 1}
+pipelinesNG {"name": "createdAt_1", "background": true} {"createdAt": 1}
+pipelinesNG {"name": "unique_accountIdentifier_organizationIdentifier_projectIdentifier_pipelineIdentifier", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 preferences {"name": "appId_1", "background": true} {"appId": 1}
 preferences {"name": "createdAt_1", "background": true} {"createdAt": 1}
 preferences {"name": "keywords_1", "background": true} {"keywords": 1}

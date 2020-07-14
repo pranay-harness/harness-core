@@ -7,8 +7,10 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.state.io.StepParameters;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Property;
 import software.wings.service.impl.SSHKeyDataProvider;
@@ -21,8 +23,10 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Redesign
-@Value
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ShellScriptStepParameters implements StepParameters {
   @Attributes(title = "Execute on Delegate") boolean executeOnDelegate;
   @NotEmpty @Attributes(title = "Target Host") String host;

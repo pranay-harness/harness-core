@@ -56,18 +56,17 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
   private PlanNode getEnvStepNode(PipelineInfrastructure pipelineInfrastructure) {
     final String envNodeId = generateUuid();
     EnvironmentYaml environment = pipelineInfrastructure.getEnvironment();
-    environment.setDisplayName(StringUtils.defaultIfEmpty(environment.getDisplayName(), environment.getIdentifier()));
+    environment.setName(StringUtils.defaultIfEmpty(environment.getName(), environment.getIdentifier()));
     EnvironmentYaml environmentOverrides = null;
     if (pipelineInfrastructure.getUseFromStage() != null
         && pipelineInfrastructure.getUseFromStage().getOverrides() != null) {
       environmentOverrides = pipelineInfrastructure.getUseFromStage().getOverrides().getEnvironment();
-      environmentOverrides.setDisplayName(
-          StringUtils.defaultIfEmpty(environment.getDisplayName(), environment.getIdentifier()));
+      environmentOverrides.setName(StringUtils.defaultIfEmpty(environment.getName(), environment.getIdentifier()));
     }
 
     return PlanNode.builder()
         .uuid(envNodeId)
-        .name(environment.getDisplayName())
+        .name(environment.getName())
         .identifier(environment.getIdentifier())
         .stepType(EnvironmentStep.STEP_TYPE)
         .facilitatorObtainment(
@@ -86,9 +85,9 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
     Infrastructure infraOverrides = null;
     if (pipelineInfrastructure.getUseFromStage() != null
         && pipelineInfrastructure.getUseFromStage().getOverrides() != null
-        && pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureSpec() != null) {
+        && pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDef() != null) {
       infraOverrides =
-          pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureSpec().getInfrastructure();
+          pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDef().getInfrastructure();
     }
 
     PlanNodeBuilder planNodeBuilder =
@@ -98,7 +97,7 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
             .identifier(infraIdentifier)
             .stepType(InfrastructureStep.STEP_TYPE)
             .stepParameters(InfraStepParameters.builder()
-                                .infrastructure(pipelineInfrastructure.getInfrastructureSpec().getInfrastructure())
+                                .infrastructure(pipelineInfrastructure.getInfrastructureDef().getInfrastructure())
                                 .infrastructureOverrides(infraOverrides)
                                 .build())
             .facilitatorObtainment(FacilitatorObtainment.builder()
@@ -139,7 +138,7 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
   private PipelineInfrastructure getActualInfraConfig(
       PipelineInfrastructure infrastructure, CreateExecutionPlanContext context) {
     if (infrastructure.getUseFromStage() != null) {
-      if (infrastructure.getInfrastructureSpec() != null) {
+      if (infrastructure.getInfrastructureDef() != null) {
         throw new InvalidArgumentsException("Infrastructure should not exist with UseFromStage.");
       }
       //  Add validation for not chaining of stages
@@ -147,7 +146,7 @@ public class InfraPlanCreator implements SupportDefinedExecutorPlanCreator<Pipel
           context, infrastructure.getUseFromStage().getStage());
       if (previousStage != null) {
         DeploymentStage deploymentStage = (DeploymentStage) previousStage;
-        return infrastructure.applyUseFromStage(deploymentStage.getDeployment().getInfrastructure());
+        return infrastructure.applyUseFromStage(deploymentStage.getInfrastructure());
       } else {
         throw new InvalidArgumentsException("Stage identifier given in useFromStage doesn't exist.");
       }

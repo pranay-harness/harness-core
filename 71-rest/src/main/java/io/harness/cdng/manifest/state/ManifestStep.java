@@ -35,7 +35,7 @@ public class ManifestStep implements Step, SyncExecutable {
     ManifestStepParameters parameters = (ManifestStepParameters) stepParameters;
     Map<String, ManifestAttributes> identifierToManifestMap = new HashMap<>();
 
-    // 1. Get Manifests belonging to ServiceSpec
+    // 1. Get Manifests belonging to KubernetesServiceSpec
     if (EmptyPredicate.isNotEmpty(parameters.getServiceSpecManifests())) {
       identifierToManifestMap = parameters.getServiceSpecManifests().stream().collect(
           Collectors.toMap(WithIdentifier::getIdentifier, ManifestConfigWrapper::getManifestAttributes, (a, b) -> b));

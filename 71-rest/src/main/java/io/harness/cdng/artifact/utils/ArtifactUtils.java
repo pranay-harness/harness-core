@@ -5,7 +5,7 @@ import static software.wings.common.VerificationConstants.CONNECTOR;
 
 import com.google.common.hash.Hashing;
 
-import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
@@ -29,32 +29,31 @@ public class ArtifactUtils {
   public final String PRIMARY_ARTIFACT = "primary";
   public final String SIDECAR_ARTIFACT = "sidecars";
 
-  public boolean isPrimaryArtifact(ArtifactConfigWrapper artifactConfigWrapper) {
-    return artifactConfigWrapper.getArtifactType().equals(PRIMARY_ARTIFACT);
+  public boolean isPrimaryArtifact(ArtifactConfig artifactConfig) {
+    return artifactConfig.getArtifactType().equals(PRIMARY_ARTIFACT);
   }
 
-  public String getArtifactKey(ArtifactConfigWrapper artifactConfigWrapper) {
-    return isPrimaryArtifact(artifactConfigWrapper)
-        ? artifactConfigWrapper.getIdentifier()
-        : artifactConfigWrapper.getArtifactType() + "." + artifactConfigWrapper.getIdentifier();
+  public String getArtifactKey(ArtifactConfig artifactConfig) {
+    return isPrimaryArtifact(artifactConfig) ? artifactConfig.getIdentifier()
+                                             : artifactConfig.getArtifactType() + "." + artifactConfig.getIdentifier();
   }
 
   public boolean isPrimaryArtifact(ArtifactOutcome artifactOutcome) {
     return artifactOutcome.getArtifactType().equals(PRIMARY_ARTIFACT);
   }
 
-  public List<ArtifactConfigWrapper> convertArtifactListIntoArtifacts(ArtifactListConfig artifactListConfig) {
-    List<ArtifactConfigWrapper> artifacts = new LinkedList<>();
+  public List<ArtifactConfig> convertArtifactListIntoArtifacts(ArtifactListConfig artifactListConfig) {
+    List<ArtifactConfig> artifacts = new LinkedList<>();
     if (artifactListConfig == null) {
       return artifacts;
     }
     if (artifactListConfig.getPrimary() != null) {
-      artifacts.add(artifactListConfig.getPrimary());
+      artifacts.add(artifactListConfig.getPrimary().getArtifactConfig());
     }
     if (EmptyPredicate.isNotEmpty(artifactListConfig.getSidecars())) {
       artifacts.addAll(artifactListConfig.getSidecars()
                            .stream()
-                           .map(SidecarArtifactWrapper::getArtifact)
+                           .map(SidecarArtifactWrapper::getArtifactConfig)
                            .collect(Collectors.toList()));
     }
     return artifacts;

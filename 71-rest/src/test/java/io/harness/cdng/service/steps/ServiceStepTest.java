@@ -10,13 +10,14 @@ import static org.mockito.Mockito.mock;
 import io.harness.CategoryTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
-import io.harness.cdng.service.ServiceConfig;
-import io.harness.cdng.service.ServiceSpec;
+import io.harness.cdng.service.beans.KubernetesServiceSpec;
+import io.harness.cdng.service.beans.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.delegate.beans.ResponseData;
@@ -58,25 +59,26 @@ public class ServiceStepTest extends CategoryTest {
   public void testCreateServiceOutcome() {
     K8sManifest k8Manifest = K8sManifest.builder()
                                  .identifier("m1")
-                                 .kind(ManifestType.K8Manifest)
-                                 .storeConfig(GitStore.builder()
-                                                  .path("path")
-                                                  .connectorId("g1")
-                                                  .fetchType(FetchType.BRANCH)
-                                                  .fetchValue("master")
-                                                  .build())
+                                 .storeConfigWrapper(StoreConfigWrapper.builder()
+                                                         .storeConfig(GitStore.builder()
+                                                                          .path("path")
+                                                                          .connectorIdentifier("g1")
+                                                                          .gitFetchType(FetchType.BRANCH)
+                                                                          .branch("master")
+                                                                          .build())
+                                                         .build())
                                  .build();
 
     K8sManifest k8Manifest1 = K8sManifest.builder()
                                   .identifier("m2")
-
-                                  .kind(ManifestType.K8Manifest)
-                                  .storeConfig(GitStore.builder()
-                                                   .path("path1")
-                                                   .connectorId("g1")
-                                                   .fetchType(FetchType.BRANCH)
-                                                   .fetchValue("master")
-                                                   .build())
+                                  .storeConfigWrapper(StoreConfigWrapper.builder()
+                                                          .storeConfig(GitStore.builder()
+                                                                           .path("path1")
+                                                                           .connectorIdentifier("g1")
+                                                                           .gitFetchType(FetchType.BRANCH)
+                                                                           .branch("master")
+                                                                           .build())
+                                                          .build())
                                   .build();
 
     OutcomeService outcomeService = mock(OutcomeService.class);
@@ -89,8 +91,8 @@ public class ServiceStepTest extends CategoryTest {
     ServiceOutcome serviceOutcome = serviceStep.createServiceOutcome(
         ServiceConfig.builder()
             .identifier("s1")
-            .displayName("s1")
-            .serviceSpec(ServiceSpec.builder().deploymentType("kubernetes").build())
+            .name("s1")
+            .serviceDef(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
             .build(),
         Collections.singletonList(
             StepResponseNotifyData.builder()
@@ -141,17 +143,18 @@ public class ServiceStepTest extends CategoryTest {
     doReturn(Arrays.asList(artifactsOutcome, manifestOutcome)).when(outcomeService).fetchOutcomes(any());
 
     Ambiance ambiance = Ambiance.builder().build();
-    ServiceConfig serviceConfig = ServiceConfig.builder()
-                                      .identifier("IDENTIFIER")
-                                      .displayName("DISPLAY")
-                                      .serviceSpec(ServiceSpec.builder().deploymentType("DEPLOYMENT_TYPE").build())
-                                      .build();
+    ServiceConfig serviceConfig =
+        ServiceConfig.builder()
+            .identifier("IDENTIFIER")
+            .name("DISPLAY")
+            .serviceDef(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
+            .build();
     ServiceConfig serviceConfigOverrides =
         ServiceConfig.builder()
             .identifier("IDENTIFIER1")
-            .displayName("DISPLAY")
+            .name("DISPLAY")
             .description("DESCRIPTION")
-            .serviceSpec(ServiceSpec.builder().deploymentType("DEPLOYMENT_TYPE").build())
+            .serviceDef(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
             .build();
     ServiceStepParameters stepParameters =
         ServiceStepParameters.builder().service(serviceConfig).serviceOverrides(serviceConfigOverrides).build();

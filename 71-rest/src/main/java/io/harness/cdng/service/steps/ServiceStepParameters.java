@@ -1,6 +1,6 @@
 package io.harness.cdng.service.steps;
 
-import io.harness.cdng.service.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.state.io.StepParameters;
 import lombok.Builder;
 import lombok.Singular;

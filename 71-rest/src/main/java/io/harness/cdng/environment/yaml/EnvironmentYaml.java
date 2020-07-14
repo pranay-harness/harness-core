@@ -15,20 +15,20 @@ import java.util.List;
 @Value
 @Builder
 public class EnvironmentYaml implements Outcome, OverridesApplier<EnvironmentYaml> {
-  @NonFinal @Wither String displayName;
+  @NonFinal @Wither String name;
   @Wither String identifier;
   @Wither EnvironmentType type;
   @Wither List<Tag> tags;
 
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
+  public void setName(String name) {
+    this.name = name;
   }
 
   @Override
   public EnvironmentYaml applyOverrides(EnvironmentYaml overrideConfig) {
     EnvironmentYaml resultant = this;
-    if (EmptyPredicate.isNotEmpty(overrideConfig.getDisplayName())) {
-      resultant = resultant.withDisplayName(overrideConfig.getDisplayName());
+    if (EmptyPredicate.isNotEmpty(overrideConfig.getName())) {
+      resultant = resultant.withName(overrideConfig.getName());
     }
     if (EmptyPredicate.isNotEmpty(identifier)) {
       resultant = resultant.withIdentifier(overrideConfig.getIdentifier());

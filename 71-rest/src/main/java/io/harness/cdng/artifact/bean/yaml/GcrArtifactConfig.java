@@ -2,7 +2,7 @@ package io.harness.cdng.artifact.bean.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.ArtifactSourceType;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
@@ -25,9 +25,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ArtifactSourceType.GCR)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GcrArtifactConfig implements ArtifactConfigWrapper {
+public class GcrArtifactConfig implements ArtifactConfig {
   /** GCP connector to connect to Google Container Registry. */
-  @Wither String gcpConnector;
+  @Wither String connectorIdentifier;
   /** Registry where the artifact source is located. */
   @Wither String registryHostname;
   /** Images in repos need to be referenced via a path. */
@@ -44,7 +44,7 @@ public class GcrArtifactConfig implements ArtifactConfigWrapper {
 
   @Override
   public String getUniqueHash() {
-    List<String> valuesList = Arrays.asList(gcpConnector, registryHostname, imagePath);
+    List<String> valuesList = Arrays.asList(connectorIdentifier, registryHostname, imagePath);
     return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
   }
 
@@ -65,23 +65,17 @@ public class GcrArtifactConfig implements ArtifactConfigWrapper {
   }
 
   @Override
-  public String setIdentifier(String identifier) {
-    this.identifier = identifier;
-    return identifier;
-  }
-
-  @Override
-  public ArtifactConfigWrapper applyOverrides(ArtifactConfigWrapper overrideConfig) {
-    GcrArtifactConfig gcrArtifactConfig = (GcrArtifactConfig) overrideConfig;
+  public ArtifactConfig applyOverrides(ArtifactConfig overrideConfig) {
+    GcrArtifactConfig gcrArtifactSpecConfig = (GcrArtifactConfig) overrideConfig;
     GcrArtifactConfig resultantConfig = this;
-    if (EmptyPredicate.isNotEmpty(gcrArtifactConfig.getGcpConnector())) {
-      resultantConfig = resultantConfig.withGcpConnector(gcrArtifactConfig.getGcpConnector());
+    if (EmptyPredicate.isNotEmpty(gcrArtifactSpecConfig.getConnectorIdentifier())) {
+      resultantConfig = resultantConfig.withConnectorIdentifier(gcrArtifactSpecConfig.getConnectorIdentifier());
     }
-    if (EmptyPredicate.isNotEmpty(gcrArtifactConfig.getImagePath())) {
-      resultantConfig = resultantConfig.withImagePath(gcrArtifactConfig.getImagePath());
+    if (EmptyPredicate.isNotEmpty(gcrArtifactSpecConfig.getImagePath())) {
+      resultantConfig = resultantConfig.withImagePath(gcrArtifactSpecConfig.getImagePath());
     }
-    if (EmptyPredicate.isNotEmpty(gcrArtifactConfig.getRegistryHostname())) {
-      resultantConfig = resultantConfig.withRegistryHostname(gcrArtifactConfig.getRegistryHostname());
+    if (EmptyPredicate.isNotEmpty(gcrArtifactSpecConfig.getRegistryHostname())) {
+      resultantConfig = resultantConfig.withRegistryHostname(gcrArtifactSpecConfig.getRegistryHostname());
     }
     return resultantConfig;
   }

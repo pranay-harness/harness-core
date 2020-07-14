@@ -1,61 +1,59 @@
-package io.harness.cdng.pipeline.plancreators;
+package io.harness.executionplan.plancreator;
 
-import static io.harness.cdng.executionplan.CDPlanCreatorType.EXECUTION_PHASES_PLAN_CREATOR;
-import static io.harness.cdng.executionplan.CDPlanCreatorType.PHASE_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
-import io.harness.cdng.executionplan.CDPlanNodeType;
-import io.harness.cdng.pipeline.CDPhase;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.ExecutionPlanCreator;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
+import io.harness.executionplan.plancreator.beans.PlanCreatorType;
+import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
+import io.harness.state.StepType;
 import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
+import io.harness.yaml.core.StageElement;
+import io.harness.yaml.core.intfc.StageType;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
-@Singleton
 @Slf4j
-public class ExecutionPhasesPlanCreator
-    extends AbstractPlanCreatorWithChildren<List<CDPhase>> implements SupportDefinedExecutorPlanCreator<List<CDPhase>> {
+public class CDStagesPlanCreator extends AbstractPlanCreatorWithChildren<List<StageElement>>
+    implements SupportDefinedExecutorPlanCreator<List<StageElement>> {
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 
   @Override
   public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
-      List<CDPhase> phases, CreateExecutionPlanContext context) {
+      List<StageElement> stagesList, CreateExecutionPlanContext context) {
     Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
-    final List<CreateExecutionPlanResponse> planForPhases = getPlanForPhases(context, phases);
-    childrenPlanMap.put("PHASES", planForPhases);
+    List<CreateExecutionPlanResponse> planForStages = getPlanForStages(context, stagesList);
+    childrenPlanMap.put("STAGES", planForStages);
     return childrenPlanMap;
   }
 
   @Override
-  public CreateExecutionPlanResponse createPlanForSelf(List<CDPhase> input,
+  public CreateExecutionPlanResponse createPlanForSelf(List<StageElement> input,
       Map<String, List<CreateExecutionPlanResponse>> planForChildrenMap, CreateExecutionPlanContext context) {
-    List<CreateExecutionPlanResponse> planForPhases = planForChildrenMap.get("PHASES");
-    final PlanNode executionPlanNode = prepareExecutionPhasesNode(context, planForPhases);
+    List<CreateExecutionPlanResponse> planForStages = planForChildrenMap.get("STAGES");
+    final PlanNode stagesPlanNode = prepareStagesNode(planForStages);
     return CreateExecutionPlanResponse.builder()
-        .planNode(executionPlanNode)
-        .planNodes(getPlanNodes(planForPhases))
-        .startingNodeId(executionPlanNode.getUuid())
+        .planNode(stagesPlanNode)
+        .planNodes(getPlanNodes(planForStages))
+        .startingNodeId(stagesPlanNode.getUuid())
         .build();
   }
 
@@ -66,30 +64,31 @@ public class ExecutionPhasesPlanCreator
         .collect(Collectors.toList());
   }
 
-  private List<CreateExecutionPlanResponse> getPlanForPhases(CreateExecutionPlanContext context, List<CDPhase> phases) {
-    return phases.stream()
-        .map(phase -> getPlanCreatorForPhase(context, phase).createPlan(phase, context))
+  private List<CreateExecutionPlanResponse> getPlanForStages(
+      CreateExecutionPlanContext context, List<StageElement> stages) {
+    return stages.stream()
+        .map(stage -> getPlanCreatorForStage(context, stage.getStageType()).createPlan(stage.getStageType(), context))
         .collect(Collectors.toList());
   }
 
-  private ExecutionPlanCreator<CDPhase> getPlanCreatorForPhase(CreateExecutionPlanContext context, CDPhase phase) {
+  private ExecutionPlanCreator<StageType> getPlanCreatorForStage(CreateExecutionPlanContext context, StageType stage) {
     return planCreatorHelper.getExecutionPlanCreator(
-        PHASE_PLAN_CREATOR.getName(), phase, context, format("no execution plan creator found for phase [%s]", phase));
+        PlanCreatorType.STAGE_PLAN_CREATOR.getName(), stage, context, "no execution plan creator found for  stage");
   }
 
-  private PlanNode prepareExecutionPhasesNode(
-      CreateExecutionPlanContext context, List<CreateExecutionPlanResponse> planForPhases) {
+  private PlanNode prepareStagesNode(List<CreateExecutionPlanResponse> planForStages) {
     final String nodeId = generateUuid();
 
-    final String EXECUTION = "EXECUTION";
+    final String STAGES = "stages";
+
     return PlanNode.builder()
         .uuid(nodeId)
-        .name(EXECUTION)
-        .identifier(EXECUTION)
-        .stepType(SectionChainStep.STEP_TYPE)
-        .group(StepGroup.PHASES.name())
+        .name(STAGES)
+        .identifier(STAGES)
+        .stepType(StepType.builder().type(SectionChainStep.STEP_TYPE.getType()).build())
+        .group(StepGroup.STAGES.name())
         .stepParameters(SectionChainStepParameters.builder()
-                            .childNodeIds(planForPhases.stream()
+                            .childNodeIds(planForStages.stream()
                                               .map(CreateExecutionPlanResponse::getStartingNodeId)
                                               .collect(Collectors.toList()))
                             .build())
@@ -103,16 +102,17 @@ public class ExecutionPhasesPlanCreator
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
     final Object objectToPlan = searchContext.getObjectToPlan();
     return getSupportedTypes().contains(searchContext.getType())
-        && objectToPlan instanceof List<?> && ((List<?>) objectToPlan).stream().allMatch(o -> o instanceof CDPhase);
+        && objectToPlan
+        instanceof List<?> && ((List<?>) objectToPlan).stream().allMatch(o -> o instanceof StageElement);
   }
 
   @Override
   public List<String> getSupportedTypes() {
-    return singletonList(EXECUTION_PHASES_PLAN_CREATOR.getName());
+    return singletonList(PlanCreatorType.STAGES_PLAN_CREATOR.getName());
   }
 
   @Override
-  public String getPlanNodeType(List<CDPhase> input) {
-    return CDPlanNodeType.EXECUTION.name();
+  public String getPlanNodeType(List<StageElement> input) {
+    return PlanNodeType.STAGES.name();
   }
 }

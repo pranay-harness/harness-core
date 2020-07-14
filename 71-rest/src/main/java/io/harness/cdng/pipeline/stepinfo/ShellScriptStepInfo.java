@@ -1,34 +1,45 @@
 package io.harness.cdng.pipeline.stepinfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.executionplan.plancreator.beans.GenericStepInfo;
+import io.harness.delegate.task.shell.ScriptType;
 import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.state.StepType;
-import io.harness.state.io.StepParameters;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import software.wings.sm.states.ShellScriptState;
 
-@Value
-@Builder
-@JsonTypeName("shellScript")
-public class ShellScriptStepInfo implements CDStepInfo, GenericStepInfo {
-  String displayName;
-  String identifier;
-  ShellScriptStepParameters shellScript;
+import java.util.List;
 
-  @Override
-  @JsonIgnore
-  public StepParameters getStepParameters() {
-    return shellScript;
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@JsonTypeName(StepSpecType.SHELL_SCRIPT)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ShellScriptStepInfo extends ShellScriptStepParameters implements CDStepInfo {
+  @JsonIgnore String name;
+  @JsonIgnore String identifier;
+
+  @Builder(builderMethodName = "infoBuilder")
+  public ShellScriptStepInfo(boolean executeOnDelegate, String host, List<String> tags,
+      ShellScriptState.ConnectionType connectionType, String sshKeyRef, String connectionAttributes, String commandPath,
+      ScriptType scriptType, String scriptString, String outputVars, String sweepingOutputName,
+      String sweepingOutputScope, String name, String identifier) {
+    super(executeOnDelegate, host, tags, connectionType, sshKeyRef, connectionAttributes, commandPath, scriptType,
+        scriptString, outputVars, sweepingOutputName, sweepingOutputScope);
+    this.name = name;
+    this.identifier = identifier;
   }
 
   @Override
   public String getDisplayName() {
-    return displayName;
+    return name;
   }
 
   @Override

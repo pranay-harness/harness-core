@@ -17,6 +17,7 @@ import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.service.beans.ServiceOutcome;
@@ -82,7 +83,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
   @Override
   public TaskChainResponse startChainLink(
       Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    K8sRollingStepParameters k8sRollingStepParameters = ((K8sRollingStepInfo) stepParameters).getK8sRolling();
+    K8sRollingStepParameters k8sRollingStepParameters = (K8sRollingStepParameters) stepParameters;
 
     StepDependencySpec serviceSpec =
         k8sRollingStepParameters.getStepDependencySpecs().get(CDStepDependencyKey.SERVICE.name());
@@ -120,9 +121,9 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
     List<GitFetchFilesConfig> gitFetchFilesConfigs = new ArrayList<>();
 
     for (ValuesManifest valuesManifest : aggregatedValuesManifests) {
-      if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfig().getKind())) {
-        GitStore gitStore = (GitStore) valuesManifest.getStoreConfig();
-        String connectorId = gitStore.getConnectorId();
+      if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfigWrapper().getStoreConfig().getKind())) {
+        GitStore gitStore = (GitStore) valuesManifest.getStoreConfigWrapper().getStoreConfig();
+        String connectorId = gitStore.getConnectorIdentifier();
         GitConfig gitConfig = (GitConfig) k8sStepHelper.getSettingAttribute(connectorId, ambiance).getValue();
 
         List<EncryptedDataDetail> encryptionDetails = k8sStepHelper.getEncryptedDataDetails(gitConfig);
@@ -170,7 +171,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
   private TaskChainResponse executeK8sTask(K8sManifest k8sManifest, Ambiance ambiance,
       K8sRollingStepParameters stepParameters, List<String> valuesFileContents, Infrastructure infrastructure) {
     List<String> renderedValuesList = renderValues(ambiance, valuesFileContents);
-    StoreConfig storeConfig = k8sManifest.getStoreConfig();
+    StoreConfig storeConfig = k8sManifest.getStoreConfigWrapper().getStoreConfig();
 
     K8sDelegateManifestConfig k8sDelegateManifestConfig = getK8sDelegateManifestConfig(storeConfig, ambiance);
     K8sClusterConfig k8sClusterConfig = k8sStepHelper.getK8sClusterConfig(infrastructure, ambiance);
@@ -223,18 +224,18 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
       StoreType storeType = StoreType.Remote;
       GitStore gitStore = (GitStore) storeConfig;
       SettingAttribute gitConfigSettingAttribute =
-          k8sStepHelper.getSettingAttribute(gitStore.getConnectorId(), ambiance);
+          k8sStepHelper.getSettingAttribute(gitStore.getConnectorIdentifier(), ambiance);
       List<EncryptedDataDetail> encryptionDetails =
           k8sStepHelper.getEncryptedDataDetails((GitConfig) gitConfigSettingAttribute.getValue());
 
       GitFileConfig gitFileConfig =
           GitFileConfig.builder()
-              .connectorId(gitStore.getConnectorId())
-              .useBranch(gitStore.getFetchType() == FetchType.BRANCH)
-              .branch(gitStore.getFetchType() == FetchType.BRANCH ? gitStore.getFetchValue() : null)
+              .connectorId(gitStore.getConnectorIdentifier())
+              .useBranch(gitStore.getGitFetchType() == FetchType.BRANCH)
+              .branch(gitStore.getGitFetchType() == FetchType.BRANCH ? gitStore.getBranch() : null)
               .filePathList(gitStore.getPaths())
               .filePath(isNotEmpty(gitStore.getPaths()) ? gitStore.getPaths().get(0) : null)
-              .commitId(gitStore.getFetchType() == FetchType.BRANCH ? null : gitStore.getFetchValue())
+              .commitId(gitStore.getGitFetchType() == FetchType.BRANCH ? null : gitStore.getBranch())
               .build();
 
       k8sDelegateManifestConfigBuilder.gitConfig((GitConfig) gitConfigSettingAttribute.getValue())
@@ -247,8 +248,8 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
   }
 
   private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifest> aggregatedValuesManifests) {
-    return aggregatedValuesManifests.stream().anyMatch(
-        valuesManifest -> ManifestStoreType.GIT.equals(valuesManifest.getStoreConfig().getKind()));
+    return aggregatedValuesManifests.stream().anyMatch(valuesManifest
+        -> ManifestStoreType.GIT.equals(valuesManifest.getStoreConfigWrapper().getStoreConfig().getKind()));
   }
 
   @VisibleForTesting
@@ -278,14 +279,15 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
             .orElse(null);
 
     if (k8sManifest != null && isNotEmpty(k8sManifest.getValuesFilePaths())
-        && ManifestStoreType.GIT.equals(k8sManifest.getStoreConfig().getKind())) {
-      GitStore gitStore = (GitStore) k8sManifest.getStoreConfig();
-      ValuesManifest valuesManifest = ValuesManifest.builder()
-                                          .identifier(k8sManifest.getIdentifier())
-                                          .storeConfig(gitStore.cloneInternal())
-                                          .build();
+        && ManifestStoreType.GIT.equals(k8sManifest.getStoreConfigWrapper().getStoreConfig().getKind())) {
+      GitStore gitStore = (GitStore) k8sManifest.getStoreConfigWrapper().getStoreConfig();
+      ValuesManifest valuesManifest =
+          ValuesManifest.builder()
+              .identifier(k8sManifest.getIdentifier())
+              .storeConfigWrapper(StoreConfigWrapper.builder().storeConfig(gitStore.cloneInternal()).build())
+              .build();
 
-      ((GitStore) valuesManifest.getStoreConfig()).setPaths(k8sManifest.getValuesFilePaths());
+      ((GitStore) valuesManifest.getStoreConfigWrapper().getStoreConfig()).setPaths(k8sManifest.getValuesFilePaths());
 
       aggregateValuesManifests.add(valuesManifest);
     }
@@ -326,7 +328,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
 
     List<String> valuesFileContents = getFileContents(gitFetchFilesResultMap, valuesManifests);
 
-    K8sRollingStepParameters k8sRollingStepParameters = ((K8sRollingStepInfo) stepParameters).getK8sRolling();
+    K8sRollingStepParameters k8sRollingStepParameters = (K8sRollingStepParameters) stepParameters;
     return executeK8sTask(k8sManifest, ambiance, k8sRollingStepParameters, valuesFileContents,
         k8sRollingPassThroughData.getInfrastructure());
   }
@@ -337,7 +339,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
     List<String> valuesFileContents = new ArrayList<>();
 
     for (ValuesManifest valuesManifest : valuesManifests) {
-      if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfig().getKind())) {
+      if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfigWrapper().getStoreConfig().getKind())) {
         GitFetchFilesResult gitFetchFilesResult = gitFetchFilesResultMap.get(valuesManifest.getIdentifier());
         valuesFileContents.addAll(
             gitFetchFilesResult.getFiles().stream().map(GitFile::getFileContent).collect(Collectors.toList()));

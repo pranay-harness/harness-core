@@ -1,7 +1,8 @@
 package io.harness.cdng.infra.beans;
 
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
-import io.harness.cdng.infra.InfrastructureSpec;
+import io.harness.cdng.infra.InfrastructureDef;
+import io.swagger.annotations.ApiModel;
 import lombok.Builder;
 import lombok.Value;
 
@@ -17,8 +18,9 @@ public class InfraUseFromStage implements Serializable {
 
   @Value
   @Builder
+  @ApiModel(value = "InfraOverrides")
   public static class Overrides implements Serializable {
     EnvironmentYaml environment;
-    InfrastructureSpec infrastructureSpec;
+    InfrastructureDef infrastructureDef;
   }
 }

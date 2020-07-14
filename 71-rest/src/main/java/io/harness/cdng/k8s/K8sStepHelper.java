@@ -1,5 +1,7 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -37,7 +39,7 @@ public class K8sStepHelper {
 
   String getReleaseName(Infrastructure infrastructure) {
     switch (infrastructure.getKind()) {
-      case K8S_DIRECT:
+      case KUBERNETES_DIRECT:
         K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
         return k8SDirectInfrastructure.getReleaseName();
       default:
@@ -65,9 +67,10 @@ public class K8sStepHelper {
     K8sClusterConfigBuilder k8sClusterConfigBuilder = K8sClusterConfig.builder();
 
     switch (infrastructure.getKind()) {
-      case K8S_DIRECT:
+      case KUBERNETES_DIRECT:
         K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
-        SettingAttribute cloudProvider = getSettingAttribute(k8SDirectInfrastructure.getConnectorId(), ambiance);
+        SettingAttribute cloudProvider =
+            getSettingAttribute(k8SDirectInfrastructure.getConnectorIdentifier(), ambiance);
         List<EncryptedDataDetail> encryptionDetails =
             getEncryptedDataDetails((KubernetesClusterConfig) cloudProvider.getValue());
         k8sClusterConfigBuilder.cloudProvider(cloudProvider.getValue())

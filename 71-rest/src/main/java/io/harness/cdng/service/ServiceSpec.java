@@ -1,21 +1,23 @@
 package io.harness.cdng.service;
 
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
-import lombok.Builder;
-import lombok.Value;
+import io.harness.yaml.core.intfc.WithType;
 
-import java.io.Serializable;
 import java.util.List;
 
-@Value
-@Builder
-public class ServiceSpec implements Serializable {
-  String deploymentType;
-  ArtifactListConfig artifacts;
-  List<ManifestConfigWrapper> manifests;
-  List<ManifestOverrideSets> manifestOverrideSets;
-  List<ArtifactOverrideSets> artifactOverrideSets;
+@JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
+public interface ServiceSpec extends WithType {
+  ArtifactListConfig getArtifacts();
+  List<ManifestConfigWrapper> getManifests();
+  List<ManifestOverrideSets> getManifestOverrideSets();
+  List<ArtifactOverrideSets> getArtifactOverrideSets();
+  @Override @JsonIgnore String getType();
 }

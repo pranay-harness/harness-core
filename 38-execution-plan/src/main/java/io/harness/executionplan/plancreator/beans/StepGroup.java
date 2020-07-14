@@ -4,7 +4,7 @@ public enum StepGroup {
   STAGE,
   STEP,
   PHASE,
-  PHASES,
+  EXECUTION,
   STAGES,
   PIPELINE;
 }

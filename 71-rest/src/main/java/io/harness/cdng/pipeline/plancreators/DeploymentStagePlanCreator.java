@@ -1,6 +1,6 @@
 package io.harness.cdng.pipeline.plancreators;
 
-import static io.harness.cdng.executionplan.CDPlanCreatorType.EXECUTION_PHASES_PLAN_CREATOR;
+import static io.harness.cdng.executionplan.CDPlanCreatorType.CD_EXECUTION_PLAN_CREATOR;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.INFRA_PLAN_CREATOR;
 import static io.harness.cdng.executionplan.CDPlanCreatorType.SERVICE_PLAN_CREATOR;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -13,7 +13,7 @@ import com.google.inject.Singleton;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
-import io.harness.cdng.service.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.executionplan.core.AbstractPlanCreatorWithChildren;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
@@ -28,7 +28,7 @@ import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
-import io.harness.yaml.core.auxiliary.intfc.PhaseWrapper;
+import io.harness.yaml.core.ExecutionElement;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
@@ -46,12 +46,11 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
   public Map<String, List<CreateExecutionPlanResponse>> createPlanForChildren(
       DeploymentStage deploymentStage, CreateExecutionPlanContext context) {
     Map<String, List<CreateExecutionPlanResponse>> childrenPlanMap = new HashMap<>();
-    final CreateExecutionPlanResponse planForService =
-        createPlanForService(deploymentStage.getDeployment().getService(), context);
+    final CreateExecutionPlanResponse planForService = createPlanForService(deploymentStage.getService(), context);
     final CreateExecutionPlanResponse planForInfrastructure =
-        createPlanForInfrastructure(deploymentStage.getDeployment().getInfrastructure(), context);
+        createPlanForInfrastructure(deploymentStage.getInfrastructure(), context);
     final CreateExecutionPlanResponse planForExecution =
-        createPlanForExecution(deploymentStage.getDeployment().getExecution(), context);
+        createPlanForExecution(deploymentStage.getExecution(), context);
     childrenPlanMap.put("SERVICE", singletonList(planForService));
     childrenPlanMap.put("INFRA", singletonList(planForInfrastructure));
     childrenPlanMap.put("EXECUTION", singletonList(planForExecution));
@@ -90,7 +89,7 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
 
     return PlanNode.builder()
         .uuid(deploymentStageUid)
-        .name(deploymentStage.getDisplayName())
+        .name(deploymentStage.getName())
         .identifier(deploymentStage.getIdentifier())
         .stepType(SectionChainStep.STEP_TYPE)
         .group(StepGroup.STAGE.name())
@@ -114,9 +113,9 @@ public class DeploymentStagePlanCreator extends AbstractPlanCreatorWithChildren<
   }
 
   private CreateExecutionPlanResponse createPlanForExecution(
-      List<PhaseWrapper> execution, CreateExecutionPlanContext context) {
-    final ExecutionPlanCreator<List<PhaseWrapper>> executionPlanCreator =
-        executionPlanCreatorHelper.getExecutionPlanCreator(EXECUTION_PHASES_PLAN_CREATOR.getName(), execution, context,
+      ExecutionElement execution, CreateExecutionPlanContext context) {
+    final ExecutionPlanCreator<ExecutionElement> executionPlanCreator =
+        executionPlanCreatorHelper.getExecutionPlanCreator(CD_EXECUTION_PLAN_CREATOR.getName(), execution, context,
             "no execution plan creator found for stage execution");
 
     return executionPlanCreator.createPlan(execution, context);

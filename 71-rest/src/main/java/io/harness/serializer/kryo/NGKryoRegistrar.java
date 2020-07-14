@@ -27,15 +27,16 @@ import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
-import io.harness.cdng.service.ServiceConfig;
-import io.harness.cdng.service.ServiceSpec;
-import io.harness.cdng.service.StageOverridesConfig;
+import io.harness.cdng.service.beans.KubernetesServiceSpec;
+import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
+import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
@@ -57,7 +58,7 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceConfig.class, 8010);
     kryo.register(DockerHubArtifactConfig.class, 8011);
     kryo.register(GcrArtifactConfig.class, 8012);
-    kryo.register(ServiceSpec.class, 8015);
+    kryo.register(KubernetesServiceSpec.class, 8015);
     kryo.register(SidecarArtifact.class, 8016);
     kryo.register(DockerArtifactSource.class, 8017);
     kryo.register(ServiceOutcome.class, 8018);
@@ -85,5 +86,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(InfraStepParameters.class, 8042);
     kryo.register(ManifestOverrideSets.class, 8043);
     kryo.register(ArtifactOverrideSets.class, 8044);
+    kryo.register(StoreConfigWrapper.class, 8045);
   }
 }

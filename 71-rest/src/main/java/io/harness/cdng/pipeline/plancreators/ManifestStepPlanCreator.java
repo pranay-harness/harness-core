@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
-import io.harness.cdng.service.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
 import io.harness.executionplan.core.CreateExecutionPlanResponse;
@@ -49,7 +49,7 @@ public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreato
         .identifier(MANIFESTS)
         .stepType(ManifestStep.STEP_TYPE)
         .stepParameters(ManifestStepParameters.builder()
-                            .serviceSpecManifests(serviceConfig.getServiceSpec().getManifests())
+                            .serviceSpecManifests(serviceConfig.getServiceDef().getServiceSpec().getManifests())
                             .stageOverrideManifests(stageOverrideManifests)
                             .manifestOverrideSets(manifestOverrideSets)
                             .build())
@@ -66,7 +66,8 @@ public class ManifestStepPlanCreator implements SupportDefinedExecutorPlanCreato
           .getUseManifestOverrideSets()
           .stream()
           .map(useManifestOverrideSet
-              -> serviceConfig.getServiceSpec()
+              -> serviceConfig.getServiceDef()
+                     .getServiceSpec()
                      .getManifestOverrideSets()
                      .stream()
                      .filter(o -> o.getIdentifier().equals(useManifestOverrideSet))

@@ -7,7 +7,7 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 
-import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.steps.ArtifactForkStep;
@@ -15,7 +15,7 @@ import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters.ArtifactStepParametersBuilder;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.executionplan.CDPlanNodeType;
-import io.harness.cdng.service.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -116,26 +116,25 @@ public class ArtifactForkPlanCreator
 
   private List<ArtifactStepParameters> getArtifactsWithCorrespondingOverrides(ServiceConfig serviceConfig) {
     Map<String, ArtifactStepParametersBuilder> artifactsMap = new HashMap<>();
-    ArtifactListConfig artifacts = serviceConfig.getServiceSpec().getArtifacts();
+    ArtifactListConfig artifacts = serviceConfig.getServiceDef().getServiceSpec().getArtifacts();
     if (artifacts != null) {
       if (artifacts.getPrimary() == null) {
         throw new InvalidArgumentsException("Primary artifact cannot be null.");
       }
       // Add service artifacts.
-      List<ArtifactConfigWrapper> serviceSpecArtifacts = ArtifactUtils.convertArtifactListIntoArtifacts(artifacts);
+      List<ArtifactConfig> serviceSpecArtifacts = ArtifactUtils.convertArtifactListIntoArtifacts(artifacts);
       mapArtifactsToIdentifier(artifactsMap, serviceSpecArtifacts, ArtifactStepParametersBuilder::artifact);
     }
 
     // Add Artifact Override Sets.
-    List<ArtifactConfigWrapper> artifactOverrideSetsApplicable = getArtifactOverrideSetsApplicable(serviceConfig);
+    List<ArtifactConfig> artifactOverrideSetsApplicable = getArtifactOverrideSetsApplicable(serviceConfig);
     mapArtifactsToIdentifier(
         artifactsMap, artifactOverrideSetsApplicable, ArtifactStepParametersBuilder::artifactOverrideSet);
 
     // Add Stage Overrides.
     if (serviceConfig.getStageOverrides() != null && serviceConfig.getStageOverrides().getArtifacts() != null) {
       ArtifactListConfig stageOverrides = serviceConfig.getStageOverrides().getArtifacts();
-      List<ArtifactConfigWrapper> stageOverridesArtifacts =
-          ArtifactUtils.convertArtifactListIntoArtifacts(stageOverrides);
+      List<ArtifactConfig> stageOverridesArtifacts = ArtifactUtils.convertArtifactListIntoArtifacts(stageOverrides);
       mapArtifactsToIdentifier(
           artifactsMap, stageOverridesArtifacts, ArtifactStepParametersBuilder::artifactStageOverride);
     }
@@ -146,10 +145,9 @@ public class ArtifactForkPlanCreator
   }
 
   private void mapArtifactsToIdentifier(Map<String, ArtifactStepParametersBuilder> artifactsMap,
-      List<ArtifactConfigWrapper> artifactsList,
-      BiConsumer<ArtifactStepParametersBuilder, ArtifactConfigWrapper> consumer) {
+      List<ArtifactConfig> artifactsList, BiConsumer<ArtifactStepParametersBuilder, ArtifactConfig> consumer) {
     if (EmptyPredicate.isNotEmpty(artifactsList)) {
-      for (ArtifactConfigWrapper artifact : artifactsList) {
+      for (ArtifactConfig artifact : artifactsList) {
         String key = ArtifactUtils.getArtifactKey(artifact);
         if (artifactsMap.containsKey(key)) {
           consumer.accept(artifactsMap.get(key), artifact);
@@ -162,13 +160,14 @@ public class ArtifactForkPlanCreator
     }
   }
 
-  private List<ArtifactConfigWrapper> getArtifactOverrideSetsApplicable(ServiceConfig serviceConfig) {
-    List<ArtifactConfigWrapper> artifacts = new LinkedList<>();
+  private List<ArtifactConfig> getArtifactOverrideSetsApplicable(ServiceConfig serviceConfig) {
+    List<ArtifactConfig> artifacts = new LinkedList<>();
     if (serviceConfig.getStageOverrides() != null
         && serviceConfig.getStageOverrides().getUseArtifactOverrideSets() != null) {
       for (String useArtifactOverrideSet : serviceConfig.getStageOverrides().getUseArtifactOverrideSets()) {
         List<ArtifactOverrideSets> artifactOverrideSetsList =
-            serviceConfig.getServiceSpec()
+            serviceConfig.getServiceDef()
+                .getServiceSpec()
                 .getArtifactOverrideSets()
                 .stream()
                 .filter(o -> o.getIdentifier().equals(useArtifactOverrideSet))

@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
-import io.harness.cdng.service.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ServiceOutcomeBuilder;
@@ -99,11 +99,12 @@ public class ServiceStep implements Step, ChildrenExecutable {
   @VisibleForTesting
   ServiceOutcome createServiceOutcome(
       ServiceConfig serviceConfig, List<StepResponseNotifyData> responseNotifyDataList) {
-    ServiceOutcomeBuilder outcomeBuilder = ServiceOutcome.builder()
-                                               .displayName(serviceConfig.getDisplayName())
-                                               .identifier(serviceConfig.getIdentifier())
-                                               .description(serviceConfig.getDescription())
-                                               .deploymentType(serviceConfig.getServiceSpec().getDeploymentType());
+    ServiceOutcomeBuilder outcomeBuilder =
+        ServiceOutcome.builder()
+            .displayName(serviceConfig.getName())
+            .identifier(serviceConfig.getIdentifier())
+            .description(serviceConfig.getDescription())
+            .deploymentType(serviceConfig.getServiceDef().getServiceSpec().getType());
 
     // Fetch all outcomes of the children.
     List<String> outcomeInstanceIds = responseNotifyDataList.stream()

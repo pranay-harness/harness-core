@@ -2,17 +2,23 @@ package io.harness.yaml.core.jsontype;
 
 import com.google.common.collect.Sets;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.cfg.MapperConfig;
+import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.jsontype.SubtypeResolver;
+import io.harness.reflection.CodeUtils;
 import io.harness.serializer.JsonSubtypeResolver;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -26,6 +32,27 @@ public class AnnotationAwareJsonSubtypeResolver extends JsonSubtypeResolver {
     return new AnnotationAwareJsonSubtypeResolver(subtypeResolver);
   }
 
+  public List<NamedType> findSubtypes(Annotated a) {
+    final Class<?> rawType = getRawType(a);
+    if (CodeUtils.isHarnessClass(rawType) && hasJsonTypeAnnotation(rawType)) {
+      try {
+        return getClassListLoadingCache().get(rawType);
+      } catch (ExecutionException e) {
+        logger.error("error while finding subtypes", e);
+      }
+    }
+    return Collections.emptyList();
+  }
+
+  private boolean hasJsonTypeAnnotation(Class<?> c) {
+    for (Annotation ann : c.getAnnotations()) {
+      if (ann instanceof JsonTypeInfo) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   public Collection<NamedType> collectAndResolveSubtypes(
       AnnotatedMember property, MapperConfig<?> config, AnnotationIntrospector ai, JavaType baseType) {
@@ -33,7 +60,7 @@ public class AnnotationAwareJsonSubtypeResolver extends JsonSubtypeResolver {
     final Set<NamedType> newReturnValue = Sets.newLinkedHashSet(returnValue);
     if (newReturnValue.size() == 1) {
       try {
-        newReturnValue.addAll(classListLoadingCache.get(getRawType(property)));
+        newReturnValue.addAll(getClassListLoadingCache().get(getRawType(property)));
       } catch (ExecutionException e) {
         logger.error("Error while getting subtypes", e);
       }
@@ -41,7 +68,7 @@ public class AnnotationAwareJsonSubtypeResolver extends JsonSubtypeResolver {
     return newReturnValue;
   }
 
-  private Class<?> getRawType(AnnotatedMember member) {
+  private Class<?> getRawType(Annotated member) {
     if (member instanceof AnnotatedMethod) {
       final AnnotatedMethod method = (AnnotatedMethod) member;
       if (method.getParameterCount() > 0) {

@@ -2,7 +2,7 @@ package io.harness.cdng.artifact.bean.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.ArtifactSourceType;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
@@ -29,9 +29,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ArtifactSourceType.DOCKER_HUB)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DockerHubArtifactConfig implements ArtifactConfigWrapper {
+public class DockerHubArtifactConfig implements ArtifactConfig {
   /** Docker hub registry connector. */
-  @Wither String dockerhubConnector;
+  @Wither String connectorIdentifier;
   /** Images in repos need to be referenced via a path. */
   @Wither String imagePath;
   /** Tag refers to exact tag number. */
@@ -50,7 +50,7 @@ public class DockerHubArtifactConfig implements ArtifactConfigWrapper {
 
   @Override
   public String getUniqueHash() {
-    List<String> valuesList = Arrays.asList(dockerhubConnector, imagePath);
+    List<String> valuesList = Arrays.asList(connectorIdentifier, imagePath);
     return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
   }
 
@@ -59,7 +59,7 @@ public class DockerHubArtifactConfig implements ArtifactConfigWrapper {
     return DockerArtifactSource.builder()
         .accountId(accountId)
         .sourceType(getSourceType())
-        .dockerHubConnector(dockerhubConnector)
+        .dockerHubConnector(connectorIdentifier)
         .imagePath(imagePath)
         .uniqueHash(getUniqueHash())
         .build();
@@ -72,7 +72,7 @@ public class DockerHubArtifactConfig implements ArtifactConfigWrapper {
       tagRegex = "*";
     }
     return DockerArtifactSourceAttributes.builder()
-        .dockerhubConnector(dockerhubConnector)
+        .dockerhubConnector(connectorIdentifier)
         .imagePath(imagePath)
         .tag(tag)
         .tagRegex(tagRegex)
@@ -86,17 +86,11 @@ public class DockerHubArtifactConfig implements ArtifactConfigWrapper {
   }
 
   @Override
-  public String setIdentifier(String identifier) {
-    this.identifier = identifier;
-    return identifier;
-  }
-
-  @Override
-  public ArtifactConfigWrapper applyOverrides(ArtifactConfigWrapper overrideConfig) {
+  public ArtifactConfig applyOverrides(ArtifactConfig overrideConfig) {
     DockerHubArtifactConfig dockerHubArtifactConfig = (DockerHubArtifactConfig) overrideConfig;
     DockerHubArtifactConfig resultantConfig = this;
-    if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getDockerhubConnector())) {
-      resultantConfig = resultantConfig.withDockerhubConnector(dockerHubArtifactConfig.getDockerhubConnector());
+    if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getConnectorIdentifier())) {
+      resultantConfig = resultantConfig.withConnectorIdentifier(dockerHubArtifactConfig.getConnectorIdentifier());
     }
     if (EmptyPredicate.isNotEmpty(dockerHubArtifactConfig.getImagePath())) {
       resultantConfig = resultantConfig.withImagePath(dockerHubArtifactConfig.getImagePath());

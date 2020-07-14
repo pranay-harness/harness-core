@@ -40,7 +40,7 @@ public class K8sRollingRollbackStep implements Step, TaskExecutable, TaskV2Execu
   @Override
   public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     K8sRollingRollbackStepParameters k8sRollingRollbackStepParameters =
-        ((K8sRollingRollbackStepInfo) stepParameters).getK8sRollingRollback();
+        (K8sRollingRollbackStepParameters) stepParameters;
 
     StepDependencySpec k8sRollingSpec =
         k8sRollingRollbackStepParameters.getStepDependencySpecs().get(CDStepDependencyKey.K8S_ROLL_OUT.name());

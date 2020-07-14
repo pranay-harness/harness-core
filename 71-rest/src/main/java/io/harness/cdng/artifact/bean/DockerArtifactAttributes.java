@@ -19,13 +19,13 @@ public class DockerArtifactAttributes implements ArtifactAttributes {
   String tag;
 
   @Override
-  public ArtifactOutcome getArtifactOutcome(ArtifactConfigWrapper artifactConfig) {
-    DockerHubArtifactConfig dockerHubArtifactConfig = (DockerHubArtifactConfig) artifactConfig;
+  public ArtifactOutcome getArtifactOutcome(ArtifactConfig artifactConfig) {
+    DockerHubArtifactConfig dockerHubArtifactSpecConfig = (DockerHubArtifactConfig) artifactConfig;
     return DockerArtifactOutcome.builder()
         .dockerhubConnector(getDockerHubConnector())
         .imagePath(getImagePath())
         .tag(getTag())
-        .tagRegex(dockerHubArtifactConfig.getTagRegex())
+        .tagRegex(dockerHubArtifactSpecConfig.getTagRegex())
         .identifier(artifactConfig.getIdentifier())
         .artifactType(artifactConfig.getArtifactType())
         .build();

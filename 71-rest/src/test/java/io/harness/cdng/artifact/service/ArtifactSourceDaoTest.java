@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
+import io.harness.cdng.artifact.repository.ArtifactSourceDao;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -35,7 +36,6 @@ public class ArtifactSourceDaoTest extends WingsBaseTest {
     assertThat(artifactSourceResult.getImagePath()).isEqualTo(dockerArtifactSource.getImagePath());
     assertThat(artifactSourceResult.getAccountId()).isEqualTo(dockerArtifactSource.getAccountId());
     assertThat(artifactSourceResult.getUniqueHash()).isEqualTo(dockerArtifactSource.getUniqueHash());
-
     ArtifactSource nextSourceResult = artifactSourceDao.get(WingsTestConstants.ACCOUNT_ID, artifactSource.getUuid());
     assertThat(nextSourceResult).isInstanceOf(DockerArtifactSource.class);
     DockerArtifactSource nextDockerSourceResult = (DockerArtifactSource) nextSourceResult;

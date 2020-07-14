@@ -3,7 +3,6 @@ package io.harness.cdng.pipeline.steps;
 import static io.harness.cdng.orchestration.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.execution.status.Status;
@@ -16,7 +15,6 @@ import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
-import io.harness.state.io.StepResponse.StepOutcome;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -28,23 +26,7 @@ public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable 
   @Override
   public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData) {
-    CDPipelineSetupParameters parameters = (CDPipelineSetupParameters) stepParameters;
-    return StepResponse.builder()
-        .status(Status.SUCCEEDED)
-        .stepOutcome(
-            StepOutcome.builder()
-                .name("service")
-                .outcome(((DeploymentStage) parameters.getCdPipeline().getStages().get(0)).getDeployment().getService())
-                .build())
-        .stepOutcome(StepOutcome.builder()
-                         .name("infraDefinition")
-                         .outcome(((DeploymentStage) parameters.getCdPipeline().getStages().get(0))
-                                      .getDeployment()
-                                      .getInfrastructure()
-                                      .getInfrastructureSpec()
-                                      .getInfrastructure())
-                         .build())
-        .build();
+    return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 
   @Override

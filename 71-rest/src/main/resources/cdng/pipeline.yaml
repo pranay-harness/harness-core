@@ -1,43 +1,47 @@
 pipeline:
-  displayName: "Manager Service Deployment"
+  name: "Manager Service Deployment"
   identifier: managerServiceDeployment
   stages:
   - stage:
       identifier: qaStage
-      displayName: "qa stage"
-      deployment:
+      name: "qa stage"
+      type: Deployment
+      spec:
         service:
           identifier: manager
-          serviceSpec:
-            deploymentType: kubernetes
-            artifacts:
-              primary:
-                dockerhub:
-                  dockerhubConnector: "https://registry.hub.docker.com/"
-                  imagePath: "library/nginx"
-                  tag: "1.19"
-            manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
-            - manifest:
-                identifier: baseValues
-                k8s:
-                  git:
-                    connectorId: BBPSsTiCQ3OnD87_SHrSmw
-                    fetchType: BRANCH
-                    fetchValue: master
-                    paths:
-                    - test/spec
-                  valuesFilePaths:
-                  - test/baseValues.yaml
-          # If your base values.yaml is in different repo or branch, use below configuration
-          #            - manifest:
-          #                identifier: 2
-          #                values:
-          #                  git:
-          #                    connectorId: 6NY8BQ-0T_mqYE3Uoo6WHg
-          #                    fetchType: BRANCH
-          #                    fetchValue: master
-          #                    paths:
-          #                    - test/override/values.yaml
+          serviceDef:
+            type: Kubernetes
+            spec:
+              artifacts:
+                primary:
+                  type: Dockerhub
+                  spec:
+                    connectorIdentifier: "https://registry.hub.docker.com/"
+                    imagePath: "library/nginx"
+                    tag: "1.19"
+              manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
+              - manifest:
+                  identifier: baseValues
+                  type: K8sManifest
+                  spec:
+                    store:
+                      type: Git
+                      spec:
+                        connectorIdentifier: BBPSsTiCQ3OnD87_SHrSmw
+                        gitFetchType: Branch
+                        branch: master
+                        paths:
+                        - test/spec
+            # If your base values.yaml is in different repo or branch, use below configuration
+            #            - manifest:
+            #                identifier: 2
+            #                values:
+            #                  git:
+            #                    connectorId: 6NY8BQ-0T_mqYE3Uoo6WHg
+            #                    fetchType: BRANCH
+            #                    fetchValue: master
+            #                    paths:
+            #                    - test/override/values.yaml
           stageOverrides:
             manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
             #            - manifest:/
@@ -51,22 +55,25 @@ pipeline:
             #                    - test/dev/values_1.yaml
             - manifest:
                 identifier: qaOverride
-                values:
-                  git:
-                    connectorId: BBPSsTiCQ3OnD87_SHrSmw
-                    fetchType: BRANCH
-                    fetchValue: master
-                    paths:
-                    - test/qa/values_1.yaml
+                type: Values
+                spec:
+                  store:
+                    type: Git
+                    spec:
+                      connectorIdentifier: BBPSsTiCQ3OnD87_SHrSmw
+                      gitFetchType: Branch
+                      branch: master
+                      paths:
+                      - test/qa/values_1.yaml
         #                    - k8s/cdng/values.yaml
         infrastructure:
           environment:
             # Give a name to the environment where deployment is being done (Dev, QA, Production, etc). You can give any name and if an environment with this name doesn't exist, it will be created. REQUIRED
-            displayName:
+            name:
             identifier: stagingInfra
             # Type of the environment where deployment is being done if the environment doesn't already exist. Options: pre-production | production. pre-production is default. OPTIONAL
             # If there is an existing environment with the specified name, the type of existing environment will be used.
-            type: PRE_PRODUCTION
+            type: PreProduction
             tags:
             - key: cloud
               value: AWS
@@ -74,107 +81,111 @@ pipeline:
               value: cdp
           # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
           # Dynamic type ???
-          infrastructureSpec:
+          infrastructureDef:
             # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
             # Dynamic type ???
-            kubernetesDirect:
+            type: KubernetesDirect
+            spec:
               # Spec for Infrastructure Type kubernetes-direct
-              connectorId: 2JrX8ESYSTWbhBTPBu7slQ
+              connectorIdentifier: 2JrX8ESYSTWbhBTPBu7slQ
               # namespace
               namespace: default
               # release name
               releaseName: vaibhav
         execution:
-        - phase:
-            # Name of the phase. REQUIRED
-            displayName:  Deploy
-            identifier: phase1
-            steps:
-            - step:
-                displayName: "Rollout Deployment"
-                identifier: rolloutDeployment
-                k8sRolling:
-                  timeout: 120000
-                  skipDryRun: false
-            - step:
-                displayName: "http"
-                identifier: http
-                http:
-                  socketTimeoutMillis: 1000
-                  method: GET
-                  url: wrongUrl
-            - step:
-                identifier: shellScript
-                shellScript:
-                  executeOnDelegate: true
-                  connectionType: SSH
-                  scriptType: BASH
-                  scriptString: |
-                    echo 'I should not execute'
-            rollbackSteps:
-            - step:
-                displayName: "Rollback Rollout Deployment"
-                identifier: rollbackRolloutDeployment
-                k8sRollingRollback:
-                  timeout: 120000
-            - step:
-                identifier: shellScript2
-                shellScript:
-                  executeOnDelegate: true
-                  connectionType: SSH
-                  scriptType: BASH
-                  scriptString: |
-                    echo 'I should be executed during rollback'
-#             - step:
-#             displayName: "Rollback Rollout Deployment"
-#             identifier: rollbackRolloutDeployment
-#             k8sRollingRollback:
-#               timeout: 120000
+          steps:
+          - step:
+              name: "Rollout Deployment"
+              identifier: rolloutDeployment
+              type: K8sRolloutDeploy
+              spec:
+                timeout: 120000
+                skipDryRun: false
+          - step:
+              name: "http"
+              identifier: http
+              type: Http
+              spec:
+                socketTimeoutMillis: 1000
+                method: GET
+                url: wrongUrl
+          - step:
+              identifier: shellScript
+              type: ShellScript
+              spec:
+                executeOnDelegate: true
+                connectionType: SSH
+                scriptType: BASH
+                scriptString: |
+                  echo 'I should not execute'
+          rollbackSteps:
+          - step:
+              name: "Rollback Rollout Deployment"
+              identifier: rollbackRolloutDeployment
+              type: K8sRollingRollback
+              spec:
+                timeout: 120000
+          - step:
+              identifier: shellScript2
+              type: ShellScript
+              spec:
+                executeOnDelegate: true
+                connectionType: SSH
+                scriptType: BASH
+                scriptString: |
+                  echo 'I should be executed during rollback'
   - stage:
       identifier: prodStage
-      displayName: "prod stage"
-      deployment:
+      name: "prod stage"
+      type: Deployment
+      spec:
         service:
           identifier: manager
-          serviceSpec:
-            deploymentType: kubernetes
-            artifacts:
-              primary:
-                dockerhub:
-                  dockerhubConnector: "https://registry.hub.docker.com/"
-                  imagePath: "library/nginx"
-                  tag: "1.18"
-            manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
-              - manifest:
-                  identifier: baseValues
-                  k8s:
-                    git:
-                      connectorId: BBPSsTiCQ3OnD87_SHrSmw
-                      fetchType: BRANCH
-                      fetchValue: master
-                      paths:
-                        - test/spec
-                    valuesFilePaths:
-                      - test/baseValues.yaml
+          serviceDef:
+            type: Kubernetes
+            spec:
+              artifacts:
+                primary:
+                  type: Dockerhub
+                  spec:
+                    connectorIdentifier: "https://registry.hub.docker.com/"
+                    imagePath: "library/nginx"
+                    tag: "1.18"
+              manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
+                - manifest:
+                    identifier: baseValues
+                    type: K8sManifest
+                    spec:
+                      store:
+                        type: Git
+                        spec:
+                          connectorIdentifier: BBPSsTiCQ3OnD87_SHrSmw
+                          gitFetchType: Branch
+                          branch: master
+                          paths:
+                            - test/spec
           stageOverrides:
             manifests:   # {k8Manifest |  valuesOverride | pcfManifest |  HelmSourceRepo | HelmSourceRepo | Kustomize | openShift}
               - manifest:
                   identifier: prodOverride
-                  values:
-                    git:
-                      connectorId: BBPSsTiCQ3OnD87_SHrSmw
-                      fetchType: BRANCH
-                      fetchValue: master
-                      paths:
-                        - test/prod/values.yaml
+                  type: Values
+                  spec:
+                    store:
+                      type: Git
+                      spec:
+                        connectorIdentifier: BBPSsTiCQ3OnD87_SHrSmw
+                        gitFetchType: Branch
+                        branch: master
+                        paths:
+                          - test/prod/values.yaml
         infrastructure:
           environment:
             # Give a name to the environment where deployment is being done (Dev, QA, Production, etc). You can give any name and if an environment with this name doesn't exist, it will be created. REQUIRED
-            displayName:
+            name:
             identifier: stagingInfra
             # Type of the environment where deployment is being done if the environment doesn't already exist. Options: pre-production | production. pre-production is default. OPTIONAL
             # If there is an existing environment with the specified name, the type of existing environment will be used.
-            type: PRE_PRODUCTION
+            type: PreProduction
             tags:
               - key: cloud
                 value: AWS
@@ -182,25 +193,23 @@ pipeline:
                 value: cdp
           # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
           # Dynamic type ???
-          infrastructureSpec:
+          infrastructureDef:
             # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
             # Dynamic type ???
-            kubernetesDirect:
+            type: KubernetesDirect
+            spec:
               # Spec for Infrastructure Type kubernetes-direct
-              connectorId: 2JrX8ESYSTWbhBTPBu7slQ
+              connectorIdentifier: 2JrX8ESYSTWbhBTPBu7slQ
               # namespace
               namespace: default
               # release name
               releaseName: vaibhav
         execution:
-          - phase:
-              # Name of the phase. REQUIRED
-              displayName:  Deploy
-              identifier: phase1
-              steps:
-                - step:
-                    displayName: "Rollout Deployment"
-                    identifier: rolloutDeployment
-                    k8sRolling:
-                      timeout: 120000
-                      skipDryRun: false
+          steps:
+            - step:
+                name: "Rollout Deployment"
+                identifier: rolloutDeployment
+                type: K8sRolloutDeploy
+                spec:
+                  timeout: 120000
+                  skipDryRun: false

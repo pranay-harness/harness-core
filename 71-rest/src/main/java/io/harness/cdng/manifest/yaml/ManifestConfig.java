@@ -1,34 +1,40 @@
 package io.harness.cdng.manifest.yaml;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.cdng.manifest.ManifestType;
-import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
-import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder
-@JsonIgnoreProperties(ignoreUnknown = true)
+@NoArgsConstructor
 @JsonTypeName("manifest")
 public class ManifestConfig implements ManifestConfigWrapper {
   String identifier;
-  @JsonIgnore ManifestAttributes manifestAttributes;
+  String type;
+  @JsonProperty("spec")
+  @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY)
+  ManifestAttributes manifestAttributes;
 
-  @JsonProperty(ManifestType.K8Manifest)
-  public void setK8Manifest(K8sManifest k8Manifest) {
-    k8Manifest.setIdentifier(identifier);
-    k8Manifest.setKind(ManifestType.K8Manifest);
-    this.manifestAttributes = k8Manifest;
+  public void setIdentifier(String identifier) {
+    this.identifier = identifier;
   }
 
-  @JsonProperty(ManifestType.VALUES)
-  public void setValuesManifest(ValuesManifest valuesManifest) {
-    valuesManifest.setIdentifier(identifier);
-    valuesManifest.setKind(ManifestType.VALUES);
-    this.manifestAttributes = valuesManifest;
+  public void setManifestAttributes(ManifestAttributes manifestAttributes) {
+    this.manifestAttributes = manifestAttributes;
+    if (this.manifestAttributes != null) {
+      this.manifestAttributes.setIdentifier(identifier);
+    }
+  }
+
+  @Builder
+  public ManifestConfig(String identifier, String type, ManifestAttributes manifestAttributes) {
+    this.identifier = identifier;
+    this.type = type;
+    this.manifestAttributes = manifestAttributes;
   }
 }
