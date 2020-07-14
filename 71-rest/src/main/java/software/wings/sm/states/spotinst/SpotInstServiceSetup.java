@@ -175,6 +175,8 @@ public class SpotInstServiceSetup extends State {
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
     SpotInstCommandRequest spotInstCommandRequest = stateExecutionData.getSpotinstCommandRequest();
+    elastiGroupNamePrefix =
+        ((SpotInstSetupTaskParameters) spotInstCommandRequest.getSpotInstTaskParameters()).getElastiGroupNamePrefix();
     SpotInstSetupContextElement spotInstSetupContextElement =
         SpotInstSetupContextElement.builder()
             .commandRequest(spotInstCommandRequest)
