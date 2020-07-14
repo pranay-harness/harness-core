@@ -112,8 +112,12 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
 
   private PricingData getCustomVMPricing(InstanceData instanceData, Instant startTime, Instant endTime,
       double instanceActiveSeconds, String instanceFamily, String region, CloudProvider cloudProvider) {
-    Resource computeVMResource = instanceResourceService.getComputeVMResource(instanceFamily, region, cloudProvider);
     PricingData pricingData = null;
+    if (instanceFamily == null || region == null || cloudProvider == null) {
+      logger.error("Required columns are null {}", instanceData);
+      return pricingData;
+    }
+    Resource computeVMResource = instanceResourceService.getComputeVMResource(instanceFamily, region, cloudProvider);
     String awsDataSetId = customBillingMetaDataService.getAwsDataSetId(instanceData.getAccountId());
     if (cloudProvider == CloudProvider.AWS && null != awsDataSetId) {
       VMInstanceBillingData vmInstanceBillingData =
