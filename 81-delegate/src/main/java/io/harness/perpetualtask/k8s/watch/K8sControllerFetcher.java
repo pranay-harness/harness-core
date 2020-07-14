@@ -15,6 +15,7 @@ import io.kubernetes.client.util.exception.ObjectMetaReflectException;
 import lombok.Value;
 
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 public class K8sControllerFetcher {
   private final Map<String, Store<?>> stores;
@@ -55,7 +56,9 @@ public class K8sControllerFetcher {
     Store<?> store = stores.get(ownerReference.getKind());
     if (store != null) {
       Object workload = store.getByKey(namespace + "/" + ownerReference.getName());
-      return Workload.of(ownerReference.getKind(), getObjectMeta(workload));
+      if (workload != null) {
+        return Workload.of(ownerReference.getKind(), getObjectMeta(workload));
+      }
     }
     // This indicates it is not one of the well-known workloads.
     return Workload.of(ownerReference.getKind(),
@@ -66,7 +69,7 @@ public class K8sControllerFetcher {
             .build());
   }
 
-  private V1ObjectMeta getObjectMeta(Object workloadResource) {
+  private V1ObjectMeta getObjectMeta(@NotNull Object workloadResource) {
     V1ObjectMeta objectMeta;
     try {
       objectMeta = ObjectAccessor.objectMetadata(workloadResource);
