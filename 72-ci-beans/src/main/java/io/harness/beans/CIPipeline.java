@@ -7,10 +7,9 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.ProjectAccess;
 import io.harness.persistence.AccountAccess;
-import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import io.harness.yaml.core.Tag;
@@ -22,6 +21,8 @@ import lombok.Data;
 import lombok.Getter;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.mapping.Document;
 import software.wings.jersey.JsonViews;
 
 import java.util.List;
@@ -33,21 +34,21 @@ import javax.validation.constraints.NotNull;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @StoreIn("harnessci")
+@Document("cipipeline")
 public class CIPipeline implements Pipeline, WithNonYamlInfo<CIPipelineEntityInfo>, PersistentEntity, UuidAware,
-                                   CreatedAtAware, UpdatedAtAware, AccountAccess {
+                                   AccountAccess, ProjectAccess {
   @EntityIdentifier private String identifier;
   private String displayName;
   private String description;
-  List<Tag> tags;
+  private List<Tag> tags;
   private List<StageWrapper> stages;
-  private EmbeddedUser createdBy;
-  private long createdAt;
-
-  private long lastUpdatedAt;
 
   @FdIndex private String accountId;
+  private String projectId;
+  private String organizationId;
+  @Version private Long version;
 
-  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @Id @org.springframework.data.annotation.Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   @Getter @JsonView(JsonViews.Public.class) CIPipelineEntityInfo nonYamlInfo;
 }
