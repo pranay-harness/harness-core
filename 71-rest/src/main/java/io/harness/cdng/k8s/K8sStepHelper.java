@@ -3,6 +3,8 @@ package io.harness.cdng.k8s;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.ambiance.Ambiance;
+import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.connector.apis.dto.ConnectorDTO;
@@ -44,8 +46,9 @@ public class K8sStepHelper {
     }
   }
 
-  private ConnectorDTO getConnector(String connectorId) {
-    Optional<ConnectorDTO> connectorDTO = connectorService.get(null, null, null, connectorId);
+  private ConnectorDTO getConnector(String connectorId, Ambiance ambiance) {
+    Optional<ConnectorDTO> connectorDTO = connectorService.get(AmbianceHelper.getAccountId(ambiance),
+        AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance), connectorId);
     if (!connectorDTO.isPresent()) {
       throw new InvalidRequestException(
           String.format("Connector not found for identifier : [%s]", connectorId), WingsException.USER);
@@ -58,13 +61,13 @@ public class K8sStepHelper {
     return Collections.emptyList();
   }
 
-  K8sClusterConfig getK8sClusterConfig(Infrastructure infrastructure) {
+  K8sClusterConfig getK8sClusterConfig(Infrastructure infrastructure, Ambiance ambiance) {
     K8sClusterConfigBuilder k8sClusterConfigBuilder = K8sClusterConfig.builder();
 
     switch (infrastructure.getKind()) {
       case K8S_DIRECT:
         K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
-        SettingAttribute cloudProvider = getSettingAttribute(k8SDirectInfrastructure.getConnectorId());
+        SettingAttribute cloudProvider = getSettingAttribute(k8SDirectInfrastructure.getConnectorId(), ambiance);
         List<EncryptedDataDetail> encryptionDetails =
             getEncryptedDataDetails((KubernetesClusterConfig) cloudProvider.getValue());
         k8sClusterConfigBuilder.cloudProvider(cloudProvider.getValue())
@@ -113,8 +116,8 @@ public class K8sStepHelper {
     return builder.build();
   }
 
-  SettingAttribute getSettingAttribute(String connectorId) {
-    ConnectorDTO connectorDTO = getConnector(connectorId);
+  SettingAttribute getSettingAttribute(String connectorId, Ambiance ambiance) {
+    ConnectorDTO connectorDTO = getConnector(connectorId, ambiance);
     return getSettingAttribute(connectorDTO);
   }
 }

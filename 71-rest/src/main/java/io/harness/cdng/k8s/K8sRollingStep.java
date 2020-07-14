@@ -123,7 +123,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
       if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfig().getKind())) {
         GitStore gitStore = (GitStore) valuesManifest.getStoreConfig();
         String connectorId = gitStore.getConnectorId();
-        GitConfig gitConfig = (GitConfig) k8sStepHelper.getSettingAttribute(connectorId).getValue();
+        GitConfig gitConfig = (GitConfig) k8sStepHelper.getSettingAttribute(connectorId, ambiance).getValue();
 
         List<EncryptedDataDetail> encryptionDetails = k8sStepHelper.getEncryptedDataDetails(gitConfig);
         gitFetchFilesConfigs.add(GitFetchFilesConfig.builder()
@@ -172,8 +172,8 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
     List<String> renderedValuesList = renderValues(ambiance, valuesFileContents);
     StoreConfig storeConfig = k8sManifest.getStoreConfig();
 
-    K8sDelegateManifestConfig k8sDelegateManifestConfig = getK8sDelegateManifestConfig(storeConfig);
-    K8sClusterConfig k8sClusterConfig = k8sStepHelper.getK8sClusterConfig(infrastructure);
+    K8sDelegateManifestConfig k8sDelegateManifestConfig = getK8sDelegateManifestConfig(storeConfig, ambiance);
+    K8sClusterConfig k8sClusterConfig = k8sStepHelper.getK8sClusterConfig(infrastructure, ambiance);
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
@@ -216,13 +216,14 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
         .collect(Collectors.toList());
   }
 
-  private K8sDelegateManifestConfig getK8sDelegateManifestConfig(StoreConfig storeConfig) {
+  private K8sDelegateManifestConfig getK8sDelegateManifestConfig(StoreConfig storeConfig, Ambiance ambiance) {
     K8sDelegateManifestConfigBuilder k8sDelegateManifestConfigBuilder = K8sDelegateManifestConfig.builder();
 
     if (storeConfig.getKind().equals(ManifestStoreType.GIT)) {
       StoreType storeType = StoreType.Remote;
       GitStore gitStore = (GitStore) storeConfig;
-      SettingAttribute gitConfigSettingAttribute = k8sStepHelper.getSettingAttribute(gitStore.getConnectorId());
+      SettingAttribute gitConfigSettingAttribute =
+          k8sStepHelper.getSettingAttribute(gitStore.getConnectorId(), ambiance);
       List<EncryptedDataDetail> encryptionDetails =
           k8sStepHelper.getEncryptedDataDetails((GitConfig) gitConfigSettingAttribute.getValue());
 
