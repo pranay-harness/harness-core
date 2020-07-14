@@ -60,7 +60,7 @@ public class K8sRollingRollbackStep implements Step, TaskExecutable, TaskV2Execu
             .commandName(K8sRollingDeployRollback.K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
             .timeoutIntervalInMin(k8sRollingRollbackStepParameters.getTimeout())
-            .k8sClusterConfig(k8sStepHelper.getK8sClusterConfig(infrastructure))
+            .k8sClusterConfig(k8sStepHelper.getK8sClusterConfig(infrastructure, ambiance))
             .accountId(AmbianceHelper.getAccountId(ambiance))
             .build();
 

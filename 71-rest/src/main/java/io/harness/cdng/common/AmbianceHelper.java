@@ -5,7 +5,15 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class AmbianceHelper {
-  public static String getAccountId(Ambiance ambiance) {
+  public String getAccountId(Ambiance ambiance) {
     return ambiance.getSetupAbstractions().get("accountId");
+  }
+
+  public String getProjectIdentifier(Ambiance ambiance) {
+    return ambiance.getSetupAbstractions().get("projectIdentifier");
+  }
+
+  public String getOrgIdentifier(Ambiance ambiance) {
+    return ambiance.getSetupAbstractions().get("orgIdentifier");
   }
 }
