@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK;
@@ -13,6 +15,7 @@ import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.VIKAS;
+import static io.harness.rule.OwnerRule.VOJIN;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -66,6 +69,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMSettingService;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.GeneralException;
 import io.harness.exception.UserGroupAlreadyExistException;
 import io.harness.limits.LimitCheckerFactory;
@@ -94,6 +98,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.EnvFilter;
+import software.wings.security.Filter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute.Action;
@@ -863,6 +868,184 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     userGroupService.updateOverview(userGroup2);
   }
 
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void testPruneByApplication() {
+    Set<AppPermission> appPermissions = new HashSet<>();
+    appPermissions.add(
+        createAppPermission(FilterType.SELECTED, PermissionType.ALL_APP_ENTITIES, Arrays.asList("111", "222", "333")));
+    appPermissions.add(createAppPermission(FilterType.SELECTED, PermissionType.ALL_APP_ENTITIES, Arrays.asList("444")));
+
+    UserGroup userGroup = builder()
+                              .accountId(accountId)
+                              .uuid(userGroupId)
+                              .description(description)
+                              .name(userGroupName)
+                              .appPermissions(appPermissions)
+                              .build();
+
+    wingsPersistence.save(userGroup);
+
+    userGroupService.pruneByApplication("222");
+
+    UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+                                .filter(UserGroupKeys.accountId, accountId)
+                                .filter(UserGroup.ID_KEY, userGroupId)
+                                .get();
+
+    Set<String> prunedAppIds = getAppIds(prunedGroup);
+
+    assertThat(prunedGroup.getAppPermissions().size()).isEqualTo(2);
+    assertThat(prunedAppIds.size()).isEqualTo(3);
+    assertThat(prunedAppIds.containsAll(Arrays.asList("111", "333", "444"))).isTrue();
+    assertThat(prunedAppIds.contains("222")).isFalse();
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void testRemoveEmptyAppPermissions() {
+    Set<AppPermission> appPermissions = new HashSet<>();
+    appPermissions.add(
+        createAppPermission(FilterType.SELECTED, PermissionType.WORKFLOW, Arrays.asList("111", "222", "333")));
+    appPermissions.add(
+        createAppPermission(FilterType.SELECTED, PermissionType.ACCOUNT_MANAGEMENT, Collections.emptyList()));
+    appPermissions.add(createAppPermission(FilterType.SELECTED, PermissionType.DEPLOYMENT, Collections.emptyList()));
+    assertThat(appPermissions.size()).isEqualTo(3);
+
+    UserGroup userGroup = builder()
+                              .accountId(accountId)
+                              .uuid(userGroupId)
+                              .description(description)
+                              .name(userGroupName)
+                              .appPermissions(appPermissions)
+                              .build();
+
+    wingsPersistence.save(userGroup);
+
+    userGroupService.pruneByApplication("444");
+
+    UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+                                .filter(UserGroupKeys.accountId, accountId)
+                                .filter(UserGroup.ID_KEY, userGroupId)
+                                .get();
+
+    Set<String> appIds = getAppIds(prunedGroup);
+
+    assertThat(prunedGroup.getAppPermissions().size()).isEqualTo(1);
+    assertThat(appIds.containsAll(Arrays.asList("111", "222", "333"))).isTrue();
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void testPruneByApplicationAllPermissionsRemoved() {
+    Set<AppPermission> appPermissions = new HashSet<>();
+    appPermissions.add(createAppPermission(FilterType.SELECTED, PermissionType.WORKFLOW, singletonList("111")));
+    appPermissions.add(
+        createAppPermission(FilterType.SELECTED, PermissionType.ACCOUNT_MANAGEMENT, Collections.emptyList()));
+    appPermissions.add(createAppPermission(FilterType.SELECTED, PermissionType.DEPLOYMENT, Collections.emptyList()));
+
+    UserGroup userGroup = builder()
+                              .accountId(accountId)
+                              .uuid(userGroupId)
+                              .description(description)
+                              .name(userGroupName)
+                              .appPermissions(appPermissions)
+                              .build();
+
+    wingsPersistence.save(userGroup);
+
+    userGroupService.pruneByApplication("111");
+
+    UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+                                .filter(UserGroupKeys.accountId, accountId)
+                                .filter(UserGroup.ID_KEY, userGroupId)
+                                .get();
+
+    assertThat(prunedGroup.getAppPermissions()).isNull();
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void testPruneByApplicationNotSelectedPermissionsAreNotRemoved() {
+    Set<AppPermission> appPermissions = new HashSet<>();
+    appPermissions.add(createAppPermission(FilterType.ALL, PermissionType.WORKFLOW, null));
+    appPermissions.add(createAppPermission(FilterType.ALL, PermissionType.ACCOUNT_MANAGEMENT, null));
+    appPermissions.add(createAppPermission(FilterType.ALL, PermissionType.DEPLOYMENT, null));
+
+    UserGroup userGroup = builder()
+                              .accountId(accountId)
+                              .uuid(userGroupId)
+                              .description(description)
+                              .name(userGroupName)
+                              .appPermissions(appPermissions)
+                              .build();
+
+    wingsPersistence.save(userGroup);
+
+    userGroupService.pruneByApplication("111");
+
+    UserGroup prunedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+                                .filter(UserGroupKeys.accountId, accountId)
+                                .filter(UserGroup.ID_KEY, userGroupId)
+                                .get();
+
+    assertThat(prunedGroup.getAppPermissions().size()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = VOJIN)
+  @Category(UnitTests.class)
+  public void testRemoveDeletedAppIds() {
+    Set<AppPermission> appPermissions = new HashSet<>();
+    appPermissions.add(
+        createAppPermission(FilterType.SELECTED, PermissionType.WORKFLOW, Arrays.asList("111", "222", "333")));
+    appPermissions.add(
+        createAppPermission(FilterType.SELECTED, PermissionType.ACCOUNT_MANAGEMENT, Collections.emptyList()));
+    appPermissions.add(createAppPermission(FilterType.SELECTED, PermissionType.DEPLOYMENT, Collections.emptyList()));
+    assertThat(appPermissions.size()).isEqualTo(3);
+
+    UserGroup userGroup = builder()
+                              .accountId(accountId)
+                              .uuid(userGroupId)
+                              .description(description)
+                              .name(userGroupName)
+                              .appPermissions(appPermissions)
+                              .build();
+
+    wingsPersistence.save(userGroup);
+
+    Set<String> nonExistingAppIds = new HashSet(Arrays.asList("111", "333", "444", "555", "666"));
+
+    userGroupService.removeAppIdsFromAppPermissions(userGroup, nonExistingAppIds);
+
+    UserGroup cleanedGroup = wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+                                 .filter(UserGroupKeys.accountId, accountId)
+                                 .filter(UserGroup.ID_KEY, userGroupId)
+                                 .get();
+
+    Set<String> appIds = getAppIds(cleanedGroup);
+
+    assertThat(cleanedGroup.getAppPermissions().size()).isEqualTo(1);
+    assertThat(appIds.size()).isEqualTo(1);
+    assertThat(appIds.containsAll(Arrays.asList("222"))).isTrue();
+  }
+
+  private Set<String> getAppIds(UserGroup userGroup) {
+    return userGroup.getAppPermissions()
+        .stream()
+        .map(AppPermission::getAppFilter)
+        .map(Filter::getIds)
+        .filter(EmptyPredicate::isNotEmpty)
+        .reduce(new HashSet<>(), (a, b) -> {
+          a.addAll(b);
+          return a;
+        });
+  }
+
   private List<String> getIds(List<UserGroup> userGroups) {
     List<String> ids = new ArrayList<>();
     for (UserGroup userGroup : userGroups) {
@@ -880,6 +1063,15 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                           .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                           .build();
     return anUser().uuid(userId).appId(APP_ID).emailVerified(true).email(USER_EMAIL).accounts(asList(account)).build();
+  }
+
+  private AppPermission createAppPermission(String filterType, PermissionType permissionType, List<String> appIds) {
+    Set<String> ids = new HashSet<>();
+    if (isNotEmpty(appIds)) {
+      ids.addAll(appIds);
+    }
+    return new AppPermission(
+        permissionType, new GenericEntityFilter(ids, filterType), new EnvFilter(), Collections.EMPTY_SET);
   }
 
   private UserGroup createUserGroup(List<String> memberIds) {

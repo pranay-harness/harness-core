@@ -64,6 +64,7 @@ import migrations.all.MigrateServiceNowCriteriaInPipelines;
 import migrations.all.MigrateServiceNowCriteriaInWorkflows;
 import migrations.all.MigrateTimeSeriesRawDataToGoogle;
 import migrations.all.NoOpMigration;
+import migrations.all.RemoveDeletedAppIdsFromUserGroups;
 import migrations.all.RemoveDuplicateUserGroupNameMigration;
 import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.ScheduleSegmentPublishJob;
@@ -227,6 +228,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(132, RemoveDuplicateUserGroupNameMigration.class))
         .add(Pair.of(133, MigrateServiceNowCriteriaInPipelines.class))
         .add(Pair.of(134, MigrateServiceNowCriteriaInWorkflows.class))
+        .add(Pair.of(135, RemoveDeletedAppIdsFromUserGroups.class))
         .build();
   }
 }
