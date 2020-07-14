@@ -36,7 +36,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class YamlGitFolderConfig implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                             UpdatedByAware, AccountAccess, ProjectAccess {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id @EntityIdentifier private String uuid;
-  private String yamlGitConfigId;
+  @NotEmpty private String yamlGitConfigId;
   @NotEmpty private String gitConnectorId;
   @NotEmpty private String repo;
   @NotEmpty private String branch;

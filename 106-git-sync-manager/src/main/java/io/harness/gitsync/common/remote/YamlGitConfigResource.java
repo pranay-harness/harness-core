@@ -30,14 +30,16 @@ import javax.ws.rs.QueryParam;
 @Api("/git-sync")
 @Path("/git-sync")
 @Produces({"application/json", "text/yaml", "text/html"})
-@Consumes({"application/json", "text/yaml", "text/html"})
+@Consumes({"application/json", "text/yaml", "text/html", "text/plain"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class YamlGitConfigResource {
   private final YamlGitConfigService yamlGitConfigService;
 
   @POST
   @ApiOperation(value = "Create a Git Sync", nickname = "postGitSync")
-  public GitSyncConfigDTO create(@NotNull @Valid GitSyncConfigDTO request) {
+  public GitSyncConfigDTO create(@QueryParam("projectId") String projectId,
+      @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
+      @NotNull @Valid GitSyncConfigDTO request) {
     YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.save(toYamlGitConfigDTO(request));
     return toSetupGitSyncDTO(yamlGitConfig);
   }
@@ -47,7 +49,7 @@ public class YamlGitConfigResource {
   @ApiOperation(value = "Update Git Sync by id", nickname = "putGitSync")
   public GitSyncConfigDTO update(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
-      @PathParam("identifier") String identifier, @NotNull @Valid GitSyncConfigDTO updateGitSyncConfigDTO) {
+      @PathParam("identifier") @NotEmpty String identifier, @NotNull @Valid GitSyncConfigDTO updateGitSyncConfigDTO) {
     YamlGitConfigDTO yamlGitConfigDTO =
         yamlGitConfigService.getByIdentifier(projectId, organizationId, accountId, identifier);
     if (yamlGitConfigDTO != null) {
@@ -70,7 +72,7 @@ public class YamlGitConfigResource {
   }
 
   @GET
-  @ApiOperation(value = "Get Git Sync list", nickname = "listGitSync")
+  @ApiOperation(value = "List Git Sync", nickname = "listGitSync")
   public List<GitSyncConfigDTO> list(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId) {
     List<YamlGitConfigDTO> yamlGitConfigDTOs = yamlGitConfigService.get(projectId, organizationId, accountId);

@@ -12,10 +12,10 @@ import java.util.List;
 @HarnessRepo
 @OwnedBy(HarnessTeam.DX)
 public interface YamlGitFolderConfigRepository extends PagingAndSortingRepository<YamlGitFolderConfig, String> {
-  List<YamlGitFolderConfig> findByAccountIdAndOrganizationIdAndProjectIdAndScope(
+  List<YamlGitFolderConfig> findByAccountIdAndOrganizationIdAndProjectIdAndScopeOrderByCreatedAtAsc(
       String accountId, String organizationIdentifier, String projectIdentifier, Scope scope);
 
-  List<YamlGitFolderConfig> findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndYamlGitConfigId(
+  List<YamlGitFolderConfig> findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndYamlGitConfigIdOrderByCreatedAtAsc(
       String accountId, String organizationId, String projectId, Scope scope, String identifier);
 
   YamlGitFolderConfig findByAccountIdAndOrganizationIdAndProjectIdAndScopeAndIsDefault(

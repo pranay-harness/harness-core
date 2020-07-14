@@ -1,6 +1,5 @@
 package io.harness.gitsync.common.dtos;
 
-import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.Trimmed;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,9 +13,9 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GitSyncConfigDTO {
-  @NotEmpty @EntityIdentifier private String identifier;
-  @Trimmed @NotEmpty private String projectId;
-  @Trimmed @NotEmpty private String organizationId;
+  private String identifier;
+  @Trimmed private String projectId;
+  @Trimmed private String organizationId;
   @Trimmed @NotEmpty private String accountId;
   @Trimmed @NotEmpty private String gitConnectorId;
   @Trimmed @NotEmpty private String repo;
