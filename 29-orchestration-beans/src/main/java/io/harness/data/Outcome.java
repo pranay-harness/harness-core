@@ -6,10 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.references.RefType;
 import io.harness.state.io.StepTransput;
 
-import java.io.Serializable;
-
 @OwnedBy(CDC)
-public interface Outcome extends StepTransput, Serializable {
+public interface Outcome extends StepTransput {
   @Override
   default RefType getRefType() {
     return RefType.builder().type(RefType.OUTCOME).build();
