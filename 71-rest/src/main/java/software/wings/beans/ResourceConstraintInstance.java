@@ -88,7 +88,7 @@ public class ResourceConstraintInstance implements PersistentRegularIterable, Uu
   @Default @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 
   @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     this.nextIteration = nextIteration;
   }
 

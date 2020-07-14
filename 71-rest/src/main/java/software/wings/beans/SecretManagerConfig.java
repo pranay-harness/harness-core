@@ -81,7 +81,7 @@ public abstract class SecretManagerConfig
   public abstract void maskSecrets();
 
   @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     if (SecretManagerConfigKeys.nextTokenRenewIteration.equals(fieldName)) {
       this.nextTokenRenewIteration = nextIteration;
       return;

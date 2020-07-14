@@ -57,7 +57,7 @@ public abstract class CVConfig
   @FdIndex private Long analysisOrchestrationIteration;
 
   @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
       this.dataCollectionTaskIteration = nextIteration;
       return;

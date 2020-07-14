@@ -82,7 +82,7 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
   }
 
   @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     if (PerpetualTaskRecordKeys.resetterIteration.equals(fieldName)) {
       this.resetterIteration = nextIteration;
       return;

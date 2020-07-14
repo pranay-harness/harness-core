@@ -279,7 +279,7 @@ public class WorkflowExecution
   }
 
   @Override
-  public void updateNextIteration(String fieldName, Long nextIteration) {
+  public void updateNextIteration(String fieldName, long nextIteration) {
     this.nextIteration = nextIteration;
   }
 
