@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -81,7 +81,7 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
       return null;
     }
     List<SettingAttribute> settingAttributes = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-        accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingValue.SettingVariableTypes.CE_AWS);
+        accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS);
     if (!settingAttributes.isEmpty()) {
       SettingAttribute settingAttribute = settingAttributes.get(0);
       BillingDataPipelineRecord billingDataPipelineRecord =

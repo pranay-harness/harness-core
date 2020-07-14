@@ -19,7 +19,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretText;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
 import java.util.List;

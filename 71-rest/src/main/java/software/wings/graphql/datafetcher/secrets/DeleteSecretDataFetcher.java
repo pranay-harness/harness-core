@@ -6,10 +6,10 @@ import static software.wings.graphql.schema.type.secrets.QLSecretType.ENCRYPTED_
 import static software.wings.graphql.schema.type.secrets.QLSecretType.ENCRYPTED_TEXT;
 import static software.wings.graphql.schema.type.secrets.QLSecretType.SSH_CREDENTIAL;
 import static software.wings.graphql.schema.type.secrets.QLSecretType.WINRM_CREDENTIAL;
-import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
-import static software.wings.settings.SettingValue.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.CONFIG_FILE;
+import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
+import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
 import com.google.inject.Inject;
 

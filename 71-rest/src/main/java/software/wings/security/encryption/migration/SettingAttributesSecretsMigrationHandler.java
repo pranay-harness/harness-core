@@ -11,8 +11,8 @@ import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
-import static software.wings.settings.SettingValue.SettingVariableTypes.APM_VERIFICATION;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
+import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
+import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

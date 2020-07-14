@@ -10,7 +10,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
+import static software.wings.settings.SettingVariableTypes.GIT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

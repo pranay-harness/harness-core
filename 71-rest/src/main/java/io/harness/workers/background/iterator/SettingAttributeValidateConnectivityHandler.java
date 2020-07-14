@@ -23,7 +23,7 @@ import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.exception.InvalidArtifactServerException;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.time.Duration;
 

@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
+import static software.wings.settings.SettingVariableTypes.GCP;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;

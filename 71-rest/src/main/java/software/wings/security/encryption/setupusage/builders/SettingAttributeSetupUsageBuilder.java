@@ -1,7 +1,7 @@
 package software.wings.security.encryption.setupusage.builders;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.settings.SettingValue.SettingVariableTypes.APM_VERIFICATION;
+import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

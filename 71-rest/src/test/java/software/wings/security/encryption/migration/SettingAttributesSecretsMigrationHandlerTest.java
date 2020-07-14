@@ -17,8 +17,8 @@ import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
-import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNAMICS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
+import static software.wings.settings.SettingVariableTypes.APP_DYNAMICS;
+import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -56,7 +56,7 @@ import software.wings.service.impl.SettingValidationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 
 import java.util.ArrayList;

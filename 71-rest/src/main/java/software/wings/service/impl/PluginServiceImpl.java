@@ -67,7 +67,7 @@ import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PluginService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.net.URL;
 import java.util.HashMap;

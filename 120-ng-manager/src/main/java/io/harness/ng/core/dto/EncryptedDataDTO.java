@@ -1,7 +1,5 @@
 package io.harness.ng.core.dto;
 
-import static software.wings.settings.SettingValue.SettingVariableTypes;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptionType;
@@ -10,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import software.wings.security.encryption.EncryptedDataParent;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 
 import java.util.List;

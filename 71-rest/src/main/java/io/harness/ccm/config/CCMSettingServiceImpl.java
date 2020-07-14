@@ -12,6 +12,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 @Slf4j
 @Singleton
@@ -54,7 +55,7 @@ public class CCMSettingServiceImpl implements CCMSettingService {
       CloudCostAware value = (CloudCostAware) settingAttribute.getValue();
       CCMConfig ccmConfig = value.getCcmConfig();
       if (null != ccmConfig) {
-        return settingAttribute.getValue().getType().equals(SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER.name())
+        return settingAttribute.getValue().getType().equals(SettingVariableTypes.KUBERNETES_CLUSTER.name())
             && !ccmConfig.isSkipK8sEventCollection();
       }
     } else {

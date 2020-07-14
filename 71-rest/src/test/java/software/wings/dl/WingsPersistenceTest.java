@@ -15,7 +15,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.security.UserThreadLocal.userGuard;
-import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
+import static software.wings.settings.SettingVariableTypes.JENKINS;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 

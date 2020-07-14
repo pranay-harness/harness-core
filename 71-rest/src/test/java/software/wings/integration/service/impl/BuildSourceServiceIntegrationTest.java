@@ -73,7 +73,7 @@ import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 
 import java.util.Collection;

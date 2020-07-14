@@ -1,6 +1,6 @@
 package software.wings.service.impl.apm;
 
-import static software.wings.settings.SettingValue.SettingVariableTypes.APM_VERIFICATION;
+import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 
 import com.google.inject.Inject;
 

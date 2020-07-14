@@ -20,7 +20,7 @@ import software.wings.beans.LocalEncryptionConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.LocalEncryptionService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

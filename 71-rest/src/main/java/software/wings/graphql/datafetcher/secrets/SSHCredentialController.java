@@ -8,7 +8,7 @@ import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
 import static software.wings.graphql.schema.type.secrets.QLTGTGenerationUsing.KEY_TAB_FILE;
 import static software.wings.graphql.schema.type.secrets.QLTGTGenerationUsing.PASSWORD;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

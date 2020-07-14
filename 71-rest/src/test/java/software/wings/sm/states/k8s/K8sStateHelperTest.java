@@ -43,7 +43,7 @@ import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.infra.InfraDefinitionTestConstants.INFRA_DEFINITION_NAME;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
+import static software.wings.settings.SettingVariableTypes.GCP;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StepType.K8S_SCALE;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;

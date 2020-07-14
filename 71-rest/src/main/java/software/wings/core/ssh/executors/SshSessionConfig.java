@@ -11,7 +11,7 @@ import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.KerberosConfig;
 import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.concurrent.TimeUnit;
 

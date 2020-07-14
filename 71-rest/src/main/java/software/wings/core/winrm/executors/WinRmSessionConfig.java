@@ -9,7 +9,7 @@ import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;

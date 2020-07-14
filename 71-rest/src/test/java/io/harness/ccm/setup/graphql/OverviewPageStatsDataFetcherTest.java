@@ -31,7 +31,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTest;
 import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

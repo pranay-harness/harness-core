@@ -19,7 +19,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.QLPhysicalDataCenterCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdatePhysicalDataCenterCloudProviderInput;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.sql.SQLException;
 
@@ -51,7 +51,7 @@ public class PhysicalDataCenterDataFetcherHelperTest extends WingsBaseTest {
     assertThat(setting.getName()).isEqualTo(NAME);
     assertThat(setting.getValue()).isInstanceOf(PhysicalDataCenterConfig.class);
     PhysicalDataCenterConfig config = (PhysicalDataCenterConfig) setting.getValue();
-    assertThat(config.getSettingType()).isEqualTo(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER);
+    assertThat(config.getSettingType()).isEqualTo(SettingVariableTypes.PHYSICAL_DATA_CENTER);
   }
 
   @Test
@@ -77,19 +77,18 @@ public class PhysicalDataCenterDataFetcherHelperTest extends WingsBaseTest {
                                                              .usageScope(RequestField.ofNullable(usageScope()))
                                                              .build();
 
-    SettingAttribute setting =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
-                           .withType(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
-                           .build())
-            .build();
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
+                                                  .withType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                                                  .build())
+                                   .build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
     assertThat(setting).isNotNull();
     assertThat(setting.getName()).isEqualTo(NAME);
     assertThat(setting.getValue()).isInstanceOf(PhysicalDataCenterConfig.class);
     PhysicalDataCenterConfig config = (PhysicalDataCenterConfig) setting.getValue();
-    assertThat(config.getSettingType()).isEqualTo(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER);
+    assertThat(config.getSettingType()).isEqualTo(SettingVariableTypes.PHYSICAL_DATA_CENTER);
   }
 
   @Test
@@ -101,12 +100,11 @@ public class PhysicalDataCenterDataFetcherHelperTest extends WingsBaseTest {
                                                              .usageScope(RequestField.ofNull())
                                                              .build();
 
-    SettingAttribute setting =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
-                           .withType(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
-                           .build())
-            .build();
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
+                                                  .withType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                                                  .build())
+                                   .build();
     helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
 
     assertThat(setting).isNotNull();

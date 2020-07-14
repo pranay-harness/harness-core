@@ -16,6 +16,7 @@ import software.wings.audit.ResourceType;
 import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
 import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.HelmRepoYaml;
 

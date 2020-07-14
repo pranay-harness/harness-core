@@ -45,7 +45,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 public abstract class AbstractDataFetcherTest extends WingsBaseTest {
   public static final String TAG_TEAM = "TEAM";

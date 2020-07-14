@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 /**
  * Created by rishi on 10/30/16.

@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.security.encryption.EncryptedData.PARENT_ID_KEY;
-import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
+import static software.wings.settings.SettingVariableTypes.CONFIG_FILE;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -109,7 +109,7 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
 import software.wings.service.intfc.security.VaultService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 
 import java.io.File;

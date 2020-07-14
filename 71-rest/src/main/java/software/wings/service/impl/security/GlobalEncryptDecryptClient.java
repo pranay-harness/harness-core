@@ -33,7 +33,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.ByteArrayInputStream;
 import java.nio.CharBuffer;

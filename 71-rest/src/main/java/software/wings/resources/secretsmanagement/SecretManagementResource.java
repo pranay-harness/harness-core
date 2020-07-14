@@ -39,7 +39,7 @@ import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

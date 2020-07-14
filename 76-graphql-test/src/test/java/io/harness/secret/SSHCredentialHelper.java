@@ -14,7 +14,7 @@ import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KerberosConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 @Singleton
 public class SSHCredentialHelper {
@@ -82,7 +82,7 @@ public class SSHCredentialHelper {
             .withPassphrase("passphrase".toCharArray())
             .withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.SSH_KEY)
             .build();
-    settingValue.setSettingType(SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES);
+    settingValue.setSettingType(SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES);
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withName(name)
                                             .withValue(settingValue)

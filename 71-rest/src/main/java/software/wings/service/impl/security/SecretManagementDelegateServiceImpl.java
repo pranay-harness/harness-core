@@ -77,7 +77,7 @@ import software.wings.service.impl.security.vault.VaultSecretMetadata.VersionMet
 import software.wings.service.intfc.security.CustomSecretsManagerDelegateService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import java.time.Instant;

@@ -53,8 +53,8 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.RUNTIME
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.SPOTINST_ALB_SHIFT_LISTENER_UPDATE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.SPOTINST_LISTENER_UPDATE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE_CONTAINERS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
+import static software.wings.settings.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingVariableTypes.GCP;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;

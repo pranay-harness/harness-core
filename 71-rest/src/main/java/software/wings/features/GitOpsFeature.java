@@ -14,7 +14,7 @@ import software.wings.features.api.ComplianceByLimitingUsage;
 import software.wings.features.api.FeatureRestrictions;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Map;

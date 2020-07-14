@@ -2,7 +2,7 @@ package software.wings.service.intfc.security;
 
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;
 import java.io.OutputStream;

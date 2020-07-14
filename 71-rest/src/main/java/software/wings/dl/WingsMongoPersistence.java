@@ -59,7 +59,7 @@ import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretParentsUpdateDetail;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.lang.reflect.Field;
 import java.util.Collections;

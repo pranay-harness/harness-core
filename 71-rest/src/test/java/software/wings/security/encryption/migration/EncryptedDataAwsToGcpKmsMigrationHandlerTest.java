@@ -52,7 +52,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -237,7 +237,7 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
   @Category(UnitTests.class)
   public void testHandleForEncryptedValueAsNull() {
     EncryptedData encryptedData =
-        getEncryptedData(TEST_ENCRYPTION_KEY, null, KMS, AWS_KMS_UUID, SettingValue.SettingVariableTypes.SECRET_TEXT);
+        getEncryptedData(TEST_ENCRYPTION_KEY, null, KMS, AWS_KMS_UUID, SettingVariableTypes.SECRET_TEXT);
     String encryptedDataId = wingsPersistence.save(encryptedData);
 
     EncryptedData oldEncryptedDataInDB = wingsPersistence.get(EncryptedData.class, encryptedDataId);
@@ -263,8 +263,8 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testHandleWhenFFisDisabled() {
-    EncryptedData encryptedData = getEncryptedData(TEST_ENCRYPTION_KEY, TEST_ENCRYPTION_KEY.toCharArray(), KMS,
-        AWS_KMS_UUID, SettingValue.SettingVariableTypes.SECRET_TEXT);
+    EncryptedData encryptedData = getEncryptedData(
+        TEST_ENCRYPTION_KEY, TEST_ENCRYPTION_KEY.toCharArray(), KMS, AWS_KMS_UUID, SettingVariableTypes.SECRET_TEXT);
     String encryptedDataId = wingsPersistence.save(encryptedData);
     EncryptedData oldEncryptedDataInDB = wingsPersistence.get(EncryptedData.class, encryptedDataId);
 
@@ -279,8 +279,8 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testHandleWhenEncryptedValueIsNotNull_And_DecryptionFailed() {
-    EncryptedData encryptedData = getEncryptedData(TEST_ENCRYPTION_KEY, TEST_ENCRYPTION_KEY.toCharArray(), KMS,
-        AWS_KMS_UUID, SettingValue.SettingVariableTypes.SECRET_TEXT);
+    EncryptedData encryptedData = getEncryptedData(
+        TEST_ENCRYPTION_KEY, TEST_ENCRYPTION_KEY.toCharArray(), KMS, AWS_KMS_UUID, SettingVariableTypes.SECRET_TEXT);
     String encryptedDataId = wingsPersistence.save(encryptedData);
     EncryptedData oldEncryptedDataInDB = wingsPersistence.get(EncryptedData.class, encryptedDataId);
 
@@ -299,8 +299,8 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testHandleWhenEncryptedValueIsNotNull_And_DecryptionWasSuccessful() {
-    EncryptedData encryptedData = getEncryptedData(TEST_ENCRYPTION_KEY, TEST_ENCRYPTION_KEY.toCharArray(), KMS,
-        AWS_KMS_UUID, SettingValue.SettingVariableTypes.SECRET_TEXT);
+    EncryptedData encryptedData = getEncryptedData(
+        TEST_ENCRYPTION_KEY, TEST_ENCRYPTION_KEY.toCharArray(), KMS, AWS_KMS_UUID, SettingVariableTypes.SECRET_TEXT);
     String encryptedDataId = wingsPersistence.save(encryptedData);
     EncryptedData oldEncryptedDataInDB = wingsPersistence.get(EncryptedData.class, encryptedDataId);
 
@@ -317,8 +317,8 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testHandleWhenEncryptedValueIsNotNull_And_SecretIsConfigFile() {
-    EncryptedData encryptedData = getEncryptedData(TEST_ENCRYPTION_KEY, TEST_ENCRYPTION_KEY.toCharArray(), KMS,
-        AWS_KMS_UUID, SettingValue.SettingVariableTypes.CONFIG_FILE);
+    EncryptedData encryptedData = getEncryptedData(
+        TEST_ENCRYPTION_KEY, TEST_ENCRYPTION_KEY.toCharArray(), KMS, AWS_KMS_UUID, SettingVariableTypes.CONFIG_FILE);
     String encryptedDataId = wingsPersistence.save(encryptedData);
     EncryptedData oldEncryptedDataInDB = wingsPersistence.get(EncryptedData.class, encryptedDataId);
 
@@ -368,7 +368,7 @@ public class EncryptedDataAwsToGcpKmsMigrationHandlerTest extends WingsBaseTest 
   }
 
   private EncryptedData getEncryptedData(String encryptionKey, char[] encryptedValue, EncryptionType encryptionType,
-      String kmsId, SettingValue.SettingVariableTypes settingVariableTypes) {
+      String kmsId, SettingVariableTypes settingVariableTypes) {
     return EncryptedData.builder()
         .encryptionKey(encryptionKey)
         .encryptedValue(encryptedValue)

@@ -8,7 +8,7 @@ import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 @Data
 @Builder

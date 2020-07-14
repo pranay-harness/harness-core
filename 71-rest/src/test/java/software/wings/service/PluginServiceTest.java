@@ -69,7 +69,7 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.PluginServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PluginService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.StateType;
 
 import java.io.IOException;

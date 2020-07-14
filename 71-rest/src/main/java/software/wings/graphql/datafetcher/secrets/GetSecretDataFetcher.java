@@ -2,8 +2,8 @@ package software.wings.graphql.datafetcher.secrets;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.SettingAttribute.SettingCategory.SETTING;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
-import static software.wings.settings.SettingValue.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
 import com.google.inject.Inject;
 
@@ -19,6 +19,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 public class GetSecretDataFetcher extends AbstractObjectDataFetcher<QLSecret, QLSecretQueryParameters> {
   @Inject SecretManager secretManager;
@@ -62,9 +63,9 @@ public class GetSecretDataFetcher extends AbstractObjectDataFetcher<QLSecret, QL
     QLSecret qlSecret = null;
     if (encryptedData != null) {
       // The secret is either encrypted Text or encrypted File, also ensuring that no other encrypted record is deleted
-      if (encryptedData.getType() == SettingValue.SettingVariableTypes.SECRET_TEXT) {
+      if (encryptedData.getType() == SettingVariableTypes.SECRET_TEXT) {
         qlSecret = encryptedTextController.populateEncryptedText(encryptedData);
-      } else if (encryptedData.getType() == SettingValue.SettingVariableTypes.CONFIG_FILE) {
+      } else if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
         qlSecret = encryptedFileController.populateEncryptedFile(encryptedData);
       } else {
         throw throwInvalidSecretException();

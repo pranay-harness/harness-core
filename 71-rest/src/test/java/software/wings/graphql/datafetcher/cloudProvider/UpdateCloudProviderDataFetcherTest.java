@@ -52,7 +52,7 @@ import software.wings.graphql.schema.type.cloudProvider.aws.QLAwsCredentialsType
 import software.wings.graphql.schema.type.cloudProvider.k8s.QLClusterDetailsType;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.sql.SQLException;
 
@@ -269,13 +269,12 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updatePhysicalDataCenter() {
-    SettingAttribute setting =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
-            .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
-                           .withType(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
-                           .build())
-            .build();
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+                                   .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
+                                                  .withType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                                                  .build())
+                                   .build();
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CLOUD_PROVIDER_ID);
 
@@ -287,7 +286,7 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
     doReturn(SettingAttribute.Builder.aSettingAttribute()
                  .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
                  .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
-                                .withType(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                                .withType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
                                 .build())
                  .build())
         .when(settingsService)

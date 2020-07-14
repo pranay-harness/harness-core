@@ -27,7 +27,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.GitSyncWebhook.GitSyncWebhookKeys;

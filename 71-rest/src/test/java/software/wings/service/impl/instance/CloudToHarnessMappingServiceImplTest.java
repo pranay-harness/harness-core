@@ -21,7 +21,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.service.intfc.instance.DeploymentService;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -62,8 +62,8 @@ public class CloudToHarnessMappingServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetSettingAttributes() {
     List<SettingAttribute> settingAttributes = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-        ACCOUNT_ID, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingValue.SettingVariableTypes.CE_AWS,
-        instant.toEpochMilli(), instant.plus(1, ChronoUnit.DAYS).toEpochMilli());
+        ACCOUNT_ID, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS, instant.toEpochMilli(),
+        instant.plus(1, ChronoUnit.DAYS).toEpochMilli());
     assertThat(settingAttributes.size()).isEqualTo(0);
   }
 

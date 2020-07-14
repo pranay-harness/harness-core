@@ -25,7 +25,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

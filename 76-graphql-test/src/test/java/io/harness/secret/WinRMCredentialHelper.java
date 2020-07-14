@@ -14,7 +14,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 @Singleton
 public class WinRMCredentialHelper {
@@ -56,7 +56,7 @@ public class WinRMCredentialHelper {
             .useSSL(true)
             .domain("")
             .build();
-    settingValue.setSettingType(SettingValue.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES);
+    settingValue.setSettingType(SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES);
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withName(name)
                                             .withValue(settingValue)

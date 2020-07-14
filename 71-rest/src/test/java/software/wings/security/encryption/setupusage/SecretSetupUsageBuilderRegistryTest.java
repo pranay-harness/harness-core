@@ -16,7 +16,7 @@ import software.wings.security.encryption.setupusage.builders.ConfigFileSetupUsa
 import software.wings.security.encryption.setupusage.builders.SecretManagerSetupUsageBuilder;
 import software.wings.security.encryption.setupusage.builders.ServiceVariableSetupUsageBuilder;
 import software.wings.security.encryption.setupusage.builders.SettingAttributeSetupUsageBuilder;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.Optional;
 

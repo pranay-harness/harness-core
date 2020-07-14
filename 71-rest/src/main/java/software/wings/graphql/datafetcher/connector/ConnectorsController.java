@@ -36,7 +36,7 @@ import software.wings.graphql.schema.type.connector.QLSlackConnector;
 import software.wings.graphql.schema.type.connector.QLSmtpConnector;
 import software.wings.graphql.schema.type.connector.QLSplunkConnector;
 import software.wings.graphql.schema.type.connector.QLSumoConnector;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 @UtilityClass
 public class ConnectorsController {

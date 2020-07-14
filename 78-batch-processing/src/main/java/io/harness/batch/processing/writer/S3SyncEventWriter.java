@@ -1,7 +1,7 @@
 package io.harness.batch.processing.writer;
 
 import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
-import static software.wings.settings.SettingValue.SettingVariableTypes.CE_AWS;
+import static software.wings.settings.SettingVariableTypes.CE_AWS;
 
 import com.google.inject.Singleton;
 

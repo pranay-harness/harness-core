@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 

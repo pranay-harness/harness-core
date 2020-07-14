@@ -40,7 +40,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.Arrays;

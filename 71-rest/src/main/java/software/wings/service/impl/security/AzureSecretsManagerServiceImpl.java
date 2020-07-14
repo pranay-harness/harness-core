@@ -7,7 +7,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE_VAULT;
+import static software.wings.settings.SettingVariableTypes.AZURE_VAULT;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

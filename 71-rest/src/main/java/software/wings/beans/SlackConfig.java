@@ -13,6 +13,7 @@ import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.Arrays;
 import java.util.List;

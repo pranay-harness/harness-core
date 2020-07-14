@@ -21,6 +21,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -50,7 +51,7 @@ public class CustomBillingMetaDataServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetAwsDataSetId() {
     when(cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-             ACCOUNT_ID, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingValue.SettingVariableTypes.CE_AWS))
+             ACCOUNT_ID, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS))
         .thenReturn(ceConnectorSettingAttribute());
     when(billingDataPipelineRecordDao.getBySettingId(ACCOUNT_ID, SETTING_ID))
         .thenReturn(BillingDataPipelineRecord.builder().dataSetId(AWS_DATA_SETID).build());
@@ -63,7 +64,7 @@ public class CustomBillingMetaDataServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetPipelineJobStatusWhenJobNotFinished() {
     when(cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-             ACCOUNT_ID, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingValue.SettingVariableTypes.CE_AWS))
+             ACCOUNT_ID, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS))
         .thenReturn(ceConnectorSettingAttribute());
     when(billingDataPipelineRecordDao.getBySettingId(ACCOUNT_ID, SETTING_ID))
         .thenReturn(BillingDataPipelineRecord.builder().dataSetId(AWS_DATA_SETID).build());
@@ -81,7 +82,7 @@ public class CustomBillingMetaDataServiceImplTest extends CategoryTest {
         VMInstanceBillingData.builder().computeCost(10).networkCost(0).resourceId(RESOURCE_ID).build();
     vmInstanceBillingDataMap.put(RESOURCE_ID, vmInstanceBillingData);
     when(cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-             ACCOUNT_ID, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingValue.SettingVariableTypes.CE_AWS))
+             ACCOUNT_ID, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS))
         .thenReturn(ceConnectorSettingAttribute());
     when(billingDataPipelineRecordDao.getBySettingId(ACCOUNT_ID, SETTING_ID))
         .thenReturn(BillingDataPipelineRecord.builder().dataSetId(AWS_DATA_SETID).build());

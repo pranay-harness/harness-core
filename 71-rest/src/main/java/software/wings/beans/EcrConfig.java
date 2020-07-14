@@ -20,6 +20,7 @@ import software.wings.audit.ResourceType;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 

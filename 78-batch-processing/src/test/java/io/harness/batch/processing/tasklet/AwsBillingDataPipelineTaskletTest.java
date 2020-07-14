@@ -36,7 +36,7 @@ import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -85,9 +85,8 @@ public class AwsBillingDataPipelineTaskletTest extends CategoryTest {
             .build();
     when(cloudToHarnessMappingService.getAccountInfoFromId(accountId))
         .thenReturn(Account.Builder.anAccount().withAccountName(accountName).build());
-    when(cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(accountId,
-             SettingAttribute.SettingCategory.CE_CONNECTOR, SettingValue.SettingVariableTypes.CE_AWS, startTime,
-             endTime))
+    when(cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
+             accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS, startTime, endTime))
         .thenReturn(Collections.singletonList(settingAttribute));
     when(billingDataPipelineService.createDataSet(any())).thenReturn(dataSetId);
     when(billingDataPipelineService.createDataTransferJobFromGCS(

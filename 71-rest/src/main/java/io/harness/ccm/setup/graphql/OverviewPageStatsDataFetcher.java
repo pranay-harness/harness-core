@@ -28,7 +28,7 @@ import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLNoOpQueryParameters;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 

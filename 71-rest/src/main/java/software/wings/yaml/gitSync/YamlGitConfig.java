@@ -1,6 +1,6 @@
 package software.wings.yaml.gitSync;
 
-import static software.wings.settings.SettingValue.SettingVariableTypes.YAML_GIT_SYNC;
+import static software.wings.settings.SettingVariableTypes.YAML_GIT_SYNC;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -22,7 +22,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.jersey.JsonViews;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import javax.validation.constraints.NotNull;
 

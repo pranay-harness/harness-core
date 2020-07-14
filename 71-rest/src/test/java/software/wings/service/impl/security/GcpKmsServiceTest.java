@@ -46,7 +46,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

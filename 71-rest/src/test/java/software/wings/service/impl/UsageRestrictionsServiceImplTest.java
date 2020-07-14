@@ -92,7 +92,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.settings.UsageRestrictionsReferenceSummary;
@@ -713,8 +713,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testIsEditable_When_EntityNotAvailable() {
     when(secretManager.getSecretById(ACCOUNT_ID, ENTITY_ID)).thenReturn(null);
-    assertThat(usageRestrictionsService.isEditable(
-                   ACCOUNT_ID, ENTITY_ID, SettingValue.SettingVariableTypes.SECRET_TEXT.name()))
+    assertThat(usageRestrictionsService.isEditable(ACCOUNT_ID, ENTITY_ID, SettingVariableTypes.SECRET_TEXT.name()))
         .isFalse();
   }
 
@@ -725,8 +724,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     UsageRestrictions usageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
     when(secretManager.getSecretById(ACCOUNT_ID, ENTITY_ID))
         .thenReturn(EncryptedData.builder().usageRestrictions(usageRestrictions).build());
-    assertThat(usageRestrictionsService.isEditable(
-                   ACCOUNT_ID, ENTITY_ID, SettingValue.SettingVariableTypes.SECRET_TEXT.name()))
+    assertThat(usageRestrictionsService.isEditable(ACCOUNT_ID, ENTITY_ID, SettingVariableTypes.SECRET_TEXT.name()))
         .isTrue();
   }
 
@@ -754,8 +752,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       when(secretManager.getSecretById(ACCOUNT_ID, ENTITY_ID))
           .thenReturn(EncryptedData.builder().usageRestrictions(usageRestrictions).scopedToAccount(true).build());
 
-      assertThat(usageRestrictionsService.isEditable(
-                     ACCOUNT_ID, ENTITY_ID, SettingValue.SettingVariableTypes.CONFIG_FILE.name()))
+      assertThat(usageRestrictionsService.isEditable(ACCOUNT_ID, ENTITY_ID, SettingVariableTypes.CONFIG_FILE.name()))
           .isTrue();
 
     } finally {
@@ -788,8 +785,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
       when(secretManager.getSecretById(ACCOUNT_ID, ENTITY_ID))
           .thenReturn(EncryptedData.builder().usageRestrictions(usageRestrictions).scopedToAccount(true).build());
 
-      assertThat(usageRestrictionsService.isEditable(
-                     ACCOUNT_ID, ENTITY_ID, SettingValue.SettingVariableTypes.CONFIG_FILE.name()))
+      assertThat(usageRestrictionsService.isEditable(ACCOUNT_ID, ENTITY_ID, SettingVariableTypes.CONFIG_FILE.name()))
           .isTrue();
     } finally {
       UserThreadLocal.unset();

@@ -55,7 +55,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
@@ -169,8 +169,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       phaseExecutionDataBuilder.withComputeProviderId(infrastructureMapping.getComputeProviderSettingId())
           .withComputeProviderName(infrastructureMapping.getComputeProviderName())
           .withComputeProviderType(
-              SettingValue.SettingVariableTypes.valueOf(infrastructureMapping.getComputeProviderType())
-                  .getDisplayName())
+              SettingVariableTypes.valueOf(infrastructureMapping.getComputeProviderType()).getDisplayName())
           .withInfraMappingId(infrastructureMapping.getUuid())
           .withInfraMappingName(infrastructureMapping.getName())
           .withDeploymentType(deploymentType.getDisplayName());

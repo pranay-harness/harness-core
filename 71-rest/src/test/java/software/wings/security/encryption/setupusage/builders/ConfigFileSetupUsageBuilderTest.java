@@ -6,7 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
+import static software.wings.settings.SettingVariableTypes.CONFIG_FILE;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
