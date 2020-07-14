@@ -12,6 +12,7 @@ import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
+import software.wings.service.intfc.ownership.OwnedByApplication;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,7 +23,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by rishi
  */
-public interface UserGroupService extends OwnedByAccount {
+public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
   /**
    * Save.
    *
@@ -168,6 +169,13 @@ public interface UserGroupService extends OwnedByAccount {
       @NotBlank String ssoId, @NotBlank String ssoGroupId, @NotBlank String ssoGroupName);
 
   UserGroup unlinkSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, boolean retainMembers);
+
+  /**
+   * Remove app ids from permissions, remove empty app permissions and save UserGroup
+   * @param userGroup user group
+   * @param appIds collection of app ids
+   */
+  void removeAppIdsFromAppPermissions(UserGroup userGroup, Set<String> appIds);
 
   /**
    * Get list of user groups linked to given sso id

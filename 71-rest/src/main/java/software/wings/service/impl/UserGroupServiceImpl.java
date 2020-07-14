@@ -75,6 +75,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.features.RbacFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.scheduler.LdapGroupSyncJob;
+import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
@@ -799,6 +800,46 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
+  public void removeAppIdsFromAppPermissions(UserGroup userGroup, Set<String> appIds) {
+    boolean isModified = false;
+    boolean hasEmptyPermission = false;
+
+    if (isEmpty(appIds)) {
+      return;
+    }
+
+    Set<AppPermission> groupAppPermissions = userGroup.getAppPermissions();
+
+    if (isEmpty(groupAppPermissions)) {
+      return;
+    }
+
+    for (AppPermission permission : groupAppPermissions) {
+      GenericEntityFilter filter = permission.getAppFilter();
+      Set<String> ids = filter.getIds();
+
+      if (ids != null && ids.removeIf(appIds::contains)) {
+        isModified = true;
+      }
+
+      if (isEmpty(ids)) {
+        hasEmptyPermission = true;
+      }
+    }
+
+    if (hasEmptyPermission) {
+      removeEmptyAppPermissions(userGroup);
+      isModified = true;
+    }
+
+    if (isModified) {
+      UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
+      setUnset(operations, UserGroupKeys.appPermissions, userGroup.getAppPermissions());
+      update(userGroup, operations);
+    }
+  }
+
+  @Override
   public List<UserGroup> getUserGroupsBySsoId(String accountId, String ssoId) {
     PageRequest<UserGroup> pageRequest = aPageRequest()
                                              .addFilter(UserGroupKeys.accountId, Operator.EQ, accountId)
@@ -864,5 +905,39 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
     PageRequestBuilder pageRequest = aPageRequest().addFilter(UserGroup.ID_KEY, Operator.IN, userIds);
     return list(userInvite.getAccountId(), pageRequest.build(), true).getResponse();
+  }
+
+  /**
+   * Removing permissions which were created for specific applications (filter type is SELECTED) if all of those
+   * applications are deleted
+   */
+  private void removeEmptyAppPermissions(UserGroup userGroup) {
+    Set<AppPermission> appPermissions = userGroup.getAppPermissions();
+    Set<AppPermission> updatedAppPermissions =
+        appPermissions.stream()
+            .filter(appPermission
+                -> !(isAppPermissionSelected(appPermission) && isAppPermissionWithEmptyIds(appPermission)))
+            .collect(Collectors.toSet());
+    userGroup.setAppPermissions(updatedAppPermissions);
+  }
+
+  private boolean isAppPermissionSelected(AppPermission appPermission) {
+    return appPermission.getAppFilter().getFilterType().equals(GenericEntityFilter.FilterType.SELECTED);
+  }
+
+  private boolean isAppPermissionWithEmptyIds(AppPermission appPermission) {
+    return isEmpty(appPermission.getAppFilter().getIds());
+  }
+
+  @Override
+  public void pruneByApplication(String appId) {
+    List<UserGroup> userGroups = wingsPersistence.createQuery(UserGroup.class, excludeAuthority).asList();
+
+    Set<String> deletedIds = new HashSet<>();
+    deletedIds.add(appId);
+
+    for (UserGroup userGroup : userGroups) {
+      removeAppIdsFromAppPermissions(userGroup, deletedIds);
+    }
   }
 }

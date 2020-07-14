@@ -84,6 +84,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -137,6 +138,7 @@ public class AppServiceImpl implements AppService {
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private ResourceLookupService resourceLookupService;
+  @Inject private UserGroupService userGroupService;
 
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
