@@ -24,13 +24,16 @@ import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class DataCollectionTaskServiceImpl implements DataCollectionTaskService {
@@ -50,19 +53,25 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   public Optional<DataCollectionTask> getNextTask(String accountId, String cvConfigId) {
-    DataCollectionTask task = hPersistence.createQuery(DataCollectionTask.class)
-                                  .filter(DataCollectionTaskKeys.accountId, accountId)
-                                  .filter(DataCollectionTaskKeys.cvConfigId, cvConfigId)
-                                  .filter(DataCollectionTaskKeys.status, ExecutionStatus.QUEUED)
-                                  .filter(DataCollectionTaskKeys.validAfter + " <=", clock.millis())
-                                  .order(DataCollectionTaskKeys.lastUpdatedAt)
-                                  .get();
-    if (task == null) {
-      return Optional.empty();
-    }
-    task.setStatus(ExecutionStatus.RUNNING);
-    updateTaskStatus(task.getUuid(), ExecutionStatus.RUNNING);
-    return Optional.of(task);
+    Query<DataCollectionTask> query = hPersistence.createQuery(DataCollectionTask.class)
+                                          .filter(DataCollectionTaskKeys.accountId, accountId)
+                                          .filter(DataCollectionTaskKeys.cvConfigId, cvConfigId)
+                                          .filter(DataCollectionTaskKeys.validAfter + " <=", clock.millis())
+                                          .field(DataCollectionTaskKeys.retryCount)
+                                          .lessThan(MAX_RETRY_COUNT)
+                                          .order(Sort.ascending("lastUpdatedAt"));
+    query.or(query.criteria(DataCollectionTaskKeys.status).equal(ExecutionStatus.QUEUED),
+        query.and(query.criteria(DataCollectionTaskKeys.status).equal(ExecutionStatus.RUNNING),
+            query.criteria(DataCollectionTaskKeys.lastUpdatedAt)
+                .lessThan(clock.millis() - TimeUnit.MINUTES.toMillis(5))));
+    UpdateOperations<DataCollectionTask> updateOperations =
+        hPersistence.createUpdateOperations(DataCollectionTask.class)
+            .set(DataCollectionTaskKeys.status, ExecutionStatus.RUNNING)
+            .inc(DataCollectionTaskKeys.retryCount)
+            .set(DataCollectionTaskKeys.lastUpdatedAt, clock.millis());
+
+    DataCollectionTask task = hPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
+    return Optional.ofNullable(task);
   }
 
   @Override
@@ -81,14 +90,6 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     } else {
       return Optional.empty();
     }
-  }
-
-  private void updateTaskStatus(String taskId, ExecutionStatus status) {
-    UpdateOperations<DataCollectionTask> updateOperations =
-        hPersistence.createUpdateOperations(DataCollectionTask.class).set(DataCollectionTaskKeys.status, status);
-    Query<DataCollectionTask> query =
-        hPersistence.createQuery(DataCollectionTask.class).filter(DataCollectionTaskKeys.uuid, taskId);
-    hPersistence.update(query, updateOperations);
   }
 
   @Override
