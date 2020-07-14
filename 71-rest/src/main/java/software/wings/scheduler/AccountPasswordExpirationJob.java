@@ -116,7 +116,7 @@ public class AccountPasswordExpirationJob implements Job {
   }
 
   private boolean hasPasswordExpired(long passwordAgeInDays, PasswordExpirationPolicy passwordExpirationPolicy) {
-    return passwordAgeInDays == passwordExpirationPolicy.getDaysBeforePasswordExpires();
+    return passwordAgeInDays >= passwordExpirationPolicy.getDaysBeforePasswordExpires();
   }
 
   private boolean isPasswordAboutToExpire(long passwordAgeInDays, PasswordExpirationPolicy passwordExpirationPolicy) {

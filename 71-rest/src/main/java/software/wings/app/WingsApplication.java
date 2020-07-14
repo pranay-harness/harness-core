@@ -163,6 +163,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.prune.PruneEntityListener;
 import software.wings.resources.AppResource;
+import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.scheduler.InstancesPurgeJob;
 import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.scheduler.VaultSecretManagerRenewalHandler;
@@ -799,6 +800,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       if (acquiredLock != null) {
         YamlChangeSetPruneJob.add(jobScheduler);
         InstancesPurgeJob.add(jobScheduler);
+        AccountPasswordExpirationJob.add(jobScheduler);
       }
     }
 
