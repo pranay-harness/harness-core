@@ -4,6 +4,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
@@ -12,6 +13,9 @@ import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -20,6 +24,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
@@ -44,6 +49,7 @@ import software.wings.jersey.JsonViews;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -81,8 +87,20 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     });
   }
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    mapper.setSubtypeResolver(AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver()));
+    final AnnotationAwareJsonSubtypeResolver subtypeResolver =
+        AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver());
+    mapper.setSubtypeResolver(subtypeResolver);
     mapper.setConfig(mapper.getSerializationConfig().withView(JsonViews.Public.class));
+    mapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
+      @Override
+      public List<NamedType> findSubtypes(Annotated a) {
+        final List<NamedType> subtypesFromSuper = super.findSubtypes(a);
+        if (EmptyPredicate.isNotEmpty(subtypesFromSuper)) {
+          return subtypesFromSuper;
+        }
+        return emptyIfNull(subtypeResolver.findSubtypes(a));
+      }
+    });
   }
 
   @Override

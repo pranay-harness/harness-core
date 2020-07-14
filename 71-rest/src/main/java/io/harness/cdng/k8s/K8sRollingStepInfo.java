@@ -1,9 +1,12 @@
 package io.harness.cdng.k8s;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
+import io.harness.cdng.pipeline.stepinfo.StepSpecType;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
@@ -15,22 +18,32 @@ import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.state.StepType;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.validation.constraints.NotNull;
 
 @Data
-@Builder
-@JsonTypeName("k8sRolling")
-public class K8sRollingStepInfo implements CDStepInfo {
-  private String displayName;
-  private String identifier;
-  private K8sRollingStepParameters k8sRolling;
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@JsonTypeName(StepSpecType.K8S_ROLLOUT_DEPLOY)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDStepInfo {
+  @JsonIgnore private String name;
+  @JsonIgnore private String identifier;
+
+  @Builder(builderMethodName = "infoBuilder")
+  public K8sRollingStepInfo(int timeout, boolean skipDryRun, Map<String, StepDependencySpec> stepDependencySpecs,
+      String name, String identifier) {
+    super(timeout, skipDryRun, stepDependencySpecs);
+    this.name = name;
+    this.identifier = identifier;
+  }
 
   @Override
   public String getDisplayName() {
-    return displayName;
+    return name;
   }
 
   @Override
@@ -49,10 +62,10 @@ public class K8sRollingStepInfo implements CDStepInfo {
         KeyAwareStepDependencySpec.builder().key(CDStepDependencyUtils.getServiceKey(context)).build();
     KeyAwareStepDependencySpec infraSpec =
         KeyAwareStepDependencySpec.builder().key(CDStepDependencyUtils.getInfraKey(context)).build();
-    k8sRolling.setStepDependencySpecs(new HashMap<>());
-    k8sRolling.getStepDependencySpecs().put(CDStepDependencyKey.SERVICE.name(), serviceSpec);
-    k8sRolling.getStepDependencySpecs().put(CDStepDependencyKey.INFRASTRUCTURE.name(), infraSpec);
-    return k8sRolling.getStepDependencySpecs();
+    setStepDependencySpecs(new HashMap<>());
+    getStepDependencySpecs().put(CDStepDependencyKey.SERVICE.name(), serviceSpec);
+    getStepDependencySpecs().put(CDStepDependencyKey.INFRASTRUCTURE.name(), infraSpec);
+    return getStepDependencySpecs();
   }
 
   @Override
@@ -65,11 +78,5 @@ public class K8sRollingStepInfo implements CDStepInfo {
             .outcomeExpression(OutcomeExpressionConstants.K8S_ROLL_OUT.getName())
             .build();
     stepDependencyService.registerStepDependencyInstructor(instructor, context);
-  }
-
-  @NotNull
-  @Override
-  public String getIdentifier() {
-    return identifier;
   }
 }

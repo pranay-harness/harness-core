@@ -1,3 +1,3 @@
 package io.harness.cdng.infra.yaml;
 
-public enum InfrastructureKind { K8S_DIRECT }
+public interface InfrastructureKind { String KUBERNETES_DIRECT = "KubernetesDirect"; }

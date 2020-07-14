@@ -50,9 +50,7 @@ public class K8sRollingStepTest extends WingsBaseTest {
       }
     };
     K8sRollingStepInfo k8sRollingStepInfo =
-        K8sRollingStepInfo.builder()
-            .k8sRolling(K8sRollingStepParameters.builder().stepDependencySpecs(stepDependencySpecs).build())
-            .build();
+        K8sRollingStepInfo.infoBuilder().stepDependencySpecs(stepDependencySpecs).build();
 
     Ambiance ambiance = Ambiance.builder().build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();

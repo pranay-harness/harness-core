@@ -4,7 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.ambiance.Ambiance;
-import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
@@ -50,7 +50,7 @@ public class ArtifactStep implements Step, TaskExecutable, TaskV2Executable {
   public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
     ArtifactStepParameters parameters = (ArtifactStepParameters) stepParameters;
     logger.info("Executing deployment stage with params [{}]", parameters);
-    ArtifactConfigWrapper finalArtifact = applyArtifactsOverlay(parameters);
+    ArtifactConfig finalArtifact = applyArtifactsOverlay(parameters);
     ArtifactSource artifactSource = getArtifactSource(finalArtifact, AmbianceHelper.getAccountId(ambiance));
 
     final ArtifactTaskParameters taskParameters =
@@ -100,7 +100,7 @@ public class ArtifactStep implements Step, TaskExecutable, TaskV2Executable {
   }
 
   @VisibleForTesting
-  ArtifactSource getArtifactSource(ArtifactConfigWrapper artifactConfig, String accountId) {
+  ArtifactSource getArtifactSource(ArtifactConfig artifactConfig, String accountId) {
     return artifactConfig.getArtifactSource(accountId);
   }
 
@@ -113,8 +113,8 @@ public class ArtifactStep implements Step, TaskExecutable, TaskV2Executable {
   }
 
   @VisibleForTesting
-  ArtifactConfigWrapper applyArtifactsOverlay(ArtifactStepParameters stepParameters) {
-    List<ArtifactConfigWrapper> artifactList = new LinkedList<>();
+  ArtifactConfig applyArtifactsOverlay(ArtifactStepParameters stepParameters) {
+    List<ArtifactConfig> artifactList = new LinkedList<>();
     if (stepParameters.getArtifact() != null) {
       artifactList.add(stepParameters.getArtifact());
     }
@@ -127,8 +127,8 @@ public class ArtifactStep implements Step, TaskExecutable, TaskV2Executable {
     if (EmptyPredicate.isEmpty(artifactList)) {
       throw new InvalidArgumentsException("No Artifact details defined.");
     }
-    ArtifactConfigWrapper resultantArtifact = artifactList.get(0);
-    for (ArtifactConfigWrapper artifact : artifactList) {
+    ArtifactConfig resultantArtifact = artifactList.get(0);
+    for (ArtifactConfig artifact : artifactList) {
       resultantArtifact = resultantArtifact.applyOverrides(artifact);
     }
     return resultantArtifact;

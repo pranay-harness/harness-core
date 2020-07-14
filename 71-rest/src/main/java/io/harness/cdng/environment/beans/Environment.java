@@ -1,6 +1,5 @@
 package io.harness.cdng.environment.beans;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.common.beans.Tag;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
@@ -14,7 +13,11 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
@@ -25,8 +28,10 @@ import java.util.List;
                                   , @Field("orgId"), @Field("projectId"), @Field("identifier") })
 @Entity("environmentsNG")
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
+@Document("environmentsNG")
+@TypeAlias("environmentsNG")
 public class Environment implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
-  @NonFinal @Id private String uuid;
+  @NonFinal @Id @org.mongodb.morphia.annotations.Id private String uuid;
   @NonFinal private String displayName;
   @NotEmpty private String identifier;
   @NotEmpty private EnvironmentType environmentType;
@@ -34,8 +39,6 @@ public class Environment implements PersistentEntity, UuidAware, CreatedAtAware,
   private String accountId;
   private String orgId;
   private String projectId;
-  private long createdAt;
-  private long lastUpdatedAt;
-  private EmbeddedUser createdBy;
-  private EmbeddedUser lastUpdatedBy;
+  @CreatedDate private long createdAt;
+  @LastModifiedDate private long lastUpdatedAt;
 }

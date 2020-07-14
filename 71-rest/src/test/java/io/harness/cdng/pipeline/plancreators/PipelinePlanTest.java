@@ -72,7 +72,7 @@ public class PipelinePlanTest extends WingsBaseTest {
     assertThat(manifestsNodesList.size()).isEqualTo(2);
 
     List<PlanNode> executionNodesList =
-        planNodes.stream().filter(p -> p.getIdentifier().equals("EXECUTION")).collect(Collectors.toList());
+        planNodes.stream().filter(p -> p.getIdentifier().equals("execution")).collect(Collectors.toList());
     assertThat(executionNodesList.size()).isEqualTo(2);
 
     List<PlanNode> stage1RollOutNodesList =

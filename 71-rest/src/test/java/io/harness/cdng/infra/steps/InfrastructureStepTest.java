@@ -25,7 +25,7 @@ public class InfrastructureStepTest {
     String serviceIdentifier = "serviceIdentifier";
 
     Infrastructure infrastructureSpec =
-        K8SDirectInfrastructure.builder().connectorId(connector).namespace(namespace).build();
+        K8SDirectInfrastructure.builder().connectorIdentifier(connector).namespace(namespace).build();
 
     InfraMapping expectedInfraMapping = K8sDirectInfraMapping.builder()
                                             .serviceIdentifier(serviceIdentifier)

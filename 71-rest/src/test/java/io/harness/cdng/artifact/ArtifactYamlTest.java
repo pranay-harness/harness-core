@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.ArtifactSourceType;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
@@ -18,9 +18,10 @@ import io.harness.cdng.artifact.delegate.DockerArtifactServiceImpl;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.DeploymentStage;
-import io.harness.cdng.service.ServiceSpec;
+import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.auxiliary.intfc.StageWrapper;
+import io.harness.yaml.core.StageElement;
+import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -43,17 +44,19 @@ public class ArtifactYamlTest extends CategoryTest {
     assertThat(cdPipeline.getStages().size()).isEqualTo(2);
 
     // First Stage
-    StageWrapper stageWrapper = cdPipeline.getStages().get(0);
-    assertThat(stageWrapper).isInstanceOf(DeploymentStage.class);
-    DeploymentStage deploymentStage = (DeploymentStage) stageWrapper;
-    ServiceSpec serviceSpec = deploymentStage.getDeployment().getService().getServiceSpec();
+    StageElementWrapper stageWrapper = cdPipeline.getStages().get(0);
+    assertThat(stageWrapper).isInstanceOf(StageElement.class);
+    assertThat(((StageElement) stageWrapper).getStageType()).isInstanceOf(DeploymentStage.class);
+    DeploymentStage deploymentStage = (DeploymentStage) ((StageElement) stageWrapper).getStageType();
+    KubernetesServiceSpec serviceSpec =
+        (KubernetesServiceSpec) deploymentStage.getService().getServiceDef().getServiceSpec();
     assertThat(serviceSpec).isNotNull();
 
     assertThat(serviceSpec.getArtifacts().getPrimary()).isNotNull();
     assertThat(serviceSpec.getArtifacts().getSidecars()).isNotNull();
     assertThat(serviceSpec.getArtifacts().getSidecars().size()).isEqualTo(2);
 
-    ArtifactConfigWrapper primary = serviceSpec.getArtifacts().getPrimary();
+    ArtifactConfig primary = serviceSpec.getArtifacts().getPrimary().getArtifactConfig();
     assertThat(primary).isInstanceOf(DockerHubArtifactConfig.class);
     DockerHubArtifactConfig dockerArtifact = (DockerHubArtifactConfig) primary;
     assertThat(dockerArtifact.getImagePath()).isEqualTo("library/ubuntu");
@@ -64,9 +67,9 @@ public class ArtifactYamlTest extends CategoryTest {
     SidecarArtifactWrapper sidecarArtifactWrapper = serviceSpec.getArtifacts().getSidecars().get(0);
     assertThat(sidecarArtifactWrapper).isInstanceOf(SidecarArtifact.class);
     SidecarArtifact sidecarArtifact = (SidecarArtifact) sidecarArtifactWrapper;
-    assertThat(sidecarArtifact.getArtifact()).isInstanceOf(DockerHubArtifactConfig.class);
+    assertThat(sidecarArtifact.getArtifactConfig()).isInstanceOf(DockerHubArtifactConfig.class);
     assertThat(sidecarArtifact.getIdentifier()).isEqualTo("sidecar1");
-    dockerArtifact = (DockerHubArtifactConfig) sidecarArtifact.getArtifact();
+    dockerArtifact = (DockerHubArtifactConfig) sidecarArtifact.getArtifactConfig();
     assertThat(dockerArtifact.getIdentifier()).isEqualTo("sidecar1");
     assertThat(dockerArtifact.getImagePath()).isEqualTo("library/redis");
     assertThat(dockerArtifact.getTag()).isEqualTo("latest");
@@ -79,7 +82,7 @@ public class ArtifactYamlTest extends CategoryTest {
     assertThat(dockerArtifactSource.getImagePath()).isEqualTo("library/redis");
     assertThat(dockerArtifactSource.getUniqueHash())
         .isEqualTo(ArtifactUtils.generateUniqueHashFromStringList(
-            Arrays.asList(dockerArtifact.getDockerhubConnector(), dockerArtifact.getImagePath())));
+            Arrays.asList(dockerArtifact.getConnectorIdentifier(), dockerArtifact.getImagePath())));
     assertThat(dockerArtifactSource.getSourceType()).isEqualTo(ArtifactSourceType.DOCKER_HUB);
 
     ArtifactSourceAttributes sourceAttributes = dockerArtifact.getSourceAttributes();
@@ -89,7 +92,7 @@ public class ArtifactYamlTest extends CategoryTest {
         .isEqualTo(DockerArtifactServiceImpl.class);
     assertThat(dockerArtifactSourceAttributes.getImagePath()).isEqualTo(dockerArtifact.getImagePath());
     assertThat(dockerArtifactSourceAttributes.getDockerhubConnector())
-        .isEqualTo(dockerArtifact.getDockerhubConnector());
+        .isEqualTo(dockerArtifact.getConnectorIdentifier());
     assertThat(dockerArtifactSourceAttributes.getTag()).isEqualTo(dockerArtifact.getTag());
   }
 }

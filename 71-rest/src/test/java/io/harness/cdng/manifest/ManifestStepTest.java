@@ -12,6 +12,7 @@ import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.execution.status.Status;
@@ -32,25 +33,28 @@ public class ManifestStepTest extends CategoryTest {
   public void testManifestStepExecuteSync() {
     K8sManifest k8Manifest1 = K8sManifest.builder()
                                   .identifier("specsManifest")
-                                  .storeConfig(GitStore.builder()
-                                                   .connectorId("connector")
-                                                   .path("path1")
-                                                   .fetchValue("master")
-                                                   .fetchType(FetchType.BRANCH)
-                                                   .build())
+                                  .storeConfigWrapper(StoreConfigWrapper.builder()
+                                                          .storeConfig(GitStore.builder()
+                                                                           .connectorIdentifier("connector")
+                                                                           .path("path1")
+                                                                           .branch("master")
+                                                                           .gitFetchType(FetchType.BRANCH)
+                                                                           .build())
+                                                          .build())
                                   .build();
     ManifestConfigWrapper manifestConfig1 =
         ManifestConfig.builder().identifier("specsManifest").manifestAttributes(k8Manifest1).build();
 
     K8sManifest k8Manifest2 = K8sManifest.builder()
                                   .identifier("spec1")
-
-                                  .storeConfig(GitStore.builder()
-                                                   .path("override/path1")
-                                                   .connectorId("connector")
-                                                   .fetchValue("commitId")
-                                                   .fetchType(FetchType.COMMIT)
-                                                   .build())
+                                  .storeConfigWrapper(StoreConfigWrapper.builder()
+                                                          .storeConfig(GitStore.builder()
+                                                                           .path("override/path1")
+                                                                           .connectorIdentifier("connector")
+                                                                           .branch("commitId")
+                                                                           .gitFetchType(FetchType.COMMIT)
+                                                                           .build())
+                                                          .build())
                                   .build();
 
     ManifestConfigWrapper manifestConfig2 =
@@ -58,24 +62,28 @@ public class ManifestStepTest extends CategoryTest {
 
     ValuesManifest valuesManifest1 = ValuesManifest.builder()
                                          .identifier("valuesManifest1")
-                                         .storeConfig(GitStore.builder()
-                                                          .path("overrides/path1")
-                                                          .connectorId("connector1")
-                                                          .fetchValue("commitId1")
-                                                          .fetchType(FetchType.COMMIT)
-                                                          .build())
+                                         .storeConfigWrapper(StoreConfigWrapper.builder()
+                                                                 .storeConfig(GitStore.builder()
+                                                                                  .path("overrides/path1")
+                                                                                  .connectorIdentifier("connector1")
+                                                                                  .branch("commitId1")
+                                                                                  .gitFetchType(FetchType.COMMIT)
+                                                                                  .build())
+                                                                 .build())
                                          .build();
     ManifestConfigWrapper manifestConfig3 =
         ManifestConfig.builder().identifier("valuesManifest1").manifestAttributes(valuesManifest1).build();
 
     K8sManifest k8Manifest3 = K8sManifest.builder()
                                   .identifier("spec1")
-                                  .storeConfig(GitStore.builder()
-                                                   .path("overrides/path2")
-                                                   .connectorId("connector2")
-                                                   .fetchValue("commitId2")
-                                                   .fetchType(FetchType.COMMIT)
-                                                   .build())
+                                  .storeConfigWrapper(StoreConfigWrapper.builder()
+                                                          .storeConfig(GitStore.builder()
+                                                                           .path("overrides/path2")
+                                                                           .connectorIdentifier("connector2")
+                                                                           .branch("commitId2")
+                                                                           .gitFetchType(FetchType.COMMIT)
+                                                                           .build())
+                                                          .build())
                                   .build();
 
     ManifestConfigWrapper manifestConfig4 =
@@ -83,12 +91,14 @@ public class ManifestStepTest extends CategoryTest {
 
     ValuesManifest valuesManifest2 = ValuesManifest.builder()
                                          .identifier("valuesManifest1")
-                                         .storeConfig(GitStore.builder()
-                                                          .path("overrides/path3")
-                                                          .connectorId("connector3")
-                                                          .fetchValue("commitId3")
-                                                          .fetchType(FetchType.COMMIT)
-                                                          .build())
+                                         .storeConfigWrapper(StoreConfigWrapper.builder()
+                                                                 .storeConfig(GitStore.builder()
+                                                                                  .path("overrides/path3")
+                                                                                  .connectorIdentifier("connector3")
+                                                                                  .branch("commitId3")
+                                                                                  .gitFetchType(FetchType.COMMIT)
+                                                                                  .build())
+                                                                 .build())
                                          .build();
     ManifestConfigWrapper manifestConfig5 =
         ManifestConfig.builder().identifier("valuesManifest1").manifestAttributes(valuesManifest2).build();

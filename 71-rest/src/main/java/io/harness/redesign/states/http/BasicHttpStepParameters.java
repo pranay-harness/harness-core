@@ -6,12 +6,16 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.state.io.StepParameters;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @OwnedBy(CDC)
-@Value
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Redesign
 public class BasicHttpStepParameters implements StepParameters {
   @Attributes(required = true, title = "URL") String url;

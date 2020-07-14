@@ -39,7 +39,7 @@ public class ManifestFetchHelper {
           paths = fetchPathsToFetch(manifestAttribute, gitStore);
 
           if (isNotEmpty(paths)) {
-            String connectorId = gitStore.getConnectorId();
+            String connectorId = gitStore.getConnectorIdentifier();
             SettingAttribute settingAttribute = settingsService.get(connectorId);
 
             if (settingAttribute != null) {

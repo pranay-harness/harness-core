@@ -1,7 +1,7 @@
 package io.harness.cdng.pipeline;
 
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
-import io.harness.cdng.infra.InfrastructureSpec;
+import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.data.Outcome;
 import io.harness.state.Step;
@@ -14,7 +14,7 @@ import java.util.List;
 @Data
 @Builder
 public class PipelineInfrastructure implements Outcome {
-  private InfrastructureSpec infrastructureSpec;
+  private InfrastructureDef infrastructureDef;
   @Wither private InfraUseFromStage useFromStage;
   private EnvironmentYaml environment;
   private List<Step> steps;

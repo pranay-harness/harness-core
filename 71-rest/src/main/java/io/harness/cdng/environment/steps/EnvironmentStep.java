@@ -46,7 +46,7 @@ public class EnvironmentStep implements Step, SyncExecutable {
     String orgId = ambiance.getSetupAbstractions().get("orgId");
 
     return Environment.builder()
-        .displayName(environmentYaml.getDisplayName())
+        .displayName(environmentYaml.getName())
         .accountId(accountId)
         .environmentType(environmentYaml.getType())
         .identifier(environmentYaml.getIdentifier())

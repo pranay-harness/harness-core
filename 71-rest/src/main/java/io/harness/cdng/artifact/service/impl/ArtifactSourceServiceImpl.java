@@ -4,7 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
-import io.harness.cdng.artifact.service.ArtifactSourceDao;
+import io.harness.cdng.artifact.repository.ArtifactRepository;
+import io.harness.cdng.artifact.repository.ArtifactSourceDao;
 import io.harness.cdng.artifact.service.ArtifactSourceService;
 import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -15,6 +16,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class ArtifactSourceServiceImpl implements ArtifactSourceService {
   @Inject private ArtifactSourceDao artifactSourceDao;
+  @Inject private ArtifactRepository artifactRepository;
 
   @Override
   @ValidationGroups(Create.class)
@@ -49,5 +51,6 @@ public class ArtifactSourceServiceImpl implements ArtifactSourceService {
   @Override
   public ArtifactSource getArtifactStreamByHash(String accountId, String uniqueHash) {
     return artifactSourceDao.getArtifactStreamByHash(accountId, uniqueHash);
+    // return artifactSourceDao.
   }
 }

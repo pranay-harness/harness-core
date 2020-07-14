@@ -16,36 +16,36 @@ import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.environment.steps.EnvironmentStep;
 import io.harness.cdng.environment.steps.EnvironmentStepParameters;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
-import io.harness.cdng.infra.InfrastructureSpec;
+import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
-import io.harness.cdng.manifest.ManifestStoreType;
-import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.state.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
+import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.steps.PipelineSetupStep;
-import io.harness.cdng.service.ServiceConfig;
-import io.harness.cdng.service.ServiceSpec;
-import io.harness.cdng.service.StageOverridesConfig;
+import io.harness.cdng.service.beans.KubernetesServiceSpec;
+import io.harness.cdng.service.beans.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceDefinition;
+import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
@@ -82,6 +82,7 @@ import io.harness.state.core.section.SectionStepParameters;
 import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.state.io.StepParameters;
+import io.harness.yaml.core.StageElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
@@ -1044,9 +1045,8 @@ public class CustomExecutionUtils {
     CDPipeline pipeline = YamlPipelineUtils.read(fileContent, CDPipeline.class);
 
     DeploymentStage stage = (DeploymentStage) pipeline.getStages().get(0);
-    EnvironmentYaml environmentYaml = stage.getDeployment().getInfrastructure().getEnvironment();
-    Infrastructure infrastructureSpec =
-        stage.getDeployment().getInfrastructure().getInfrastructureSpec().getInfrastructure();
+    EnvironmentYaml environmentYaml = stage.getInfrastructure().getEnvironment();
+    Infrastructure infrastructureSpec = stage.getInfrastructure().getInfrastructureDef().getInfrastructure();
 
     ShellScriptStepParameters shellScriptStepParameters1 =
         ShellScriptStepParameters.builder()
@@ -1291,12 +1291,12 @@ public class CustomExecutionUtils {
     String sectionNodeId = generateUuid();
     String dummyNodeId = generateUuid();
     String artifactNodeId = generateUuid();
-    ArtifactConfigWrapper artifactConfigWrapper = DockerHubArtifactConfig.builder()
-                                                      .dockerhubConnector("https://registry.hub.docker.com/")
-                                                      .imagePath("library/ubuntu")
-                                                      .tag("latest")
-                                                      .build();
-    ArtifactStepParameters stepParameters = ArtifactStepParameters.builder().artifact(artifactConfigWrapper).build();
+    ArtifactConfig artifactConfig = DockerHubArtifactConfig.builder()
+                                        .connectorIdentifier("https://registry.hub.docker.com/")
+                                        .imagePath("library/ubuntu")
+                                        .tag("latest")
+                                        .build();
+    ArtifactStepParameters stepParameters = ArtifactStepParameters.builder().artifact(artifactConfig).build();
     return Plan.builder()
         .startingNodeId(sectionNodeId)
         .uuid(planId)
@@ -1338,33 +1338,37 @@ public class CustomExecutionUtils {
   }
 
   private static ManifestStepParameters getManifestStepParameters() {
-    ManifestConfigWrapper manifestConfig1 = ManifestConfig.builder()
-                                                .identifier("specsManifest")
-                                                .manifestAttributes(K8sManifest.builder()
-                                                                        .identifier("specsManifest")
+    ManifestConfigWrapper manifestConfig1 =
+        ManifestConfig.builder()
+            .identifier("specsManifest")
+            .manifestAttributes(K8sManifest.builder()
+                                    .identifier("specsManifest")
+                                    .storeConfigWrapper(StoreConfigWrapper.builder()
+                                                            .storeConfig(GitStore.builder()
+                                                                             .connectorIdentifier("connector")
+                                                                             .branch("master")
+                                                                             .path("path1")
+                                                                             .gitFetchType(FetchType.BRANCH)
+                                                                             .build())
+                                                            .build())
+                                    .build())
+            .build();
 
-                                                                        .storeConfig(GitStore.builder()
-                                                                                         .connectorId("connector")
-                                                                                         .fetchValue("master")
-                                                                                         .path("path1")
-                                                                                         .fetchType(FetchType.BRANCH)
-                                                                                         .build())
-                                                                        .build())
-                                                .build();
-
-    ManifestConfigWrapper manifestConfig2 = ManifestConfig.builder()
-                                                .identifier("valuesManifest")
-                                                .manifestAttributes(K8sManifest.builder()
-                                                                        .identifier("valuesManifest")
-
-                                                                        .storeConfig(GitStore.builder()
-                                                                                         .connectorId("connector")
-                                                                                         .path("override/path1")
-                                                                                         .fetchValue("master")
-                                                                                         .fetchType(FetchType.BRANCH)
-                                                                                         .build())
-                                                                        .build())
-                                                .build();
+    ManifestConfigWrapper manifestConfig2 =
+        ManifestConfig.builder()
+            .identifier("valuesManifest")
+            .manifestAttributes(K8sManifest.builder()
+                                    .identifier("valuesManifest")
+                                    .storeConfigWrapper(StoreConfigWrapper.builder()
+                                                            .storeConfig(GitStore.builder()
+                                                                             .connectorIdentifier("connector")
+                                                                             .path("override/path1")
+                                                                             .branch("master")
+                                                                             .gitFetchType(FetchType.BRANCH)
+                                                                             .build())
+                                                            .build())
+                                    .build())
+            .build();
 
     return ManifestStepParameters.builder()
         .serviceSpecManifests(Arrays.asList(manifestConfig1, manifestConfig2))
@@ -1381,11 +1385,12 @@ public class CustomExecutionUtils {
     ServiceConfig serviceConfig =
         ServiceConfig.builder()
             .identifier("service")
-            .displayName("k8s")
-            .serviceSpec(ServiceSpec.builder()
-                             .deploymentType("kubernetes")
-                             .manifests(manifestStepParameters.getServiceSpecManifests())
-                             .build())
+            .name("k8s")
+            .serviceDef(ServiceDefinition.builder()
+                            .serviceSpec(KubernetesServiceSpec.builder()
+                                             .manifests(manifestStepParameters.getServiceSpecManifests())
+                                             .build())
+                            .build())
             .stageOverrides(
                 StageOverridesConfig.builder().manifests(manifestStepParameters.getStageOverrideManifests()).build())
             .build();
@@ -1402,18 +1407,19 @@ public class CustomExecutionUtils {
                                        .build())
             .build();
 
-    K8sManifest fetchManifest = K8sManifest.builder()
-                                    .identifier("id1")
-                                    .valuesFilePath("test/values1.yaml")
+    K8sManifest fetchManifest =
+        K8sManifest.builder()
+            .identifier("id1")
+            .valuesFilePath("test/values1.yaml")
+            .storeConfigWrapper(StoreConfigWrapper.builder()
                                     .storeConfig(GitStore.builder()
                                                      .path("test")
-                                                     .fetchType(FetchType.BRANCH)
-                                                     .fetchValue("master")
-                                                     .kind(ManifestStoreType.GIT)
-                                                     .connectorId("6NY8BQ-0T_mqYE3Uoo6WHg")
+                                                     .gitFetchType(FetchType.BRANCH)
+                                                     .branch("master")
+                                                     .connectorIdentifier("6NY8BQ-0T_mqYE3Uoo6WHg")
                                                      .build())
-                                    .kind(ManifestType.K8Manifest)
-                                    .build();
+                                    .build())
+            .build();
 
     String manifestFetchId = generateUuid();
     PlanNode manifestFetchNode =
@@ -1443,7 +1449,7 @@ public class CustomExecutionUtils {
     PlanNode serviceNode =
         PlanNode.builder()
             .uuid(serviceNodeId)
-            .name(serviceConfig.getDisplayName())
+            .name(serviceConfig.getName())
             .identifier(serviceConfig.getIdentifier())
             .stepType(ServiceStep.STEP_TYPE)
             .stepParameters(
@@ -1498,12 +1504,14 @@ public class CustomExecutionUtils {
             .identifier("overrideManifest")
             .manifestAttributes(K8sManifest.builder()
                                     .identifier("overrideManifest")
-                                    .storeConfig(GitStore.builder()
-                                                     .connectorId("connector")
-                                                     .path("overridePath")
-                                                     .fetchValue("master")
-                                                     .fetchType(FetchType.BRANCH)
-                                                     .build())
+                                    .storeConfigWrapper(StoreConfigWrapper.builder()
+                                                            .storeConfig(GitStore.builder()
+                                                                             .connectorIdentifier("connector")
+                                                                             .path("overridePath")
+                                                                             .branch("master")
+                                                                             .gitFetchType(FetchType.BRANCH)
+                                                                             .build())
+                                                            .build())
                                     .build())
             .build();
     return Collections.singletonList(manifestConfigOverride);
@@ -1686,15 +1694,13 @@ public class CustomExecutionUtils {
 
     PipelineInfrastructure pipelineInfrastructure =
         PipelineInfrastructure.builder()
-            .infrastructureSpec(InfrastructureSpec.builder().infrastructure(k8sDirectInfraDefinition).build())
+            .infrastructureDef(InfrastructureDef.builder().infrastructure(k8sDirectInfraDefinition).build())
             .build();
 
     return CDPipeline.builder()
-        .stage(DeploymentStage.builder()
-                   .deployment(DeploymentStage.Deployment.builder()
-                                   .service(serviceConfig)
-                                   .infrastructure(pipelineInfrastructure)
-                                   .build())
+        .stage(StageElement.builder()
+                   .stageType(
+                       DeploymentStage.builder().service(serviceConfig).infrastructure(pipelineInfrastructure).build())
                    .build())
         .build();
   }

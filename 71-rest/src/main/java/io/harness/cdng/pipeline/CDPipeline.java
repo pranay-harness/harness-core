@@ -1,7 +1,10 @@
 package io.harness.cdng.pipeline;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.EntityName;
 import io.harness.yaml.core.Tag;
-import io.harness.yaml.core.auxiliary.intfc.StageWrapper;
+import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Pipeline;
 import lombok.Builder;
 import lombok.Singular;
@@ -11,10 +14,11 @@ import java.util.List;
 
 @Value
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CDPipeline implements Pipeline {
-  private String displayName;
-  private String description;
-  private List<Tag> tags;
-  @Singular private List<StageWrapper> stages;
-  private String identifier;
+  @EntityName String name;
+  @EntityIdentifier String identifier;
+  String description;
+  List<Tag> tags;
+  @Singular List<StageElementWrapper> stages;
 }

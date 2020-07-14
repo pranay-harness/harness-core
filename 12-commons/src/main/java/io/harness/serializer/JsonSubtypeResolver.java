@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class JsonSubtypeResolver extends SubtypeResolver {
   protected SubtypeResolver subtypeResolver;
 
-  protected LoadingCache<Class<?>, List<NamedType>> classListLoadingCache =
+  private LoadingCache<Class<?>, List<NamedType>> classListLoadingCache =
       CacheBuilder.newBuilder()
           .maximumSize(1000)
           .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -43,6 +43,10 @@ public class JsonSubtypeResolver extends SubtypeResolver {
                   .collect(toList());
             }
           });
+
+  protected final LoadingCache<Class<?>, List<NamedType>> getClassListLoadingCache() {
+    return classListLoadingCache;
+  }
 
   /**
    * Instantiates a new Json subtype resolver.

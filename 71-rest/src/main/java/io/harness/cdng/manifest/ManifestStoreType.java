@@ -1,6 +1,6 @@
 package io.harness.cdng.manifest;
 
 public interface ManifestStoreType {
-  String GIT = "git";
-  String LOCAL = "local";
+  String GIT = "Git";
+  String LOCAL = "Local";
 }

@@ -6,8 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.artifact.bean.ArtifactConfigWrapper;
+import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
+import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
@@ -136,11 +137,12 @@ public class ArtifactUtilsTest extends WingsBaseTest {
         DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.PRIMARY_ARTIFACT).identifier("ARTIFACT1").build();
     DockerHubArtifactConfig sidecarArtifact =
         DockerHubArtifactConfig.builder().artifactType(ArtifactUtils.SIDECAR_ARTIFACT).identifier("ARTIFACT2").build();
-    ArtifactListConfig artifactListConfig = ArtifactListConfig.builder()
-                                                .primary(primaryArtifact)
-                                                .sidecar(SidecarArtifact.builder().artifact(sidecarArtifact).build())
-                                                .build();
-    List<ArtifactConfigWrapper> artifactsList = ArtifactUtils.convertArtifactListIntoArtifacts(artifactListConfig);
+    ArtifactListConfig artifactListConfig =
+        ArtifactListConfig.builder()
+            .primary(ArtifactSpecWrapper.builder().artifactConfig(primaryArtifact).build())
+            .sidecar(SidecarArtifact.builder().artifactConfig(sidecarArtifact).build())
+            .build();
+    List<ArtifactConfig> artifactsList = ArtifactUtils.convertArtifactListIntoArtifacts(artifactListConfig);
     assertThat(artifactsList).containsOnly(primaryArtifact, sidecarArtifact);
   }
 }

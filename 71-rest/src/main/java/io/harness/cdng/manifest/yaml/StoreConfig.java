@@ -1,10 +1,16 @@
 package io.harness.cdng.manifest.yaml;
 
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.yaml.core.intfc.OverridesApplier;
 
 import java.io.Serializable;
 
+@JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
 public interface StoreConfig extends OverridesApplier<StoreConfig>, Serializable {
-  String getKind();
-  StoreConfig cloneInternal();
+  @JsonIgnore String getKind();
+  @JsonIgnore StoreConfig cloneInternal();
 }

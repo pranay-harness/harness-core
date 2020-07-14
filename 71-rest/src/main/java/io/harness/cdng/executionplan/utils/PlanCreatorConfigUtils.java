@@ -1,10 +1,10 @@
 package io.harness.cdng.executionplan.utils;
 
-import io.harness.cdng.pipeline.CDPhase;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.CDStage;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.executionplan.core.CreateExecutionPlanContext;
+import io.harness.yaml.core.StageElement;
 import lombok.experimental.UtilityClass;
 
 import java.util.Optional;
@@ -13,7 +13,6 @@ import java.util.Optional;
 public class PlanCreatorConfigUtils {
   public static final String CD_PIPELINE_CONFIG = "CD_PIPELINE_CONFIG";
   public static final String CD_CURRENT_STAGE_CONFIG = "CD_CURRENT_STAGE_CONFIG";
-  public static final String CD_CURRENT_PHASE_CONFIG = "CD_CURRENT_PHASE_CONFIG";
 
   public static void setPipelineConfig(CDPipeline pipeline, CreateExecutionPlanContext context) {
     setConfig(CD_PIPELINE_CONFIG, pipeline, context);
@@ -29,14 +28,6 @@ public class PlanCreatorConfigUtils {
 
   public static Optional<CDStage> getCurrentStageConfig(CreateExecutionPlanContext context) {
     return getConfig(CD_CURRENT_STAGE_CONFIG, context);
-  }
-
-  public static void setCurrentPhaseConfig(CDPhase phase, CreateExecutionPlanContext context) {
-    setConfig(CD_CURRENT_PHASE_CONFIG, phase, context);
-  }
-
-  public static Optional<CDPhase> getCurrentPhaseConfig(CreateExecutionPlanContext context) {
-    return getConfig(CD_CURRENT_PHASE_CONFIG, context);
   }
 
   private <T> void setConfig(String key, T config, CreateExecutionPlanContext context) {
@@ -57,7 +48,7 @@ public class PlanCreatorConfigUtils {
       CDPipeline pipeline = pipelineConfig.get();
       return pipeline.getStages()
           .stream()
-          .map(stage -> (DeploymentStage) stage)
+          .map(stage -> (DeploymentStage) ((StageElement) stage).getStageType())
           .filter(deploymentStage -> deploymentStage.getIdentifier().equals(stageIdentifier))
           .findFirst()
           .orElse(null);

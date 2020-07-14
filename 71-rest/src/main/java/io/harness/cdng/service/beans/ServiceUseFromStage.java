@@ -1,5 +1,6 @@
 package io.harness.cdng.service.beans;
 
+import io.swagger.annotations.ApiModel;
 import lombok.Builder;
 import lombok.Value;
 
@@ -15,8 +16,9 @@ public class ServiceUseFromStage implements Serializable {
 
   @Value
   @Builder
+  @ApiModel(value = "ServiceOverrides")
   public static class Overrides {
-    String displayName;
+    String name;
     String description;
   }
 }

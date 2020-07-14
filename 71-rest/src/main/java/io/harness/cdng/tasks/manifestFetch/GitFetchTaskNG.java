@@ -109,7 +109,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
     encryptionService.decrypt(gitConfig, gitFetchFilesConfig.getEncryptedDataDetails());
 
     executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfig.getRepoUrl());
-    executionLogCallback.saveExecutionLog(gitStore.getFetchType() + " : " + gitStore.getFetchValue());
+    executionLogCallback.saveExecutionLog(gitStore.getGitFetchType() + " : " + gitStore.getBranch());
 
     List<String> filePathsToFetch = null;
     if (EmptyPredicate.isNotEmpty(gitFetchFilesConfig.getPaths())) {
@@ -118,8 +118,8 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
       gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
     }
 
-    GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitStore.getConnectorId(),
-        gitStore.getFetchValue(), gitStore.getFetchValue(), filePathsToFetch, BRANCH == gitStore.getFetchType());
+    GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitStore.getConnectorIdentifier(),
+        gitStore.getBranch(), gitStore.getBranch(), filePathsToFetch, BRANCH == gitStore.getGitFetchType());
     gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(gitFetchFilesResult, executionLogCallback);
 
     return gitFetchFilesResult;

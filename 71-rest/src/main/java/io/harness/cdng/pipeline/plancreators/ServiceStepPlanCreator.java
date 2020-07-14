@@ -13,7 +13,7 @@ import io.harness.cdng.executionplan.CDPlanNodeType;
 import io.harness.cdng.executionplan.utils.PlanCreatorConfigUtils;
 import io.harness.cdng.pipeline.CDStage;
 import io.harness.cdng.pipeline.DeploymentStage;
-import io.harness.cdng.service.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
@@ -93,17 +93,14 @@ public class ServiceStepPlanCreator
       ServiceConfig serviceConfig, List<String> childNodeIds, CreateExecutionPlanContext context) {
     final String serviceNodeUid = generateUuid();
 
-    serviceConfig.setDisplayName(
-        StringUtils.defaultIfEmpty(serviceConfig.getDisplayName(), serviceConfig.getIdentifier()));
+    serviceConfig.setName(StringUtils.defaultIfEmpty(serviceConfig.getName(), serviceConfig.getIdentifier()));
 
     ServiceConfig serviceOverrides = null;
     if (serviceConfig.getUseFromStage() != null) {
       ServiceUseFromStage.Overrides overrides = serviceConfig.getUseFromStage().getOverrides();
       if (overrides != null) {
-        serviceOverrides = ServiceConfig.builder()
-                               .displayName(overrides.getDisplayName())
-                               .description(overrides.getDescription())
-                               .build();
+        serviceOverrides =
+            ServiceConfig.builder().name(overrides.getName()).description(overrides.getDescription()).build();
       }
     }
 
@@ -136,15 +133,15 @@ public class ServiceStepPlanCreator
   /** Method returns actual Service object by resolving useFromStage if present. */
   private ServiceConfig getActualServiceConfig(ServiceConfig serviceConfig, CreateExecutionPlanContext context) {
     if (serviceConfig.getUseFromStage() != null) {
-      if (serviceConfig.getServiceSpec() != null) {
-        throw new InvalidArgumentsException("ServiceSpec should not exist with UseFromStage.");
+      if (serviceConfig.getServiceDef() != null) {
+        throw new InvalidArgumentsException("KubernetesServiceSpec should not exist with UseFromStage.");
       }
       //  Add validation for not chaining of stages
       CDStage previousStage = PlanCreatorConfigUtils.getGivenDeploymentStageFromPipeline(
           context, serviceConfig.getUseFromStage().getStage());
       if (previousStage != null) {
         DeploymentStage deploymentStage = (DeploymentStage) previousStage;
-        return serviceConfig.applyUseFromStage(deploymentStage.getDeployment().getService());
+        return serviceConfig.applyUseFromStage(deploymentStage.getService());
       } else {
         throw new InvalidArgumentsException("Stage identifier given in useFromStage doesn't exist.");
       }

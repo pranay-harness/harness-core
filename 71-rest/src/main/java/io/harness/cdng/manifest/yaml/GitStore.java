@@ -18,31 +18,40 @@ import java.util.List;
 @JsonTypeName(ManifestStoreType.GIT)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GitStore implements StoreConfig {
-  @Wither private String connectorId;
+  @Wither private String connectorIdentifier;
+  @Wither private FetchType gitFetchType;
+  @Wither private String branch;
   @Wither @Singular private List<String> paths;
-  @Wither private FetchType fetchType;
-  @Wither private String fetchValue;
-  @Builder.Default private String kind = ManifestStoreType.GIT;
+
+  @Override
+  public String getKind() {
+    return ManifestStoreType.GIT;
+  }
 
   public GitStore cloneInternal() {
-    return GitStore.builder().connectorId(connectorId).fetchType(fetchType).fetchValue(fetchValue).paths(paths).build();
+    return GitStore.builder()
+        .connectorIdentifier(connectorIdentifier)
+        .gitFetchType(gitFetchType)
+        .branch(branch)
+        .paths(paths)
+        .build();
   }
 
   @Override
   public StoreConfig applyOverrides(StoreConfig overrideConfig) {
     GitStore gitStore = (GitStore) overrideConfig;
     GitStore resultantGitStore = this;
-    if (EmptyPredicate.isNotEmpty(gitStore.getConnectorId())) {
-      resultantGitStore = resultantGitStore.withConnectorId(gitStore.getConnectorId());
+    if (EmptyPredicate.isNotEmpty(gitStore.getConnectorIdentifier())) {
+      resultantGitStore = resultantGitStore.withConnectorIdentifier(gitStore.getConnectorIdentifier());
     }
     if (EmptyPredicate.isNotEmpty(gitStore.getPaths())) {
       resultantGitStore = resultantGitStore.withPaths(gitStore.getPaths());
     }
-    if (gitStore.getFetchType() != null) {
-      resultantGitStore = resultantGitStore.withFetchType(gitStore.getFetchType());
+    if (gitStore.getGitFetchType() != null) {
+      resultantGitStore = resultantGitStore.withGitFetchType(gitStore.getGitFetchType());
     }
-    if (EmptyPredicate.isNotEmpty(gitStore.getFetchValue())) {
-      resultantGitStore = resultantGitStore.withFetchValue(gitStore.getFetchValue());
+    if (EmptyPredicate.isNotEmpty(gitStore.getBranch())) {
+      resultantGitStore = resultantGitStore.withBranch(gitStore.getBranch());
     }
     return resultantGitStore;
   }

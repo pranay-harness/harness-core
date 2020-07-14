@@ -25,7 +25,7 @@ import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
-import io.harness.yaml.core.auxiliary.intfc.StageWrapper;
+import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -60,8 +60,8 @@ public class PipelinePlanCreator
   }
 
   private CreateExecutionPlanResponse createPlanForStages(
-      List<? extends StageWrapper> stages, CreateExecutionPlanContext context) {
-    final ExecutionPlanCreator<List<? extends StageWrapper>> stagesPlanCreator =
+      List<? extends StageElementWrapper> stages, CreateExecutionPlanContext context) {
+    final ExecutionPlanCreator<List<? extends StageElementWrapper>> stagesPlanCreator =
         executionPlanCreatorHelper.getExecutionPlanCreator(
             STAGES_PLAN_CREATOR.getName(), stages, context, "no execution plan creator found for pipeline stages");
 
@@ -73,7 +73,7 @@ public class PipelinePlanCreator
 
     return PlanNode.builder()
         .uuid(pipelineSetupNodeId)
-        .name(pipeline.getDisplayName())
+        .name(pipeline.getName())
         .identifier(pipeline.getIdentifier())
         .stepType(PipelineSetupStep.STEP_TYPE)
         .group(StepGroup.PIPELINE.name())

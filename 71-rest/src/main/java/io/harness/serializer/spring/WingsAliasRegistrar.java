@@ -1,5 +1,6 @@
 package io.harness.serializer.spring;
 
+import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
@@ -9,7 +10,7 @@ import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.environment.steps.EnvironmentStepParameters;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
-import io.harness.cdng.infra.InfrastructureSpec;
+import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.cdng.infra.steps.InfraStepParameters;
@@ -25,9 +26,9 @@ import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
+import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
-import io.harness.cdng.pipeline.CDPhase;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
@@ -35,12 +36,13 @@ import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.stepinfo.HttpStepInfo;
 import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
-import io.harness.cdng.service.ServiceConfig;
-import io.harness.cdng.service.ServiceSpec;
-import io.harness.cdng.service.StageOverridesConfig;
+import io.harness.cdng.service.beans.KubernetesServiceSpec;
+import io.harness.cdng.service.beans.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
+import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
@@ -139,15 +141,14 @@ public class WingsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("waitStateExecutionData", WaitStateExecutionData.class);
     orchestrationElements.put("waitStepParameters", WaitStepParameters.class);
     orchestrationElements.put("stageOverridesConfig", StageOverridesConfig.class);
-    orchestrationElements.put("serviceSpec", ServiceSpec.class);
+    orchestrationElements.put("kubernetesServiceSpec", KubernetesServiceSpec.class);
     orchestrationElements.put("cdPipeline", CDPipeline.class);
     orchestrationElements.put("pcfRouteUpdateRequestConfigData", PcfRouteUpdateRequestConfigData.class);
     orchestrationElements.put("pcfConfig", PcfConfig.class);
     orchestrationElements.put("stageVariables", StageVariables.class);
     orchestrationElements.put("k8sManifest", K8sManifest.class);
-    orchestrationElements.put("deploymentState_deployment", DeploymentStage.Deployment.class);
     orchestrationElements.put("helmChartInfo", HelmChartInfo.class);
-    orchestrationElements.put("infrastructureSpec", InfrastructureSpec.class);
+    orchestrationElements.put("infrastructureDef", InfrastructureDef.class);
     orchestrationElements.put("serviceOutcome_artifactsOutcome", ServiceOutcome.ArtifactsOutcome.class);
     orchestrationElements.put("ecsBGSetupData", EcsBGSetupData.class);
     orchestrationElements.put("deploymentStage", DeploymentStage.class);
@@ -158,7 +159,6 @@ public class WingsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("gitStore", GitStore.class);
     orchestrationElements.put("manifestConfig", ManifestConfig.class);
     orchestrationElements.put("valuesManifest", ValuesManifest.class);
-    orchestrationElements.put("cdPhase", CDPhase.class);
     orchestrationElements.put("serviceUseFromStage", ServiceUseFromStage.class);
     orchestrationElements.put("serviceUseFromStage_overrides", Overrides.class);
     orchestrationElements.put("infraUseFromStage_overrides", InfraUseFromStage.Overrides.class);
@@ -168,5 +168,8 @@ public class WingsAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("manifestOverrideSets", ManifestOverrideSets.class);
     orchestrationElements.put("artifactOverrideSets", ArtifactOverrideSets.class);
     orchestrationElements.put("sidecarArtifact", SidecarArtifact.class);
+    orchestrationElements.put("artifactSpecWrapper", ArtifactSpecWrapper.class);
+    orchestrationElements.put("storeConfigWrapper", StoreConfigWrapper.class);
+    orchestrationElements.put("serviceDefinition", ServiceDefinition.class);
   }
 }
