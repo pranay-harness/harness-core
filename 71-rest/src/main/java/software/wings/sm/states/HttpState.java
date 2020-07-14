@@ -403,6 +403,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .workflowExecutionId(context.getWorkflowExecutionId())
             .build();
 
     String delegateTaskId = scheduleDelegateTask(delegateTask);
