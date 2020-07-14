@@ -182,6 +182,11 @@ public class AuthenticationManager {
     }
 
     builder.showCaptcha(showCaptcha);
+
+    if (user.getAccounts().isEmpty()) {
+      return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
+    }
+
     Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(
         user, isEmpty(accountId) ? Optional.empty() : Optional.of(accountId));
     AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();

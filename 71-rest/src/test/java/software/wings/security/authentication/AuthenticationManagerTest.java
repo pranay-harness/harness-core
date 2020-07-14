@@ -4,6 +4,7 @@ import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.rule.OwnerRule.AMAN;
+import static io.harness.rule.OwnerRule.LAZAR;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -57,6 +58,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
 
@@ -210,6 +212,21 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     } catch (WingsException e) {
       // Exception expected.
     }
+  }
+
+  @Test
+  @Owner(developers = LAZAR)
+  @Category(UnitTests.class)
+  public void testGetLoginType_emailUnverified() throws MaxLoginAttemptExceededException {
+    User mockUser = mock(User.class);
+
+    doNothing().when(failedLoginAttemptCountChecker).check(Mockito.any(User.class));
+    when(mockUser.getAccounts()).thenReturn(Collections.emptyList());
+    when(AUTHENTICATION_UTL.getUser(Matchers.anyString(), any(EnumSet.class))).thenReturn(mockUser);
+
+    LoginTypeResponse loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
+
+    assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
   }
 
   @Test
