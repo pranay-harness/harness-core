@@ -74,7 +74,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlResourceService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.YamlPayload;
 
 import java.io.ByteArrayInputStream;

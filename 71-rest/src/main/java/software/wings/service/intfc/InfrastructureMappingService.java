@@ -23,7 +23,7 @@ import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureProvisioner;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Map;

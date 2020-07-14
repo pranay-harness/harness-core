@@ -12,7 +12,7 @@ import org.mockito.Mockito;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 

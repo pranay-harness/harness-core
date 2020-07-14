@@ -11,7 +11,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 @Slf4j
 public class AddScopedToAccountAttributeToEncryptedData implements Migration {

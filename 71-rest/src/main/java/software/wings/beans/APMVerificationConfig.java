@@ -26,6 +26,7 @@ import software.wings.audit.ResourceType;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.utils.Utils;
 

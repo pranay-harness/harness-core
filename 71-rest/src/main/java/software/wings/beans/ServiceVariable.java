@@ -32,7 +32,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.ArtifactStreamSummary;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
 import java.util.Collections;

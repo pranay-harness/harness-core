@@ -6,43 +6,43 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S3_HELM_REPO;
-import static software.wings.settings.SettingValue.SettingVariableTypes.APM_VERIFICATION;
-import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNAMICS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.ARTIFACTORY;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE_ARTIFACTS_PAT;
-import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
-import static software.wings.settings.SettingValue.SettingVariableTypes.BUG_SNAG;
-import static software.wings.settings.SettingValue.SettingVariableTypes.CLOUD_WATCH;
-import static software.wings.settings.SettingValue.SettingVariableTypes.DATA_DOG;
-import static software.wings.settings.SettingValue.SettingVariableTypes.DATA_DOG_LOG;
-import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
-import static software.wings.settings.SettingValue.SettingVariableTypes.DYNA_TRACE;
-import static software.wings.settings.SettingValue.SettingVariableTypes.ELK;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GCS_HELM_REPO;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HTTP_HELM_REPO;
-import static software.wings.settings.SettingValue.SettingVariableTypes.INSTANA;
-import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.JIRA;
-import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
-import static software.wings.settings.SettingValue.SettingVariableTypes.LOGZ;
-import static software.wings.settings.SettingValue.SettingVariableTypes.NEW_RELIC;
-import static software.wings.settings.SettingValue.SettingVariableTypes.NEXUS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.PCF;
-import static software.wings.settings.SettingValue.SettingVariableTypes.PROMETHEUS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SERVICENOW;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SFTP;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SMB;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SMTP;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SPLUNK;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SPOT_INST;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SUMO;
-import static software.wings.settings.SettingValue.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.AMAZON_S3_HELM_REPO;
+import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
+import static software.wings.settings.SettingVariableTypes.APP_DYNAMICS;
+import static software.wings.settings.SettingVariableTypes.ARTIFACTORY;
+import static software.wings.settings.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingVariableTypes.AZURE;
+import static software.wings.settings.SettingVariableTypes.AZURE_ARTIFACTS_PAT;
+import static software.wings.settings.SettingVariableTypes.BAMBOO;
+import static software.wings.settings.SettingVariableTypes.BUG_SNAG;
+import static software.wings.settings.SettingVariableTypes.CLOUD_WATCH;
+import static software.wings.settings.SettingVariableTypes.DATA_DOG;
+import static software.wings.settings.SettingVariableTypes.DATA_DOG_LOG;
+import static software.wings.settings.SettingVariableTypes.DOCKER;
+import static software.wings.settings.SettingVariableTypes.DYNA_TRACE;
+import static software.wings.settings.SettingVariableTypes.ELK;
+import static software.wings.settings.SettingVariableTypes.GCP;
+import static software.wings.settings.SettingVariableTypes.GCS_HELM_REPO;
+import static software.wings.settings.SettingVariableTypes.GIT;
+import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.HTTP_HELM_REPO;
+import static software.wings.settings.SettingVariableTypes.INSTANA;
+import static software.wings.settings.SettingVariableTypes.JENKINS;
+import static software.wings.settings.SettingVariableTypes.JIRA;
+import static software.wings.settings.SettingVariableTypes.KUBERNETES_CLUSTER;
+import static software.wings.settings.SettingVariableTypes.LOGZ;
+import static software.wings.settings.SettingVariableTypes.NEW_RELIC;
+import static software.wings.settings.SettingVariableTypes.NEXUS;
+import static software.wings.settings.SettingVariableTypes.PCF;
+import static software.wings.settings.SettingVariableTypes.PROMETHEUS;
+import static software.wings.settings.SettingVariableTypes.SERVICENOW;
+import static software.wings.settings.SettingVariableTypes.SFTP;
+import static software.wings.settings.SettingVariableTypes.SMB;
+import static software.wings.settings.SettingVariableTypes.SMTP;
+import static software.wings.settings.SettingVariableTypes.SPLUNK;
+import static software.wings.settings.SettingVariableTypes.SPOT_INST;
+import static software.wings.settings.SettingVariableTypes.SUMO;
+import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -63,7 +63,7 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.YamlHelper;
 
@@ -241,7 +241,7 @@ public class SettingServiceHelper {
     return settingCategory == CONNECTOR || settingCategory == HELM_REPO || settingCategory == AZURE_ARTIFACTS;
   }
 
-  boolean isArtifactServer(SettingValue.SettingVariableTypes settingVariableTypes) {
+  boolean isArtifactServer(SettingVariableTypes settingVariableTypes) {
     switch (settingVariableTypes) {
       case JENKINS:
       case BAMBOO:

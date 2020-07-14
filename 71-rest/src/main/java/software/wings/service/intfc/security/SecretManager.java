@@ -16,7 +16,7 @@ import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.ownership.OwnedByAccount;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 
 import java.io.File;

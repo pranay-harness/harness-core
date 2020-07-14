@@ -20,7 +20,7 @@ import static software.wings.security.encryption.EncryptedData.PARENT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
-import static software.wings.settings.SettingValue.SettingVariableTypes.KMS;
+import static software.wings.settings.SettingVariableTypes.KMS;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -43,7 +43,7 @@ import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

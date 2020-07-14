@@ -11,7 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretText;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 

@@ -13,7 +13,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 /**
  * @author marklu on 9/4/19

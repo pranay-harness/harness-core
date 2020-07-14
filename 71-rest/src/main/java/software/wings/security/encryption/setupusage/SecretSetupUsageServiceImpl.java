@@ -16,7 +16,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.EncryptionDetail;
 import software.wings.service.intfc.security.SecretManagerConfigService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.Collections;
 import java.util.EnumMap;

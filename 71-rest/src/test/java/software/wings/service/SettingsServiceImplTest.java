@@ -46,8 +46,8 @@ import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYM
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.UsageRestrictions.AppEnvRestriction.builder;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -131,7 +131,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 

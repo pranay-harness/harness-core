@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.settings.SettingValue.SettingVariableTypes.APM_VERIFICATION;
+import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;

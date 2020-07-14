@@ -39,7 +39,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.security.GcpKmsService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
 import java.util.List;

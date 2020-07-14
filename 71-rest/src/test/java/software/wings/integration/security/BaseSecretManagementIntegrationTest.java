@@ -28,7 +28,7 @@ import software.wings.service.impl.security.SecretText;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;
 import java.io.IOException;

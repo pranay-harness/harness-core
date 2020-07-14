@@ -41,11 +41,11 @@ import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServi
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
-import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
-import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.settings.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingVariableTypes.AZURE;
+import static software.wings.settings.SettingVariableTypes.GCP;
+import static software.wings.settings.SettingVariableTypes.KUBERNETES_CLUSTER;
+import static software.wings.settings.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -151,7 +151,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.Collections;

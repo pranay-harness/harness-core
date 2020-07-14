@@ -11,7 +11,7 @@ import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.EnumMap;
 import java.util.Map;

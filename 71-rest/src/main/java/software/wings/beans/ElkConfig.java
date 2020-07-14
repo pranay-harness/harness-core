@@ -21,6 +21,7 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.ElkValidationTypeProvider;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;

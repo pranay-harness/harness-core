@@ -16,7 +16,7 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingVariableTypes.AWS;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;

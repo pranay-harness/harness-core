@@ -84,7 +84,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.verification.CVConfiguration;
 
 import java.util.List;

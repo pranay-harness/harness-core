@@ -28,8 +28,8 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.service.impl.security.SecretManagerImpl.HARNESS_DEFAULT_SECRET_MANAGER;
-import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;
+import static software.wings.settings.SettingVariableTypes.CONFIG_FILE;
+import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
 import static software.wings.utils.ArtifactType.JAR;
 
 import com.google.inject.Inject;
@@ -104,7 +104,7 @@ import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 
 import java.io.File;

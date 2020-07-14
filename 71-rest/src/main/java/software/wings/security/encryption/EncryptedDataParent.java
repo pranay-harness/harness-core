@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.lang.reflect.Field;
 import javax.validation.constraints.NotNull;

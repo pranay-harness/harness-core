@@ -182,7 +182,7 @@ import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.StateType;
 import software.wings.verification.APMCVConfigurationYamlHandler;
 import software.wings.verification.AppDynamicsCVConfigurationYamlHandler;

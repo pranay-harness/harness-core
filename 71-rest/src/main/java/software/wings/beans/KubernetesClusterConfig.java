@@ -33,6 +33,7 @@ import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.jersey.JsonViews;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 

@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretText;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;
 import java.util.List;

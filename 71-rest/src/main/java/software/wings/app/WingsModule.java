@@ -626,7 +626,7 @@ import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
 import software.wings.service.intfc.yaml.sync.GitSyncService;
 import software.wings.service.intfc.yaml.sync.YamlGitConfigService;
 import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.signup.BugsnagErrorReporter;
 import software.wings.signup.SignupServiceImpl;
 import software.wings.sm.ExpressionProcessorFactory;

@@ -39,7 +39,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.EmailHelperUtils;
 import software.wings.utils.EmailUtils;
 

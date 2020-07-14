@@ -9,7 +9,7 @@ import io.harness.rule.Owner;
 import lombok.experimental.FieldNameConstants;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 @FieldNameConstants(innerTypeName = "EncryptedDataParentTestKeys")
 public class EncryptedDataParentTest {

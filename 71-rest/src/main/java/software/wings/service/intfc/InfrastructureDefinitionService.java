@@ -18,7 +18,7 @@ import software.wings.service.impl.aws.model.AwsSecurityGroup;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 
 import java.util.List;

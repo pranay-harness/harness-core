@@ -22,7 +22,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserGroupService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -33,7 +33,7 @@ import software.wings.security.encryption.EncryptionDetail;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.Arrays;
 import java.util.HashMap;

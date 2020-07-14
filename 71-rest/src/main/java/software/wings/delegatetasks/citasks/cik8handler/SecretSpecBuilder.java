@@ -36,6 +36,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.container.ImageDetails;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -81,7 +82,7 @@ public class SecretSpecBuilder {
     encryptionService.decrypt(
         imageDetailsWithConnector.getEncryptableSetting(), imageDetailsWithConnector.getEncryptedDataDetails());
     if (encryptableSetting != null) {
-      SettingValue.SettingVariableTypes settingType = encryptableSetting.getSettingType();
+      SettingVariableTypes settingType = encryptableSetting.getSettingType();
       switch (settingType) {
         case DOCKER:
           DockerConfig dockerConfig = (DockerConfig) encryptableSetting;
@@ -168,7 +169,7 @@ public class SecretSpecBuilder {
           EncryptableSetting encryptableSetting = encryptableSettingWithEncryptionDetails.getEncryptableSetting();
 
           if (encryptableSetting != null) {
-            SettingValue.SettingVariableTypes settingType = encryptableSetting.getSettingType();
+            SettingVariableTypes settingType = encryptableSetting.getSettingType();
             switch (settingType) {
               case DOCKER:
                 DockerConfig dockerConfig = (DockerConfig) encryptableSetting;

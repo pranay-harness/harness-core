@@ -58,7 +58,7 @@ import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.common.TemplateConstants.TEMPLATE_TYPES_WITH_YAML_SUPPORT;
 import static software.wings.security.UserThreadLocal.userGuard;
-import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.settings.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -156,7 +156,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.GitSyncErrorService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Utils;
 import software.wings.verification.CVConfiguration;

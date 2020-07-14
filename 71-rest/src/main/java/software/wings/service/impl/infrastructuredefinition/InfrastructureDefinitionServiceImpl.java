@@ -40,8 +40,8 @@ import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MAX_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_MIN_INSTANCES;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_NAME;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.settings.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.Utils.safe;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -175,7 +175,7 @@ import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;

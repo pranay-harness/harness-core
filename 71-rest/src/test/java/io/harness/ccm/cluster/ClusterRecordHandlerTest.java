@@ -34,7 +34,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.Arrays;
 

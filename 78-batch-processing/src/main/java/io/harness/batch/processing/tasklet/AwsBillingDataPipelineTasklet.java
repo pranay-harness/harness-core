@@ -22,7 +22,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import java.util.HashMap;

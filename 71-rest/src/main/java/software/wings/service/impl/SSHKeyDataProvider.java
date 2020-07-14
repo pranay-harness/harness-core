@@ -13,7 +13,7 @@ import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
 
 import java.util.Collection;

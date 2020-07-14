@@ -43,7 +43,7 @@ import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.time.Instant;
 import java.util.ArrayList;

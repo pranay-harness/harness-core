@@ -22,7 +22,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import java.util.HashMap;

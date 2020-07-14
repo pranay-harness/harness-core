@@ -12,7 +12,7 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
+import static software.wings.settings.SettingVariableTypes.GCP;
 
 import com.google.inject.Inject;
 
@@ -58,7 +58,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;

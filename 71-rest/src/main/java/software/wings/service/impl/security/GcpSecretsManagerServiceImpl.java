@@ -11,7 +11,7 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTION_TYPE_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GCP_KMS;
+import static software.wings.settings.SettingVariableTypes.GCP_KMS;
 import static software.wings.utils.Utils.isJSONValid;
 
 import com.google.common.base.Preconditions;

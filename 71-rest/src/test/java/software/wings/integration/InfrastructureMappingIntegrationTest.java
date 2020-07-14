@@ -12,7 +12,7 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.settings.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;

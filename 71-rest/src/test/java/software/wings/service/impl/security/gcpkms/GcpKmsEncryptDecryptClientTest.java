@@ -39,7 +39,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.beans.GcpKmsConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementDelegateException;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.nio.charset.StandardCharsets;
 

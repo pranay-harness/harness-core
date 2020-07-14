@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;

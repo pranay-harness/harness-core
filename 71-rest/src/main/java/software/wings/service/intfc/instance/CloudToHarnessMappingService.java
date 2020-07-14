@@ -8,7 +8,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.instance.HarnessServiceInfo;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.time.Instant;
 import java.util.List;

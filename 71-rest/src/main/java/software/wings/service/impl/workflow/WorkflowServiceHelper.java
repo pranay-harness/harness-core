@@ -48,7 +48,7 @@ import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.PCF_SWICH_ROUTES;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.settings.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.StateType.ARTIFACT_CHECK;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;

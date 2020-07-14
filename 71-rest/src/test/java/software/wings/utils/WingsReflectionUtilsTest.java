@@ -3,7 +3,7 @@ package software.wings.utils;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static software.wings.settings.SettingValue.SettingVariableTypes.KMS;
+import static software.wings.settings.SettingVariableTypes.KMS;
 import static software.wings.testutils.encryptionsamples.SampleEncryptableSetting.ENCRYPTED_ANNOTATION_KEY_FIELD;
 import static software.wings.testutils.encryptionsamples.SampleEncryptableSetting.ENCRYPTED_ANNOTATION_VALUE_FIELD;
 import static software.wings.utils.WingsReflectionUtils.buildSecretIdsToParentsMap;
@@ -22,7 +22,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.SecretParentsUpdateDetail;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.testutils.encryptionsamples.SampleEncryptableSetting;
 import software.wings.testutils.encryptionsamples.SampleEncryptableSettingField;
 

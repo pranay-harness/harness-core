@@ -12,7 +12,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 @Singleton
 public class ConnectorSampleDataProvider {

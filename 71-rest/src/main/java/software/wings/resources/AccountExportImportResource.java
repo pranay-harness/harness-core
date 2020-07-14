@@ -72,7 +72,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;

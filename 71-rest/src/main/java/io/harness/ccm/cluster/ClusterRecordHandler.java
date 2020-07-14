@@ -15,7 +15,7 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.SettingAttributeObserver;
 import software.wings.service.intfc.InfrastructureDefinitionServiceObserver;
 import software.wings.service.intfc.InfrastructureMappingServiceObserver;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,7 +49,7 @@ public class ClusterRecordHandler
   @Override
   public void onSaved(SettingAttribute cloudProvider) {
     upsertClusterRecord(cloudProvider);
-    if (cloudProvider.getValue().getType().equals(SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER.name())
+    if (cloudProvider.getValue().getType().equals(SettingVariableTypes.KUBERNETES_CLUSTER.name())
         && ccmSettingService.isCeK8sEventCollectionEnabled(cloudProvider)) {
       cePerpetualTaskManager.createPerpetualTasks(cloudProvider);
     }
@@ -59,7 +59,7 @@ public class ClusterRecordHandler
   public void onUpdated(SettingAttribute prevCloudProvider, SettingAttribute currCloudProvider) {
     upsertClusterRecord(currCloudProvider);
 
-    if (currCloudProvider.getValue().getType().equals(SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER.name())) {
+    if (currCloudProvider.getValue().getType().equals(SettingVariableTypes.KUBERNETES_CLUSTER.name())) {
       // compare previous and current Cloud Providers
       boolean prevCeK8sEventCollectionEnabled = ccmSettingService.isCeK8sEventCollectionEnabled(prevCloudProvider);
       boolean currCeK8sEventCollectionEnabled = ccmSettingService.isCeK8sEventCollectionEnabled(currCloudProvider);

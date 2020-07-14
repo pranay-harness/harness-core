@@ -22,6 +22,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.VerificationProviderYaml;
 

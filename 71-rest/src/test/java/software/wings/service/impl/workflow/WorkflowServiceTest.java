@@ -367,7 +367,7 @@ import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;

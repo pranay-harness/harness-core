@@ -62,7 +62,7 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.EnumSet;
 

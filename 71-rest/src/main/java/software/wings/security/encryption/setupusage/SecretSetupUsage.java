@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.Value;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 @Value
 @Builder

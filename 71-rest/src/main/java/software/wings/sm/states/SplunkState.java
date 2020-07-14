@@ -17,7 +17,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;

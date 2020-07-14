@@ -9,8 +9,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerUtils.obtainConfig;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
-import static software.wings.settings.SettingValue.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
 import com.google.inject.Inject;
 

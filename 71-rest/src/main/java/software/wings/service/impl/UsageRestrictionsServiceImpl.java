@@ -62,7 +62,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.RestrictionsAndAppEnvMap.RestrictionsAndAppEnvMapBuilder;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.settings.UsageRestrictionsReferenceSummary;

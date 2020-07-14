@@ -19,6 +19,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.LoadBalancerConfig;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.jersey.JsonViews;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;

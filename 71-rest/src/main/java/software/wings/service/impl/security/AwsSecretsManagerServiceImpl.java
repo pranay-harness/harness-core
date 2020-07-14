@@ -16,7 +16,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.intfc.security.SecretManagementDelegateService.NUM_OF_RETRIES;
 import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY;
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AWS_SECRETS_MANAGER;
+import static software.wings.settings.SettingVariableTypes.AWS_SECRETS_MANAGER;
 
 import com.google.common.io.Files;
 import com.google.inject.Singleton;
@@ -43,7 +43,7 @@ import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;
 import java.io.IOException;

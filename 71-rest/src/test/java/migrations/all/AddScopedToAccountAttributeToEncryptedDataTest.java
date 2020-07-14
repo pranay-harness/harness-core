@@ -18,7 +18,7 @@ import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 

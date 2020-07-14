@@ -23,7 +23,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.yaml.YamlType;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;

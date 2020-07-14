@@ -12,7 +12,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.integration.yaml.YamlIntegrationTestConstants.DESCRIPTION;
-import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.settings.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.inject.Singleton;
 
@@ -55,7 +55,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;

@@ -44,7 +44,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
 import java.util.HashMap;

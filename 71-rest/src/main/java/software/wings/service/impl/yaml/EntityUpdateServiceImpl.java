@@ -43,7 +43,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlResourceService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.Utils;
 
 import java.io.ByteArrayOutputStream;

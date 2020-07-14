@@ -33,7 +33,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.Arrays;

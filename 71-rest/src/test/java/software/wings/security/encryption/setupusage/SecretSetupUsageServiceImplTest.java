@@ -10,9 +10,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.service.intfc.security.SecretManager.HARNESS_DEFAULT_SECRET_MANAGER;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SERVICE_VARIABLE;
+import static software.wings.settings.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingVariableTypes.DOCKER;
+import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -35,7 +35,7 @@ import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.EncryptionDetail;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,7 +67,7 @@ public class SecretSetupUsageServiceImplTest extends WingsBaseTest {
                         .encryptionKey("plainTextKey")
                         .encryptedValue("encryptedValue".toCharArray())
                         .encryptionType(EncryptionType.LOCAL)
-                        .type(SettingValue.SettingVariableTypes.SECRET_TEXT)
+                        .type(SettingVariableTypes.SECRET_TEXT)
                         .kmsId(account.getUuid())
                         .enabled(true)
                         .accountId(account.getUuid())

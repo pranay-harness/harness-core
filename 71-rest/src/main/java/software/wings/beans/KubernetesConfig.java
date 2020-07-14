@@ -13,6 +13,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.Arrays;
 import java.util.List;

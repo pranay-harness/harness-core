@@ -26,7 +26,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.integration.UserResourceRestClient;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

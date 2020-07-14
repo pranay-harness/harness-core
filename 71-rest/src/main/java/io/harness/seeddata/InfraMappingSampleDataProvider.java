@@ -14,7 +14,7 @@ import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 @Singleton
 public class InfraMappingSampleDataProvider {

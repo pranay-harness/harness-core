@@ -2,7 +2,7 @@ package io.harness.ng.core.services.api;
 
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretText;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 

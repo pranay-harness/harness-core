@@ -25,7 +25,7 @@ import software.wings.beans.KmsConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
 import java.util.Collection;

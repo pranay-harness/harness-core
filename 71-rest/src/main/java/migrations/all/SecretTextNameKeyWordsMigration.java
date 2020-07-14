@@ -8,7 +8,7 @@ import migrations.Migration;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.Misc;
 @Slf4j
 public class SecretTextNameKeyWordsMigration implements Migration {

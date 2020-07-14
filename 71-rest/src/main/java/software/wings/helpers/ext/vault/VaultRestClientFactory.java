@@ -20,7 +20,7 @@ import software.wings.service.impl.security.vault.VaultReadResponse;
 import software.wings.service.impl.security.vault.VaultReadResponseV2;
 import software.wings.service.impl.security.vault.VaultSecretMetadata;
 import software.wings.service.impl.security.vault.VaultSecretValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import java.util.HashMap;

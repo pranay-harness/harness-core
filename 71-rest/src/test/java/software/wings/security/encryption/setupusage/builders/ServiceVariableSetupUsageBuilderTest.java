@@ -7,7 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.settings.SettingValue.SettingVariableTypes.SERVICE_VARIABLE;
+import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -35,7 +35,7 @@ import software.wings.security.encryption.EncryptedDataParent;
 import software.wings.security.encryption.EncryptionDetail;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
 import software.wings.service.intfc.ServiceVariableService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
 import java.util.HashMap;

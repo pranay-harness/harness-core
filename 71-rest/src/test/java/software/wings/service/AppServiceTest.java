@@ -82,7 +82,7 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import java.util.HashSet;

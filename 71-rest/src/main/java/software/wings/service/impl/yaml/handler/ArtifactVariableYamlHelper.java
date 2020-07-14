@@ -17,7 +17,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
 import java.util.List;

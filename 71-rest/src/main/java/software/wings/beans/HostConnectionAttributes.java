@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import static software.wings.audit.ResourceType.CONNECTION_ATTRIBUTES;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -17,6 +17,7 @@ import lombok.ToString;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 
 import java.util.ArrayList;

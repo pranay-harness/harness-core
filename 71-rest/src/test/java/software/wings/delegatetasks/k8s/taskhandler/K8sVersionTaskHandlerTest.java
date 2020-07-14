@@ -27,7 +27,7 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sVersionResponse;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 public class K8sVersionTaskHandlerTest extends WingsBaseTest {
   @Mock private ApiClientFactoryImpl apiClientFactory;
@@ -65,7 +65,7 @@ public class K8sVersionTaskHandlerTest extends WingsBaseTest {
     CCMConfig ccmConfig = CCMConfig.builder().cloudCostEnabled(true).skipK8sEventCollection(true).build();
 
     kubernetesClusterConfig = new KubernetesClusterConfig();
-    kubernetesClusterConfig.setType(SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER.name());
+    kubernetesClusterConfig.setType(SettingVariableTypes.KUBERNETES_CLUSTER.name());
     kubernetesClusterConfig.setCcmConfig(ccmConfig);
   }
 

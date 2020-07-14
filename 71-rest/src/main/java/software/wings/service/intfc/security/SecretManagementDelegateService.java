@@ -13,7 +13,7 @@ import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 

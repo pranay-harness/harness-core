@@ -770,7 +770,6 @@ import software.wings.service.impl.stackdriver.StackdriverGcpConfigTaskParams;
 import software.wings.service.impl.stackdriver.StackdriverLogGcpConfigTaskParams;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.validation.ConnectivityValidationAttributes;
 import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
@@ -1349,7 +1348,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ThirdPartyApiCallLog.class, 5377);
     kryo.register(WorkflowTree.class, 5369);
     kryo.register(WorkflowExecutionUpdate.class, 5126);
-    kryo.register(SettingValue.SettingVariableTypes.class, 5131);
     kryo.register(UsageRestrictions.AppEnvRestriction.class, 5248);
     kryo.register(UsageRestrictions.class, 5247);
     kryo.register(ConnectivityValidationAttributes.class, 5567);

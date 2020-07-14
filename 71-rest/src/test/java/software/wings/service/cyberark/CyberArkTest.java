@@ -59,7 +59,7 @@ import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalEncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 
 import java.io.IOException;

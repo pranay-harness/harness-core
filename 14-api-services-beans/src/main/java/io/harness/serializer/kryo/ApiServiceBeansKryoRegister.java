@@ -59,6 +59,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import org.json.JSONException;
+import software.wings.settings.SettingVariableTypes;
 
 public class ApiServiceBeansKryoRegister implements KryoRegistrar {
   @Override
@@ -126,5 +127,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(InstanceDetails.PHYSICAL_HOST.class, 1411);
     kryo.register(InstanceDetails.K8s.class, 1412);
     kryo.register(EncryptedDataParams.class, 1413);
+
+    kryo.register(SettingVariableTypes.class, 5131);
   }
 }

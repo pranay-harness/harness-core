@@ -59,7 +59,7 @@ import software.wings.graphql.schema.type.secrets.QLEnvScopeFilter;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.sql.SQLException;
 
@@ -261,13 +261,12 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTest 
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void createPhysicalDataCenter() {
-    SettingAttribute setting =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
-            .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
-                           .withType(SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
-                           .build())
-            .build();
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+                                   .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig()
+                                                  .withType(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+                                                  .build())
+                                   .build();
 
     doReturn(setting)
         .when(physicalDataCenterDataFetcherHelper)

@@ -18,7 +18,7 @@ import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
 import java.util.List;

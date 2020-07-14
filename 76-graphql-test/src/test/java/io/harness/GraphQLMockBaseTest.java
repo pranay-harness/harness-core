@@ -15,7 +15,7 @@ import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.impl.security.kms.KmsEncryptDecryptClient;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.IOException;
 import javax.crypto.spec.SecretKeySpec;

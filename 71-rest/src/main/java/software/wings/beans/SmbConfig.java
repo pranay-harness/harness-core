@@ -20,6 +20,7 @@ import software.wings.audit.ResourceType;
 import software.wings.delegatetasks.validation.capabilities.SmbConnectionCapability;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
 

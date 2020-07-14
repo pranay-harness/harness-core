@@ -39,7 +39,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.KmsService;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;
 import java.io.IOException;
@@ -173,8 +173,7 @@ public class EncryptedDataAwsToGcpKmsMigrationHandler implements Handler<Encrypt
       return;
     }
 
-    if (encryptedData.getEncryptedValue() != null
-        && SettingValue.SettingVariableTypes.CONFIG_FILE == encryptedData.getType()) {
+    if (encryptedData.getEncryptedValue() != null && SettingVariableTypes.CONFIG_FILE == encryptedData.getType()) {
       boolean isUpdateSuccessful = updateEncryptedValueFile(encryptedData);
       if (!isUpdateSuccessful) {
         logger.info("Not proceeding with migration of CONFIG_FILE encrypted record {} as encryptedValue update failed ",

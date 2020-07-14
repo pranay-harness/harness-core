@@ -25,7 +25,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.UserPermissionInfo;
-import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.verification.CVConfiguration;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.directory.DirectoryNode;
