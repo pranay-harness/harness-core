@@ -103,6 +103,11 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
                 ElastiGroup.builder()
                     .capacity(ElastiGroupCapacity.builder().maximum(0).maximum(4).target(2).build())
                     .build())
+            .spotinstCommandRequest(
+                SpotInstCommandRequest.builder()
+                    .spotInstTaskParameters(
+                        SpotInstSetupTaskParameters.builder().elastiGroupNamePrefix(groupPrefix).build())
+                    .build())
             .build();
     doReturn(data).when(mockContext).getStateExecutionData();
     doReturn(groupPrefix).when(mockContext).renderExpression(anyString());
