@@ -145,7 +145,6 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     return delegateService.queueTask(delegateTask);
   }
 
-  @Override
   protected Map<String, String> getLastExecutionNodes(ExecutionContext context) {
     Map<String, String> controlHostMap = new HashMap<>();
     for (int i = 1; i <= CANARY_DAYS_TO_COLLECT; i++) {
@@ -154,7 +153,6 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     return controlHostMap;
   }
 
-  @Override
   protected Map<String, String> getCanaryNewHostNames(ExecutionContext context) {
     return Collections.singletonMap(TEST_HOST_NAME, DEFAULT_GROUP_NAME);
   }

@@ -6,7 +6,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.LAMBDA_HOST_NAME;
-import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
@@ -28,8 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.intellij.lang.annotations.Language;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.PcfInstanceElement;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.VerificationLogContext;
@@ -432,30 +429,13 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   }
 
   private AnalysisContext getAnalysisContext(ExecutionContext context, String correlationId) {
-    Map<String, String> controlNodes = new HashMap<>();
-    Map<String, String> testNodes = new HashMap<>();
-
-    if (isNewInstanceFieldPopulated(context)) {
-      populateNewAndOldHostNames(context, controlNodes, testNodes);
-    } else {
-      controlNodes =
-          getComparisonStrategy() == COMPARE_WITH_PREVIOUS ? Collections.emptyMap() : getLastExecutionNodes(context);
-      testNodes = getCanaryNewHostNames(context);
-    }
-    if (getComparisonStrategy() == COMPARE_WITH_CURRENT) {
-      getLogger().info("For {}, the lastExecutionNodes returned for canary is {}",
-          context.getStateExecutionInstanceId(), controlNodes);
-    }
-    testNodes.keySet().forEach(controlNodes::remove);
-    campareAndLogNodesUsingNewInstanceAPI(context, testNodes, controlNodes);
-
     NodePair nodePair = getControlAndTestNodes(context);
-    if (featureFlagService.isEnabled(FeatureName.CV_NEW_INSTANCE_API, context.getAccountId())) {
-      getLogger().info("Using new instance API");
-      testNodes = nodePair.getTestNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
-      controlNodes =
-          nodePair.getControlNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
-    }
+    getLogger().info("Using new instance API");
+    Map<String, String> testNodes =
+        nodePair.getTestNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+    Map<String, String> controlNodes =
+        nodePair.getControlNodes().stream().collect(Collectors.toMap(key -> key, key -> DEFAULT_GROUP_NAME));
+
     int timeDurationInt = Integer.parseInt(getTimeDuration());
     String accountId = appService.get(context.getAppId()).getAccountId();
     boolean isHistoricalDataCollection = isHistoricalAnalysis(context.getAccountId());
@@ -535,15 +515,6 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       default:
         return null;
     }
-  }
-
-  @Override
-  protected String getPcfHostName(PcfInstanceElement pcfInstanceElement, boolean includePrevious) {
-    if ((includePrevious && !pcfInstanceElement.isUpsize()) || (!includePrevious && pcfInstanceElement.isUpsize())) {
-      return pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex();
-    }
-
-    return null;
   }
 
   public AnalysisTolerance getAnalysisTolerance() {

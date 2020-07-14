@@ -23,9 +23,6 @@ public interface ContainerService {
   @DelegateTaskType(TaskType.CONTAINER_CONNECTION_VALIDATION)
   Boolean validate(ContainerServiceParams containerServiceParams);
 
-  @DelegateTaskType(TaskType.FETCH_CONTAINER_INFO)
-  List<software.wings.cloudprovider.ContainerInfo> fetchContainerInfos(ContainerServiceParams containerServiceParams);
-
   @DelegateTaskType(TaskType.LIST_CLUSTERS) List<String> listClusters(ContainerServiceParams containerServiceParams);
 
   @DelegateTaskType(TaskType.FETCH_MASTER_URL)

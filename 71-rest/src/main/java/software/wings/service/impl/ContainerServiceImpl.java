@@ -294,46 +294,6 @@ public class ContainerServiceImpl implements ContainerService {
   }
 
   @Override
-  public List<software.wings.cloudprovider.ContainerInfo> fetchContainerInfos(
-      ContainerServiceParams containerServiceParams) {
-    if (containerServiceParams.getSettingAttribute().getValue() instanceof AwsConfig) {
-      AwsConfig awsConfig = (AwsConfig) containerServiceParams.getSettingAttribute().getValue();
-      List<Task> tasks = new ArrayList<>();
-      containerServiceParams.getContainerServiceNames().forEach(serviceName -> {
-        ListTasksRequest listTasksRequest = new ListTasksRequest()
-                                                .withCluster(containerServiceParams.getClusterName())
-                                                .withServiceName(serviceName)
-                                                .withDesiredStatus("RUNNING");
-
-        ListTasksResult listTasksResult = awsHelperService.listTasks(containerServiceParams.getRegion(), awsConfig,
-            containerServiceParams.getEncryptionDetails(), listTasksRequest);
-
-        if (listTasksResult != null && !isEmpty(listTasksResult.getTaskArns())) {
-          DescribeTasksRequest describeTasksRequest = new DescribeTasksRequest()
-                                                          .withCluster(containerServiceParams.getClusterName())
-                                                          .withTasks(listTasksResult.getTaskArns());
-          DescribeTasksResult describeTasksResult = awsHelperService.describeTasks(containerServiceParams.getRegion(),
-              awsConfig, containerServiceParams.getEncryptionDetails(), describeTasksRequest);
-          tasks.addAll(describeTasksResult.getTasks());
-        }
-      });
-
-      List<String> taskArns = tasks.stream().map(Task::getTaskArn).collect(toList());
-
-      logger.info("Task Arns : " + taskArns);
-
-      List<software.wings.cloudprovider.ContainerInfo> containerInfos = ecsContainerService.generateContainerInfos(
-          tasks, containerServiceParams.getClusterName(), containerServiceParams.getRegion(),
-          containerServiceParams.getEncryptionDetails(), null, awsConfig, taskArns, taskArns);
-
-      logger.info("Container Info details : " + containerInfos);
-      return containerInfos;
-    }
-
-    throw new WingsException("invalid setting type " + containerServiceParams);
-  }
-
-  @Override
   public List<String> listClusters(ContainerServiceParams containerServiceParams) {
     return gkeClusterService.listClusters(
         containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails());

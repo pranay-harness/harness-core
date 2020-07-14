@@ -14,7 +14,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -47,10 +46,10 @@ import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
+import software.wings.sm.states.AbstractAnalysisState.NodePair;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Optional;
 
 /**
@@ -121,12 +120,13 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
   @Category(UnitTests.class)
   public void noTestNodes() {
     ElkAnalysisState spyState = spy(elkAnalysisState);
-    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
-    doReturn(Collections.emptyMap()).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(NodePair.builder()
+                 .testNodes(Collections.emptySet())
+                 .controlNodes(Collections.emptySet())
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyState)
         .getControlAndTestNodes(any());
 
@@ -151,18 +151,18 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
   public void noControlNodesCompareWithCurrent() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     ElkAnalysisState spyState = spy(elkAnalysisState);
-    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
-    doReturn(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME))
+    doReturn(NodePair.builder()
+                 .testNodes(Collections.singleton("some-host"))
+                 .controlNodes(Collections.emptySet())
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(Collections.emptyMap()).when(spyState).getLastExecutionNodes(executionContext);
+        .getControlAndTestNodes(any());
+
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     String analysisResponseMsg =
         "As no previous version instances exist for comparison, analysis will be skipped. Check your setup if this is the first deployment or if the previous instances have been deleted or replaced.";
-    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
-        .when(spyState)
-        .getControlAndTestNodes(any());
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
@@ -182,16 +182,13 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
   public void compareWithCurrentSameTestAndControlNodes() {
     elkAnalysisState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     ElkAnalysisState spyState = spy(elkAnalysisState);
-    doReturn(false).when(spyState).isNewInstanceFieldPopulated(any());
-    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
-        .when(spyState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(new HashMap<>(Collections.singletonMap("some-host", DEFAULT_GROUP_NAME)))
-        .when(spyState)
-        .getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    doReturn(AbstractAnalysisState.NodePair.builder().newNodesTrafficShiftPercent(Optional.empty()).build())
+    doReturn(NodePair.builder()
+                 .testNodes(Collections.singleton("some-host"))
+                 .controlNodes(Collections.emptySet())
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyState)
         .getControlAndTestNodes(any());
 

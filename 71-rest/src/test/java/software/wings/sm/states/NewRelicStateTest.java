@@ -277,12 +277,13 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
         .when(spyNewRelicState)
         .getTemplateExpressions();
 
-    doReturn(Collections.singletonMap("test", DEFAULT_GROUP_NAME))
+    doReturn(AbstractAnalysisState.NodePair.builder()
+                 .controlNodes(Collections.singleton("control"))
+                 .testNodes(Collections.singleton("test"))
+                 .newNodesTrafficShiftPercent(Optional.empty())
+                 .build())
         .when(spyNewRelicState)
-        .getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singletonMap("control", DEFAULT_GROUP_NAME))
-        .when(spyNewRelicState)
-        .getLastExecutionNodes(executionContext);
+        .getControlAndTestNodes(any());
     doReturn(workflowId).when(spyNewRelicState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyNewRelicState).getPhaseServiceId(executionContext);
 
