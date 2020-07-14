@@ -85,7 +85,8 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
       long lastUpdatedAt, String entityYamlPath, String name, String description, TriggerCondition condition,
       String pipelineId, String pipelineName, String workflowId, String workflowName,
       List<ArtifactSelection> artifactSelections, String webHookToken, WorkflowType workflowType,
-      Map<String, String> workflowVariables, List<ServiceInfraWorkflow> serviceInfraWorkflows) {
+      Map<String, String> workflowVariables, List<ServiceInfraWorkflow> serviceInfraWorkflows,
+      boolean excludeHostsWithSameArtifact) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -99,6 +100,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     this.workflowType = workflowType != null ? workflowType : PIPELINE;
     this.workflowVariables = workflowVariables;
     this.serviceInfraWorkflows = serviceInfraWorkflows;
+    this.excludeHostsWithSameArtifact = excludeHostsWithSameArtifact;
   }
 
   public void setPipelineId(String pipelineId) {
