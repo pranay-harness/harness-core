@@ -45,18 +45,20 @@ public final class Task {
         + "tractions\022N\n\006values\030\001 \003(\01326.io.harness.d"
         + "elegate.TaskSetupAbstractions.ValuesEntr"
         + "yR\006values\0329\n\013ValuesEntry\022\020\n\003key\030\001 \001(\tR\003k"
-        + "ey\022\024\n\005value\030\002 \001(\tR\005value:\0028\001\"\220\003\n\013TaskDet"
-        + "ails\0221\n\004type\030\002 \001(\0132\035.io.harness.delegate"
-        + ".TaskTypeR\004type\022)\n\017kryo_parameters\030\003 \001(\014"
-        + "H\000R\016kryoParameters\022F\n\021execution_timeout\030"
-        + "\004 \001(\0132\031.google.protobuf.DurationR\020execut"
-        + "ionTimeout\022S\n\013expressions\030\005 \003(\01321.io.har"
-        + "ness.delegate.TaskDetails.ExpressionsEnt"
-        + "ryR\013expressions\0228\n\030expression_functor_to"
-        + "ken\030\006 \001(\003R\026expressionFunctorToken\032>\n\020Exp"
-        + "ressionsEntry\022\020\n\003key\030\001 \001(\tR\003key\022\024\n\005value"
-        + "\030\002 \001(\tR\005value:\0028\001B\014\n\nparametersB\002P\001b\006pro"
-        + "to3"};
+        + "ey\022\024\n\005value\030\002 \001(\tR\005value:\0028\001\"\303\003\n\013TaskDet"
+        + "ails\0221\n\004mode\030\001 \001(\0162\035.io.harness.delegate"
+        + ".TaskModeR\004mode\0221\n\004type\030\002 \001(\0132\035.io.harne"
+        + "ss.delegate.TaskTypeR\004type\022)\n\017kryo_param"
+        + "eters\030\003 \001(\014H\000R\016kryoParameters\022F\n\021executi"
+        + "on_timeout\030\004 \001(\0132\031.google.protobuf.Durat"
+        + "ionR\020executionTimeout\022S\n\013expressions\030\005 \003"
+        + "(\01321.io.harness.delegate.TaskDetails.Exp"
+        + "ressionsEntryR\013expressions\0228\n\030expression"
+        + "_functor_token\030\006 \001(\003R\026expressionFunctorT"
+        + "oken\032>\n\020ExpressionsEntry\022\020\n\003key\030\001 \001(\tR\003k"
+        + "ey\022\024\n\005value\030\002 \001(\tR\005value:\0028\001B\014\n\nparamete"
+        + "rs*5\n\010TaskMode\022\024\n\020MODE_UNSPECIFIED\020\000\022\010\n\004"
+        + "SYNC\020\001\022\t\n\005ASYNC\020\002B\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.DurationProto.getDescriptor(),
@@ -96,6 +98,7 @@ public final class Task {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_delegate_TaskDetails_descriptor,
             new java.lang.String[] {
+                "Mode",
                 "Type",
                 "KryoParameters",
                 "ExecutionTimeout",

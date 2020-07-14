@@ -31,6 +31,7 @@ import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
+import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
@@ -118,19 +119,26 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
     expressions.put("expression1", "exp1");
     expressions.put("expression1", "exp1");
 
-    TaskId taskId = delegateServiceGrpcClient.submitTask(AccountId.newBuilder().setId(generateUuid()).build(),
+    TaskDetails.Builder builder = TaskDetails.newBuilder()
+                                      .setType(TaskType.newBuilder().setType("TYPE").build())
+                                      .setKryoParameters(kryoParams)
+                                      .setExecutionTimeout(Duration.newBuilder().setSeconds(3).setNanos(100).build())
+                                      .setExpressionFunctorToken(200)
+                                      .putAllExpressions(expressions);
+
+    TaskId taskId1 = delegateServiceGrpcClient.submitTask(AccountId.newBuilder().setId(generateUuid()).build(),
         TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
-        TaskDetails.newBuilder()
-            .setType(TaskType.newBuilder().setType("TYPE").build())
-            .setKryoParameters(kryoParams)
-            .setExecutionTimeout(Duration.newBuilder().setSeconds(3).setNanos(100).build())
-            .setExpressionFunctorToken(200)
-            .putAllExpressions(expressions)
-            .build(),
-        asList(SystemEnvCheckerCapability.builder().build()));
-    assertThat(taskId).isNotNull();
-    assertThat(taskId.getId()).isNotBlank();
-    verify(delegateService).executeTask(any(DelegateTask.class));
+        builder.setMode(TaskMode.SYNC).build(), asList(SystemEnvCheckerCapability.builder().build()));
+    assertThat(taskId1).isNotNull();
+    assertThat(taskId1.getId()).isNotBlank();
+    verify(delegateService).scheduleSyncTask(any(DelegateTask.class));
+
+    TaskId taskId2 = delegateServiceGrpcClient.submitTask(AccountId.newBuilder().setId(generateUuid()).build(),
+        TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
+        builder.setMode(TaskMode.ASYNC).build(), asList(SystemEnvCheckerCapability.builder().build()));
+    assertThat(taskId2).isNotNull();
+    assertThat(taskId2.getId()).isNotBlank();
+    verify(delegateService).queueTask(any(DelegateTask.class));
   }
 
   @Test

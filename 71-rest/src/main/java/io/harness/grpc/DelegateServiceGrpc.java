@@ -28,6 +28,7 @@ import io.harness.delegate.SubmitTaskResponse;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
+import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskProgressRequest;
 import io.harness.delegate.TaskProgressResponse;
 import io.harness.delegate.TaskProgressUpdatesRequest;
@@ -77,12 +78,14 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
     DelegateTask task =
         DelegateTask.builder()
             .uuid(taskId)
+            .driverId(request.hasCallbackToken() ? request.getCallbackToken().getToken() : null)
             .waitId(taskId)
             .accountId(request.getAccountId().getId())
             .setupAbstractions(setupAbstractions)
             .workflowExecutionId(setupAbstractions.get(DelegateTaskKeys.workflowExecutionId))
             .executionCapabilities(capabilities)
             .data(TaskData.builder()
+                      .async(taskDetails.getMode() == TaskMode.ASYNC)
                       .taskType(taskDetails.getType().getType())
                       .parameters(
                           new Object[] {kryoSerializer.asInflatedObject(taskDetails.getKryoParameters().toByteArray())})
@@ -92,16 +95,15 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
                       .build())
             .build();
 
-    try {
-      delegateService.executeTask(task);
-
-      responseObserver.onNext(
-          SubmitTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build());
-      responseObserver.onCompleted();
-    } catch (InterruptedException ex) {
-      Thread.currentThread().interrupt();
-      responseObserver.onError(ex);
+    if (task.getData().isAsync()) {
+      delegateService.queueTask(task);
+    } else {
+      delegateService.scheduleSyncTask(task);
     }
+
+    responseObserver.onNext(
+        SubmitTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build());
+    responseObserver.onCompleted();
   }
 
   @Override

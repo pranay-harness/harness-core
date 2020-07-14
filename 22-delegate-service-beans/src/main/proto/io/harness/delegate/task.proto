@@ -22,9 +22,18 @@ message TaskSetupAbstractions {
   map<string, string> values = 1;
 }
 
+// Specifies the execution mode of the task
+enum TaskMode {
+  MODE_UNSPECIFIED = 0;
+  SYNC = 1;
+  ASYNC = 2;
+}
+
 // Task details represent the object that will be propagated over the wire to the task executor Task executor needs to
 // be able to make sense of this data and accomplish the needed work from the task.
 message TaskDetails {
+  TaskMode mode = 1;
+
   // Arbitrary globally unique task type identifier. The delegate system will use it to make the connection to the
   // actual task executor. TODO: more details
   TaskType type = 2;
