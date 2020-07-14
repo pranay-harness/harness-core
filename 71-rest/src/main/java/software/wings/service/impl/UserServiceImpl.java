@@ -12,6 +12,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
 import static java.sql.Date.from;
 import static java.util.Arrays.asList;
+import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -3033,8 +3034,8 @@ public class UserServiceImpl implements UserService {
   Query<User> getSearchUserQuery(String accountId, String searchTerm) {
     Query<User> searchUsersQuery = wingsPersistence.createQuery(User.class, HQuery.excludeAuthority);
     searchUsersQuery.criteria(UserKeys.accounts).hasThisOne(accountId);
-    searchUsersQuery.or(searchUsersQuery.criteria(UserKeys.name).startsWithIgnoreCase(searchTerm),
-        searchUsersQuery.criteria(UserKeys.email).startsWithIgnoreCase(searchTerm));
+    searchUsersQuery.or(searchUsersQuery.criteria(UserKeys.name).startsWithIgnoreCase(quote(searchTerm)),
+        searchUsersQuery.criteria(UserKeys.email).startsWithIgnoreCase(quote(searchTerm)));
     return searchUsersQuery;
   }
 
