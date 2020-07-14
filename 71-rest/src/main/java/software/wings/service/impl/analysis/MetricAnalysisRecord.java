@@ -84,7 +84,7 @@ public class MetricAnalysisRecord extends Base implements Comparable<MetricAnaly
 
   @FdIndex private String accountId;
 
-  private double riskScore;
+  private Double riskScore;
 
   @JsonIgnore
   @SchemaIgnore

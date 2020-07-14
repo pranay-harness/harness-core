@@ -87,15 +87,11 @@ public class HeatMapUnit implements Comparable<HeatMapUnit> {
     }
     return -1;
   }
-  public void updateOverallScore(Map<String, Double> overallMetricScores) {
-    if (scoreList == null) {
-      scoreList = new ArrayList<>();
-    }
-    overallScore = updateScores(overallMetricScores, scoreList);
-    updateRisksInUnit();
-  }
 
   public void updateOverallScore(Double overallMetricScore) {
+    if (overallMetricScore == null) {
+      return;
+    }
     if (scoreList == null) {
       scoreList = new ArrayList<>();
     }

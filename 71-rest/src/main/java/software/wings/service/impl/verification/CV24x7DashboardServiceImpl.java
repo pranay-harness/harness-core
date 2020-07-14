@@ -472,10 +472,10 @@ public class CV24x7DashboardServiceImpl implements CV24x7DashboardService {
 
     List<Double> scoreList = new ArrayList<>();
     timeSeriesMLAnalysisRecords.forEach(record -> {
-      if (isEmpty(record.getOverallMetricScores())) {
+      if (record.getRiskScore() == null) {
         scoreList.add(-1.0);
       } else {
-        scoreList.add(Collections.max(record.getOverallMetricScores().values()));
+        scoreList.add(record.getRiskScore());
       }
     });
 
