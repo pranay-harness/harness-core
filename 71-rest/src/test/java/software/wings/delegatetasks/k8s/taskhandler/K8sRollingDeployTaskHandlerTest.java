@@ -23,7 +23,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.CONFIG_MAP_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.SECRET_YAML;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
@@ -361,5 +363,67 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     List<KubernetesResource> kubernetesResources = new ArrayList<>();
     kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
     return kubernetesResources;
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testVersioningOfConfigMapAndSecret() throws Exception {
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    kubernetesResources.addAll(ManifestHelper.processYaml(CONFIG_MAP_YAML));
+
+    K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
+    doReturn(kubernetesResources)
+        .when(k8sTaskHelper)
+        .readManifestAndOverrideLocalSecrets(anyList(), any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(mock(ExecutionLogCallback.class))
+        .when(k8sTaskHelper)
+        .getExecutionLogCallback(any(K8sTaskParameters.class), anyString());
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+    doReturn(KubernetesConfig.builder().build())
+        .when(containerDeploymentDelegateHelper)
+        .getKubernetesConfig(any(K8sClusterConfig.class));
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .dryRunManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+
+    handler.executeTaskInternal(
+        K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
+        K8sDelegateTaskParams.builder().build());
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(k8sTaskHelper, times(1))
+        .applyManifests(
+            any(Kubectl.class), captor.capture(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    List<KubernetesResource> kubernetesResourceList = captor.getValue();
+    assertThat(kubernetesResourceList.get(0).getResourceId().isVersioned()).isFalse();
+
+    kubernetesResources.clear();
+    kubernetesResources.addAll(ManifestHelper.processYaml(SECRET_YAML));
+    handler.executeTaskInternal(
+        K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
+        K8sDelegateTaskParams.builder().build());
+    captor = ArgumentCaptor.forClass(List.class);
+    verify(k8sTaskHelper, times(2))
+        .applyManifests(
+            any(Kubectl.class), captor.capture(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    kubernetesResourceList = captor.getValue();
+    assertThat(kubernetesResourceList.get(0).getResourceId().isVersioned()).isFalse();
+
+    kubernetesResources.addAll(ManifestHelper.processYaml(CONFIG_MAP_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+    handler.executeTaskInternal(
+        K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
+        K8sDelegateTaskParams.builder().build());
+    captor = ArgumentCaptor.forClass(List.class);
+    verify(k8sTaskHelper, times(3))
+        .applyManifests(
+            any(Kubectl.class), captor.capture(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    kubernetesResourceList = captor.getValue();
+    assertThat(kubernetesResourceList.get(0).getResourceId().isVersioned()).isTrue();
+    assertThat(kubernetesResourceList.get(1).getResourceId().isVersioned()).isTrue();
   }
 }
