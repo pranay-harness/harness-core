@@ -15,7 +15,9 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
   private TaskDetails(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private TaskDetails() {}
+  private TaskDetails() {
+    mode_ = 0;
+  }
 
   @java.
   lang.Override
@@ -46,6 +48,12 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
           case 0:
             done = true;
             break;
+          case 8: {
+            int rawValue = input.readEnum();
+
+            mode_ = rawValue;
+            break;
+          }
           case 18: {
             io.harness.delegate.TaskType.Builder subBuilder = null;
             if (type_ != null) {
@@ -167,6 +175,24 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
 
   public ParametersCase getParametersCase() {
     return ParametersCase.forNumber(parametersCase_);
+  }
+
+  public static final int MODE_FIELD_NUMBER = 1;
+  private int mode_;
+  /**
+   * <code>.io.harness.delegate.TaskMode mode = 1[json_name = "mode"];</code>
+   * @return The enum numeric value on the wire for mode.
+   */
+  public int getModeValue() {
+    return mode_;
+  }
+  /**
+   * <code>.io.harness.delegate.TaskMode mode = 1[json_name = "mode"];</code>
+   * @return The mode.
+   */
+  public io.harness.delegate.TaskMode getMode() {
+    @SuppressWarnings("deprecation") io.harness.delegate.TaskMode result = io.harness.delegate.TaskMode.valueOf(mode_);
+    return result == null ? io.harness.delegate.TaskMode.UNRECOGNIZED : result;
   }
 
   public static final int TYPE_FIELD_NUMBER = 2;
@@ -321,6 +347,9 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+    if (mode_ != io.harness.delegate.TaskMode.MODE_UNSPECIFIED.getNumber()) {
+      output.writeEnum(1, mode_);
+    }
     if (type_ != null) {
       output.writeMessage(2, getType());
     }
@@ -345,6 +374,9 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
       return size;
 
     size = 0;
+    if (mode_ != io.harness.delegate.TaskMode.MODE_UNSPECIFIED.getNumber()) {
+      size += com.google.protobuf.CodedOutputStream.computeEnumSize(1, mode_);
+    }
     if (type_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getType());
     }
@@ -380,6 +412,8 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     }
     io.harness.delegate.TaskDetails other = (io.harness.delegate.TaskDetails) obj;
 
+    if (mode_ != other.mode_)
+      return false;
     if (hasType() != other.hasType())
       return false;
     if (hasType()) {
@@ -418,6 +452,8 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
+    hash = (37 * hash) + MODE_FIELD_NUMBER;
+    hash = (53 * hash) + mode_;
     if (hasType()) {
       hash = (37 * hash) + TYPE_FIELD_NUMBER;
       hash = (53 * hash) + getType().hashCode();
@@ -568,6 +604,8 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     @java.lang.Override
     public Builder clear() {
       super.clear();
+      mode_ = 0;
+
       if (typeBuilder_ == null) {
         type_ = null;
       } else {
@@ -615,6 +653,7 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     public io.harness.delegate.TaskDetails buildPartial() {
       io.harness.delegate.TaskDetails result = new io.harness.delegate.TaskDetails(this);
       int from_bitField0_ = bitField0_;
+      result.mode_ = mode_;
       if (typeBuilder_ == null) {
         result.type_ = type_;
       } else {
@@ -674,6 +713,9 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     public Builder mergeFrom(io.harness.delegate.TaskDetails other) {
       if (other == io.harness.delegate.TaskDetails.getDefaultInstance())
         return this;
+      if (other.mode_ != 0) {
+        setModeValue(other.getModeValue());
+      }
       if (other.hasType()) {
         mergeType(other.getType());
       }
@@ -733,6 +775,57 @@ public final class TaskDetails extends com.google.protobuf.GeneratedMessageV3 im
     }
 
     private int bitField0_;
+
+    private int mode_ = 0;
+    /**
+     * <code>.io.harness.delegate.TaskMode mode = 1[json_name = "mode"];</code>
+     * @return The enum numeric value on the wire for mode.
+     */
+    public int getModeValue() {
+      return mode_;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskMode mode = 1[json_name = "mode"];</code>
+     * @param value The enum numeric value on the wire for mode to set.
+     * @return This builder for chaining.
+     */
+    public Builder setModeValue(int value) {
+      mode_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskMode mode = 1[json_name = "mode"];</code>
+     * @return The mode.
+     */
+    public io.harness.delegate.TaskMode getMode() {
+      @SuppressWarnings("deprecation")
+      io.harness.delegate.TaskMode result = io.harness.delegate.TaskMode.valueOf(mode_);
+      return result == null ? io.harness.delegate.TaskMode.UNRECOGNIZED : result;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskMode mode = 1[json_name = "mode"];</code>
+     * @param value The mode to set.
+     * @return This builder for chaining.
+     */
+    public Builder setMode(io.harness.delegate.TaskMode value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      mode_ = value.getNumber();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>.io.harness.delegate.TaskMode mode = 1[json_name = "mode"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearMode() {
+      mode_ = 0;
+      onChanged();
+      return this;
+    }
 
     private io.harness.delegate.TaskType type_;
     private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskType, io.harness.delegate.TaskType.Builder,

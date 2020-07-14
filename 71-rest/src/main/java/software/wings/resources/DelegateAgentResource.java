@@ -56,9 +56,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
-/**
- * Created by rohitkarelia on 11/18/19.
- */
 @Api("/agent/delegates")
 @Path("/agent/delegates")
 @Produces("application/json")

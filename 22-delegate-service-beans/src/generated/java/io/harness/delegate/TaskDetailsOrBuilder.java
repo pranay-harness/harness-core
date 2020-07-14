@@ -8,6 +8,17 @@ public interface TaskDetailsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.TaskDetails)
     com.google.protobuf.MessageOrBuilder {
   /**
+   * <code>.io.harness.delegate.TaskMode mode = 1[json_name = "mode"];</code>
+   * @return The enum numeric value on the wire for mode.
+   */
+  int getModeValue();
+  /**
+   * <code>.io.harness.delegate.TaskMode mode = 1[json_name = "mode"];</code>
+   * @return The mode.
+   */
+  io.harness.delegate.TaskMode getMode();
+
+  /**
    * <code>.io.harness.delegate.TaskType type = 2[json_name = "type"];</code>
    * @return Whether the type field is set.
    */

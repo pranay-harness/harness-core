@@ -1738,8 +1738,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  @SuppressWarnings({"unchecked", "SynchronizationOnLocalVariableOrMethodParameter"})
-  public <T extends ResponseData> T executeTask(DelegateTask task) {
+  public void scheduleSyncTask(DelegateTask task) {
     task.getData().setAsync(false);
     saveDelegateTask(task);
 
@@ -1753,9 +1752,14 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       broadcastHelper.rebroadcastDelegateTask(task);
-      return delegateSyncService.waitForTask(
-          task.getUuid(), task.calcDescription(), Duration.ofMillis(task.getData().getTimeout()));
     }
+  }
+
+  @Override
+  public <T extends ResponseData> T executeTask(DelegateTask task) {
+    scheduleSyncTask(task);
+    return delegateSyncService.waitForTask(
+        task.getUuid(), task.calcDescription(), Duration.ofMillis(task.getData().getTimeout()));
   }
 
   @Override
@@ -2267,7 +2271,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response) {
+  private void handleInprocResponse(DelegateTask delegateTask, DelegateTaskResponse response) {
     if (delegateTask.getData().isAsync()) {
       String waitId = delegateTask.getWaitId();
       if (waitId != null) {
@@ -2280,6 +2284,14 @@ public class DelegateServiceImpl implements DelegateService {
                                 .uuid(delegateTask.getUuid())
                                 .responseData(kryoSerializer.asDeflatedBytes(response.getResponse()))
                                 .build());
+    }
+  }
+
+  private void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response) {
+    if (delegateTask.getDriverId() == null) {
+      handleInprocResponse(delegateTask, response);
+    } else {
+      // TODO: we have to add the logic of handling task response based on different driver Id here
     }
     wingsPersistence.delete(taskQuery);
   }
