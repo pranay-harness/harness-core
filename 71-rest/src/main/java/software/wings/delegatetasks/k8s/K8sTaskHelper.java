@@ -1376,8 +1376,9 @@ public class K8sTaskHelper {
       return null;
     }
 
+    // NOTE(hindwani): We are not using timeOutInMillis for waiting because of the bug: CDP-13872
     Service service = waitForLoadBalancerService(kubernetesConfig, loadBalancerResource.getResourceId().getName(),
-        loadBalancerResource.getResourceId().getNamespace(), timeoutInMillis);
+        loadBalancerResource.getResourceId().getNamespace(), 60);
 
     if (service == null) {
       logger.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
@@ -1415,7 +1416,7 @@ public class K8sTaskHelper {
   }
 
   private Service waitForLoadBalancerService(
-      KubernetesConfig kubernetesConfig, String serviceName, String namespace, long timeoutInMillis) {
+      KubernetesConfig kubernetesConfig, String serviceName, String namespace, int timeoutInSeconds) {
     try {
       return timeLimiter.callWithTimeout(() -> {
         while (true) {
@@ -1431,7 +1432,7 @@ public class K8sTaskHelper {
               serviceName, sleepTimeInSeconds);
           sleep(ofSeconds(sleepTimeInSeconds));
         }
-      }, timeoutInMillis, TimeUnit.MILLISECONDS, true);
+      }, timeoutInSeconds, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
       logger.error("Timed out waiting for LoadBalancer service. Moving on.", e);
     } catch (Exception e) {
