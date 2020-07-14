@@ -89,7 +89,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class HeatMapApiUnitTest extends WingsBaseTest {
-  //@Mock private SettingsService mockSettingsService;
   @Inject WingsPersistence wingsPersistence;
   @Inject ContinuousVerificationService continuousVerificationService;
   @Inject private CVConfigurationResource cvConfigurationResource;
@@ -184,6 +183,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
           put("key2", 0.5);
         }
       });
+      analysisRecord.setRiskScore(0.76);
 
       Map<String, TimeSeriesMLTxnSummary> txnSummaryMap = new HashMap<>();
       TimeSeriesMLTxnSummary timeSeriesMLTxnSummary = new TimeSeriesMLTxnSummary();

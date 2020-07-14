@@ -795,8 +795,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         } else {
           List<Double> scoreList = new ArrayList<>();
           recordList.forEach(record -> {
-            if (isNotEmpty(record.getOverallMetricScores())) {
-              scoreList.add(Collections.max(record.getOverallMetricScores().values()));
+            if (record.getRiskScore() != null) {
+              scoreList.add(record.getRiskScore());
             }
           });
           TimeSeriesMLAnalysisRecord aggregatedRecord = minuteConfigMap.get(key).get(0);
@@ -857,7 +857,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                 .overallScore(-2)
                 .build();
 
-        heatMapUnit.updateOverallScore(record.getOverallMetricScores());
+        heatMapUnit.updateOverallScore(record.getRiskScore());
         heatMapUnit.updateKeyTransactionScores(record.getKeyTransactionMetricScores());
         sortedUnitsFromDB.add(heatMapUnit);
       });
@@ -930,13 +930,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                  .order(MetricAnalysisRecordKeys.analysisMinute)
                  .project(MetricAnalysisRecordKeys.transactions, false)
                  .project(MetricAnalysisRecordKeys.transactionsCompressedJson, false)
+                 .project(MetricAnalysisRecordKeys.metricAnalysisValuesCompressed, false)
                  .fetch())) {
       while (analysisRecords.hasNext()) {
         timeSeriesMLAnalysisRecords.add(analysisRecords.next());
       }
     }
-    timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompress(true));
-
     return timeSeriesMLAnalysisRecords;
   }
 

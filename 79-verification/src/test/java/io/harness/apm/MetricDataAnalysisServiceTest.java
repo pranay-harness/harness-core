@@ -277,7 +277,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     File file = new File(getClass().getClassLoader().getResource("./247_analysis_record_with_risk.json.zip").getFile());
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         JsonUtils.asObject(readZippedContents(file), TimeSeriesMLAnalysisRecord.class);
-    assertThat(timeSeriesMLAnalysisRecord.getRiskScore()).isEqualTo(0, offset(0.0001));
+    assertThat(timeSeriesMLAnalysisRecord.getRiskScore()).isNull();
     double riskScore = timeSeriesMLAnalysisRecord.getOverallMetricScores()
                            .values()
                            .stream()
