@@ -4,6 +4,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_D
 import static io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl.MAX_RETRY_COUNT;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.NEMANJA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -199,6 +200,55 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTasks.get(0).getUuid());
     assertThat(dataCollectionTaskService.getNextTask(accountId, cvConfigId).isPresent()).isFalse();
   }
+
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testGetNextTask_taskPickedUpAgainAfterNotCompletedForMoreThanFiveMinutes() throws IllegalAccessException {
+    DataCollectionTask dataCollectionTask = create(ExecutionStatus.RUNNING);
+    clock = Clock.fixed(Instant.now().plus(15, ChronoUnit.MINUTES), ZoneOffset.UTC);
+    FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
+    hPersistence.save(dataCollectionTask);
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+    assertThat(nextTask.isPresent()).isTrue();
+    assertThat(nextTask.get().getRetryCount()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testGetNextTask_withBothQueuedAndRunningTask() throws IllegalAccessException {
+    clock = Clock.fixed(Instant.now().plus(6, ChronoUnit.MINUTES), ZoneOffset.UTC);
+    FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
+
+    DataCollectionTask queuedDataCollectionTask = create(ExecutionStatus.QUEUED);
+    DataCollectionTask runningDataCollectionTask = create(ExecutionStatus.RUNNING);
+    runningDataCollectionTask.setEndTime(null);
+
+    hPersistence.save(queuedDataCollectionTask);
+    hPersistence.save(runningDataCollectionTask);
+
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+    assertThat(nextTask.isPresent()).isTrue();
+    nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+    assertThat(nextTask.isPresent()).isTrue();
+    clock = Clock.fixed(Instant.now(), ZoneOffset.UTC);
+    FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
+    nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+    assertThat(nextTask.isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testGetNextTask_withExceededRetryCount() {
+    DataCollectionTask dataCollectionTask = create();
+    dataCollectionTask.setRetryCount(10);
+    hPersistence.save(dataCollectionTask);
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+    assertThat(nextTask.isPresent()).isFalse();
+  }
+
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
