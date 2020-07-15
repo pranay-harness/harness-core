@@ -1724,7 +1724,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .withDeploymentType(SSH.name())
                                               .withHostConnectionAttrs(AccessType.KEY.name())
                                               .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
-                                              .build());
+                                              .build(),
+            null);
 
     InfrastructureMapping templateInfraMapping =
         createInfraMappingService(serviceTemplate2, computeProvider, "Name3", "host12");
@@ -2061,7 +2062,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                                  .withDeploymentType(SSH.name())
                                                  .withHostConnectionAttrs(AccessType.KEY.name())
                                                  .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
-                                                 .build());
+                                                 .build(),
+        null);
   }
 
   private InfrastructureMapping createContainerInfraMappingService(

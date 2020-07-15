@@ -270,7 +270,7 @@ public class YamlIntegrationTestHelper {
     infrastructureMapping.setServiceId(serviceId);
     infrastructureMapping.setEnvId(envId);
 
-    return infrastructureMappingService.save(infrastructureMapping);
+    return infrastructureMappingService.save(infrastructureMapping, null);
   }
 
   private InfrastructureMapping getInfrastructureMapping(InfrastructureMappingType infrastructureMappingType,

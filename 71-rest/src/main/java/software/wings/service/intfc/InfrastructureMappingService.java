@@ -41,21 +41,26 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   PageResponse<InfrastructureMapping> list(
       PageRequest<InfrastructureMapping> pageRequest, Set<QueryChecks> queryChecks);
 
-  void validateInfraMapping(@Valid InfrastructureMapping infraMapping, boolean skipValidation);
-
-  @ValidationGroups(Create.class) InfrastructureMapping save(@Valid InfrastructureMapping infrastructureMapping);
+  void validateInfraMapping(
+      @Valid InfrastructureMapping infraMapping, boolean skipValidation, String workflowExecutionId);
 
   @ValidationGroups(Create.class)
-  InfrastructureMapping save(@Valid InfrastructureMapping infrastructureMapping, boolean skipValidation);
+  InfrastructureMapping save(@Valid InfrastructureMapping infrastructureMapping, String workflowExecutionId);
+
+  @ValidationGroups(Create.class)
+  InfrastructureMapping save(
+      @Valid InfrastructureMapping infrastructureMapping, boolean skipValidation, String workflowExecutionId);
 
   InfrastructureMapping get(String appId, String infraMappingId);
 
   List<InfrastructureMapping> get(String appId);
 
-  @ValidationGroups(Update.class) InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping);
+  @ValidationGroups(Update.class)
+  InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping, String workflowExecutionId);
 
   @ValidationGroups(Update.class)
-  InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping, boolean skipValidation);
+  InfrastructureMapping update(
+      @Valid InfrastructureMapping infrastructureMapping, boolean skipValidation, String workflowExecutionId);
 
   void ensureSafeToDelete(@NotEmpty String appId, @NotEmpty String infraMappingId);
 

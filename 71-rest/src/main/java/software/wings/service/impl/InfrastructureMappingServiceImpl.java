@@ -329,7 +329,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public void validateInfraMapping(@Valid InfrastructureMapping infraMapping, boolean skipValidation) {
+  public void validateInfraMapping(
+      @Valid InfrastructureMapping infraMapping, boolean skipValidation, String workflowExecutionId) {
     if (skipValidation) {
       logger.info(
           "Ignore validation for InfraMapping as skipValidation is marked true. Infra mapping coming from yaml or Infra def");
@@ -378,7 +379,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infraMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infraMapping;
-      validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping);
+      validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping, null);
     }
 
     if (infraMapping instanceof PhysicalInfrastructureMapping) {
@@ -442,13 +443,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   @ValidationGroups(Create.class)
-  public InfrastructureMapping save(@Valid InfrastructureMapping infraMapping) {
-    return save(infraMapping, false);
+  public InfrastructureMapping save(@Valid InfrastructureMapping infraMapping, String workflowExecutionId) {
+    return save(infraMapping, false, workflowExecutionId);
   }
 
   @Override
   @ValidationGroups(Create.class)
-  public InfrastructureMapping save(InfrastructureMapping infraMapping, boolean skipValidation) {
+  public InfrastructureMapping save(
+      InfrastructureMapping infraMapping, boolean skipValidation, String workflowExecutionId) {
     // The default name uses a bunch of user inputs, which is why we generate it at the time of save.
     boolean infraRefactor =
         featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, infraMapping.getAccountId());
@@ -474,7 +476,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     setDefaults(infraMapping);
-    validateInfraMapping(infraMapping, skipValidation);
+    validateInfraMapping(infraMapping, skipValidation, workflowExecutionId);
     InfrastructureMapping savedInfraMapping;
     try {
       savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
@@ -508,7 +510,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping, boolean skipValidation) {
+  public InfrastructureMapping update(
+      @Valid InfrastructureMapping infrastructureMapping, boolean skipValidation, String workflowExecutionId) {
     InfrastructureMapping savedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
@@ -560,13 +563,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(ecsInfrastructureMapping, skipValidation);
+      validateInfraMapping(ecsInfrastructureMapping, skipValidation, null);
       handleEcsInfraMapping(keyValuePairs, fieldsToRemove, ecsInfrastructureMapping);
 
     } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(directKubernetesInfrastructureMapping, skipValidation);
+      validateInfraMapping(directKubernetesInfrastructureMapping, skipValidation, null);
       if (isNotBlank(directKubernetesInfrastructureMapping.getNamespace())) {
         keyValuePairs.put("namespace", directKubernetesInfrastructureMapping.getNamespace());
       } else {
@@ -581,7 +584,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
           (GcpKubernetesInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(gcpKubernetesInfrastructureMapping, skipValidation);
+      validateInfraMapping(gcpKubernetesInfrastructureMapping, skipValidation, null);
       if (isNotEmpty(gcpKubernetesInfrastructureMapping.getClusterName())) {
         keyValuePairs.put("clusterName", gcpKubernetesInfrastructureMapping.getClusterName());
       } else {
@@ -595,7 +598,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
       AzureKubernetesInfrastructureMapping azureKubernetesInfrastructureMapping =
           (AzureKubernetesInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(azureKubernetesInfrastructureMapping, skipValidation);
+      validateInfraMapping(azureKubernetesInfrastructureMapping, skipValidation, null);
       keyValuePairs.put("clusterName", azureKubernetesInfrastructureMapping.getClusterName());
       keyValuePairs.put("subscriptionId", azureKubernetesInfrastructureMapping.getSubscriptionId());
       keyValuePairs.put("resourceGroup", azureKubernetesInfrastructureMapping.getResourceGroup());
@@ -605,7 +608,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               : DEFAULT);
     } else if (infrastructureMapping instanceof AzureInfrastructureMapping) {
       AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(azureInfrastructureMapping, skipValidation);
+      validateInfraMapping(azureInfrastructureMapping, skipValidation, null);
 
       if (isNotEmpty(azureInfrastructureMapping.getSubscriptionId())) {
         keyValuePairs.put("subscriptionId", azureInfrastructureMapping.getSubscriptionId());
@@ -636,7 +639,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(awsInfrastructureMapping, skipValidation);
+      validateInfraMapping(awsInfrastructureMapping, skipValidation, null);
       if (awsInfrastructureMapping.getRegion() != null) {
         keyValuePairs.put("region", awsInfrastructureMapping.getRegion());
       } else {
@@ -674,7 +677,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof AwsLambdaInfraStructureMapping) {
       AwsLambdaInfraStructureMapping lambdaInfraStructureMapping =
           (AwsLambdaInfraStructureMapping) infrastructureMapping;
-      validateInfraMapping(lambdaInfraStructureMapping, skipValidation);
+      validateInfraMapping(lambdaInfraStructureMapping, skipValidation, null);
       if (lambdaInfraStructureMapping.getRegion() != null) {
         keyValuePairs.put("region", lambdaInfraStructureMapping.getRegion());
       } else {
@@ -710,7 +713,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       PhysicalInfrastructureMapping physicalInfrastructureMapping =
           (PhysicalInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(physicalInfrastructureMapping, skipValidation);
+      validateInfraMapping(physicalInfrastructureMapping, skipValidation, null);
       if (isNotEmpty(physicalInfrastructureMapping.hosts())) {
         keyValuePairs.put("hosts", physicalInfrastructureMapping.hosts());
       } else {
@@ -729,7 +732,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingWinRm) {
       PhysicalInfrastructureMappingWinRm physicalInfrastructureMappingWinRm =
           (PhysicalInfrastructureMappingWinRm) infrastructureMapping;
-      validateInfraMapping(infrastructureMapping, skipValidation);
+      validateInfraMapping(infrastructureMapping, skipValidation, null);
 
       if (isNotEmpty(physicalInfrastructureMappingWinRm.getLoadBalancerId())) {
         keyValuePairs.put("loadBalancerId", physicalInfrastructureMappingWinRm.getLoadBalancerId());
@@ -767,7 +770,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
       AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
       AwsAmiInfrastructureMapping savedAwsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) savedInfraMapping;
-      validateInfraMapping(awsAmiInfrastructureMapping, skipValidation);
+      validateInfraMapping(awsAmiInfrastructureMapping, skipValidation, null);
       if (awsAmiInfrastructureMapping.getRegion() != null) {
         keyValuePairs.put("region", awsAmiInfrastructureMapping.getRegion());
       } else {
@@ -823,7 +826,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
     } else if (infrastructureMapping instanceof PcfInfrastructureMapping) {
       PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
-      validateInfraMapping(pcfInfrastructureMapping, skipValidation);
+      validateInfraMapping(pcfInfrastructureMapping, skipValidation, null);
       handlePcfInfraMapping(keyValuePairs, pcfInfrastructureMapping);
     }
     if (computeProviderSetting != null) {
@@ -869,8 +872,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public InfrastructureMapping update(InfrastructureMapping infrastructureMapping) {
-    return update(infrastructureMapping, false);
+  public InfrastructureMapping update(InfrastructureMapping infrastructureMapping, String workflowExecutionId) {
+    return update(infrastructureMapping, false, null);
   }
 
   private List<String> getUniqueHostNames(PhysicalInfrastructureMappingBase physicalInfrastructureMapping) {
@@ -1079,7 +1082,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         .build();
   }
 
-  private void validateDirectKubernetesInfraMapping(DirectKubernetesInfrastructureMapping infraMapping) {
+  private void validateDirectKubernetesInfraMapping(
+      DirectKubernetesInfrastructureMapping infraMapping, String workflowExecutionId) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     String namespace = infraMapping.getNamespace();
 
@@ -1090,7 +1094,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     KubernetesHelperService.validateNamespace(namespace);
 
     List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, workflowExecutionId);
 
     SyncTaskContext syncTaskContext = getSyncTaskContext(infraMapping);
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
@@ -1340,7 +1344,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
       hosts = getAutoScaleGroupNodes(appId, infraMappingId, workflowExecutionId);
     } else {
-      hosts = listHosts(infrastructureMapping)
+      hosts = listHosts(infrastructureMapping, workflowExecutionId)
                   .stream()
                   .filter(host
                       -> !selectionParams.isSelectSpecificHosts()
@@ -1362,10 +1366,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   public List<Host> listHosts(String appId, String infrastructureMappingId) {
     InfrastructureMapping infrastructureMapping = get(appId, infrastructureMappingId);
     notNullCheck("Infra Mapping", infrastructureMapping);
-    return listHosts(infrastructureMapping);
+    return listHosts(infrastructureMapping, null);
   }
 
-  private List<Host> listHosts(InfrastructureMapping infrastructureMapping) {
+  private List<Host> listHosts(InfrastructureMapping infrastructureMapping, String workflowExecutionId) {
     if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infrastructureMapping;
       if (isNotEmpty(pyInfraMapping.getProvisionerId())) {
@@ -1425,7 +1429,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       notNullCheck("Compute Provider", computeProviderSetting);
       return infrastructureProvider
           .listHosts(awsInfraMapping, computeProviderSetting,
-              secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null),
+              secretManager.getEncryptionDetails(
+                  (EncryptableSetting) computeProviderSetting.getValue(), null, workflowExecutionId),
               new PageRequest<>())
           .getResponse();
     } else if (infrastructureMapping instanceof AzureInfrastructureMapping) {
@@ -1436,7 +1441,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           serviceResourceService.getDeploymentType(azureInfraMapping, null, azureInfraMapping.getServiceId());
 
       return azureHelperService.listHosts(azureInfraMapping, computeProviderSetting,
-          secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null),
+          secretManager.getEncryptionDetails(
+              (EncryptableSetting) computeProviderSetting.getValue(), null, workflowExecutionId),
           deploymentType);
     } else {
       throw new InvalidRequestException(

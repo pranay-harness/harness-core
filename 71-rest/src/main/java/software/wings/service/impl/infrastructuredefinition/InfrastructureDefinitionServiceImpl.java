@@ -451,7 +451,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     }
     InfrastructureMapping infrastructureMapping = infraDefinition.getInfraMapping();
     infrastructureMapping.setAccountId(appService.getAccountIdByAppId(infraDefinition.getAppId()));
-    infrastructureMappingService.validateInfraMapping(infrastructureMapping, false);
+    infrastructureMappingService.validateInfraMapping(infrastructureMapping, false, null);
   }
 
   private void validateCloudProviderAndDeploymentType(
@@ -699,12 +699,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
      * for already saved infraDef, could remove setDef() after DB migration
      * */
     setMissingValues(infrastructureDefinition);
-    return saveInfrastructureMapping(serviceId, infrastructureDefinition);
+    return saveInfrastructureMapping(serviceId, infrastructureDefinition,
+        Optional.ofNullable(context).map(ExecutionContext::getWorkflowExecutionId).orElse(null));
   }
 
   @Override
   public InfrastructureMapping saveInfrastructureMapping(
-      String serviceId, InfrastructureDefinition infrastructureDefinition) {
+      String serviceId, InfrastructureDefinition infrastructureDefinition, String workflowExecutionId) {
     Service service = serviceResourceService.get(infrastructureDefinition.getAppId(), serviceId);
     InfrastructureMapping newInfraMapping = infrastructureDefinition.getInfraMapping();
     InfrastructureMapping infraMapping =
@@ -718,19 +719,19 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         infrastructureDefinitionHelper.getNameFromInfraDefinition(infrastructureDefinition, serviceId));
     if (infraMapping == null) {
       try {
-        return infrastructureMappingService.save(newInfraMapping, true);
+        return infrastructureMappingService.save(newInfraMapping, true, workflowExecutionId);
       } catch (DuplicateFieldException ex) {
         logger.info("Trying to save but Existing InfraMapping Found. Updating........");
         infraMapping = infrastructureDefinitionHelper.existingInfraMapping(infrastructureDefinition, serviceId);
         newInfraMapping.setUuid(infraMapping.getUuid());
         newInfraMapping.setName(infraMapping.getName());
-        return infrastructureMappingService.update(newInfraMapping, true);
+        return infrastructureMappingService.update(newInfraMapping, true, workflowExecutionId);
       }
     } else {
       logger.info("Existing InfraMapping Found Updating.....");
       newInfraMapping.setUuid(infraMapping.getUuid());
       newInfraMapping.setName(infraMapping.getName());
-      return infrastructureMappingService.update(newInfraMapping, true);
+      return infrastructureMappingService.update(newInfraMapping, true, null);
     }
   }
 

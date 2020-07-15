@@ -555,13 +555,14 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   // present for terraform
   private void applyProperties(Map<String, Object> contextMap, InfrastructureMapping infrastructureMapping,
       List<BlueprintProperty> properties, Optional<ManagerExecutionLogCallback> executionLogCallbackOptional,
-      Optional<String> region, NodeFilteringType nodeFilteringType, String infraProvisionerTypeKey) {
+      Optional<String> region, NodeFilteringType nodeFilteringType, String infraProvisionerTypeKey,
+      String workflowExecutionId) {
     Map<String, Object> propertyNameEvaluatedMap =
         resolveProperties(contextMap, properties, executionLogCallbackOptional, region, false, infraProvisionerTypeKey);
 
     try {
       infrastructureMapping.applyProvisionerVariables(propertyNameEvaluatedMap, nodeFilteringType, false);
-      infrastructureMappingService.update(infrastructureMapping);
+      infrastructureMappingService.update(infrastructureMapping, workflowExecutionId);
     } catch (Exception e) {
       addToExecutionLog(executionLogCallbackOptional, ExceptionUtils.getMessage(e));
       throw e;
@@ -677,7 +678,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
           ((ProvisionerAware) infrastructureDefinition.getInfrastructure())
               .applyExpressions(resolvedExpressions, appId, infrastructureDefinition.getEnvId(), infraDefinitionId);
           InfrastructureMapping infrastructureMapping = infrastructureDefinitionService.saveInfrastructureMapping(
-              getServiceId(context), infrastructureDefinition);
+              getServiceId(context), infrastructureDefinition, context.getWorkflowExecutionId());
           PhaseElement phaseElement =
               context.getContextElement(ContextElementType.PARAM, ExecutionContextImpl.PHASE_PARAM);
           infrastructureMappingService.saveInfrastructureMappingToSweepingOutput(
@@ -720,7 +721,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                       "Updating service infra \"" + infrastructureMapping.getName() + "\"");
                   applyProperties(contextMap, infrastructureMapping, blueprint.getProperties(),
                       executionLogCallbackOptional, region, blueprint.getNodeFilteringType(),
-                      infrastructureProvisioner.variableKey());
+                      infrastructureProvisioner.variableKey(), context.getWorkflowExecutionId());
                 });
           }
         }

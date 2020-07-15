@@ -118,7 +118,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
             .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
             .build();
     PhysicalInfrastructureMapping infrastructureMapping =
-        (PhysicalInfrastructureMapping) infrastructureMappingService.save(physicalInfrastructureMapping);
+        (PhysicalInfrastructureMapping) infrastructureMappingService.save(physicalInfrastructureMapping, null);
 
     assertThat(infrastructureMapping.getHostNames()).containsExactlyInAnyOrder("host1", "host2");
 
@@ -215,7 +215,8 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
             .withHostConnectionAttrs(hostConnectionAttr.getUuid())
             .build();
 
-    awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMappingService.save(awsInfrastructureMapping);
+    awsInfrastructureMapping =
+        (AwsInfrastructureMapping) infrastructureMappingService.save(awsInfrastructureMapping, null);
   }
 
   @Test
@@ -259,7 +260,8 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
             .withDesiredCapacity(5)
             .build();
 
-    awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMappingService.save(awsInfrastructureMapping);
+    awsInfrastructureMapping =
+        (AwsInfrastructureMapping) infrastructureMappingService.save(awsInfrastructureMapping, null);
 
     List<Host> hosts =
         infrastructureMappingService.getAutoScaleGroupNodes(app.getUuid(), awsInfrastructureMapping.getUuid(), null);

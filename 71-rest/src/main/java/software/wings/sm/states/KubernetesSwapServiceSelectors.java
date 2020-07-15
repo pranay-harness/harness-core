@@ -265,8 +265,9 @@ public class KubernetesSwapServiceSelectors extends State {
 
     List<String> taskTags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
     if (containerMasterUrlHelper.masterUrlRequired(containerInfraMapping)) {
-      boolean masterUrlPresent = containerMasterUrlHelper.fetchMasterUrlAndUpdateInfraMapping(
-          containerInfraMapping, containerServiceParams, getSyncContext(context, containerInfraMapping, taskTags));
+      boolean masterUrlPresent =
+          containerMasterUrlHelper.fetchMasterUrlAndUpdateInfraMapping(containerInfraMapping, containerServiceParams,
+              getSyncContext(context, containerInfraMapping, taskTags), context.getWorkflowExecutionId());
       if (!masterUrlPresent) {
         throw new InvalidRequestException("No Valid Master Url for" + containerInfraMapping.getClass().getName()
                 + "Id : " + containerInfraMapping.getUuid(),

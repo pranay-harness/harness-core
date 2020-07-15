@@ -310,7 +310,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(clonedServiceTemplate);
     when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED))
         .thenReturn(serviceTemplate);
-    when(infrastructureMappingService.save(infrastructureMapping, true))
+    when(infrastructureMappingService.save(infrastructureMapping, true, null))
         .thenReturn(aPhysicalInfrastructureMapping().build());
 
     CloneMetadata cloneMetadata = CloneMetadata.builder().environment(environment).build();
@@ -329,7 +329,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(serviceTemplateService).get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
     verify(infrastructureDefinitionService, times(1))
         .cloneInfrastructureDefinitions(APP_ID, ENV_ID, APP_ID, clonedEnvironment.getUuid());
-    verify(infrastructureMappingService, times(1)).save(infrastructureMapping, true);
+    verify(infrastructureMappingService, times(1)).save(infrastructureMapping, true, null);
   }
 
   private void shouldCloneEnvironment(boolean differentApp) {
@@ -858,7 +858,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                                                       .build();
 
     cloneEnvironmentWithInfraMapping(false, physicalInfrastructureMapping);
-    verify(infrastructureMappingService, times(1)).save(physicalInfrastructureMapping, true);
+    verify(infrastructureMappingService, times(1)).save(physicalInfrastructureMapping, true, null);
   }
 
   @Test

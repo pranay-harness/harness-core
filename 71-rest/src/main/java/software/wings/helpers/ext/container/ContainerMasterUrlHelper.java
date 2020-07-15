@@ -31,14 +31,15 @@ public class ContainerMasterUrlHelper {
   @Inject ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
   public boolean fetchMasterUrlAndUpdateInfraMapping(ContainerInfrastructureMapping containerInfraMapping,
-      ContainerServiceParams containerServiceParams, SyncTaskContext syncTaskContext) {
+      ContainerServiceParams containerServiceParams, SyncTaskContext syncTaskContext, String workflowExecutionId) {
     String masterUrl = fetchMasterUrl(containerServiceParams, syncTaskContext);
     if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
       ((GcpKubernetesInfrastructureMapping) containerInfraMapping).setMasterUrl(masterUrl);
     } else {
       ((AzureKubernetesInfrastructureMapping) containerInfraMapping).setMasterUrl(masterUrl);
     }
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.save(containerInfraMapping);
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.save(containerInfraMapping, workflowExecutionId);
     return infrastructureMapping != null;
   }
 
