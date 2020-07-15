@@ -54,7 +54,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
 
     if (isNotEmpty(updateValues)) {
       UpdateOperations<Environment> updateOperations = hPersistence.createUpdateOperations(Environment.class);
-      updateValues.forEach(updateOperations::addToSet);
+      updateValues.forEach(updateOperations::set);
 
       hPersistence.update(environment, updateOperations);
     }
