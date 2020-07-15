@@ -5,6 +5,7 @@ public enum CloudProvider {
   AZURE("azure"),
   GCP("google"),
   IBM("ibm"),
+  ON_PREM("onprem"),
   UNKNOWN("unknown");
 
   CloudProvider(String cloudProviderName) {
