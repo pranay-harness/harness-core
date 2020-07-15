@@ -53,7 +53,7 @@ public class AwsAmiInstanceSyncPerpetualTaskClient
     Map<String, String> paramMap = ImmutableMap.of(HARNESS_APPLICATION_ID, clientParams.getAppId(),
         INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId(), ASG_NAME, clientParams.getAsgName());
 
-    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(paramMap);
+    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(paramMap).build();
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))

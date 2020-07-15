@@ -56,7 +56,7 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClient
     paramsMap.put(INFRASTRUCTURE_MAPPING_ID, clientParams.getInframmapingId());
     paramsMap.put(HARNESS_APPLICATION_ID, clientParams.getAppId());
 
-    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(paramsMap);
+    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(paramsMap).build();
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))

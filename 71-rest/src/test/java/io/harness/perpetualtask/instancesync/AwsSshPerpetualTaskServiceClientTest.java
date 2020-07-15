@@ -66,8 +66,10 @@ public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
 
     Mockito.verify(perpetualTaskService, Mockito.times(1))
         .createTask(eq(PerpetualTaskType.AWS_SSH_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
-            eq(new PerpetualTaskClientContext(ImmutableMap.of(InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
-                InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID))),
+            eq(PerpetualTaskClientContext.builder()
+                    .clientParams(ImmutableMap.of(InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
+                        InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID))
+                    .build()),
             eq(PerpetualTaskSchedule.newBuilder()
                     .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))
                     .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
@@ -84,8 +86,10 @@ public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
 
     final AwsSshInstanceSyncPerpetualTaskParams taskParams =
         (AwsSshInstanceSyncPerpetualTaskParams) client.getTaskParams(
-            new PerpetualTaskClientContext(ImmutableMap.of(InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
-                InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID)));
+            PerpetualTaskClientContext.builder()
+                .clientParams(ImmutableMap.of(InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
+                    InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID))
+                .build());
 
     assertThat(taskParams.getRegion()).isEqualTo("us-east-1");
     assertThat(taskParams.getAwsConfig()).isNotNull();
@@ -100,10 +104,12 @@ public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
     AwsConfig awsConfig = AwsConfig.builder().tag("abc").build();
     prepareTaskData(awsConfig);
 
-    final DelegateTask validationTask = client.getValidationTask(
-        new PerpetualTaskClientContext(ImmutableMap.of(InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
-            InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID)),
-        InstanceSyncTestConstants.ACCOUNT_ID);
+    final DelegateTask validationTask =
+        client.getValidationTask(PerpetualTaskClientContext.builder()
+                                     .clientParams(ImmutableMap.of(InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
+                                         InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID))
+                                     .build(),
+            InstanceSyncTestConstants.ACCOUNT_ID);
 
     assertThat(validationTask)
         .isEqualTo(DelegateTask.builder()

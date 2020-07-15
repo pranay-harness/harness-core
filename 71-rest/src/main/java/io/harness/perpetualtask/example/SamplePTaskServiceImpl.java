@@ -36,7 +36,10 @@ public class SamplePTaskServiceImpl implements SamplePTaskService {
       countryMap.putIfAbsent(countryName, population);
       Map<String, String> clientParamMap = new HashMap<>();
       clientParamMap.put(COUNTRY_NAME, countryName);
-      PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
+
+      PerpetualTaskClientContext clientContext =
+          PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
+
       PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                            .setInterval(Durations.fromMinutes(1))
                                            .setTimeout(Durations.fromSeconds(30))

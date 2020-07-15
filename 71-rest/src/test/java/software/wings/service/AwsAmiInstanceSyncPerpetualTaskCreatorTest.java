@@ -72,11 +72,12 @@ public class AwsAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void createPerpetualTasksForNewDeployment() {
-    List<PerpetualTaskRecord> existingRecords =
-        asList(PerpetualTaskRecord.builder()
-                   .clientContext(new PerpetualTaskClientContext(
-                       ImmutableMap.of(AwsAmiInstanceSyncPerpetualTaskClient.ASG_NAME, "asg-1")))
-                   .build());
+    List<PerpetualTaskRecord> existingRecords = asList(
+        PerpetualTaskRecord.builder()
+            .clientContext(PerpetualTaskClientContext.builder()
+                               .clientParams(ImmutableMap.of(AwsAmiInstanceSyncPerpetualTaskClient.ASG_NAME, "asg-1"))
+                               .build())
+            .build());
 
     final List<String> perpetualTaskIds = perpetualTaskCreator.createPerpetualTasksForNewDeployment(
         asList(DeploymentSummary.builder()

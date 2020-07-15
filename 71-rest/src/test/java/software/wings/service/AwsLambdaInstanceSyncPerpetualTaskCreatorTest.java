@@ -74,8 +74,10 @@ public class AwsLambdaInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
     Date now = new Date();
     List<PerpetualTaskRecord> existingRecords =
         asList(PerpetualTaskRecord.builder()
-                   .clientContext(new PerpetualTaskClientContext(ImmutableMap.of(
-                       FUNCTION_NAME, "function-1", QUALIFIER, "version-1", START_DATE, String.valueOf(now.getTime()))))
+                   .clientContext(PerpetualTaskClientContext.builder()
+                                      .clientParams(ImmutableMap.of(FUNCTION_NAME, "function-1", QUALIFIER, "version-1",
+                                          START_DATE, String.valueOf(now.getTime())))
+                                      .build())
                    .build());
 
     perpetualTaskCreator.createPerpetualTasksForNewDeployment(

@@ -101,7 +101,7 @@ public class PcfInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
     clientParamMap.put(INFRASTRUCTURE_MAPPING_ID, INFRA_ID);
     clientParamMap.put(HARNESS_APPLICATION_ID, HARNESS_APPLICATION_ID);
     clientParamMap.put(PcfInstanceSyncPerpetualTaskClient.PCF_APPLICATION_NAME, APPLICATION_NAME);
-    return new PerpetualTaskClientContext(clientParamMap);
+    return PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
   }
 
   @Test

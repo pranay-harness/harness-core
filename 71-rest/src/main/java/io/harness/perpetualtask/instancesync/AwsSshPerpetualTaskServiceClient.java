@@ -60,7 +60,9 @@ public class AwsSshPerpetualTaskServiceClient
   public String create(String accountId, AwsSshPTClientParams clientParams) {
     Map<String, String> clientParamMap = ImmutableMap.of(InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID,
         clientParams.getInframappingId(), InstanceSyncConstants.HARNESS_APPLICATION_ID, clientParams.getAppId());
-    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
+
+    PerpetualTaskClientContext clientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))

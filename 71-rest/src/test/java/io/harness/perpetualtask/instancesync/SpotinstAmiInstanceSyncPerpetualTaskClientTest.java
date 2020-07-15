@@ -146,7 +146,9 @@ public class SpotinstAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTes
   }
 
   private PerpetualTaskClientContext getPerpetualTaskClientContext() {
-    return new PerpetualTaskClientContext(ImmutableMap.of(HARNESS_APPLICATION_ID, APP_ID, INFRASTRUCTURE_MAPPING_ID,
-        INFRA_MAPPING_ID, SpotinstAmiInstanceSyncPerpetualTaskClient.ELASTIGROUP_ID, ELASTIGROUP_ID));
+    return PerpetualTaskClientContext.builder()
+        .clientParams(ImmutableMap.of(HARNESS_APPLICATION_ID, APP_ID, INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID,
+            SpotinstAmiInstanceSyncPerpetualTaskClient.ELASTIGROUP_ID, ELASTIGROUP_ID))
+        .build();
   }
 }

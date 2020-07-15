@@ -37,18 +37,26 @@ public class HttpsPerpetualTaskServiceClientImpl implements HttpsPerpetualTaskSe
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
-    if (clientContext == null || clientContext.getClientParams() == null) {
+    if (clientContext == null) {
       return null;
     }
 
     try {
-      Response<ResponseBody> response = httpsClient.getTaskParams(clientContext.getClientParams()).execute();
-      if (response != null && response.body() != null) {
-        return HttpsPerpetualTaskParams.newBuilder()
-            .setTaskParams(ByteString.copyFrom(response.body().bytes()))
-            .build();
+      if (clientContext.getClientParams() != null) {
+        Response<ResponseBody> response = httpsClient.getTaskParams(clientContext.getClientParams()).execute();
+        if (response != null && response.body() != null) {
+          return HttpsPerpetualTaskParams.newBuilder()
+              .setTaskParams(ByteString.copyFrom(response.body().bytes()))
+              .build();
+        }
       }
-      return null;
+
+      if (clientContext.getTaskParameters() != null) {
+        PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
+            PerpetualTaskExecutionBundle.parseFrom(clientContext.getTaskParameters());
+        return perpetualTaskExecutionBundle.getTaskParams();
+      }
+
     } catch (IOException ex) {
       logger.error("Failed to fetch task params.", ex);
     }

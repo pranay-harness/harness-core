@@ -70,12 +70,16 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTe
   public void testCreatePerpetualTasksForNewDeployment() {
     List<PerpetualTaskRecord> existingPerpetualTasks =
         asList(PerpetualTaskRecord.builder()
-                   .clientContext(new PerpetualTaskClientContext(
-                       ImmutableMap.of(SpotinstAmiInstanceSyncPerpetualTaskClient.ELASTIGROUP_ID, "elastigroup-1")))
+                   .clientContext(PerpetualTaskClientContext.builder()
+                                      .clientParams(ImmutableMap.of(
+                                          SpotinstAmiInstanceSyncPerpetualTaskClient.ELASTIGROUP_ID, "elastigroup-1"))
+                                      .build())
                    .build(),
             PerpetualTaskRecord.builder()
-                .clientContext(new PerpetualTaskClientContext(
-                    ImmutableMap.of(SpotinstAmiInstanceSyncPerpetualTaskClient.ELASTIGROUP_ID, "elastigroup-n")))
+                .clientContext(PerpetualTaskClientContext.builder()
+                                   .clientParams(ImmutableMap.of(
+                                       SpotinstAmiInstanceSyncPerpetualTaskClient.ELASTIGROUP_ID, "elastigroup-n"))
+                                   .build())
                 .build());
 
     List<DeploymentSummary> summaries =

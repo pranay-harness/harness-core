@@ -76,7 +76,8 @@ public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testGetTaskParams() {
-    PerpetualTaskClientContext perpetualTaskClientContext = new PerpetualTaskClientContext(clientParamsMap);
+    PerpetualTaskClientContext perpetualTaskClientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamsMap).build();
     K8sWatchTaskParams k8sWatchTaskParams =
         k8SWatchPerpetualTaskServiceClient.getTaskParams(perpetualTaskClientContext);
     assertThat(k8sWatchTaskParams.getClusterId()).isEqualTo(CLUSTER_ID);
@@ -88,7 +89,8 @@ public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testGetValidationTask() {
-    PerpetualTaskClientContext perpetualTaskClientContext = new PerpetualTaskClientContext(clientParamsMap);
+    PerpetualTaskClientContext perpetualTaskClientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamsMap).build();
     DelegateTask delegateTask =
         k8SWatchPerpetualTaskServiceClient.getValidationTask(perpetualTaskClientContext, accountId);
     assertThat(delegateTask).isNotNull();

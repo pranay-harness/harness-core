@@ -1,19 +1,23 @@
 package io.harness.perpetualtask;
 
-import lombok.Data;
+import lombok.Builder;
+import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 
 import java.util.Map;
 
-@Data
+@Value
+@Builder
 @FieldNameConstants(innerTypeName = "PerpetualTaskClientContextKeys")
 public class PerpetualTaskClientContext {
+  // This is a set of arbitrary client parameters that will allow for the task to be identified from the
+  // client that requested it and will provide the necessary task parameters.
   private Map<String, String> clientParams;
-  /* What is the purpose of the taskId field, since it is not used anywhere */
-  @Deprecated private transient String taskId;
-  private long lastContextUpdated;
 
-  public PerpetualTaskClientContext(Map<String, String> clientParams) {
-    this.clientParams = clientParams;
-  }
+  // Alternatively the caller might provide the task parameters directly to be stored with the task.
+  // In this case we are not going to make a request back for them.
+  private byte[] taskParameters;
+
+  // Last time the context was updated.
+  private long lastContextUpdated;
 }

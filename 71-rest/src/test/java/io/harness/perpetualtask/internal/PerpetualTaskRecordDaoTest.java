@@ -112,7 +112,7 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
     clientParamMap.put(CLOUD_PROVIDER_ID, CLOUD_PROVIDER_ID);
     clientParamMap.put(CLUSTER_ID, CLUSTER_ID);
     clientParamMap.put(CLUSTER_NAME, CLUSTER_NAME);
-    return new PerpetualTaskClientContext(clientParamMap);
+    return PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
   }
 
   public PerpetualTaskRecord getPerpetualTaskRecord() {

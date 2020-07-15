@@ -44,7 +44,8 @@ public class ArtifactCollectionPTaskServiceClient
     }
     clientParamMap.put(ARTIFACT_STREAM_ID, clientParams.getArtifactStreamId());
 
-    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
+    PerpetualTaskClientContext clientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(1))

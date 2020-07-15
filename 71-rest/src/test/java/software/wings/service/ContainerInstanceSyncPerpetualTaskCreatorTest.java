@@ -133,8 +133,10 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
   public void createK8sPerpetualTasksForNewDeployment() {
     List<PerpetualTaskRecord> existingRecords =
         asList(PerpetualTaskRecord.builder()
-                   .clientContext(new PerpetualTaskClientContext(
-                       ImmutableMap.of(CONTAINER_TYPE, "K8S", NAMESPACE, "namespace-1", RELEASE_NAME, "release-1")))
+                   .clientContext(PerpetualTaskClientContext.builder()
+                                      .clientParams(ImmutableMap.of(
+                                          CONTAINER_TYPE, "K8S", NAMESPACE, "namespace-1", RELEASE_NAME, "release-1"))
+                                      .build())
                    .build());
 
     perpetualTaskCreator.createPerpetualTasksForNewDeployment(
@@ -171,8 +173,10 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
   public void createContainerServicePerpetualTasksForNewDeployment() {
     List<PerpetualTaskRecord> existingRecords =
         asList(PerpetualTaskRecord.builder()
-                   .clientContext(new PerpetualTaskClientContext(
-                       ImmutableMap.of(NAMESPACE, "namespace-1", CONTAINER_SERVICE_NAME, "service-1")))
+                   .clientContext(
+                       PerpetualTaskClientContext.builder()
+                           .clientParams(ImmutableMap.of(NAMESPACE, "namespace-1", CONTAINER_SERVICE_NAME, "service-1"))
+                           .build())
                    .build());
 
     perpetualTaskCreator.createPerpetualTasksForNewDeployment(

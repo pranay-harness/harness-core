@@ -67,7 +67,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskClient
                                        .put(START_DATE, clientParams.getStartDate())
                                        .build();
 
-    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(paramMap);
+    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(paramMap).build();
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))

@@ -58,7 +58,8 @@ public class ArtifactCollectionPTaskServiceClientTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetTaskParams() {
-    final PerpetualTaskClientContext perpetualTaskClientContext = new PerpetualTaskClientContext(clientParamsMap);
+    final PerpetualTaskClientContext perpetualTaskClientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamsMap).build();
     ArtifactCollectionTaskParams collectionTaskParams =
         artifactCollectionPTaskServiceClient.getTaskParams(perpetualTaskClientContext);
     assertThat(collectionTaskParams).isNotNull();
@@ -85,7 +86,8 @@ public class ArtifactCollectionPTaskServiceClientTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetValidationTask() {
-    PerpetualTaskClientContext perpetualTaskClientContext = new PerpetualTaskClientContext(clientParamsMap);
+    PerpetualTaskClientContext perpetualTaskClientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamsMap).build();
     when(artifactCollectionUtils.prepareValidateTask(artifactStreamId)).thenReturn(DelegateTask.builder().build());
     assertThat(artifactCollectionPTaskServiceClient.getValidationTask(perpetualTaskClientContext, accountId))
         .isNotNull();

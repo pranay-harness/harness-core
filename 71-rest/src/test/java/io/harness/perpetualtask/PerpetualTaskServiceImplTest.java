@@ -209,7 +209,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     clientParamMap.put(REGION, REGION);
     clientParamMap.put(SETTING_ID, SETTING_ID);
     clientParamMap.put(CLUSTER_NAME, CLUSTER_NAME);
-    return new PerpetualTaskClientContext(clientParamMap);
+    return PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
   }
 
   public PerpetualTaskSchedule perpetualTaskSchedule() {

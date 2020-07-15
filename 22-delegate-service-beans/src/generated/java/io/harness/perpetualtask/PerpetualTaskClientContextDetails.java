@@ -36,7 +36,6 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
-    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
       boolean done = false;
@@ -47,17 +46,33 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
             done = true;
             break;
           case 10: {
-            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-              taskClientParams_ =
-                  com.google.protobuf.MapField.newMapField(TaskClientParamsDefaultEntryHolder.defaultEntry);
-              mutable_bitField0_ |= 0x00000001;
+            io.harness.perpetualtask.TaskClientParams.Builder subBuilder = null;
+            if (parametersCase_ == 1) {
+              subBuilder = ((io.harness.perpetualtask.TaskClientParams) parameters_).toBuilder();
             }
-            com.google.protobuf.MapEntry<java.lang.String, java.lang.String> taskClientParams__ = input.readMessage(
-                TaskClientParamsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
-            taskClientParams_.getMutableMap().put(taskClientParams__.getKey(), taskClientParams__.getValue());
+            parameters_ = input.readMessage(io.harness.perpetualtask.TaskClientParams.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom((io.harness.perpetualtask.TaskClientParams) parameters_);
+              parameters_ = subBuilder.buildPartial();
+            }
+            parametersCase_ = 1;
             break;
           }
           case 18: {
+            io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder subBuilder = null;
+            if (parametersCase_ == 2) {
+              subBuilder = ((io.harness.perpetualtask.PerpetualTaskExecutionBundle) parameters_).toBuilder();
+            }
+            parameters_ =
+                input.readMessage(io.harness.perpetualtask.PerpetualTaskExecutionBundle.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom((io.harness.perpetualtask.PerpetualTaskExecutionBundle) parameters_);
+              parameters_ = subBuilder.buildPartial();
+            }
+            parametersCase_ = 2;
+            break;
+          }
+          case 26: {
             com.google.protobuf.Timestamp.Builder subBuilder = null;
             if (lastContextUpdated_ != null) {
               subBuilder = lastContextUpdated_.toBuilder();
@@ -92,17 +107,6 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
         .internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_descriptor;
   }
 
-  @SuppressWarnings({"rawtypes"})
-  @java.
-  lang.Override
-  protected com.google.protobuf.MapField internalGetMapField(int number) {
-    switch (number) {
-      case 1:
-        return internalGetTaskClientParams();
-      default:
-        throw new RuntimeException("Invalid map field number: " + number);
-    }
-  }
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
@@ -112,94 +116,123 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
             io.harness.perpetualtask.PerpetualTaskClientContextDetails.Builder.class);
   }
 
+  private int parametersCase_ = 0;
+  private java.lang.Object parameters_;
+  public enum ParametersCase implements com
+  .google.protobuf.Internal.EnumLite, com.google.protobuf.AbstractMessage.InternalOneOfEnum {
+    TASK_CLIENT_PARAMS(1), EXECUTION_BUNDLE(2), PARAMETERS_NOT_SET(0);
+    private final int value;
+    private ParametersCase(int value) {
+      this.value = value;
+    }
+    /**
+     * @param value The number of the enum to look for.
+     * @return The enum associated with the given number.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static ParametersCase valueOf(int value) {
+      return forNumber(value);
+    }
+
+    public static ParametersCase forNumber(int value) {
+      switch (value) {
+        case 1:
+          return TASK_CLIENT_PARAMS;
+        case 2:
+          return EXECUTION_BUNDLE;
+        case 0:
+          return PARAMETERS_NOT_SET;
+        default:
+          return null;
+      }
+    }
+    public int getNumber() {
+      return this.value;
+    }
+  };
+
+  public ParametersCase getParametersCase() {
+    return ParametersCase.forNumber(parametersCase_);
+  }
+
   public static final int TASK_CLIENT_PARAMS_FIELD_NUMBER = 1;
-  private static final class TaskClientParamsDefaultEntryHolder {
-    static final com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
-        defaultEntry = com.google.protobuf.MapEntry.<java.lang.String, java.lang.String>newDefaultInstance(
-        io.harness.perpetualtask.PerpetualTaskClient
-            .internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_TaskClientParamsEntry_descriptor,
-        com.google.protobuf.WireFormat.FieldType.STRING, "", com.google.protobuf.WireFormat.FieldType.STRING, "");
-  }
-  private com.google.protobuf.MapField<java.lang.String, java.lang.String> taskClientParams_;
-  private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetTaskClientParams() {
-    if (taskClientParams_ == null) {
-      return com.google.protobuf.MapField.emptyMapField(TaskClientParamsDefaultEntryHolder.defaultEntry);
-    }
-    return taskClientParams_;
-  }
-
-  public int getTaskClientParamsCount() {
-    return internalGetTaskClientParams().getMap().size();
+  /**
+   * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+   * @return Whether the taskClientParams field is set.
+   */
+  public boolean hasTaskClientParams() {
+    return parametersCase_ == 1;
   }
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
+   * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+   * @return The taskClientParams.
    */
-
-  public boolean containsTaskClientParams(java.lang.String key) {
-    if (key == null) {
-      throw new java.lang.NullPointerException();
+  public io.harness.perpetualtask.TaskClientParams getTaskClientParams() {
+    if (parametersCase_ == 1) {
+      return (io.harness.perpetualtask.TaskClientParams) parameters_;
     }
-    return internalGetTaskClientParams().getMap().containsKey(key);
+    return io.harness.perpetualtask.TaskClientParams.getDefaultInstance();
   }
   /**
-   * Use {@link #getTaskClientParamsMap()} instead.
+   * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
    */
-  @java.
-  lang.Deprecated
-  public java.util.Map<java.lang.String, java.lang.String> getTaskClientParams() {
-    return getTaskClientParamsMap();
+  public io.harness.perpetualtask.TaskClientParamsOrBuilder getTaskClientParamsOrBuilder() {
+    if (parametersCase_ == 1) {
+      return (io.harness.perpetualtask.TaskClientParams) parameters_;
+    }
+    return io.harness.perpetualtask.TaskClientParams.getDefaultInstance();
+  }
+
+  public static final int EXECUTION_BUNDLE_FIELD_NUMBER = 2;
+  /**
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+   * "executionBundle"];</code>
+   * @return Whether the executionBundle field is set.
+   */
+  public boolean hasExecutionBundle() {
+    return parametersCase_ == 2;
   }
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+   * "executionBundle"];</code>
+   * @return The executionBundle.
    */
-
-  public java.util.Map<java.lang.String, java.lang.String> getTaskClientParamsMap() {
-    return internalGetTaskClientParams().getMap();
+  public io.harness.perpetualtask.PerpetualTaskExecutionBundle getExecutionBundle() {
+    if (parametersCase_ == 2) {
+      return (io.harness.perpetualtask.PerpetualTaskExecutionBundle) parameters_;
+    }
+    return io.harness.perpetualtask.PerpetualTaskExecutionBundle.getDefaultInstance();
   }
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+   * "executionBundle"];</code>
    */
-
-  public java.lang.String getTaskClientParamsOrDefault(java.lang.String key, java.lang.String defaultValue) {
-    if (key == null) {
-      throw new java.lang.NullPointerException();
+  public io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder getExecutionBundleOrBuilder() {
+    if (parametersCase_ == 2) {
+      return (io.harness.perpetualtask.PerpetualTaskExecutionBundle) parameters_;
     }
-    java.util.Map<java.lang.String, java.lang.String> map = internalGetTaskClientParams().getMap();
-    return map.containsKey(key) ? map.get(key) : defaultValue;
-  }
-  /**
-   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
-   */
-
-  public java.lang.String getTaskClientParamsOrThrow(java.lang.String key) {
-    if (key == null) {
-      throw new java.lang.NullPointerException();
-    }
-    java.util.Map<java.lang.String, java.lang.String> map = internalGetTaskClientParams().getMap();
-    if (!map.containsKey(key)) {
-      throw new java.lang.IllegalArgumentException();
-    }
-    return map.get(key);
+    return io.harness.perpetualtask.PerpetualTaskExecutionBundle.getDefaultInstance();
   }
 
-  public static final int LAST_CONTEXT_UPDATED_FIELD_NUMBER = 2;
+  public static final int LAST_CONTEXT_UPDATED_FIELD_NUMBER = 3;
   private com.google.protobuf.Timestamp lastContextUpdated_;
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
    * @return Whether the lastContextUpdated field is set.
    */
   public boolean hasLastContextUpdated() {
     return lastContextUpdated_ != null;
   }
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
    * @return The lastContextUpdated.
    */
   public com.google.protobuf.Timestamp getLastContextUpdated() {
     return lastContextUpdated_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : lastContextUpdated_;
   }
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
    */
   public com.google.protobuf.TimestampOrBuilder getLastContextUpdatedOrBuilder() {
     return getLastContextUpdated();
@@ -220,10 +253,14 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(
-        output, internalGetTaskClientParams(), TaskClientParamsDefaultEntryHolder.defaultEntry, 1);
+    if (parametersCase_ == 1) {
+      output.writeMessage(1, (io.harness.perpetualtask.TaskClientParams) parameters_);
+    }
+    if (parametersCase_ == 2) {
+      output.writeMessage(2, (io.harness.perpetualtask.PerpetualTaskExecutionBundle) parameters_);
+    }
     if (lastContextUpdated_ != null) {
-      output.writeMessage(2, getLastContextUpdated());
+      output.writeMessage(3, getLastContextUpdated());
     }
     unknownFields.writeTo(output);
   }
@@ -235,17 +272,16 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return size;
 
     size = 0;
-    for (java.util.Map.Entry<java.lang.String, java.lang.String> entry :
-        internalGetTaskClientParams().getMap().entrySet()) {
-      com.google.protobuf.MapEntry<java.lang.String, java.lang.String> taskClientParams__ =
-          TaskClientParamsDefaultEntryHolder.defaultEntry.newBuilderForType()
-              .setKey(entry.getKey())
-              .setValue(entry.getValue())
-              .build();
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, taskClientParams__);
+    if (parametersCase_ == 1) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(
+          1, (io.harness.perpetualtask.TaskClientParams) parameters_);
+    }
+    if (parametersCase_ == 2) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(
+          2, (io.harness.perpetualtask.PerpetualTaskExecutionBundle) parameters_);
     }
     if (lastContextUpdated_ != null) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getLastContextUpdated());
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, getLastContextUpdated());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -263,13 +299,25 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
     io.harness.perpetualtask.PerpetualTaskClientContextDetails other =
         (io.harness.perpetualtask.PerpetualTaskClientContextDetails) obj;
 
-    if (!internalGetTaskClientParams().equals(other.internalGetTaskClientParams()))
-      return false;
     if (hasLastContextUpdated() != other.hasLastContextUpdated())
       return false;
     if (hasLastContextUpdated()) {
       if (!getLastContextUpdated().equals(other.getLastContextUpdated()))
         return false;
+    }
+    if (!getParametersCase().equals(other.getParametersCase()))
+      return false;
+    switch (parametersCase_) {
+      case 1:
+        if (!getTaskClientParams().equals(other.getTaskClientParams()))
+          return false;
+        break;
+      case 2:
+        if (!getExecutionBundle().equals(other.getExecutionBundle()))
+          return false;
+        break;
+      case 0:
+      default:
     }
     if (!unknownFields.equals(other.unknownFields))
       return false;
@@ -283,13 +331,21 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    if (!internalGetTaskClientParams().getMap().isEmpty()) {
-      hash = (37 * hash) + TASK_CLIENT_PARAMS_FIELD_NUMBER;
-      hash = (53 * hash) + internalGetTaskClientParams().hashCode();
-    }
     if (hasLastContextUpdated()) {
       hash = (37 * hash) + LAST_CONTEXT_UPDATED_FIELD_NUMBER;
       hash = (53 * hash) + getLastContextUpdated().hashCode();
+    }
+    switch (parametersCase_) {
+      case 1:
+        hash = (37 * hash) + TASK_CLIENT_PARAMS_FIELD_NUMBER;
+        hash = (53 * hash) + getTaskClientParams().hashCode();
+        break;
+      case 2:
+        hash = (37 * hash) + EXECUTION_BUNDLE_FIELD_NUMBER;
+        hash = (53 * hash) + getExecutionBundle().hashCode();
+        break;
+      case 0:
+      default:
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -380,24 +436,6 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
           .internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_descriptor;
     }
 
-    @SuppressWarnings({"rawtypes"})
-    protected com.google.protobuf.MapField internalGetMapField(int number) {
-      switch (number) {
-        case 1:
-          return internalGetTaskClientParams();
-        default:
-          throw new RuntimeException("Invalid map field number: " + number);
-      }
-    }
-    @SuppressWarnings({"rawtypes"})
-    protected com.google.protobuf.MapField internalGetMutableMapField(int number) {
-      switch (number) {
-        case 1:
-          return internalGetMutableTaskClientParams();
-        default:
-          throw new RuntimeException("Invalid map field number: " + number);
-      }
-    }
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
@@ -423,13 +461,14 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      internalGetMutableTaskClientParams().clear();
       if (lastContextUpdatedBuilder_ == null) {
         lastContextUpdated_ = null;
       } else {
         lastContextUpdated_ = null;
         lastContextUpdatedBuilder_ = null;
       }
+      parametersCase_ = 0;
+      parameters_ = null;
       return this;
     }
 
@@ -461,14 +500,26 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
     public io.harness.perpetualtask.PerpetualTaskClientContextDetails buildPartial() {
       io.harness.perpetualtask.PerpetualTaskClientContextDetails result =
           new io.harness.perpetualtask.PerpetualTaskClientContextDetails(this);
-      int from_bitField0_ = bitField0_;
-      result.taskClientParams_ = internalGetTaskClientParams();
-      result.taskClientParams_.makeImmutable();
+      if (parametersCase_ == 1) {
+        if (taskClientParamsBuilder_ == null) {
+          result.parameters_ = parameters_;
+        } else {
+          result.parameters_ = taskClientParamsBuilder_.build();
+        }
+      }
+      if (parametersCase_ == 2) {
+        if (executionBundleBuilder_ == null) {
+          result.parameters_ = parameters_;
+        } else {
+          result.parameters_ = executionBundleBuilder_.build();
+        }
+      }
       if (lastContextUpdatedBuilder_ == null) {
         result.lastContextUpdated_ = lastContextUpdated_;
       } else {
         result.lastContextUpdated_ = lastContextUpdatedBuilder_.build();
       }
+      result.parametersCase_ = parametersCase_;
       onBuilt();
       return result;
     }
@@ -511,9 +562,21 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
     public Builder mergeFrom(io.harness.perpetualtask.PerpetualTaskClientContextDetails other) {
       if (other == io.harness.perpetualtask.PerpetualTaskClientContextDetails.getDefaultInstance())
         return this;
-      internalGetMutableTaskClientParams().mergeFrom(other.internalGetTaskClientParams());
       if (other.hasLastContextUpdated()) {
         mergeLastContextUpdated(other.getLastContextUpdated());
+      }
+      switch (other.getParametersCase()) {
+        case TASK_CLIENT_PARAMS: {
+          mergeTaskClientParams(other.getTaskClientParams());
+          break;
+        }
+        case EXECUTION_BUNDLE: {
+          mergeExecutionBundle(other.getExecutionBundle());
+          break;
+        }
+        case PARAMETERS_NOT_SET: {
+          break;
+        }
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -541,138 +604,321 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       }
       return this;
     }
-    private int bitField0_;
-
-    private com.google.protobuf.MapField<java.lang.String, java.lang.String> taskClientParams_;
-    private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetTaskClientParams() {
-      if (taskClientParams_ == null) {
-        return com.google.protobuf.MapField.emptyMapField(TaskClientParamsDefaultEntryHolder.defaultEntry);
-      }
-      return taskClientParams_;
+    private int parametersCase_ = 0;
+    private java.lang.Object parameters_;
+    public ParametersCase getParametersCase() {
+      return ParametersCase.forNumber(parametersCase_);
     }
-    private com.google.protobuf.MapField<java.lang.String, java.lang.String> internalGetMutableTaskClientParams() {
+
+    public Builder clearParameters() {
+      parametersCase_ = 0;
+      parameters_ = null;
+      onChanged();
+      return this;
+    }
+
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.TaskClientParams,
+        io.harness.perpetualtask.TaskClientParams.Builder, io.harness.perpetualtask.TaskClientParamsOrBuilder>
+        taskClientParamsBuilder_;
+    /**
+     * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+     * @return Whether the taskClientParams field is set.
+     */
+    public boolean hasTaskClientParams() {
+      return parametersCase_ == 1;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+     * @return The taskClientParams.
+     */
+    public io.harness.perpetualtask.TaskClientParams getTaskClientParams() {
+      if (taskClientParamsBuilder_ == null) {
+        if (parametersCase_ == 1) {
+          return (io.harness.perpetualtask.TaskClientParams) parameters_;
+        }
+        return io.harness.perpetualtask.TaskClientParams.getDefaultInstance();
+      } else {
+        if (parametersCase_ == 1) {
+          return taskClientParamsBuilder_.getMessage();
+        }
+        return io.harness.perpetualtask.TaskClientParams.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+     */
+    public Builder setTaskClientParams(io.harness.perpetualtask.TaskClientParams value) {
+      if (taskClientParamsBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        parameters_ = value;
+        onChanged();
+      } else {
+        taskClientParamsBuilder_.setMessage(value);
+      }
+      parametersCase_ = 1;
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+     */
+    public Builder setTaskClientParams(io.harness.perpetualtask.TaskClientParams.Builder builderForValue) {
+      if (taskClientParamsBuilder_ == null) {
+        parameters_ = builderForValue.build();
+        onChanged();
+      } else {
+        taskClientParamsBuilder_.setMessage(builderForValue.build());
+      }
+      parametersCase_ = 1;
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+     */
+    public Builder mergeTaskClientParams(io.harness.perpetualtask.TaskClientParams value) {
+      if (taskClientParamsBuilder_ == null) {
+        if (parametersCase_ == 1 && parameters_ != io.harness.perpetualtask.TaskClientParams.getDefaultInstance()) {
+          parameters_ = io.harness.perpetualtask.TaskClientParams
+                            .newBuilder((io.harness.perpetualtask.TaskClientParams) parameters_)
+                            .mergeFrom(value)
+                            .buildPartial();
+        } else {
+          parameters_ = value;
+        }
+        onChanged();
+      } else {
+        if (parametersCase_ == 1) {
+          taskClientParamsBuilder_.mergeFrom(value);
+        }
+        taskClientParamsBuilder_.setMessage(value);
+      }
+      parametersCase_ = 1;
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+     */
+    public Builder clearTaskClientParams() {
+      if (taskClientParamsBuilder_ == null) {
+        if (parametersCase_ == 1) {
+          parametersCase_ = 0;
+          parameters_ = null;
+          onChanged();
+        }
+      } else {
+        if (parametersCase_ == 1) {
+          parametersCase_ = 0;
+          parameters_ = null;
+        }
+        taskClientParamsBuilder_.clear();
+      }
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+     */
+    public io.harness.perpetualtask.TaskClientParams.Builder getTaskClientParamsBuilder() {
+      return getTaskClientParamsFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+     */
+    public io.harness.perpetualtask.TaskClientParamsOrBuilder getTaskClientParamsOrBuilder() {
+      if ((parametersCase_ == 1) && (taskClientParamsBuilder_ != null)) {
+        return taskClientParamsBuilder_.getMessageOrBuilder();
+      } else {
+        if (parametersCase_ == 1) {
+          return (io.harness.perpetualtask.TaskClientParams) parameters_;
+        }
+        return io.harness.perpetualtask.TaskClientParams.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.TaskClientParams,
+        io.harness.perpetualtask.TaskClientParams.Builder, io.harness.perpetualtask.TaskClientParamsOrBuilder>
+    getTaskClientParamsFieldBuilder() {
+      if (taskClientParamsBuilder_ == null) {
+        if (!(parametersCase_ == 1)) {
+          parameters_ = io.harness.perpetualtask.TaskClientParams.getDefaultInstance();
+        }
+        taskClientParamsBuilder_ =
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.TaskClientParams,
+                io.harness.perpetualtask.TaskClientParams.Builder, io.harness.perpetualtask.TaskClientParamsOrBuilder>(
+                (io.harness.perpetualtask.TaskClientParams) parameters_, getParentForChildren(), isClean());
+        parameters_ = null;
+      }
+      parametersCase_ = 1;
       onChanged();
       ;
-      if (taskClientParams_ == null) {
-        taskClientParams_ = com.google.protobuf.MapField.newMapField(TaskClientParamsDefaultEntryHolder.defaultEntry);
-      }
-      if (!taskClientParams_.isMutable()) {
-        taskClientParams_ = taskClientParams_.copy();
-      }
-      return taskClientParams_;
+      return taskClientParamsBuilder_;
     }
 
-    public int getTaskClientParamsCount() {
-      return internalGetTaskClientParams().getMap().size();
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskExecutionBundle,
+        io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder,
+        io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder> executionBundleBuilder_;
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+     * "executionBundle"];</code>
+     * @return Whether the executionBundle field is set.
+     */
+    public boolean hasExecutionBundle() {
+      return parametersCase_ == 2;
     }
     /**
-     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+     * "executionBundle"];</code>
+     * @return The executionBundle.
      */
-
-    public boolean containsTaskClientParams(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
+    public io.harness.perpetualtask.PerpetualTaskExecutionBundle getExecutionBundle() {
+      if (executionBundleBuilder_ == null) {
+        if (parametersCase_ == 2) {
+          return (io.harness.perpetualtask.PerpetualTaskExecutionBundle) parameters_;
+        }
+        return io.harness.perpetualtask.PerpetualTaskExecutionBundle.getDefaultInstance();
+      } else {
+        if (parametersCase_ == 2) {
+          return executionBundleBuilder_.getMessage();
+        }
+        return io.harness.perpetualtask.PerpetualTaskExecutionBundle.getDefaultInstance();
       }
-      return internalGetTaskClientParams().getMap().containsKey(key);
     }
     /**
-     * Use {@link #getTaskClientParamsMap()} instead.
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+     * "executionBundle"];</code>
      */
-    @java.
-    lang.Deprecated
-    public java.util.Map<java.lang.String, java.lang.String> getTaskClientParams() {
-      return getTaskClientParamsMap();
-    }
-    /**
-     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
-     */
-
-    public java.util.Map<java.lang.String, java.lang.String> getTaskClientParamsMap() {
-      return internalGetTaskClientParams().getMap();
-    }
-    /**
-     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
-     */
-
-    public java.lang.String getTaskClientParamsOrDefault(java.lang.String key, java.lang.String defaultValue) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
+    public Builder setExecutionBundle(io.harness.perpetualtask.PerpetualTaskExecutionBundle value) {
+      if (executionBundleBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        parameters_ = value;
+        onChanged();
+      } else {
+        executionBundleBuilder_.setMessage(value);
       }
-      java.util.Map<java.lang.String, java.lang.String> map = internalGetTaskClientParams().getMap();
-      return map.containsKey(key) ? map.get(key) : defaultValue;
-    }
-    /**
-     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
-     */
-
-    public java.lang.String getTaskClientParamsOrThrow(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
-      }
-      java.util.Map<java.lang.String, java.lang.String> map = internalGetTaskClientParams().getMap();
-      if (!map.containsKey(key)) {
-        throw new java.lang.IllegalArgumentException();
-      }
-      return map.get(key);
-    }
-
-    public Builder clearTaskClientParams() {
-      internalGetMutableTaskClientParams().getMutableMap().clear();
+      parametersCase_ = 2;
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+     * "executionBundle"];</code>
      */
-
-    public Builder removeTaskClientParams(java.lang.String key) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
+    public Builder setExecutionBundle(io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder builderForValue) {
+      if (executionBundleBuilder_ == null) {
+        parameters_ = builderForValue.build();
+        onChanged();
+      } else {
+        executionBundleBuilder_.setMessage(builderForValue.build());
       }
-      internalGetMutableTaskClientParams().getMutableMap().remove(key);
+      parametersCase_ = 2;
       return this;
     }
     /**
-     * Use alternate mutation accessors instead.
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+     * "executionBundle"];</code>
      */
-    @java.
-    lang.Deprecated
-    public java.util.Map<java.lang.String, java.lang.String> getMutableTaskClientParams() {
-      return internalGetMutableTaskClientParams().getMutableMap();
-    }
-    /**
-     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
-     */
-    public Builder putTaskClientParams(java.lang.String key, java.lang.String value) {
-      if (key == null) {
-        throw new java.lang.NullPointerException();
+    public Builder mergeExecutionBundle(io.harness.perpetualtask.PerpetualTaskExecutionBundle value) {
+      if (executionBundleBuilder_ == null) {
+        if (parametersCase_ == 2
+            && parameters_ != io.harness.perpetualtask.PerpetualTaskExecutionBundle.getDefaultInstance()) {
+          parameters_ = io.harness.perpetualtask.PerpetualTaskExecutionBundle
+                            .newBuilder((io.harness.perpetualtask.PerpetualTaskExecutionBundle) parameters_)
+                            .mergeFrom(value)
+                            .buildPartial();
+        } else {
+          parameters_ = value;
+        }
+        onChanged();
+      } else {
+        if (parametersCase_ == 2) {
+          executionBundleBuilder_.mergeFrom(value);
+        }
+        executionBundleBuilder_.setMessage(value);
       }
-      if (value == null) {
-        throw new java.lang.NullPointerException();
-      }
-      internalGetMutableTaskClientParams().getMutableMap().put(key, value);
+      parametersCase_ = 2;
       return this;
     }
     /**
-     * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+     * "executionBundle"];</code>
      */
-
-    public Builder putAllTaskClientParams(java.util.Map<java.lang.String, java.lang.String> values) {
-      internalGetMutableTaskClientParams().getMutableMap().putAll(values);
+    public Builder clearExecutionBundle() {
+      if (executionBundleBuilder_ == null) {
+        if (parametersCase_ == 2) {
+          parametersCase_ = 0;
+          parameters_ = null;
+          onChanged();
+        }
+      } else {
+        if (parametersCase_ == 2) {
+          parametersCase_ = 0;
+          parameters_ = null;
+        }
+        executionBundleBuilder_.clear();
+      }
       return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+     * "executionBundle"];</code>
+     */
+    public io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder getExecutionBundleBuilder() {
+      return getExecutionBundleFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+     * "executionBundle"];</code>
+     */
+    public io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder getExecutionBundleOrBuilder() {
+      if ((parametersCase_ == 2) && (executionBundleBuilder_ != null)) {
+        return executionBundleBuilder_.getMessageOrBuilder();
+      } else {
+        if (parametersCase_ == 2) {
+          return (io.harness.perpetualtask.PerpetualTaskExecutionBundle) parameters_;
+        }
+        return io.harness.perpetualtask.PerpetualTaskExecutionBundle.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+     * "executionBundle"];</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskExecutionBundle,
+        io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder,
+        io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder>
+    getExecutionBundleFieldBuilder() {
+      if (executionBundleBuilder_ == null) {
+        if (!(parametersCase_ == 2)) {
+          parameters_ = io.harness.perpetualtask.PerpetualTaskExecutionBundle.getDefaultInstance();
+        }
+        executionBundleBuilder_ =
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskExecutionBundle,
+                io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder,
+                io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder>(
+                (io.harness.perpetualtask.PerpetualTaskExecutionBundle) parameters_, getParentForChildren(), isClean());
+        parameters_ = null;
+      }
+      parametersCase_ = 2;
+      onChanged();
+      ;
+      return executionBundleBuilder_;
     }
 
     private com.google.protobuf.Timestamp lastContextUpdated_;
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> lastContextUpdatedBuilder_;
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
      * @return Whether the lastContextUpdated field is set.
      */
     public boolean hasLastContextUpdated() {
       return lastContextUpdatedBuilder_ != null || lastContextUpdated_ != null;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
      * @return The lastContextUpdated.
      */
     public com.google.protobuf.Timestamp getLastContextUpdated() {
@@ -683,7 +929,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
      */
     public Builder setLastContextUpdated(com.google.protobuf.Timestamp value) {
       if (lastContextUpdatedBuilder_ == null) {
@@ -699,7 +945,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
      */
     public Builder setLastContextUpdated(com.google.protobuf.Timestamp.Builder builderForValue) {
       if (lastContextUpdatedBuilder_ == null) {
@@ -712,7 +958,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
      */
     public Builder mergeLastContextUpdated(com.google.protobuf.Timestamp value) {
       if (lastContextUpdatedBuilder_ == null) {
@@ -730,7 +976,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
      */
     public Builder clearLastContextUpdated() {
       if (lastContextUpdatedBuilder_ == null) {
@@ -744,14 +990,14 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       return this;
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
      */
     public com.google.protobuf.Timestamp.Builder getLastContextUpdatedBuilder() {
       onChanged();
       return getLastContextUpdatedFieldBuilder().getBuilder();
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
      */
     public com.google.protobuf.TimestampOrBuilder getLastContextUpdatedOrBuilder() {
       if (lastContextUpdatedBuilder_ != null) {
@@ -761,7 +1007,7 @@ public final class PerpetualTaskClientContextDetails extends com.google.protobuf
       }
     }
     /**
-     * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+     * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp,
         com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>

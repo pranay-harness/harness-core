@@ -53,7 +53,8 @@ public class EcsPerpetualTaskServiceClient
     clientParamMap.put(CLUSTER_NAME, clientParams.getClusterName());
     clientParamMap.put(CLUSTER_ID, clientParams.getClusterId());
 
-    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
+    PerpetualTaskClientContext clientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromSeconds(600))

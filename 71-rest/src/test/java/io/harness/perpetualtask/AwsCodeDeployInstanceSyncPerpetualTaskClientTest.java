@@ -141,7 +141,8 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClientTest extends WingsBaseT
   }
 
   private PerpetualTaskClientContext getClientContext() {
-    return new PerpetualTaskClientContext(
-        ImmutableMap.of(INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID, HARNESS_APPLICATION_ID, APP_ID));
+    return PerpetualTaskClientContext.builder()
+        .clientParams(ImmutableMap.of(INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID, HARNESS_APPLICATION_ID, APP_ID))
+        .build();
   }
 }
