@@ -3,9 +3,7 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.cvng.CVConstants.LEARNING_RESOURCE;
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.cvng.CVConstants.TIMESERIES_ANALYSIS_RESOURCE;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 
@@ -26,8 +24,6 @@ import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.entities.TimeSeriesRecord;
-import io.harness.cvng.core.entities.TimeSeriesRecord.TimeSeriesRecordKeys;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
@@ -35,13 +31,11 @@ import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
-import org.mongodb.morphia.query.Query;
 
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -193,101 +187,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public Map<String, Map<String, List<Double>>> getTestData(String cvConfigId, Instant startTime, Instant endTime) {
-    TimeSeriesTestDataDTO testDataDTO = getTimeSeriesDataForRange(cvConfigId, startTime, endTime, null, null);
+    TimeSeriesTestDataDTO testDataDTO =
+        timeSeriesService.getTxnMetricDataForRange(cvConfigId, startTime, endTime, null, null);
 
     return testDataDTO.getTransactionMetricValues();
-  }
-
-  private Map<String, Map<String, List<Double>>> getSortedListOfTimeSeriesRecords(
-      Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>> unsortedTimeseries) {
-    if (isNotEmpty(unsortedTimeseries)) {
-      Map<String, Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>>> txnMetricMap = new HashMap<>();
-
-      // first build the txn -> metric -> TimeSeriesGroupValue object
-      unsortedTimeseries.forEach((metricName, txnValList) -> {
-        txnValList.forEach(txnValue -> {
-          String txnName = txnValue.getGroupName();
-          if (!txnMetricMap.containsKey(txnName)) {
-            txnMetricMap.put(txnName, new HashMap<>());
-          }
-          if (!txnMetricMap.get(txnName).containsKey(metricName)) {
-            txnMetricMap.get(txnName).put(metricName, new ArrayList<>());
-          }
-
-          txnMetricMap.get(txnName).get(metricName).add(txnValue);
-        });
-      });
-
-      // next sort the list under each txn->metric
-      Map<String, Map<String, List<Double>>> txnMetricValueMap = new HashMap<>();
-      for (String txnName : txnMetricMap.keySet()) {
-        Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>> metricValueMap = txnMetricMap.get(txnName);
-        txnMetricValueMap.put(txnName, new HashMap<>());
-
-        for (String metricName : metricValueMap.keySet()) {
-          List<TimeSeriesRecord.TimeSeriesGroupValue> valueList = metricValueMap.get(metricName);
-          Collections.sort(valueList);
-          txnMetricValueMap.get(txnName).put(metricName, new ArrayList<>());
-          valueList.forEach(value -> { txnMetricValueMap.get(txnName).get(metricName).add(value.getMetricValue()); });
-        }
-      }
-
-      return txnMetricValueMap;
-    }
-    return null;
-  }
-
-  @Override
-  public TimeSeriesTestDataDTO getTimeSeriesDataForRange(
-      String cvConfigId, Instant startTime, Instant endTime, String metricName, String txnName) {
-    Instant queryStartTime = startTime.truncatedTo(ChronoUnit.SECONDS);
-    Instant queryEndTime = endTime.truncatedTo(ChronoUnit.SECONDS);
-    Query<TimeSeriesRecord> timeSeriesRecordsQuery = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
-                                                         .filter(TimeSeriesRecordKeys.cvConfigId, cvConfigId)
-                                                         .field(TimeSeriesRecordKeys.bucketStartTime)
-                                                         .greaterThanOrEq(queryStartTime)
-                                                         .field(TimeSeriesRecordKeys.bucketStartTime)
-                                                         .lessThan(queryEndTime);
-    if (isNotEmpty(metricName)) {
-      timeSeriesRecordsQuery = timeSeriesRecordsQuery.filter(TimeSeriesRecordKeys.metricName, metricName);
-    }
-
-    List<TimeSeriesRecord> records = timeSeriesRecordsQuery.asList();
-
-    Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>> metricValueList = new HashMap<>();
-    records.forEach(record -> {
-      if (!metricValueList.containsKey(record.getMetricName())) {
-        metricValueList.put(record.getMetricName(), new ArrayList<>());
-      }
-
-      List<TimeSeriesRecord.TimeSeriesGroupValue> valueList = metricValueList.get(record.getMetricName());
-      List<TimeSeriesRecord.TimeSeriesGroupValue> curValueList = new ArrayList<>();
-      // if txnName filter is present, filter by that name
-      if (isNotEmpty(txnName)) {
-        record.getTimeSeriesGroupValues().forEach(timeSeriesGroupValue -> {
-          if (timeSeriesGroupValue.getGroupName().equals(txnName)) {
-            curValueList.add(timeSeriesGroupValue);
-          }
-        });
-      } else {
-        curValueList.addAll(record.getTimeSeriesGroupValues());
-      }
-
-      // filter for those timestamps that fall within the start and endTime
-      curValueList.forEach(groupValue -> {
-        boolean timestampInWindow =
-            !(groupValue.getTimeStamp().isBefore(startTime) || groupValue.getTimeStamp().isAfter(endTime));
-        if (timestampInWindow) {
-          valueList.add(groupValue);
-        }
-      });
-
-      metricValueList.put(record.getMetricName(), valueList);
-    });
-
-    Map<String, Map<String, List<Double>>> sortedValueMap = getSortedListOfTimeSeriesRecords(metricValueList);
-
-    return TimeSeriesTestDataDTO.builder().cvConfigId(cvConfigId).transactionMetricValues(sortedValueMap).build();
   }
 
   @Override

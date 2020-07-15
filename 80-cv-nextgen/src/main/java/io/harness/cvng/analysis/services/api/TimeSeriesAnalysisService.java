@@ -3,7 +3,6 @@ package io.harness.cvng.analysis.services.api;
 import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.beans.ServiceGuardMetricAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
-import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
@@ -25,6 +24,4 @@ public interface TimeSeriesAnalysisService {
   void saveAnalysis(
       ServiceGuardMetricAnalysisDTO analysis, String cvConfigId, String taskId, Instant startTime, Instant endTime);
   List<TimeSeriesMetricDefinition> getMetricTemplate(String cvConfigId);
-  TimeSeriesTestDataDTO getTimeSeriesDataForRange(
-      String cvConfigId, Instant startTime, Instant endTime, String metricName, String txnName);
 }

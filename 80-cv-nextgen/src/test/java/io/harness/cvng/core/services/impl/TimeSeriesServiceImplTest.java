@@ -4,6 +4,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDO
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.TestUserProvider.testUserProvider;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,6 +12,8 @@ import static org.assertj.core.data.Offset.offset;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
@@ -42,10 +45,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.lang.reflect.Type;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -274,5 +285,80 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
     assertThat(m1Definition.getOccurrenceCount()).isEqualTo(5);
     assertThat(m1Definition.getThresholdType()).isEqualTo(TimeSeriesThresholdType.ACT_WHEN_HIGHER);
     assertThat(m1Definition.getValue()).isEqualTo(0.6, offset(0.01));
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetTxnMetricDataForRange() throws Exception {
+    List<TimeSeriesRecord> records = getTimeSeriesRecords();
+    hPersistence.save(records);
+    Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
+    Map<String, Map<String, List<Double>>> testData =
+        timeSeriesService.getTxnMetricDataForRange(cvConfigId, start, start.plus(5, ChronoUnit.MINUTES), null, null)
+            .getTransactionMetricValues();
+
+    assertThat(testData).isNotNull();
+    assertThat(testData.size()).isEqualTo(61);
+    testData.forEach((txn, metricMap) -> { assertThat(metricMap.size()).isEqualTo(2); });
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetMetricGroupDataForRange_allTransactions() throws Exception {
+    List<TimeSeriesRecord> records = getTimeSeriesRecords();
+    hPersistence.save(records);
+    Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
+    Map<String, Map<String, List<Double>>> testData =
+        timeSeriesService
+            .getMetricGroupDataForRange(
+                cvConfigId, start, start.plus(5, ChronoUnit.MINUTES), "Average Response Time (ms)", null)
+            .getTransactionMetricValues();
+
+    assertThat(testData).isNotNull();
+    assertThat(testData.size()).isEqualTo(1);
+    testData.forEach((metric, txnMap) -> {
+      assertThat(metric).isEqualTo("Average Response Time (ms)");
+      assertThat(txnMap.size()).isEqualTo(61);
+    });
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetMetricGroupDataForRange_filterTransactions() throws Exception {
+    List<TimeSeriesRecord> records = getTimeSeriesRecords();
+    hPersistence.save(records);
+    Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
+    Map<String, Map<String, List<Double>>> testData =
+        timeSeriesService
+            .getMetricGroupDataForRange(cvConfigId, start, start.plus(5, ChronoUnit.MINUTES),
+                "Average Response Time (ms)", Arrays.asList("/api/settings", "/api/service-templates"))
+            .getTransactionMetricValues();
+
+    assertThat(testData).isNotNull();
+    assertThat(testData.size()).isEqualTo(1);
+    assertThat(testData.containsKey("Average Response Time (ms)")).isTrue();
+    testData.forEach((txn, metricMap) -> { assertThat(metricMap.size()).isEqualTo(2); });
+  }
+
+  private List<TimeSeriesRecord> getTimeSeriesRecords() throws Exception {
+    File file = new File(getClass().getClassLoader().getResource("timeseries/timeseriesRecords.json").getFile());
+    final Gson gson = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<List<TimeSeriesRecord>>() {}.getType();
+      List<TimeSeriesRecord> timeSeriesMLAnalysisRecords = gson.fromJson(br, type);
+      timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
+        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+        timeSeriesMLAnalysisRecord.setBucketStartTime(Instant.parse("2020-07-07T02:40:00.000Z"));
+        timeSeriesMLAnalysisRecord.getTimeSeriesGroupValues().forEach(groupVal -> {
+          Instant baseTime = Instant.parse("2020-07-07T02:40:00.000Z");
+          Random random = new Random();
+          groupVal.setTimeStamp(baseTime.plus(random.nextInt(4), ChronoUnit.MINUTES));
+        });
+      });
+      return timeSeriesMLAnalysisRecords;
+    }
   }
 }

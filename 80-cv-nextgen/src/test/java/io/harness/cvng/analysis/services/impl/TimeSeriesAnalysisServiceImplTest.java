@@ -51,7 +51,8 @@ import java.util.Set;
 
 public class TimeSeriesAnalysisServiceImplTest extends CVNextGenBaseTest {
   @Mock LearningEngineTaskService learningEngineTaskService;
-  @Mock TimeSeriesService timeSeriesService;
+  @Mock TimeSeriesService mockTimeSeriesService;
+  @Inject TimeSeriesService timeSeriesService;
   @Inject TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject HPersistence hPersistence;
 
@@ -60,7 +61,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CVNextGenBaseTest {
   @Before
   public void setUp() throws Exception {
     cvConfigId = generateUuid();
-    FieldUtils.writeField(timeSeriesAnalysisService, "timeSeriesService", timeSeriesService, true);
+    FieldUtils.writeField(timeSeriesAnalysisService, "timeSeriesService", mockTimeSeriesService, true);
   }
 
   @Test
@@ -105,7 +106,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CVNextGenBaseTest {
   public void testGetMetricTemplate() {
     timeSeriesAnalysisService.getMetricTemplate(cvConfigId);
 
-    Mockito.verify(timeSeriesService).getTimeSeriesMetricDefinitions(cvConfigId);
+    Mockito.verify(mockTimeSeriesService).getTimeSeriesMetricDefinitions(cvConfigId);
   }
 
   @Test
@@ -138,6 +139,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CVNextGenBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetTestData() throws Exception {
+    FieldUtils.writeField(timeSeriesAnalysisService, "timeSeriesService", timeSeriesService, true);
     List<TimeSeriesRecord> records = getTimeSeriesRecords();
     hPersistence.save(records);
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
