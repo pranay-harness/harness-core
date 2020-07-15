@@ -53,6 +53,7 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   private static final String SEVERITY = "severity";
   private static final String LOG_NAME = "delegate";
   private static final String LOG_PROXY_HOST = "logs.harness.io:443";
+  private static final long LOG_QUEUE_BUFFER_MILLIS = 60000L;
 
   private static Logging logging;
 
@@ -103,8 +104,10 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
           synchronized (this) {
             Map<String, ?> jsonMap = layout.toJsonMap((ILoggingEvent) eventObject);
             Level logLevel = Level.valueOf((String) jsonMap.remove(SEVERITY));
-            if (!logQueue.offer(
-                    LogEntry.newBuilder(JsonPayload.of(jsonMap)).setSeverity(logLevelToSeverity(logLevel)).build())) {
+            if (!logQueue.offer(LogEntry.newBuilder(JsonPayload.of(jsonMap))
+                                    .setSeverity(logLevelToSeverity(logLevel))
+                                    .setTimestamp(System.currentTimeMillis())
+                                    .build())) {
               logQueue.clear();
               logger.error("No space left in log queue. Cleared.");
             }
@@ -156,7 +159,9 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
         return;
       }
 
-      if (logQueue.size() < minimum) {
+      if (logQueue.isEmpty()
+          || (logQueue.size() < minimum
+                 && (logQueue.peek().getTimestamp() + LOG_QUEUE_BUFFER_MILLIS > System.currentTimeMillis()))) {
         return;
       }
 
