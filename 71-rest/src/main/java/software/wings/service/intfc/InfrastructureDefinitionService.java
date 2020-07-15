@@ -44,7 +44,8 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   InfrastructureMapping renderAndSaveInfraMapping(
       String appId, String serviceId, String infraDefinitionId, ExecutionContext context);
 
-  InfrastructureMapping saveInfrastructureMapping(String serviceId, InfrastructureDefinition infrastructureDefinition);
+  InfrastructureMapping saveInfrastructureMapping(
+      String serviceId, InfrastructureDefinition infrastructureDefinition, String workflowExecutionId);
 
   boolean isDynamicInfrastructure(String appId, String infraDefinitionId);
 

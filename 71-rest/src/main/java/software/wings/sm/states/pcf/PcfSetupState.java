@@ -609,7 +609,8 @@ public class PcfSetupState extends State {
       if (ExecutionStatus.SUCCESS == executionStatus) {
         setupSweepingOutputPcfBuilder.isSuccess(true);
         setupSweepingOutputPcfBuilder.newPcfApplicationDetails(pcfSetupCommandResponse.getNewApplicationDetails());
-        addNewlyCreateRouteMapIfRequired(stateExecutionData, pcfSetupCommandResponse, setupSweepingOutputPcfBuilder);
+        addNewlyCreateRouteMapIfRequired(stateExecutionData, pcfSetupCommandResponse, setupSweepingOutputPcfBuilder,
+            context.getWorkflowExecutionId());
       }
     }
 
@@ -658,7 +659,8 @@ public class PcfSetupState extends State {
   }
 
   private void addNewlyCreateRouteMapIfRequired(PcfSetupStateExecutionData stateExecutionData,
-      PcfSetupCommandResponse pcfSetupCommandResponse, SetupSweepingOutputPcfBuilder setupSweepingOutputPcfBuilder) {
+      PcfSetupCommandResponse pcfSetupCommandResponse, SetupSweepingOutputPcfBuilder setupSweepingOutputPcfBuilder,
+      String workflowExecutionId) {
     PcfInfrastructureMapping infrastructureMapping = (PcfInfrastructureMapping) infrastructureMappingService.get(
         stateExecutionData.getAppId(), stateExecutionData.getInfraMappingId());
     boolean isInfraUpdated = false;
@@ -685,7 +687,7 @@ public class PcfSetupState extends State {
     }
 
     if (isInfraUpdated) {
-      infrastructureMappingService.update(infrastructureMapping);
+      infrastructureMappingService.update(infrastructureMapping, workflowExecutionId);
     }
   }
 

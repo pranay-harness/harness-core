@@ -298,7 +298,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .get(COMPUTE_PROVIDER_ID);
 
     InfrastructureMapping returnedInfrastructureMapping =
-        infrastructureMappingService.save(physicalInfrastructureMapping);
+        infrastructureMappingService.save(physicalInfrastructureMapping, null);
 
     assertThat(returnedInfrastructureMapping.getUuid()).isEqualTo(INFRA_MAPPING_ID);
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
@@ -374,7 +374,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .when(serviceTemplateService)
         .get(APP_ID, TEMPLATE_ID);
 
-    InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra);
+    InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra, null);
     assertThat(returnedInfra).isNotNull();
     verify(wingsPersistence, times(2)).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(staticInfrastructureProvider).updateHostConnAttrs(updatedInfra, updatedInfra.getHostConnectionAttrs());
@@ -444,7 +444,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .when(serviceTemplateService)
         .get(APP_ID, TEMPLATE_ID);
 
-    InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra);
+    InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra, null);
     assertThat(returnedInfra).isNotNull();
     Map<String, Object> keyValuePairs = new LinkedHashMap<>();
     keyValuePairs.put("computeProviderSettingId", COMPUTE_PROVIDER_ID_CHANGED);
@@ -537,7 +537,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .when(serviceTemplateService)
         .get(APP_ID, TEMPLATE_ID);
 
-    InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra);
+    InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra, null);
     assertThat(returnedInfra).isNotNull();
     Map<String, Object> keyValuePairs = new LinkedHashMap<>();
     keyValuePairs.put("computeProviderSettingId", COMPUTE_PROVIDER_ID);
@@ -1264,7 +1264,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     doReturn(true)
         .when(spyInfrastructureMappingService)
         .isNamespaceExpression(any(ContainerInfrastructureMapping.class));
-    spyInfrastructureMappingService.validateInfraMapping(infrastructureMapping, false);
+    spyInfrastructureMappingService.validateInfraMapping(infrastructureMapping, false, null);
     verify(spyInfrastructureMappingService, times(1)).isNamespaceExpression(any(ContainerInfrastructureMapping.class));
   }
 }

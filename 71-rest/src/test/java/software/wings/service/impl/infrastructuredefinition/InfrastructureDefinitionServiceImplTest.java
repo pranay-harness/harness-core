@@ -601,7 +601,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     InfrastructureDefinition valid = null;
     valid = getValidInfra(PHYSICAL_INFRA, false);
     infrastructureDefinitionService.validateInfraDefinition(valid);
-    verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false);
+    verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false, null);
     InfrastructureDefinition inValid_phy = valid.cloneForUpdate();
     inValid_phy.setDeploymentType(DeploymentType.HELM);
     assertThatExceptionOfType(InvalidRequestException.class)
@@ -618,7 +618,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
 
     valid = getValidInfra(PHYSICAL_INFRA_WINRM, false);
     infrastructureDefinitionService.validateInfraDefinition(valid);
-    verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false);
+    verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false, null);
     InfrastructureDefinition inValid_phy_winrm = valid.cloneForUpdate();
     inValid_phy_winrm.setDeploymentType(DeploymentType.HELM);
     assertThatExceptionOfType(InvalidRequestException.class)
@@ -626,7 +626,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
 
     valid = getValidInfra(GCP_KUBERNETES_ENGINE, true);
     infrastructureDefinitionService.validateInfraDefinition(valid);
-    verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false);
+    verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false, null);
     InfrastructureDefinition inValid_gcpK8s = valid.cloneForUpdate();
     InfrastructureDefinition invalid_gcp_k8s_prov = valid.cloneForUpdate();
     for (String key : ImmutableList.of(GoogleKubernetesEngineKeys.clusterName, GoogleKubernetesEngineKeys.namespace)) {
@@ -638,7 +638,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
 
     valid = getValidInfra(AWS_ECS, true);
     infrastructureDefinitionService.validateInfraDefinition(valid);
-    verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false);
+    verify(infrastructureMappingService, times(1)).validateInfraMapping(valid.getInfraMapping(), false, null);
     InfrastructureDefinition invalid_awsEcs = valid.cloneForUpdate();
     for (String key : ImmutableList.<String>of(AwsEcsInfrastructureKeys.region, AwsEcsInfrastructureKeys.clusterName,
              AwsEcsInfrastructureKeys.executionRole, AwsEcsInfrastructureKeys.vpcId,

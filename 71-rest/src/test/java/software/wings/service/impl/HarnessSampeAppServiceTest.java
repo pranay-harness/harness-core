@@ -111,13 +111,13 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
         sampleApp.getAppId(), qaEnv.getUuid(), K8S_SERVICE_INFRA_NAME);
     assertThat(k8sInfraMappingQA).isNotNull();
     k8sInfraMappingQA.setName("Test K8s Service Infra QA");
-    when(mockInfrastructureMappingService.update(k8sInfraMappingQA)).thenReturn(k8sInfraMappingQA);
+    when(mockInfrastructureMappingService.update(k8sInfraMappingQA, null)).thenReturn(k8sInfraMappingQA);
 
     InfrastructureMapping k8sInfraMappingProd = infrastructureMappingService.getInfraMappingByName(
         sampleApp.getAppId(), prodEnv.getUuid(), K8S_SERVICE_INFRA_NAME);
     assertThat(k8sInfraMappingProd).isNotNull();
     k8sInfraMappingProd.setName("Test K8s Service Infra Prod");
-    when(mockInfrastructureMappingService.update(k8sInfraMappingProd)).thenReturn(k8sInfraMappingProd);
+    when(mockInfrastructureMappingService.update(k8sInfraMappingProd, null)).thenReturn(k8sInfraMappingProd);
 
     if (isV2) {
       Workflow rollingWf = workflowService.readWorkflowByName(sampleApp.getAppId(), K8S_ROLLING_WORKFLOW_NAME);

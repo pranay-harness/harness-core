@@ -78,7 +78,7 @@ public class InfrastructureMappingResource {
     infrastructureMapping.setEnvId(envId);
     infrastructureMapping.setAccountId(appService.getAccountIdByAppId(appId));
     populateDeploymentTypeIfRequired(appId, infrastructureMapping);
-    return new RestResponse<>(infrastructureMappingService.save(infrastructureMapping));
+    return new RestResponse<>(infrastructureMappingService.save(infrastructureMapping, null));
   }
 
   @GET
@@ -155,7 +155,7 @@ public class InfrastructureMappingResource {
     infrastructureMapping.setAppId(appId);
     infrastructureMapping.setEnvId(envId);
     infrastructureMapping.setUuid(infraMappingId);
-    return new RestResponse<>(infrastructureMappingService.update(infrastructureMapping));
+    return new RestResponse<>(infrastructureMappingService.update(infrastructureMapping, null));
   }
 
   @DELETE

@@ -42,6 +42,6 @@ public class InfraMappingSampleDataProvider {
             .withEnvId(envId)
             .withSample(true)
             .build();
-    return infrastructureMappingService.save(directKubeInfra, true);
+    return infrastructureMappingService.save(directKubeInfra, true, null);
   }
 }

@@ -175,7 +175,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
                                                         .cloudFormationOutputMap(objectMap)
                                                         .build();
 
-    doReturn(infrastructureMapping).when(infrastructureMappingService).update(any());
+    doReturn(infrastructureMapping).when(infrastructureMappingService).update(any(), anyString());
 
     PageResponse<Service> response = new PageResponse<>();
     Service service = Service.builder().name("service1").uuid(SERVICE_ID).build();
@@ -185,7 +185,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     infrastructureProvisionerService.regenerateInfrastructureMappings(ID_KEY, executionContext, objectMap);
 
     ArgumentCaptor<InfrastructureMapping> captor = ArgumentCaptor.forClass(InfrastructureMapping.class);
-    verify(infrastructureMappingService).update(captor.capture());
+    verify(infrastructureMappingService).update(captor.capture(), anyString());
     InfrastructureMapping mapping = captor.getValue();
     AwsInstanceFilter awsInstanceFilter = ((AwsInfrastructureMapping) mapping).getAwsInstanceFilter();
     assertThat(awsInstanceFilter).isNotNull();
