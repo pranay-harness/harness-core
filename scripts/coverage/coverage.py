@@ -85,33 +85,29 @@ def calculate_coverage(coverage_file_path):
         branch_coverage = extract_from_json(result, metric_key, "branch_coverage")
         conditions_to_cover = extract_from_json(result, metric_key, "conditions_to_cover")
 
-    comma_str = "{0} ,{1}, {2}, {3}%, {4}".format(coverage_file_path,
-                                                  coverage, lines_to_cover, branch_coverage,
-                                                  conditions_to_cover)
-    print(comma_str)
-    return comma_str
+    return [coverage_file_path, coverage, lines_to_cover, branch_coverage, conditions_to_cover]
 
 
 def export_file(data):
     with open("out.csv", 'w') as csvfile:
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(
-            ["File", "Coverage", "Lines To Cover", "Branch Coverage", "Conditions To Cover"])
+            ["File", "Coverage(%)", "Lines To Cover", "Branch Coverage(%)", "Conditions To Cover"])
         csv_writer.writerows(data)
-    export_file(data)
 
 
 def main(list_file_path):
     rows = []
     with open(list_file_path) as fp:
-        line = fp.readline()
-        while line:
-            try:
-                print("Fetching Coverage for File {}".format(line.strip()))
-                line = fp.readline()
-                rows.append(calculate_coverage(line.strip()))
-            except Exception as e:
-                print("Error in processing file {}".format(line))
+        files = [line.strip() for line in fp]
+
+    for coverage_file in files:
+        try:
+            rows.append(calculate_coverage(coverage_file))
+            print("Fetching Coverage for File {}".format(coverage_file))
+        except Exception as e:
+            print("Error in processing file {}, Error: {}".format(coverage_file, str(e)))
+    export_file(rows)
 
 
 if __name__ == "__main__":
