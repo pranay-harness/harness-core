@@ -32,7 +32,7 @@ public class PerpetualTaskServiceGrpcClient {
 
   public List<PerpetualTaskAssignDetails> perpetualTaskList(String delegateId) {
     PerpetualTaskListResponse response =
-        serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+        serviceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
             .perpetualTaskList(PerpetualTaskListRequest.newBuilder()
                                    .setDelegateId(DelegateId.newBuilder().setId(delegateId).build())
                                    .build());
@@ -40,13 +40,13 @@ public class PerpetualTaskServiceGrpcClient {
   }
 
   public PerpetualTaskExecutionContext perpetualTaskContext(PerpetualTaskId taskId) {
-    return serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+    return serviceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
         .perpetualTaskContext(PerpetualTaskContextRequest.newBuilder().setPerpetualTaskId(taskId).build())
         .getPerpetualTaskContext();
   }
 
   public void heartbeat(PerpetualTaskId taskId, Instant taskStartTime, PerpetualTaskResponse perpetualTaskResponse) {
-    serviceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+    serviceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
         .heartbeat(HeartbeatRequest.newBuilder()
                        .setId(taskId.getId())
                        .setHeartbeatTimestamp(HTimestamps.fromInstant(taskStartTime))
