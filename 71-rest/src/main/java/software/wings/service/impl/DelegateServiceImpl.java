@@ -62,10 +62,14 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import com.github.zafarkhaja.semver.Version;
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.mongodb.MongoGridFSException;
+import com.mongodb.client.MongoCollection;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -74,10 +78,13 @@ import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.FileMetadata;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.callback.DelegateCallback;
+import io.harness.callback.MongoDatabase;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateApproval;
+import io.harness.delegate.beans.DelegateCallbackRecord;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
@@ -113,12 +120,14 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.logging.DelegateDriverLogContext;
 import io.harness.mongo.DelayLogContext;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
+import io.harness.serializer.JsonUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.service.intfc.DelegateTaskService;
@@ -135,6 +144,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.bson.Document;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -2292,8 +2302,47 @@ public class DelegateServiceImpl implements DelegateService {
       handleInprocResponse(delegateTask, response);
     } else {
       // TODO: we have to add the logic of handling task response based on different driver Id here
+      handleDriverResponse(delegateTask, response);
     }
     wingsPersistence.delete(taskQuery);
+  }
+
+  private void handleDriverResponse(DelegateTask delegateTask, DelegateTaskResponse response) {
+    DelegateCallbackRecord delegateCallbackRecord =
+        wingsPersistence.get(DelegateCallbackRecord.class, delegateTask.getDriverId());
+    if (delegateCallbackRecord == null) {
+      return;
+    }
+
+    try (DelegateDriverLogContext driverLogContext =
+             new DelegateDriverLogContext(delegateCallbackRecord.getUuid(), OVERRIDE_ERROR)) {
+      DelegateCallback delegateCallback = DelegateCallback.parseFrom(delegateCallbackRecord.getCallbackMetadata());
+      publishTaskResponseEvent(delegateCallback, response);
+    } catch (InvalidProtocolBufferException ex) {
+      logger.error("Unable to parse {} object from byte array.", DelegateCallback.class.getName(), ex);
+    }
+  }
+
+  private void publishTaskResponseEvent(DelegateCallback delegateCallback, DelegateTaskResponse response) {
+    if (delegateCallback.getMongoDatabase() != null) {
+      publishMongoDbEvent(delegateCallback.getMongoDatabase(), response);
+    }
+  }
+
+  private void publishMongoDbEvent(MongoDatabase databaseConfig, DelegateTaskResponse response) {
+    // Expected URI format - mongodb://username:password@host:port/database
+    String connectionString = databaseConfig.getConnection();
+    try (MongoClient mongoClient = new MongoClient(new MongoClientURI(connectionString))) {
+      com.mongodb.client.MongoDatabase database =
+          mongoClient.getDatabase(connectionString.substring(connectionString.lastIndexOf('/') + 1));
+      MongoCollection<Document> collection =
+          database.getCollection(databaseConfig.getCollectionNamePrefix() + "_delegate_task_response_event");
+
+      Document document = Document.parse(JsonUtils.asJson(response));
+      collection.insertOne(document);
+    } catch (Exception ex) {
+      logger.error("Unable to open connection to driver MongoDb.", DelegateCallback.class.getName(), ex);
+    }
   }
 
   @VisibleForTesting
