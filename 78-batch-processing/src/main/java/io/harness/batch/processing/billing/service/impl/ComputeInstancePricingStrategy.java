@@ -1,5 +1,7 @@
 package io.harness.batch.processing.billing.service.impl;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.batch.processing.billing.service.PricingData;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.InstanceCategory;
@@ -65,7 +67,7 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     if (null == customVMPricing) {
       if (GCPCustomInstanceDetailProvider.isCustomGCPInstance(instanceFamily, cloudProvider)) {
         return GCPCustomInstanceDetailProvider.getGCPCustomInstancePricingData(instanceFamily, instanceCategory);
-      } else if (cloudProvider == CloudProvider.IBM) {
+      } else if (ImmutableList.of(CloudProvider.ON_PREM, CloudProvider.IBM).contains(cloudProvider)) {
         return getIBMInstancePricingData(instanceData);
       } else if (cloudProvider == CloudProvider.AWS && K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType)) {
         return ecsFargateInstancePricingStrategy.getPricePerHour(

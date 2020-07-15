@@ -3,6 +3,7 @@ package io.harness.batch.processing.service.impl;
 import static io.harness.batch.processing.pricing.data.CloudProvider.AWS;
 import static io.harness.batch.processing.pricing.data.CloudProvider.AZURE;
 import static io.harness.batch.processing.pricing.data.CloudProvider.GCP;
+import static io.harness.batch.processing.pricing.data.CloudProvider.ON_PREM;
 
 import com.google.common.collect.ImmutableList;
 
@@ -32,7 +33,7 @@ public class CloudProviderServiceImpl implements CloudProviderService {
   private static final String AZURE_SEARCH_STRING = "azure:";
   private static final String IBM_SEARCH_STRING = "ibm:";
 
-  private static final CloudProvider DEFAULT_CLOUD_PROVIDER = GCP;
+  private static final CloudProvider DEFAULT_CLOUD_PROVIDER = ON_PREM;
 
   private Cache<String, CloudProvider> cloudProviderInfoCache =
       Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
