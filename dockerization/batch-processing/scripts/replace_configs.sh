@@ -86,3 +86,11 @@ fi
 if [[ "" != "$UI_SERVER_URL" ]]; then
   yq write -i $CONFIG_FILE baseUrl "$UI_SERVER_URL"
 fi
+
+if [[ "" != "$SEGMENT_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE segmentConfig.enabled "$SEGMENT_ENABLED"
+fi
+
+if [[ "" != "$SEGMENT_APIKEY" ]]; then
+  yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
+fi
