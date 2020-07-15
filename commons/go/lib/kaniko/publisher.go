@@ -249,6 +249,7 @@ func (c *registryClient) ecrCleanup() error {
 
 func (c *registryClient) Publish(filePath, fileContext, destination string) error {
 	start := time.Now()
+	// TODO: Honour existing context
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.timeoutSecs)*time.Second)
 	defer cancel()
 
@@ -311,6 +312,7 @@ func (c *registryClient) Publish(filePath, fileContext, destination string) erro
 
 	c.log.Infow("Successfully built and published images to registry",
 		"arguments", args,
+		"stdout", out.String(),
 		"elapsed_time_ms", utils.TimeSince(start))
 	return nil
 }

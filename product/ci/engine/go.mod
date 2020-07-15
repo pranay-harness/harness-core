@@ -11,6 +11,7 @@ require (
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.4.1
+	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.5.1
