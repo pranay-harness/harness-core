@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.TimeRange;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.models.VerificationType;
 import io.harness.iterator.PersistentRegularIterable;
@@ -95,6 +96,8 @@ public abstract class CVConfig
   protected abstract void validateParams();
 
   public abstract DataSourceType getType();
+
+  public abstract TimeRange getFirstTimeDataCollectionTimeRange();
 
   @JsonIgnore public abstract String getDataCollectionDsl();
 }

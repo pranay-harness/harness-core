@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
-import io.harness.cvng.beans.TimeRange;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -21,8 +20,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -274,8 +271,6 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
     fillCommon(cvConfig);
     cvConfig.setQuery("exception");
     cvConfig.setServiceInstanceIdentifier(serviceInstanceIdentifier);
-    cvConfig.setBaseline(
-        TimeRange.builder().startTime(Instant.now()).endTime(Instant.now().plus(10, ChronoUnit.DAYS)).build());
     return cvConfig;
   }
 

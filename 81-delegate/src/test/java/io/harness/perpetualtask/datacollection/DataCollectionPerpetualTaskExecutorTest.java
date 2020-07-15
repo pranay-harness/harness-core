@@ -89,8 +89,14 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
     dataCollectionTaskDTO =
         DataCollectionTaskDTO.builder().accountId(accountId).dataCollectionInfo(dataCollectionInfo).build();
     Call<RestResponse<DataCollectionTaskDTO>> nextTaskCall = mock(Call.class);
+    Call<RestResponse<DataCollectionTaskDTO>> nullCall = mock(Call.class);
+
     when(nextTaskCall.execute()).thenReturn(Response.success(new RestResponse<>(dataCollectionTaskDTO)));
-    when(cvNextGenServiceClient.getNextDataCollectionTask(anyString(), anyString())).thenReturn(nextTaskCall);
+    when(nullCall.execute()).thenReturn(Response.success(new RestResponse<>(null)));
+
+    when(cvNextGenServiceClient.getNextDataCollectionTask(anyString(), anyString()))
+        .thenReturn(nextTaskCall)
+        .thenReturn(nullCall);
     Call<RestResponse<Void>> taskUpdateResult = mock(Call.class);
     when(cvNextGenServiceClient.updateTaskStatus(anyString(), any())).thenReturn(taskUpdateResult);
   }
@@ -122,7 +128,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.RAGHU)
   @Category({UnitTests.class})
-  public void testDataCollection_executeDSL() {
+  public void testDataCollection_executeDSL() throws IOException {
     createTaskParams(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER, "dsl");
     dataCollector.runOnce(PerpetualTaskId.newBuilder().build(), perpetualTaskParams, Instant.now());
     verifyDsl("dsl");

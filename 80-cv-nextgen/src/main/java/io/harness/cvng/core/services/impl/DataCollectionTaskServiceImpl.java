@@ -11,6 +11,7 @@ import com.google.inject.name.Names;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.beans.ExecutionStatus;
+import io.harness.cvng.beans.TimeRange;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
@@ -20,7 +21,6 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
@@ -113,9 +113,9 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     DataCollectionTask dataCollectionTask = getDataCollectionTask(result.getDataCollectionTaskId());
     if (result.getStatus() == ExecutionStatus.SUCCESS) {
       // TODO: make this an atomic operation
+      createNextTask(dataCollectionTask);
       orchestrationService.queueAnalysis(
           dataCollectionTask.getCvConfigId(), dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
-      createNextTask(dataCollectionTask);
     } else {
       retry(dataCollectionTask);
     }
@@ -164,15 +164,15 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     logger.info("Enqueuing cvConfigId for the first time: {}", cvConfig.getUuid());
     populateMetricPack(cvConfig);
 
-    Instant endTimeForCollection = DateTimeUtils.roundDownTo5MinBoundary(clock.instant());
-    // setting it to 2:05 min hours for now. This should come from cvConfig
+    TimeRange dataCollectionRange = cvConfig.getFirstTimeDataCollectionTimeRange();
     DataCollectionTask dataCollectionTask = getDataCollectionTask(
-        cvConfig, endTimeForCollection.minus(125, ChronoUnit.MINUTES), endTimeForCollection.minusMillis(1));
+        cvConfig, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime().minusMillis(1));
 
-    save(dataCollectionTask);
     String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(
         cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getConnectorId());
+    save(dataCollectionTask);
     cvConfigService.setCollectionTaskId(cvConfig.getUuid(), dataCollectionTaskId);
+
     logger.info("Enqueued cvConfigId successfully: {}", cvConfig.getUuid());
     return dataCollectionTaskId;
   }
