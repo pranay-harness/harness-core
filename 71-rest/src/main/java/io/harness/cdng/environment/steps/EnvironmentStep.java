@@ -3,6 +3,7 @@ package io.harness.cdng.environment.steps;
 import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
+import io.harness.cdng.common.AmbianceHelper;
 import io.harness.cdng.environment.EnvironmentService;
 import io.harness.cdng.environment.beans.Environment;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
@@ -41,9 +42,9 @@ public class EnvironmentStep implements Step, SyncExecutable {
   }
 
   private Environment getEnvironmentObject(EnvironmentYaml environmentYaml, Ambiance ambiance) {
-    String accountId = ambiance.getSetupAbstractions().get("accountId");
-    String projectId = ambiance.getSetupAbstractions().get("projectId");
-    String orgId = ambiance.getSetupAbstractions().get("orgId");
+    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String projectId = AmbianceHelper.getProjectIdentifier(ambiance);
+    String orgId = AmbianceHelper.getOrgIdentifier(ambiance);
 
     return Environment.builder()
         .displayName(environmentYaml.getName())
