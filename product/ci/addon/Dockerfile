@@ -6,7 +6,7 @@
 
 
 # First stage
-FROM alpine:latest
+FROM alpine:3.12
 # Install jfrog cli with version 1.35.5
 RUN apk add --update \
     curl \
@@ -17,7 +17,7 @@ RUN mv ./jfrog /usr/local/bin/
 COPY linux_amd64_pure_stripped/ci-addon /usr/local/bin/ci-addon
 
 # Second stage
-FROM gcr.io/kaniko-project/executor:debug
+FROM gcr.io/kaniko-project/executor:debug-v0.16.0
 COPY --from=0 /usr/local/bin/jfrog /usr/local/bin/jfrog
 COPY --from=0 /usr/local/bin/ci-addon /usr/local/bin/ci-addon
 RUN ["chmod", "+x", "/usr/local/bin/ci-addon"]

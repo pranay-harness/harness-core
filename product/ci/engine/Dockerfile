@@ -7,7 +7,7 @@
 
 
 # First stage
-FROM alpine:latest
+FROM alpine:3.12
 # Copy ci-lite-engine binary
 COPY linux_amd64_pure_stripped/engine /usr/local/bin/ci-lite-engine-linux-amd64
 RUN chmod +x /usr/local/bin/ci-lite-engine-linux-amd64
