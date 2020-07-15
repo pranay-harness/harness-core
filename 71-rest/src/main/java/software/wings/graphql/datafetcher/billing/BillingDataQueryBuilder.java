@@ -681,11 +681,18 @@ public class BillingDataQueryBuilder {
                                         .values(instanceType.toArray(new String[0]))
                                         .build())
                       .build());
+      DbColumn instanceName = schema.getInstanceName();
       selectQuery.addColumns(groupByColumn);
       selectQuery.addGroupings(groupByColumn);
       fieldNames.add(BillingDataMetaDataFields.valueOf(groupByColumn.getName().toUpperCase()));
       selectQuery.addCondition(UnaryCondition.isNotNull(groupByColumn));
       groupByFields.add(BillingDataMetaDataFields.valueOf(groupByColumn.getName().toUpperCase()));
+      // Adding group by instance name
+      selectQuery.addColumns(instanceName);
+      selectQuery.addGroupings(instanceName);
+      fieldNames.add(BillingDataMetaDataFields.valueOf(instanceName.getName().toUpperCase()));
+      selectQuery.addCondition(UnaryCondition.isNotNull(instanceName));
+      groupByFields.add(BillingDataMetaDataFields.valueOf(instanceName.getName().toUpperCase()));
     }
   }
 

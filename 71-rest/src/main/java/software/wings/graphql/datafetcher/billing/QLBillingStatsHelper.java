@@ -25,6 +25,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.service.intfc.SettingsService;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 @Singleton
 @Slf4j
 public class QLBillingStatsHelper {
@@ -41,6 +44,16 @@ public class QLBillingStatsHelper {
   protected static class CacheKey {
     private String entityId;
     private BillingDataMetaDataFields field;
+  }
+
+  public String getEntityName(BillingDataMetaDataFields field, String entityId, ResultSet resultSet)
+      throws SQLException {
+    switch (field) {
+      case INSTANCEID:
+        return resultSet.getString(BillingDataMetaDataFields.INSTANCENAME.getFieldName());
+      default:
+        return getEntityName(field, entityId);
+    }
   }
 
   public String getEntityName(BillingDataMetaDataFields field, String entityId) {
