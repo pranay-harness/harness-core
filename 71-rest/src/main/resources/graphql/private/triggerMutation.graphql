@@ -103,7 +103,6 @@ enum GitHubAction {
 enum BitbucketEvent {
   PING
   DIAGNOSTICS_PING
-  ALL
 
   PUSH_ANY
   ANY
@@ -136,7 +135,6 @@ enum BitbucketEvent {
 enum GitlabEvent {
   PULL_REQUEST
   PUSH
-  PING
   ANY
 }
 
