@@ -10,6 +10,7 @@ import com.mongodb.BasicDBObject;
 import io.harness.iterator.PersistentIterable;
 import io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
+import org.apache.commons.lang3.NotImplementedException;
 import org.mongodb.morphia.query.FilterOperator;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -82,5 +83,10 @@ public class SpringPersistenceProvider<T extends PersistentIterable>
   @Override
   public T findInstance(Class<T> clazz, String fieldName, SpringFilterExpander filterExpander) {
     return persistence.findOne(createQuery(clazz, fieldName, filterExpander), clazz);
+  }
+
+  @Override
+  public void recoverAfterPause(Class<T> clazz, String fieldName) {
+    throw new NotImplementedException("TODO");
   }
 }

@@ -5,4 +5,5 @@ public interface PersistenceIterator<T extends PersistentIterable> {
 
   void wakeup();
   void process();
+  void recoverAfterPause();
 }

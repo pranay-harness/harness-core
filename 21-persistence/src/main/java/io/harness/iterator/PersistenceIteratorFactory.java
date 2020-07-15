@@ -1,6 +1,8 @@
 package io.harness.iterator;
 
 import static io.harness.iterator.PersistenceIterator.ProcessMode.PUMP;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -79,6 +81,10 @@ public final class PersistenceIteratorFactory {
     injector.injectMembers(iterator);
     long millis = options.interval.toMillis();
     executor.scheduleAtFixedRate(iterator::process, random.nextInt((int) millis), millis, TimeUnit.MILLISECONDS);
+
+    if (iterator.getSchedulingType() == IRREGULAR || iterator.getSchedulingType() == IRREGULAR_SKIP_MISSED) {
+      executor.schedule(() -> iterator.recoverAfterPause(), random.nextInt((int) millis), TimeUnit.MILLISECONDS);
+    }
 
     return iterator;
   }

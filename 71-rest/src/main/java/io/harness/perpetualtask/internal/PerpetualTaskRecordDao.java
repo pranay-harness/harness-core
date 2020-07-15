@@ -1,7 +1,5 @@
 package io.harness.perpetualtask.internal;
 
-import static java.util.Collections.emptyList;
-
 import com.google.inject.Inject;
 
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -30,7 +28,7 @@ public class PerpetualTaskRecordDao {
     UpdateOperations<PerpetualTaskRecord> updateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.delegateId, delegateId)
-            .set(PerpetualTaskRecordKeys.assignerIterations, emptyList())
+            .unset(PerpetualTaskRecordKeys.assignerIterations)
             .set(PerpetualTaskRecordKeys.client_context_last_updated, lastContextUpdated);
     persistence.update(query, updateOperations);
   }
@@ -46,7 +44,7 @@ public class PerpetualTaskRecordDao {
     UpdateOperations<PerpetualTaskRecord> updateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.delegateId, "")
-            .set(PerpetualTaskRecordKeys.assignerIterations, emptyList());
+            .unset(PerpetualTaskRecordKeys.assignerIterations);
     UpdateResults update = persistence.update(query, updateOperations);
     return update.getUpdatedCount() > 0;
   }

@@ -144,28 +144,4 @@ public class PersistenceRegularIteratorTest extends PersistenceTest {
       assertThat(updatedEntity.getNextIteration()).isGreaterThan(entity.getNextIteration());
     }
   }
-
-  @Test
-  @Owner(developers = GEORGE)
-  @Category(StressTests.class)
-  public void testNextReturnsJustAdded() throws IOException {
-    PersistenceIterator<TestRegularIterableEntity> loopIterator = iterator(LOOP);
-    assertThatCode(() -> {
-      try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-        for (int i = 0; i < 10; i++) {
-          persistence.save(TestRegularIterableEntity.builder().build());
-        }
-
-        Future<?> future1 = executorService.submit(() -> loopIterator.process());
-        //    final Future<?> future2 = executorService.submit(() -> iterator.process());
-        //    final Future<?> future3 = executorService.submit(() -> iterator.process());
-
-        Morpheus.sleep(ofSeconds(300));
-        future1.cancel(true);
-        //    future2.cancel(true);
-        //    future3.cancel(true);
-      }
-    })
-        .doesNotThrowAnyException();
-  }
 }

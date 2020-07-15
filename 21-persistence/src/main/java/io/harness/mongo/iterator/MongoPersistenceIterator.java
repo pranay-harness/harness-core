@@ -61,14 +61,14 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
   private ExecutorService executorService;
   private Semaphore semaphore;
   private boolean redistribute;
-  private SchedulingType schedulingType;
+  @Getter private SchedulingType schedulingType;
 
   private long movingAvg(long current, long sample) {
     return (15 * current + sample) / 16;
   }
 
   private boolean shouldProcess() {
-    return !MaintenanceController.getMaintenanceFilename() && queueController.isPrimary();
+    return !MaintenanceController.getMaintenanceFlag() && queueController.isPrimary();
   }
 
   @Override
@@ -169,6 +169,10 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
         sleep(ofSeconds(1));
       }
     }
+  }
+
+  public void recoverAfterPause() {
+    persistenceProvider.recoverAfterPause(clazz, fieldName);
   }
 
   public Duration calculateSleepDuration(T next) {

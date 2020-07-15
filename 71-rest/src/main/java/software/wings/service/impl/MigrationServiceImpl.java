@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
@@ -383,7 +383,7 @@ public class MigrationServiceImpl implements MigrationService {
 
   @VisibleForTesting
   boolean isNotUnderMaintenance() {
-    return !getMaintenanceFilename();
+    return !getMaintenanceFlag();
   }
 
   @VisibleForTesting

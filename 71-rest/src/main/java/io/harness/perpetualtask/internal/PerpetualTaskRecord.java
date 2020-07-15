@@ -1,13 +1,16 @@
 package io.harness.perpetualtask.internal;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentFibonacciIterable;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.Field;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskClientContext.PerpetualTaskClientContextKeys;
 import io.harness.persistence.AccountAccess;
@@ -22,7 +25,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -37,6 +39,9 @@ import java.util.List;
 @FieldNameConstants(innerTypeName = "PerpetualTaskRecordKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "perpetualTask", noClassnameStored = true)
+@CdIndex(name = "assignerIterator",
+    fields = { @Field(PerpetualTaskRecordKeys.delegateId)
+               , @Field(PerpetualTaskRecordKeys.assignerIterations) })
 @HarnessEntity(exportable = false)
 @Slf4j
 public class PerpetualTaskRecord implements PersistentEntity, UuidAware, PersistentRegularIterable,
@@ -47,11 +52,11 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
   PerpetualTaskClientContext clientContext;
   long intervalSeconds;
   long timeoutMillis;
-  @FdIndex String delegateId;
+  String delegateId;
   String state;
   long lastHeartbeat;
 
-  @FdIndex List<Long> assignerIterations;
+  List<Long> assignerIterations;
   @FdIndex long resetterIteration;
 
   long createdAt;
@@ -90,8 +95,8 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
-  @UtilityClass
   public static final class PerpetualTaskRecordKeys {
+    private PerpetualTaskRecordKeys() {}
     public static final String client_context_last_updated =
         clientContext + "." + PerpetualTaskClientContextKeys.lastContextUpdated;
     public static final String client_params = clientContext + "." + PerpetualTaskClientContextKeys.clientParams;

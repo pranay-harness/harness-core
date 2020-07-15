@@ -13,4 +13,5 @@ public interface PersistenceProvider<T extends PersistentIterable, F extends Fil
   T obtainNextInstance(long base, long throttled, Class<T> clazz, String fieldName, SchedulingType schedulingType,
       Duration targetInterval, F filterExpander);
   T findInstance(Class<T> clazz, String fieldName, F filterExpander);
+  void recoverAfterPause(Class<T> clazz, String fieldName);
 }

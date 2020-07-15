@@ -1,6 +1,6 @@
 package software.wings.scheduler;
 
-import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
@@ -36,7 +36,7 @@ public class JobScheduler extends HQuartzScheduler implements ConfigChangeListen
         injector.getInstance(ConfigurationController.class).register(this, asList(ConfigChangeEvent.PrimaryChanged));
 
         ConfigurationController configurationController = injector.getInstance(Key.get(ConfigurationController.class));
-        if (!getMaintenanceFilename() && configurationController.isPrimary()) {
+        if (!getMaintenanceFlag() && configurationController.isPrimary()) {
           scheduler.start();
         }
       }

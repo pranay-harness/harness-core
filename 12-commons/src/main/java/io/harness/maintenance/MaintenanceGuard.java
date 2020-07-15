@@ -3,7 +3,7 @@ package io.harness.maintenance;
 public class MaintenanceGuard implements AutoCloseable {
   private boolean old;
   public MaintenanceGuard(boolean maintenance) {
-    old = MaintenanceController.getMaintenanceFilename();
+    old = MaintenanceController.getMaintenanceFlag();
     MaintenanceController.forceMaintenance(maintenance);
   }
 

@@ -5,7 +5,7 @@ import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.System.currentTimeMillis;
 import static java.util.function.Function.identity;
@@ -67,7 +67,7 @@ public class DelegateQueueTask implements Runnable {
    */
   @Override
   public void run() {
-    if (getMaintenanceFilename()) {
+    if (getMaintenanceFlag()) {
       return;
     }
 

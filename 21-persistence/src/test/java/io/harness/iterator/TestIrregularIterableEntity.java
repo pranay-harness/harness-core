@@ -14,7 +14,7 @@ import java.util.List;
 @Data
 @Builder
 @Entity(value = "!!!testIrregularIterable")
-@FieldNameConstants(innerTypeName = "IrregularIterableEntityKeys")
+@FieldNameConstants(innerTypeName = "TestIrregularIterableEntityKeys")
 public class TestIrregularIterableEntity implements PersistentIrregularIterable {
   @Id private String uuid;
   private String name;

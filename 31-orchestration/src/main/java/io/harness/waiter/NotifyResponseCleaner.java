@@ -3,7 +3,7 @@ package io.harness.waiter;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
@@ -34,7 +34,7 @@ public class NotifyResponseCleaner implements Runnable {
 
   @Override
   public void run() {
-    if (getMaintenanceFilename() || queueController.isNotPrimary()) {
+    if (getMaintenanceFlag() || queueController.isNotPrimary()) {
       return;
     }
 

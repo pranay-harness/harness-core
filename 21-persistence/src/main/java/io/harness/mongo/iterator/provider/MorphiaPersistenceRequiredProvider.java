@@ -75,4 +75,12 @@ public class MorphiaPersistenceRequiredProvider<T extends PersistentIterable>
     Query<T> resultQuery = createQuery(clazz, fieldName, filterExpander).project(fieldName, true);
     return resultQuery.get();
   }
+
+  @Override
+  public void recoverAfterPause(Class<T> clazz, String fieldName) {
+    persistence.update(persistence.createQuery(clazz).filter(fieldName, null),
+        persistence.createUpdateOperations(clazz).unset(fieldName));
+    persistence.update(persistence.createQuery(clazz).field(fieldName).sizeEq(0),
+        persistence.createUpdateOperations(clazz).unset(fieldName));
+  }
 }
