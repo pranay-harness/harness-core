@@ -27,28 +27,21 @@ public class RawBillingTableSchema {
   public static final DbColumn region;
   public static final DbColumn startTime;
   public static final DbColumn endTime;
-
-  public static final DbColumn invoiceMonth;
-  public static final DbColumn costType;
-  public static final DbColumn serviceId;
-  public static final DbColumn projectAncestryNumbers;
-  public static final DbColumn projectLabelsKey;
-  public static final DbColumn projectLabelsValue;
   public static final DbColumn labelsKey;
   public static final DbColumn labelsValue;
-  public static final DbColumn systemLabelsKey;
-  public static final DbColumn systemLabelsValue;
-  public static final DbColumn locationLocation;
-  public static final DbColumn locationCountry;
-  public static final DbColumn currency;
-  public static final DbColumn currencyConversionRate;
-  public static final DbColumn usageAmount;
-  public static final DbColumn usageUnit;
-  public static final DbColumn usageAmountInPricingUnits;
-  public static final DbColumn usagePricingUnit;
-  public static final DbColumn creditsName;
-  public static final DbColumn creditsAmount;
-  public static final DbColumn exportTime;
+  public static final DbColumn tagsKey;
+  public static final DbColumn tagsValue;
+  public static final DbColumn awsBlendedRate;
+  public static final DbColumn awsBlendedCost;
+  public static final DbColumn awsUnBlendedRate;
+  public static final DbColumn awsUnBlendedCost;
+  public static final DbColumn awsServiceCode;
+  public static final DbColumn awsAvailabilityZone;
+  public static final DbColumn awsUsageAccountId;
+  public static final DbColumn awsInstanceType;
+  public static final DbColumn awsUsageType;
+  public static final DbColumn awsRegion;
+  public static final DbColumn awsStartTime;
 
   static {
     spec = new DbSpec();
@@ -69,25 +62,19 @@ public class RawBillingTableSchema {
     labelsKey = table.addColumn("labels.key");
     labelsValue = table.addColumn("labels.value");
 
-    projectLabelsKey = table.addColumn("project.labels.key");
-    projectLabelsValue = table.addColumn("project.labels.value");
-    systemLabelsKey = table.addColumn("system_labels.key");
-    systemLabelsValue = table.addColumn("system_labels.value");
+    awsRegion = table.addColumn("region");
+    awsStartTime = table.addColumn("usagestartdate");
+    tagsKey = table.addColumn("tags.key");
+    tagsValue = table.addColumn("tags.value");
 
-    invoiceMonth = table.addColumn("invoice.month");
-    costType = table.addColumn("cost_type");
-    serviceId = table.addColumn("service.id");
-    projectAncestryNumbers = table.addColumn("project.ancestry_numbers");
-    locationLocation = table.addColumn("location.location");
-    locationCountry = table.addColumn("location.country");
-    currency = table.addColumn("currency");
-    currencyConversionRate = table.addColumn("currency_conversion_rate");
-    usageAmount = table.addColumn("usage.amount");
-    usageUnit = table.addColumn("usage.unit");
-    usageAmountInPricingUnits = table.addColumn("usage.amount_in_pricing_units");
-    usagePricingUnit = table.addColumn("usage.pricing_unit");
-    creditsName = table.addColumn("credits.name");
-    creditsAmount = table.addColumn("credits.amount");
-    exportTime = table.addColumn("export_time");
+    awsBlendedRate = table.addColumn("blendedrate");
+    awsBlendedCost = table.addColumn("blendedcost");
+    awsUnBlendedRate = table.addColumn("unblendedrate");
+    awsUnBlendedCost = table.addColumn("unblendedcost");
+    awsServiceCode = table.addColumn("productname");
+    awsAvailabilityZone = table.addColumn("availabilityzone");
+    awsUsageAccountId = table.addColumn("usageaccountid");
+    awsInstanceType = table.addColumn("instancetype");
+    awsUsageType = table.addColumn("usagetype");
   }
 }

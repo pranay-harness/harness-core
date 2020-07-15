@@ -118,21 +118,15 @@ public class GcpBillingServiceImplTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void shouldGetGcpBillingEntityStats() throws InterruptedException {
-    tableResult =
-        new EmptyTableResult(Schema.of(Field.newBuilder("sum_discount", (StandardSQLTypeName) FLOAT64).build(),
-            Field.newBuilder("sum_cost", (StandardSQLTypeName) FLOAT64).build(),
-            Field.newBuilder("sku_description", (StandardSQLTypeName) STRING).build(),
-            Field.newBuilder("sku_id", (StandardSQLTypeName) STRING).build(),
-            Field.newBuilder("service_description", (StandardSQLTypeName) STRING).build(),
-            Field.newBuilder("usage_pricing_unit", (StandardSQLTypeName) STRING).build(),
-            Field.newBuilder("usage_amount_in_pricing_units", (StandardSQLTypeName) STRING).build()));
+    tableResult = new EmptyTableResult(Schema.of(Field.newBuilder("sum_cost", (StandardSQLTypeName) FLOAT64).build(),
+        Field.newBuilder("sku_description", (StandardSQLTypeName) STRING).build(),
+        Field.newBuilder("sku_id", (StandardSQLTypeName) STRING).build(),
+        Field.newBuilder("service_description", (StandardSQLTypeName) STRING).build()));
 
     when(bigQuery.query(any(QueryJobConfiguration.class))).thenReturn(tableResult);
 
     List<Object> gcpBillingGroupby = Arrays.asList(RawBillingTableSchema.gcpSkuId,
-        RawBillingTableSchema.gcpSkuDescription, RawBillingTableSchema.gcpProduct,
-        RawBillingTableSchema.usagePricingUnit, RawBillingTableSchema.usageAmountInPricingUnits,
-        RawBillingTableSchema.cost, RawBillingTableSchema.creditsAmount);
+        RawBillingTableSchema.gcpSkuDescription, RawBillingTableSchema.gcpProduct, RawBillingTableSchema.cost);
 
     GcpBillingEntityStatsDTO entityStats =
         gcpBillingService.getGcpBillingEntityStats(null, gcpBillingGroupby, conditions);

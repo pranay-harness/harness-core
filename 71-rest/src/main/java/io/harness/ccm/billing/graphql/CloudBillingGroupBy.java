@@ -35,4 +35,16 @@ public class CloudBillingGroupBy {
     }
     return null;
   }
+
+  public Object toAwsRawTableGroupbyObject() {
+    if (entityGroupBy != null) {
+      return entityGroupBy.getAwsRawDbObject();
+    }
+    if (timeTruncGroupby != null) {
+      timeTruncGroupby.setAlias(startTimeTruncAlias);
+      timeTruncGroupby.setEntity(RawBillingTableSchema.awsStartTime);
+      return timeTruncGroupby.toGroupbyObject();
+    }
+    return null;
+  }
 }

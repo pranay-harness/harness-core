@@ -1,6 +1,7 @@
 package io.harness.ccm.billing;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.healthmarketscience.sqlbuilder.SqlObject;
@@ -32,7 +33,7 @@ public class CloudBillingAggregateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = HANTANG)
+  @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testToRawTableFunctionCall() {
     rawTableCloudBillingAggregate =
@@ -54,5 +55,30 @@ public class CloudBillingAggregateTest extends CategoryTest {
         CloudBillingAggregate.builder().operationType(QLCCMAggregateOperation.MAX).columnName("startTime").build();
     functionCall = rawTableCloudBillingAggregate.toRawTableFunctionCall();
     assertThat(functionCall.toString()).isEqualTo("MAX(t0.usage_start_time) AS max_startTime");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testToAwsRawTableFunctionCall() {
+    rawTableCloudBillingAggregate =
+        CloudBillingAggregate.builder().operationType(QLCCMAggregateOperation.SUM).columnName("unblendedCost").build();
+    SqlObject functionCall = rawTableCloudBillingAggregate.toAwsRawTableFunctionCall();
+    assertThat(functionCall.toString()).isEqualTo("SUM(t0.unblendedcost) AS sum_unblendedCost");
+
+    rawTableCloudBillingAggregate =
+        CloudBillingAggregate.builder().operationType(QLCCMAggregateOperation.AVG).columnName("blendedCost").build();
+    functionCall = rawTableCloudBillingAggregate.toAwsRawTableFunctionCall();
+    assertThat(functionCall.toString()).isEqualTo("AVG(t0.blendedcost) AS avg_blendedCost");
+
+    rawTableCloudBillingAggregate =
+        CloudBillingAggregate.builder().operationType(QLCCMAggregateOperation.MIN).columnName("startTime").build();
+    functionCall = rawTableCloudBillingAggregate.toAwsRawTableFunctionCall();
+    assertThat(functionCall.toString()).isEqualTo("MIN(t0.usagestartdate) AS min_startTime");
+
+    rawTableCloudBillingAggregate =
+        CloudBillingAggregate.builder().operationType(QLCCMAggregateOperation.MAX).columnName("startTime").build();
+    functionCall = rawTableCloudBillingAggregate.toAwsRawTableFunctionCall();
+    assertThat(functionCall.toString()).isEqualTo("MAX(t0.usagestartdate) AS max_startTime");
   }
 }

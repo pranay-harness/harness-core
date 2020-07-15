@@ -28,6 +28,7 @@ public class CloudBillingTimeFilter implements Filter {
   private QLTimeOperator operator;
   private String variable;
   private Number value;
+  private static final String invalidTimeFilter = "Invalid time filter.";
 
   @Override
   public Number[] getValues() {
@@ -47,7 +48,7 @@ public class CloudBillingTimeFilter implements Filter {
     } else if (variable.equals(BILLING_AWS_STARTTIME)) {
       dbColumn = PreAggregatedTableSchema.startTime;
     } else {
-      throw new InvalidRequestException("Invalid time filter.");
+      throw new InvalidRequestException(invalidTimeFilter);
     }
 
     return getCondition(dbColumn, timestamp);
@@ -66,7 +67,23 @@ public class CloudBillingTimeFilter implements Filter {
     } else if (variable.equals(BILLING_AWS_STARTTIME)) {
       dbColumn = RawBillingTableSchema.startTime;
     } else {
-      throw new InvalidRequestException("Invalid time filter.");
+      throw new InvalidRequestException(invalidTimeFilter);
+    }
+
+    return getCondition(dbColumn, timestamp);
+  }
+
+  public Condition toAwsRawTableCondition() {
+    Preconditions.checkNotNull(value, "The AWS Raw Table billing time filter is missing value.");
+    Preconditions.checkNotNull(operator, "The AWS Raw Table billing time filter is missing operator");
+    Timestamp timestamp = Timestamp.of(DateUtils.round(new Date(value.longValue()), Calendar.SECOND));
+
+    DbColumn dbColumn = null;
+    if (variable.equals(BILLING_GCP_STARTTIME) || variable.equals(BILLING_GCP_ENDTIME)
+        || variable.equals(BILLING_AWS_STARTTIME)) {
+      dbColumn = RawBillingTableSchema.awsStartTime;
+    } else {
+      throw new InvalidRequestException(invalidTimeFilter);
     }
 
     return getCondition(dbColumn, timestamp);

@@ -27,6 +27,8 @@ public class CloudBillingFilter {
   public static final String CLOUD_PROVIDER = "cloudProvider";
   public static final String BILLING_GCP_LABEL_KEY = "billing/gcp/labelsKey";
   public static final String BILLING_GCP_LABEL_VALUE = "billing/gcp/labelsValue";
+  public static final String BILLING_AWS_TAG_KEY = "billing/aws/tagsKey";
+  public static final String BILLING_AWS_TAG_VALUE = "billing/aws/tagsValue";
 
   CloudBillingTimeFilter startTime;
   CloudBillingTimeFilter endTime;
@@ -44,6 +46,8 @@ public class CloudBillingFilter {
   CloudBillingIdFilter cloudProvider;
   CloudBillingIdFilter labelsKey;
   CloudBillingIdFilter labelsValue;
+  CloudBillingIdFilter tagsKey;
+  CloudBillingIdFilter tagsValue;
 
   public CloudBillingTimeFilter getStartTime() {
     if (startTime == null) {
@@ -107,6 +111,22 @@ public class CloudBillingFilter {
     }
     labelsValue.setVariable(BILLING_GCP_LABEL_VALUE);
     return labelsValue;
+  }
+
+  public CloudBillingIdFilter getTagsKey() {
+    if (tagsKey == null) {
+      return null;
+    }
+    tagsKey.setVariable(BILLING_AWS_TAG_KEY);
+    return tagsKey;
+  }
+
+  public CloudBillingIdFilter getTagsValue() {
+    if (tagsValue == null) {
+      return null;
+    }
+    tagsValue.setVariable(BILLING_AWS_TAG_VALUE);
+    return tagsValue;
   }
 
   public CloudBillingIdFilter getProject() {
@@ -233,6 +253,43 @@ public class CloudBillingFilter {
     }
     if (preAggregatedTableEndTime != null) {
       return getPreAggregatedEndTime().toRawTableCondition();
+    }
+    return null;
+  }
+
+  public Condition toAwsRawTableCondition() {
+    if (startTime != null) {
+      return getStartTime().toAwsRawTableCondition();
+    }
+    if (endTime != null) {
+      return getEndTime().toAwsRawTableCondition();
+    }
+    if (region != null) {
+      return getRegion().toAwsRawTableCondition();
+    }
+    if (awsLinkedAccount != null) {
+      return getLinkedAccount().toAwsRawTableCondition();
+    }
+    if (awsUsageType != null) {
+      return getUsageType().toAwsRawTableCondition();
+    }
+    if (awsInstanceType != null) {
+      return getInstanceType().toAwsRawTableCondition();
+    }
+    if (awsService != null) {
+      return getService().toAwsRawTableCondition();
+    }
+    if (tagsKey != null) {
+      return getTagsKey().toAwsRawTableCondition();
+    }
+    if (tagsValue != null) {
+      return getTagsValue().toAwsRawTableCondition();
+    }
+    if (preAggregatedTableStartTime != null) {
+      return getPreAggregatedStartTime().toAwsRawTableCondition();
+    }
+    if (preAggregatedTableEndTime != null) {
+      return getPreAggregatedEndTime().toAwsRawTableCondition();
     }
     return null;
   }

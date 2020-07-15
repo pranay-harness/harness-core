@@ -58,7 +58,7 @@ public class CloudBillingAggregate {
   }
 
   public SqlObject toRawTableFunctionCall() {
-    Preconditions.checkNotNull(columnName, "Billing aggregate is missing column name.");
+    Preconditions.checkNotNull(columnName, "Billing aggregate Query to Raw Table is missing column name.");
     if (operationType == null || columnName == null) {
       return null;
     }
@@ -70,6 +70,30 @@ public class CloudBillingAggregate {
         break;
       case PRE_AGG_START_TIME:
         functionCall.addColumnParams(RawBillingTableSchema.startTime);
+        break;
+      default:
+        break;
+    }
+    alias = String.join("_", operationType.name().toLowerCase(), columnName);
+    return AliasedObject.toAliasedObject(functionCall, alias);
+  }
+
+  public SqlObject toAwsRawTableFunctionCall() {
+    Preconditions.checkNotNull(columnName, "Billing aggregate Query to AWS Raw Table is missing column name.");
+    if (operationType == null || columnName == null) {
+      return null;
+    }
+
+    FunctionCall functionCall = getFunctionCallType();
+    switch (columnName) {
+      case AWS_BLENDED_COST:
+        functionCall.addColumnParams(RawBillingTableSchema.awsBlendedCost);
+        break;
+      case AWS_UN_BLENDED_COST:
+        functionCall.addColumnParams(RawBillingTableSchema.awsUnBlendedCost);
+        break;
+      case PRE_AGG_START_TIME:
+        functionCall.addColumnParams(RawBillingTableSchema.awsStartTime);
         break;
       default:
         break;

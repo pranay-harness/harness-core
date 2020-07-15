@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -46,6 +47,8 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
   private static final String CLOUD_PROVIDER = "AWS";
   private static final String LABELS_KEY = "labelKey";
   private static final String LABELS_VALUE = "labelValue";
+  private static final String TAGS_KEY = "tagKey";
+  private static final String TAGS_VALUE = "tagValue";
   private static final Double UN_BLENDED_COST_VALUE = 2.0;
   private static final Double BLENDED_COST_VALUE = 1.0;
 
@@ -56,6 +59,10 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
 
   @Before
   public void setup() {
+    doCallRealMethod().when(cloudBillingHelper).getAggregationMapper(anyBoolean(), anyBoolean());
+    doCallRealMethod().when(cloudBillingHelper).getGroupByMapper(anyBoolean(), anyBoolean());
+    doCallRealMethod().when(cloudBillingHelper).getFiltersMapper(anyBoolean(), anyBoolean());
+
     cloudBillingAggregates.add(getBillingAggregate(BLENDED_COST));
     cloudBillingAggregates.add(getBillingAggregate(UN_BLENDED_COST));
     filters.addAll(Arrays.asList(getCloudProviderFilter(new String[] {CLOUD_PROVIDER})));
@@ -79,6 +86,7 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void shoudFetch() {
+    doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
     PreAggregateBillingEntityStatsDTO data = (PreAggregateBillingEntityStatsDTO) cloudEntityStatsDataFetcher.fetch(
         ACCOUNT1_ID, cloudBillingAggregates, filters, groupBy, sort, 5, 0);
     assertThat(data.getStats()).isNotNull();
@@ -92,16 +100,40 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void shouldFetchWithLabels() {
     doCallRealMethod().when(cloudBillingHelper).fetchIfRawTableQueryRequired(anyList(), anyList());
+    doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
+    doCallRealMethod().when(cloudBillingHelper).getLeftJoin(anyString());
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
     when(preAggregateBillingService.getPreAggregateBillingEntityStats(
              anyString(), anyList(), anyList(), anyList(), anyList(), any(), anyList(), any()))
         .thenReturn(null);
 
-    PreAggregateBillingEntityStatsDTO data = (PreAggregateBillingEntityStatsDTO) cloudEntityStatsDataFetcher.fetch(
-        ACCOUNT1_ID, cloudBillingAggregates,
-        Arrays.asList(getLablesKeyFilter(new String[] {LABELS_KEY}), getLablesValueFilter(new String[] {LABELS_VALUE})),
-        Collections.emptyList(), null, 5, 0);
+    PreAggregateBillingEntityStatsDTO data =
+        (PreAggregateBillingEntityStatsDTO) cloudEntityStatsDataFetcher.fetch(ACCOUNT1_ID, cloudBillingAggregates,
+            Arrays.asList(getLablesKeyFilter(new String[] {LABELS_KEY}),
+                getLablesValueFilter(new String[] {LABELS_VALUE}), getCloudProviderFilter(new String[] {"GCP"})),
+            Collections.emptyList(), null, 5, 0);
+    assertThat(data).isNull();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldFetchWithTags() {
+    doCallRealMethod().when(cloudBillingHelper).fetchIfRawTableQueryRequired(anyList(), anyList());
+    doCallRealMethod().when(cloudBillingHelper).getLeftJoin(anyString());
+    doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
+    when(preAggregateBillingService.getPreAggregateBillingEntityStats(
+             anyString(), anyList(), anyList(), anyList(), anyList(), any(), anyList(), any()))
+        .thenReturn(null);
+
+    PreAggregateBillingEntityStatsDTO data =
+        (PreAggregateBillingEntityStatsDTO) cloudEntityStatsDataFetcher.fetch(ACCOUNT1_ID, cloudBillingAggregates,
+            Arrays.asList(getLablesKeyFilter(new String[] {TAGS_KEY}), getLablesValueFilter(new String[] {TAGS_VALUE}),
+                getCloudProviderFilter(new String[] {CLOUD_PROVIDER})),
+            Collections.emptyList(), null, 5, 0);
     assertThat(data).isNull();
   }
 
@@ -153,7 +185,7 @@ public class CloudEntityStatsDataFetcherTest extends AbstractDataFetcherTest {
   private CloudBillingFilter getCloudProviderFilter(String[] cloudProvider) {
     CloudBillingFilter cloudBillingFilter = new CloudBillingFilter();
     cloudBillingFilter.setCloudProvider(
-        CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(cloudProvider).build());
+        CloudBillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(cloudProvider).build());
     return cloudBillingFilter;
   }
 

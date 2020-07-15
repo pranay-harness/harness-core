@@ -21,4 +21,5 @@ public class PreAggregatedFilterValuesDataPoint {
   Set<QLEntityData> gcpSku;
   Set<QLEntityData> gcpBillingAccount;
   List<QLK8sLabel> gcpLabels;
+  List<QLK8sLabel> awsTags;
 }

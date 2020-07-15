@@ -73,4 +73,40 @@ public class CloudBillingGroupByTest extends CategoryTest {
     groupbyObject = cloudBillingEntityGroupBy.toRawTableGroupbyObject();
     assertThat(groupbyObject).isEqualTo(RawBillingTableSchema.labelsValue);
   }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableTimeToGroupbyObject() {
+    Object groupbyObject = cloudBillingGroupBy.toAwsRawTableGroupbyObject();
+    assertThat(groupbyObject.toString()).isEqualTo("TIMESTAMP_TRUNC(t0.usagestartdate,DAY) AS start_time_trunc");
+
+    cloudBillingEntityGroupBy.setEntityGroupBy(CloudEntityGroupBy.awsLinkedAccount);
+    groupbyObject = cloudBillingEntityGroupBy.toAwsRawTableGroupbyObject();
+    assertThat(groupbyObject).isEqualTo(RawBillingTableSchema.awsUsageAccountId);
+
+    cloudBillingEntityGroupBy.setEntityGroupBy(CloudEntityGroupBy.awsUsageType);
+    groupbyObject = cloudBillingEntityGroupBy.toAwsRawTableGroupbyObject();
+    assertThat(groupbyObject).isEqualTo(RawBillingTableSchema.awsUsageType);
+
+    cloudBillingEntityGroupBy.setEntityGroupBy(CloudEntityGroupBy.awsInstanceType);
+    groupbyObject = cloudBillingEntityGroupBy.toAwsRawTableGroupbyObject();
+    assertThat(groupbyObject).isEqualTo(RawBillingTableSchema.awsInstanceType);
+
+    cloudBillingEntityGroupBy.setEntityGroupBy(CloudEntityGroupBy.awsService);
+    groupbyObject = cloudBillingEntityGroupBy.toAwsRawTableGroupbyObject();
+    assertThat(groupbyObject).isEqualTo(RawBillingTableSchema.awsServiceCode);
+
+    cloudBillingEntityGroupBy.setEntityGroupBy(CloudEntityGroupBy.region);
+    groupbyObject = cloudBillingEntityGroupBy.toAwsRawTableGroupbyObject();
+    assertThat(groupbyObject).isEqualTo(RawBillingTableSchema.awsRegion);
+
+    cloudBillingEntityGroupBy.setEntityGroupBy(CloudEntityGroupBy.tagsKey);
+    groupbyObject = cloudBillingEntityGroupBy.toAwsRawTableGroupbyObject();
+    assertThat(groupbyObject).isEqualTo(RawBillingTableSchema.tagsKey);
+
+    cloudBillingEntityGroupBy.setEntityGroupBy(CloudEntityGroupBy.tagsValue);
+    groupbyObject = cloudBillingEntityGroupBy.toAwsRawTableGroupbyObject();
+    assertThat(groupbyObject).isEqualTo(RawBillingTableSchema.tagsValue);
+  }
 }

@@ -10,6 +10,8 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityC
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsNoService;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsNoUsageType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsService;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsTagKey;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsTagValue;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUnBlendedCost;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantAwsUsageType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpBillingAccount;
@@ -25,6 +27,12 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityC
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpSku;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantGcpSkuId;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantNoRegion;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableAwsBlendedCost;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableAwsInstanceType;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableAwsLinkedAccount;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableAwsService;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableAwsUnBlendedCost;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableAwsUsageType;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableGcpBillingAccount;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableGcpProduct;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRawTableGcpProjectId;
@@ -34,6 +42,7 @@ import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityC
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityConstantRegion;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityNoCloudProviderConst;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityNoLabelConst;
+import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.entityNoTagConst;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.maxPreAggStartTimeConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.minPreAggStartTimeConstant;
 import static io.harness.ccm.billing.preaggregated.PreAggregateConstants.nullStringValueConstant;
@@ -70,6 +79,7 @@ import io.harness.ccm.billing.preaggregated.PreAggregatedCostData.PreAggregatedC
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.billing.BillingDataHelper;
+import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
 import software.wings.graphql.datafetcher.billing.QLEntityData;
 import software.wings.graphql.schema.type.QLK8sLabel;
@@ -101,6 +111,7 @@ import java.util.stream.Stream;
 @Singleton
 public class PreAggregatedBillingDataHelper {
   @Inject BillingDataHelper billingDataHelper;
+  @Inject CloudBillingHelper cloudBillingHelper;
 
   private static final String COST_DESCRIPTION = "of %s - %s";
   private static final String COST_VALUE = "$%s";
@@ -150,16 +161,22 @@ public class PreAggregatedBillingDataHelper {
     String value;
     switch (field.getName()) {
       case entityConstantGcpLabelKey:
+      case entityConstantAwsTagKey:
+        boolean isLabel = field.getName().equals(entityConstantGcpLabelKey);
         String labelKey = fetchStringValue(row, field);
-        String labelValue =
-            fetchStringValue(row, Field.newBuilder(entityConstantGcpLabelValue, StandardSQLTypeName.STRING).build());
+        String labelValue = fetchStringValue(row,
+            Field
+                .newBuilder(
+                    isLabel ? entityConstantGcpLabelValue : entityConstantAwsTagValue, StandardSQLTypeName.STRING)
+                .build());
         value = String.format(LABEL, labelKey, labelValue);
         if (labelKey.equals(nullStringValueConstant)) {
-          value = entityNoLabelConst;
+          value = isLabel ? entityNoLabelConst : entityNoTagConst;
         }
         billingDataPointBuilder.key(QLReference.builder().id(value).name(value).type(field.getName()).build());
         return;
       case entityConstantGcpLabelValue:
+      case entityConstantAwsTagValue:
         return;
       default:
         value = fetchStringValue(row, field);
@@ -182,12 +199,16 @@ public class PreAggregatedBillingDataHelper {
       case entityConstantRawTableGcpRegion:
         return entityConstantNoRegion;
       case entityConstantAwsLinkedAccount:
+      case entityConstantRawTableAwsLinkedAccount:
         return entityConstantAwsNoLinkedAccount;
       case entityConstantAwsService:
+      case entityConstantRawTableAwsService:
         return entityConstantAwsNoService;
       case entityConstantAwsUsageType:
+      case entityConstantRawTableAwsUsageType:
         return entityConstantAwsNoUsageType;
       case entityConstantAwsInstanceType:
+      case entityConstantRawTableAwsInstanceType:
         return entityConstantAwsNoInstanceType;
       case entityConstantGcpProjectId:
       case entityConstantRawTableGcpProjectId:
@@ -281,8 +302,15 @@ public class PreAggregatedBillingDataHelper {
             && ((((DbColumn) g).getColumnNameSQL().equals(RawBillingTableSchema.labelsKey.getColumnNameSQL()))
                    || ((DbColumn) g).getColumnNameSQL().equals(RawBillingTableSchema.labelsValue.getColumnNameSQL())));
 
+    boolean isTagsPresent = groupByObjects.stream().anyMatch(g
+        -> g instanceof DbColumn
+            && ((((DbColumn) g).getColumnNameSQL().equals(RawBillingTableSchema.tagsKey.getColumnNameSQL()))
+                   || ((DbColumn) g).getColumnNameSQL().equals(RawBillingTableSchema.tagsValue.getColumnNameSQL())));
+
+    DbColumn rawTableStartTime = isLabelsPresent ? RawBillingTableSchema.startTime : RawBillingTableSchema.awsStartTime;
+
     timeTruncatedGroupBy = Optional.of(
-        new TruncExpression(isLabelsPresent ? RawBillingTableSchema.startTime : PreAggregatedTableSchema.startTime,
+        new TruncExpression(isLabelsPresent || isTagsPresent ? rawTableStartTime : PreAggregatedTableSchema.startTime,
             getTimeTruncationInterval(timeTruncatedGroupBy), PreAggregateConstants.startTimeTruncatedConstant));
 
     sqlGroupByObjects.add(timeTruncatedGroupBy.get());
@@ -309,7 +337,9 @@ public class PreAggregatedBillingDataHelper {
         String columnNameSQL = ((DbColumn) sqlGroupByObjects.get(i)).getColumnNameSQL();
         String alias = columnNameSQL.replace(".", "_");
         if (columnNameSQL.equals(RawBillingTableSchema.labelsKey.getColumnNameSQL())
-            || columnNameSQL.equals(RawBillingTableSchema.labelsValue.getColumnNameSQL())) {
+            || columnNameSQL.equals(RawBillingTableSchema.labelsValue.getColumnNameSQL())
+            || columnNameSQL.equals(RawBillingTableSchema.tagsKey.getColumnNameSQL())
+            || columnNameSQL.equals(RawBillingTableSchema.tagsValue.getColumnNameSQL())) {
           sqlGroupByObjects.set(i, alias);
         }
         selectObjects.add(new AliasExpression(columnNameSQL, alias));
@@ -361,31 +391,37 @@ public class PreAggregatedBillingDataHelper {
           dataPointBuilder.region(value);
           break;
         case entityConstantAwsLinkedAccount:
+        case entityConstantRawTableAwsLinkedAccount:
           String awsAccountId = fetchStringValue(row, field);
           dataPointBuilder.id(awsAccountId);
           dataPointBuilder.awsLinkedAccount(getAwsAccountName(awsAccountId, awsCloudAccountMap));
           break;
         case entityConstantAwsService:
+        case entityConstantRawTableAwsService:
           value = fetchStringValue(row, field);
           dataPointBuilder.id(value);
           dataPointBuilder.awsService(value);
           break;
         case entityConstantAwsUsageType:
+        case entityConstantRawTableAwsUsageType:
           value = fetchStringValue(row, field);
           dataPointBuilder.id(value);
           dataPointBuilder.awsUsageType(value);
           break;
         case entityConstantAwsInstanceType:
+        case entityConstantRawTableAwsInstanceType:
           value = fetchStringValue(row, field);
           dataPointBuilder.id(value);
           dataPointBuilder.awsInstanceType(value);
           break;
         case entityConstantAwsBlendedCost:
+        case entityConstantRawTableAwsBlendedCost:
           double blendedCost = getNumericValue(row, field);
           preAggregatedCostDataBuilder.cost(blendedCost);
           dataPointBuilder.awsBlendedCost(billingDataHelper.getRoundedDoubleValue(blendedCost));
           break;
         case entityConstantAwsUnBlendedCost:
+        case entityConstantRawTableAwsUnBlendedCost:
           double unBlendedCost = getNumericValue(row, field);
           preAggregatedCostDataBuilder.cost(unBlendedCost);
           dataPointBuilder.awsUnblendedCost(billingDataHelper.getRoundedDoubleValue(unBlendedCost));
@@ -424,6 +460,17 @@ public class PreAggregatedBillingDataHelper {
           }
           dataPointBuilder.id(value);
           dataPointBuilder.gcpLabel(value);
+          break;
+        case entityConstantAwsTagKey:
+          String tagKey = fetchStringValue(row, field);
+          String tagValue =
+              fetchStringValue(row, Field.newBuilder(entityConstantAwsTagValue, StandardSQLTypeName.STRING).build());
+          value = String.format(LABEL, tagKey, tagValue);
+          if (tagKey.equals(nullStringValueConstant)) {
+            value = entityNoTagConst;
+          }
+          dataPointBuilder.id(value);
+          dataPointBuilder.awsTag(value);
           break;
         case entityConstantGcpCost:
           double cost = getNumericValue(row, field);
@@ -600,14 +647,15 @@ public class PreAggregatedBillingDataHelper {
   }
 
   protected List<Condition> filtersToConditions(List<CloudBillingFilter> filters) {
-    return filtersToConditions(filters, false);
+    return filtersToConditions(filters, false, false);
   }
 
-  protected List<Condition> filtersToConditions(List<CloudBillingFilter> filters, boolean isQueryRawTable) {
+  protected List<Condition> filtersToConditions(
+      List<CloudBillingFilter> filters, boolean isQueryRawTable, boolean isAWSCloudProvider) {
     return Optional.ofNullable(filters)
         .map(Collection::stream)
         .orElseGet(Stream::empty)
-        .map(isQueryRawTable ? CloudBillingFilter::toRawTableCondition : CloudBillingFilter::toCondition)
+        .map(cloudBillingHelper.getFiltersMapper(isAWSCloudProvider, isQueryRawTable))
         .collect(Collectors.toList());
   }
 
@@ -653,6 +701,7 @@ public class PreAggregatedBillingDataHelper {
     Set<QLEntityData> gcpSku = new HashSet<>();
     Set<QLEntityData> gcpBillingAccount = new HashSet<>();
     Map<String, Set<String>> labelsMap = new HashMap<>();
+    Map<String, Set<String>> tagsMap = new HashMap<>();
 
     for (FieldValueList row : result.iterateAll()) {
       for (Field field : fields) {
@@ -663,18 +712,22 @@ public class PreAggregatedBillingDataHelper {
             region.add(getEntityDataPoint(row, field));
             break;
           case entityConstantAwsLinkedAccount:
+          case entityConstantRawTableAwsLinkedAccount:
             String awsAccountId = fetchStringValue(row, field);
             String awsAccountName = getAwsAccountName(awsAccountId, awsCloudAccountMap);
             awsLinkedAccount.add(
                 QLEntityData.builder().id(awsAccountId).name(awsAccountName).type(field.getName()).build());
             break;
           case entityConstantAwsService:
+          case entityConstantRawTableAwsService:
             awsService.add(getEntityDataPoint(row, field));
             break;
           case entityConstantAwsUsageType:
+          case entityConstantRawTableAwsUsageType:
             awsUsageType.add(getEntityDataPoint(row, field));
             break;
           case entityConstantAwsInstanceType:
+          case entityConstantRawTableAwsInstanceType:
             awsInstanceType.add(getEntityDataPoint(row, field));
             break;
           case entityConstantGcpSku:
@@ -701,6 +754,14 @@ public class PreAggregatedBillingDataHelper {
               updateLabelsMap(labelsMap, labelKey, labelValue);
             }
             break;
+          case entityConstantAwsTagKey:
+            String tagKey = fetchStringValue(row, field);
+            String tagValue =
+                fetchStringValue(row, Field.newBuilder(entityConstantAwsTagValue, StandardSQLTypeName.STRING).build());
+            if (!tagKey.equals(nullStringValueConstant)) {
+              updateLabelsMap(tagsMap, tagKey, tagValue);
+            }
+            break;
           default:
             break;
         }
@@ -708,12 +769,9 @@ public class PreAggregatedBillingDataHelper {
     }
 
     List<QLK8sLabel> labelsDTO = new ArrayList<>();
-    for (Map.Entry<String, Set<String>> labels : labelsMap.entrySet()) {
-      labelsDTO.add(QLK8sLabel.builder()
-                        .name(labels.getKey())
-                        .values(labels.getValue().toArray(new String[labels.getValue().size()]))
-                        .build());
-    }
+    List<QLK8sLabel> tagsDTO = new ArrayList<>();
+    getLabelsDTO(labelsMap, labelsDTO);
+    getLabelsDTO(tagsMap, tagsDTO);
 
     return PreAggregateFilterValuesDTO.builder()
         .data(Arrays.asList(PreAggregatedFilterValuesDataPoint.builder()
@@ -727,8 +785,18 @@ public class PreAggregatedBillingDataHelper {
                                 .gcpProjectId(gcpProjectId)
                                 .gcpBillingAccount(gcpBillingAccount)
                                 .gcpLabels(labelsDTO)
+                                .awsTags(tagsDTO)
                                 .build()))
         .build();
+  }
+
+  private void getLabelsDTO(Map<String, Set<String>> labelsMap, List<QLK8sLabel> labelsDTO) {
+    for (Map.Entry<String, Set<String>> labels : labelsMap.entrySet()) {
+      labelsDTO.add(QLK8sLabel.builder()
+                        .name(labels.getKey())
+                        .values(labels.getValue().toArray(new String[labels.getValue().size()]))
+                        .build());
+    }
   }
 
   public void updateLabelsMap(Map<String, Set<String>> labels, String labelKey, String labelValue) {
@@ -825,19 +893,30 @@ public class PreAggregatedBillingDataHelper {
         case entityConstantRawTableGcpSku:
         case entityConstantRawTableGcpSkuId:
         case entityConstantRawTableGcpRegion:
+        case entityConstantRawTableAwsLinkedAccount:
+        case entityConstantRawTableAwsUsageType:
+        case entityConstantRawTableAwsInstanceType:
+        case entityConstantRawTableAwsService:
           id = fetchStringValue(row, field);
           break;
         case entityConstantGcpLabelKey:
+        case entityConstantAwsTagKey:
+          boolean isLabel = field.getName().equals(entityConstantGcpLabelKey);
           String labelKey = fetchStringValue(row, field);
-          String labelValue =
-              fetchStringValue(row, Field.newBuilder(entityConstantGcpLabelValue, StandardSQLTypeName.STRING).build());
+          String labelValue = fetchStringValue(row,
+              Field
+                  .newBuilder(
+                      isLabel ? entityConstantGcpLabelValue : entityConstantAwsTagValue, StandardSQLTypeName.STRING)
+                  .build());
           id = String.format(LABEL, labelKey, labelValue);
           if (labelKey.equals(nullStringValueConstant)) {
-            id = entityNoLabelConst;
+            id = isLabel ? entityNoLabelConst : entityNoTagConst;
           }
           break;
         case entityConstantAwsBlendedCost:
         case entityConstantAwsUnBlendedCost:
+        case entityConstantRawTableAwsBlendedCost:
+        case entityConstantRawTableAwsUnBlendedCost:
         case entityConstantGcpCost:
           cost = getNumericValue(row, field);
           break;

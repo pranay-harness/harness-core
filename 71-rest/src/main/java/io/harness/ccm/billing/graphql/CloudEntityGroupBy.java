@@ -5,27 +5,32 @@ import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 
 public enum CloudEntityGroupBy {
-  projectId(PreAggregatedTableSchema.gcpProjectId, RawBillingTableSchema.gcpProjectId),
-  billingAccountId(PreAggregatedTableSchema.gcpBillingAccountId, RawBillingTableSchema.gcpBillingAccountId),
-  skuId(PreAggregatedTableSchema.gcpSkuId, RawBillingTableSchema.gcpSkuId),
-  product(PreAggregatedTableSchema.gcpProduct, RawBillingTableSchema.gcpProduct),
-  sku(PreAggregatedTableSchema.gcpSkuDescription, RawBillingTableSchema.gcpSkuDescription),
-  region(PreAggregatedTableSchema.region, RawBillingTableSchema.region),
-  labelsKey(null, RawBillingTableSchema.labelsKey),
-  labelsValue(null, RawBillingTableSchema.labelsValue),
+  projectId(PreAggregatedTableSchema.gcpProjectId, RawBillingTableSchema.gcpProjectId, null),
+  billingAccountId(PreAggregatedTableSchema.gcpBillingAccountId, RawBillingTableSchema.gcpBillingAccountId, null),
+  skuId(PreAggregatedTableSchema.gcpSkuId, RawBillingTableSchema.gcpSkuId, null),
+  product(PreAggregatedTableSchema.gcpProduct, RawBillingTableSchema.gcpProduct, null),
+  sku(PreAggregatedTableSchema.gcpSkuDescription, RawBillingTableSchema.gcpSkuDescription, null),
+  region(PreAggregatedTableSchema.region, RawBillingTableSchema.region, RawBillingTableSchema.awsRegion),
+  labelsKey(null, RawBillingTableSchema.labelsKey, null),
+  labelsValue(null, RawBillingTableSchema.labelsValue, null),
 
-  projectNumber(PreAggregatedTableSchema.gcpProjectNumbers, null),
-  awsLinkedAccount(PreAggregatedTableSchema.awsUsageAccountId, null),
-  awsUsageType(PreAggregatedTableSchema.awsUsageType, null),
-  awsInstanceType(PreAggregatedTableSchema.awsInstanceType, null),
-  awsService(PreAggregatedTableSchema.awsServiceCode, null),
-  cloudProvider(PreAggregatedTableSchema.cloudProvider, null);
+  tagsKey(null, null, RawBillingTableSchema.tagsKey),
+  tagsValue(null, null, RawBillingTableSchema.tagsValue),
+  awsLinkedAccount(PreAggregatedTableSchema.awsUsageAccountId, null, RawBillingTableSchema.awsUsageAccountId),
+  awsUsageType(PreAggregatedTableSchema.awsUsageType, null, RawBillingTableSchema.awsUsageType),
+  awsInstanceType(PreAggregatedTableSchema.awsInstanceType, null, RawBillingTableSchema.awsInstanceType),
+  awsService(PreAggregatedTableSchema.awsServiceCode, null, RawBillingTableSchema.awsServiceCode),
+  projectNumber(PreAggregatedTableSchema.gcpProjectNumbers, null, null),
+  cloudProvider(PreAggregatedTableSchema.cloudProvider, null, null);
 
   private DbColumn dbColumn;
   private DbColumn rawDbColumn;
-  CloudEntityGroupBy(DbColumn dbColumn, DbColumn rawDbColumn) {
+  private DbColumn awsRawDbColumn;
+
+  CloudEntityGroupBy(DbColumn dbColumn, DbColumn rawDbColumn, DbColumn awsRawDbColumn) {
     this.dbColumn = dbColumn;
     this.rawDbColumn = rawDbColumn;
+    this.awsRawDbColumn = awsRawDbColumn;
   }
 
   DbColumn getDbObject() {
@@ -34,5 +39,9 @@ public enum CloudEntityGroupBy {
 
   DbColumn getRawDbObject() {
     return rawDbColumn;
+  }
+
+  DbColumn getAwsRawDbObject() {
+    return awsRawDbColumn;
   }
 }
