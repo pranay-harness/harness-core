@@ -20,6 +20,8 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesCluste
 import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.repositories.ConnectorRepository;
+import io.harness.connector.validator.ConnectionValidator;
+import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -39,6 +41,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -48,6 +51,7 @@ public class ConnectorServiceImplTest extends CategoryTest {
   @Mock ConnectorMapper connectorMapper;
   @Mock ConnectorRepository connectorRepository;
   @InjectMocks ConnectorServiceImpl connectorService;
+  @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   String userName = "userName";
   String password = "password";
   String cacert = "cacert";
@@ -238,6 +242,7 @@ public class ConnectorServiceImplTest extends CategoryTest {
                                                   .connectorConfig(connectorDTOWithDelegateCreds)
                                                   .build();
 
+    when(connectionValidatorMap.get(any())).thenReturn(kubernetesConnectionValidator);
     connectorService.validate(connectorRequestDTO, "accountId");
     verify(kubernetesConnectionValidator, times(1)).validate(any(), anyString());
   }

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KubernetesClusterConfigDTO implements ConnectorConfigDTO {
+public class KubernetesClusterConfigDTO extends ConnectorConfigDTO {
   @JsonProperty("type") KubernetesCredentialType kubernetesCredentialType;
 
   @JsonProperty("spec")

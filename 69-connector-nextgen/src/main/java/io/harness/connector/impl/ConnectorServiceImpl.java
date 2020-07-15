@@ -15,9 +15,9 @@ import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.mappers.ConnectorSummaryMapper;
 import io.harness.connector.repositories.ConnectorRepository;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.connector.validator.ConnectionValidator;
+import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import lombok.AccessLevel;
@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -45,6 +46,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final MongoTemplate mongoTemplate;
   private final ConnectorFilterHelper connectorFilterHelper;
   private final ConnectorSummaryMapper connectorSummaryMapper;
+  @Inject private Map<String, ConnectionValidator> connectionValidatorMap;
   private final KubernetesConnectionValidator kubernetesConnectionValidator;
 
   @Override
@@ -120,13 +122,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   public ConnectorValidationResult validate(ConnectorRequestDTO connectorDTO, String accountId) {
-    ConnectorType connectorType = connectorDTO.getConnectorType();
-    switch (connectorType) {
-      case KUBERNETES_CLUSTER:
-        return kubernetesConnectionValidator.validate(
-            (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig(), accountId);
-      default:
-        throw new UnsupportedOperationException(String.format("The connector type %s is invalid", connectorType));
-    }
+    ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorDTO.getConnectorType().toString());
+    return connectionValidator.validate(connectorDTO.getConnectorConfig(), accountId);
   }
 }

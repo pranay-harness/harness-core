@@ -1,4 +1,4 @@
-package io.harness.cdng.connectornextgen;
+package io.harness.cdng.connector;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;

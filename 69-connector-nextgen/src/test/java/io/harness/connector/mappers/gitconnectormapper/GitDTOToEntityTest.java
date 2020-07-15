@@ -53,7 +53,7 @@ public class GitDTOToEntityTest extends CategoryTest {
                                                       .build();
     GitConfigDTO gitConfigDTO =
         GitConfigDTO.builder().gitSyncConfig(gitSyncConfig).gitAuthType(HTTP).gitAuth(httpAuthentication).build();
-    GitConfig gitConfig = gitDTOToEntity.toGitConfig(gitConfigDTO);
+    GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);
     assertThat(gitConfig).isNotNull();
     assertThat(gitConfig.isSupportsGitSync()).isTrue();
     assertThat(gitConfig.getUrl()).isEqualTo(url);
@@ -83,7 +83,7 @@ public class GitDTOToEntityTest extends CategoryTest {
         GitSSHAuthenticationDTO.builder().gitType(ACCOUNT).url(url).sshKeyReference(sshKeyReference).build();
     GitConfigDTO gitConfigDTO =
         GitConfigDTO.builder().gitSyncConfig(gitSyncConfig).gitAuthType(SSH).gitAuth(httpAuthentication).build();
-    GitConfig gitConfig = gitDTOToEntity.toGitConfig(gitConfigDTO);
+    GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);
     assertThat(gitConfig).isNotNull();
     assertThat(gitConfig.isSupportsGitSync()).isTrue();
     assertThat(gitConfig.getUrl()).isEqualTo(url);

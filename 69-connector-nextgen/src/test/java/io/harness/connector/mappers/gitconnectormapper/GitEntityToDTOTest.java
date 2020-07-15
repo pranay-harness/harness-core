@@ -52,7 +52,7 @@ public class GitEntityToDTOTest extends CategoryTest {
                               .customCommitAttributes(customCommitAttributes)
                               .authenticationDetails(userNamePasswordGitAuthentication)
                               .build();
-    GitConfigDTO gitConfigDTO = gitEntityToDTO.createGitConfigDTO(gitConfig);
+    GitConfigDTO gitConfigDTO = gitEntityToDTO.createConnectorDTO((GitConfig) gitConfig);
     assertThat(gitConfigDTO).isNotNull();
     assertThat(gitConfigDTO.getGitAuthType()).isEqualTo(HTTP);
     assertThat(gitConfigDTO.getGitSyncConfig().isSyncEnabled()).isEqualTo(true);
@@ -84,7 +84,7 @@ public class GitEntityToDTOTest extends CategoryTest {
                               .customCommitAttributes(customCommitAttributes)
                               .authenticationDetails(sshAuthentication)
                               .build();
-    GitConfigDTO gitConfigDTO = gitEntityToDTO.createGitConfigDTO(gitConfig);
+    GitConfigDTO gitConfigDTO = gitEntityToDTO.createConnectorDTO((GitConfig) gitConfig);
     assertThat(gitConfigDTO).isNotNull();
     assertThat(gitConfigDTO.getGitAuthType()).isEqualTo(SSH);
     assertThat(gitConfigDTO.getGitSyncConfig().isSyncEnabled()).isEqualTo(true);

@@ -19,6 +19,7 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelega
 import io.harness.connector.entities.embedded.kubernetescluster.OpenIdConnectK8;
 import io.harness.connector.entities.embedded.kubernetescluster.ServiceAccountK8;
 import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
+import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.k8Connector.ClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
@@ -37,8 +38,9 @@ import io.harness.exception.UnsupportedOperationException;
 import java.util.Collections;
 
 @Singleton
-public class KubernetesDTOToEntity {
-  public KubernetesClusterConfig toKubernetesClusterConfig(KubernetesClusterConfigDTO k8ClusterDTO) {
+public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<KubernetesClusterConfigDTO> {
+  @Override
+  public KubernetesClusterConfig toConnectorEntity(KubernetesClusterConfigDTO k8ClusterDTO) {
     KubernetesCredentialType credentialType = getKubernetesCredentialType(k8ClusterDTO);
     KubernetesCredential kubernetesCredential = getKubernetesCredential(k8ClusterDTO);
     KubernetesClusterConfig kubernetesClusterConfig =

@@ -31,11 +31,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Map;
+
 public class ConnectorMapperTest extends CategoryTest {
   @InjectMocks private ConnectorMapper connectorMapper;
   @Mock KubernetesConfigCastHelper kubernetesConfigCastHelper;
   @Mock KubernetesDTOToEntity kubernetesDTOToEntity;
   @Mock KubernetesEntityToDTO kubernetesEntityToDTO;
+  @Mock private Map<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapperMap;
+  @Mock private Map<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapperMap;
   String masterURL = "masterURL";
   String userName = "userName";
   String password = "password";
@@ -48,7 +52,7 @@ public class ConnectorMapperTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     when(kubernetesConfigCastHelper.castToKubernetesDelegateCredential(any())).thenCallRealMethod();
     when(kubernetesConfigCastHelper.castToManualKubernetesCredentials(any())).thenCallRealMethod();
-    when(kubernetesDTOToEntity.toKubernetesClusterConfig(any())).thenCallRealMethod();
+    when(kubernetesDTOToEntity.toConnectorEntity(any())).thenCallRealMethod();
 
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
@@ -60,7 +64,7 @@ public class ConnectorMapperTest extends CategoryTest {
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterURL).auth(kubernetesAuthDTO).build())
             .build();
-    when(kubernetesEntityToDTO.createK8ClusterConfigDTO(any())).thenReturn(connectorDTOWithUserNamePassword);
+    when(kubernetesEntityToDTO.createConnectorDTO(any())).thenReturn(connectorDTOWithUserNamePassword);
   }
 
   @Test
@@ -83,6 +87,7 @@ public class ConnectorMapperTest extends CategoryTest {
                                                   .connectorType(KUBERNETES_CLUSTER)
                                                   .connectorConfig(connectorDTOWithDelegateCreds)
                                                   .build();
+    when(connectorDTOToEntityMapperMap.get(any())).thenReturn(kubernetesDTOToEntity);
     Connector connector = connectorMapper.toConnector(connectorRequestDTO);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
@@ -110,6 +115,7 @@ public class ConnectorMapperTest extends CategoryTest {
     connector.setName(name);
     connector.setIdentifier(identifier);
     connector.setType(KUBERNETES_CLUSTER);
+    when(connectorEntityToDTOMapperMap.get(any())).thenReturn(kubernetesEntityToDTO);
     ConnectorDTO connectorRequestDTO = connectorMapper.writeDTO(connector);
     assertThat(connectorRequestDTO).isNotNull();
     assertThat(connectorRequestDTO.getName()).isEqualTo(name);

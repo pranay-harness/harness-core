@@ -9,6 +9,7 @@ import io.harness.connector.entities.embedded.gitconnector.GitAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication;
+import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
@@ -19,8 +20,9 @@ import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
 import io.harness.exception.InvalidRequestException;
 
 @Singleton
-public class GitDTOToEntity {
-  public GitConfig toGitConfig(GitConfigDTO configDTO) {
+public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> {
+  @Override
+  public GitConfig toConnectorEntity(GitConfigDTO configDTO) {
     GitConnectionType gitConnectionType = getGitConnectionLevel(configDTO);
     CustomCommitAttributes customCommitAttributes = getCustomCommitAttributes(configDTO);
     GitAuthentication gitAuthentication = getGitAuthentication(configDTO.getGitAuth(), configDTO.getGitAuthType());
