@@ -2,6 +2,7 @@ package io.harness.grpc;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.SANJA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -25,6 +26,9 @@ import io.harness.MockableTestMixin;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.DelegateTask.Status;
+import io.harness.callback.DelegateCallback;
+import io.harness.callback.DelegateCallbackToken;
+import io.harness.callback.MongoDatabase;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.DelegateServiceGrpc;
@@ -218,19 +222,16 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
   }
 
   @Test
-  @Owner(developers = MARKO)
+  @Owner(developers = SANJA)
   @Category(UnitTests.class)
-  public void testRegisterPerpetualTaskClientEntrypoint() {
+  public void testRegisterCallback() {
     try {
-      //      delegateServiceGrpcClient.registerCalback(PerpetualTaskType.SAMPLE,
-      //          PerpetualTaskClientEntrypoint.newBuilder()
-      //              .setHttpsEntrypoint(
-      //                  HttpsClientEntrypoint.newBuilder()
-      //                      .setUrl("https://localhost:9999")
-      //                      .setBasicAuthCredentials(
-      //                          BasicAuthCredentials.newBuilder().setUsername("test@harness.io").setPassword("test").build())
-      //                      .build())
-      //              .build());
+      DelegateCallbackToken token = delegateServiceGrpcClient.registerCallback(
+          DelegateCallback.newBuilder()
+              .setMongoDatabase(
+                  MongoDatabase.newBuilder().setConnection("test").setCollectionNamePrefix("test").build())
+              .build());
+      assertThat(token).isNotNull();
     } catch (Exception e) {
       fail("Should not have thrown any exception");
     }

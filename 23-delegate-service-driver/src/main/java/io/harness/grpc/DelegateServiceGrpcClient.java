@@ -6,6 +6,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 
+import io.harness.callback.DelegateCallback;
+import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.CancelTaskRequest;
 import io.harness.delegate.CancelTaskResponse;
@@ -14,6 +16,8 @@ import io.harness.delegate.CreatePerpetualTaskRequest;
 import io.harness.delegate.CreatePerpetualTaskResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
 import io.harness.delegate.DeletePerpetualTaskRequest;
+import io.harness.delegate.RegisterCallbackRequest;
+import io.harness.delegate.RegisterCallbackResponse;
 import io.harness.delegate.ResetPerpetualTaskRequest;
 import io.harness.delegate.SubmitTaskRequest;
 import io.harness.delegate.SubmitTaskResponse;
@@ -122,5 +126,11 @@ public class DelegateServiceGrpcClient {
     delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
         .resetPerpetualTask(
             ResetPerpetualTaskRequest.newBuilder().setAccountId(accountId).setPerpetualTaskId(perpetualTaskId).build());
+  }
+
+  public DelegateCallbackToken registerCallback(DelegateCallback delegateCallback) {
+    RegisterCallbackResponse response = delegateServiceBlockingStub.registerCallback(
+        RegisterCallbackRequest.newBuilder().setCallback(delegateCallback).build());
+    return response.getCallbackToken();
   }
 }
