@@ -27,6 +27,7 @@ import io.harness.rule.Owner;
 import io.harness.threading.Morpheus;
 import io.harness.threading.ThreadPool;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -121,6 +122,7 @@ public class PersistenceCronIteratorTest extends PersistenceTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(StressTests.class)
+  @Ignore("This is a stress test, we ignore it to not mess with the unit tests")
   public void testNextReturnsJustAdded() {
     PersistenceIterator<TestCronIterableEntity> iterator =
         MongoPersistenceIterator.<TestCronIterableEntity, MorphiaFilterExpander<TestCronIterableEntity>>builder()

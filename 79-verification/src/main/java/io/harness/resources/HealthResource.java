@@ -2,7 +2,7 @@ package io.harness.resources;
 
 import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 
 import com.google.inject.Inject;
 
@@ -45,7 +45,7 @@ public class HealthResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> get() throws Exception {
-    if (getMaintenanceFilename()) {
+    if (getMaintenanceFlag()) {
       logger.info("In maintenance mode. Throwing exception to prevent traffic.");
       throw new WingsException(RESOURCE_NOT_FOUND, USER);
     }

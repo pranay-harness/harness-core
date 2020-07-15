@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.maintenance.MaintenanceController.getMaintenanceFilename;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -175,7 +175,7 @@ public class GitChangeSetRunnable implements Runnable {
   }
 
   private boolean shouldRun() {
-    return !getMaintenanceFilename() && configurationController.isPrimary();
+    return !getMaintenanceFlag() && configurationController.isPrimary();
   }
 
   private void handleStuckChangeSets() {

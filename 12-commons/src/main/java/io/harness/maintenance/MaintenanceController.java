@@ -40,7 +40,7 @@ public class MaintenanceController implements Managed {
     }
   }
 
-  public static boolean getMaintenanceFilename() {
+  public static boolean getMaintenanceFlag() {
     return forceMaintenance != null ? forceMaintenance : maintenance.get();
   }
 
