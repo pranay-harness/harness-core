@@ -275,7 +275,7 @@ public class MultiArtifactCommandStateTest extends CategoryTest {
     verify(executionContext, times(5)).renderExpression(anyString());
     verify(executionContext, times(1)).getServiceVariables();
     verify(executionContext, times(1)).getSafeDisplayServiceVariables();
-    verify(executionContext, times(4)).getAppId();
+    verify(executionContext, times(5)).getAppId();
 
     verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
     verify(settingsService, times(4)).get(anyString());

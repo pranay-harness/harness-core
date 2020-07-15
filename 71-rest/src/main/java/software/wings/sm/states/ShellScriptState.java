@@ -424,6 +424,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .waitId(activityId)
             .tags(renderedTags)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getApp().getAppId())
+            .workflowExecutionId(context.getWorkflowExecutionId())
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TaskType.SCRIPT.name())

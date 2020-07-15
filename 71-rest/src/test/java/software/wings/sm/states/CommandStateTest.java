@@ -509,7 +509,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(5)).renderExpression(anyString());
     verify(context, times(1)).getServiceVariables();
     verify(context, times(1)).getSafeDisplayServiceVariables();
-    verify(context, times(4)).getAppId();
+    verify(context, times(5)).getAppId();
     verify(context).getStateExecutionData();
 
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);

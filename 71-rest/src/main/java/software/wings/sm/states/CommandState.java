@@ -485,7 +485,7 @@ public class CommandState extends State {
           commandExecutionContextBuilder.activityId(activityId).deploymentType(deploymentType.name()).build();
 
       delegateTaskId = queueDelegateTask(
-          activityId, appId, envId, infrastructureMappingId, command, accountId, commandExecutionContext);
+          activityId, envId, infrastructureMappingId, command, accountId, commandExecutionContext, context);
       logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
     } catch (Exception e) {
       return handleException(context, executionDataBuilder, activityId, appId, e);
@@ -536,15 +536,16 @@ public class CommandState extends State {
     }
   }
 
-  private String queueDelegateTask(String activityId, String appId, String envId, String infrastructureMappingId,
-      Command command, String accountId, CommandExecutionContext commandExecutionContext) {
+  private String queueDelegateTask(String activityId, String envId, String infrastructureMappingId, Command command,
+      String accountId, CommandExecutionContext commandExecutionContext, ExecutionContext context) {
     String delegateTaskId;
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .waitId(activityId)
             .tags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
+            .workflowExecutionId(context.getWorkflowExecutionId())
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TaskType.COMMAND.name())
@@ -958,7 +959,7 @@ public class CommandState extends State {
           commandExecutionContextBuilder.activityId(activityId).deploymentType(deploymentType.name()).build();
 
       delegateTaskId = queueDelegateTask(
-          activityId, appId, envId, infrastructureMappingId, command, accountId, commandExecutionContext);
+          activityId, envId, infrastructureMappingId, command, accountId, commandExecutionContext, context);
       logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
     } catch (Exception e) {
       return handleException(context, executionDataBuilder, activityId, appId, e);

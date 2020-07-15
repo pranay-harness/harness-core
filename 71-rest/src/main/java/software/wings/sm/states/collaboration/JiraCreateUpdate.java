@@ -195,6 +195,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                       .parameters(new Object[] {parameters})
                       .timeout(JIRA_TASK_TIMEOUT_MILLIS)
                       .build())
+            .workflowExecutionId(context.getWorkflowExecutionId())
             .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
