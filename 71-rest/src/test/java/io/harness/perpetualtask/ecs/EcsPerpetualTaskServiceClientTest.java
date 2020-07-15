@@ -84,7 +84,8 @@ public class EcsPerpetualTaskServiceClientTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testGet() {
-    PerpetualTaskClientContext perpetualTaskClientContext = new PerpetualTaskClientContext(clientParamsMap);
+    PerpetualTaskClientContext perpetualTaskClientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamsMap).build();
     EcsPerpetualTaskParams ecsPerpetualTaskParams =
         ecsPerpetualTaskServiceClient.getTaskParams(perpetualTaskClientContext);
     assertThat(ecsPerpetualTaskParams.getClusterId()).isEqualTo(CLUSTER_ID);
@@ -97,7 +98,8 @@ public class EcsPerpetualTaskServiceClientTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testGetValidationTask() {
-    PerpetualTaskClientContext perpetualTaskClientContext = new PerpetualTaskClientContext(clientParamsMap);
+    PerpetualTaskClientContext perpetualTaskClientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamsMap).build();
     DelegateTask delegateTask = ecsPerpetualTaskServiceClient.getValidationTask(perpetualTaskClientContext, accountId);
     assertThat(delegateTask).isNotNull();
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);

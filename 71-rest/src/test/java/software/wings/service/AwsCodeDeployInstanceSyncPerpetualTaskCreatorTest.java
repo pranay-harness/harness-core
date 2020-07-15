@@ -96,10 +96,12 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskCreatorTest extends WingsBase
   public void testCreateTasksForNewDeploymentsWhenTaskExistsForAppId() {
     List<DeploymentSummary> deploymentSummaries = singletonList(
         DeploymentSummary.builder().accountId(ACCOUNT_ID).appId(APP_ID).infraMappingId(INFRA_MAPPING_ID).build());
-    List<PerpetualTaskRecord> existingTasks = singletonList(
-        PerpetualTaskRecord.builder()
-            .clientContext(new PerpetualTaskClientContext(ImmutableMap.of(HARNESS_APPLICATION_ID, APP_ID)))
-            .build());
+    List<PerpetualTaskRecord> existingTasks =
+        singletonList(PerpetualTaskRecord.builder()
+                          .clientContext(PerpetualTaskClientContext.builder()
+                                             .clientParams(ImmutableMap.of(HARNESS_APPLICATION_ID, APP_ID))
+                                             .build())
+                          .build());
     CodeDeployInfrastructureMapping infrastructureMapping = getInfrastructureMapping();
 
     List<String> taskIds =

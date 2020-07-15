@@ -19,6 +19,10 @@ public final class PerpetualTask {
       .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskSchedule_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskSchedule_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskExecutionBundle_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskExecutionBundle_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
     return descriptor;
@@ -26,16 +30,23 @@ public final class PerpetualTask {
   private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
     java.lang.String[] descriptorData = {"\n-io/harness/perpetualtask/perpetual_tas"
-        + "k.proto\022\030io.harness.perpetualtask\032\036googl"
-        + "e/protobuf/duration.proto\"!\n\017PerpetualTa"
-        + "skId\022\016\n\002id\030\001 \001(\tR\002id\"\203\001\n\025PerpetualTaskSc"
-        + "hedule\0225\n\010interval\030\001 \001(\0132\031.google.protob"
-        + "uf.DurationR\010interval\0223\n\007timeout\030\002 \001(\0132\031"
-        + ".google.protobuf.DurationR\007timeoutB\002P\001b\006"
-        + "proto3"};
+        + "k.proto\022\030io.harness.perpetualtask\032\031googl"
+        + "e/protobuf/any.proto\032\036google/protobuf/du"
+        + "ration.proto\032$io/harness/delegate/capabi"
+        + "lity.proto\"!\n\017PerpetualTaskId\022\016\n\002id\030\001 \001("
+        + "\tR\002id\"\203\001\n\025PerpetualTaskSchedule\0225\n\010inter"
+        + "val\030\001 \001(\0132\031.google.protobuf.DurationR\010in"
+        + "terval\0223\n\007timeout\030\002 \001(\0132\031.google.protobu"
+        + "f.DurationR\007timeout\"\232\001\n\034PerpetualTaskExe"
+        + "cutionBundle\022C\n\014capabilities\030\001 \003(\0132\037.io."
+        + "harness.delegate.CapabilityR\014capabilitie"
+        + "s\0225\n\013task_params\030\002 \001(\0132\024.google.protobuf"
+        + ".AnyR\ntaskParamsB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+            com.google.protobuf.AnyProto.getDescriptor(),
             com.google.protobuf.DurationProto.getDescriptor(),
+            io.harness.delegate.CapabilityOuterClass.getDescriptor(),
         });
     internal_static_io_harness_perpetualtask_PerpetualTaskId_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_perpetualtask_PerpetualTaskId_fieldAccessorTable =
@@ -53,7 +64,18 @@ public final class PerpetualTask {
                 "Interval",
                 "Timeout",
             });
+    internal_static_io_harness_perpetualtask_PerpetualTaskExecutionBundle_descriptor =
+        getDescriptor().getMessageTypes().get(2);
+    internal_static_io_harness_perpetualtask_PerpetualTaskExecutionBundle_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_PerpetualTaskExecutionBundle_descriptor,
+            new java.lang.String[] {
+                "Capabilities",
+                "TaskParams",
+            });
+    com.google.protobuf.AnyProto.getDescriptor();
     com.google.protobuf.DurationProto.getDescriptor();
+    io.harness.delegate.CapabilityOuterClass.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -46,6 +46,7 @@ import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
+import io.harness.perpetualtask.TaskClientParams;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCallbackRegistry;
@@ -253,12 +254,14 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
 
     PerpetualTaskClientContextDetails contextDetails =
         PerpetualTaskClientContextDetails.newBuilder()
-            .putAllTaskClientParams(new HashMap<>())
+            .setTaskClientParams(TaskClientParams.newBuilder().putAllParams(new HashMap<>()).build())
             .setLastContextUpdated(Timestamps.fromMillis(lastContextUpdated))
             .build();
 
-    PerpetualTaskClientContext context = new PerpetualTaskClientContext(new HashMap<>());
-    context.setLastContextUpdated(lastContextUpdated);
+    PerpetualTaskClientContext context = PerpetualTaskClientContext.builder()
+                                             .clientParams(new HashMap<>())
+                                             .lastContextUpdated(lastContextUpdated)
+                                             .build();
 
     when(perpetualTaskService.createTask(eq(type), eq(accountId), eq(context), eq(schedule), eq(false)))
         .thenReturn(taskId);

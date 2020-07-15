@@ -45,7 +45,7 @@ public class DisconnectedDelegateHandlerTest extends CategoryTest {
                  .uuid(taskId)
                  .accountId(accountId)
                  .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                 .clientContext(new PerpetualTaskClientContext(new HashMap<>()))
+                 .clientContext(PerpetualTaskClientContext.builder().clientParams(new HashMap<>()).build())
                  .delegateId(delegateId)
                  .build();
     when(delegateDao.get(eq(delegateId))).thenReturn(delegate);

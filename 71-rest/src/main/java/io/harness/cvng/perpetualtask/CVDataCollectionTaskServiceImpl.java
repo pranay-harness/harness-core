@@ -19,7 +19,10 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
     clientParamMap.put("accountId", accountId);
     clientParamMap.put("cvConfigId", cvConfigId);
     clientParamMap.put("connectorId", connectorId);
-    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
+
+    PerpetualTaskClientContext clientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
+
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(1))
                                          .setTimeout(Durations.fromMinutes(15))

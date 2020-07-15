@@ -1184,7 +1184,7 @@ public class InstanceHelperTest extends WingsBaseTest {
         .uuid(id)
         .accountId(WingsTestConstants.ACCOUNT_ID)
         .perpetualTaskType(PerpetualTaskType.PCF_INSTANCE_SYNC)
-        .clientContext(new PerpetualTaskClientContext(clientParams))
+        .clientContext(PerpetualTaskClientContext.builder().clientParams(clientParams).build())
         .build();
   }
 

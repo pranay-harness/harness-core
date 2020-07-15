@@ -41,7 +41,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   private PerpetualTaskClientContext getPerpetualTaskClientContext() {
     Map<String, String> clientParamMap = new HashMap<>();
     clientParamMap.put("region", "default-region");
-    return new PerpetualTaskClientContext(clientParamMap);
+    return PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
   }
 
   @Test

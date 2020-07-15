@@ -43,7 +43,8 @@ public class K8sWatchPerpetualTaskServiceClient
     clientParamMap.put(CLUSTER_ID, clientParams.getClusterId());
     clientParamMap.put(CLUSTER_NAME, clientParams.getClusterName());
 
-    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
+    PerpetualTaskClientContext clientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(1))

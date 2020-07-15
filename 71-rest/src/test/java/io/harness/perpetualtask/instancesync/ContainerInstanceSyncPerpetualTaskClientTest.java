@@ -355,6 +355,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
     clientParams.put(CONTAINER_SERVICE_NAME, "container_service_name");
     clientParams.put(InstanceSyncConstants.CONTAINER_TYPE, isK8s ? "K8S" : "");
 
-    return new PerpetualTaskClientContext(clientParams);
+    return PerpetualTaskClientContext.builder().clientParams(clientParams).build();
   }
 }

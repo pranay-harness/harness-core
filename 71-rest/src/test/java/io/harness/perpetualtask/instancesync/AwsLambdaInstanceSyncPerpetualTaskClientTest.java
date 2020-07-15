@@ -123,11 +123,13 @@ public class AwsLambdaInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
   }
 
   private PerpetualTaskClientContext getClientContext() {
-    return new PerpetualTaskClientContext(ImmutableMap.of(InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID,
-        INFRA_MAPPING_ID, InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
-        AwsLambdaInstanceSyncPerpetualTaskClient.FUNCTION_NAME, "function",
-        AwsLambdaInstanceSyncPerpetualTaskClient.QUALIFIER, "version",
-        AwsLambdaInstanceSyncPerpetualTaskClient.START_DATE, String.valueOf(startDate)));
+    return PerpetualTaskClientContext.builder()
+        .clientParams(ImmutableMap.of(InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID,
+            InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
+            AwsLambdaInstanceSyncPerpetualTaskClient.FUNCTION_NAME, "function",
+            AwsLambdaInstanceSyncPerpetualTaskClient.QUALIFIER, "version",
+            AwsLambdaInstanceSyncPerpetualTaskClient.START_DATE, String.valueOf(startDate)))
+        .build();
   }
 
   private void prepareTaskData(AwsConfig awsConfig) {

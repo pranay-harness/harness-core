@@ -63,7 +63,7 @@ public class PcfInstanceSyncPerpetualTaskClient
     paramMap.put(HARNESS_APPLICATION_ID, clientParams.getAppId());
     paramMap.put(PCF_APPLICATION_NAME, clientParams.getApplicationName());
 
-    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(paramMap);
+    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(paramMap).build();
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))

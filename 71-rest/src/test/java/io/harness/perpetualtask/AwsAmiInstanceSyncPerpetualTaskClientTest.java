@@ -90,9 +90,11 @@ public class AwsAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   }
 
   private PerpetualTaskClientContext getClientContext() {
-    return new PerpetualTaskClientContext(ImmutableMap.of(InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID,
-        INFRA_MAPPING_ID, InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
-        AwsAmiInstanceSyncPerpetualTaskClient.ASG_NAME, "asg"));
+    return PerpetualTaskClientContext.builder()
+        .clientParams(ImmutableMap.of(InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID,
+            InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID, AwsAmiInstanceSyncPerpetualTaskClient.ASG_NAME,
+            "asg"))
+        .build();
   }
 
   @Test

@@ -82,7 +82,9 @@ public class ContainerInstanceSyncPerpetualTaskClient
     clientParamMap.put(CONTAINER_SERVICE_NAME, clientParams.getContainerSvcName());
     clientParamMap.put(CONTAINER_TYPE, emptyIfNull(clientParams.getContainerType()));
 
-    PerpetualTaskClientContext clientContext = new PerpetualTaskClientContext(clientParamMap);
+    PerpetualTaskClientContext clientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
+
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
                                          .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))

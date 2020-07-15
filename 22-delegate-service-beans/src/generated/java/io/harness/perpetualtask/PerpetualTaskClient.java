@@ -12,13 +12,17 @@ public final class PerpetualTaskClient {
     registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
   }
   static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_perpetualtask_TaskClientParams_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_perpetualtask_TaskClientParams_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_perpetualtask_TaskClientParams_ParamsEntry_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_perpetualtask_TaskClientParams_ParamsEntry_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors.Descriptor
-      internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_TaskClientParamsEntry_descriptor;
-  static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_TaskClientParamsEntry_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_perpetualtask_PerpetualTaskClientEntrypoint_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
@@ -32,44 +36,59 @@ public final class PerpetualTaskClient {
     java.lang.String[] descriptorData = {"\n4io/harness/perpetualtask/perpetual_tas"
         + "k_client.proto\022\030io.harness.perpetualtask"
         + "\032\037google/protobuf/timestamp.proto\032)io/ha"
-        + "rness/callback/http_entrypoint.proto\"\267\002\n"
-        + "!PerpetualTaskClientContextDetails\022\177\n\022ta"
-        + "sk_client_params\030\001 \003(\0132Q.io.harness.perp"
-        + "etualtask.PerpetualTaskClientContextDeta"
-        + "ils.TaskClientParamsEntryR\020taskClientPar"
-        + "ams\022L\n\024last_context_updated\030\002 \001(\0132\032.goog"
-        + "le.protobuf.TimestampR\022lastContextUpdate"
-        + "d\032C\n\025TaskClientParamsEntry\022\020\n\003key\030\001 \001(\tR"
-        + "\003key\022\024\n\005value\030\002 \001(\tR\005value:\0028\001\"\207\001\n\035Perpe"
-        + "tualTaskClientEntrypoint\022W\n\020https_entryp"
-        + "oint\030\001 \001(\0132*.io.harness.callback.HttpsCl"
-        + "ientEntrypointH\000R\017httpsEntrypointB\r\n\013ent"
-        + "rypointsB\002P\001b\006proto3"};
+        + "rness/callback/http_entrypoint.proto\032-io"
+        + "/harness/perpetualtask/perpetual_task.pr"
+        + "oto\"\235\001\n\020TaskClientParams\022N\n\006params\030\001 \003(\013"
+        + "26.io.harness.perpetualtask.TaskClientPa"
+        + "rams.ParamsEntryR\006params\0329\n\013ParamsEntry\022"
+        + "\020\n\003key\030\001 \001(\tR\003key\022\024\n\005value\030\002 \001(\tR\005value:"
+        + "\0028\001\"\300\002\n!PerpetualTaskClientContextDetail"
+        + "s\022Z\n\022task_client_params\030\001 \001(\0132*.io.harne"
+        + "ss.perpetualtask.TaskClientParamsH\000R\020tas"
+        + "kClientParams\022c\n\020execution_bundle\030\002 \001(\0132"
+        + "6.io.harness.perpetualtask.PerpetualTask"
+        + "ExecutionBundleH\000R\017executionBundle\022L\n\024la"
+        + "st_context_updated\030\003 \001(\0132\032.google.protob"
+        + "uf.TimestampR\022lastContextUpdatedB\014\n\npara"
+        + "meters\"\207\001\n\035PerpetualTaskClientEntrypoint"
+        + "\022W\n\020https_entrypoint\030\001 \001(\0132*.io.harness."
+        + "callback.HttpsClientEntrypointH\000R\017httpsE"
+        + "ntrypointB\r\n\013entrypointsB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.TimestampProto.getDescriptor(),
             io.harness.callback.HttpEntrypoint.getDescriptor(),
+            io.harness.perpetualtask.PerpetualTask.getDescriptor(),
         });
+    internal_static_io_harness_perpetualtask_TaskClientParams_descriptor = getDescriptor().getMessageTypes().get(0);
+    internal_static_io_harness_perpetualtask_TaskClientParams_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_TaskClientParams_descriptor,
+            new java.lang.String[] {
+                "Params",
+            });
+    internal_static_io_harness_perpetualtask_TaskClientParams_ParamsEntry_descriptor =
+        internal_static_io_harness_perpetualtask_TaskClientParams_descriptor.getNestedTypes().get(0);
+    internal_static_io_harness_perpetualtask_TaskClientParams_ParamsEntry_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_perpetualtask_TaskClientParams_ParamsEntry_descriptor,
+            new java.lang.String[] {
+                "Key",
+                "Value",
+            });
     internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_descriptor =
-        getDescriptor().getMessageTypes().get(0);
+        getDescriptor().getMessageTypes().get(1);
     internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_descriptor,
             new java.lang.String[] {
                 "TaskClientParams",
+                "ExecutionBundle",
                 "LastContextUpdated",
-            });
-    internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_TaskClientParamsEntry_descriptor =
-        internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_descriptor.getNestedTypes().get(0);
-    internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_TaskClientParamsEntry_fieldAccessorTable =
-        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_io_harness_perpetualtask_PerpetualTaskClientContextDetails_TaskClientParamsEntry_descriptor,
-            new java.lang.String[] {
-                "Key",
-                "Value",
+                "Parameters",
             });
     internal_static_io_harness_perpetualtask_PerpetualTaskClientEntrypoint_descriptor =
-        getDescriptor().getMessageTypes().get(1);
+        getDescriptor().getMessageTypes().get(2);
     internal_static_io_harness_perpetualtask_PerpetualTaskClientEntrypoint_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_perpetualtask_PerpetualTaskClientEntrypoint_descriptor,
@@ -79,6 +98,7 @@ public final class PerpetualTaskClient {
             });
     com.google.protobuf.TimestampProto.getDescriptor();
     io.harness.callback.HttpEntrypoint.getDescriptor();
+    io.harness.perpetualtask.PerpetualTask.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -61,7 +61,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                  .accountId(accountId)
                  .uuid(taskId)
                  .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                 .clientContext(new PerpetualTaskClientContext(new HashMap<>()))
+                 .clientContext(PerpetualTaskClientContext.builder().clientParams(new HashMap<>()).build())
                  .build();
     when(clientRegistry.getClient(isA(String.class))).thenReturn(k8sWatchPerpetualTaskServiceClient);
     when(k8sWatchPerpetualTaskServiceClient.getValidationTask(isA(PerpetualTaskClientContext.class), anyString()))

@@ -9,44 +9,52 @@ public interface PerpetualTaskClientContextDetailsOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.PerpetualTaskClientContextDetails)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
+   * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+   * @return Whether the taskClientParams field is set.
    */
-  int getTaskClientParamsCount();
+  boolean hasTaskClientParams();
   /**
-   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
+   * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
+   * @return The taskClientParams.
    */
-  boolean containsTaskClientParams(java.lang.String key);
+  io.harness.perpetualtask.TaskClientParams getTaskClientParams();
   /**
-   * Use {@link #getTaskClientParamsMap()} instead.
+   * <code>.io.harness.perpetualtask.TaskClientParams task_client_params = 1[json_name = "taskClientParams"];</code>
    */
-  @java.lang.Deprecated java.util.Map<java.lang.String, java.lang.String> getTaskClientParams();
-  /**
-   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
-   */
-  java.util.Map<java.lang.String, java.lang.String> getTaskClientParamsMap();
-  /**
-   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
-   */
-
-  java.lang.String getTaskClientParamsOrDefault(java.lang.String key, java.lang.String defaultValue);
-  /**
-   * <code>map&lt;string, string&gt; task_client_params = 1[json_name = "taskClientParams"];</code>
-   */
-
-  java.lang.String getTaskClientParamsOrThrow(java.lang.String key);
+  io.harness.perpetualtask.TaskClientParamsOrBuilder getTaskClientParamsOrBuilder();
 
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+   * "executionBundle"];</code>
+   * @return Whether the executionBundle field is set.
+   */
+  boolean hasExecutionBundle();
+  /**
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+   * "executionBundle"];</code>
+   * @return The executionBundle.
+   */
+  io.harness.perpetualtask.PerpetualTaskExecutionBundle getExecutionBundle();
+  /**
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle execution_bundle = 2[json_name =
+   * "executionBundle"];</code>
+   */
+  io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder getExecutionBundleOrBuilder();
+
+  /**
+   * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
    * @return Whether the lastContextUpdated field is set.
    */
   boolean hasLastContextUpdated();
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
    * @return The lastContextUpdated.
    */
   com.google.protobuf.Timestamp getLastContextUpdated();
   /**
-   * <code>.google.protobuf.Timestamp last_context_updated = 2[json_name = "lastContextUpdated"];</code>
+   * <code>.google.protobuf.Timestamp last_context_updated = 3[json_name = "lastContextUpdated"];</code>
    */
   com.google.protobuf.TimestampOrBuilder getLastContextUpdatedOrBuilder();
+
+  public io.harness.perpetualtask.PerpetualTaskClientContextDetails.ParametersCase getParametersCase();
 }

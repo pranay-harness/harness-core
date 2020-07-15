@@ -36,6 +36,7 @@ import io.harness.delegate.TaskProgressUpdatesResponse;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskClientContext.PerpetualTaskClientContextBuilder;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.serializer.KryoSerializer;
@@ -194,13 +195,20 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
       CreatePerpetualTaskRequest request, StreamObserver<CreatePerpetualTaskResponse> responseObserver) {
     String accountId = request.getAccountId().getId();
 
-    PerpetualTaskClientContext context = new PerpetualTaskClientContext(request.getContext().getTaskClientParamsMap());
+    PerpetualTaskClientContextBuilder contextBuilder = PerpetualTaskClientContext.builder();
+
+    if (request.getContext().hasTaskClientParams()) {
+      contextBuilder.clientParams(request.getContext().getTaskClientParams().getParamsMap());
+    } else if (request.getContext().hasExecutionBundle()) {
+      contextBuilder.taskParameters(request.getContext().toByteArray());
+    }
+
     if (request.getContext().getLastContextUpdated() != null) {
-      context.setLastContextUpdated(Timestamps.toMillis(request.getContext().getLastContextUpdated()));
+      contextBuilder.lastContextUpdated(Timestamps.toMillis(request.getContext().getLastContextUpdated()));
     }
 
     String perpetualTaskId = perpetualTaskService.createTask(
-        request.getType(), accountId, context, request.getSchedule(), request.getAllowDuplicate());
+        request.getType(), accountId, contextBuilder.build(), request.getSchedule(), request.getAllowDuplicate());
 
     responseObserver.onNext(CreatePerpetualTaskResponse.newBuilder()
                                 .setPerpetualTaskId(PerpetualTaskId.newBuilder().setId(perpetualTaskId).build())
