@@ -243,7 +243,8 @@ public class BillingStatsTimeSeriesDataFetcher
             }
             break;
           case STRING:
-            if (addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE) {
+            if ((addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE)
+                || field == BillingDataMetaDataFields.INSTANCENAME) {
               additionalInfo = resultSet.getString(field.getFieldName());
               break;
             }
@@ -251,9 +252,9 @@ public class BillingStatsTimeSeriesDataFetcher
             String entityId = resultSet.getString(field.getFieldName());
             String idWithInfo =
                 addNamespaceToEntityId ? additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId : entityId;
-            cpuPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
-            memoryPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
-            dataPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
+            cpuPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
+            memoryPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
+            dataPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
 
             cpuMaxUtilsPointBuilder.key(buildQLReferenceForUtilization("MAX", idWithInfo));
             cpuAvgUtilsPointBuilder.key(buildQLReferenceForUtilization("AVG", idWithInfo));
@@ -388,14 +389,14 @@ public class BillingStatsTimeSeriesDataFetcher
       if (checkStartTimeFilterIsValid(startTimeFromFilters)) {
         long timeOfFirstEntry = resultSet.getTimestamp(timeFieldName, utils.getDefaultCalendar()).getTime();
         addPrecedingZeroValuedData(
-            queryData, qlTimeDataPointMap, entityId, idWithInfo, timeOfFirstEntry, startTimeFromFilters);
+            queryData, qlTimeDataPointMap, entityId, idWithInfo, timeOfFirstEntry, startTimeFromFilters, resultSet);
       }
     }
   }
 
   private void addPrecedingZeroValuedData(BillingDataQueryMetadata queryData,
       Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap, String entityId, String idWithInfo,
-      long timeOfFirstEntry, long startTimeFromFilters) {
+      long timeOfFirstEntry, long startTimeFromFilters, ResultSet resultSet) throws SQLException {
     int missingDays = (int) ((timeOfFirstEntry - startTimeFromFilters) / ONE_DAY_MILLIS);
     long startTime = timeOfFirstEntry - missingDays * ONE_DAY_MILLIS;
     while (timeOfFirstEntry > startTime) {
@@ -406,7 +407,7 @@ public class BillingStatsTimeSeriesDataFetcher
             dataPointBuilder.value(0);
             break;
           case STRING:
-            dataPointBuilder.key(buildQLReference(field, entityId, idWithInfo));
+            dataPointBuilder.key(buildQLReference(field, entityId, idWithInfo, resultSet));
             break;
           case TIMESTAMP:
             dataPointBuilder.time(startTime);
@@ -422,8 +423,13 @@ public class BillingStatsTimeSeriesDataFetcher
     }
   }
 
-  private QLReference buildQLReference(BillingDataMetaDataFields field, String key, String id) {
-    return QLReference.builder().type(field.getFieldName()).id(id).name(statsHelper.getEntityName(field, key)).build();
+  private QLReference buildQLReference(BillingDataMetaDataFields field, String key, String id, ResultSet resultSet)
+      throws SQLException {
+    return QLReference.builder()
+        .type(field.getFieldName())
+        .id(id)
+        .name(statsHelper.getEntityName(field, key, resultSet))
+        .build();
   }
 
   private QLReference buildQLReferenceForUtilization(String name, String id) {

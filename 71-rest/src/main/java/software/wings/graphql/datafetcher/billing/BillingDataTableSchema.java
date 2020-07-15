@@ -43,6 +43,7 @@ public class BillingDataTableSchema {
   DbColumn billingAccountId;
   DbColumn instanceId;
   DbColumn instanceType;
+  DbColumn instanceName;
   DbColumn serviceId;
   DbColumn appId;
   DbColumn clusterName;
@@ -105,6 +106,7 @@ public class BillingDataTableSchema {
     accountId = billingDataTable.addColumn("accountid", "text", null);
     billingAccountId = billingDataTable.addColumn("billingaccountid", "text", null);
     instanceId = billingDataTable.addColumn("instanceid", "text", null);
+    instanceName = billingDataTable.addColumn("instancename", "text", null);
     instanceType = billingDataTable.addColumn("instancetype", varcharType, null);
     serviceId = billingDataTable.addColumn("serviceid", "text", null);
     appId = billingDataTable.addColumn("appid", "text", null);
