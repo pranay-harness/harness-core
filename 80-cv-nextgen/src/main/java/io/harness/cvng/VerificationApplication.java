@@ -205,7 +205,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .semaphore(new Semaphore(5))
             .handler(cvConfigDataCollectionHandler)
             .schedulingType(REGULAR)
-            .filterExpander(query -> query.filter(CVConfigKeys.dataCollectionTaskId, null))
+            .filterExpander(query -> query.criteria(CVConfigKeys.dataCollectionTaskId).doesNotExist())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();

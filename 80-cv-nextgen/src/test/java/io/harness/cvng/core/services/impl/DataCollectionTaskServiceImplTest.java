@@ -23,10 +23,12 @@ import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.ExecutionStatus;
+import io.harness.cvng.beans.SplunkDataCollectionInfo;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
+import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -366,7 +368,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testEnqueueFirstTask() throws IllegalAccessException {
+  public void testEnqueueFirstTask_forMetricsConfig() throws IllegalAccessException {
     String taskId = generateUuid();
     VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
@@ -381,9 +383,32 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     assertThat(savedTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(AppDynamicsDataCollectionInfo.class);
     assertThat(taskIdFromApi).isEqualTo(taskId);
-    Instant startTime = Instant.parse("2020-04-22T07:55:00Z");
-    assertThat(savedTask.getEndTime()).isEqualTo(getFiveMinBoundaryInstant(fakeNow).minus(1, ChronoUnit.MILLIS));
-    assertThat(savedTask.getStartTime()).isEqualTo(getFiveMinBoundaryInstant(fakeNow).minus(125, ChronoUnit.MINUTES));
+    assertThat(savedTask.getEndTime())
+        .isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime().minusMillis(1));
+    assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testEnqueueFirstTask_forLogConfig() throws IllegalAccessException {
+    String taskId = generateUuid();
+    VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
+    FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
+
+    when(verificationManagerService.createDataCollectionTask(eq(accountId), eq(cvConfigId), anyString()))
+        .thenReturn(taskId);
+    SplunkCVConfig cvConfig = getSplunkCVConfig();
+
+    String taskIdFromApi = dataCollectionTaskService.enqueueFirstTask(cvConfig);
+    DataCollectionTask savedTask =
+        hPersistence.createQuery(DataCollectionTask.class).filter(DataCollectionTaskKeys.cvConfigId, cvConfigId).get();
+    assertThat(savedTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(SplunkDataCollectionInfo.class);
+    assertThat(taskIdFromApi).isEqualTo(taskId);
+    assertThat(savedTask.getEndTime())
+        .isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime().minusMillis(1));
+    assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
   }
 
   private Instant getFiveMinBoundaryInstant(Instant instant) {
@@ -409,6 +434,23 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     cvConfig.setTierName("tierName");
     cvConfig.setMetricPack(
         metricPackService.getMetricPacks(accountId, "projectId", DataSourceType.APP_DYNAMICS).get(0));
+    return cvConfig;
+  }
+
+  private SplunkCVConfig getSplunkCVConfig() {
+    SplunkCVConfig cvConfig = new SplunkCVConfig();
+    cvConfig.setCreatedAt(clock.millis());
+    cvConfig.setName("name");
+    cvConfig.setProjectIdentifier("projectIdentifier");
+    cvConfig.setUuid(cvConfigId);
+    cvConfig.setAccountId(accountId);
+    cvConfig.setVerificationType(VerificationType.TIME_SERIES);
+    cvConfig.setConnectorId(generateUuid());
+    cvConfig.setServiceIdentifier("serviceIdentifier");
+    cvConfig.setEnvIdentifier("envIdentifier");
+    cvConfig.setGroupId(generateUuid());
+    cvConfig.setQuery("excetpion");
+    cvConfig.setServiceInstanceIdentifier("host");
     return cvConfig;
   }
 

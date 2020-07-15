@@ -1,7 +1,9 @@
 package io.harness.cvng.core.entities;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
@@ -15,7 +17,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 public class LogCVConfigTest extends CategoryTest {
   private String accountId;
@@ -43,12 +44,46 @@ public class LogCVConfigTest extends CategoryTest {
         .hasMessage("query should not be null");
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetBaseline_whenCreatedAtIsNotSet() {
+    LogCVConfig logCVConfig = createCVConfig();
+    assertThatThrownBy(() -> logCVConfig.getBaseline())
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("CreatedAt needs to be set to get the baseline");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetBaseline_whenCreatedAtIsSet() {
+    LogCVConfig logCVConfig = createCVConfig();
+    logCVConfig.setCreatedAt(Instant.parse("2020-04-22T10:02:06Z").toEpochMilli());
+    assertThat(logCVConfig.getBaseline())
+        .isEqualTo(TimeRange.builder()
+                       .endTime(Instant.parse("2020-04-22T10:00:00Z"))
+                       .startTime(Instant.parse("2020-04-22T09:30:00Z"))
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetFirstTimeDataCollectionTimeRange_whenCreatedAtIsSet() {
+    LogCVConfig logCVConfig = createCVConfig();
+    logCVConfig.setCreatedAt(Instant.parse("2020-04-22T10:02:06Z").toEpochMilli());
+    assertThat(logCVConfig.getFirstTimeDataCollectionTimeRange())
+        .isEqualTo(TimeRange.builder()
+                       .endTime(Instant.parse("2020-04-22T09:35:00Z"))
+                       .startTime(Instant.parse("2020-04-22T09:30:00Z"))
+                       .build());
+  }
+
   private LogCVConfig createCVConfig() {
     SplunkCVConfig cvConfig = new SplunkCVConfig();
     fillCommon(cvConfig);
     cvConfig.setServiceInstanceIdentifier(serviceInstanceIdentifier);
-    cvConfig.setBaseline(
-        TimeRange.builder().startTime(Instant.now()).endTime(Instant.now().plus(10, ChronoUnit.DAYS)).build());
     return cvConfig;
   }
 

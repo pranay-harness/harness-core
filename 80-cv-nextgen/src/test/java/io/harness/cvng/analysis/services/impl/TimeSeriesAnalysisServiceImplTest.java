@@ -2,7 +2,6 @@ package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.Gson;

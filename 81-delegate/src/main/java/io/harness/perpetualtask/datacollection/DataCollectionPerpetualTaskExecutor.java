@@ -60,24 +60,29 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
     logger.info("DataCollectionInfo {} ", cvDataCollectionInfo);
     DataCollectionTaskDTO dataCollectionTask;
     try {
-      dataCollectionTask =
-          cvNextGenServiceClient.getNextDataCollectionTask(taskParams.getAccountId(), taskParams.getCvConfigId())
-              .execute()
-              .body()
-              .getResource();
-      if (dataCollectionTask == null) {
-        logger.info("Nothing to process.");
-      } else {
-        logger.info("Next task to process: ", dataCollectionTask);
-        SettingValue settingValue = cvDataCollectionInfo.getSettingValue();
-        if (settingValue instanceof EncryptableSetting) {
-          encryptionService.decrypt((EncryptableSetting) settingValue, cvDataCollectionInfo.getEncryptedDataDetails());
+      // TODO: What happens if this task takes more time then the schedule?
+      while (true) {
+        dataCollectionTask =
+            cvNextGenServiceClient.getNextDataCollectionTask(taskParams.getAccountId(), taskParams.getCvConfigId())
+                .execute()
+                .body()
+                .getResource();
+        if (dataCollectionTask == null) {
+          logger.info("Nothing to process.");
+          break;
+        } else {
+          logger.info("Next task to process: ", dataCollectionTask);
+          SettingValue settingValue = cvDataCollectionInfo.getSettingValue();
+          if (settingValue instanceof EncryptableSetting) {
+            encryptionService.decrypt(
+                (EncryptableSetting) settingValue, cvDataCollectionInfo.getEncryptedDataDetails());
+          }
+          Connector connector = (Connector) settingValue;
+          run(taskParams, connector, dataCollectionTask);
         }
-        Connector connector = (Connector) settingValue;
-        run(taskParams, connector, dataCollectionTask);
       }
-
     } catch (IOException e) {
+      logger.error("Perpetual task failed with exception", e);
       throw new IllegalStateException(e);
     }
 
@@ -125,12 +130,13 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result).execute();
       logger.info("Updated task status to success.");
 
-    } catch (Exception ex) {
+    } catch (Exception e) {
+      logger.error("Perpetual task failed with exception", e);
       DataCollectionTaskResult result = DataCollectionTaskResult.builder()
                                             .dataCollectionTaskId(dataCollectionTask.getUuid())
                                             .status(FAILED)
-                                            .exception(ExceptionUtils.getMessage(ex))
-                                            .stacktrace(ExceptionUtils.getStackTrace(ex))
+                                            .exception(ExceptionUtils.getMessage(e))
+                                            .stacktrace(ExceptionUtils.getStackTrace(e))
                                             .build();
       cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result).execute();
     }

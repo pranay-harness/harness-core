@@ -6,16 +6,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.beans.TimeRange;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.models.VerificationType;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 public class CVConfigTest extends CategoryTest {
   private String accountId;
@@ -104,8 +100,6 @@ public class CVConfigTest extends CategoryTest {
     fillCommon(cvConfig);
     cvConfig.setQuery("exception");
     cvConfig.setServiceInstanceIdentifier(serviceInstanceIdentifier);
-    cvConfig.setBaseline(
-        TimeRange.builder().startTime(Instant.now()).endTime(Instant.now().plus(10, ChronoUnit.DAYS)).build());
     return cvConfig;
   }
 
