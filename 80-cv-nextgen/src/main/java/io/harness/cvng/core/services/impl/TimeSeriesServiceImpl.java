@@ -1,13 +1,16 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_ANALYSIS_WINDOW_MINUTES;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
@@ -22,10 +25,15 @@ import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.UpdateOptions;
+import org.mongodb.morphia.query.Query;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -131,5 +139,136 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
       }
     });
     return timeSeriesMetricDefinitions;
+  }
+
+  @Override
+  public TimeSeriesTestDataDTO getMetricGroupDataForRange(
+      String cvConfigId, Instant startTime, Instant endTime, String metricName, List<String> groupNames) {
+    Preconditions.checkNotNull(cvConfigId, "cvConfigId is null in getTimeseriesDataForRange");
+
+    TimeSeriesTestDataDTO timeseriesData = getTxnMetricDataForRange(cvConfigId, startTime, endTime, metricName, null);
+
+    Map<String, Map<String, List<Double>>> metricNameGroupNameValMap = new HashMap<>();
+    if (timeseriesData != null) {
+      timeseriesData.getTransactionMetricValues().forEach((groupName, metricValueMap) -> {
+        if (!metricNameGroupNameValMap.containsKey(metricName)) {
+          metricNameGroupNameValMap.put(metricName, new HashMap<>());
+        }
+
+        if (isNotEmpty(groupNames) && groupNames.contains(groupName)) {
+          List<Double> values = metricValueMap.get(metricName);
+          if (!metricNameGroupNameValMap.containsKey(metricName)) {
+            metricNameGroupNameValMap.put(metricName, new HashMap<>());
+          }
+
+          metricNameGroupNameValMap.get(metricName).put(groupName, values);
+        } else if (isEmpty(groupNames)) {
+          // we need to add for all transactions without filtering
+          metricNameGroupNameValMap.get(metricName).put(groupName, metricValueMap.get(metricName));
+        }
+      });
+
+      return TimeSeriesTestDataDTO.builder()
+          .cvConfigId(cvConfigId)
+          .transactionMetricValues(metricNameGroupNameValMap)
+          .build();
+    }
+    return null;
+  }
+
+  @Override
+  public TimeSeriesTestDataDTO getTxnMetricDataForRange(
+      String cvConfigId, Instant startTime, Instant endTime, String metricName, String txnName) {
+    Instant queryStartTime = startTime.truncatedTo(ChronoUnit.SECONDS);
+    Instant queryEndTime = endTime.truncatedTo(ChronoUnit.SECONDS);
+    Query<TimeSeriesRecord> timeSeriesRecordsQuery = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
+                                                         .filter(TimeSeriesRecordKeys.cvConfigId, cvConfigId)
+                                                         .field(TimeSeriesRecordKeys.bucketStartTime)
+                                                         .greaterThanOrEq(queryStartTime)
+                                                         .field(TimeSeriesRecordKeys.bucketStartTime)
+                                                         .lessThan(queryEndTime);
+    if (isNotEmpty(metricName)) {
+      timeSeriesRecordsQuery = timeSeriesRecordsQuery.filter(TimeSeriesRecordKeys.metricName, metricName);
+    }
+
+    List<TimeSeriesRecord> records = timeSeriesRecordsQuery.asList();
+
+    if (records == null) {
+      return null;
+    }
+
+    Map<String, List<TimeSeriesGroupValue>> metricValueList = new HashMap<>();
+    records.forEach(record -> {
+      if (!metricValueList.containsKey(record.getMetricName())) {
+        metricValueList.put(record.getMetricName(), new ArrayList<>());
+      }
+
+      List<TimeSeriesRecord.TimeSeriesGroupValue> valueList = metricValueList.get(record.getMetricName());
+      List<TimeSeriesRecord.TimeSeriesGroupValue> curValueList = new ArrayList<>();
+      // if txnName filter is present, filter by that name
+      if (isNotEmpty(txnName)) {
+        record.getTimeSeriesGroupValues().forEach(timeSeriesGroupValue -> {
+          if (timeSeriesGroupValue.getGroupName().equals(txnName)) {
+            curValueList.add(timeSeriesGroupValue);
+          }
+        });
+      } else {
+        curValueList.addAll(record.getTimeSeriesGroupValues());
+      }
+
+      // filter for those timestamps that fall within the start and endTime
+      curValueList.forEach(groupValue -> {
+        boolean timestampInWindow =
+            !(groupValue.getTimeStamp().isBefore(startTime) || groupValue.getTimeStamp().isAfter(endTime));
+        if (timestampInWindow) {
+          valueList.add(groupValue);
+        }
+      });
+
+      metricValueList.put(record.getMetricName(), valueList);
+    });
+
+    Map<String, Map<String, List<Double>>> sortedValueMap = getSortedListOfTimeSeriesRecords(metricValueList);
+
+    return TimeSeriesTestDataDTO.builder().cvConfigId(cvConfigId).transactionMetricValues(sortedValueMap).build();
+  }
+
+  private Map<String, Map<String, List<Double>>> getSortedListOfTimeSeriesRecords(
+      Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>> unsortedTimeseries) {
+    if (isNotEmpty(unsortedTimeseries)) {
+      Map<String, Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>>> txnMetricMap = new HashMap<>();
+
+      // first build the txn -> metric -> TimeSeriesGroupValue object
+      unsortedTimeseries.forEach((metricName, txnValList) -> {
+        txnValList.forEach(txnValue -> {
+          String txnName = txnValue.getGroupName();
+          if (!txnMetricMap.containsKey(txnName)) {
+            txnMetricMap.put(txnName, new HashMap<>());
+          }
+          if (!txnMetricMap.get(txnName).containsKey(metricName)) {
+            txnMetricMap.get(txnName).put(metricName, new ArrayList<>());
+          }
+
+          txnMetricMap.get(txnName).get(metricName).add(txnValue);
+        });
+      });
+
+      // next sort the list under each txn->metric
+      Map<String, Map<String, List<Double>>> txnMetricValueMap = new HashMap<>();
+      for (String txnName : txnMetricMap.keySet()) {
+        Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>> metricValueMap = txnMetricMap.get(txnName);
+        txnMetricValueMap.put(txnName, new HashMap<>());
+
+        for (String metricName : metricValueMap.keySet()) {
+          List<TimeSeriesRecord.TimeSeriesGroupValue> valueList = metricValueMap.get(metricName);
+          Collections.sort(valueList);
+          txnMetricValueMap.get(txnName).put(metricName, new ArrayList<>());
+          valueList.forEach(value -> { txnMetricValueMap.get(txnName).get(metricName).add(value.getMetricValue()); });
+        }
+      }
+
+      return txnMetricValueMap;
+    }
+    return null;
   }
 }
