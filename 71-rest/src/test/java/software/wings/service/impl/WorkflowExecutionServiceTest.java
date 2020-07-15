@@ -31,6 +31,7 @@ import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrati
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -51,6 +52,7 @@ import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -93,11 +95,13 @@ import software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuild
 import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.FeatureName;
+import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.Service;
 import software.wings.beans.User;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.deployment.DeploymentMetadata;
@@ -106,8 +110,10 @@ import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -118,6 +124,7 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutionSimulator;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -147,6 +154,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock WorkflowExecutionServiceHelper workflowExecutionServiceHelper;
+  @Mock AuthService authService;
+  @Mock private AccountExpirationChecker accountExpirationChecker;
 
   @Inject private WingsPersistence wingsPersistence1;
 
@@ -917,5 +926,23 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     workflowExecutionService.addTagFilterToPageRequest(pageRequest,
         "{\"harnessTagFilter\":{\"matchAll\":false,\"conditions\":[{\"name\":\"feature\",\"operator\":\"IN\",\"values\":[\"copy\"]}]}}");
     assertThat(pageRequest.getFilters().size()).isEqualTo(1);
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void testPipelineAuthorization() {
+    Variable envVariable = aVariable().name("Environment").entityType(EntityType.ENVIRONMENT).build();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).build();
+    pipeline.setEnvIds(Collections.singletonList("Environment"));
+    pipeline.setPipelineVariables(Collections.singletonList(envVariable));
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setWorkflowVariables(ImmutableMap.of("Environment", ENV_ID));
+    when(pipelineService.readPipelineResolvedVariablesLoopedInfo(any(), any(), any())).thenReturn(pipeline);
+    User user = anUser().build();
+    UserThreadLocal.set(user);
+    workflowExecutionService.triggerPipelineExecution(APP_ID, PIPELINE_ID, executionArgs, null);
+    verify(deploymentAuthHandler).authorizePipelineExecution(eq(APP_ID), eq(PIPELINE_ID));
+    verify(authService).checkIfUserAllowedToDeployPipelineToEnv(eq(APP_ID), eq(ENV_ID));
   }
 }

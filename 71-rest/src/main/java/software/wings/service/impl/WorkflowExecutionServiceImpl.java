@@ -232,6 +232,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
 import software.wings.service.intfc.BuildSourceService;
@@ -372,6 +373,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private BuildSourceService buildSourceService;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
   @Inject private DeploymentAuthHandler deploymentAuthHandler;
+  @Inject private AuthService authService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -1097,6 +1099,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     String pipelineId = pipeline.getUuid();
     String accountId = appService.getAccountIdByAppId(appId);
+
+    User user = UserThreadLocal.get();
+    if (trigger == null && user != null) {
+      deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
+      if (isNotEmpty(pipeline.getEnvIds())) {
+        pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
+      }
+    }
     checkPreDeploymentConditions(accountId, appId);
 
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
@@ -1160,7 +1170,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       stdParams.setWorkflowElement(WorkflowElement.builder().pipelineResumeUuid(pipelineResumeId).build());
     }
 
-    User user = UserThreadLocal.get();
     if (user != null) {
       stdParams.setCurrentUser(
           EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
@@ -1227,6 +1236,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Workflow workflow = workflowExecutionServiceHelper.obtainWorkflow(appId, workflowId, infraRefactor);
     String resolveEnvId = workflowService.resolveEnvironmentId(workflow, executionArgs.getWorkflowVariables());
     envId = resolveEnvId != null ? resolveEnvId : envId;
+    User user = UserThreadLocal.get();
+    if (trigger == null && user != null) {
+      deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
+      authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
+    }
 
     // Doing this check here so that workflow is already fetched from databae.
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);

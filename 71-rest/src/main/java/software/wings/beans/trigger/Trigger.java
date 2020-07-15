@@ -67,7 +67,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
   @NotEmpty private String name;
   private String description;
   @NotNull private TriggerCondition condition;
-  private String pipelineId;
+  @Deprecated private String pipelineId;
   private String pipelineName;
   private String workflowId;
   private String workflowName;

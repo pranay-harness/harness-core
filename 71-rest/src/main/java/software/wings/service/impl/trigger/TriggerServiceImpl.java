@@ -417,7 +417,7 @@ public class TriggerServiceImpl implements TriggerService {
     List<Artifact> artifacts = new ArrayList<>();
     Trigger trigger = triggerServiceHelper.getTrigger(appId, webHookToken);
     logger.info("Received WebHook request  for the Trigger {} with Service Build Numbers {}  and parameters {}",
-        trigger.getPipelineId(), serviceArtifactMapping, parameters);
+        trigger.getUuid(), serviceArtifactMapping, parameters);
     if (isNotEmpty(serviceArtifactMapping)) {
       addArtifactsFromVersionsOfWebHook(trigger, serviceArtifactMapping, artifacts);
     }
@@ -1173,7 +1173,7 @@ public class TriggerServiceImpl implements TriggerService {
                 triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.SUCCESS, "File content changed");
                 break;
               case PIPELINE:
-                logger.info("Starting deployment for the pipeline {}", trigger.getPipelineId());
+                logger.info("Starting deployment for the pipeline {}", trigger.getWorkflowId());
                 if (triggerExecution.getExecutionArgs() != null) {
                   triggerExecution.getExecutionArgs().setPipelineId(trigger.getWorkflowId());
                 }
