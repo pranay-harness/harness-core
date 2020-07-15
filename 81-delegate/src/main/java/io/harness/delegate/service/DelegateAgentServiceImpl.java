@@ -415,6 +415,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .description(description)
                                           .version(getVersion())
                                           .delegateType(DELEGATE_TYPE)
+                                          .proxy(delegateConfiguration.isProxy())
+                                          .polllingModeEnabled(delegateConfiguration.isPollForTasks())
                                           .sampleDelegate(isSample);
 
       delegateId = registerDelegate(builder);
@@ -841,7 +843,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         attempts.incrementAndGet();
         String attemptString = attempts.get() > 1 ? " (Attempt " + attempts.get() + ")" : "";
         logger.info("Registering delegate" + attemptString);
-        DelegateParams delegateParams = builder.build().toBuilder().lastHeartBeat(clock.millis()).build();
+        DelegateParams delegateParams = builder.build()
+                                            .toBuilder()
+                                            .lastHeartBeat(clock.millis())
+                                            .delegateType(DELEGATE_TYPE)
+                                            .description(delegateConfiguration.getDescription())
+                                            .proxy(delegateConfiguration.isProxy())
+                                            .polllingModeEnabled(delegateConfiguration.isPollForTasks())
+                                            .build();
         restResponse = delegateExecute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
       } catch (Exception e) {
         String msg = "Unknown error occurred while registering Delegate [" + accountId + "] with manager";
@@ -1367,6 +1376,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           builder.build()
               .toBuilder()
               .lastHeartBeat(clock.millis())
+              .polllingModeEnabled(delegateConfiguration.isPollForTasks())
               .currentlyExecutingDelegateTasks(currentlyExecutingTasks.values()
                                                    .stream()
                                                    .map(DelegateTaskPackage::getDelegateTaskId)

@@ -18,11 +18,13 @@ import static io.harness.obfuscate.Obfuscator.obfuscate;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DESCRIPTION;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -50,6 +52,7 @@ import static software.wings.service.impl.DelegateServiceImpl.KUBERNETES_DELEGAT
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.DELEGATE_GROUP_NAME;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
@@ -541,6 +544,79 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldRegisterDelegateParams() {
+    String accountId = generateUuid();
+    DelegateParams params = DelegateParams.builder()
+                                .accountId(accountId)
+                                .hostName(HOST_NAME)
+                                .description(DESCRIPTION)
+                                .delegateType(DOCKER_DELEGATE)
+                                .ip("127.0.0.1")
+                                .delegateGroupName(DELEGATE_GROUP_NAME)
+                                .version(VERSION)
+                                .proxy(true)
+                                .polllingModeEnabled(true)
+                                .sampleDelegate(true)
+                                .build();
+
+    DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
+    when(delegateProfileService.fetchPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
+    DelegateRegisterResponse registerResponse = delegateService.register(params);
+    Delegate delegateFromDb = delegateService.get(accountId, registerResponse.getDelegateId(), true);
+
+    assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
+    assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
+    assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
+    assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
+    assertThat(delegateFromDb.getIp()).isEqualTo(params.getIp());
+    assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
+    assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
+    assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
+    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPolllingModeEnabled());
+    assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+  }
+
+  @Test
+  @Owner(developers = SANJA)
+  @Category(UnitTests.class)
+  public void shouldRegisterExistingDelegateParams() {
+    String accountId = generateUuid();
+    DelegateParams params = DelegateParams.builder()
+                                .accountId(accountId)
+                                .hostName(HOST_NAME)
+                                .description(DESCRIPTION)
+                                .delegateType(DOCKER_DELEGATE)
+                                .ip("127.0.0.1")
+                                .delegateGroupName(DELEGATE_GROUP_NAME)
+                                .version(VERSION)
+                                .proxy(true)
+                                .polllingModeEnabled(true)
+                                .sampleDelegate(false)
+                                .build();
+    DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
+    when(delegateProfileService.fetchPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
+    DelegateRegisterResponse registerResponse = delegateService.register(params);
+    Delegate delegateFromDb = delegateService.get(accountId, registerResponse.getDelegateId(), true);
+
+    assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
+    assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
+    assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
+    assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
+    assertThat(delegateFromDb.getIp()).isEqualTo(params.getIp());
+    assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
+    assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
+    assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
+    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPolllingModeEnabled());
+    assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+  }
+
+  @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldRegisterExistingDelegate() {
@@ -559,6 +635,167 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.register(delegate);
     Delegate registeredDelegate = delegateService.get(accountId, delegate.getUuid(), true);
     assertThat(registeredDelegate).isEqualTo(delegate);
+  }
+
+  @Test
+  @Owner(developers = BRETT)
+  @Category(UnitTests.class)
+  public void shouldRegisterParamsWithExistingDelegate() {
+    String accountId = generateUuid();
+    Delegate delegate = createDelegateBuilder()
+                            .accountId(accountId)
+                            .hostName(HOST_NAME)
+                            .description(DESCRIPTION)
+                            .delegateType(DOCKER_DELEGATE)
+                            .ip("127.0.0.1")
+                            .delegateGroupName(DELEGATE_GROUP_NAME)
+                            .version(VERSION)
+                            .proxy(false)
+                            .polllingModeEnabled(false)
+                            .sampleDelegate(false)
+                            .build();
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+    delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
+    delegate = delegateService.add(delegate);
+    DelegateParams params = DelegateParams.builder()
+                                .delegateId(delegate.getUuid())
+                                .accountId(accountId)
+                                .hostName(HOST_NAME + "UPDATED")
+                                .description(DESCRIPTION + "UPDATED")
+                                .delegateType(DOCKER_DELEGATE + "UPDATED")
+                                .ip("127.0.0.2")
+                                .delegateGroupName(DELEGATE_GROUP_NAME + "UPDATED")
+                                .version(VERSION + "UPDATED")
+                                .proxy(true)
+                                .polllingModeEnabled(true)
+                                .sampleDelegate(false)
+                                .build();
+
+    delegateService.register(params);
+
+    Delegate delegateFromDb = delegateService.get(accountId, delegate.getUuid(), true);
+    assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
+    assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
+    assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
+    assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
+    assertThat(delegateFromDb.getIp()).isEqualTo(params.getIp());
+    assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
+    assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
+    assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
+    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPolllingModeEnabled());
+    assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+  }
+
+  @Test
+  @Owner(developers = BRETT)
+  @Category(UnitTests.class)
+  public void shouldRegisterParamsWithExistingDelegateForECS() {
+    String accountId = generateUuid();
+    Delegate delegate = createDelegateBuilder()
+                            .accountId(accountId)
+                            .hostName(HOST_NAME)
+                            .description(DESCRIPTION)
+                            .delegateType(ECS)
+                            .ip("127.0.0.1")
+                            .delegateGroupName(DELEGATE_GROUP_NAME)
+                            .version(VERSION)
+                            .proxy(false)
+                            .polllingModeEnabled(false)
+                            .sampleDelegate(false)
+                            .build();
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+    delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
+    delegate = delegateService.add(delegate);
+    DelegateParams params = DelegateParams.builder()
+                                .delegateId(delegate.getUuid())
+                                .accountId(accountId)
+                                .hostName(HOST_NAME)
+                                .description(DESCRIPTION + "UPDATED")
+                                .delegateType(ECS)
+                                .ip("127.0.0.2")
+                                .delegateGroupName(DELEGATE_GROUP_NAME + "UPDATED")
+                                .delegateRandomToken("13")
+                                .version(VERSION + "UPDATED")
+                                .proxy(true)
+                                .polllingModeEnabled(true)
+                                .sampleDelegate(false)
+                                .build();
+
+    delegateService.register(params);
+
+    Delegate delegateFromDb = delegateService.get(accountId, delegate.getUuid(), true);
+    assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
+    assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
+    assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
+    assertThat(delegateFromDb.getIp()).isEqualTo(params.getIp());
+    assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
+    assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
+    assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
+    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPolllingModeEnabled());
+    assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+  }
+
+  @Test
+  @Owner(developers = BRETT)
+  @Category(UnitTests.class)
+  public void shouldNotFailOnNullRegisterParamsWithExistingDelegate() {
+    String accountId = generateUuid();
+    Delegate delegate = createDelegateBuilder()
+                            .accountId(accountId)
+                            .hostName(HOST_NAME)
+                            .description(DESCRIPTION)
+                            .delegateType(DOCKER_DELEGATE)
+                            .ip("127.0.0.1")
+                            .delegateGroupName(DELEGATE_GROUP_NAME)
+                            .version(VERSION)
+                            .proxy(false)
+                            .polllingModeEnabled(false)
+                            .sampleDelegate(false)
+                            .build();
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+    delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
+    delegate = delegateService.add(delegate);
+    DelegateParams params = DelegateParams.builder()
+                                .delegateId(delegate.getUuid())
+                                .accountId(accountId)
+                                .hostName(HOST_NAME + "UPDATED")
+                                .version(VERSION + "UPDATED")
+                                .proxy(true)
+                                .polllingModeEnabled(true)
+                                .sampleDelegate(false)
+                                .build();
+
+    delegateService.register(params);
+
+    Delegate delegateFromDb = delegateService.get(accountId, delegate.getUuid(), true);
+    assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
+    assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
+    assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
+    assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
+    assertThat(delegateFromDb.getIp()).isEqualTo(params.getIp());
+    assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
+    assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
+    assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
+    assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPolllingModeEnabled());
+    assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
   }
 
   @Test
