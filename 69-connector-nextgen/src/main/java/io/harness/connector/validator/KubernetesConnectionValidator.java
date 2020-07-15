@@ -1,4 +1,4 @@
-package io.harness.connector.impl;
+package io.harness.connector.validator;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-public class KubernetesConnectionValidator {
+public class KubernetesConnectionValidator implements ConnectionValidator<KubernetesClusterConfigDTO> {
   private final ManagerDelegateServiceDriver managerDelegateServiceDriver;
 
   public ConnectorValidationResult validate(KubernetesClusterConfigDTO kubernetesClusterConfig, String accountId) {

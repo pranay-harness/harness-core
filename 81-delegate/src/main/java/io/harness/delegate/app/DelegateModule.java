@@ -11,8 +11,8 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
-import io.harness.cdng.connectornextgen.impl.KubernetesConnectorDelegateServiceImpl;
-import io.harness.cdng.connectornextgen.service.KubernetesConnectorDelegateService;
+import io.harness.cdng.connector.impl.KubernetesConnectorDelegateServiceImpl;
+import io.harness.cdng.connector.service.KubernetesConnectorDelegateService;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.message.MessageService;

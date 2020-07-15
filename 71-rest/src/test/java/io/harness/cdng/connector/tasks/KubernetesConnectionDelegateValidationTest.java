@@ -1,4 +1,4 @@
-package io.harness.cdng.connectornextgen.tasks;
+package io.harness.cdng.connector.tasks;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;

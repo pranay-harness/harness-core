@@ -1,8 +1,8 @@
-package io.harness.cdng.connectornextgen.tasks;
+package io.harness.cdng.connector.tasks;
 
 import com.google.inject.Inject;
 
-import io.harness.cdng.connectornextgen.service.KubernetesConnectorDelegateService;
+import io.harness.cdng.connector.service.KubernetesConnectorDelegateService;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;

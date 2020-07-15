@@ -15,7 +15,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class GitConfigDTO implements ConnectorConfigDTO {
+public class GitConfigDTO extends ConnectorConfigDTO {
   @JsonProperty("type") GitAuthType gitAuthType;
 
   @JsonProperty("spec")

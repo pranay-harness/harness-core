@@ -6,8 +6,8 @@ import com.google.inject.Injector;
 
 import io.harness.beans.DelegateTask;
 import io.harness.cdng.artifact.delegate.task.ArtifactCollectTask;
-import io.harness.cdng.connectornextgen.tasks.KubernetesConnectionDelegateValidation;
-import io.harness.cdng.connectornextgen.tasks.KubernetesTestConnectionDelegateTask;
+import io.harness.cdng.connector.tasks.KubernetesConnectionDelegateValidation;
+import io.harness.cdng.connector.tasks.KubernetesTestConnectionDelegateTask;
 import io.harness.cdng.tasks.manifestFetch.GitFetchTaskNG;
 import io.harness.cdng.tasks.manifestFetch.GitFetchValidationNG;
 import io.harness.delegate.beans.DelegateTaskResponse;

@@ -7,17 +7,15 @@ import io.harness.connector.FullyQualitifedIdentifierHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.entities.Connector;
-import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.exception.UnsupportedOperationException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+
+import java.util.Map;
 
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
@@ -26,21 +24,13 @@ public class ConnectorMapper {
   KubernetesEntityToDTO kubernetesEntityToDTO;
   GitDTOToEntity gitDTOToEntity;
   GitEntityToDTO gitEntityToDTO;
+  @Inject private Map<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapperMap;
+  @Inject private Map<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapperMap;
+
   public Connector toConnector(ConnectorRequestDTO connectorRequestDTO) {
-    Connector connector = null;
-    // todo @deepak: Change this design to something so that switch case is not required
-    switch (connectorRequestDTO.getConnectorType()) {
-      case KUBERNETES_CLUSTER:
-        connector = kubernetesDTOToEntity.toKubernetesClusterConfig(
-            (KubernetesClusterConfigDTO) connectorRequestDTO.getConnectorConfig());
-        break;
-      case GIT:
-        connector = gitDTOToEntity.toGitConfig((GitConfigDTO) connectorRequestDTO.getConnectorConfig());
-        break;
-      default:
-        throw new UnsupportedOperationException(
-            String.format("The connectorType [%s] is invalid", connectorRequestDTO.getConnectorType()));
-    }
+    ConnectorDTOToEntityMapper connectorDTOToEntityMapper =
+        connectorDTOToEntityMapperMap.get(connectorRequestDTO.getConnectorType().toString());
+    Connector connector = connectorDTOToEntityMapper.toConnectorEntity(connectorRequestDTO.getConnectorConfig());
     connector.setIdentifier(connectorRequestDTO.getIdentifier());
     connector.setName(connectorRequestDTO.getName());
     connector.setAccountId(connectorRequestDTO.getAccountIdentifier());
@@ -74,15 +64,8 @@ public class ConnectorMapper {
   }
 
   private ConnectorConfigDTO createConnectorConfigDTO(Connector connector) {
-    // todo @deepak: Change this design to something so that switch case is not required
-    switch (connector.getType()) {
-      case KUBERNETES_CLUSTER:
-        return kubernetesEntityToDTO.createK8ClusterConfigDTO(connector);
-      case GIT:
-        return gitEntityToDTO.createGitConfigDTO((GitConfig) connector);
-      default:
-        throw new UnsupportedOperationException(
-            String.format("The connectorType [%s] is invalid", connector.getType()));
-    }
+    ConnectorEntityToDTOMapper connectorEntityToDTOMapper =
+        connectorEntityToDTOMapperMap.get(connector.getType().toString());
+    return connectorEntityToDTOMapper.createConnectorDTO(connector);
   }
 }

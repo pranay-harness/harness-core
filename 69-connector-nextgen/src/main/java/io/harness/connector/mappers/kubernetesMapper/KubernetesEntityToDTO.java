@@ -10,7 +10,6 @@ import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredenti
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.kubernetescluster.ClientKeyCertK8;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesAuth;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
@@ -19,6 +18,7 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelega
 import io.harness.connector.entities.embedded.kubernetescluster.OpenIdConnectK8;
 import io.harness.connector.entities.embedded.kubernetescluster.ServiceAccountK8;
 import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
+import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.k8Connector.ClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -32,11 +32,12 @@ import io.harness.exception.UnexpectedException;
 import io.harness.exception.UnsupportedOperationException;
 
 @Singleton
-public class KubernetesEntityToDTO {
+public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<KubernetesClusterConfig> {
   @Inject private KubernetesConfigCastHelper kubernetesConfigCastHelper;
-  public KubernetesClusterConfigDTO createK8ClusterConfigDTO(Connector connector) {
+
+  @Override
+  public KubernetesClusterConfigDTO createConnectorDTO(KubernetesClusterConfig connector) {
     KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) connector;
-    String inheritConfigFromDelegate = null;
     if (kubernetesClusterConfig.getCredentialType() == INHERIT_FROM_DELEGATE) {
       KubernetesDelegateDetails kubernetesDelegateDetails =
           kubernetesConfigCastHelper.castToKubernetesDelegateCredential(kubernetesClusterConfig.getCredential());

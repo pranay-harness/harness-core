@@ -1,4 +1,4 @@
-package io.harness.cdng.connectornextgen;
+package io.harness.cdng.connector;
 
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.CLIENT_KEY_CERT;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.SERVICE_ACCOUNT;

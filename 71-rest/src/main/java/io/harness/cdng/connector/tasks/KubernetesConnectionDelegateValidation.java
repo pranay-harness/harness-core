@@ -1,4 +1,4 @@
-package io.harness.cdng.connectornextgen.tasks;
+package io.harness.cdng.connector.tasks;
 
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;

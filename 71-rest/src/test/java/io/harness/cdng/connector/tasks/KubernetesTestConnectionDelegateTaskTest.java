@@ -1,4 +1,4 @@
-package io.harness.cdng.connectornextgen.tasks;
+package io.harness.cdng.connector.tasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.DEEPAK;
@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.connectornextgen.service.KubernetesConnectorDelegateService;
+import io.harness.cdng.connector.service.KubernetesConnectorDelegateService;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;

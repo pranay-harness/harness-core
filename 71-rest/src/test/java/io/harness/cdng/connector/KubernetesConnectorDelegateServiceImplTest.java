@@ -9,7 +9,8 @@ import static org.mockito.Mockito.verify;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.connectornextgen.impl.KubernetesConnectorDelegateServiceImpl;
+import io.harness.cdng.connector.KubernetesValidationHelper;
+import io.harness.cdng.connector.impl.KubernetesConnectorDelegateServiceImpl;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;

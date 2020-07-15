@@ -53,7 +53,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
             .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
             .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateName).build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithDelegateCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithDelegateCreds);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(INHERIT_FROM_DELEGATE);
@@ -79,7 +79,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithUserNamePasswordCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithUserNamePasswordCreds);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -115,7 +115,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithClientKeyCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithClientKeyCreds);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -156,7 +156,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithOpenIdConnectCred);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithOpenIdConnectCred);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
@@ -188,7 +188,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
             .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
             .build();
-    Connector connector = kubernetesDTOToEntity.toKubernetesClusterConfig(connectorDTOWithServiceAccountCreds);
+    Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithServiceAccountCreds);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);
