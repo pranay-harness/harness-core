@@ -1,6 +1,5 @@
 package io.harness.serializer.morphia;
 
-import io.harness.beans.Encryptable;
 import io.harness.cache.CacheEntity;
 import io.harness.iterator.PersistentCronIterable;
 import io.harness.iterator.PersistentFibonacciIterable;
@@ -38,7 +37,6 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CreatedAtAware.class);
     set.add(CreatedByAccess.class);
     set.add(CreatedByAware.class);
-    set.add(Encryptable.class);
     set.add(GoogleDataStoreAware.class);
     set.add(MigrationJobInstance.class);
     set.add(MorphiaMove.class);

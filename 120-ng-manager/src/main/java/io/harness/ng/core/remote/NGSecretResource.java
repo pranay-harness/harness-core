@@ -1,14 +1,17 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.ng.core.remote.EncryptedDataMapper.writeDTO;
-
 import com.google.inject.Inject;
 
-import io.harness.ng.core.ErrorDTO;
-import io.harness.ng.core.FailureDTO;
-import io.harness.ng.core.ResponseDTO;
+import io.harness.encryption.SecretType;
 import io.harness.ng.core.dto.EncryptedDataDTO;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
+import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.dto.SecretTextDTO;
+import io.harness.ng.core.entities.SampleEncryptableSettingImplementation;
 import io.harness.ng.core.services.api.NGSecretService;
+import io.harness.secretmanagerclient.SecretManagerClientService;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -17,11 +20,7 @@ import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretText;
-import software.wings.settings.SettingVariableTypes;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -48,17 +47,14 @@ import javax.ws.rs.QueryParam;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class NGSecretResource {
   private final NGSecretService ngSecretService;
+  private final SecretManagerClientService secretManagerClientService;
 
   @GET
   @ApiOperation(value = "Get secrets for an account", nickname = "listSecretsForAccount")
   public ResponseDTO<List<EncryptedDataDTO>> getSecretsForAccount(
-      @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
-      @QueryParam("type") @NotNull SettingVariableTypes type,
-      @QueryParam("includeDetails") @DefaultValue("true") boolean details) {
-    List<EncryptedData> secrets = ngSecretService.getSecretsByType(accountIdentifier, type, details);
-    List<EncryptedDataDTO> secretsDto = new ArrayList<>();
-    secrets.forEach(secret -> secretsDto.add(writeDTO(secret)));
-    return ResponseDTO.newResponse(secretsDto);
+      @QueryParam("accountIdentifier") @NotNull String accountIdentifier, @QueryParam("type") SecretType secretType) {
+    List<EncryptedDataDTO> secrets = ngSecretService.getSecretsByType(accountIdentifier, secretType);
+    return ResponseDTO.newResponse(secrets);
   }
 
   @GET
@@ -66,21 +62,21 @@ public class NGSecretResource {
   @ApiOperation(value = "Gets a secret by id", nickname = "getSecretById")
   public ResponseDTO<EncryptedDataDTO> get(@PathParam("secretId") @NotEmpty String secretId,
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier) {
-    EncryptedData encryptedData = ngSecretService.getSecretById(accountIdentifier, secretId);
-    return ResponseDTO.newResponse(writeDTO(encryptedData));
+    EncryptedDataDTO encryptedData = ngSecretService.getSecretById(accountIdentifier, secretId);
+    return ResponseDTO.newResponse(encryptedData);
   }
 
   @POST
   @ApiOperation(value = "Create a secret text", nickname = "createSecretText")
   public ResponseDTO<String> createSecret(@QueryParam("accountId") String accountId,
-      @QueryParam("local") @DefaultValue("false") boolean localMode, SecretText secretText) {
+      @QueryParam("local") @DefaultValue("false") boolean localMode, SecretTextDTO secretText) {
     return ResponseDTO.newResponse(ngSecretService.createSecret(accountId, localMode, secretText));
   }
 
   @PUT
   @ApiOperation(value = "Update a secret text", nickname = "updateSecretText")
   public ResponseDTO<Boolean> updateSecret(@QueryParam("accountId") @NotBlank final String accountId,
-      @QueryParam("uuid") @NotBlank final String uuid, @Body @Valid SecretText secretText) {
+      @QueryParam("uuid") @NotBlank final String uuid, @Body @Valid SecretTextDTO secretText) {
     return ResponseDTO.newResponse(ngSecretService.updateSecret(accountId, uuid, secretText));
   }
 
@@ -89,5 +85,14 @@ public class NGSecretResource {
   public ResponseDTO<Boolean> deleteSecret(
       @QueryParam("accountId") @NotBlank String accountId, @QueryParam("uuid") @NotBlank String uuId) {
     return ResponseDTO.newResponse(ngSecretService.deleteSecret(accountId, uuId));
+  }
+
+  @GET
+  @Path("test")
+  @ApiOperation(value = "test", nickname = "test")
+  public ResponseDTO<List<EncryptedDataDetail>> testMethod() {
+    SampleEncryptableSettingImplementation test =
+        SampleEncryptableSettingImplementation.builder().encryptedSecretText("5gCyTeToQFacz8Y9bXGRyw").build();
+    return ResponseDTO.newResponse(secretManagerClientService.getEncryptionDetails(test));
   }
 }

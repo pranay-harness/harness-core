@@ -1,6 +1,9 @@
-package io.harness.ng.core;
+package io.harness.ng.core.dto;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.ng.core.CorrelationContext;
+import io.harness.ng.core.Status;
+import io.harness.ng.core.ValidationError;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;

@@ -1,22 +1,26 @@
 package io.harness.ng.core.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
-import javax.validation.constraints.Size;
 
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class OrganizationDTO {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ProjectDTO {
   String id;
   String accountIdentifier;
+  String orgIdentifier;
   String identifier;
   String name;
   String color;
+  List<String> purposeList;
   String description;
-  @Size(max = 128) List<String> tags;
+  List<String> owners;
+  List<String> tags;
 }

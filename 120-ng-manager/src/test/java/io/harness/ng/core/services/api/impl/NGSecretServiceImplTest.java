@@ -16,7 +16,9 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.BaseTest;
-import io.harness.ng.core.remote.client.rest.SecretManagerClient;
+import io.harness.ng.core.dto.EncryptedDataDTO;
+import io.harness.ng.core.dto.SecretTextDTO;
+import io.harness.ng.core.remote.client.rest.factory.SecretManagerClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import okhttp3.MediaType;
@@ -27,9 +29,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementException;
-import software.wings.service.impl.security.SecretText;
 
 import java.io.IOException;
 
@@ -51,15 +51,15 @@ public class NGSecretServiceImplTest extends BaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetSecretById() throws IOException {
-    EncryptedData encryptedData = EncryptedData.builder().name(SECRET_NAME).build();
-    RestResponse<EncryptedData> restResponse = new RestResponse<>(encryptedData);
-    Response<RestResponse<EncryptedData>> response = Response.success(restResponse);
-    Call<RestResponse<EncryptedData>> restResponseCall = (Call<RestResponse<EncryptedData>>) mock(Call.class);
+    EncryptedDataDTO encryptedData = EncryptedDataDTO.builder().name(SECRET_NAME).build();
+    RestResponse<EncryptedDataDTO> restResponse = new RestResponse<>(encryptedData);
+    Response<RestResponse<EncryptedDataDTO>> response = Response.success(restResponse);
+    Call<RestResponse<EncryptedDataDTO>> restResponseCall = mock(Call.class);
 
     when(secretManagerClient.getSecretById(any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    EncryptedData returnedEncryptedData = ngSecretService.getSecretById(ACCOUNT_ID, SECRET_ID);
+    EncryptedDataDTO returnedEncryptedData = ngSecretService.getSecretById(ACCOUNT_ID, SECRET_ID);
     assertThat(returnedEncryptedData).isNotNull();
     assertThat(returnedEncryptedData.getName()).isEqualTo(SECRET_NAME);
   }
@@ -68,7 +68,7 @@ public class NGSecretServiceImplTest extends BaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetSecretById_For_FailedCall() throws IOException {
-    Response<RestResponse<EncryptedData>> response = Response.error(SC_BAD_GATEWAY, new ResponseBody() {
+    Response<RestResponse<EncryptedDataDTO>> response = Response.error(SC_BAD_GATEWAY, new ResponseBody() {
       @Override
       public MediaType contentType() {
         return null;
@@ -85,7 +85,7 @@ public class NGSecretServiceImplTest extends BaseTest {
       }
     });
 
-    Call<RestResponse<EncryptedData>> restResponseCall = (Call<RestResponse<EncryptedData>>) mock(Call.class);
+    Call<RestResponse<EncryptedDataDTO>> restResponseCall = mock(Call.class);
 
     when(secretManagerClient.getSecretById(anyString(), anyString(), anyString())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
@@ -104,7 +104,7 @@ public class NGSecretServiceImplTest extends BaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetSecretById_For_Exception() throws IOException {
-    Call<RestResponse<EncryptedData>> restResponseCall = (Call<RestResponse<EncryptedData>>) mock(Call.class);
+    Call<RestResponse<EncryptedDataDTO>> restResponseCall = mock(Call.class);
     when(secretManagerClient.getSecretById(any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenThrow(new IOException());
 
@@ -124,8 +124,8 @@ public class NGSecretServiceImplTest extends BaseTest {
     String secretEncryptionId = randomAlphabetic(10);
     RestResponse<String> restResponse = new RestResponse<>(secretEncryptionId);
     Response<RestResponse<String>> response = Response.success(restResponse);
-    Call<RestResponse<String>> restResponseCall = (Call<RestResponse<String>>) mock(Call.class);
-    SecretText randomSecretText = random(SecretText.class);
+    Call<RestResponse<String>> restResponseCall = mock(Call.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(secretManagerClient.createSecret(eq(ACCOUNT_ID), anyBoolean(), eq(randomSecretText)))
         .thenReturn(restResponseCall);
@@ -157,7 +157,7 @@ public class NGSecretServiceImplTest extends BaseTest {
       }
     });
     Call<RestResponse<String>> restResponseCall = (Call<RestResponse<String>>) mock(Call.class);
-    SecretText randomSecretText = random(SecretText.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(secretManagerClient.createSecret(eq(ACCOUNT_ID), anyBoolean(), eq(randomSecretText)))
         .thenReturn(restResponseCall);
@@ -178,7 +178,7 @@ public class NGSecretServiceImplTest extends BaseTest {
   @Category(UnitTests.class)
   public void testCreateSecret_For_Exception() throws IOException {
     Call<RestResponse<String>> restResponseCall = (Call<RestResponse<String>>) mock(Call.class);
-    SecretText randomSecretText = random(SecretText.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(secretManagerClient.createSecret(eq(ACCOUNT_ID), anyBoolean(), eq(randomSecretText)))
         .thenReturn(restResponseCall);
@@ -201,7 +201,7 @@ public class NGSecretServiceImplTest extends BaseTest {
     RestResponse<Boolean> restResponse = new RestResponse<>(true);
     Response<RestResponse<Boolean>> response = Response.success(restResponse);
     Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
-    SecretText randomSecretText = random(SecretText.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(secretManagerClient.updateSecret(ACCOUNT_ID, UUID, randomSecretText)).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
@@ -232,7 +232,7 @@ public class NGSecretServiceImplTest extends BaseTest {
       }
     });
     Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
-    SecretText randomSecretText = random(SecretText.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(secretManagerClient.updateSecret(ACCOUNT_ID, UUID, randomSecretText)).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
@@ -252,7 +252,7 @@ public class NGSecretServiceImplTest extends BaseTest {
   @Category(UnitTests.class)
   public void testUpdateSecret_For_Exception() throws IOException {
     Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
-    SecretText randomSecretText = random(SecretText.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(secretManagerClient.updateSecret(ACCOUNT_ID, UUID, randomSecretText)).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenThrow(new IOException());

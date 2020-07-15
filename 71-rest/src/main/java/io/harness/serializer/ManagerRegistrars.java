@@ -6,6 +6,7 @@ import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateAgentKryoRegister;
 import io.harness.serializer.kryo.ManagerKryoRegistrar;
+import io.harness.serializer.kryo.NGCoreKryoRegistrar;
 import io.harness.serializer.kryo.NGKryoRegistrar;
 import lombok.experimental.UtilityClass;
 
@@ -17,6 +18,7 @@ public class ManagerRegistrars {
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(ManagerKryoRegistrar.class)
           .add(NGKryoRegistrar.class)
+          .add(NGCoreKryoRegistrar.class)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
           // temporary:
           .add(DelegateAgentKryoRegister.class)

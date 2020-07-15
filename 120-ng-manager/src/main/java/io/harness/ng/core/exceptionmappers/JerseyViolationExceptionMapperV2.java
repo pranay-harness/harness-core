@@ -3,9 +3,9 @@ package io.harness.ng.core.exceptionmappers;
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
-import io.harness.ng.core.FailureDTO;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.ValidationError;
+import io.harness.ng.core.dto.FailureDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;

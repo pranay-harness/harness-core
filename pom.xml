@@ -16,8 +16,10 @@
         <module>20-delegate-beans</module>
         <module>21-delegate-agent-beans</module>
         <module>21-persistence</module>
+        <module>21-sm-core</module>
         <module>22-delegate-service-beans</module>
         <module>22-ng-project-n-orgs</module>
+        <module>22-secret-manager-client</module>
         <module>23-delegate-service-driver</module>
         <module>24-common-entities</module>
         <module>24-manager-delegate-service-beans</module>

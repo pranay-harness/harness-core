@@ -1,4 +1,4 @@
-package io.harness.registrar;
+package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

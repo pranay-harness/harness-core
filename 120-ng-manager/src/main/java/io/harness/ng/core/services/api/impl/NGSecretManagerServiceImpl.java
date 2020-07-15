@@ -5,7 +5,7 @@ import static io.harness.ng.core.utils.SecretUtils.getResponse;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ng.core.remote.client.rest.SecretManagerClient;
+import io.harness.ng.core.remote.client.rest.factory.SecretManagerClient;
 import io.harness.ng.core.services.api.NGSecretManagerService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

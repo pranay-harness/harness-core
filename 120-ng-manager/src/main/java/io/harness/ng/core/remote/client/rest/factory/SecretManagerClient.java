@@ -1,6 +1,11 @@
-package io.harness.ng.core.remote.client.rest;
+package io.harness.ng.core.remote.client.rest.factory;
 
 import io.harness.beans.PageResponse;
+import io.harness.encryption.SecretType;
+import io.harness.managerclient.KryoRequest;
+import io.harness.managerclient.KryoResponse;
+import io.harness.ng.core.dto.EncryptedDataDTO;
+import io.harness.ng.core.dto.SecretTextDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
 import retrofit2.Call;
@@ -13,9 +18,6 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerConfig;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretText;
-import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 
@@ -28,41 +30,45 @@ public interface SecretManagerClient {
   String SECRET_MANAGERS_API = "/api/ng/secret-managers";
 
   @GET(SECRETS_API + "/{secretId}")
-  Call<RestResponse<EncryptedData>> getSecretById(@Path(value = SECRET_ID_KEY) String secretId,
+  Call<RestResponse<EncryptedDataDTO>> getSecretById(@Path(value = SECRET_ID_KEY) String secretId,
       @Query(value = ACCOUNT_ID_KEY) String accountId, @Query(value = USER_ID_KEY) String userId);
 
   @POST(SECRETS_API)
   Call<RestResponse<String>> createSecret(@Query(value = ACCOUNT_ID_KEY) String accountId,
-      @Query(value = "local") boolean localMode, @Body SecretText secretText);
+      @Query(value = "local") boolean localMode, @Body SecretTextDTO secretText);
 
   @PUT(SECRETS_API)
-  Call<RestResponse<Boolean>> updateSecret(
-      @Query(value = ACCOUNT_ID_KEY) String accountId, @Query(value = "uuid") String uuId, @Body SecretText secretText);
+  Call<RestResponse<Boolean>> updateSecret(@Query(value = ACCOUNT_ID_KEY) String accountId,
+      @Query(value = "uuid") String uuId, @Body SecretTextDTO secretText);
 
   @DELETE(SECRETS_API)
   Call<RestResponse<Boolean>> deleteSecret(
       @Query(value = ACCOUNT_ID_KEY) String accountId, @Query(value = "uuid") String uuId);
 
   @GET(SECRETS_API)
-  Call<RestResponse<PageResponse<EncryptedData>>> getSecretsForAccountByType(@Query("accountId") String accountId,
-      @Query("type") SettingVariableTypes type, @Query("details") boolean includeDetails);
-
-  @POST(SECRETS_API + "/encryption-details")
-  Call<RestResponse<List<EncryptedDataDetail>>> getEncryptionDetails(@Query("appId") String appId,
-      @Query("workflowExecutionId") String workflowExecutionId, @Body EncryptableSetting encryptableSetting);
+  Call<RestResponse<PageResponse<EncryptedDataDTO>>> getSecretsForAccountByType(
+      @Query("accountId") String accountId, @Query("type") SecretType secretType);
 
   @GET(SECRET_MANAGERS_API)
+  @KryoResponse
   Call<RestResponse<List<SecretManagerConfig>>> getSecretManagersForAccount(
       @Query(value = ACCOUNT_ID_KEY) String accountId);
 
   @GET(SECRET_MANAGERS_API + "/{kmsId}")
+  @KryoResponse
   Call<RestResponse<SecretManagerConfig>> getSecretManager(
       @Path("kmsId") String kmsId, @Query("accountId") String accountId);
 
   @POST(SECRET_MANAGERS_API)
+  @KryoRequest
   Call<RestResponse<String>> createOrUpdateSecretManager(
       @Query("accountId") String accountId, @Body SecretManagerConfig secretManagerConfig);
 
   @DELETE(SECRET_MANAGERS_API + "/{kmsId}")
   Call<RestResponse<Boolean>> deleteSecretManager(@Path("kmsId") String kmsId, @Query("accountId") String accountId);
+
+  @POST(SecretManagerClient.SECRETS_API + "/encryption-details")
+  @KryoRequest
+  @KryoResponse
+  Call<RestResponse<List<EncryptedDataDetail>>> getEncryptionDetails(@Body EncryptableSetting encryptableSetting);
 }

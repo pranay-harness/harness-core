@@ -53,6 +53,7 @@ public class SecretManagerResourceNG {
   @Inject private CustomSecretsManagerService customSecretsManagerService;
 
   @POST
+  @Consumes("application/x-kryo")
   public RestResponse<String> createOrUpdateSecretManager(
       @QueryParam("accountId") String accountId, SecretManagerConfig secretManagerConfig) {
     switch (secretManagerConfig.getEncryptionType()) {
@@ -81,12 +82,14 @@ public class SecretManagerResourceNG {
   }
 
   @GET
+  @Produces("application/x-kryo")
   public RestResponse<List<SecretManagerConfig>> getSecretManagers(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(secretManager.listSecretManagers(accountId));
   }
 
   @GET
   @Path("{kmsId}")
+  @Produces("application/x-kryo")
   public RestResponse<SecretManagerConfig> getSecretManager(
       @QueryParam("accountId") String accountId, @PathParam("kmsId") String kmsId) {
     return new RestResponse<>(secretManager.getSecretManager(accountId, kmsId));
