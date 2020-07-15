@@ -4,9 +4,9 @@ import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.managerclient.KryoConverterFactory;
 import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.SecretManagerClientConfig;
-import io.harness.ng.core.remote.client.rest.SecretManagerClient;
 import io.harness.rule.Owner;
 import io.harness.security.ServiceTokenGenerator;
 import org.junit.Test;
@@ -20,6 +20,7 @@ public class SecretManagerHttpClientFactoryTest extends BaseTest {
   private static final long READ_TIME_OUT_IN_SECONDS = 15;
 
   @Mock ServiceTokenGenerator tokenGenerator;
+  @Mock KryoConverterFactory kryoConverterFactory;
 
   @Test
   @Owner(developers = VIKAS)
@@ -32,7 +33,7 @@ public class SecretManagerHttpClientFactoryTest extends BaseTest {
                                                         .build();
 
     SecretManagerHttpClientFactory secretManagerHttpClientFactory =
-        new SecretManagerHttpClientFactory(secretManagerConfig, SERVICE_SECRET, tokenGenerator);
+        new SecretManagerHttpClientFactory(secretManagerConfig, SERVICE_SECRET, tokenGenerator, kryoConverterFactory);
     SecretManagerClient secretManagerClient = secretManagerHttpClientFactory.get();
     assertThat(secretManagerClient).isNotNull();
   }

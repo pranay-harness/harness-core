@@ -9,8 +9,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import io.harness.ng.core.ErrorDTO;
 import io.harness.ng.core.Status;
+import io.harness.ng.core.dto.ErrorDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;

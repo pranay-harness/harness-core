@@ -13,9 +13,9 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.managerclient.KryoConverterFactory;
 import io.harness.network.Http;
 import io.harness.ng.core.SecretManagerClientConfig;
-import io.harness.ng.core.remote.client.rest.SecretManagerClient;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.JsonSubtypeResolver;
 import lombok.AccessLevel;
@@ -39,13 +39,15 @@ public class SecretManagerHttpClientFactory implements Provider<SecretManagerCli
   private final SecretManagerClientConfig secretManagerConfig;
   private final String serviceSecret;
   private final ServiceTokenGenerator tokenGenerator;
+  private final KryoConverterFactory kryoConverterFactory;
   private static final String CLIENT_ID = "NextGenManager";
 
-  public SecretManagerHttpClientFactory(
-      SecretManagerClientConfig secretManagerConfig, String serviceSecret, ServiceTokenGenerator tokenGenerator) {
+  public SecretManagerHttpClientFactory(SecretManagerClientConfig secretManagerConfig, String serviceSecret,
+      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
     this.secretManagerConfig = secretManagerConfig;
     this.serviceSecret = serviceSecret;
     this.tokenGenerator = tokenGenerator;
+    this.kryoConverterFactory = kryoConverterFactory;
   }
 
   @Override
@@ -54,6 +56,7 @@ public class SecretManagerHttpClientFactory implements Provider<SecretManagerCli
     ObjectMapper objectMapper = getObjectMapper();
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(baseUrl)
+                                  .addConverterFactory(kryoConverterFactory)
                                   .client(getUnsafeOkHttpClient(baseUrl))
                                   .addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker()))
                                   .addConverterFactory(JacksonConverterFactory.create(objectMapper))

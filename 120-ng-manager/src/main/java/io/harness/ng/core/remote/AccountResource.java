@@ -4,10 +4,10 @@ import static io.harness.utils.PageUtils.getPageRequest;
 
 import com.google.inject.Inject;
 
-import io.harness.ng.core.ErrorDTO;
-import io.harness.ng.core.FailureDTO;
-import io.harness.ng.core.ResponseDTO;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.api.ProjectService;

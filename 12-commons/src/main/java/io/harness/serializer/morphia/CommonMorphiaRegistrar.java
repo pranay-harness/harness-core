@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.beans.Encryptable;
 import io.harness.context.MdcGlobalContextData;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
@@ -20,6 +21,7 @@ public class CommonMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Serializable.class);
     set.add(ProjectAccess.class);
     set.add(OrganizationAccess.class);
+    set.add(Encryptable.class);
   }
 
   @Override

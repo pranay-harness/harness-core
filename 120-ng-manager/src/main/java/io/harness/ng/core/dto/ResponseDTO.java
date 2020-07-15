@@ -1,5 +1,7 @@
-package io.harness.ng.core;
+package io.harness.ng.core.dto;
 
+import io.harness.ng.core.CorrelationContext;
+import io.harness.ng.core.Status;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;

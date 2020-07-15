@@ -1,19 +1,19 @@
 package io.harness.ng.core.services.api;
 
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretText;
-import software.wings.settings.SettingVariableTypes;
+import io.harness.encryption.SecretType;
+import io.harness.ng.core.dto.EncryptedDataDTO;
+import io.harness.ng.core.dto.SecretTextDTO;
 
 import java.util.List;
 
 public interface NGSecretService {
-  EncryptedData getSecretById(String accountId, String id);
+  EncryptedDataDTO getSecretById(String accountId, String id);
 
-  List<EncryptedData> getSecretsByType(String accountId, SettingVariableTypes type, boolean includeDetails);
+  List<EncryptedDataDTO> getSecretsByType(String accountId, SecretType secretType);
 
-  String createSecret(String accountId, boolean localMode, SecretText secretText);
+  String createSecret(String accountId, boolean localMode, SecretTextDTO secretText);
 
-  boolean updateSecret(String accountId, String uuid, SecretText secretText);
+  boolean updateSecret(String accountId, String uuid, SecretTextDTO secretText);
 
   boolean deleteSecret(String accountId, String uuId);
 }

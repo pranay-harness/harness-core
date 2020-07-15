@@ -7,6 +7,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
+import software.wings.annotation.EncryptableSetting;
 
 import java.util.Set;
 
@@ -15,6 +16,7 @@ public class ApiServiceBeansMorphiaRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(EncryptionConfig.class);
     set.add(EncryptedRecord.class);
+    set.add(EncryptableSetting.class);
   }
 
   @Override

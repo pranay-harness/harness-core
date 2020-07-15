@@ -10,7 +10,6 @@ import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.User;
 import software.wings.beans.User.UserKeys;
-
 import software.wings.dl.WingsPersistence;
 
 @Slf4j

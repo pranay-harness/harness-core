@@ -35,9 +35,9 @@ public class CoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(mongoTypeModule(annotations));
     modules.add(new CoreModule());
     modules.add(new CorePersistenceTestModule());
+    modules.add(KryoModule.getInstance());
     modules.add(new SecretManagementModule(
         SecretManagerClientConfig.builder().baseUrl("http://localhost:8080/").build(), "test_secret"));
-    modules.add(KryoModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

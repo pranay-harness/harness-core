@@ -6,20 +6,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 import io.harness.category.element.UnitTests;
+import io.harness.govern.ProviderModule;
 import io.harness.ng.core.services.api.NGSecretManagerService;
 import io.harness.ng.core.services.api.NGSecretService;
-import io.harness.ng.core.services.api.NgSecretUsageService;
 import io.harness.ng.core.services.api.impl.NGSecretManagerServiceImpl;
 import io.harness.ng.core.services.api.impl.NGSecretServiceImpl;
-import io.harness.ng.core.services.api.impl.NGSecretUsageServiceImpl;
+import io.harness.ng.core.services.api.impl.SecretManagerClientServiceImpl;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.SecretManagerClientService;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.NextGenRegistrars;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class SecretManagementModuleTest extends BaseTest {
   private SecretManagementModule secretManagementModule;
@@ -34,6 +40,13 @@ public class SecretManagementModuleTest extends BaseTest {
     secretManagementModule = new SecretManagementModule(secretManagerClientConfig, serviceSecret);
 
     List<Module> modules = new ArrayList<>();
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return NextGenRegistrars.kryoRegistrars;
+      }
+    });
     modules.add(secretManagementModule);
     Injector injector = Guice.createInjector(modules);
 
@@ -45,8 +58,8 @@ public class SecretManagementModuleTest extends BaseTest {
     assertThat(ngSecretService).isNotNull();
     assertThat(ngSecretService).isInstanceOf(NGSecretServiceImpl.class);
 
-    NgSecretUsageService ngSecretUsageService = injector.getInstance(NgSecretUsageService.class);
-    assertThat(ngSecretUsageService).isNotNull();
-    assertThat(ngSecretUsageService).isInstanceOf(NGSecretUsageServiceImpl.class);
+    SecretManagerClientService secretManagerClientService = injector.getInstance(SecretManagerClientService.class);
+    assertThat(secretManagerClientService).isNotNull();
+    assertThat(secretManagerClientService).isInstanceOf(SecretManagerClientServiceImpl.class);
   }
 }

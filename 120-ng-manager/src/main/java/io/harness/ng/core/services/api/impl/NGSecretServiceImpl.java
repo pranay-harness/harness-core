@@ -5,13 +5,13 @@ import static io.harness.ng.core.utils.SecretUtils.getResponse;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ng.core.remote.client.rest.SecretManagerClient;
+import io.harness.encryption.SecretType;
+import io.harness.ng.core.dto.EncryptedDataDTO;
+import io.harness.ng.core.dto.SecretTextDTO;
+import io.harness.ng.core.remote.client.rest.factory.SecretManagerClient;
 import io.harness.ng.core.services.api.NGSecretService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretText;
-import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 
@@ -22,17 +22,17 @@ public class NGSecretServiceImpl implements NGSecretService {
   private final SecretManagerClient secretManagerClient;
 
   @Override
-  public EncryptedData getSecretById(String accountId, String id) {
+  public EncryptedDataDTO getSecretById(String accountId, String id) {
     return getResponse(secretManagerClient.getSecretById(id, accountId, null));
   }
 
   @Override
-  public String createSecret(String accountId, boolean localMode, SecretText secretText) {
+  public String createSecret(String accountId, boolean localMode, SecretTextDTO secretText) {
     return getResponse(secretManagerClient.createSecret(accountId, localMode, secretText));
   }
 
   @Override
-  public boolean updateSecret(String accountId, String uuId, SecretText secretText) {
+  public boolean updateSecret(String accountId, String uuId, SecretTextDTO secretText) {
     return getResponse(secretManagerClient.updateSecret(accountId, uuId, secretText));
   }
 
@@ -42,7 +42,7 @@ public class NGSecretServiceImpl implements NGSecretService {
   }
 
   @Override
-  public List<EncryptedData> getSecretsByType(String accountId, SettingVariableTypes type, boolean includeDetails) {
-    return getResponse(secretManagerClient.getSecretsForAccountByType(accountId, type, includeDetails));
+  public List<EncryptedDataDTO> getSecretsByType(String accountId, SecretType secretType) {
+    return getResponse(secretManagerClient.getSecretsForAccountByType(accountId, secretType));
   }
 }

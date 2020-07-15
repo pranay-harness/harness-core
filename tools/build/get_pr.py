@@ -7,9 +7,9 @@ Usage:
 python get_pr.py <pull_request_id> <output_file> <access-token>
 """
 
+import json
 import sys
 from urllib2 import urlopen, Request
-import json
 
 FIELDS_TO_KEEP = ["filename", "status", "raw_url"]
 OWNER = "wings-software"

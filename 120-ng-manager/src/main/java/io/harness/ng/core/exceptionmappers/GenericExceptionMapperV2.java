@@ -3,8 +3,8 @@ package io.harness.ng.core.exceptionmappers;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
-import io.harness.ng.core.ErrorDTO;
 import io.harness.ng.core.Status;
+import io.harness.ng.core.dto.ErrorDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ws.rs.container.ResourceInfo;

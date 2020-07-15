@@ -3,7 +3,6 @@ package io.harness.ng.core.remote;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.ng.core.remote.EncryptedDataMapper.writeDTO;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
@@ -16,25 +15,27 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.BaseTest;
-import io.harness.ng.core.ResponseDTO;
 import io.harness.ng.core.dto.EncryptedDataDTO;
+import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.dto.SecretTextDTO;
 import io.harness.ng.core.services.api.NGSecretService;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.SecretManagerClientService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.SecretManagementException;
-import software.wings.service.impl.security.SecretText;
 
 public class NGSecretResourceTest extends BaseTest {
   private NGSecretService ngSecretService;
+  private SecretManagerClientService secretManagerClientService;
   private NGSecretResource ngSecretResource;
 
   @Before
   public void setup() {
     ngSecretService = mock(NGSecretService.class);
-    ngSecretResource = new NGSecretResource(ngSecretService);
+    secretManagerClientService = mock(SecretManagerClientService.class);
+    ngSecretResource = new NGSecretResource(ngSecretService, secretManagerClientService);
   }
   private final String ACCOUNT_ID = "ACCOUNT_ID";
   private final String SECRET_ID = "SECRET_ID";
@@ -45,10 +46,9 @@ public class NGSecretResourceTest extends BaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetSecret() {
-    EncryptedData encryptedData = EncryptedData.builder().name(SECRET_NAME).build();
-    EncryptedDataDTO encryptedDataDTO = writeDTO(encryptedData);
+    EncryptedDataDTO encryptedData = EncryptedDataDTO.builder().name(SECRET_NAME).build();
     when(ngSecretService.getSecretById(anyString(), eq(SECRET_ID))).thenReturn(encryptedData);
-    encryptedDataDTO = ngSecretResource.get(SECRET_ID, ACCOUNT_ID).getData();
+    EncryptedDataDTO encryptedDataDTO = ngSecretResource.get(SECRET_ID, ACCOUNT_ID).getData();
     assertThat(encryptedDataDTO).isNotNull();
     assertThat(encryptedDataDTO.getName()).isEqualTo(SECRET_NAME);
   }
@@ -75,7 +75,7 @@ public class NGSecretResourceTest extends BaseTest {
   @Category(UnitTests.class)
   public void testCreateSecret() {
     String secretEncryptionId = randomAlphabetic(10);
-    SecretText randomSecretText = random(SecretText.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(ngSecretService.createSecret(eq(ACCOUNT_ID), anyBoolean(), eq(randomSecretText)))
         .thenReturn(secretEncryptionId);
@@ -89,7 +89,7 @@ public class NGSecretResourceTest extends BaseTest {
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testCreateSecret_For_Exception() {
-    SecretText randomSecretText = random(SecretText.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(ngSecretService.createSecret(eq(ACCOUNT_ID), anyBoolean(), eq(randomSecretText)))
         .thenThrow(new SecretManagementException(
@@ -109,7 +109,7 @@ public class NGSecretResourceTest extends BaseTest {
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testUpdateSecret() {
-    SecretText randomSecretText = random(SecretText.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(ngSecretService.updateSecret(ACCOUNT_ID, UUID, randomSecretText)).thenReturn(true);
 
@@ -122,7 +122,7 @@ public class NGSecretResourceTest extends BaseTest {
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testUpdateSecret_For_Exception() {
-    SecretText randomSecretText = random(SecretText.class);
+    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
     when(ngSecretService.updateSecret(ACCOUNT_ID, UUID, randomSecretText))
         .thenThrow(new SecretManagementException(

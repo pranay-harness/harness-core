@@ -100,12 +100,12 @@ public class SecretsResourceNG {
     }
   }
 
-  // TODO{phoenikx} figure out a way to serialize and deserialize encryptable setting
   @POST
   @Path("encryption-details")
-  public RestResponse<List<EncryptedDataDetail>> getEncryptionDetails(@QueryParam("appId") String appId,
-      @QueryParam("workflowExecutionId") String workflowExecutionId, EncryptableSetting encryptableSetting) {
-    return new RestResponse<>(secretManager.getEncryptionDetails(encryptableSetting, appId, workflowExecutionId));
+  @Consumes("application/x-kryo")
+  @Produces("application/x-kryo")
+  public RestResponse<List<EncryptedDataDetail>> getEncryptionDetails(EncryptableSetting encryptableSetting) {
+    return new RestResponse<>(secretManager.getEncryptionDetails(encryptableSetting));
   }
 
   @GET

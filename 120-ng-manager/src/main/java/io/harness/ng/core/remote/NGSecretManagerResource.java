@@ -1,13 +1,10 @@
 package io.harness.ng.core.remote;
 
-import static io.harness.ng.core.remote.SecretManagerConfigMapper.writeDTO;
-
 import com.google.inject.Inject;
 
-import io.harness.ng.core.ErrorDTO;
-import io.harness.ng.core.FailureDTO;
-import io.harness.ng.core.ResponseDTO;
-import io.harness.ng.core.dto.SecretManagerConfigDTO;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.services.api.NGSecretManagerService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,7 +13,6 @@ import io.swagger.annotations.ApiResponses;
 import lombok.AllArgsConstructor;
 import software.wings.beans.SecretManagerConfig;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -51,21 +47,19 @@ public class NGSecretManagerResource {
 
   @GET
   @ApiOperation(value = "Get secret managers for an account", nickname = "listSecretManagers")
-  public ResponseDTO<List<SecretManagerConfigDTO>> listSecretManagersForAccount(
+  public ResponseDTO<List<SecretManagerConfig>> listSecretManagersForAccount(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier) {
     List<SecretManagerConfig> secretManagerConfigs = ngSecretManagerService.listSecretManagers(accountIdentifier);
-    List<SecretManagerConfigDTO> secretManagerConfigDtos = new ArrayList<>();
-    secretManagerConfigs.forEach(secretManagerConfig -> secretManagerConfigDtos.add(writeDTO(secretManagerConfig)));
-    return ResponseDTO.newResponse(secretManagerConfigDtos);
+    return ResponseDTO.newResponse(secretManagerConfigs);
   }
 
   @GET
   @Path("/{kmsId}")
   @ApiOperation(value = "Get a secret manager by kmsId", nickname = "getSecretManagerById")
-  public ResponseDTO<SecretManagerConfigDTO> getNgSecretManagerService(
+  public ResponseDTO<SecretManagerConfig> getNgSecretManagerService(
       @PathParam("kmsId") String kmsId, @QueryParam("accountIdentifier") @NotNull String accountIdentifier) {
     SecretManagerConfig secretManagerConfig = ngSecretManagerService.getSecretManager(accountIdentifier, kmsId);
-    return ResponseDTO.newResponse(writeDTO(secretManagerConfig));
+    return ResponseDTO.newResponse(secretManagerConfig);
   }
 
   @DELETE
