@@ -1,10 +1,8 @@
 import csv
 import os
-import pprint
 import requests
 import sys
 
-pp = pprint.PrettyPrinter(indent=4)
 token = os.environ['SONAR_TOKEN']
 baseUrl = "http://sonar.harness.io/api/measures/component_tree?component=portal:<PATH>&metricKeys=ncloc,coverage,lines_to_cover,branch_coverage,branch_coverage,uncovered_lines,conditions_to_cover&qualifiers=<Q>"
 regexUrl = "&q=<REGEX>"
@@ -108,9 +106,12 @@ def main(list_file_path):
     with open(list_file_path) as fp:
         line = fp.readline()
         while line:
-            print("Fetching Coverage for File {}".format(line.strip()))
-            line = fp.readline()
-            rows.append(calculate_coverage(line.strip()))
+            try:
+                print("Fetching Coverage for File {}".format(line.strip()))
+                line = fp.readline()
+                rows.append(calculate_coverage(line.strip()))
+            except Exception as e:
+                print("Error in processing file {}".format(line))
 
 
 if __name__ == "__main__":
