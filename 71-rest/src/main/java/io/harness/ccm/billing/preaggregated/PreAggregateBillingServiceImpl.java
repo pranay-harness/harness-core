@@ -30,6 +30,7 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
   private CECloudAccountDao ceCloudAccountDao;
 
   private static final String TOTAL_COST_LABEL = "Total Cost";
+  private static final String awsRawTable = "awscur";
 
   @Inject
   PreAggregateBillingServiceImpl(
@@ -86,8 +87,9 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     List<CloudBillingFilter> trendFilters = dataHelper.getTrendFilters(filters);
     Instant trendStartInstant =
         Instant.ofEpochMilli(dataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
-    SelectQuery prevQuery = dataHelper.getQuery(
-        aggregateFunction, groupByObjects, dataHelper.filtersToConditions(trendFilters, leftJoin != null), sort, false);
+    SelectQuery prevQuery = dataHelper.getQuery(aggregateFunction, groupByObjects,
+        dataHelper.filtersToConditions(trendFilters, leftJoin != null, queryTableName.contains(awsRawTable)), sort,
+        false);
     if (leftJoin != null) {
       prevQuery.addFromTable(RawBillingTableSchema.table);
       prevQuery.addCustomJoin(leftJoin);
@@ -132,8 +134,9 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
     List<CloudBillingFilter> trendFilters = dataHelper.getTrendFilters(filters);
     Instant trendStartInstant =
         Instant.ofEpochMilli(dataHelper.getStartTimeFilter(trendFilters).getValue().longValue());
-    PreAggregatedCostDataStats prevPreAggregatedCostDataStats = getAggregatedCostData(
-        aggregateFunction, dataHelper.filtersToConditions(trendFilters), queryTableName, leftJoin);
+    PreAggregatedCostDataStats prevPreAggregatedCostDataStats = getAggregatedCostData(aggregateFunction,
+        dataHelper.filtersToConditions(trendFilters, leftJoin != null, queryTableName.contains(awsRawTable)),
+        queryTableName, leftJoin);
     if (preAggregatedCostDataStats != null) {
       return PreAggregateBillingTrendStatsDTO.builder()
           .blendedCost(dataHelper.getCostBillingStats(preAggregatedCostDataStats.getBlendedCost(),

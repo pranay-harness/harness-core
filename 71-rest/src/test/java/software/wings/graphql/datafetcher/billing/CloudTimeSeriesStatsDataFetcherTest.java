@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
@@ -65,6 +66,10 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
 
   @Before
   public void setup() {
+    doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
+    doCallRealMethod().when(cloudBillingHelper).getAggregationMapper(anyBoolean(), anyBoolean());
+    doCallRealMethod().when(cloudBillingHelper).getGroupByMapper(anyBoolean(), anyBoolean());
+    doCallRealMethod().when(cloudBillingHelper).getFiltersMapper(anyBoolean(), anyBoolean());
     cloudBillingAggregates.add(getBillingAggregate(COST));
     cloudBillingAggregates.add(getBillingAggregate(DISCOUNT));
     filters.addAll(Arrays.asList(getStartTimeAwsBillingFilter(0L), getServiceAwsFilter(new String[] {SERVICE}),
@@ -138,8 +143,22 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
     doCallRealMethod().when(cloudBillingHelper).fetchIfRawTableQueryRequired(anyList(), anyList());
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
-    QLData data = cloudTimeSeriesStatsDataFetcher.fetch(ACCOUNT1_ID, null, Collections.emptyList(),
+    QLData data = cloudTimeSeriesStatsDataFetcher.fetch(ACCOUNT1_ID, null,
+        Collections.singletonList(getCloudProviderFilter(new String[] {"GCP"})),
         Arrays.asList(getLabelsKeyGroupBy(), getLabelsValueGroupBy()), null, 5, 0);
+    assertThat(data).isEqualTo(PreAggregateBillingTimeSeriesStatsDTO.builder().build());
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testTimeSeriesDataFetcherWithAwsTags() {
+    doCallRealMethod().when(cloudBillingHelper).fetchIfRawTableQueryRequired(anyList(), anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
+    QLData data = cloudTimeSeriesStatsDataFetcher.fetch(ACCOUNT1_ID, null,
+        Collections.singletonList(getCloudProviderFilter(new String[] {CLOUD_PROVIDER})),
+        Arrays.asList(getTagsKeyGroupBy(), getTagsValueGroupBy()), null, 5, 0);
     assertThat(data).isEqualTo(PreAggregateBillingTimeSeriesStatsDTO.builder().build());
   }
 
@@ -262,6 +281,18 @@ public class CloudTimeSeriesStatsDataFetcherTest extends AbstractDataFetcherTest
   private CloudBillingGroupBy getLabelsValueGroupBy() {
     CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
     cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.labelsValue);
+    return cloudBillingGroupBy;
+  }
+
+  private CloudBillingGroupBy getTagsKeyGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.tagsKey);
+    return cloudBillingGroupBy;
+  }
+
+  private CloudBillingGroupBy getTagsValueGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.tagsValue);
     return cloudBillingGroupBy;
   }
 }

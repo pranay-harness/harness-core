@@ -58,6 +58,7 @@ type CloudEntityData {
   awsService: String
   awsBlendedCost: Number
   awsUnblendedCost: Number
+  awsTag: String
 
   gcpProjectId: String
   gcpProduct: String
@@ -100,6 +101,7 @@ type CloudFilterDataPoint {
   gcpSku: [EntityData]
   gcpBillingAccount: [EntityData]
   gcpLabels: [K8sLabel]
+  awsTags: [K8sLabel]
 }
 
 input CloudBillingFilter {
@@ -119,6 +121,8 @@ input CloudBillingFilter {
   cloudProvider: IdFilter
   labelsKey: IdFilter
   labelsValue: IdFilter
+  tagsKey: IdFilter
+  tagsValue: IdFilter
 }
 
 input CloudBillingGroupBy {
@@ -135,6 +139,8 @@ enum CloudEntityGroupBy {
   skuId
   labelsKey
   labelsValue
+  tagsKey
+  tagsValue
   region
   usageAmount
   usageUnit

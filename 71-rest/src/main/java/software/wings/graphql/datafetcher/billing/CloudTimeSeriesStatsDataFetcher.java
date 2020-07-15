@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
-import com.healthmarketscience.sqlbuilder.CustomSql;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.ccm.billing.TimeSeriesDataPoints;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
@@ -41,11 +40,14 @@ public class CloudTimeSeriesStatsDataFetcher
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
       Integer limit, Integer offset) {
+    String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, groupByList);
+    boolean isAWSCloudProvider = cloudProvider.equals("AWS");
+
     SqlObject leftJoin = null;
     String queryTableName;
     if (isQueryRawTableRequired) {
-      leftJoin = new CustomSql(" LEFT JOIN UNNEST(labels) as labels");
+      leftJoin = cloudBillingHelper.getLeftJoin(cloudProvider);
       String tableName = cloudBillingHelper.getTableName(cloudBillingHelper.getCloudProvider(filters));
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId, tableName);
       filters = cloudBillingHelper.removeAndReturnCloudProviderFilter(filters);
@@ -58,19 +60,17 @@ public class CloudTimeSeriesStatsDataFetcher
         Optional.ofNullable(aggregateFunction)
             .map(Collection::stream)
             .orElseGet(Stream::empty)
-            .map(isQueryRawTableRequired ? CloudBillingAggregate::toRawTableFunctionCall
-                                         : CloudBillingAggregate::toFunctionCall)
+            .map(cloudBillingHelper.getAggregationMapper(isAWSCloudProvider, isQueryRawTableRequired))
             .collect(Collectors.toList()),
         Optional.ofNullable(groupByList)
             .map(Collection::stream)
             .orElseGet(Stream::empty)
-            .map(isQueryRawTableRequired ? CloudBillingGroupBy::toRawTableGroupbyObject
-                                         : CloudBillingGroupBy::toGroupbyObject)
+            .map(cloudBillingHelper.getGroupByMapper(isAWSCloudProvider, isQueryRawTableRequired))
             .collect(Collectors.toList()),
         Optional.ofNullable(filters)
             .map(Collection::stream)
             .orElseGet(Stream::empty)
-            .map(isQueryRawTableRequired ? CloudBillingFilter::toRawTableCondition : CloudBillingFilter::toCondition)
+            .map(cloudBillingHelper.getFiltersMapper(isAWSCloudProvider, isQueryRawTableRequired))
             .collect(Collectors.toList()),
         Optional.ofNullable(sort)
             .map(Collection::stream)

@@ -3,6 +3,8 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.ccm.billing.graphql.CloudEntityGroupBy.cloudProvider;
 import static io.harness.ccm.billing.graphql.CloudEntityGroupBy.labelsKey;
 import static io.harness.ccm.billing.graphql.CloudEntityGroupBy.labelsValue;
+import static io.harness.ccm.billing.graphql.CloudEntityGroupBy.tagsKey;
+import static io.harness.ccm.billing.graphql.CloudEntityGroupBy.tagsValue;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -10,16 +12,22 @@ import com.google.inject.Singleton;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.healthmarketscience.sqlbuilder.Condition;
+import com.healthmarketscience.sqlbuilder.CustomSql;
+import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
+import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.exception.InvalidRequestException;
+import org.jetbrains.annotations.NotNull;
 import software.wings.app.MainConfiguration;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -30,6 +38,9 @@ public class CloudBillingHelper {
   private static final String preAggregated = "preAggregated";
   private static final String awsRawTable = "awscur*";
   private static final String gcpRawTable = "gcp_billing_export*";
+  private static final String leftJoinTemplate = " LEFT JOIN UNNEST(%s) as %s";
+  private static final String tags = "tags";
+  private static final String labels = "labels";
 
   private Cache<String, String> billingDataPipelineRecordCache =
       Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
@@ -75,6 +86,17 @@ public class CloudBillingHelper {
     }
   }
 
+  public SqlObject getLeftJoin(String cloudProvider) {
+    switch (cloudProvider) {
+      case "AWS":
+        return new CustomSql(String.format(leftJoinTemplate, tags, tags));
+      case "GCP":
+        return new CustomSql(String.format(leftJoinTemplate, labels, labels));
+      default:
+        throw new InvalidRequestException("Invalid Cloud Provider");
+    }
+  }
+
   public List<CloudBillingFilter> removeAndReturnCloudProviderFilter(List<CloudBillingFilter> filters) {
     return filters.stream()
         .filter(billingFilter -> billingFilter.getCloudProvider() == null)
@@ -88,12 +110,47 @@ public class CloudBillingHelper {
   }
 
   public Boolean fetchIfRawTableQueryRequired(List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList) {
-    boolean labelsFilterPresent = filters.stream().anyMatch(
-        billingFilter -> billingFilter.getLabelsValue() != null || billingFilter.getLabelsKey() != null);
+    boolean labelsFilterPresent = filters.stream().anyMatch(billingFilter
+        -> billingFilter.getLabelsValue() != null || billingFilter.getLabelsKey() != null
+            || billingFilter.getTagsValue() != null || billingFilter.getTagsKey() != null);
 
     boolean labelsGroupByPresent = groupByList.stream().anyMatch(billingGroupBy
-        -> billingGroupBy.getEntityGroupBy() == labelsKey || billingGroupBy.getEntityGroupBy() == labelsValue);
+        -> billingGroupBy.getEntityGroupBy() == labelsKey || billingGroupBy.getEntityGroupBy() == labelsValue
+            || billingGroupBy.getEntityGroupBy() == tagsKey || billingGroupBy.getEntityGroupBy() == tagsValue);
 
     return labelsFilterPresent || labelsGroupByPresent;
+  }
+
+  @NotNull
+  public Function<CloudBillingFilter, Condition> getFiltersMapper(
+      boolean isAWSCloudProvider, boolean isQueryRawTableRequired) {
+    if (isQueryRawTableRequired) {
+      return isAWSCloudProvider ? CloudBillingFilter::toAwsRawTableCondition : CloudBillingFilter::toRawTableCondition;
+    } else {
+      return CloudBillingFilter::toCondition;
+    }
+  }
+
+  @NotNull
+  protected Function<CloudBillingGroupBy, Object> getGroupByMapper(
+      boolean isAWSCloudProvider, boolean isQueryRawTableRequired) {
+    if (isQueryRawTableRequired) {
+      return isAWSCloudProvider ? CloudBillingGroupBy::toAwsRawTableGroupbyObject
+                                : CloudBillingGroupBy::toRawTableGroupbyObject;
+    } else {
+      return CloudBillingGroupBy::toGroupbyObject;
+    }
+  }
+
+  @NotNull
+  protected Function<CloudBillingAggregate, SqlObject> getAggregationMapper(
+      boolean isAWSCloudProvider, boolean isQueryRawTableRequired) {
+    if (isQueryRawTableRequired) {
+      return isAWSCloudProvider ? CloudBillingAggregate::toAwsRawTableFunctionCall
+                                : CloudBillingAggregate::toRawTableFunctionCall;
+
+    } else {
+      return CloudBillingAggregate::toFunctionCall;
+    }
   }
 }

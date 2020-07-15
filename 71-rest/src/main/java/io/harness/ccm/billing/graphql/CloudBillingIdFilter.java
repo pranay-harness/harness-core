@@ -3,6 +3,8 @@ package io.harness.ccm.billing.graphql;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_INSTANCE_TYPE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_LINKED_ACCOUNT;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_SERVICE;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_TAG_KEY;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_TAG_VALUE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_USAGE_TYPE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_BILLING_ACCOUNT_ID;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_LABEL_KEY;
@@ -132,10 +134,43 @@ public class CloudBillingIdFilter implements Filter {
     return returnCondition(operator, dbColumn);
   }
 
+  public Condition toAwsRawTableCondition() {
+    Preconditions.checkNotNull(values, "The AWS Raw Table billing Id filter is missing values");
+    Preconditions.checkNotNull(operator, "The AWS Raw Table billing Id filter is missing operator");
+
+    DbColumn dbColumn = null;
+    switch (variable) {
+      case BILLING_REGION:
+        dbColumn = RawBillingTableSchema.awsRegion;
+        break;
+      case BILLING_AWS_SERVICE:
+        dbColumn = RawBillingTableSchema.awsServiceCode;
+        break;
+      case BILLING_AWS_USAGE_TYPE:
+        dbColumn = RawBillingTableSchema.awsUsageType;
+        break;
+      case BILLING_AWS_INSTANCE_TYPE:
+        dbColumn = RawBillingTableSchema.awsInstanceType;
+        break;
+      case BILLING_AWS_LINKED_ACCOUNT:
+        dbColumn = RawBillingTableSchema.awsUsageAccountId;
+        break;
+      case BILLING_AWS_TAG_KEY:
+        dbColumn = RawBillingTableSchema.tagsKey;
+        break;
+      case BILLING_AWS_TAG_VALUE:
+        dbColumn = RawBillingTableSchema.tagsValue;
+        break;
+      default:
+        return null;
+    }
+    return returnCondition(operator, dbColumn);
+  }
+
   public Condition returnCondition(QLIdOperator operator, DbColumn dbColumnName) {
     Object dbColumn = dbColumnName;
-    if (dbColumnName.equals(RawBillingTableSchema.labelsKey)
-        || dbColumnName.equals(RawBillingTableSchema.labelsValue)) {
+    if (dbColumnName.equals(RawBillingTableSchema.labelsKey) || dbColumnName.equals(RawBillingTableSchema.labelsValue)
+        || dbColumnName.equals(RawBillingTableSchema.tagsKey) || dbColumnName.equals(RawBillingTableSchema.tagsValue)) {
       dbColumn = new CustomSql(dbColumnName.getColumnNameSQL());
     }
     Condition condition;

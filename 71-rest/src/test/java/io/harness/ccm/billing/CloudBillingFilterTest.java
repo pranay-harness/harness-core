@@ -157,4 +157,121 @@ public class CloudBillingFilterTest extends CategoryTest {
     Condition condition = rawTableCloudBillingFilter.toRawTableCondition();
     assertThat(condition.toString()).isEqualTo("(labels.value = 'val1')");
   }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionStartTime() {
+    rawTableCloudBillingFilter.setStartTime(
+        CloudBillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(value).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString()).isEqualTo("(t0.usagestartdate >= '1970-01-01T00:00:00Z')");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionEndTime() {
+    rawTableCloudBillingFilter.setEndTime(
+        CloudBillingTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(value).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString()).isEqualTo("(t0.usagestartdate <= '1970-01-01T00:00:00Z')");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionPreAggStartTime() {
+    rawTableCloudBillingFilter.setPreAggregatedTableStartTime(
+        CloudBillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(value).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString()).isEqualTo("(t0.usagestartdate >= '1970-01-01T00:00:00Z')");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionPreAggEndTime() {
+    rawTableCloudBillingFilter.setPreAggregatedTableEndTime(
+        CloudBillingTimeFilter.builder().operator(QLTimeOperator.AFTER).value(value).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString()).isEqualTo("(t0.usagestartdate >= '1970-01-01T00:00:00Z')");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionAwsUsageAccountId() {
+    String[] linkedAccount = {"ccm-play"};
+    rawTableCloudBillingFilter.setAwsLinkedAccount(
+        CloudBillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(linkedAccount).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString()).isEqualTo("(t0.usageaccountid = 'ccm-play')");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionService() {
+    String[] service = {"RDS", "S3"};
+    rawTableCloudBillingFilter.setAwsService(
+        CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(service).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString()).isEqualTo("(t0.productname IN ('RDS','S3') )");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionInstanceType() {
+    String[] instanceType = {"instanceType"};
+    rawTableCloudBillingFilter.setAwsInstanceType(
+        CloudBillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(instanceType).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString()).isEqualTo("(t0.instancetype = 'instanceType')");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionUsageType() {
+    String[] usageType = {"usageType"};
+    rawTableCloudBillingFilter.setAwsUsageType(
+        CloudBillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(usageType).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString()).isEqualTo("(t0.usagetype = 'usageType')");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionRegion() {
+    String[] region = {"us-east-1", "us-east-2"};
+    rawTableCloudBillingFilter.setRegion(
+        CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(region).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString()).isEqualTo("(t0.region IN ('us-east-1','us-east-2') )");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionTagsKey() {
+    String[] key = {"key1"};
+    rawTableCloudBillingFilter.setTagsKey(
+        CloudBillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(key).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString()).isEqualTo("(tags.key = 'key1')");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionTagsValue() {
+    String[] value = {"val1"};
+    rawTableCloudBillingFilter.setTagsValue(
+        CloudBillingIdFilter.builder().operator(QLIdOperator.EQUALS).values(value).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString()).isEqualTo("(tags.value = 'val1')");
+  }
 }

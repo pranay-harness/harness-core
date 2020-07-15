@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
+import com.healthmarketscience.sqlbuilder.SqlObject;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
@@ -13,6 +14,7 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,19 +29,32 @@ public class CloudTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy, List<CloudBillingSortCriteria> sort) {
-    String queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
+    String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
+    boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, Collections.EMPTY_LIST);
+    boolean isAWSCloudProvider = cloudProvider.equals("AWS");
+    SqlObject leftJoin = null;
+    String queryTableName;
+    if (isQueryRawTableRequired) {
+      String tableName = cloudBillingHelper.getTableName(cloudProvider);
+      queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId, tableName);
+      filters = cloudBillingHelper.removeAndReturnCloudProviderFilter(filters);
+      leftJoin = cloudBillingHelper.getLeftJoin(cloudProvider);
+    } else {
+      queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId);
+    }
 
-    return preAggregateBillingService.getPreAggregateBillingTrendStats(Optional.ofNullable(aggregateFunction)
-                                                                           .map(Collection::stream)
-                                                                           .orElseGet(Stream::empty)
-                                                                           .map(CloudBillingAggregate::toFunctionCall)
-                                                                           .collect(Collectors.toList()),
+    return preAggregateBillingService.getPreAggregateBillingTrendStats(
+        Optional.ofNullable(aggregateFunction)
+            .map(Collection::stream)
+            .orElseGet(Stream::empty)
+            .map(cloudBillingHelper.getAggregationMapper(isAWSCloudProvider, isQueryRawTableRequired))
+            .collect(Collectors.toList()),
         Optional.ofNullable(filters)
             .map(Collection::stream)
             .orElseGet(Stream::empty)
-            .map(CloudBillingFilter::toCondition)
+            .map(cloudBillingHelper.getFiltersMapper(isAWSCloudProvider, isQueryRawTableRequired))
             .collect(Collectors.toList()),
-        queryTableName, filters, null);
+        queryTableName, filters, leftJoin);
   }
 
   @Override

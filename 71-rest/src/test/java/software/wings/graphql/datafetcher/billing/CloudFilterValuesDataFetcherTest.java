@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -30,7 +31,6 @@ import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -52,6 +52,8 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
 
   @Before
   public void setup() {
+    doCallRealMethod().when(cloudBillingHelper).getGroupByMapper(anyBoolean(), anyBoolean());
+    doCallRealMethod().when(cloudBillingHelper).getFiltersMapper(anyBoolean(), anyBoolean());
     filters.addAll(Arrays.asList(getCloudProviderFilter(new String[] {CLOUD_PROVIDER}),
         getAwsFilter(new String[] {PreAggregateConstants.nullStringValueConstant}),
         getInstanceTypeAwsFilter(new String[] {INSTANCE_TYPE, PreAggregateConstants.nullStringValueConstant})));
@@ -80,6 +82,7 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void fetch() {
+    doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
     PreAggregateFilterValuesDTO data =
         (PreAggregateFilterValuesDTO) cloudFilterValuesDataFetcher.fetch(ACCOUNT1_ID, null, filters, groupBy, sort);
     assertThat(data.getData()).isNotNull();
@@ -91,6 +94,7 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
   @Category(UnitTests.class)
   public void fetchWithLabels() {
     doCallRealMethod().when(cloudBillingHelper).fetchIfRawTableQueryRequired(anyList(), anyList());
+    doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
     doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
 
@@ -98,7 +102,27 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
              anyString(), anyList(), anyList(), anyString(), any()))
         .thenReturn(null);
     PreAggregateFilterValuesDTO data = (PreAggregateFilterValuesDTO) cloudFilterValuesDataFetcher.fetch(ACCOUNT1_ID,
-        null, Collections.emptyList(), Arrays.asList(getLabelsKeyGroupBy(), getLabelsValueGroupBy()), null);
+        null, Arrays.asList(getCloudProviderFilter(new String[] {"GCP"})),
+        Arrays.asList(getLabelsKeyGroupBy(), getLabelsValueGroupBy()), null);
+    assertThat(data).isNull();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void fetchWithTags() {
+    doCallRealMethod().when(cloudBillingHelper).fetchIfRawTableQueryRequired(anyList(), anyList());
+    doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
+
+    when(preAggregateBillingService.getPreAggregateFilterValueStats(
+             anyString(), anyList(), anyList(), anyString(), any()))
+        .thenReturn(null);
+
+    PreAggregateFilterValuesDTO data = (PreAggregateFilterValuesDTO) cloudFilterValuesDataFetcher.fetch(ACCOUNT1_ID,
+        null, Arrays.asList(getCloudProviderFilter(new String[] {CLOUD_PROVIDER})),
+        Arrays.asList(getTagsKeyGroupBy(), getTagsValueGroupBy()), null);
     assertThat(data).isNull();
   }
 
@@ -153,6 +177,18 @@ public class CloudFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
   private CloudBillingGroupBy getLabelsValueGroupBy() {
     CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
     cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.labelsValue);
+    return cloudBillingGroupBy;
+  }
+
+  private CloudBillingGroupBy getTagsKeyGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.tagsKey);
+    return cloudBillingGroupBy;
+  }
+
+  private CloudBillingGroupBy getTagsValueGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.tagsValue);
     return cloudBillingGroupBy;
   }
 }

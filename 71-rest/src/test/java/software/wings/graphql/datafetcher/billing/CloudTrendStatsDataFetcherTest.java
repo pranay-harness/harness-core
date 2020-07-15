@@ -3,8 +3,10 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -13,6 +15,7 @@ import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudBillingSortCriteria;
+import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingServiceImpl;
 import io.harness.ccm.billing.preaggregated.PreAggregateBillingTrendStatsDTO;
 import io.harness.rule.Owner;
@@ -50,6 +53,10 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
 
   @Before
   public void setup() {
+    doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
+    doCallRealMethod().when(cloudBillingHelper).getAggregationMapper(anyBoolean(), anyBoolean());
+    doCallRealMethod().when(cloudBillingHelper).getGroupByMapper(anyBoolean(), anyBoolean());
+    doCallRealMethod().when(cloudBillingHelper).getFiltersMapper(anyBoolean(), anyBoolean());
     cloudBillingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.SUM, BLENDED_COST));
     cloudBillingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.SUM, UN_BLENDED_COST));
     cloudBillingAggregates.add(getBillingAggregate(QLCCMAggregateOperation.MIN, START_TIME));
@@ -82,6 +89,23 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
+  public void fetchWithLabels() {
+    doCallRealMethod().when(cloudBillingHelper).fetchIfRawTableQueryRequired(anyList(), anyList());
+    doCallRealMethod().when(cloudBillingHelper).getCloudProvider(anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderFilter(anyList());
+    doCallRealMethod().when(cloudBillingHelper).removeAndReturnCloudProviderGroupBy(anyList());
+
+    when(preAggregateBillingService.getPreAggregateFilterValueStats(
+             anyString(), anyList(), anyList(), anyString(), any()))
+        .thenReturn(null);
+    PreAggregateBillingTrendStatsDTO data = (PreAggregateBillingTrendStatsDTO) cloudTrendStatsDataFetcher.fetch(
+        ACCOUNT1_ID, null, filters, Arrays.asList(getLabelsKeyGroupBy(), getLabelsValueGroupBy()), null);
+    assertThat(data).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
   public void testPostFetch() {
     QLData postFetchData =
         cloudTrendStatsDataFetcher.postFetch(ACCOUNT1_ID, groupBy, cloudBillingAggregates, sort, null);
@@ -105,5 +129,17 @@ public class CloudTrendStatsDataFetcherTest extends AbstractDataFetcherTest {
 
   private CloudBillingAggregate getBillingAggregate(QLCCMAggregateOperation operation, String columnName) {
     return CloudBillingAggregate.builder().operationType(operation).columnName(columnName).build();
+  }
+
+  private CloudBillingGroupBy getLabelsKeyGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.labelsKey);
+    return cloudBillingGroupBy;
+  }
+
+  private CloudBillingGroupBy getLabelsValueGroupBy() {
+    CloudBillingGroupBy cloudBillingGroupBy = new CloudBillingGroupBy();
+    cloudBillingGroupBy.setEntityGroupBy(CloudEntityGroupBy.labelsValue);
+    return cloudBillingGroupBy;
   }
 }

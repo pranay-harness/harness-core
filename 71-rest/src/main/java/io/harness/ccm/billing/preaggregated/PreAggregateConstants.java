@@ -15,6 +15,15 @@ public class PreAggregateConstants {
   public static final String entityConstantAwsBlendedCost = "sum_blendedCost";
   public static final String entityConstantAwsUnBlendedCost = "sum_unblendedCost";
 
+  public static final String entityConstantRawTableAwsLinkedAccount = "usageaccountid";
+  public static final String entityConstantRawTableAwsUsageType = "usagetype";
+  public static final String entityConstantRawTableAwsInstanceType = "instancetype";
+  public static final String entityConstantRawTableAwsService = "productname";
+  public static final String entityConstantRawTableAwsBlendedCost = "sum_blendedcost";
+  public static final String entityConstantRawTableAwsUnBlendedCost = "sum_unblendedcost";
+  public static final String entityConstantAwsTagKey = "tags_key";
+  public static final String entityConstantAwsTagValue = "tags_value";
+
   public static final String minPreAggStartTimeConstant = "min_startTime";
   public static final String maxPreAggStartTimeConstant = "max_startTime";
   public static final String startTimeTruncatedConstant = "start_time_trunc";
@@ -46,4 +55,5 @@ public class PreAggregateConstants {
   public static final String entityConstantGcpNoSku = "No Sku";
   public static final String entityNoCloudProviderConst = "No Cloud Provider";
   public static final String entityNoLabelConst = "Label not present";
+  public static final String entityNoTagConst = "Tag not present";
 }
