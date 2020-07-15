@@ -1,10 +1,8 @@
 import csv
-import json
 import os
 import pprint
-import pycurl
+import requests
 import sys
-from io import BytesIO
 
 pp = pprint.PrettyPrinter(indent=4)
 token = os.environ['SONAR_TOKEN']
@@ -27,13 +25,8 @@ def is_folder(path):
 
 
 def get_json_from_api(url):
-    b_obj = BytesIO()
-    curl = pycurl.Curl()
-    curl.setopt(pycurl.URL, url)
-    curl.setopt(pycurl.USERPWD, '%s:' % token)
-    curl.setopt(curl.WRITEDATA, b_obj)
-    curl.perform()
-    return json.loads(b_obj.getvalue())
+    response = requests.get(url, auth=(token, ''))
+    return response.json()
 
 
 def find_item_with_key(data, key, value):
@@ -107,6 +100,7 @@ def export_file(data):
         csv_writer.writerow(
             ["File", "Coverage", "Lines To Cover", "Branch Coverage", "Conditions To Cover"])
         csv_writer.writerows(data)
+    export_file(data)
 
 
 def main(list_file_path):
@@ -117,7 +111,6 @@ def main(list_file_path):
             print("Fetching Coverage for File {}".format(line.strip()))
             line = fp.readline()
             rows.append(calculate_coverage(line.strip()))
-    export_file(rows)
 
 
 if __name__ == "__main__":
