@@ -63,7 +63,7 @@ public class Anomaly implements UuidAware, CreatedAtAware, AccountAccess, Persis
     @Singular("addAnomalousMetric") Set<AnomalousMetric> anomalousMetrics;
   }
 
-  @Value
+  @Data
   @Builder
   @EqualsAndHashCode(of = {"groupName", "metricName"})
   public static class AnomalousMetric {
@@ -73,8 +73,8 @@ public class Anomaly implements UuidAware, CreatedAtAware, AccountAccess, Persis
   }
 
   public enum AnomalyStatus {
-    OPEN("Open"),
-    CLOSED("Closed");
+    CLOSED("Closed"),
+    OPEN("Open");
 
     private String displayName;
     AnomalyStatus(String displayName) {

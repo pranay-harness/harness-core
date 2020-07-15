@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -18,6 +19,9 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.dashboard.beans.AnomalyDTO;
+import io.harness.cvng.dashboard.beans.AnomalyDTO.AnomalyDetailDTO;
+import io.harness.cvng.dashboard.beans.AnomalyDTO.AnomalyTxnDetail;
 import io.harness.cvng.dashboard.entities.Anomaly;
 import io.harness.cvng.dashboard.entities.Anomaly.AnomalousMetric;
 import io.harness.cvng.dashboard.entities.Anomaly.AnomalyDetail;
@@ -33,7 +37,10 @@ import org.junit.experimental.categories.Category;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class AnomalyServiceImplTest extends CVNextGenBaseTest {
   @Inject private AnomalyService anomalyService;
@@ -60,7 +67,7 @@ public class AnomalyServiceImplTest extends CVNextGenBaseTest {
   public void testOpenAndCloseanomaly_withSingleCvConfig() {
     Instant instant = Instant.now();
     CVConfig cvConfig = createAndSaveAppDConfig(CVMonitoringCategory.PERFORMANCE);
-    List<AnomalousMetric> anomalousMetrics = getAnomalousMetrics(10);
+    List<AnomalousMetric> anomalousMetrics = getAnomalousMetrics(10, 0);
 
     // open anomaly multiple times
     for (int i = 0; i < 5; i++) {
@@ -103,7 +110,7 @@ public class AnomalyServiceImplTest extends CVNextGenBaseTest {
     for (int i = 0; i < numOfCvConfigs; i++) {
       cvConfigs.add(createAndSaveAppDConfig(CVMonitoringCategory.PERFORMANCE));
     }
-    List<AnomalousMetric> anomalousMetrics = getAnomalousMetrics(5);
+    List<AnomalousMetric> anomalousMetrics = getAnomalousMetrics(5, 0);
     for (Instant instant = now; instant.toEpochMilli() < now.plus(1, ChronoUnit.HOURS).toEpochMilli();
          instant = instant.plus(5, ChronoUnit.MINUTES)) {
       for (int i = 0; i < cvConfigs.size(); i++) {
@@ -160,7 +167,7 @@ public class AnomalyServiceImplTest extends CVNextGenBaseTest {
     for (CVMonitoringCategory category : CVMonitoringCategory.values()) {
       cvConfigs.add(createAndSaveAppDConfig(category));
     }
-    List<AnomalousMetric> anomalousMetrics = getAnomalousMetrics(5);
+    List<AnomalousMetric> anomalousMetrics = getAnomalousMetrics(5, 0);
     for (Instant instant = now; instant.toEpochMilli() < now.plus(1, ChronoUnit.HOURS).toEpochMilli();
          instant = instant.plus(5, ChronoUnit.MINUTES)) {
       for (int i = 0; i < cvConfigs.size(); i++) {
@@ -190,7 +197,7 @@ public class AnomalyServiceImplTest extends CVNextGenBaseTest {
   public void testCloseAnomaly_whenCvConfigDeleted() {
     Instant instant = Instant.now();
     CVConfig cvConfig = createAndSaveAppDConfig(CVMonitoringCategory.PERFORMANCE);
-    List<AnomalousMetric> anomalousMetrics = getAnomalousMetrics(10);
+    List<AnomalousMetric> anomalousMetrics = getAnomalousMetrics(10, 0);
 
     anomalyService.openAnomaly(accountId, cvConfig.getUuid(), instant, anomalousMetrics);
     List<Anomaly> anomalies = hPersistence.createQuery(Anomaly.class, excludeAuthority).asList();
@@ -222,9 +229,128 @@ public class AnomalyServiceImplTest extends CVNextGenBaseTest {
     return cvConfigService.save(appDynamicsCVConfig);
   }
 
-  private List<AnomalousMetric> getAnomalousMetrics(int numOfMetrics) {
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetAnomaly_withSingleCvConfig() {
+    Instant instant = Instant.now();
+    CVConfig cvConfig = createAndSaveAppDConfig(CVMonitoringCategory.PERFORMANCE);
+
+    int numOfAnomalousMetrics = 10;
+    int numOfAnomalies = 5;
+    for (int i = 0; i < numOfAnomalies; i++) {
+      anomalyService.openAnomaly(accountId, cvConfig.getUuid(), instant.plus(i, ChronoUnit.MINUTES),
+          getAnomalousMetrics(numOfAnomalousMetrics, i * numOfAnomalousMetrics));
+    }
+    Collection<AnomalyDTO> anomalies = anomalyService.getAnomalies(accountId, serviceIdentifier, envIdentifier,
+        CVMonitoringCategory.PERFORMANCE, instant, instant.plus(1, ChronoUnit.HOURS));
+    assertThat(anomalies.size()).isEqualTo(1);
+    AnomalyDTO anomaly = anomalies.iterator().next();
+    assertThat(anomaly.getStartTimestamp()).isEqualTo(instant.toEpochMilli());
+    assertThat(anomaly.getEndTimestamp()).isNull();
+    assertThat(anomaly.getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
+    assertThat(anomaly.getStatus()).isEqualTo(AnomalyStatus.OPEN);
+    SortedSet<AnomalyDetailDTO> anomalyDetails = anomaly.getAnomalyDetails();
+    assertThat(anomalyDetails.size()).isEqualTo(1);
+    AnomalyDetailDTO anomalyDetail = anomalyDetails.first();
+    assertThat(anomalyDetail.getCvConfigId()).isEqualTo(cvConfig.getUuid());
+    assertThat(anomalyDetail.getRiskScore()).isEqualTo(0.1 * (numOfAnomalies * numOfAnomalousMetrics - 1));
+    assertThat(anomalyDetail.getTxnDetails().size()).isEqualTo(numOfAnomalies * numOfAnomalousMetrics);
+
+    int i = numOfAnomalies * numOfAnomalousMetrics - 1;
+    for (AnomalyTxnDetail txnDetail : anomalyDetail.getTxnDetails()) {
+      assertThat(txnDetail.getGroupName()).isEqualTo("g-" + i);
+      assertThat(txnDetail.getMetricName()).isEqualTo("m-" + i);
+      assertThat(txnDetail.getRiskScore()).isEqualTo(0.1 * i);
+      i--;
+    }
+
+    anomalyService.closeAnomaly(accountId, cvConfig.getUuid(), instant.plus(1, ChronoUnit.HOURS));
+    anomalies = anomalyService.getAnomalies(accountId, serviceIdentifier, envIdentifier,
+        CVMonitoringCategory.PERFORMANCE, instant, instant.plus(1, ChronoUnit.HOURS));
+    assertThat(anomalies.size()).isEqualTo(1);
+    anomaly = anomalies.iterator().next();
+    assertThat(anomaly.getStartTimestamp()).isEqualTo(instant.toEpochMilli());
+    assertThat(anomaly.getEndTimestamp()).isEqualTo(instant.plus(1, ChronoUnit.HOURS).toEpochMilli());
+    assertThat(anomaly.getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
+    assertThat(anomaly.getStatus()).isEqualTo(AnomalyStatus.CLOSED);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetAnomaly_SortedByStatus() {
+    Instant instant = Instant.now();
+    int numOfAnomalousMetrics = 10;
+    CVConfig cvConfig = createAndSaveAppDConfig(CVMonitoringCategory.PERFORMANCE);
+    anomalyService.openAnomaly(accountId, cvConfig.getUuid(), instant, getAnomalousMetrics(numOfAnomalousMetrics, 0));
+    anomalyService.closeAnomaly(accountId, cvConfig.getUuid(), instant);
+
+    anomalyService.openAnomaly(accountId, cvConfig.getUuid(), instant.plus(1, ChronoUnit.MINUTES),
+        getAnomalousMetrics(numOfAnomalousMetrics, 0));
+    anomalyService.closeAnomaly(accountId, cvConfig.getUuid(), instant.plus(1, ChronoUnit.MINUTES));
+
+    anomalyService.openAnomaly(accountId, cvConfig.getUuid(), instant.plus(5, ChronoUnit.MINUTES),
+        getAnomalousMetrics(numOfAnomalousMetrics, 0));
+
+    Collection<AnomalyDTO> anomalies = anomalyService.getAnomalies(accountId, serviceIdentifier, envIdentifier,
+        CVMonitoringCategory.PERFORMANCE, instant, instant.plus(1, ChronoUnit.HOURS));
+
+    assertThat(anomalies.size()).isEqualTo(3);
+    List<AnomalyDTO> anomalyDTOS = new ArrayList<>(anomalies);
+    assertThat(anomalyDTOS.get(0).getStatus()).isEqualTo(AnomalyStatus.OPEN);
+    assertThat(anomalyDTOS.get(1).getStatus()).isEqualTo(AnomalyStatus.CLOSED);
+    assertThat(anomalyDTOS.get(2).getStatus()).isEqualTo(AnomalyStatus.CLOSED);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetAnomaly_withMultipleConfigsAndInstants() {
+    Instant now = Instant.now();
+    int numOfCvConfigs = 5;
+    int numOfAnomalousTxns = 5;
+    List<CVConfig> cvConfigs = new ArrayList<>();
+    for (int i = 0; i < numOfCvConfigs; i++) {
+      cvConfigs.add(createAndSaveAppDConfig(CVMonitoringCategory.PERFORMANCE));
+    }
+    for (Instant instant = now; instant.toEpochMilli() < now.plus(1, ChronoUnit.HOURS).toEpochMilli();
+         instant = instant.plus(5, ChronoUnit.MINUTES)) {
+      for (int i = 0; i < cvConfigs.size(); i++) {
+        anomalyService.openAnomaly(accountId, cvConfigs.get(i).getUuid(), instant,
+            getAnomalousMetrics(numOfAnomalousTxns, i * numOfAnomalousTxns));
+      }
+    }
+
+    Collection<AnomalyDTO> anomalies = anomalyService.getAnomalies(accountId, serviceIdentifier, envIdentifier,
+        CVMonitoringCategory.PERFORMANCE, now, now.plus(1, ChronoUnit.HOURS));
+
+    assertThat(anomalies.size()).isEqualTo(1);
+    AnomalyDTO anomaly = anomalies.iterator().next();
+    assertThat(anomaly.getStatus()).isEqualTo(AnomalyStatus.OPEN);
+    assertThat(anomaly.getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
+
+    SortedSet<AnomalyDetailDTO> anomalyDetails = anomaly.getAnomalyDetails();
+    assertThat(anomalyDetails.size()).isEqualTo(numOfCvConfigs);
+    // verify that anomaly details are sorted by risk score
+    int index = numOfCvConfigs;
+    for (AnomalyDetailDTO anomalyDetail : anomalyDetails) {
+      assertThat(anomalyDetail.getCvConfigId()).isEqualTo(cvConfigs.get(index - 1).getUuid());
+      assertThat(anomalyDetail.getRiskScore()).isEqualTo((numOfAnomalousTxns * index - 1) * 0.1);
+      AtomicInteger txnIndex = new AtomicInteger(numOfAnomalousTxns * index - 1);
+      anomalyDetail.getTxnDetails().forEach(anomalyTxnDetail -> {
+        assertThat(anomalyTxnDetail.getGroupName()).isEqualTo("g-" + txnIndex.get());
+        assertThat(anomalyTxnDetail.getMetricName()).isEqualTo("m-" + txnIndex.get());
+        assertThat(anomalyTxnDetail.getRiskScore()).isEqualTo(0.1 * txnIndex.get(), offset(0.00001));
+        txnIndex.decrementAndGet();
+      });
+      index--;
+    }
+  }
+
+  private List<AnomalousMetric> getAnomalousMetrics(int numOfMetrics, int offset) {
     List<AnomalousMetric> rv = new ArrayList<>();
-    for (int i = 0; i < numOfMetrics; i++) {
+    for (int i = offset; i < offset + numOfMetrics; i++) {
       rv.add(AnomalousMetric.builder().groupName("g-" + i).metricName("m-" + i).riskScore(0.1 * i).build());
     }
 
