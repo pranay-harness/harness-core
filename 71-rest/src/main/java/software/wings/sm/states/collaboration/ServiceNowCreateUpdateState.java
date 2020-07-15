@@ -156,6 +156,7 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
                       .parameters(new Object[] {serviceNowTaskParameters})
                       .timeout(ASYNC_TASK_TIMEOUT_MILLIS)
                       .build())
+            .workflowExecutionId(context.getWorkflowExecutionId())
             .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
