@@ -202,19 +202,9 @@ public class ExecutionResource {
       @QueryParam("envId") String envId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
     if (pipelineId != null && executionArgs != null && executionArgs.getWorkflowType() == WorkflowType.PIPELINE) {
       executionArgs.setPipelineId(pipelineId);
-      deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
-      authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envId);
-    } else {
-      if (executionArgs != null) {
-        if (executionArgs.getOrchestrationId() != null) {
-          deploymentAuthHandler.authorizeWorkflowExecution(appId, executionArgs.getOrchestrationId());
-          authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
-        } else if (executionArgs.getPipelineId() != null) {
-          deploymentAuthHandler.authorizePipelineExecution(appId, executionArgs.getPipelineId());
-          authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envId);
-        }
-      }
     }
+    // Moved Authorization checks to WorkflowExecutionServiceImpl where pipeline and workflow is already read and we
+    // have env resolved to validate RBAC.
     if (executionArgs != null) {
       if (isNotEmpty(executionArgs.getArtifactVariables())) {
         for (ArtifactVariable artifactVariable : executionArgs.getArtifactVariables()) {

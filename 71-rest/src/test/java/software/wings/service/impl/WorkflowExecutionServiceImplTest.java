@@ -174,10 +174,12 @@ import software.wings.rules.Listeners;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
+import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -238,6 +240,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private BuildSourceService buildSourceService;
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
+  @Mock private DeploymentAuthHandler deploymentAuthHandler;
+  @Mock private AuthService authService;
 
   @Inject private ServiceInstanceService serviceInstanceService;
 
