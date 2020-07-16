@@ -2,7 +2,9 @@ package io.harness.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.beans.NGPageResponse;
 import lombok.experimental.UtilityClass;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -32,5 +34,16 @@ public class PageUtils {
     }
 
     return PageRequest.of(page, size, Sort.by(orders));
+  }
+
+  public <T> NGPageResponse<T> getNGPageResponse(Page<T> page) {
+    return NGPageResponse.<T>builder()
+        .totalPages(page.getTotalPages())
+        .totalElements(page.getTotalElements())
+        .content(page.getContent())
+        .size(page.getSize())
+        .pageNumber(page.getPageable().getPageNumber())
+        .empty(page.isEmpty())
+        .build();
   }
 }

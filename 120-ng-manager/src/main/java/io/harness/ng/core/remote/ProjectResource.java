@@ -3,10 +3,12 @@ package io.harness.ng.core.remote;
 import static io.harness.ng.core.remote.ProjectMapper.applyUpdateToProject;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.ng.core.remote.ProjectMapper.writeDTO;
+import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.NGPageResponse;
 import io.harness.ng.core.dto.CreateProjectDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -74,12 +76,13 @@ public class ProjectResource {
 
   @GET
   @ApiOperation(value = "Gets Project list for an organization", nickname = "getProjectListForOrganization")
-  public ResponseDTO<Page<ProjectDTO>> listProjectsForOrganization(@PathParam("orgIdentifier") String orgIdentifier,
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
-      @QueryParam("sort") List<String> sort) {
+  public ResponseDTO<NGPageResponse<ProjectDTO>> listProjectsForOrganization(
+      @PathParam("orgIdentifier") String orgIdentifier, @QueryParam("page") @DefaultValue("0") int page,
+      @QueryParam("size") @DefaultValue("100") int size, @QueryParam("sort") List<String> sort) {
     Criteria criteria = Criteria.where(ProjectKeys.orgIdentifier).is(orgIdentifier).and(ProjectKeys.deleted).ne(true);
-    Page<Project> projects = projectService.list(criteria, getPageRequest(page, size, sort));
-    return ResponseDTO.newResponse(projects.map(ProjectMapper::writeDTO));
+    Page<ProjectDTO> projects =
+        projectService.list(criteria, getPageRequest(page, size, sort)).map(ProjectMapper::writeDTO);
+    return ResponseDTO.newResponse(getNGPageResponse(projects));
   }
 
   @PUT
