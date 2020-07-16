@@ -6,6 +6,9 @@ CMD ["/bin/sh"]
 RUN sed -i '1 c https://alpine.global.ssl.fastly.net/alpine/v3.11/main' /etc/apk/repositories
 RUN sed -i '2 c https://alpine.global.ssl.fastly.net/alpine/v3.11/community' /etc/apk/repositories
 
+#upgrade existing packages
+RUN apk upgrade --available && sync
+
 # install Utilities
 RUN apk add --no-cache dpkg bash util-linux make strace procps curl gnupg nmap net-tools openntpd
 
