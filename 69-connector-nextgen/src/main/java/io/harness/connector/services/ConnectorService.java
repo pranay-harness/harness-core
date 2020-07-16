@@ -22,4 +22,7 @@ public interface ConnectorService {
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 
   ConnectorValidationResult validate(ConnectorRequestDTO connector, String accountIdentifier);
+
+  ConnectorValidationResult testConnection(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 }
