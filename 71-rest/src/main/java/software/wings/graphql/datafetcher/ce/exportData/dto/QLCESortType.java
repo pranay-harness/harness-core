@@ -3,10 +3,10 @@ package software.wings.graphql.datafetcher.ce.exportData.dto;
 import software.wings.graphql.datafetcher.ce.exportData.CEExportDataQueryMetadata.CEExportDataMetadataFields;
 
 public enum QLCESortType {
-  Time(CEExportDataMetadataFields.STARTTIME),
-  TotalCost(CEExportDataMetadataFields.SUM),
-  UnallocatedCost(CEExportDataMetadataFields.UNALLOCATEDCOST),
-  IdleCost(CEExportDataMetadataFields.IDLECOST);
+  TIME(CEExportDataMetadataFields.STARTTIME),
+  TOTALCOST(CEExportDataMetadataFields.SUM),
+  UNALLOCATEDCOST(CEExportDataMetadataFields.UNALLOCATEDCOST),
+  IDLECOST(CEExportDataMetadataFields.IDLECOST);
 
   private CEExportDataMetadataFields billingMetaData;
 

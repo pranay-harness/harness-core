@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.ce.exportData;
 
 import com.google.inject.Inject;
 
+import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.SelectedField;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -35,34 +37,48 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class BillingDataDataFetcher extends AbstractStatsDataFetcherWithAggregationListAndTags<QLCEAggregation,
+public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWithAggregationListAndTags<QLCEAggregation,
     QLCEFilter, QLCEGroupBy, QLCESort, QLCETagType, QLCETagAggregation, QLCELabelAggregation, QLCEEntityGroupBy> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject CEExportDataQueryBuilder queryBuilder;
   @Inject QLBillingStatsHelper statsHelper;
+  private static final int LIMIT_THRESHOLD = 100;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<QLCEAggregation> aggregateFunction, List<QLCEFilter> filters,
       List<QLCEGroupBy> groupBy, List<QLCESort> sort, Integer limit, Integer offset) {
+    return null;
+  }
+
+  @Override
+  protected QLData fetchSelectedFields(String accountId, List<QLCEAggregation> aggregateFunction,
+      List<QLCEFilter> filters, List<QLCEGroupBy> groupBy, List<QLCESort> sort, Integer limit, Integer offset,
+      DataFetchingEnvironment dataFetchingEnvironment) {
+    if (limit > LIMIT_THRESHOLD) {
+      limit = LIMIT_THRESHOLD;
+    }
     try {
       if (timeScaleDBService.isValid()) {
-        return getData(accountId, filters, aggregateFunction, groupBy, sort, limit, offset);
+        List<String> selectedFields = getSelectedFields(dataFetchingEnvironment);
+        return getData(accountId, filters, aggregateFunction, groupBy, sort, limit, offset, selectedFields);
       } else {
-        throw new InvalidRequestException("Cannot process request in BillingDataDataFetcher");
+        throw new InvalidRequestException("Cannot process request in CeClusterBillingDataDataFetcher");
       }
     } catch (Exception e) {
-      throw new InvalidRequestException("Error while fetching billing data in BillingDataDataFetcher {}", e);
+      throw new InvalidRequestException("Error while fetching billing data in CeClusterBillingDataDataFetcher {}", e);
     }
   }
 
   protected QLCEData getData(@NotNull String accountId, List<QLCEFilter> filters,
       List<QLCEAggregation> aggregateFunction, List<QLCEGroupBy> groupByList, List<QLCESort> sortCriteria,
-      Integer limit, Integer offset) {
+      Integer limit, Integer offset, List<String> selectedFields) {
     CEExportDataQueryMetadata queryData;
     ResultSet resultSet = null;
     boolean successful = false;
@@ -91,10 +107,10 @@ public class BillingDataDataFetcher extends AbstractStatsDataFetcherWithAggregat
       offset = 0;
     }
 
-    queryData = queryBuilder.formQuery(
-        accountId, filters, aggregateFunction, groupByEntityList, groupByTime, sortCriteria, limit, offset);
+    queryData = queryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, groupByTime,
+        sortCriteria, limit, offset, selectedFields);
 
-    logger.info("BillingDataDataFetcher query!! {}", queryData.getQuery());
+    logger.info("CeClusterBillingDataDataFetcher query!! {}", queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -106,10 +122,11 @@ public class BillingDataDataFetcher extends AbstractStatsDataFetcherWithAggregat
         retryCount++;
         if (retryCount >= MAX_RETRY) {
           logger.error(
-              "Failed to execute query in BillingDataDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
+              "Failed to execute query in CeClusterBillingDataDataFetcher, max retry count reached, query=[{}],accountId=[{}]",
               queryData.getQuery(), accountId, e);
         } else {
-          logger.warn("Failed to execute query in BillingDataDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
+          logger.warn(
+              "Failed to execute query in CeClusterBillingDataDataFetcher, query=[{}],accountId=[{}], retryCount=[{}]",
               queryData.getQuery(), accountId, retryCount);
         }
       } finally {
@@ -137,8 +154,8 @@ public class BillingDataDataFetcher extends AbstractStatsDataFetcherWithAggregat
       String region = "";
       String namespace = "";
       String workload = "";
-      String nodeId = "";
-      String podId = "";
+      String node = "";
+      String pod = "";
       String task = "";
       String ecsService = "";
       String launchType = "";
@@ -146,9 +163,9 @@ public class BillingDataDataFetcher extends AbstractStatsDataFetcherWithAggregat
       String service = "";
       String environment = "";
       String cluster = "";
-      String clusterName = "";
       String instanceType = "";
       String clusterType = "";
+      String instanceName = "";
       Long startTime = null;
 
       for (CEExportDataMetadataFields field : queryData.getFieldNames()) {
@@ -198,8 +215,8 @@ public class BillingDataDataFetcher extends AbstractStatsDataFetcherWithAggregat
             = resultSet.getString(field.getFieldName());
             break;
           case CLUSTERID:
-            cluster = resultSet.getString(field.getFieldName());
-            clusterName = statsHelper.getEntityName(BillingDataMetaDataFields.CLUSTERID, cluster);
+            cluster = statsHelper.getEntityName(
+                BillingDataMetaDataFields.CLUSTERID, resultSet.getString(field.getFieldName()));
             break;
           case CLUSTERTYPE:
             clusterType = resultSet.getString(field.getFieldName());
@@ -235,9 +252,18 @@ public class BillingDataDataFetcher extends AbstractStatsDataFetcherWithAggregat
           case TIME_SERIES:
             startTime = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
             break;
+          case INSTANCENAME:
+            instanceName = resultSet.getString(field.getFieldName());
+            break;
           default:
             break;
         }
+      }
+
+      if (instanceType.equals("K8S_NODE")) {
+        node = instanceName;
+      } else if (instanceType.equals("K8S_POD")) {
+        pod = instanceName;
       }
 
       final QLCEDataEntryBuilder dataEntryBuilder = QLCEDataEntry.builder();
@@ -256,10 +282,9 @@ public class BillingDataDataFetcher extends AbstractStatsDataFetcherWithAggregat
           .region(region)
           .harness(
               QLCEHarnessEntity.builder().application(application).service(service).environment(environment).build())
-          .k8s(QLCEK8sEntity.builder().namespace(namespace).nodeId(nodeId).podId(podId).workload(workload).build())
+          .k8s(QLCEK8sEntity.builder().namespace(namespace).node(node).pod(pod).workload(workload).build())
           .ecs(QLCEEcsEntity.builder().launchType(launchType).service(ecsService).taskId(task).build())
           .cluster(cluster)
-          .clusterName(clusterName)
           .clusterType(clusterType)
           .instanceType(instanceType)
           .startTime(startTime);
@@ -268,6 +293,13 @@ public class BillingDataDataFetcher extends AbstractStatsDataFetcherWithAggregat
     }
 
     return QLCEData.builder().data(dataEntries).build();
+  }
+
+  private List<String> getSelectedFields(DataFetchingEnvironment dataFetchingEnvironment) {
+    Set<String> selectedFields = new HashSet<>();
+    List<SelectedField> selectionSet = dataFetchingEnvironment.getSelectionSet().getFields();
+    selectionSet.forEach(field -> selectedFields.add(field.getName()));
+    return new ArrayList<>(selectedFields);
   }
 
   @Override

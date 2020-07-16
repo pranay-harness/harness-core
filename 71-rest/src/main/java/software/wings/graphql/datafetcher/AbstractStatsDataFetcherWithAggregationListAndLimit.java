@@ -61,6 +61,9 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
   protected abstract QLData postFetch(String accountId, List<G> groupByList, List<A> aggregations, List<S> sort,
       QLData qlData, Integer limit, boolean includeOthers);
 
+  protected abstract QLData fetchSelectedFields(String accountId, List<A> aggregateFunction, List<F> filters,
+      List<G> groupBy, List<S> sort, Integer limit, Integer offset, DataFetchingEnvironment dataFetchingEnvironment);
+
   @Override
   public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
     Object result;
@@ -90,7 +93,11 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
 
            AutoLogContext ignore3 = new GroupByLogContext(groupByClass.getSimpleName(), OVERRIDE_ERROR);
            AutoLogContext ignore4 = new FilterLogContext(filterClass.getSimpleName(), OVERRIDE_ERROR)) {
-        QLData qlData = fetch(accountId, aggregateFunctions, filters, groupBy, sort, limit, offset);
+        QLData qlData = fetchSelectedFields(
+            accountId, aggregateFunctions, filters, groupBy, sort, limit, offset, dataFetchingEnvironment);
+        if (qlData == null) {
+          qlData = fetch(accountId, aggregateFunctions, filters, groupBy, sort, limit, offset);
+        }
         QLData postFetchResult = postFetch(accountId, groupBy, aggregateFunctions, sort, qlData, limit, includeOthers);
         result = qlData;
         if (postFetchResult != null) {

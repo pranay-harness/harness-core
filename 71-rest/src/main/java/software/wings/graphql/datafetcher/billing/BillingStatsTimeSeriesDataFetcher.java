@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.billing;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -520,6 +521,13 @@ public class BillingStatsTimeSeriesDataFetcher
         .cpuUtilMetrics(data.getCpuUtilMetrics())
         .memoryUtilMetrics(data.getMemoryUtilMetrics())
         .build();
+  }
+
+  @Override
+  protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort, Integer limit,
+      Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
+    return null;
   }
 
   private List<QLBillingStackedTimeSeriesDataPoint> getDataAfterLimit(

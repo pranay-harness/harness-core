@@ -20,6 +20,7 @@ public class CEExportDataTableSchema {
   DbColumn endTime;
   DbColumn accountId;
   DbColumn instanceId;
+  DbColumn instanceName;
   DbColumn instanceType;
   DbColumn serviceId;
   DbColumn appId;
@@ -63,6 +64,7 @@ public class CEExportDataTableSchema {
     endTime = billingDataTable.addColumn("endtime", "timestamp", null);
     accountId = billingDataTable.addColumn("accountid", "text", null);
     instanceId = billingDataTable.addColumn("instanceid", "text", null);
+    instanceName = billingDataTable.addColumn("instancename", "text", null);
     instanceType = billingDataTable.addColumn("instancetype", varcharType, null);
     serviceId = billingDataTable.addColumn("serviceid", "text", null);
     appId = billingDataTable.addColumn("appid", "text", null);

@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.billing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -211,6 +212,13 @@ public class SunburstChartStatsDataFetcher
       topNGridData.add(getOtherDataPoint(gridData.subList(limit, gridSize), limit, gridSize));
     }
     return QLSunburstChartData.builder().totalCost(data.getTotalCost()).gridData(topNGridData).build();
+  }
+
+  @Override
+  protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort, Integer limit,
+      Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
+    return null;
   }
 
   private QLSunburstGridDataPoint getOtherDataPoint(

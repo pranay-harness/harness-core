@@ -4,12 +4,14 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 import software.wings.graphql.schema.type.aggregation.QLData;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "CEDataEntryKeys")
 @Scope(PermissionAttribute.ResourceType.USER)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLCEDataEntry implements QLData {
@@ -31,7 +33,10 @@ public class QLCEDataEntry implements QLData {
   QLCEHarnessEntity harness;
   String clusterType;
   String cluster;
-  String clusterName;
   String instanceType;
   Long startTime;
+  String labelName;
+  String labelValue;
+  String tagName;
+  String tagValue;
 }

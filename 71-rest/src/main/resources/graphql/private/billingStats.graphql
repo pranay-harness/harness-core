@@ -127,13 +127,6 @@ input CCMTimeSeriesAggregation {
   timeGroupType: TimeGroupType
 }
 
-enum TimeGroupType {
-  HOUR
-  DAY
-  WEEK
-  MONTH
-}
-
 input BillingDataTagAggregation {
   entityType: BillingDataTagType
   tagName: String
@@ -373,11 +366,6 @@ input BillingDataLabelFilter {
 input BillingDataTagFilter {
   entityType: BillingDataTagType
   tags: [TagInput]
-}
-
-input K8sLabelInput {
-  name: String
-  values: [String]
 }
 
 enum BillingDataTagType {

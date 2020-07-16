@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -61,6 +62,13 @@ public class BillingStatsEntityDataFetcher
     } catch (Exception e) {
       throw new InvalidRequestException("Error while fetching billing data {}", e);
     }
+  }
+
+  @Override
+  protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort, Integer limit,
+      Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
+    return null;
   }
 
   protected QLEntityTableListData getEntityData(@NotNull String accountId, List<QLBillingDataFilter> filters,

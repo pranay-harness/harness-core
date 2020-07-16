@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.billing;
 import com.google.inject.Inject;
 
 import com.healthmarketscience.sqlbuilder.SqlObject;
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
@@ -82,6 +83,13 @@ public class CloudEntityStatsDataFetcher
   protected QLData postFetch(String accountId, List<CloudBillingGroupBy> groupByList,
       List<CloudBillingAggregate> aggregations, List<CloudBillingSortCriteria> sort, QLData qlData, Integer limit,
       boolean includeOthers) {
+    return null;
+  }
+
+  @Override
+  protected QLData fetchSelectedFields(String accountId, List<CloudBillingAggregate> aggregateFunction,
+      List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy, List<CloudBillingSortCriteria> sort,
+      Integer limit, Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
 
