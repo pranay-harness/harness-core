@@ -7,6 +7,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static java.util.Collections.singletonList;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+import static software.wings.service.impl.aws.model.AwsConstants.PROD_LISTENER;
+import static software.wings.service.impl.aws.model.AwsConstants.STAGE_LISTENER;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 
 import com.google.inject.Inject;
@@ -42,6 +44,7 @@ import software.wings.helpers.ext.ecs.request.EcsBGServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -53,6 +56,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -240,5 +244,23 @@ public class EcsBlueGreenServiceSetup extends State {
     } catch (Exception e) {
       throw new InvalidRequestException(getMessage(e), e);
     }
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (isEmpty(prodListenerArn)) {
+      invalidFields.put(PROD_LISTENER, "Prod Listener ARN name must be specified");
+    }
+    if (isEmpty(stageListenerArn)) {
+      invalidFields.put(STAGE_LISTENER, "Stage Listener ARN must be specified");
+    }
+    if (isEmpty(maxInstances)) {
+      invalidFields.put("Max Instances", "Max Instances must be specified");
+    }
+    if (isEmpty(loadBalancerName)) {
+      invalidFields.put(WorkflowServiceHelper.ELB, "Elastic Load Balancer must be specified");
+    }
+    return invalidFields;
   }
 }

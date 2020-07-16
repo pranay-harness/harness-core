@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,6 +11,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -66,6 +68,8 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+
+import java.util.Map;
 
 public class EcsBlueGreenServiceSetupTest extends WingsBaseTest {
   @Mock private EcsStateHelper mockEcsStateHelper;
@@ -194,5 +198,15 @@ public class EcsBlueGreenServiceSetupTest extends WingsBaseTest {
         .buildContainerServiceElement(
             any(), any(), any(), any(), anyString(), anyString(), anyString(), any(), anyInt(), any());
     verify(mockEcsStateHelper).populateFromDelegateResponse(any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testValidateFields() {
+    EcsBlueGreenServiceSetup state = spy(new EcsBlueGreenServiceSetup("ECS Service Setup Test"));
+    Map<String, String> fieldsMap = state.validateFields();
+    assertThat(fieldsMap).isNotNull();
+    assertThat(fieldsMap.size()).isEqualTo(4);
   }
 }

@@ -41,4 +41,7 @@ public interface AwsConstants {
 
   int LAMBDA_SLEEP_SECS = 5;
   String ECS_STEADY_STATE_CHECK = "ECS Steady State Check";
+
+  String PROD_LISTENER = "Prod Listener";
+  String STAGE_LISTENER = "Stage Listener";
 }
