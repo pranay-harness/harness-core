@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECluster;
 
 import java.util.List;
 
@@ -34,23 +33,6 @@ public class AwsCEInfraSetupHandler extends CEInfraSetupHandler {
       List<CECloudAccount> awsAccounts = awsAccountService.getAWSAccounts(accountId, settingId, ceAwsConfig);
       updateLinkedAccounts(accountId, settingId, ceAwsConfig.getAwsAccountId(), awsAccounts);
     }
-  }
-
-  private void syncCEClusters(String accountId, String settingId, CEAwsConfig ceAwsConfig) {
-    List<CECluster> eksCluster = awsEKSClusterService.getEKSCluster(accountId, settingId, ceAwsConfig);
-    updateClusters(accountId, ceAwsConfig.getAwsAccountId(), eksCluster);
-  }
-
-  @Override
-  public void syncCEClusters(CECloudAccount ceCloudAccount) {
-    String accountId = ceCloudAccount.getAccountId();
-    String settingId = ceCloudAccount.getMasterAccountSettingId();
-    CEAwsConfig ceAwsConfig = CEAwsConfig.builder()
-                                  .awsCrossAccountAttributes(ceCloudAccount.getAwsCrossAccountAttributes())
-                                  .awsAccountId(ceCloudAccount.getInfraAccountId())
-                                  .awsMasterAccountId(ceCloudAccount.getInfraMasterAccountId())
-                                  .build();
-    syncCEClusters(accountId, settingId, ceAwsConfig);
   }
 
   @Override

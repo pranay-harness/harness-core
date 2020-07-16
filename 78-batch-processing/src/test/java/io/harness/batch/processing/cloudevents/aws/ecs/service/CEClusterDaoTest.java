@@ -1,4 +1,4 @@
-package io.harness.ccm.setup;
+package io.harness.batch.processing.cloudevents.aws.ecs.service;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
