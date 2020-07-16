@@ -48,6 +48,14 @@ public final class Addon {
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_product_ci_addon_proto_TaskProgressRequest_fieldAccessorTable;
   static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_addon_proto_SignalStopRequest_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_product_ci_addon_proto_SignalStopRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
+      .Descriptor internal_static_io_harness_product_ci_addon_proto_SignalStopResponse_descriptor;
+  static final com.google.protobuf.GeneratedMessageV3
+      .FieldAccessorTable internal_static_io_harness_product_ci_addon_proto_SignalStopResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors
       .Descriptor internal_static_io_harness_product_ci_addon_proto_TaskProgressResponse_descriptor;
   static final com.google.protobuf.GeneratedMessageV3
       .FieldAccessorTable internal_static_io_harness_product_ci_addon_proto_TaskProgressResponse_fieldAccessorTable;
@@ -96,35 +104,39 @@ public final class Addon {
         + "es\"\032\n\030PublishArtifactsResponse\"Y\n\023TaskPr"
         + "ogressRequest\022B\n\007task_id\030\001 \001(\0132).io.harn"
         + "ess.product.ci.addon.proto.TaskIdR\006taskI"
-        + "d\"\252\001\n\024TaskProgressResponse\022R\n\rcurrent_st"
-        + "age\030\001 \001(\0162-.io.harness.product.ci.addon."
-        + "proto.TaskStatusR\014currentStage\022>\n\005error\030"
-        + "\002 \001(\0132(.io.harness.product.ci.addon.prot"
-        + "o.ErrorR\005error\"`\n\032TaskProgressUpdatesReq"
-        + "uest\022B\n\007task_id\030\001 \001(\0132).io.harness.produ"
-        + "ct.ci.addon.proto.TaskIdR\006taskId\"\261\001\n\033Tas"
-        + "kProgressUpdatesResponse\022R\n\rcurrent_stag"
-        + "e\030\001 \001(\0162-.io.harness.product.ci.addon.pr"
-        + "oto.TaskStatusR\014currentStage\022>\n\005error\030\002 "
-        + "\001(\0132(.io.harness.product.ci.addon.proto."
-        + "ErrorR\005error*F\n\tErrorType\022\014\n\010NO_ERROR\020\000\022"
-        + "\021\n\rNETWORK_ERROR\020\001\022\030\n\024AUTHENTICATION_ERR"
-        + "OR\020\002*X\n\014LocationType\022\013\n\007UNKNOWN\020\000\022\006\n\002S3\020"
-        + "\001\022\007\n\003GCS\020\002\022\t\n\005JFROG\020\003\022\007\n\003GCR\020\004\022\007\n\003ECR\020\005\022"
-        + "\r\n\tDOCKERHUB\020\006*;\n\010AuthType\022\016\n\nBASIC_AUTH"
-        + "\020\000\022\017\n\013SECRET_FILE\020\001\022\016\n\nACCESS_KEY\020\0022\261\003\n\007"
-        + "CIAddon\022\213\001\n\020PublishArtifacts\022:.io.harnes"
-        + "s.product.ci.addon.proto.PublishArtifact"
-        + "sRequest\032;.io.harness.product.ci.addon.p"
-        + "roto.PublishArtifactsResponse\022\177\n\014TaskPro"
-        + "gress\0226.io.harness.product.ci.addon.prot"
-        + "o.TaskProgressRequest\0327.io.harness.produ"
-        + "ct.ci.addon.proto.TaskProgressResponse\022\226"
-        + "\001\n\023TaskProgressUpdates\022=.io.harness.prod"
-        + "uct.ci.addon.proto.TaskProgressUpdatesRe"
-        + "quest\032>.io.harness.product.ci.addon.prot"
-        + "o.TaskProgressUpdatesResponse0\001B\rP\001Z\tcia"
-        + "ddonpbb\006proto3"};
+        + "d\"\023\n\021SignalStopRequest\"\024\n\022SignalStopResp"
+        + "onse\"\252\001\n\024TaskProgressResponse\022R\n\rcurrent"
+        + "_stage\030\001 \001(\0162-.io.harness.product.ci.add"
+        + "on.proto.TaskStatusR\014currentStage\022>\n\005err"
+        + "or\030\002 \001(\0132(.io.harness.product.ci.addon.p"
+        + "roto.ErrorR\005error\"`\n\032TaskProgressUpdates"
+        + "Request\022B\n\007task_id\030\001 \001(\0132).io.harness.pr"
+        + "oduct.ci.addon.proto.TaskIdR\006taskId\"\261\001\n\033"
+        + "TaskProgressUpdatesResponse\022R\n\rcurrent_s"
+        + "tage\030\001 \001(\0162-.io.harness.product.ci.addon"
+        + ".proto.TaskStatusR\014currentStage\022>\n\005error"
+        + "\030\002 \001(\0132(.io.harness.product.ci.addon.pro"
+        + "to.ErrorR\005error*F\n\tErrorType\022\014\n\010NO_ERROR"
+        + "\020\000\022\021\n\rNETWORK_ERROR\020\001\022\030\n\024AUTHENTICATION_"
+        + "ERROR\020\002*X\n\014LocationType\022\013\n\007UNKNOWN\020\000\022\006\n\002"
+        + "S3\020\001\022\007\n\003GCS\020\002\022\t\n\005JFROG\020\003\022\007\n\003GCR\020\004\022\007\n\003ECR"
+        + "\020\005\022\r\n\tDOCKERHUB\020\006*;\n\010AuthType\022\016\n\nBASIC_A"
+        + "UTH\020\000\022\017\n\013SECRET_FILE\020\001\022\016\n\nACCESS_KEY\020\0022\254"
+        + "\004\n\007CIAddon\022\213\001\n\020PublishArtifacts\022:.io.har"
+        + "ness.product.ci.addon.proto.PublishArtif"
+        + "actsRequest\032;.io.harness.product.ci.addo"
+        + "n.proto.PublishArtifactsResponse\022y\n\nSign"
+        + "alStop\0224.io.harness.product.ci.addon.pro"
+        + "to.SignalStopRequest\0325.io.harness.produc"
+        + "t.ci.addon.proto.SignalStopResponse\022\177\n\014T"
+        + "askProgress\0226.io.harness.product.ci.addo"
+        + "n.proto.TaskProgressRequest\0327.io.harness"
+        + ".product.ci.addon.proto.TaskProgressResp"
+        + "onse\022\226\001\n\023TaskProgressUpdates\022=.io.harnes"
+        + "s.product.ci.addon.proto.TaskProgressUpd"
+        + "atesRequest\032>.io.harness.product.ci.addo"
+        + "n.proto.TaskProgressUpdatesResponse0\001B\rP"
+        + "\001Z\tciaddonpbb\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             io.harness.product.ci.addon.proto.Progress.getDescriptor(),
@@ -204,8 +216,18 @@ public final class Addon {
             new java.lang.String[] {
                 "TaskId",
             });
-    internal_static_io_harness_product_ci_addon_proto_TaskProgressResponse_descriptor =
+    internal_static_io_harness_product_ci_addon_proto_SignalStopRequest_descriptor =
         getDescriptor().getMessageTypes().get(9);
+    internal_static_io_harness_product_ci_addon_proto_SignalStopRequest_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_addon_proto_SignalStopRequest_descriptor, new java.lang.String[] {});
+    internal_static_io_harness_product_ci_addon_proto_SignalStopResponse_descriptor =
+        getDescriptor().getMessageTypes().get(10);
+    internal_static_io_harness_product_ci_addon_proto_SignalStopResponse_fieldAccessorTable =
+        new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_io_harness_product_ci_addon_proto_SignalStopResponse_descriptor, new java.lang.String[] {});
+    internal_static_io_harness_product_ci_addon_proto_TaskProgressResponse_descriptor =
+        getDescriptor().getMessageTypes().get(11);
     internal_static_io_harness_product_ci_addon_proto_TaskProgressResponse_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_addon_proto_TaskProgressResponse_descriptor,
@@ -214,7 +236,7 @@ public final class Addon {
                 "Error",
             });
     internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesRequest_descriptor =
-        getDescriptor().getMessageTypes().get(10);
+        getDescriptor().getMessageTypes().get(12);
     internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesRequest_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesRequest_descriptor,
@@ -222,7 +244,7 @@ public final class Addon {
                 "TaskId",
             });
     internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesResponse_descriptor =
-        getDescriptor().getMessageTypes().get(11);
+        getDescriptor().getMessageTypes().get(13);
     internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesResponse_fieldAccessorTable =
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesResponse_descriptor,

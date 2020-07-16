@@ -21,10 +21,6 @@ var (
 	newCIAddonClient = egrpc.NewCIAddonClient
 )
 
-const (
-	ciAddonPort = 8001
-)
-
 // mockgen -source publish_artifacts.go -package steps -destination mocks/publish_artifacts_mock.go
 
 // PublishArtifactsStep to publish artifacts to an artifactory
@@ -59,7 +55,7 @@ func (s *publishArtifactsStep) Run(ctx context.Context) error {
 		return err
 	}
 
-	ciAddonClient, err := newCIAddonClient(ciAddonPort, s.log)
+	ciAddonClient, err := newCIAddonClient(egrpc.CIAddonPort, s.log)
 	if err != nil {
 		s.log.Warnw("Unable to create CI addon client", "error_msg", zap.Error(err))
 		return errors.Wrap(err, "Could not create CI Addon client")

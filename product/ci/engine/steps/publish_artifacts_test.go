@@ -26,7 +26,8 @@ const bufSize = 1024 * 1024
 
 func init() {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	server := addon.NewCIAddonHandler(log.Sugar())
+	stopCh := make(chan bool)
+	server := addon.NewCIAddonHandler(stopCh, log.Sugar())
 	lis = bufconn.Listen(bufSize)
 	s := grpc.NewServer()
 	addonpb.RegisterCIAddonServer(s, server)
@@ -178,7 +179,6 @@ func TestCreatePublishArtifacts_Invalid(t *testing.T) {
 	defer func() { newCIAddonClient = oldClient }()
 	// Initialize a mock CI addon
 	mockClient := mgrpc.NewMockCIAddonClient(ctrl)
-	fmt.Println(client)
 	mockClient.EXPECT().Client().Return(client)
 	mockClient.EXPECT().CloseConn().Return(nil)
 	newCIAddonClient = func(port uint, log *zap.SugaredLogger) (egrpc.CIAddonClient, error) {
@@ -221,12 +221,6 @@ func Test_GetRequestArgError(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	stepID := "test-step"
 	stepName := "test step"
-	// taskID := "test-id"
-	// filePattern := "/a/b/c"
-	// destinationURL := "file://a/b/c"
-	// connectorID := "testConnector"
-	// dockerFilePath := "~/DockerFile"
-	// context := "~/"
 	dockerFile := "/a/b"
 	invalidFilePattern := "~test"
 	invalidDockerFile := "~test"

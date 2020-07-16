@@ -14,6 +14,10 @@ const (
 	deployable      = "ci-lite-engine"
 )
 
+var (
+	executeStage = executor.ExecuteStage
+)
+
 type schema struct {
 	Input       string `arg:"--input, required" help:"base64 format of stage/step to execute"`
 	LogPath     string `arg:"--logpath, required" help:"relative file path to store logs of steps"`
@@ -53,7 +57,7 @@ func main() {
 	log.Infow("CI lite engine is starting")
 	switch {
 	case args.Stage != nil:
-		executor.ExecuteStage(args.Stage.Input, args.Stage.LogPath, args.Stage.TmpFilePath, log)
+		executeStage(args.Stage.Input, args.Stage.LogPath, args.Stage.TmpFilePath, log)
 	case args.Step != nil:
 		executor.ExecuteStep(args.Step.Input, args.Step.LogPath, args.Step.TmpFilePath, log)
 	default:

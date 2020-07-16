@@ -28,5 +28,6 @@ func Test_MainWithGrpc(t *testing.T) {
 	ciAddonServer = s
 
 	mockServer.EXPECT().Start()
+	mockServer.EXPECT().Stop().AnyTimes()
 	main()
 }

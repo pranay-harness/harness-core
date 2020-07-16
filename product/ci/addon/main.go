@@ -56,5 +56,8 @@ func main() {
 	if err != nil {
 		logger.Fatalw("error while running CI addon server", "port", args.Port, zap.Error(err))
 	}
+
+	// Wait for stop signal and shutdown the server upon receiving it in a separate goroutine
+	go s.Stop()
 	s.Start()
 }

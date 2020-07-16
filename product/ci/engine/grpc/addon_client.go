@@ -14,8 +14,11 @@ import (
 const (
 	backoffTime = 100 * time.Millisecond
 	maxRetries  = 9
+	// CIAddonPort is the port on which CI addon service runs.
+	CIAddonPort = 8001
 )
 
+//CIAddonClient implements a GRPC client to communicate with CI addon
 type CIAddonClient interface {
 	CloseConn() error
 	Client() pb.CIAddonClient
@@ -28,6 +31,7 @@ type ciAddonClient struct {
 	grpcClient pb.CIAddonClient
 }
 
+// NewCIAddonClient creates a CI addon client
 func NewCIAddonClient(port uint, log *zap.SugaredLogger) (CIAddonClient, error) {
 	// Default gRPC Call options - can be made configurable if the need arises
 	// Retries are ENABLED by default for all RPCs on the below codes. To disable retries, pass in a zero value
