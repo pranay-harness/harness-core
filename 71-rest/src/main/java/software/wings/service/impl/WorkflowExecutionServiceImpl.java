@@ -1001,24 +1001,31 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return;
     }
 
-    WorkflowTree tree = null;
-    List<String> params = null;
-    params = getParamsForTree();
-    if (!upToDate) {
-      tree = mongoStore.<WorkflowTree>get(
-          GraphRenderer.algorithmId, WorkflowTree.STRUCTURE_HASH, workflowExecution.getUuid(), params);
-    }
+    try (AutoLogContext ignore = new WorkflowExecutionLogContext(workflowExecution.getUuid(), OVERRIDE_NESTS)) {
+      WorkflowTree tree = null;
+      List<String> params = null;
+      params = getParamsForTree();
+      if (!upToDate) {
+        tree = mongoStore.<WorkflowTree>get(
+            GraphRenderer.algorithmId, WorkflowTree.STRUCTURE_HASH, workflowExecution.getUuid(), params);
+      }
 
-    if (upToDate || tree == null || tree.isWasInvalidated()
-        || tree.getLastUpdatedAt() < (System.currentTimeMillis() - 5000)) {
-      tree = calculateTree(workflowExecution.getAppId(), workflowExecution.getUuid());
-    }
+      if (upToDate || tree == null || tree.isWasInvalidated()
+          || tree.getLastUpdatedAt() < (System.currentTimeMillis() - 5000)) {
+        tree = calculateTree(workflowExecution.getAppId(), workflowExecution.getUuid());
+      }
 
-    if (includeStatus && tree.getOverrideStatus() != null) {
-      workflowExecution.setStatus(tree.getOverrideStatus());
-    }
-    if (includeGraph) {
-      workflowExecution.setExecutionNode(tree.getGraph());
+      if (includeStatus && tree.getOverrideStatus() != null) {
+        if (ExecutionStatus.isFinalStatus(workflowExecution.getStatus())
+            && ExecutionStatus.isFinalStatus(tree.getOverrideStatus())) {
+          logger.error("Workflow Execution is in final status but override status is not Override Status: {}",
+              tree.getOverrideStatus());
+        }
+        workflowExecution.setStatus(tree.getOverrideStatus());
+      }
+      if (includeGraph) {
+        workflowExecution.setExecutionNode(tree.getGraph());
+      }
     }
   }
 

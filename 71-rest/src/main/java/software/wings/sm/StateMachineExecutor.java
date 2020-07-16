@@ -885,7 +885,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   StateExecutionInstance handleExecuteResponseException(ExecutionContextImpl context, WingsException exception) {
     StateExecutionInstance stateExecutionInstance = null;
     State currentState = null;
-    try {
+    try (AutoLogContext ignore = context.autoLogContext()) {
       stateExecutionInstance = context.getStateExecutionInstance();
       StateMachine sm = context.getStateMachine();
       currentState =
@@ -903,7 +903,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           stateExecutionInstance.getExpiryTs());
     }
 
-    try {
+    try (AutoLogContext ignore = context.autoLogContext()) {
       ExecutionEventAdvice executionEventAdvice =
           invokeAdvisors(ExecutionEvent.builder()
                              .failureTypes(ExceptionUtils.getFailureTypes(exception))
@@ -917,7 +917,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       logger.error("Error when trying to obtain the advice ", ex);
     }
 
-    try {
+    try (AutoLogContext ignore = context.autoLogContext()) {
       return failedTransition(context, exception);
     } catch (RuntimeException ex) {
       logger.error("Error in transitioning to failure state", ex);
