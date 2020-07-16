@@ -29,12 +29,13 @@ public class CloudTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy, List<CloudBillingSortCriteria> sort) {
-    String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, Collections.EMPTY_LIST);
-    boolean isAWSCloudProvider = cloudProvider.equals("AWS");
+    boolean isAWSCloudProvider = false;
     SqlObject leftJoin = null;
     String queryTableName;
     if (isQueryRawTableRequired) {
+      String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
+      isAWSCloudProvider = cloudProvider.equals("AWS");
       String tableName = cloudBillingHelper.getTableName(cloudProvider);
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId, tableName);
       filters = cloudBillingHelper.removeAndReturnCloudProviderFilter(filters);
