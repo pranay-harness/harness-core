@@ -22,7 +22,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -36,7 +35,6 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @Entity(value = "interrupts")
 @Document(value = "interrupts")
-@TypeAlias(value = "interrupts")
 @FieldNameConstants(innerTypeName = "InterruptKeys")
 public class Interrupt implements PersistentEntity, UuidAccess, CreatedByAccess {
   public enum State { REGISTERED, PROCESSING, PROCESSED_SUCCESSFULLY, PROCESSED_UNSUCCESSFULLY, DISCARDED }
