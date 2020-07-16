@@ -7,9 +7,11 @@ import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
 
 import com.google.common.base.Charsets;
@@ -420,6 +422,20 @@ public class KubernetesResourceTest extends CategoryTest {
     assertThat(resource.getField("spec.template.spec.volumes[1].projected.sources[1].secret.name"))
         .isEqualTo("secret-projection-2");
     assertThat(resource.getField("spec.template.spec.imagePullSecrets[0].name")).isEqualTo("image_pull_secret-2");
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testUpdateConfigMapAndSecretRefEmptyInitContainers() throws Exception {
+    URL url = this.getClass().getResource("/deployment-emptyInitContainer.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    UnaryOperator<Object> configMapRevision = t -> t + "-1";
+    UnaryOperator<Object> secretRevision = t -> t + "-2";
+    assertThatThrownBy(() -> resource.transformConfigMapAndSecretRef(configMapRevision, secretRevision))
+        .hasMessage("The container or initContainer list contains empty elements. Please remove the empty elements");
   }
 
   @Test
