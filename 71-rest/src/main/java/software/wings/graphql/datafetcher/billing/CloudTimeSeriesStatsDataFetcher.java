@@ -41,13 +41,13 @@ public class CloudTimeSeriesStatsDataFetcher
   protected QLData fetch(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList, List<CloudBillingSortCriteria> sort,
       Integer limit, Integer offset) {
-    String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
     boolean isQueryRawTableRequired = cloudBillingHelper.fetchIfRawTableQueryRequired(filters, groupByList);
-    boolean isAWSCloudProvider = cloudProvider.equals("AWS");
-
+    boolean isAWSCloudProvider = false;
     SqlObject leftJoin = null;
     String queryTableName;
     if (isQueryRawTableRequired) {
+      String cloudProvider = cloudBillingHelper.getCloudProvider(filters);
+      isAWSCloudProvider = cloudProvider.equals("AWS");
       leftJoin = cloudBillingHelper.getLeftJoin(cloudProvider);
       String tableName = cloudBillingHelper.getTableName(cloudBillingHelper.getCloudProvider(filters));
       queryTableName = cloudBillingHelper.getCloudProviderTableName(accountId, tableName);
