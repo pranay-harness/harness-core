@@ -8,17 +8,25 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
+import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
+import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
+import static software.wings.service.SpotinstAmiInstanceSyncPerpetualTaskCreator.ELASTIGROUP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
-import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -40,7 +48,7 @@ import java.util.List;
 
 public class SpotinstAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Mock InstanceService instanceService;
-  @Mock SpotinstAmiInstanceSyncPerpetualTaskClient perpetualTaskClient;
+  @Mock PerpetualTaskService perpetualTaskService;
 
   @InjectMocks @Inject SpotinstAmiInstanceSyncPerpetualTaskCreator taskCreator;
 
@@ -50,18 +58,33 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTe
   public void testCreatePerpetualTasks() {
     doReturn(getAllInstances()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn("perpetual-task-id")
-        .when(perpetualTaskClient)
-        .create(eq(ACCOUNT_ID), any(SpotinstAmiInstanceSyncPerpetualTaskClientParams.class));
+        .when(perpetualTaskService)
+        .createTask(eq(PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC), eq(ACCOUNT_ID),
+            any(PerpetualTaskClientContext.class), any(PerpetualTaskSchedule.class), eq(false));
 
     taskCreator.createPerpetualTasks(getInfrastructureMapping());
 
-    ArgumentCaptor<SpotinstAmiInstanceSyncPerpetualTaskClientParams> paramsCaptor =
-        ArgumentCaptor.forClass(SpotinstAmiInstanceSyncPerpetualTaskClientParams.class);
-    verify(perpetualTaskClient, times(2)).create(eq(ACCOUNT_ID), paramsCaptor.capture());
+    ArgumentCaptor<PerpetualTaskClientContext> clientContextCaptor =
+        ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    ArgumentCaptor<PerpetualTaskSchedule> scheduleCaptor = ArgumentCaptor.forClass(PerpetualTaskSchedule.class);
 
-    assertThat(
-        paramsCaptor.getAllValues().stream().map(SpotinstAmiInstanceSyncPerpetualTaskClientParams::getElastigroupId))
+    verify(perpetualTaskService, times(2))
+        .createTask(eq(PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC), eq(ACCOUNT_ID), clientContextCaptor.capture(),
+            scheduleCaptor.capture(), eq(false));
+
+    assertThat(clientContextCaptor.getAllValues().stream().map(
+                   clientContext -> clientContext.getClientParams().get(ELASTIGROUP_ID)))
         .containsExactlyInAnyOrder("group-1", "group-2");
+
+    clientContextCaptor.getAllValues().forEach(clientContext -> {
+      assertThat(clientContext.getClientParams().get(HARNESS_APPLICATION_ID)).isEqualTo(APP_ID);
+      assertThat(clientContext.getClientParams().get(INFRASTRUCTURE_MAPPING_ID)).isEqualTo(INFRA_MAPPING_ID);
+    });
+
+    scheduleCaptor.getAllValues().forEach(schedule -> {
+      assertThat(schedule.getInterval()).isEqualTo(Durations.fromMinutes(INTERVAL_MINUTES));
+      assertThat(schedule.getInterval()).isEqualTo(Durations.fromSeconds(TIMEOUT_SECONDS));
+    });
   }
 
   @Test
@@ -105,17 +128,32 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTe
     taskCreator.createPerpetualTasksForNewDeployment(
         summaries, existingPerpetualTasks, new AwsAmiInfrastructureMapping());
 
-    ArgumentCaptor<SpotinstAmiInstanceSyncPerpetualTaskClientParams> paramsCaptor =
-        ArgumentCaptor.forClass(SpotinstAmiInstanceSyncPerpetualTaskClientParams.class);
-    verify(perpetualTaskClient, times(2)).create(eq(ACCOUNT_ID), paramsCaptor.capture());
+    ArgumentCaptor<PerpetualTaskClientContext> clientContextCaptor =
+        ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    ArgumentCaptor<PerpetualTaskSchedule> scheduleCaptor = ArgumentCaptor.forClass(PerpetualTaskSchedule.class);
 
-    assertThat(
-        paramsCaptor.getAllValues().stream().map(SpotinstAmiInstanceSyncPerpetualTaskClientParams::getElastigroupId))
+    verify(perpetualTaskService, times(2))
+        .createTask(eq(PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC), eq(ACCOUNT_ID), clientContextCaptor.capture(),
+            scheduleCaptor.capture(), eq(false));
+
+    assertThat(clientContextCaptor.getAllValues().stream().map(
+                   clientContext -> clientContext.getClientParams().get(ELASTIGROUP_ID)))
         .containsExactlyInAnyOrder("elastigroup-2", "elastigroup-3");
+
+    clientContextCaptor.getAllValues().forEach(clientContext -> {
+      assertThat(clientContext.getClientParams().get(HARNESS_APPLICATION_ID)).isEqualTo(APP_ID);
+      assertThat(clientContext.getClientParams().get(INFRASTRUCTURE_MAPPING_ID)).isEqualTo(INFRA_MAPPING_ID);
+    });
+
+    scheduleCaptor.getAllValues().forEach(schedule -> {
+      assertThat(schedule.getInterval()).isEqualTo(Durations.fromMinutes(INTERVAL_MINUTES));
+      assertThat(schedule.getInterval()).isEqualTo(Durations.fromSeconds(TIMEOUT_SECONDS));
+    });
   }
 
   private AwsAmiInfrastructureMapping getInfrastructureMapping() {
     return AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping()
+        .withAppId(APP_ID)
         .withUuid(INFRA_MAPPING_ID)
         .withAccountId(ACCOUNT_ID)
         .build();
