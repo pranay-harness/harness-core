@@ -137,4 +137,20 @@ public class ConnectorServiceImpl implements ConnectorService {
     ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorDTO.getConnectorType().toString());
     return connectionValidator.validate(connectorDTO.getConnectorConfig(), accountId);
   }
+
+  public ConnectorValidationResult testConnection(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+    String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    Optional<Connector> connectorOptional =
+        connectorRepository.findByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
+    if (connectorOptional.isPresent()) {
+      ConnectorDTO connectorDTO = connectorMapper.writeDTO(connectorOptional.get());
+      ConnectionValidator connectionValidator = connectionValidatorMap.get(connectorDTO.getConnectorType().toString());
+      return connectionValidator.validate(connectorDTO.getConnectorConfig(), accountIdentifier);
+    } else {
+      throw new InvalidRequestException(
+          createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+    }
+  }
 }

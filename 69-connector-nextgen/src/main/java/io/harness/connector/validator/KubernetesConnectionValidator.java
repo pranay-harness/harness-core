@@ -13,7 +13,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
-import io.harness.secretmanagerclient.SecretManagerClientService;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

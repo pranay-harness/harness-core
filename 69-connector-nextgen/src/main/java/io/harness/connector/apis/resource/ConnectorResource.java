@@ -46,7 +46,8 @@ public class ConnectorResource {
   public Optional<ConnectorDTO> get(@NotEmpty @QueryParam("accountIdentifier") String accountIdentifier,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
       @PathParam("connectorIdentifier") String connectorIdentifier) {
-    // todo @deepak: Make the changes to use accountIdentifier in pathparam
+    // todo @deepak: Make the changes to use accountIdentifier in pathparam, check with PL team on this and also add
+    // Restresponse here
     return connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
   }
 
@@ -88,6 +89,19 @@ public class ConnectorResource {
       ConnectorRequestDTO connectorDTO, @QueryParam("accountIdentifier") String accountIdentifier) {
     return RestResponse.Builder.aRestResponse()
         .withResource(connectorService.validate(connectorDTO, accountIdentifier))
+        .build();
+  }
+
+  @GET
+  @Path("testConnection/{connectorIdentifier}")
+  @ApiOperation(value = "Test the connection", nickname = "getTestConnectionResult")
+  public RestResponse<ConnectorValidationResult> testConnection(
+      @NotEmpty @QueryParam("accountIdentifier") String accountIdentifier,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @PathParam("connectorIdentifier") String connectorIdentifier) {
+    return RestResponse.Builder.aRestResponse()
+        .withResource(
+            connectorService.testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier))
         .build();
   }
 }
