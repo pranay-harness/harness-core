@@ -8,6 +8,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Inject;
 
@@ -31,7 +32,7 @@ public class DelegateTaskServiceTest extends DelegateServiceTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testTouchExecutingTasksWithEmpty() {
-    delegateTaskService.touchExecutingTasks(null, null, null);
+    assertThatCode(() -> delegateTaskService.touchExecutingTasks(null, null, null)).doesNotThrowAnyException();
   }
 
   @Test

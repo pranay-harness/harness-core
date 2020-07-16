@@ -1,7 +1,16 @@
 package io.harness.service.impl;
 
+import static com.google.common.cache.CacheLoader.InvalidCacheLoadException;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import io.harness.callback.DelegateCallback;
 import io.harness.delegate.beans.DelegateCallbackRecord;
@@ -9,6 +18,7 @@ import io.harness.delegate.beans.DelegateCallbackRecord.DelegateCallbackRecordKe
 import io.harness.exception.UnexpectedException;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCallbackRegistry;
+import io.harness.service.intfc.DelegateCallbackService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 
@@ -16,6 +26,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -23,6 +35,19 @@ import javax.validation.executable.ValidateOnExecution;
 @Slf4j
 public class DelegateCallbackRegistryImpl implements DelegateCallbackRegistry {
   @Inject private HPersistence persistence;
+
+  private LoadingCache<String, DelegateCallbackService> delegateCallbackServiceCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(1000)
+          .expireAfterAccess(10, TimeUnit.MINUTES)
+          .removalListener((RemovalListener<String, DelegateCallbackService>)
+                               removalNotification -> removalNotification.getValue().destroy())
+          .build(new CacheLoader<String, DelegateCallbackService>() {
+            @Override
+            public DelegateCallbackService load(String driverId) {
+              return buildDelegateCallbackService(driverId);
+            }
+          });
 
   @Override
   public String ensureCallback(DelegateCallback delegateCallback) {
@@ -46,5 +71,42 @@ public class DelegateCallbackRegistryImpl implements DelegateCallbackRegistry {
     } catch (NoSuchAlgorithmException e) {
       throw new UnexpectedException("Unexpected", e);
     }
+  }
+
+  @Override
+  public DelegateCallbackService obtainDelegateCallbackService(String driverId) {
+    if (isBlank(driverId)) {
+      return null;
+    }
+
+    try {
+      return delegateCallbackServiceCache.get(driverId);
+    } catch (ExecutionException | InvalidCacheLoadException ex) {
+      logger.error("Unexpected error occurred while fetching callback service from cache.", ex);
+      return null;
+    }
+  }
+
+  @VisibleForTesting
+  public DelegateCallbackService buildDelegateCallbackService(String driverId) {
+    if (isBlank(driverId)) {
+      return null;
+    }
+
+    DelegateCallbackRecord delegateCallbackRecord = persistence.get(DelegateCallbackRecord.class, driverId);
+    if (delegateCallbackRecord == null) {
+      return null;
+    }
+
+    try {
+      DelegateCallback delegateCallback = DelegateCallback.parseFrom(delegateCallbackRecord.getCallbackMetadata());
+      if (delegateCallback.hasMongoDatabase()) {
+        return new MongoDelegateCallbackService(delegateCallback.getMongoDatabase());
+      }
+    } catch (InvalidProtocolBufferException | IllegalArgumentException e) {
+      throw new UnexpectedException("Invalid callback metadata", e);
+    }
+
+    return null;
   }
 }
