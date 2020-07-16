@@ -335,6 +335,7 @@ public abstract class State {
     }
   }
 
+  @SchemaIgnore
   public boolean isSelectionLogsTrackingForTasksEnabled() {
     return false;
   }
