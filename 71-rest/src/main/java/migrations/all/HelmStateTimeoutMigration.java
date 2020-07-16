@@ -1,6 +1,5 @@
 package migrations.all;
 
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.sm.StateType.HELM_DEPLOY;
 import static software.wings.sm.StateType.HELM_ROLLBACK;
 
@@ -14,6 +13,7 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
@@ -37,8 +37,10 @@ public class HelmStateTimeoutMigration implements Migration {
 
     try (HIterator<Application> apps = new HIterator<>(wingsPersistence.createQuery(Application.class).fetch())) {
       for (Application application : apps) {
-        try (HIterator<Workflow> workflowHIterator = new HIterator<>(
-                 wingsPersistence.createQuery(Workflow.class).filter(APP_ID_KEY, application.getUuid()).fetch())) {
+        try (HIterator<Workflow> workflowHIterator =
+                 new HIterator<>(wingsPersistence.createQuery(Workflow.class)
+                                     .filter(WorkflowKeys.appId, application.getUuid())
+                                     .fetch())) {
           for (Workflow workflow : workflowHIterator) {
             try {
               workflowService.loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion());

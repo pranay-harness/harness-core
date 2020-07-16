@@ -22,7 +22,6 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.alerts.AlertStatus.Open;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.template.Template.APP_ID_KEY;
 import static software.wings.beans.yaml.Change.Builder.aFileChange;
@@ -205,7 +204,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     int offset = isBlank(req.getOffset()) ? 0 : Integer.parseInt(req.getOffset());
 
     final Query<GitSyncError> query =
-        wingsPersistence.createQuery(GitSyncError.class).filter(ACCOUNT_ID_KEY, accountId);
+        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncErrorKeys.accountId, accountId);
 
     Boolean userHasAtleastOneGitConfigAccess = addAppFilterAndReturnTrueIfUserHasAnyAppAccess(query, appId, accountId);
     if (!userHasAtleastOneGitConfigAccess) {
@@ -254,7 +253,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   @Override
   public Integer getTotalGitCommitsWithErrors(String accountId, String appId) {
     final Query<GitSyncError> query =
-        wingsPersistence.createQuery(GitSyncError.class).filter(ACCOUNT_ID_KEY, accountId);
+        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncErrorKeys.accountId, accountId);
 
     Boolean userHasAtleastOneGitConfigAccess = addAppFilterAndReturnTrueIfUserHasAnyAppAccess(query, appId, accountId);
     if (!userHasAtleastOneGitConfigAccess) {
@@ -352,7 +351,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     int limit = isBlank(req.getLimit()) ? DEFAULT_UNLIMITED : Integer.parseInt(req.getLimit());
     int offset = isBlank(req.getOffset()) ? 0 : Integer.parseInt(req.getOffset());
 
-    Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class).filter(ACCOUNT_ID_KEY, accountId);
+    Query<GitSyncError> query =
+        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncErrorKeys.accountId, accountId);
     addAppIdFilterToQuery(query, appId);
     addGitToHarnessErrorFilter(query);
     boolean returnPreviousErrors = false;
@@ -412,7 +412,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       PageRequest<GitSyncError> req, String accountId, String appId, String yamlFilePathPattern) {
     int limit = isBlank(req.getLimit()) ? DEFAULT_UNLIMITED : Integer.parseInt(req.getLimit());
     int offset = isBlank(req.getOffset()) ? 0 : Integer.parseInt(req.getOffset());
-    Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class).filter(ACCOUNT_ID_KEY, accountId);
+    Query<GitSyncError> query =
+        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncErrorKeys.accountId, accountId);
     Boolean userHasAtleastOneGitConfigAccess = addAppFilterAndReturnTrueIfUserHasAnyAppAccess(query, appId, accountId);
     if (!userHasAtleastOneGitConfigAccess) {
       return aPageResponse().withTotal(0).build();
@@ -677,7 +678,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       PageRequest<GitSyncError> req, String accountId, String appId) {
     int limit = isBlank(req.getLimit()) ? DEFAULT_UNLIMITED : Integer.parseInt(req.getLimit());
     int offset = isBlank(req.getOffset()) ? 0 : Integer.parseInt(req.getOffset());
-    Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class).filter(ACCOUNT_ID_KEY, accountId);
+    Query<GitSyncError> query =
+        wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncErrorKeys.accountId, accountId);
     Boolean userHasAtleastOneGitConfigPerm = addAppFilterAndReturnTrueIfUserHasAnyAppAccess(query, appId, accountId);
     if (!userHasAtleastOneGitConfigPerm) {
       return aPageResponse().withTotal(0).build();
@@ -727,7 +729,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       return Collections.emptyList();
     }
     final Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class)
-                                          .filter(ACCOUNT_ID_KEY, accountId)
+                                          .filter(GitSyncErrorKeys.accountId, accountId)
                                           .field(CreatedAtAware.CREATED_AT_KEY)
                                           .greaterThan(fromTimestamp);
 
@@ -765,7 +767,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     final List<YamlGitConfig> yamlGitConfigList = wingsPersistence.createQuery(YamlGitConfig.class)
                                                       .project(YamlGitConfigKeys.entityId, true)
                                                       .project(YamlGitConfigKeys.entityType, true)
-                                                      .filter(ACCOUNT_ID_KEY, accountId)
+                                                      .filter(GitSyncErrorKeys.accountId, accountId)
                                                       .filter(YamlGitConfigKeys.enabled, Boolean.TRUE)
                                                       .filter(YamlGitConfigKeys.gitConnectorId, gitConnectorId)
                                                       .filter(YamlGitConfigKeys.branchName, branchName)
@@ -786,7 +788,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     }
     PageRequest<GitSyncError> req = aPageRequest()
                                         .addFieldsIncluded("_id")
-                                        .addFilter(ACCOUNT_ID_KEY, SearchFilter.Operator.EQ, accountId)
+                                        .addFilter(GitSyncErrorKeys.accountId, SearchFilter.Operator.EQ, accountId)
                                         .addFilter("_id", IN, gitSyncErrorsIds.toArray())
                                         .build();
 
@@ -807,7 +809,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   @Override
   public boolean deleteGitSyncErrors(List<String> errorIds, String accountId) {
     Query query = wingsPersistence.createQuery(GitSyncError.class);
-    query.filter(ACCOUNT_ID_KEY, accountId);
+    query.filter(GitSyncErrorKeys.accountId, accountId);
     query.field(ID_KEY).in(errorIds);
     boolean deleted = wingsPersistence.delete(query);
     alertsUtils.closeAlertIfApplicable(accountId);

@@ -1,6 +1,5 @@
 package migrations.all;
 
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.template.TemplateGallery.GALLERY_KEY;
 
 import com.google.inject.Inject;
@@ -13,6 +12,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Account;
 import software.wings.beans.template.TemplateGallery;
+import software.wings.beans.template.TemplateGallery.TemplateGalleryKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateGalleryService;
 
@@ -34,7 +34,7 @@ public class ImportedTemplateGalleryMigration implements Migration {
                 .set(GALLERY_KEY, templateGalleryService.getAccountGalleryKey());
 
         Query<TemplateGallery> query = wingsPersistence.createQuery(TemplateGallery.class)
-                                           .filter(ACCOUNT_ID_KEY, account.getUuid())
+                                           .filter(TemplateGalleryKeys.accountId, account.getUuid())
                                            .field(GALLERY_KEY)
                                            .doesNotExist();
         UpdateResults result = wingsPersistence.update(query, updateOperations);

@@ -36,7 +36,7 @@ import software.wings.beans.Account;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.features.AuditTrailFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.licensing.LicenseService;
@@ -220,7 +220,7 @@ public class AuditServiceTest extends WingsBaseTest {
     createAuditHeader();
 
     auditService.deleteAuditRecords(0);
-    assertThat(auditService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, appId).build())).hasSize(0);
+    assertThat(auditService.list(aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, appId).build())).hasSize(0);
   }
 
   @Test
@@ -233,6 +233,6 @@ public class AuditServiceTest extends WingsBaseTest {
     createAuditHeader();
 
     auditService.deleteAuditRecords(1 * 24 * 60 * 60 * 1000);
-    assertThat(auditService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, appId).build())).hasSize(4);
+    assertThat(auditService.list(aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, appId).build())).hasSize(4);
   }
 }

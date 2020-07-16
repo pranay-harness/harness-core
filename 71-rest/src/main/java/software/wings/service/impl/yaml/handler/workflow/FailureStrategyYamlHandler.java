@@ -26,7 +26,7 @@ import java.util.List;
 @OwnedBy(CDC)
 @Singleton
 public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.Yaml, FailureStrategy> {
-  private FailureStrategy toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
+  private FailureStrategy toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
     RepairActionCode repairActionCode = Utils.getEnumFromString(RepairActionCode.class, yaml.getRepairActionCode());
     ExecutionScope executionScope = Utils.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
@@ -87,7 +87,7 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // DO nothing
   }
 }

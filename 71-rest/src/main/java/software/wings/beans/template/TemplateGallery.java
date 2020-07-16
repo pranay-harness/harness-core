@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
@@ -25,6 +26,7 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = false)
 @Entity("templateGalleries")
 @HarnessEntity(exportable = true)
+@FieldNameConstants(innerTypeName = "TemplateGalleryKeys")
 public class TemplateGallery extends Base implements KeywordsAware {
   public static final String ACCOUNT_NAME_KEY = "accountName";
   public static final String NAME_KEY = "name";

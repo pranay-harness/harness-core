@@ -1,7 +1,6 @@
 package software.wings.service.impl.template;
 
 import static io.harness.exception.WingsException.USER;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.template.TemplateVersion.ChangeType.IMPORTED;
 import static software.wings.beans.template.TemplateVersion.INITIAL_VERSION;
 import static software.wings.beans.template.TemplateVersion.TEMPLATE_UUID_KEY;
@@ -85,7 +84,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   @Override
   public TemplateVersion lastTemplateVersion(String accountId, String templateUuid) {
     return wingsPersistence.createQuery(TemplateVersion.class)
-        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(TemplateVersionKeys.accountId, accountId)
         .filter(TEMPLATE_UUID_KEY, templateUuid)
         .order(Sort.descending(TemplateVersionKeys.version))
         .get();

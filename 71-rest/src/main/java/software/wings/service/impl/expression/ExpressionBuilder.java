@@ -42,6 +42,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import software.wings.beans.SubEntityType;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.service.intfc.AppService;
@@ -310,7 +311,7 @@ public abstract class ExpressionBuilder {
     }
     PageRequest<ServiceVariable> serviceVariablePageRequest = aPageRequest()
                                                                   .withLimit(PageRequest.UNLIMITED)
-                                                                  .addFilter(ServiceVariable.APP_ID_KEY, EQ, appId)
+                                                                  .addFilter(ServiceVariableKeys.appId, EQ, appId)
                                                                   .addFilter("entityId", IN, entityIds.toArray())
                                                                   .build();
     if (entityType != null) {

@@ -16,6 +16,7 @@ import software.wings.beans.Application;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.InfrastructureProvisioner.InfrastructureProvisionerKeys;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
@@ -92,7 +93,7 @@ public class InfrastructureProvisionerGenerator {
 
   public InfrastructureProvisioner exists(InfrastructureProvisioner infrastructureProvisioner) {
     return wingsPersistence.createQuery(InfrastructureProvisioner.class)
-        .filter(InfrastructureProvisioner.APP_ID_KEY, infrastructureProvisioner.getAppId())
+        .filter(InfrastructureProvisionerKeys.appId, infrastructureProvisioner.getAppId())
         .filter(InfrastructureProvisioner.NAME_KEY, infrastructureProvisioner.getName())
         .get();
   }

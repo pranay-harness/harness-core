@@ -11,8 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.command.CommandType.INSTALL;
 import static software.wings.beans.command.CommandUnitType.DOWNLOAD_ARTIFACT;
 import static software.wings.beans.command.DownloadArtifactCommandUnit.Builder.aDownloadArtifactCommandUnit;
@@ -49,6 +47,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
@@ -308,8 +307,10 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
     assertThat(harnessTemplateFolder).isNotNull();
     assertThat(harnessTemplateFolder.getName()).isEqualTo(ACCOUNT_NAME);
 
-    PageRequest<Template> pageRequest =
-        aPageRequest().addFilter(ACCOUNT_ID_KEY, EQ, ACCOUNT_ID).addFilter(APP_ID_KEY, EQ, GLOBAL_APP_ID).build();
+    PageRequest<Template> pageRequest = aPageRequest()
+                                            .addFilter(TemplateKeys.accountId, EQ, ACCOUNT_ID)
+                                            .addFilter(TemplateKeys.appId, EQ, GLOBAL_APP_ID)
+                                            .build();
     assertTemplates(pageRequest, ACCOUNT_ID);
   }
 

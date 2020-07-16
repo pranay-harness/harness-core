@@ -19,8 +19,6 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.EntityType.ACCOUNT;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.GitCommit.GIT_COMMIT_ALL_STATUS_LIST;
@@ -80,12 +78,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitCommit.GitCommitKeys;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
@@ -136,6 +136,7 @@ import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
+import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigKeys;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -187,7 +188,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public YamlGitConfig get(String accountId, String entityId, EntityType entityType) {
     return wingsPersistence.createQuery(YamlGitConfig.class)
-        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(YamlGitConfigKeys.accountId, accountId)
         .filter(YamlGitConfig.ENTITY_ID_KEY, entityId)
         .filter(YamlGitConfig.ENTITY_TYPE_KEY, entityType)
         .get();
@@ -683,7 +684,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info(GIT_YAML_LOG_PREFIX + "Started processing webhook request");
       List<SettingAttribute> settingAttributes =
           wingsPersistence.createQuery(SettingAttribute.class)
-              .filter(ACCOUNT_ID_KEY, accountId)
+              .filter(SettingAttributeKeys.accountId, accountId)
               .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.GIT.name())
               .asList();
 
@@ -777,7 +778,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     checkState(isNotEmpty(branchName), "branchName should not be empty");
 
     return wingsPersistence.createQuery(YamlGitConfig.class)
-        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(YamlGitConfigKeys.accountId, accountId)
         .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
         .filter(BRANCH_NAME_KEY, branchName)
         .asList();
@@ -1039,7 +1040,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class).disableValidation();
     query.filter("accountId", accountId);
     query.filter(GitSyncErrorKeys.fullSyncPath, true);
-    query.filter(APP_ID_KEY, appId);
+    query.filter(ApplicationKeys.appId, appId);
     wingsPersistence.delete(query);
     closeAlertIfApplicable(accountId);
     return RestResponse.Builder.aRestResponse().build();
@@ -1147,7 +1148,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       fullSync(accountId, accountId, EntityType.ACCOUNT, false);
 
       try (HIterator<Application> apps = new HIterator<>(
-               wingsPersistence.createQuery(Application.class).filter(ACCOUNT_ID_KEY, accountId).fetch())) {
+               wingsPersistence.createQuery(Application.class).filter(ApplicationKeys.accountId, accountId).fetch())) {
         for (Application application : apps) {
           fullSync(accountId, application.getUuid(), APPLICATION, false);
         }
@@ -1164,7 +1165,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     // After MultiGit support gitCommit record would have list of yamlGitConfigs.
 
     GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
-                              .filter(ACCOUNT_ID_KEY, accountId)
+                              .filter(GitCommitKeys.accountId, accountId)
                               .field(GitCommitKeys.status)
                               .in(getProcessedGitCommitStatusList(accountId))
                               .field(GitCommitKeys.yamlGitConfigIds)
@@ -1175,7 +1176,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     // This is to handle the old git commit records which doesn't have yamlGitConfigId
     if (gitCommit == null) {
       gitCommit = wingsPersistence.createQuery(GitCommit.class)
-                      .filter(ACCOUNT_ID_KEY, accountId)
+                      .filter(GitCommitKeys.accountId, accountId)
                       .filter(GitCommitKeys.yamlGitConfigId, yamlGitConfigIds.get(0))
                       .field(GitCommitKeys.status)
                       .in(getProcessedGitCommitStatusList(accountId))

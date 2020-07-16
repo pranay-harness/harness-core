@@ -24,7 +24,7 @@ public class ArtifactStreamGeneratorHelper {
   public ArtifactStream exists(ArtifactStream artifactStream) {
     // TODO: ASR: IMP: update this after refactor
     return wingsPersistence.createQuery(ArtifactStream.class)
-        .filter(ArtifactStream.APP_ID_KEY, artifactStream.fetchAppId())
+        .filter(ArtifactStreamKeys.appId, artifactStream.fetchAppId())
         .filter(ArtifactStreamKeys.serviceId, artifactStream.getServiceId())
         .filter(ArtifactStreamKeys.name, artifactStream.getName())
         .get();

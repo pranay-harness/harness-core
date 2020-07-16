@@ -158,7 +158,7 @@ public class WorkflowUtils {
         .entityId(workflow.getUuid())
         .entityName(workflow.getName())
         .entityType(EntityType.WORKFLOW.name())
-        .property(Workflow.APP_ID_KEY, workflow.getAppId())
+        .property(WorkflowKeys.appId, workflow.getAppId())
         .build();
   }
 
