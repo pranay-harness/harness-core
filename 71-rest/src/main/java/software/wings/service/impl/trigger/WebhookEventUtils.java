@@ -8,16 +8,20 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_PULL_BRANCH_REF;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_PULL_REPOSITORY_NAME;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PULL_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_PUSH_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REFS_CHANGED_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REF_CHANGE_REQUEST_COMMIT_ID;
+import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_REPOSITORY_NAME;
 import static software.wings.beans.trigger.WebhookParameters.GH_PULL_REF_BRANCH;
 import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_HEAD_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_REF_BRANCH;
+import static software.wings.beans.trigger.WebhookParameters.GH_PUSH_REPOSITORY_NAME;
 import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PULL_REF_BRANCH;
 import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REF_BRANCH;
+import static software.wings.beans.trigger.WebhookParameters.GIT_LAB_PUSH_REPOSITORY_NAME;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,6 +40,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.ws.rs.core.HttpHeaders;
 
 @OwnedBy(CDC)
@@ -87,6 +92,60 @@ public class WebhookEventUtils {
         USER);
   }
 
+  public Optional<String> obtainRepositoryName(
+      WebhookSource webhookSource, HttpHeaders httpHeaders, Map<String, Object> payload) {
+    try {
+      switch (webhookSource) {
+        case GITHUB:
+          switch (getGitHubEventType(httpHeaders)) {
+            case PUSH:
+            case PULL_REQUEST:
+              return Optional.ofNullable(expressionEvaluator.substitute(GH_PUSH_REPOSITORY_NAME, payload));
+            default:
+              return Optional.empty();
+          }
+        case GITLAB:
+          switch (getGitLabEventType(httpHeaders)) {
+            case PUSH:
+            case PULL_REQUEST:
+              return Optional.ofNullable(expressionEvaluator.substitute(GIT_LAB_PUSH_REPOSITORY_NAME, payload));
+            default:
+              return Optional.empty();
+          }
+        case BITBUCKET:
+          switch (getBitBucketEventType(httpHeaders)) {
+            case PUSH:
+            case REFS_CHANGED:
+              return Optional.ofNullable(expressionEvaluator.substitute(BIT_BUCKET_REPOSITORY_NAME, payload));
+
+            case PULL_REQUEST_CREATED:
+            case PULL_REQUEST_UPDATED:
+            case PULL_REQUEST_APPROVED:
+            case PULL_REQUEST_APPROVAL_REMOVED:
+            case PULL_REQUEST_MERGED:
+            case PULL_REQUEST_DECLINED:
+            case PULL_REQUEST_COMMENT_CREATED:
+            case PULL_REQUEST_COMMENT_UPDATED:
+            case PULL_REQUEST_COMMENT_DELETED:
+              String substitutedValue = expressionEvaluator.substitute(BIT_BUCKET_REPOSITORY_NAME, payload);
+              if (BIT_BUCKET_REPOSITORY_NAME.equals(substitutedValue)) {
+                return Optional.ofNullable(
+                    expressionEvaluator.substitute(BIT_BUCKET_ON_PREM_PULL_REPOSITORY_NAME, payload));
+              } else {
+                return Optional.ofNullable(substitutedValue);
+              }
+            default:
+              return Optional.empty();
+          }
+        default:
+          unhandled(webhookSource);
+          return Optional.empty();
+      }
+    } catch (Exception e) {
+      logger.error("Failed to resolve the repository name from payload {} and headers {}", payload, httpHeaders, e);
+      return Optional.empty();
+    }
+  }
   public String obtainBranchName(WebhookSource webhookSource, HttpHeaders httpHeaders, Map<String, Object> payload) {
     try {
       switch (webhookSource) {
