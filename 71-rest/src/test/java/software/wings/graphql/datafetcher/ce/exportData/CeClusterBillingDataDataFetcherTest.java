@@ -9,6 +9,11 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import graphql.execution.MergedSelectionSet;
+import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.DataFetchingFieldSelectionSet;
+import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.SelectedField;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
@@ -28,10 +33,14 @@ import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEAggregation;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEAggregationFunction;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCECost;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEData;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEDataEntry.CEDataEntryKeys;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEEcsEntity.CEEcsEntityKeys;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEEntityGroupBy;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEFilter;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEFilterType;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEGroupBy;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEHarnessEntity.CEHarnessEntityKeys;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEK8sEntity.CEK8sEntityKeys;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCELabelAggregation;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCESort;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCESortType;
@@ -59,12 +68,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
+public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
   @Mock TagHelper tagHelper;
+  @Mock private DataFetchingEnvironment environment;
   @InjectMocks CEExportDataQueryBuilder queryBuilder;
-  @Inject @InjectMocks BillingDataDataFetcher billingDataDataFetcher;
+  @Inject @InjectMocks CeClusterBillingDataDataFetcher ceClusterBillingDataDataFetcher;
   @Inject private K8sWorkloadDao k8sWorkloadDao;
 
   @Mock Statement statement;
@@ -78,6 +88,31 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
   private static Integer OFFSET = 0;
   private static boolean INCLUDE_OTHERS = true;
   private static long ONE_DAY_MILLIS = 86400000;
+  private List<String> selectedFields = new ArrayList<>();
+
+  private static final DataFetchingFieldSelectionSet mockSelectionSet = new DataFetchingFieldSelectionSet() {
+    public MergedSelectionSet get() {
+      return MergedSelectionSet.newMergedSelectionSet().build();
+    }
+    public Map<String, Map<String, Object>> getArguments() {
+      return Collections.emptyMap();
+    }
+    public Map<String, GraphQLFieldDefinition> getDefinitions() {
+      return Collections.emptyMap();
+    }
+    public boolean contains(String fieldGlobPattern) {
+      return false;
+    }
+    public SelectedField getField(String fieldName) {
+      return null;
+    }
+    public List<SelectedField> getFields() {
+      return Collections.emptyList();
+    }
+    public List<SelectedField> getFields(String fieldGlobPattern) {
+      return Collections.emptyList();
+    }
+  };
 
   @Before
   public void setup() throws SQLException {
@@ -90,7 +125,7 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
     Map<String, String> labels = new HashMap<>();
     labels.put(LABEL_NAME, LABEL_VALUE);
     k8sWorkloadDao.save(getTestWorkload(WORKLOAD_NAME_ACCOUNT1, labels));
-
+    populateSelectedFields(selectedFields);
     Connection mockConnection = mock(Connection.class);
     Statement mockStatement = mock(Statement.class);
     when(timeScaleDBService.getDBConnection()).thenReturn(mockConnection);
@@ -106,9 +141,10 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
   public void testGetBillingTrendWhenDbIsInvalid() {
     when(timeScaleDBService.isValid()).thenReturn(false);
     List<QLCEAggregation> aggregationFunction = Arrays.asList(makeCostAggregation(QLCECost.TOTALCOST));
-    assertThatThrownBy(()
-                           -> billingDataDataFetcher.fetch(ACCOUNT1_ID, aggregationFunction, Collections.EMPTY_LIST,
-                               Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET))
+    assertThatThrownBy(
+        ()
+            -> ceClusterBillingDataDataFetcher.fetchSelectedFields(ACCOUNT1_ID, aggregationFunction,
+                Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET, environment))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -128,10 +164,10 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
 
     List<QLCEGroupBy> groupBy = Arrays.asList(makeEntityGroupBy(QLCEEntityGroupBy.Application),
         makeEntityGroupBy(QLCEEntityGroupBy.Service), makeEntityGroupBy(QLCEEntityGroupBy.Environment));
-    List<QLCESort> sortCriteria = Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.TotalCost));
+    List<QLCESort> sortCriteria = Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.TOTALCOST));
 
-    QLCEData data = (QLCEData) billingDataDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
+    QLCEData data = (QLCEData) ceClusterBillingDataDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getHarness().getApplication()).isEqualTo(APP1_ID_ACCOUNT1);
@@ -162,16 +198,16 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
     List<QLCEGroupBy> groupBy =
         Arrays.asList(makeEntityGroupBy(QLCEEntityGroupBy.Cluster), makeEntityGroupBy(QLCEEntityGroupBy.Namespace),
             makeEntityGroupBy(QLCEEntityGroupBy.Workload), makeEntityGroupBy(QLCEEntityGroupBy.Node));
-    List<QLCESort> sortCriteria = Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.IdleCost));
+    List<QLCESort> sortCriteria = Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.IDLECOST));
 
-    QLCEData data = (QLCEData) billingDataDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
+    QLCEData data = (QLCEData) ceClusterBillingDataDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getCluster()).isEqualTo(CLUSTER1_ID);
     assertThat(data.getData().get(0).getK8s().getNamespace()).isEqualTo(NAMESPACE1);
     assertThat(data.getData().get(0).getK8s().getWorkload()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
-    assertThat(data.getData().get(0).getK8s().getNodeId()).isEqualTo("");
+    assertThat(data.getData().get(0).getK8s().getNode()).isEqualTo("");
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
     assertThat(data.getData().get(0).getIdleCost()).isEqualTo(5.0);
     assertThat(data.getData().get(0).getUnallocatedCost()).isEqualTo(4.0);
@@ -195,17 +231,15 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
     filters.add(makeEntityFilter(new String[] {LAUNCH_TYPE1}, QLCEFilterType.LaunchType));
     filters.add(makeEntityFilter(new String[] {TASK1}, QLCEFilterType.Task));
 
-    List<QLCEGroupBy> groupBy =
-        Arrays.asList(makeEntityGroupBy(QLCEEntityGroupBy.Cluster), makeEntityGroupBy(QLCEEntityGroupBy.EcsService),
-            makeEntityGroupBy(QLCEEntityGroupBy.LaunchType), makeEntityGroupBy(QLCEEntityGroupBy.Task));
+    List<QLCEGroupBy> groupBy = Arrays.asList(makeEntityGroupBy(QLCEEntityGroupBy.EcsService),
+        makeEntityGroupBy(QLCEEntityGroupBy.LaunchType), makeEntityGroupBy(QLCEEntityGroupBy.Task));
     List<QLCESort> sortCriteria =
-        Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UnallocatedCost));
+        Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UNALLOCATEDCOST));
 
-    QLCEData data = (QLCEData) billingDataDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET);
+    QLCEData data = (QLCEData) ceClusterBillingDataDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(data).isNotNull();
-    assertThat(data.getData().get(0).getCluster()).isEqualTo(CLUSTER1_ID);
     assertThat(data.getData().get(0).getEcs().getService()).isEqualTo(CLOUD_SERVICE_NAME_ACCOUNT1);
     assertThat(data.getData().get(0).getEcs().getLaunchType()).isEqualTo(LAUNCH_TYPE1);
     assertThat(data.getData().get(0).getEcs().getTaskId()).isEqualTo(TASK1);
@@ -229,10 +263,10 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
     filters.add(makeEndTimeFilter(ONE_DAY_MILLIS));
 
     List<QLCESort> sortCriteria =
-        Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UnallocatedCost));
+        Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UNALLOCATEDCOST));
 
-    QLCEData data = (QLCEData) billingDataDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, Collections.emptyList(), sortCriteria, LIMIT, OFFSET);
+    QLCEData data = ceClusterBillingDataDataFetcher.getData(ACCOUNT1_ID, filters, aggregationFunction,
+        Collections.emptyList(), sortCriteria, LIMIT, OFFSET, selectedFields);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getCluster()).isEqualTo(CLUSTER1_ID);
@@ -258,10 +292,10 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
     List<QLCEGroupBy> groupBy = Arrays.asList(makeLabelGroupBy(LABEL_NAME));
 
     List<QLCESort> sortCriteria =
-        Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UnallocatedCost));
+        Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UNALLOCATEDCOST));
 
-    QLCEData data = (QLCEData) billingDataDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, Collections.emptyList(), sortCriteria, LIMIT, OFFSET);
+    QLCEData data = (QLCEData) ceClusterBillingDataDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, aggregationFunction, filters, Collections.emptyList(), sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(data).isNotNull();
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
@@ -286,15 +320,22 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
     List<QLCEGroupBy> groupBy = Arrays.asList(makeLabelGroupBy(LABEL_NAME));
 
     List<QLCESort> sortCriteria =
-        Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UnallocatedCost));
+        Arrays.asList(makeSortingCriteria(QLSortOrder.DESCENDING, QLCESortType.UNALLOCATEDCOST));
 
-    QLCEData data = (QLCEData) billingDataDataFetcher.fetch(
-        ACCOUNT1_ID, aggregationFunction, filters, Collections.emptyList(), sortCriteria, LIMIT, OFFSET);
+    QLCEData data = (QLCEData) ceClusterBillingDataDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, aggregationFunction, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getK8s().getWorkload()).isEqualTo(WORKLOAD_NAME_ACCOUNT1);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
     assertThat(data.getData().get(0).getIdleCost()).isEqualTo(5.0);
     assertThat(data.getData().get(0).getUnallocatedCost()).isEqualTo(4.0);
+
+    data = (QLCEData) ceClusterBillingDataDataFetcher.postFetch(
+        ACCOUNT1_ID, groupBy, aggregationFunction, sortCriteria, data, LIMIT, INCLUDE_OTHERS);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getLabelName()).isEqualTo(LABEL_NAME);
+    assertThat(data.getData().get(0).getLabelValue()).isEqualTo(LABEL_VALUE);
   }
 
   private void mockResultSet() throws SQLException {
@@ -304,15 +345,21 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
     when(timeScaleDBService.getDBConnection()).thenReturn(connection);
     when(connection.createStatement()).thenReturn(statement);
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
+    when(environment.getSelectionSet()).thenReturn(mockSelectionSet);
 
     when(resultSet.getDouble("BILLINGAMOUNT")).thenAnswer((Answer<Double>) invocation -> 10.0);
     when(resultSet.getDouble("COST")).thenAnswer((Answer<Double>) invocation -> 10.0);
     when(resultSet.getDouble("ACTUALIDLECOST")).thenAnswer((Answer<Double>) invocation -> 5.0);
     when(resultSet.getDouble("UNALLOCATEDCOST")).thenAnswer((Answer<Double>) invocation -> 4.0);
+    when(resultSet.getDouble("SYSTEMCOST")).thenAnswer((Answer<Double>) invocation -> 2.0);
     when(resultSet.getDouble("MAXCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.5);
     when(resultSet.getDouble("MAXMEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.5);
     when(resultSet.getDouble("AVGCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.4);
     when(resultSet.getDouble("AVGMEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.4);
+    when(resultSet.getDouble("CPUREQUEST")).thenAnswer((Answer<Double>) invocation -> 1024.0);
+    when(resultSet.getDouble("MEMORYREQUEST")).thenAnswer((Answer<Double>) invocation -> 2048.0);
+    when(resultSet.getDouble("CPULIMIT")).thenAnswer((Answer<Double>) invocation -> 1024.0);
+    when(resultSet.getDouble("MEMORYLIMIT")).thenAnswer((Answer<Double>) invocation -> 2048.0);
     when(resultSet.getString("APPID")).thenAnswer((Answer<String>) invocation -> APP1_ID_ACCOUNT1);
     when(resultSet.getString("SERVICEID")).thenAnswer((Answer<String>) invocation -> SERVICE1_ID_APP1_ACCOUNT1);
     when(resultSet.getString("ENVID")).thenAnswer((Answer<String>) invocation -> ENV1_ID_APP1_ACCOUNT1);
@@ -327,6 +374,9 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
         .thenAnswer((Answer<String>) invocation -> CLOUD_SERVICE_NAME_ACCOUNT1);
     when(resultSet.getString("LAUNCHTYPE")).thenAnswer((Answer<String>) invocation -> LAUNCH_TYPE1);
     when(resultSet.getString("TASKID")).thenAnswer((Answer<String>) invocation -> TASK1);
+    when(resultSet.getString("INSTANCEID"))
+        .thenAnswer((Answer<String>) invocation -> INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
+    when(resultSet.getString("INSTANCETYPE")).thenAnswer((Answer<String>) invocation -> "K8S_NODE");
 
     when(resultSet.getTimestamp(
              CEExportDataQueryMetadata.CEExportDataMetadataFields.STARTTIME.getFieldName(), utils.getDefaultCalendar()))
@@ -359,6 +409,36 @@ public class BillingDataDataFetcherTest extends AbstractDataFetcherTest {
         .uid("UID")
         .uuid("UUID")
         .build();
+  }
+
+  private void populateSelectedFields(List<String> selectedFields) {
+    selectedFields.add(CEHarnessEntityKeys.application);
+    selectedFields.add(CEHarnessEntityKeys.service);
+    selectedFields.add(CEHarnessEntityKeys.environment);
+    selectedFields.add(CEDataEntryKeys.totalCost);
+    selectedFields.add(CEDataEntryKeys.idleCost);
+    selectedFields.add(CEDataEntryKeys.unallocatedCost);
+    selectedFields.add(CEDataEntryKeys.systemCost);
+    selectedFields.add(CEDataEntryKeys.maxCpuUtilization);
+    selectedFields.add(CEDataEntryKeys.maxMemoryUtilization);
+    selectedFields.add(CEDataEntryKeys.avgCpuUtilization);
+    selectedFields.add(CEDataEntryKeys.avgMemoryUtilization);
+    selectedFields.add(CEDataEntryKeys.cpuRequest);
+    selectedFields.add(CEDataEntryKeys.cpuLimit);
+    selectedFields.add(CEDataEntryKeys.memoryLimit);
+    selectedFields.add(CEDataEntryKeys.memoryRequest);
+    selectedFields.add(CEDataEntryKeys.region);
+    selectedFields.add(CEDataEntryKeys.instanceType);
+    selectedFields.add(CEDataEntryKeys.clusterType);
+    selectedFields.add(CEDataEntryKeys.cluster);
+    selectedFields.add(CEDataEntryKeys.startTime);
+    selectedFields.add(CEEcsEntityKeys.service);
+    selectedFields.add(CEEcsEntityKeys.launchType);
+    selectedFields.add(CEEcsEntityKeys.taskId);
+    selectedFields.add(CEK8sEntityKeys.workload);
+    selectedFields.add(CEK8sEntityKeys.namespace);
+    selectedFields.add(CEK8sEntityKeys.node);
+    selectedFields.add(CEK8sEntityKeys.pod);
   }
 
   public QLCEAggregation makeCostAggregation(QLCECost costType) {

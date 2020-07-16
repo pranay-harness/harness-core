@@ -25,10 +25,14 @@ import software.wings.graphql.datafetcher.ce.exportData.CEExportDataQueryMetadat
 import software.wings.graphql.datafetcher.ce.exportData.CEExportDataQueryMetadata.CEExportDataQueryMetadataBuilder;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEAggregation;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEAggregationFunction;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEDataEntry.CEDataEntryKeys;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEEcsEntity.CEEcsEntityKeys;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEEntityGroupBy;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEFilter;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEFilterType;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEGroupBy;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEHarnessEntity.CEHarnessEntityKeys;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEK8sEntity.CEK8sEntityKeys;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCELabelFilter;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCESort;
 import software.wings.graphql.datafetcher.ce.exportData.dto.QLCESortType;
@@ -70,7 +74,7 @@ public class CEExportDataQueryBuilder {
 
   protected CEExportDataQueryMetadata formQuery(String accountId, List<QLCEFilter> filters,
       List<QLCEAggregation> aggregateFunction, List<QLCEEntityGroupBy> groupBy, QLCETimeAggregation groupByTime,
-      List<QLCESort> sortCriteria, Integer limit, Integer offset) {
+      List<QLCESort> sortCriteria, Integer limit, Integer offset, List<String> selectedFields) {
     CEExportDataQueryMetadataBuilder queryMetaDataBuilder = CEExportDataQueryMetadata.builder();
     SelectQuery selectQuery = new SelectQuery();
     selectQuery.setFetchNext(limit);
@@ -106,7 +110,7 @@ public class CEExportDataQueryBuilder {
     }
 
     if (!isValidGroupByTime(groupByTime) && !isValidGroupBy(groupBy)) {
-      addSelectedColumns(selectQuery, fieldNames);
+      addSelectedColumns(selectQuery, fieldNames, selectedFields);
     }
 
     if (!Lists.isNullOrEmpty(filters)) {
@@ -336,6 +340,14 @@ public class CEExportDataQueryBuilder {
     fieldNames.add(CEExportDataMetadataFields.valueOf(groupBy.getName().toUpperCase()));
     selectQuery.addCondition(UnaryCondition.isNotNull(groupBy));
     groupByFields.add(CEExportDataMetadataFields.valueOf(groupBy.getName().toUpperCase()));
+    // To fetch instance name from timescaleDb
+    if (groupBy == schema.getInstanceId()) {
+      selectQuery.addColumns(schema.getInstanceName());
+      selectQuery.addGroupings(schema.getInstanceName());
+      fieldNames.add(CEExportDataMetadataFields.valueOf(schema.getInstanceName().getName().toUpperCase()));
+      selectQuery.addCondition(UnaryCondition.isNotNull(schema.getInstanceName()));
+      groupByFields.add(CEExportDataMetadataFields.valueOf(schema.getInstanceName().getName().toUpperCase()));
+    }
   }
 
   // Methods for applying filters
@@ -591,16 +603,16 @@ public class CEExportDataQueryBuilder {
     OrderObject.Dir dir =
         sortCriteria.getOrder() == QLSortOrder.ASCENDING ? OrderObject.Dir.ASCENDING : OrderObject.Dir.DESCENDING;
     switch (sortType) {
-      case Time:
+      case TIME:
         selectQuery.addCustomOrdering(CEExportDataMetadataFields.STARTTIME.getFieldName(), dir);
         break;
-      case TotalCost:
+      case TOTALCOST:
         selectQuery.addCustomOrdering(CEExportDataMetadataFields.SUM.getFieldName(), dir);
         break;
-      case IdleCost:
+      case IDLECOST:
         selectQuery.addCustomOrdering(CEExportDataMetadataFields.IDLECOST.getFieldName(), dir);
         break;
-      case UnallocatedCost:
+      case UNALLOCATEDCOST:
         selectQuery.addCustomOrdering(CEExportDataMetadataFields.UNALLOCATEDCOST.getFieldName(), dir);
         break;
       default:
@@ -609,57 +621,90 @@ public class CEExportDataQueryBuilder {
   }
 
   // Miscellaneous methods
-  private void addSelectedColumns(SelectQuery selectQuery, List<CEExportDataMetadataFields> fieldNames) {
-    selectQuery.addColumns(schema.getAppId());
-    fieldNames.add(CEExportDataMetadataFields.APPID);
-    selectQuery.addColumns(schema.getServiceId());
-    fieldNames.add(CEExportDataMetadataFields.SERVICEID);
-    selectQuery.addColumns(schema.getEnvId());
-    fieldNames.add(CEExportDataMetadataFields.ENVID);
-    selectQuery.addColumns(schema.getBillingAmount());
-    fieldNames.add(CEExportDataMetadataFields.TOTALCOST);
-    selectQuery.addColumns(schema.getIdleCost());
-    fieldNames.add(CEExportDataMetadataFields.IDLECOST);
-    selectQuery.addColumns(schema.getUnallocatedCost());
-    fieldNames.add(CEExportDataMetadataFields.UNALLOCATEDCOST);
-    selectQuery.addColumns(schema.getSystemCost());
-    fieldNames.add(CEExportDataMetadataFields.SYSTEMCOST);
-    selectQuery.addColumns(schema.getMaxCpuUtilization());
-    fieldNames.add(CEExportDataMetadataFields.MAXCPUUTILIZATION);
-    selectQuery.addColumns(schema.getMaxMemoryUtilization());
-    fieldNames.add(CEExportDataMetadataFields.MAXMEMORYUTILIZATION);
-    selectQuery.addColumns(schema.getAvgCpuUtilization());
-    fieldNames.add(CEExportDataMetadataFields.AVGCPUUTILIZATION);
-    selectQuery.addColumns(schema.getAvgMemoryUtilization());
-    fieldNames.add(CEExportDataMetadataFields.AVGMEMORYUTILIZATION);
-    selectQuery.addColumns(schema.getCpuRequest());
-    fieldNames.add(CEExportDataMetadataFields.CPUREQUEST);
-    selectQuery.addColumns(schema.getMemoryRequest());
-    fieldNames.add(CEExportDataMetadataFields.MEMORYREQUEST);
-    selectQuery.addColumns(schema.getCpuLimit());
-    fieldNames.add(CEExportDataMetadataFields.CPULIMIT);
-    selectQuery.addColumns(schema.getMemoryLimit());
-    fieldNames.add(CEExportDataMetadataFields.MEMORYLIMIT);
-    selectQuery.addColumns(schema.getRegion());
-    fieldNames.add(CEExportDataMetadataFields.REGION);
-    selectQuery.addColumns(schema.getTaskId());
-    fieldNames.add(CEExportDataMetadataFields.TASKID);
-    selectQuery.addColumns(schema.getCloudServiceName());
-    fieldNames.add(CEExportDataMetadataFields.CLOUDSERVICENAME);
-    selectQuery.addColumns(schema.getLaunchType());
-    fieldNames.add(CEExportDataMetadataFields.LAUNCHTYPE);
-    selectQuery.addColumns(schema.getWorkloadName());
-    fieldNames.add(CEExportDataMetadataFields.WORKLOADNAME);
-    selectQuery.addColumns(schema.getNamespace());
-    fieldNames.add(CEExportDataMetadataFields.NAMESPACE);
-    selectQuery.addColumns(schema.getClusterId());
-    fieldNames.add(CEExportDataMetadataFields.CLUSTERID);
-    selectQuery.addColumns(schema.getClusterType());
-    fieldNames.add(CEExportDataMetadataFields.CLUSTERTYPE);
-    selectQuery.addColumns(schema.getInstanceType());
-    fieldNames.add(CEExportDataMetadataFields.INSTANCETYPE);
-    selectQuery.addColumns(schema.getStartTime());
-    fieldNames.add(CEExportDataMetadataFields.STARTTIME);
+
+  private void addSelectedColumns(
+      SelectQuery selectQuery, List<CEExportDataMetadataFields> fieldNames, List<String> selectedFields) {
+    for (String field : selectedFields) {
+      if (field.equals(CEHarnessEntityKeys.application)) {
+        selectQuery.addColumns(schema.getAppId());
+        fieldNames.add(CEExportDataMetadataFields.APPID);
+      } else if (field.equals(CEHarnessEntityKeys.service)) {
+        selectQuery.addColumns(schema.getServiceId());
+        fieldNames.add(CEExportDataMetadataFields.SERVICEID);
+      } else if (field.equals(CEHarnessEntityKeys.environment)) {
+        selectQuery.addColumns(schema.getEnvId());
+        fieldNames.add(CEExportDataMetadataFields.ENVID);
+      } else if (field.equals(CEDataEntryKeys.totalCost)) {
+        selectQuery.addColumns(schema.getBillingAmount());
+        fieldNames.add(CEExportDataMetadataFields.TOTALCOST);
+      } else if (field.equals(CEDataEntryKeys.idleCost)) {
+        selectQuery.addColumns(schema.getIdleCost());
+        fieldNames.add(CEExportDataMetadataFields.IDLECOST);
+      } else if (field.equals(CEDataEntryKeys.unallocatedCost)) {
+        selectQuery.addColumns(schema.getUnallocatedCost());
+        fieldNames.add(CEExportDataMetadataFields.UNALLOCATEDCOST);
+      } else if (field.equals(CEDataEntryKeys.systemCost)) {
+        selectQuery.addColumns(schema.getSystemCost());
+        fieldNames.add(CEExportDataMetadataFields.SYSTEMCOST);
+      } else if (field.equals(CEDataEntryKeys.maxCpuUtilization)) {
+        selectQuery.addColumns(schema.getMaxCpuUtilization());
+        fieldNames.add(CEExportDataMetadataFields.MAXCPUUTILIZATION);
+      } else if (field.equals(CEDataEntryKeys.maxMemoryUtilization)) {
+        selectQuery.addColumns(schema.getMaxMemoryUtilization());
+        fieldNames.add(CEExportDataMetadataFields.MAXMEMORYUTILIZATION);
+      } else if (field.equals(CEDataEntryKeys.avgCpuUtilization)) {
+        selectQuery.addColumns(schema.getAvgCpuUtilization());
+        fieldNames.add(CEExportDataMetadataFields.AVGCPUUTILIZATION);
+      } else if (field.equals(CEDataEntryKeys.avgMemoryUtilization)) {
+        selectQuery.addColumns(schema.getAvgMemoryUtilization());
+        fieldNames.add(CEExportDataMetadataFields.AVGMEMORYUTILIZATION);
+      } else if (field.equals(CEDataEntryKeys.cpuRequest)) {
+        selectQuery.addColumns(schema.getCpuRequest());
+        fieldNames.add(CEExportDataMetadataFields.CPUREQUEST);
+      } else if (field.equals(CEDataEntryKeys.memoryRequest)) {
+        selectQuery.addColumns(schema.getMemoryRequest());
+        fieldNames.add(CEExportDataMetadataFields.MEMORYREQUEST);
+      } else if (field.equals(CEDataEntryKeys.cpuLimit)) {
+        selectQuery.addColumns(schema.getCpuLimit());
+        fieldNames.add(CEExportDataMetadataFields.CPULIMIT);
+      } else if (field.equals(CEDataEntryKeys.memoryLimit)) {
+        selectQuery.addColumns(schema.getMemoryLimit());
+        fieldNames.add(CEExportDataMetadataFields.MEMORYLIMIT);
+      } else if (field.equals(CEDataEntryKeys.region)) {
+        selectQuery.addColumns(schema.getRegion());
+        fieldNames.add(CEExportDataMetadataFields.REGION);
+      } else if (field.equals(CEEcsEntityKeys.taskId)) {
+        selectQuery.addColumns(schema.getTaskId());
+        fieldNames.add(CEExportDataMetadataFields.TASKID);
+      } else if (field.equals(CEEcsEntityKeys.service)) {
+        selectQuery.addColumns(schema.getCloudServiceName());
+        fieldNames.add(CEExportDataMetadataFields.CLOUDSERVICENAME);
+      } else if (field.equals(CEEcsEntityKeys.launchType)) {
+        selectQuery.addColumns(schema.getLaunchType());
+        fieldNames.add(CEExportDataMetadataFields.LAUNCHTYPE);
+      } else if (field.equals(CEK8sEntityKeys.workload)) {
+        selectQuery.addColumns(schema.getWorkloadName());
+        fieldNames.add(CEExportDataMetadataFields.WORKLOADNAME);
+      } else if (field.equals(CEK8sEntityKeys.namespace)) {
+        selectQuery.addColumns(schema.getNamespace());
+        fieldNames.add(CEExportDataMetadataFields.NAMESPACE);
+      } else if (field.equals(CEK8sEntityKeys.pod) || field.equals(CEK8sEntityKeys.node)) {
+        selectQuery.addColumns(schema.getInstanceId());
+        fieldNames.add(CEExportDataMetadataFields.INSTANCEID);
+      } else if (field.equals(CEDataEntryKeys.cluster)) {
+        selectQuery.addColumns(schema.getClusterId());
+        fieldNames.add(CEExportDataMetadataFields.CLUSTERID);
+      } else if (field.equals(CEDataEntryKeys.clusterType)) {
+        selectQuery.addColumns(schema.getClusterType());
+        fieldNames.add(CEExportDataMetadataFields.CLUSTERTYPE);
+      } else if (field.equals(CEDataEntryKeys.instanceType)) {
+        selectQuery.addColumns(schema.getInstanceType());
+        fieldNames.add(CEExportDataMetadataFields.INSTANCETYPE);
+      } else if (field.equals(CEDataEntryKeys.startTime)) {
+        selectQuery.addColumns(schema.getStartTime());
+        fieldNames.add(CEExportDataMetadataFields.STARTTIME);
+      }
+    }
   }
 
   protected boolean checkTimeFilter(List<QLCEFilter> filters) {

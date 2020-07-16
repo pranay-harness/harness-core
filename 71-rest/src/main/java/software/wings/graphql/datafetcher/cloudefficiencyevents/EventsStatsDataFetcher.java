@@ -6,6 +6,7 @@ import static software.wings.graphql.datafetcher.cloudefficiencyevents.CEEventsQ
 
 import com.google.inject.Inject;
 
+import graphql.schema.DataFetchingEnvironment;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -153,6 +154,13 @@ public class EventsStatsDataFetcher
   protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
       List<QLCCMAggregationFunction> aggregations, List<QLEventsSortCriteria> sort, QLData qlData, Integer limit,
       boolean includeOthers) {
+    return null;
+  }
+
+  @Override
+  protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
+      List<QLEventsDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLEventsSortCriteria> sort, Integer limit,
+      Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
 }

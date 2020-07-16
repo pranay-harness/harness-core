@@ -1,16 +1,16 @@
 extend type Query {
   # Beta: Continuous Efficiency export data apis
-  billingData(
+  ceClusterBillingData(
     limit: Int
     offset: Int
-    filters: [CEFilter]
-    aggregateFunction: [CEAggregation]
-    groupBy: [CEGroupBy]
-    sortCriteria: [CESort]
-  ): BillingData @dataFetcher(name: billingData)
+    filters: [ceFilter]
+    aggregateFunction: [ceAggregation]
+    groupBy: [ceGroupBy]
+    sortCriteria: [ceSort]
+  ): ceClusterBillingData @dataFetcher(name: ceClusterBillingData)
 }
 
-input CEFilter {
+input ceFilter {
   application: IdFilter
   service: IdFilter
   environment: IdFilter
@@ -25,42 +25,47 @@ input CEFilter {
   node: IdFilter
   pod: IdFilter
   instanceType: IdFilter
-  tag: CETagFilter
-  label: CELabelFilter
+  tag: ceTagFilter
+  label: ceLabelFilter
 }
 
-input CETagFilter {
-  entityType: CETagType
+input ceTagFilter {
+  entityType: ceTagType
   tags: [TagInput]
 }
 
-input CELabelFilter {
+input ceLabelFilter {
   labels: [K8sLabelInput]
 }
 
-input CEAggregation {
-  function: CEAggregationFunction
-  cost: CECost
+input K8sLabelInput {
+  name: String
+  values: [String]
 }
 
-enum CEAggregationFunction {
+input ceAggregation {
+  function: ceAggregationFunction
+  cost: ceCost
+}
+
+enum ceAggregationFunction {
   SUM
 }
 
-enum CECost {
+enum ceCost {
   TOTALCOST
   IDLECOST
   UNALLOCATEDCOST
 }
 
-input CEGroupBy {
-  entity: CEEntityGroupBy
-  time: CETimeAggregation
-  tagAggregation: CETagAggregation
-  labelAggregation: CELabelAggregation
+input ceGroupBy {
+  entity: ceEntityGroupBy
+  time: ceTimeAggregation
+  tagAggregation: ceTagAggregation
+  labelAggregation: ceLabelAggregation
 }
 
-enum CEEntityGroupBy {
+enum ceEntityGroupBy {
   Application
   Service
   Cluster
@@ -75,38 +80,45 @@ enum CEEntityGroupBy {
   Pod
 }
 
-input CETimeAggregation {
+input ceTimeAggregation {
   timePeriod: TimeGroupType
 }
 
-input CETagAggregation {
-  entityType: CETagType
+enum TimeGroupType {
+  HOUR
+  DAY
+  WEEK
+  MONTH
+}
+
+input ceTagAggregation {
+  entityType: ceTagType
   tagName: String
 }
 
-enum CETagType {
+enum ceTagType {
   APPLICATION
   SERVICE
   ENVIRONMENT
 }
 
-input CELabelAggregation {
+input ceLabelAggregation {
   name: String
 }
 
-input CESort {
-  sortType: CESortType
+input ceSort {
+  sortType: ceSortType
   order: SortOrder
 }
 
-enum CESortType {
-  Time
-  TotalCost
-  IdleCost
-  UnallocatedCost
+enum ceSortType {
+  TIME
+  TOTALCOST
+  IDLECOST
+  UNALLOCATEDCOST
 }
 
-type BillingData {
+type ceClusterBillingData {
   data: [BillingDataEntry]
 }
 
@@ -124,29 +136,33 @@ type BillingDataEntry {
   cpuLimit: Number
   memoryLimit: Number
   region: String
-  k8s: CEK8sEntity
-  ecs: CEEcsEntity
-  harness: CEHarnessEntity
+  k8s: ceK8sEntity
+  ecs: ceEcsEntity
+  harness: ceHarnessEntity
   clusterType: String
   cluster: String
   instanceType: String
   startTime: DateTime
+  labelName: String
+  labelValue: String
+  tagName: String
+  tagValue: String
 }
 
-type CEK8sEntity {
+type ceK8sEntity {
   workload: String
   namespace: String
-  nodeId: String
-  podId: String
+  node: String
+  pod: String
 }
 
-type CEEcsEntity {
+type ceEcsEntity {
   service: String
   taskId: String
   launchType: String
 }
 
-type CEHarnessEntity {
+type ceHarnessEntity {
   service: String
   application: String
   environment: String

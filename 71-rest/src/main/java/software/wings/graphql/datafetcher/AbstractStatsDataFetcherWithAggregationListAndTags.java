@@ -15,6 +15,10 @@ import software.wings.graphql.datafetcher.billing.BillingDataTableSchema.Billing
 import software.wings.graphql.datafetcher.billing.BillingStatsDefaultKeys;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEData;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCEDataEntry;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCESort;
+import software.wings.graphql.datafetcher.ce.exportData.dto.QLCESortType;
 import software.wings.graphql.datafetcher.k8sLabel.K8sLabelHelper;
 import software.wings.graphql.schema.type.aggregation.LabelAggregation;
 import software.wings.graphql.schema.type.aggregation.QLBillingDataPoint;
@@ -79,6 +83,12 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
           return qlData;
         }
         getTagEntityTableDataPoints(accountId, entityTableDataPoints, groupByTagLevel1, includeOthers);
+      } else if (qlData instanceof QLCEData) {
+        QLCEData data = (QLCEData) qlData;
+        List<QLCEDataEntry> dataPoints = data.getData();
+        if (isEmpty(dataPoints)) {
+          return qlData;
+        }
       }
     } else if (!groupByLabelList.isEmpty()) {
       LA groupByLabelLevel1 = groupByLabelList.get(0);
@@ -100,6 +110,11 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
       List<QLEntityTableData> entityTableDataPoints = entityTableListData.getData();
       getLabelEntityTableDataPoints(accountId, entityTableDataPoints, groupByLabelLevel1, includeOthers);
       sortEntityTableData(entityTableDataPoints, (List<QLBillingSortCriteria>) sortCriteria);
+    } else if (qlData instanceof QLCEData) {
+      QLCEData data = (QLCEData) qlData;
+      List<QLCEDataEntry> dataPoints = data.getData();
+      getLabelCeExportDataPoints(accountId, dataPoints, groupByLabelLevel1);
+      sortCEExportData(dataPoints, (List<QLCESort>) sortCriteria);
     }
   }
 
@@ -515,6 +530,69 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
         }
 
         if (sort.getSortOrder() == QLSortOrder.ASCENDING) {
+          Collections.sort(dataPoints, comparator);
+        } else {
+          Collections.sort(dataPoints, comparator.reversed());
+        }
+      });
+    }
+  }
+
+  private void getLabelCeExportDataPoints(String accountId, List<QLCEDataEntry> dataPoints, LA groupByLabel) {
+    if (dataPoints.isEmpty()) {
+      return;
+    }
+    Set<String> entityIdSet =
+        dataPoints.stream().map(dataPoint -> dataPoint.getK8s().getWorkload()).collect(Collectors.toSet());
+    Set<K8sWorkload> labelLinks = k8sLabelHelper.getLabelLinks(accountId, entityIdSet, groupByLabel.getName());
+    Map<String, K8sWorkload> entityIdLabelLinkMap =
+        labelLinks.stream().collect(Collectors.toMap(K8sWorkload::getName, identity()));
+
+    ArrayMap<String, QLCEDataEntry> labelNameDataPointMap = new ArrayMap<>();
+    String labelName = groupByLabel.getName();
+    dataPoints.removeIf(dataPoint -> {
+      String entityId = dataPoint.getK8s().getWorkload();
+      K8sWorkload workload = entityIdLabelLinkMap.get(entityId);
+      String label;
+      if (workload == null) {
+        label = BillingStatsDefaultKeys.DEFAULT_LABEL;
+      } else {
+        label = workload.getLabels().get(labelName);
+      }
+
+      QLCEDataEntry existingDataPoint = labelNameDataPointMap.get(label);
+      if (existingDataPoint != null) {
+        existingDataPoint.setTotalCost(
+            billingDataHelper.getRoundedDoubleValue(existingDataPoint.getTotalCost() + dataPoint.getTotalCost()));
+        existingDataPoint.setIdleCost(
+            billingDataHelper.getRoundedDoubleValue(existingDataPoint.getIdleCost() + dataPoint.getIdleCost()));
+        existingDataPoint.setUnallocatedCost(billingDataHelper.getRoundedDoubleValue(
+            existingDataPoint.getUnallocatedCost() + dataPoint.getUnallocatedCost()));
+        return true;
+      }
+
+      dataPoint.setLabelName(labelName);
+      dataPoint.setLabelValue(label);
+      labelNameDataPointMap.put(label, dataPoint);
+      return false;
+    });
+  }
+
+  private void sortCEExportData(List<QLCEDataEntry> dataPoints, List<QLCESort> sortCriteria) {
+    if (sortCriteria != null && sortCriteria.isEmpty()) {
+      sortCriteria.forEach(sort -> {
+        Comparator<QLCEDataEntry> comparator;
+        if (sort.getSortType() == QLCESortType.TOTALCOST) {
+          comparator = Comparator.comparing(QLCEDataEntry::getTotalCost);
+        } else if (sort.getSortType() == QLCESortType.IDLECOST) {
+          comparator = Comparator.comparing(QLCEDataEntry::getIdleCost);
+        } else if (sort.getSortType() == QLCESortType.UNALLOCATEDCOST) {
+          comparator = Comparator.comparing(QLCEDataEntry::getIdleCost);
+        } else {
+          return;
+        }
+
+        if (sort.getOrder() == QLSortOrder.ASCENDING) {
           Collections.sort(dataPoints, comparator);
         } else {
           Collections.sort(dataPoints, comparator.reversed());
