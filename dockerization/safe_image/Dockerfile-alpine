@@ -11,6 +11,7 @@ RUN apk add --no-cache dpkg bash util-linux make strace procps curl gnupg nmap n
 
 # install Openjdk8
 RUN apk add --no-cache openjdk8
+RUN cp /usr/lib/jvm/java-1.8-openjdk/jre/lib/amd64/jli/libjli.so /lib/
 
 # install python3
 RUN apk add --no-cache python3
