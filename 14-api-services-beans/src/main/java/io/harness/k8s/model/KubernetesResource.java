@@ -534,6 +534,8 @@ public class KubernetesResource {
   private void updateConfigMapRefInContainers(List<V1Container> containers, UnaryOperator<Object> transformer) {
     if (isNotEmpty(containers)) {
       for (V1Container v1Container : containers) {
+        notNullCheck("The container or initContainer list contains empty elements. Please remove the empty elements",
+            v1Container);
         if (isNotEmpty(v1Container.getEnv())) {
           for (V1EnvVar v1EnvVar : v1Container.getEnv()) {
             updateConfigMapInEnvVars(v1EnvVar, transformer);
