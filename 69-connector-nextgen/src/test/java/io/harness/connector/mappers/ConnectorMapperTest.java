@@ -46,6 +46,7 @@ public class ConnectorMapperTest extends CategoryTest {
   String cacert = "cacert";
   String identifier = "identifier";
   String name = "name";
+  private String accountIdentifier = "accountIdentifier";
 
   @Before
   public void setUp() throws Exception {
@@ -88,7 +89,7 @@ public class ConnectorMapperTest extends CategoryTest {
                                                   .connectorConfig(connectorDTOWithDelegateCreds)
                                                   .build();
     when(connectorDTOToEntityMapperMap.get(any())).thenReturn(kubernetesDTOToEntity);
-    Connector connector = connectorMapper.toConnector(connectorRequestDTO);
+    Connector connector = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
     assertThat(connector).isNotNull();
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(MANUAL_CREDENTIALS);

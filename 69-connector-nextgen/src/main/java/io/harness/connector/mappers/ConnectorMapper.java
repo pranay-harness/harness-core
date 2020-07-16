@@ -1,5 +1,10 @@
 package io.harness.connector.mappers;
 
+import static io.harness.connector.entities.Connector.Scope.ACCOUNT;
+import static io.harness.connector.entities.Connector.Scope.ORGANIZATION;
+import static io.harness.connector.entities.Connector.Scope.PROJECT;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -24,25 +29,37 @@ public class ConnectorMapper {
   KubernetesEntityToDTO kubernetesEntityToDTO;
   GitDTOToEntity gitDTOToEntity;
   GitEntityToDTO gitEntityToDTO;
+
   @Inject private Map<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapperMap;
   @Inject private Map<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapperMap;
 
-  public Connector toConnector(ConnectorRequestDTO connectorRequestDTO) {
+  public Connector toConnector(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier) {
     ConnectorDTOToEntityMapper connectorDTOToEntityMapper =
         connectorDTOToEntityMapperMap.get(connectorRequestDTO.getConnectorType().toString());
     Connector connector = connectorDTOToEntityMapper.toConnectorEntity(connectorRequestDTO.getConnectorConfig());
     connector.setIdentifier(connectorRequestDTO.getIdentifier());
     connector.setName(connectorRequestDTO.getName());
-    connector.setAccountId(connectorRequestDTO.getAccountIdentifier());
-    connector.setOrgId(connectorRequestDTO.getOrgIdentifier());
-    connector.setProjectId(connectorRequestDTO.getProjectIdentifer());
-    connector.setFullyQualifiedIdentifier(FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(
-        connectorRequestDTO.getAccountIdentifier(), connectorRequestDTO.getOrgIdentifier(),
-        connectorRequestDTO.getProjectIdentifer(), connectorRequestDTO.getIdentifier()));
+    connector.setScope(getScopeFromConnectorDTO(connectorRequestDTO));
+    connector.setAccountIdentifier(accountIdentifier);
+    connector.setOrgIdentifier(connectorRequestDTO.getOrgIdentifier());
+    connector.setProjectIdentifier(connectorRequestDTO.getProjectIdentifer());
+    connector.setFullyQualifiedIdentifier(FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
+        connectorRequestDTO.getOrgIdentifier(), connectorRequestDTO.getProjectIdentifer(),
+        connectorRequestDTO.getIdentifier()));
     connector.setTags(connectorRequestDTO.getTags());
     connector.setDescription(connectorRequestDTO.getDescription());
     connector.setType(connectorRequestDTO.getConnectorType());
     return connector;
+  }
+
+  private Connector.Scope getScopeFromConnectorDTO(ConnectorRequestDTO connectorRequestDTO) {
+    if (isNotBlank(connectorRequestDTO.getProjectIdentifer())) {
+      return PROJECT;
+    }
+    if (isNotBlank(connectorRequestDTO.getOrgIdentifier())) {
+      return ORGANIZATION;
+    }
+    return ACCOUNT;
   }
 
   public ConnectorDTO writeDTO(Connector connector) {
@@ -51,9 +68,9 @@ public class ConnectorMapper {
         .name(connector.getName())
         .identifier(connector.getIdentifier())
         .description(connector.getDescription())
-        .accountIdentifier(connector.getAccountId())
-        .orgIdentifier(connector.getOrgId())
-        .projectIdentifer(connector.getProjectId())
+        .accountIdentifier(connector.getAccountIdentifier())
+        .orgIdentifier(connector.getOrgIdentifier())
+        .projectIdentifer(connector.getProjectIdentifier())
         .connectorConfig(connectorConfigDTO)
         .connectorType(connector.getType())
         .tags(connector.getTags())

@@ -13,13 +13,13 @@ public interface ConnectorService {
   Optional<ConnectorDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 
-  Page<ConnectorSummaryDTO> list(ConnectorFilter connectorFilter, int page, int size);
+  Page<ConnectorSummaryDTO> list(ConnectorFilter connectorFilter, int page, int size, String accountIdentifier);
 
-  ConnectorDTO create(ConnectorRequestDTO connector);
+  ConnectorDTO create(ConnectorRequestDTO connector, String accountIdentifier);
 
-  ConnectorDTO update(ConnectorRequestDTO connectorRequestDTO);
+  ConnectorDTO update(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 
-  ConnectorValidationResult validate(ConnectorRequestDTO connector, String accountId);
+  ConnectorValidationResult validate(ConnectorRequestDTO connector, String accountIdentifier);
 }
