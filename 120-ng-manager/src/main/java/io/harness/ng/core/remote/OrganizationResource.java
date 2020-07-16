@@ -3,9 +3,11 @@ package io.harness.ng.core.remote;
 import static io.harness.ng.core.remote.OrganizationMapper.applyUpdateToOrganization;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
+import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.NGPageResponse;
 import io.harness.ng.core.dto.CreateOrganizationDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -74,15 +76,16 @@ public class OrganizationResource {
 
   @GET
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
-  public ResponseDTO<Page<OrganizationDTO>> list(@PathParam("accountIdentifier") String accountIdentifier,
+  public ResponseDTO<NGPageResponse<OrganizationDTO>> list(@PathParam("accountIdentifier") String accountIdentifier,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
       @QueryParam("sort") @DefaultValue("[]") List<String> sort) {
     Criteria criteria = Criteria.where(OrganizationKeys.accountIdentifier)
                             .is(accountIdentifier)
                             .and(OrganizationKeys.deleted)
                             .is(false);
-    Page<Organization> organizations = organizationService.list(criteria, PageUtils.getPageRequest(page, size, sort));
-    return ResponseDTO.newResponse(organizations.map(OrganizationMapper::writeDto));
+    Page<OrganizationDTO> organizations = organizationService.list(criteria, PageUtils.getPageRequest(page, size, sort))
+                                              .map(OrganizationMapper::writeDto);
+    return ResponseDTO.newResponse(getNGPageResponse(organizations));
   }
 
   @PUT

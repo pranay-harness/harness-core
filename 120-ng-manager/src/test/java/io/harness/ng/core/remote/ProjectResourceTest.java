@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.dto.CreateProjectDTO;
@@ -56,7 +57,8 @@ public class ProjectResourceTest extends BaseTest {
 
     List<ProjectDTO> createdProjectDTOs = createProjects(orgIdentifier, accountIdentifier, 2);
 
-    Page<ProjectDTO> projectDTOs = projectResource.listProjectsForOrganization(orgIdentifier, 0, 10, null).getData();
+    NGPageResponse<ProjectDTO> projectDTOs =
+        projectResource.listProjectsForOrganization(orgIdentifier, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOs);
     assertEquals("Count of DTOs should match", createdProjectDTOs.size(), projectDTOs.getTotalElements());
     assertNotNull("Page contents should not be null", projectDTOs.getContent());
@@ -96,7 +98,7 @@ public class ProjectResourceTest extends BaseTest {
 
     List<ProjectDTO> secondOrgProjectDTOs = createProjects(secondOrgIdentifier, accountIdentifier, 2);
 
-    final Page<ProjectDTO> projectDTOS =
+    final NGPageResponse<ProjectDTO> projectDTOS =
         projectResource.listProjectsForOrganization(firstOrgIdentifier, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOS);
     assertEquals("Count of DTOs should match", firstOrgProjectDTOs.size(), projectDTOS.getTotalElements());

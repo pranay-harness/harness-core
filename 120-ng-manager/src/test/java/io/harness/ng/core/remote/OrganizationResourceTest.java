@@ -3,11 +3,14 @@ package io.harness.ng.core.remote;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.VIKAS;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.dto.CreateOrganizationDTO;
@@ -16,7 +19,6 @@ import io.harness.ng.core.dto.UpdateOrganizationDTO;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.springframework.data.domain.Page;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -88,13 +90,14 @@ public class OrganizationResourceTest extends BaseTest {
   @Category(UnitTests.class)
   public void testListOrganizations() {
     String accountIdentifier = randomAlphabetic(10);
-    assertThat(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData()).isEmpty();
+    assertTrue(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData().isEmpty());
 
     CreateOrganizationDTO firstOrganizationDTO = random(CreateOrganizationDTO.class);
     OrganizationDTO firstOrganization = organizationResource.create(accountIdentifier, firstOrganizationDTO).getData();
 
-    assertThat(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData()).isNotEmpty();
-    assertThat(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData()).hasSize(1);
+    assertFalse(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData().isEmpty());
+    assertThat(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData().getTotalElements())
+        .isEqualTo(1);
 
     CreateOrganizationDTO secondOrganizationDTO = random(CreateOrganizationDTO.class);
     String secondOrgIdentifier = randomAlphabetic(10);
@@ -102,7 +105,7 @@ public class OrganizationResourceTest extends BaseTest {
     OrganizationDTO secondOrganization =
         organizationResource.create(accountIdentifier, secondOrganizationDTO).getData();
 
-    Page<OrganizationDTO> organizationList =
+    NGPageResponse<OrganizationDTO> organizationList =
         organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData();
 
     assertThat(organizationList.getTotalElements()).isEqualTo(2);
