@@ -4,54 +4,29 @@ import static io.harness.delegate.task.k8s.K8sTaskType.APPLY;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
-import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.TaskType;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class K8sWatchPerpetualTaskServiceClient
-    implements PerpetualTaskServiceClient, PerpetualTaskServiceInprocClient<K8WatchPerpetualTaskClientParams> {
-  @Inject private PerpetualTaskService perpetualTaskService;
+public class K8sWatchPerpetualTaskServiceClient implements PerpetualTaskServiceClient {
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
 
   private static final String CLOUD_PROVIDER_ID = "cloudProviderId";
   private static final String CLUSTER_ID = "clusterId";
   private static final String CLUSTER_NAME = "clusterName";
-
-  @Override
-  public String create(String accountId, K8WatchPerpetualTaskClientParams clientParams) {
-    Map<String, String> clientParamMap = new HashMap<>();
-    clientParamMap.put(CLOUD_PROVIDER_ID, clientParams.getCloudProviderId());
-    clientParamMap.put(CLUSTER_ID, clientParams.getClusterId());
-    clientParamMap.put(CLUSTER_NAME, clientParams.getClusterName());
-
-    PerpetualTaskClientContext clientContext =
-        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
-
-    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
-                                         .setInterval(Durations.fromMinutes(1))
-                                         .setTimeout(Durations.fromSeconds(30))
-                                         .build();
-    return perpetualTaskService.createTask(PerpetualTaskType.K8S_WATCH, accountId, clientContext, schedule, false);
-  }
 
   @Override
   public K8sWatchTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
