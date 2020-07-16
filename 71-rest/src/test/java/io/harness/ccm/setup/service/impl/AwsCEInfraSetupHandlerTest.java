@@ -2,7 +2,6 @@ package io.harness.ccm.setup.service.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -11,7 +10,6 @@ import com.google.common.collect.ImmutableList;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.CECloudAccountDao;
-import io.harness.ccm.setup.CEClusterDao;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.ccm.setup.service.intfc.AwsEKSClusterService;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
@@ -30,7 +28,6 @@ import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECluster;
 
 import java.util.List;
 
@@ -38,16 +35,12 @@ import java.util.List;
 public class AwsCEInfraSetupHandlerTest extends CategoryTest {
   @InjectMocks private AwsCEInfraSetupHandler awsCEInfraSetupHandler;
   @Mock private CECloudAccountDao ceCloudAccountDao;
-  @Mock private CEClusterDao ceClusterDao;
   @Mock private AWSAccountService awsAccountService;
   @Mock private AwsEKSClusterService awsEKSClusterService;
   @Mock private AwsEKSHelperService awsEKSHelperService;
 
   @Captor private ArgumentCaptor<CECloudAccount> ceCloudCreateAccountArgumentCaptor;
   @Captor private ArgumentCaptor<String> ceCloudDeleteAccountArgumentCaptor;
-
-  @Captor private ArgumentCaptor<CECluster> ceCreateClusterArgumentCaptor;
-  @Captor private ArgumentCaptor<String> ceDeleteClusterArgumentCaptor;
 
   private String accountId = "ACCOUNT_ID";
   private String deleteRecordUUID = "DELETE_RECORD_UUID";
@@ -59,10 +52,6 @@ public class AwsCEInfraSetupHandlerTest extends CategoryTest {
   private String masterAccountSettingId = "MASTER_SETTING_ID";
   private String accountArn = "arn:aws:organizations::123123112:account/o-tbm3caqef8/3243223122";
   private String accountArnDelete = "arn:aws:organizations::123123112:account/o-tbm3caqef8/4423232112";
-  private String clusterName = "CLUSTER_NAME";
-  private String clusterNameCreate = "CLUSTER_NAME_CREATE";
-  private String clusterNameDelete = "CLUSTER_NAME_DELETE";
-  private String region = "US_EAST_1";
 
   @Before
   public void setUp() throws Exception {
@@ -119,31 +108,6 @@ public class AwsCEInfraSetupHandlerTest extends CategoryTest {
     assertThat(verifyAccess).isTrue();
   }
 
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void testSyncCEClusters() {
-    CECloudAccount ceCloudAccount = getCECloudAccount(accountNameDelete, accountArnDelete, infraAccountIdDelete);
-    CECluster ceCluster = getCECluster(clusterName, region);
-    CECluster ceClusterCreate = getCECluster(clusterNameCreate, region);
-    CECluster ceClusterDelete = getCECluster(clusterNameDelete, region);
-    ceClusterDelete.setUuid(deleteRecordUUID);
-    List<CECluster> savedCEClusters = ImmutableList.of(ceCluster, ceClusterDelete);
-    List<CECluster> infraClusters = ImmutableList.of(ceCluster, ceClusterCreate);
-
-    when(ceClusterDao.getByInfraAccountId(accountId, infraAccountIdDelete)).thenReturn(savedCEClusters);
-    when(awsEKSClusterService.getEKSCluster(any(), any(), any())).thenReturn(infraClusters);
-    awsCEInfraSetupHandler.syncCEClusters(ceCloudAccount);
-
-    verify(ceClusterDao).create(ceCreateClusterArgumentCaptor.capture());
-    verify(ceClusterDao).deleteCluster(ceDeleteClusterArgumentCaptor.capture());
-
-    CECluster createCECluster = ceCreateClusterArgumentCaptor.getValue();
-    String deleteClusterUUID = ceDeleteClusterArgumentCaptor.getValue();
-    assertThat(createCECluster.getClusterName()).isEqualTo(clusterNameCreate);
-    assertThat(deleteClusterUUID).isEqualTo(deleteRecordUUID);
-  }
-
   private CECloudAccount getCECloudAccount(String accountName, String accountArn, String infraAccountId) {
     return CECloudAccount.builder()
         .accountId(accountId)
@@ -152,17 +116,6 @@ public class AwsCEInfraSetupHandlerTest extends CategoryTest {
         .infraAccountId(infraAccountId)
         .infraMasterAccountId(infraMasterAccountId)
         .masterAccountSettingId(masterAccountSettingId)
-        .build();
-  }
-
-  private CECluster getCECluster(String clusterName, String region) {
-    return CECluster.builder()
-        .accountId(accountId)
-        .infraAccountId(infraAccountId)
-        .infraMasterAccountId(infraMasterAccountId)
-        .clusterName(clusterName)
-        .region(region)
-        .parentAccountSettingId(masterAccountSettingId)
         .build();
   }
 }

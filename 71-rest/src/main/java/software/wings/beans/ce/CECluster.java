@@ -1,5 +1,6 @@
 package software.wings.beans.ce;
 
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
@@ -27,10 +28,12 @@ import software.wings.beans.ce.CECluster.CEClusterKeys;
       , @Field(CEClusterKeys.infraAccountId), @Field(CEClusterKeys.region), @Field(CEClusterKeys.clusterName)
     })
 @FieldNameConstants(innerTypeName = "CEClusterKeys")
+@StoreIn("events")
 public class CECluster implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id String uuid;
   String accountId;
   String clusterName;
+  String clusterArn;
   String region;
   String infraAccountId;
   String infraMasterAccountId;
