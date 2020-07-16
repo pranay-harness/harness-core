@@ -23,11 +23,12 @@ import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
-import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
-import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
+import io.harness.perpetualtask.ecs.EcsPerpetualTaskClientParams;
+import io.harness.perpetualtask.k8s.watch.K8WatchPerpetualTaskClientParams;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,7 +57,6 @@ public class CEPerpetualTaskManagerTest extends CategoryTest {
   private static final String ACCOUNT_NAME = "Harness";
   private Account account;
 
-  private static final String masterUrl = "dummyMasterUrl";
   public static final String username = "dummyUsername";
   public static final String password = "dummyPassword";
   private SettingAttribute cloudProvider;
@@ -68,13 +68,11 @@ public class CEPerpetualTaskManagerTest extends CategoryTest {
 
   private String podTaskId = "POD_WATCHER_TASK_ID";
   private String nodeTaskId = "NODE_WATCHER_TASK_ID";
+  private String taskId = "TASK_ID";
   PageResponse<ClusterRecord> response;
 
   @Mock private ClusterRecordService clusterRecordService;
   @Mock private PerpetualTaskService perpetualTaskService;
-  @Mock private PerpetualTaskServiceClientRegistry clientRegistry;
-  @Mock private K8sWatchPerpetualTaskServiceClient k8sWatchPerpetualTaskServiceClient;
-  @Mock private EcsPerpetualTaskServiceClient ecsPerpetualTaskServiceClient;
 
   @InjectMocks CEPerpetualTaskManager manager;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -106,10 +104,37 @@ public class CEPerpetualTaskManagerTest extends CategoryTest {
     when(clusterRecordService.list(eq(accountId), eq(null), eq(cloudProviderId))).thenReturn(response);
     when(clusterRecordService.attachPerpetualTaskId(eq(clusterRecord), anyString())).thenReturn(clusterRecord);
     when(clusterRecordService.removePerpetualTaskId(isA(ClusterRecord.class), anyString())).thenReturn(clusterRecord);
-    when(clientRegistry.getInprocClient(eq(PerpetualTaskType.K8S_WATCH)))
-        .thenReturn(k8sWatchPerpetualTaskServiceClient);
-    when(clientRegistry.getInprocClient(eq(PerpetualTaskType.ECS_CLUSTER))).thenReturn(ecsPerpetualTaskServiceClient);
     when(perpetualTaskService.getPerpetualTaskType(anyString())).thenReturn(K8S_WATCH);
+    when(perpetualTaskService.createTask(eq(PerpetualTaskType.ECS_CLUSTER), eq(accountId),
+             isA(PerpetualTaskClientContext.class), isA(PerpetualTaskSchedule.class), eq(false)))
+        .thenReturn(taskId);
+    when(perpetualTaskService.createTask(eq(PerpetualTaskType.K8S_WATCH), eq(accountId),
+             isA(PerpetualTaskClientContext.class), isA(PerpetualTaskSchedule.class), eq(false)))
+        .thenReturn(taskId);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void shouldCreateEcsTask() {
+    EcsPerpetualTaskClientParams params =
+        new EcsPerpetualTaskClientParams("region", cloudProviderId, "clusterName", "clusterId");
+    manager.createEcsTask(accountId, params);
+    verify(perpetualTaskService)
+        .createTask(eq(PerpetualTaskType.ECS_CLUSTER), eq(accountId), isA(PerpetualTaskClientContext.class),
+            isA(PerpetualTaskSchedule.class), eq(false));
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldCreateK8WatchTask() {
+    K8WatchPerpetualTaskClientParams params =
+        new K8WatchPerpetualTaskClientParams(cloudProviderId, "clusterId", "clusterName");
+    manager.createK8WatchTask(accountId, params);
+    verify(perpetualTaskService)
+        .createTask(eq(PerpetualTaskType.K8S_WATCH), eq(accountId), isA(PerpetualTaskClientContext.class),
+            isA(PerpetualTaskSchedule.class), eq(false));
   }
 
   @Test

@@ -5,18 +5,13 @@ import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
-import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -28,41 +23,19 @@ import software.wings.service.impl.aws.model.AwsEcsRequest.AwsEcsRequestType;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class EcsPerpetualTaskServiceClient
-    implements PerpetualTaskServiceClient, PerpetualTaskServiceInprocClient<EcsPerpetualTaskClientParams> {
+public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient {
   @Inject private SecretManager secretManager;
   @Inject private SettingsService settingsService;
-  @Inject private PerpetualTaskService perpetualTaskService;
 
   private static final String REGION = "region";
   private static final String SETTING_ID = "settingId";
   private static final String CLUSTER_NAME = "clusterName";
   private static final String CLUSTER_ID = "clusterId";
-
-  @Override
-  public String create(String accountId, EcsPerpetualTaskClientParams clientParams) {
-    Map<String, String> clientParamMap = new HashMap<>();
-    clientParamMap.put(REGION, clientParams.getRegion());
-    clientParamMap.put(SETTING_ID, clientParams.getSettingId());
-    clientParamMap.put(CLUSTER_NAME, clientParams.getClusterName());
-    clientParamMap.put(CLUSTER_ID, clientParams.getClusterId());
-
-    PerpetualTaskClientContext clientContext =
-        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
-
-    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
-                                         .setInterval(Durations.fromSeconds(600))
-                                         .setTimeout(Durations.fromMillis(180000))
-                                         .build();
-
-    return perpetualTaskService.createTask(PerpetualTaskType.ECS_CLUSTER, accountId, clientContext, schedule, false);
-  }
 
   @Override
   public EcsPerpetualTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
