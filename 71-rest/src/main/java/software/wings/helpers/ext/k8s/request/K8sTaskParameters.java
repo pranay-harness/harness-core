@@ -8,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.expression.Expression;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -25,7 +26,7 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
   private String activityId;
   private K8sClusterConfig k8sClusterConfig;
   private String workflowExecutionId;
-  private String releaseName;
+  @Expression private String releaseName;
   private Integer timeoutIntervalInMin;
   @NotEmpty private K8sTaskType commandType;
   private HelmVersion helmVersion;

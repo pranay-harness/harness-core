@@ -96,6 +96,7 @@ import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
+import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
@@ -589,6 +590,7 @@ public class K8sStateHelper {
 
     String waitId = generateUuid();
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
+
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
@@ -631,6 +633,10 @@ public class K8sStateHelper {
       ExpressionReflectionUtils.applyExpression(
           delegateTask.getData().getParameters()[0], value -> context.renderExpression(value, stateExecutionContext));
     }
+
+    ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
+    stateExecutionData.setReleaseName(
+        expressionEvaluator.substitute(k8sTaskParameters.getReleaseName(), Collections.emptyMap()));
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
@@ -863,25 +869,33 @@ public class K8sStateHelper {
     if (isBlank(releaseName)) {
       releaseName = convertBase64UuidToCanonicalForm(infraMapping.getUuid());
     }
-
-    releaseName = context.renderExpression(releaseName);
-    validateReleaseName(releaseName);
+    validateReleaseName(releaseName, context);
 
     return releaseName;
   }
 
-  private void validateReleaseName(String releaseName) {
+  private void validateReleaseName(String expression, ExecutionContext context) {
+    String releaseName = context.renderExpression(expression);
     if (!ExpressionEvaluator.containsVariablePattern(releaseName)) {
       try {
         new ConfigMapBuilder().withNewMetadata().withName(releaseName).endMetadata().build();
       } catch (Exception e) {
+        String maskedReleaseName = renderMaskedExpression(expression, context);
         throw new InvalidArgumentsException(
             Pair.of("Release name",
-                "\"" + releaseName
+                "\"" + maskedReleaseName
                     + "\" is an invalid name. Release name may only contain lowercase letters, numbers, and '-'."),
             e, USER);
       }
     }
+  }
+
+  private String renderMaskedExpression(String expression, ExecutionContext context) {
+    context.resetPreparedCache();
+    String renderedExpression =
+        context.renderExpression(expression, StateExecutionContext.builder().adoptDelegateDecryption(true).build());
+    ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
+    return expressionEvaluator.substitute(renderedExpression, Collections.emptyMap());
   }
 
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String activityId) {
