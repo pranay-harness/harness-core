@@ -5,15 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
-import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
-import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
-
-import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -29,7 +24,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -71,29 +65,6 @@ public class PcfInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
     when(perpetualTaskService.getTaskRecord(TASK_ID))
         .thenReturn(PerpetualTaskRecord.builder().accountId(ACCOUNT_ID).build());
     when(secretsManager.getEncryptionDetails(pcfConfig, null, null)).thenReturn(Collections.emptyList());
-  }
-
-  @Test
-  @Owner(developers = AMAN)
-  @Category(UnitTests.class)
-  public void testCreate() {
-    PcfInstanceSyncPerpetualTaskClientParams pcfInstanceSyncParams = getPcfInstanceSyncPerpTaskClientParams();
-
-    String taskId = pcfInstanceSyncPerpetualTaskClient.create(ACCOUNT_ID, pcfInstanceSyncParams);
-    PerpetualTaskSchedule taskSchedule = scheduleArgumentCaptor.getValue();
-
-    assertThat(taskId).isEqualTo(TASK_ID);
-    assertThat(taskSchedule.getInterval()).isEqualTo(Durations.fromMinutes(INTERVAL_MINUTES));
-    assertThat(taskSchedule.getTimeout()).isEqualTo(Durations.fromSeconds(TIMEOUT_SECONDS));
-    Mockito.verify(perpetualTaskService, Mockito.times(1)).createTask(any(), anyString(), any(), any(), eq(false));
-  }
-
-  private PcfInstanceSyncPerpetualTaskClientParams getPcfInstanceSyncPerpTaskClientParams() {
-    return PcfInstanceSyncPerpetualTaskClientParams.builder()
-        .appId(HARNESS_APPLICATION_ID)
-        .inframappingId(INFRA_ID)
-        .applicationName(APPLICATION_NAME)
-        .build();
   }
 
   private PerpetualTaskClientContext getPerpetualTaskClientContext() {
