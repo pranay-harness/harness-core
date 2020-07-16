@@ -12,6 +12,7 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.dashboard.beans.AnomalyDTO;
 import io.harness.cvng.dashboard.beans.AnomalyDTO.AnomalyDetailDTO;
+import io.harness.cvng.dashboard.beans.AnomalyDTO.AnomalyMetricDetail;
 import io.harness.cvng.dashboard.beans.AnomalyDTO.AnomalyTxnDetail;
 import io.harness.cvng.dashboard.entities.Anomaly;
 import io.harness.cvng.dashboard.entities.Anomaly.AnomalousMetric;
@@ -26,6 +27,7 @@ import org.mongodb.morphia.query.Query;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -125,23 +127,14 @@ public class AnomalyServiceImpl implements AnomalyService {
             getAnomalousMetricsByCvConfigs(anomaly.getAnomalyDetails());
 
         anomalousMetricsByCvConfigs.forEach((cvConfigId, anomalousMetrics) -> {
-          SortedSet<AnomalyTxnDetail> anomalyTxnDetails = new TreeSet<>();
-          AtomicDouble maxRisk = new AtomicDouble();
-          anomalousMetrics.forEach(anomalousMetric -> {
-            anomalyTxnDetails.add(AnomalyTxnDetail.builder()
-                                      .groupName(anomalousMetric.getGroupName())
-                                      .metricName(anomalousMetric.getMetricName())
-                                      .riskScore(anomalousMetric.getRiskScore())
-                                      .build());
-            if (maxRisk.get() < anomalousMetric.getRiskScore()) {
-              maxRisk.set(anomalousMetric.getRiskScore());
-            }
-          });
-
+          SortedSet<AnomalyMetricDetail> anomalyMetricDetails = getAnomalyMetricDetailsWithRisk(anomalousMetrics);
+          AnomalousMetric maxRiskMetric = anomalousMetrics.stream()
+                                              .max(Comparator.comparing(AnomalousMetric::getRiskScore))
+                                              .orElse(AnomalousMetric.builder().riskScore(0.0).build());
           anomalyDTO.getAnomalyDetails().add(AnomalyDetailDTO.builder()
                                                  .cvConfigId(cvConfigId)
-                                                 .riskScore(maxRisk.get())
-                                                 .txnDetails(anomalyTxnDetails)
+                                                 .riskScore(maxRiskMetric.getRiskScore())
+                                                 .metricDetails(anomalyMetricDetails)
                                                  .build());
         });
 
@@ -150,6 +143,37 @@ public class AnomalyServiceImpl implements AnomalyService {
     }
 
     return new ArrayList<>(anomalies);
+  }
+
+  private SortedSet<AnomalyMetricDetail> getAnomalyMetricDetailsWithRisk(Set<AnomalousMetric> anomalousMetrics) {
+    Table<String, String, AnomalousMetric> metricTxnMap = HashBasedTable.create();
+    anomalousMetrics.forEach(anomalousMetric -> {
+      String metricName = anomalousMetric.getMetricName();
+      String groupName = anomalousMetric.getGroupName();
+      if (!metricTxnMap.contains(metricName, groupName)) {
+        metricTxnMap.put(metricName, groupName, anomalousMetric);
+      }
+
+      if (metricTxnMap.get(metricName, groupName).getRiskScore() < anomalousMetric.getRiskScore()) {
+        metricTxnMap.get(metricName, groupName).setRiskScore(anomalousMetric.getRiskScore());
+      }
+    });
+
+    SortedSet<AnomalyMetricDetail> metricDetails = new TreeSet<>();
+    metricTxnMap.rowMap().forEach((metricName, txnVsValueMap) -> {
+      AtomicDouble maxRisk = new AtomicDouble(0);
+      SortedSet<AnomalyTxnDetail> txnDetails = new TreeSet<>();
+      txnVsValueMap.forEach((groupName, anomalousMetric) -> {
+        txnDetails.add(
+            AnomalyTxnDetail.builder().groupName(groupName).riskScore(anomalousMetric.getRiskScore()).build());
+        if (maxRisk.get() < anomalousMetric.getRiskScore()) {
+          maxRisk.set(anomalousMetric.getRiskScore());
+        }
+      });
+      metricDetails.add(
+          AnomalyMetricDetail.builder().metricName(metricName).riskScore(maxRisk.get()).txnDetails(txnDetails).build());
+    });
+    return metricDetails;
   }
 
   private Map<String, Set<AnomalousMetric>> getAnomalousMetricsByCvConfigs(Set<AnomalyDetail> anomalyDetails) {
