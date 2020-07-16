@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.engine.OrchestrationService;
 import io.harness.exception.GeneralException;
@@ -30,7 +31,8 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
       cdPipeline = YamlPipelineUtils.read(pipelineYaml, CDPipeline.class);
       final Plan planForPipeline = executionPlanCreatorService.createPlanForPipeline(cdPipeline, accountId);
       return orchestrationService.startExecution(planForPipeline,
-          ImmutableMap.of("accountId", accountId, "orgIdentifier", orgId, "projectIdentifier", projectId),
+          ImmutableMap.of(SetupAbstractionKeys.accountId, accountId, SetupAbstractionKeys.orgIdentifier, orgId,
+              SetupAbstractionKeys.projectIdentifier, projectId),
           user != null ? user : getEmbeddedUser());
     } catch (IOException e) {
       throw new GeneralException("error while de-serializing Yaml", e);
