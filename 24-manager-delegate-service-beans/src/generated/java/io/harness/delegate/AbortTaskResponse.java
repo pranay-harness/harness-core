@@ -85,20 +85,21 @@ public final class AbortTaskResponse extends com.google.protobuf.GeneratedMessag
   public static final int CANCELED_AT_STAGE_FIELD_NUMBER = 1;
   private int canceledAtStage_;
   /**
-   * <code>.io.harness.delegate.TaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
+   * <code>.io.harness.delegate.NgTaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
    * @return The enum numeric value on the wire for canceledAtStage.
    */
   public int getCanceledAtStageValue() {
     return canceledAtStage_;
   }
   /**
-   * <code>.io.harness.delegate.TaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
+   * <code>.io.harness.delegate.NgTaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
    * @return The canceledAtStage.
    */
-  public io.harness.delegate.TaskExecutionStage getCanceledAtStage() {
+  public io.harness.delegate.NgTaskExecutionStage getCanceledAtStage() {
     @SuppressWarnings("deprecation")
-    io.harness.delegate.TaskExecutionStage result = io.harness.delegate.TaskExecutionStage.valueOf(canceledAtStage_);
-    return result == null ? io.harness.delegate.TaskExecutionStage.UNRECOGNIZED : result;
+    io.harness.delegate.NgTaskExecutionStage result =
+        io.harness.delegate.NgTaskExecutionStage.valueOf(canceledAtStage_);
+    return result == null ? io.harness.delegate.NgTaskExecutionStage.UNRECOGNIZED : result;
   }
 
   private byte memoizedIsInitialized = -1;
@@ -116,7 +117,7 @@ public final class AbortTaskResponse extends com.google.protobuf.GeneratedMessag
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (canceledAtStage_ != io.harness.delegate.TaskExecutionStage.TYPE_UNSPECIFIED.getNumber()) {
+    if (canceledAtStage_ != io.harness.delegate.NgTaskExecutionStage.TYPE_UNSPECIFIED.getNumber()) {
       output.writeEnum(1, canceledAtStage_);
     }
     unknownFields.writeTo(output);
@@ -129,7 +130,7 @@ public final class AbortTaskResponse extends com.google.protobuf.GeneratedMessag
       return size;
 
     size = 0;
-    if (canceledAtStage_ != io.harness.delegate.TaskExecutionStage.TYPE_UNSPECIFIED.getNumber()) {
+    if (canceledAtStage_ != io.harness.delegate.NgTaskExecutionStage.TYPE_UNSPECIFIED.getNumber()) {
       size += com.google.protobuf.CodedOutputStream.computeEnumSize(1, canceledAtStage_);
     }
     size += unknownFields.getSerializedSize();
@@ -379,14 +380,14 @@ public final class AbortTaskResponse extends com.google.protobuf.GeneratedMessag
 
     private int canceledAtStage_ = 0;
     /**
-     * <code>.io.harness.delegate.TaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
+     * <code>.io.harness.delegate.NgTaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
      * @return The enum numeric value on the wire for canceledAtStage.
      */
     public int getCanceledAtStageValue() {
       return canceledAtStage_;
     }
     /**
-     * <code>.io.harness.delegate.TaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
+     * <code>.io.harness.delegate.NgTaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
      * @param value The enum numeric value on the wire for canceledAtStage to set.
      * @return This builder for chaining.
      */
@@ -396,20 +397,21 @@ public final class AbortTaskResponse extends com.google.protobuf.GeneratedMessag
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
+     * <code>.io.harness.delegate.NgTaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
      * @return The canceledAtStage.
      */
-    public io.harness.delegate.TaskExecutionStage getCanceledAtStage() {
+    public io.harness.delegate.NgTaskExecutionStage getCanceledAtStage() {
       @SuppressWarnings("deprecation")
-      io.harness.delegate.TaskExecutionStage result = io.harness.delegate.TaskExecutionStage.valueOf(canceledAtStage_);
-      return result == null ? io.harness.delegate.TaskExecutionStage.UNRECOGNIZED : result;
+      io.harness.delegate.NgTaskExecutionStage result =
+          io.harness.delegate.NgTaskExecutionStage.valueOf(canceledAtStage_);
+      return result == null ? io.harness.delegate.NgTaskExecutionStage.UNRECOGNIZED : result;
     }
     /**
-     * <code>.io.harness.delegate.TaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
+     * <code>.io.harness.delegate.NgTaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
      * @param value The canceledAtStage to set.
      * @return This builder for chaining.
      */
-    public Builder setCanceledAtStage(io.harness.delegate.TaskExecutionStage value) {
+    public Builder setCanceledAtStage(io.harness.delegate.NgTaskExecutionStage value) {
       if (value == null) {
         throw new NullPointerException();
       }
@@ -419,7 +421,7 @@ public final class AbortTaskResponse extends com.google.protobuf.GeneratedMessag
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
+     * <code>.io.harness.delegate.NgTaskExecutionStage canceled_at_stage = 1[json_name = "canceledAtStage"];</code>
      * @return This builder for chaining.
      */
     public Builder clearCanceledAtStage() {

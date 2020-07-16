@@ -18,6 +18,7 @@
         <module>21-persistence</module>
         <module>21-sm-core</module>
         <module>22-delegate-service-beans</module>
+        <module>22-ng-delegate-service-beans</module>
         <module>22-ng-project-n-orgs</module>
         <module>22-secret-manager-client</module>
         <module>23-delegate-service-driver</module>
@@ -54,7 +55,6 @@
         <module>91-model-gen-tool</module>
         <module>106-git-sync-manager</module>
         <module>120-ng-manager</module>
-
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>

@@ -47,44 +47,44 @@ public final class NgPerpetualtaskServiceClient {
   static {
     java.lang.String[] descriptorData = {"\n>io/harness/perpetualtask/ng_perpetualt"
         + "ask_service_client.proto\022\030io.harness.per"
-        + "petualtask\032\031google/protobuf/any.proto\032\036i"
-        + "o/harness/delegate/task.proto\0328io/harnes"
-        + "s/perpetualtask/ng_peprpetual_task_clien"
-        + "t.proto\"\277\001\n+ObtainPerpetualTaskValidatio"
-        + "nDetailsRequest\022\035\n\naccount_id\030\001 \001(\tR\tacc"
-        + "ountId\022\033\n\ttask_type\030\002 \001(\tR\010taskType\022T\n\007c"
-        + "ontext\030\004 \001(\0132:.io.harness.perpetualtask."
-        + "RemotePerpetualTaskClientContextR\007contex"
-        + "t\"\305\001\n,ObtainPerpetualTaskValidationDetai"
-        + "lsResponse\022Y\n\022setup_abstractions\030\001 \001(\0132*"
-        + ".io.harness.delegate.TaskSetupAbstractio"
-        + "nsR\021setupAbstractions\022:\n\007details\030\002 \001(\0132 "
-        + ".io.harness.delegate.TaskDetailsR\007detail"
-        + "s\"\236\001\n)ObtainPerpetualTaskExecutionParams"
-        + "Request\022\033\n\ttask_type\030\001 \001(\tR\010taskType\022T\n\007"
-        + "context\030\003 \001(\0132:.io.harness.perpetualtask"
-        + ".RemotePerpetualTaskClientContextR\007conte"
-        + "xt\"o\n*ObtainPerpetualTaskExecutionParams"
-        + "Response\022A\n\021customized_params\030\001 \001(\0132\024.go"
-        + "ogle.protobuf.AnyR\020customizedParams\"\274\002\n%"
-        + "ReportPerpetualTaskStateChangeRequest\022\033\n"
-        + "\ttask_type\030\001 \001(\tR\010taskType\022*\n\021perpetual_"
-        + "task_id\030\002 \001(\tR\017perpetualTaskId\022d\n\021new_ta"
-        + "sk_response\030\003 \001(\01328.io.harness.perpetual"
-        + "task.PerpetualTaskExecutionResponseR\017new"
-        + "TaskResponse\022d\n\021old_task_response\030\004 \001(\0132"
-        + "8.io.harness.perpetualtask.PerpetualTask"
-        + "ExecutionResponseR\017oldTaskResponse\"\217\001\n\036P"
-        + "erpetualTaskExecutionResponse\022\035\n\ntask_st"
-        + "ate\030\001 \001(\tR\ttaskState\022#\n\rresponse_code\030\002 "
-        + "\001(\005R\014responseCode\022)\n\020response_message\030\003 "
-        + "\001(\tR\017responseMessage\"(\n&ReportPerpetualT"
-        + "askStateChangeResponseB\002P\001b\006proto3"};
+        + "petualtask\032\031google/protobuf/any.proto\032!i"
+        + "o/harness/delegate/ng_task.proto\0327io/har"
+        + "ness/perpetualtask/ng_perpetual_task_cli"
+        + "ent.proto\"\277\001\n+ObtainPerpetualTaskValidat"
+        + "ionDetailsRequest\022\035\n\naccount_id\030\001 \001(\tR\ta"
+        + "ccountId\022\033\n\ttask_type\030\002 \001(\tR\010taskType\022T\n"
+        + "\007context\030\004 \001(\0132:.io.harness.perpetualtas"
+        + "k.RemotePerpetualTaskClientContextR\007cont"
+        + "ext\"\311\001\n,ObtainPerpetualTaskValidationDet"
+        + "ailsResponse\022[\n\022setup_abstractions\030\001 \001(\013"
+        + "2,.io.harness.delegate.NgTaskSetupAbstra"
+        + "ctionsR\021setupAbstractions\022<\n\007details\030\002 \001"
+        + "(\0132\".io.harness.delegate.NgTaskDetailsR\007"
+        + "details\"\236\001\n)ObtainPerpetualTaskExecution"
+        + "ParamsRequest\022\033\n\ttask_type\030\001 \001(\tR\010taskTy"
+        + "pe\022T\n\007context\030\003 \001(\0132:.io.harness.perpetu"
+        + "altask.RemotePerpetualTaskClientContextR"
+        + "\007context\"o\n*ObtainPerpetualTaskExecution"
+        + "ParamsResponse\022A\n\021customized_params\030\001 \001("
+        + "\0132\024.google.protobuf.AnyR\020customizedParam"
+        + "s\"\274\002\n%ReportPerpetualTaskStateChangeRequ"
+        + "est\022\033\n\ttask_type\030\001 \001(\tR\010taskType\022*\n\021perp"
+        + "etual_task_id\030\002 \001(\tR\017perpetualTaskId\022d\n\021"
+        + "new_task_response\030\003 \001(\01328.io.harness.per"
+        + "petualtask.PerpetualTaskExecutionRespons"
+        + "eR\017newTaskResponse\022d\n\021old_task_response\030"
+        + "\004 \001(\01328.io.harness.perpetualtask.Perpetu"
+        + "alTaskExecutionResponseR\017oldTaskResponse"
+        + "\"\217\001\n\036PerpetualTaskExecutionResponse\022\035\n\nt"
+        + "ask_state\030\001 \001(\tR\ttaskState\022#\n\rresponse_c"
+        + "ode\030\002 \001(\005R\014responseCode\022)\n\020response_mess"
+        + "age\030\003 \001(\tR\017responseMessage\"(\n&ReportPerp"
+        + "etualTaskStateChangeResponseB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.google.protobuf.AnyProto.getDescriptor(),
-            io.harness.delegate.Task.getDescriptor(),
-            io.harness.perpetualtask.NgPeprpetualTaskClient.getDescriptor(),
+            io.harness.delegate.NgTask.getDescriptor(),
+            io.harness.perpetualtask.NgPerpetualTaskClient.getDescriptor(),
         });
     internal_static_io_harness_perpetualtask_ObtainPerpetualTaskValidationDetailsRequest_descriptor =
         getDescriptor().getMessageTypes().get(0);
@@ -150,8 +150,8 @@ public final class NgPerpetualtaskServiceClient {
             internal_static_io_harness_perpetualtask_ReportPerpetualTaskStateChangeResponse_descriptor,
             new java.lang.String[] {});
     com.google.protobuf.AnyProto.getDescriptor();
-    io.harness.delegate.Task.getDescriptor();
-    io.harness.perpetualtask.NgPeprpetualTaskClient.getDescriptor();
+    io.harness.delegate.NgTask.getDescriptor();
+    io.harness.perpetualtask.NgPerpetualTaskClient.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

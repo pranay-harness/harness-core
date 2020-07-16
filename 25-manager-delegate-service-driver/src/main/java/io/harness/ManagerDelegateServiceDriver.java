@@ -9,16 +9,16 @@ import com.google.protobuf.Duration;
 
 import io.harness.delegate.AbortTaskRequest;
 import io.harness.delegate.AbortTaskResponse;
-import io.harness.delegate.AccountId;
+import io.harness.delegate.NgAccountId;
+import io.harness.delegate.NgTaskDetails;
+import io.harness.delegate.NgTaskExecutionStage;
+import io.harness.delegate.NgTaskId;
+import io.harness.delegate.NgTaskSetupAbstractions;
+import io.harness.delegate.NgTaskType;
 import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
-import io.harness.delegate.TaskDetails;
-import io.harness.delegate.TaskExecutionStage;
-import io.harness.delegate.TaskId;
-import io.harness.delegate.TaskSetupAbstractions;
-import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
@@ -51,11 +51,11 @@ public class ManagerDelegateServiceDriver {
 
   public <T extends ResponseData> T sendTask(
       String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
-    TaskDetails taskDetails = buildTaskDetails(taskData);
+    NgTaskDetails taskDetails = buildTaskDetails(taskData);
     SendTaskRequest request =
         SendTaskRequest.newBuilder()
-            .setAccountId(AccountId.newBuilder().setId(accountId).build())
-            .setSetupAbstractions(TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build())
+            .setAccountId(NgAccountId.newBuilder().setId(accountId).build())
+            .setSetupAbstractions(NgTaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build())
             .setDetails(taskDetails)
             .build();
     final SendTaskResponse response = managerDelegateGrpcClient.sendTask(request, taskData.getTimeout());
@@ -74,11 +74,11 @@ public class ManagerDelegateServiceDriver {
   public boolean abortTask(String accountId, String taskId) {
     try {
       AbortTaskRequest abortTaskRequest = AbortTaskRequest.newBuilder()
-                                              .setTaskId(TaskId.newBuilder().setId(taskId).build())
-                                              .setAccountId(AccountId.newBuilder().setId(accountId).build())
+                                              .setTaskId(NgTaskId.newBuilder().setId(taskId).build())
+                                              .setAccountId(NgAccountId.newBuilder().setId(accountId).build())
                                               .build();
       AbortTaskResponse response = managerDelegateGrpcClient.abortTask(abortTaskRequest);
-      return response.getCanceledAtStage() != TaskExecutionStage.TYPE_UNSPECIFIED;
+      return response.getCanceledAtStage() != NgTaskExecutionStage.TYPE_UNSPECIFIED;
     } catch (RuntimeException ex) {
       logger.error("Failed to Abort Task: {}", ex.getMessage());
       return false;
@@ -87,17 +87,17 @@ public class ManagerDelegateServiceDriver {
 
   private SendTaskAsyncRequest buildSendTaskAsyncRequest(
       String accountId, Map<String, String> setupAbstractions, TaskData taskData) {
-    TaskDetails taskDetails = buildTaskDetails(taskData);
+    NgTaskDetails taskDetails = buildTaskDetails(taskData);
     return SendTaskAsyncRequest.newBuilder()
-        .setAccountId(AccountId.newBuilder().setId(accountId).build())
-        .setSetupAbstractions(TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build())
+        .setAccountId(NgAccountId.newBuilder().setId(accountId).build())
+        .setSetupAbstractions(NgTaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build())
         .setDetails(taskDetails)
         .build();
   }
 
-  private TaskDetails buildTaskDetails(TaskData taskData) {
-    return TaskDetails.newBuilder()
-        .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
+  private NgTaskDetails buildTaskDetails(TaskData taskData) {
+    return NgTaskDetails.newBuilder()
+        .setType(NgTaskType.newBuilder().setType(taskData.getTaskType()).build())
         .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(getTaskParameter(taskData))))
         .putAllExpressions(taskData.getExpressions() == null ? new HashMap<>() : taskData.getExpressions())
         .setExpressionFunctorToken(taskData.getExpressionFunctorToken())

@@ -46,11 +46,11 @@ public final class SendTaskAsyncResponse extends com.google.protobuf.GeneratedMe
             done = true;
             break;
           case 10: {
-            io.harness.delegate.TaskId.Builder subBuilder = null;
+            io.harness.delegate.NgTaskId.Builder subBuilder = null;
             if (taskId_ != null) {
               subBuilder = taskId_.toBuilder();
             }
-            taskId_ = input.readMessage(io.harness.delegate.TaskId.parser(), extensionRegistry);
+            taskId_ = input.readMessage(io.harness.delegate.NgTaskId.parser(), extensionRegistry);
             if (subBuilder != null) {
               subBuilder.mergeFrom(taskId_);
               taskId_ = subBuilder.buildPartial();
@@ -88,25 +88,25 @@ public final class SendTaskAsyncResponse extends com.google.protobuf.GeneratedMe
   }
 
   public static final int TASK_ID_FIELD_NUMBER = 1;
-  private io.harness.delegate.TaskId taskId_;
+  private io.harness.delegate.NgTaskId taskId_;
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
    * @return Whether the taskId field is set.
    */
   public boolean hasTaskId() {
     return taskId_ != null;
   }
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
    * @return The taskId.
    */
-  public io.harness.delegate.TaskId getTaskId() {
-    return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
+  public io.harness.delegate.NgTaskId getTaskId() {
+    return taskId_ == null ? io.harness.delegate.NgTaskId.getDefaultInstance() : taskId_;
   }
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
    */
-  public io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder() {
+  public io.harness.delegate.NgTaskIdOrBuilder getTaskIdOrBuilder() {
     return getTaskId();
   }
 
@@ -401,31 +401,31 @@ public final class SendTaskAsyncResponse extends com.google.protobuf.GeneratedMe
       return this;
     }
 
-    private io.harness.delegate.TaskId taskId_;
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-        io.harness.delegate.TaskIdOrBuilder> taskIdBuilder_;
+    private io.harness.delegate.NgTaskId taskId_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.NgTaskId, io.harness.delegate.NgTaskId.Builder,
+        io.harness.delegate.NgTaskIdOrBuilder> taskIdBuilder_;
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
      * @return Whether the taskId field is set.
      */
     public boolean hasTaskId() {
       return taskIdBuilder_ != null || taskId_ != null;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
      * @return The taskId.
      */
-    public io.harness.delegate.TaskId getTaskId() {
+    public io.harness.delegate.NgTaskId getTaskId() {
       if (taskIdBuilder_ == null) {
-        return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
+        return taskId_ == null ? io.harness.delegate.NgTaskId.getDefaultInstance() : taskId_;
       } else {
         return taskIdBuilder_.getMessage();
       }
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
      */
-    public Builder setTaskId(io.harness.delegate.TaskId value) {
+    public Builder setTaskId(io.harness.delegate.NgTaskId value) {
       if (taskIdBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -439,9 +439,9 @@ public final class SendTaskAsyncResponse extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
      */
-    public Builder setTaskId(io.harness.delegate.TaskId.Builder builderForValue) {
+    public Builder setTaskId(io.harness.delegate.NgTaskId.Builder builderForValue) {
       if (taskIdBuilder_ == null) {
         taskId_ = builderForValue.build();
         onChanged();
@@ -452,12 +452,12 @@ public final class SendTaskAsyncResponse extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
      */
-    public Builder mergeTaskId(io.harness.delegate.TaskId value) {
+    public Builder mergeTaskId(io.harness.delegate.NgTaskId value) {
       if (taskIdBuilder_ == null) {
         if (taskId_ != null) {
-          taskId_ = io.harness.delegate.TaskId.newBuilder(taskId_).mergeFrom(value).buildPartial();
+          taskId_ = io.harness.delegate.NgTaskId.newBuilder(taskId_).mergeFrom(value).buildPartial();
         } else {
           taskId_ = value;
         }
@@ -469,7 +469,7 @@ public final class SendTaskAsyncResponse extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
      */
     public Builder clearTaskId() {
       if (taskIdBuilder_ == null) {
@@ -483,32 +483,32 @@ public final class SendTaskAsyncResponse extends com.google.protobuf.GeneratedMe
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
      */
-    public io.harness.delegate.TaskId.Builder getTaskIdBuilder() {
+    public io.harness.delegate.NgTaskId.Builder getTaskIdBuilder() {
       onChanged();
       return getTaskIdFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
      */
-    public io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder() {
+    public io.harness.delegate.NgTaskIdOrBuilder getTaskIdOrBuilder() {
       if (taskIdBuilder_ != null) {
         return taskIdBuilder_.getMessageOrBuilder();
       } else {
-        return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
+        return taskId_ == null ? io.harness.delegate.NgTaskId.getDefaultInstance() : taskId_;
       }
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-        io.harness.delegate.TaskIdOrBuilder>
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.NgTaskId, io.harness.delegate.NgTaskId.Builder,
+        io.harness.delegate.NgTaskIdOrBuilder>
     getTaskIdFieldBuilder() {
       if (taskIdBuilder_ == null) {
-        taskIdBuilder_ =
-            new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-                io.harness.delegate.TaskIdOrBuilder>(getTaskId(), getParentForChildren(), isClean());
+        taskIdBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.NgTaskId,
+            io.harness.delegate.NgTaskId.Builder, io.harness.delegate.NgTaskIdOrBuilder>(
+            getTaskId(), getParentForChildren(), isClean());
         taskId_ = null;
       }
       return taskIdBuilder_;

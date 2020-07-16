@@ -15,13 +15,13 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.AccountId;
+import io.harness.delegate.NgAccountId;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
+import io.harness.delegate.NgTaskId;
 import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
-import io.harness.delegate.TaskId;
 import io.harness.rule.Owner;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -42,16 +42,16 @@ public class ManagerDelegateGrpcClientRetryTest {
 
   private final String ACCOUNT_ID = generateUuid();
   private final SendTaskRequest sendTaskRequest =
-      SendTaskRequest.newBuilder().setAccountId(AccountId.newBuilder().setId(ACCOUNT_ID).build()).build();
+      SendTaskRequest.newBuilder().setAccountId(NgAccountId.newBuilder().setId(ACCOUNT_ID).build()).build();
 
   private final SendTaskAsyncResponse sendTaskAsyncResponse =
-      SendTaskAsyncResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
+      SendTaskAsyncResponse.newBuilder().setTaskId(NgTaskId.newBuilder().setId("test").build()).build();
 
   private final SendTaskResponse sendTaskResponse =
-      SendTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
+      SendTaskResponse.newBuilder().setTaskId(NgTaskId.newBuilder().setId("test").build()).build();
 
   private final SendTaskAsyncRequest sendTaskAsyncRequest =
-      SendTaskAsyncRequest.newBuilder().setAccountId(AccountId.newBuilder().setId(ACCOUNT_ID).build()).build();
+      SendTaskAsyncRequest.newBuilder().setAccountId(NgAccountId.newBuilder().setId(ACCOUNT_ID).build()).build();
 
   private final NgDelegateTaskServiceGrpc.NgDelegateTaskServiceImplBase ngDelegateTaskServiceImplBase =
       mock(NgDelegateTaskServiceGrpc.NgDelegateTaskServiceImplBase.class,
@@ -96,7 +96,7 @@ public class ManagerDelegateGrpcClientRetryTest {
   @Category(UnitTests.class)
   public void testRetry() {
     SendTaskRequest sendTaskRequest =
-        SendTaskRequest.newBuilder().setAccountId(AccountId.newBuilder().setId(ACCOUNT_ID).build()).build();
+        SendTaskRequest.newBuilder().setAccountId(NgAccountId.newBuilder().setId(ACCOUNT_ID).build()).build();
 
     int failureCount = 2;
     IntStream.range(0, failureCount).forEach(i -> {

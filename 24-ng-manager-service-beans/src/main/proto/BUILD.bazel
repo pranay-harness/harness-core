@@ -10,7 +10,7 @@ proto_library(
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:timestamp_proto",
         "//20-delegate-beans/src/main/proto:20_delegate_beans_proto",
-        "//22-delegate-service-beans/src/main/proto:22_delegate_service_beans_proto",
+        "//22-ng-delegate-service-beans/src/main/proto:22_ng_delegate_service_beans_proto",
     ],
     visibility = ["//visibility:public"],
 )

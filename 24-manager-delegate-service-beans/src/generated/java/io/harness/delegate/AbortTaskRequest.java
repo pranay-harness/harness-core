@@ -46,11 +46,11 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
             done = true;
             break;
           case 10: {
-            io.harness.delegate.AccountId.Builder subBuilder = null;
+            io.harness.delegate.NgAccountId.Builder subBuilder = null;
             if (accountId_ != null) {
               subBuilder = accountId_.toBuilder();
             }
-            accountId_ = input.readMessage(io.harness.delegate.AccountId.parser(), extensionRegistry);
+            accountId_ = input.readMessage(io.harness.delegate.NgAccountId.parser(), extensionRegistry);
             if (subBuilder != null) {
               subBuilder.mergeFrom(accountId_);
               accountId_ = subBuilder.buildPartial();
@@ -59,11 +59,11 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
             break;
           }
           case 18: {
-            io.harness.delegate.TaskId.Builder subBuilder = null;
+            io.harness.delegate.NgTaskId.Builder subBuilder = null;
             if (taskId_ != null) {
               subBuilder = taskId_.toBuilder();
             }
-            taskId_ = input.readMessage(io.harness.delegate.TaskId.parser(), extensionRegistry);
+            taskId_ = input.readMessage(io.harness.delegate.NgTaskId.parser(), extensionRegistry);
             if (subBuilder != null) {
               subBuilder.mergeFrom(taskId_);
               taskId_ = subBuilder.buildPartial();
@@ -101,48 +101,48 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
   }
 
   public static final int ACCOUNT_ID_FIELD_NUMBER = 1;
-  private io.harness.delegate.AccountId accountId_;
+  private io.harness.delegate.NgAccountId accountId_;
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
    * @return Whether the accountId field is set.
    */
   public boolean hasAccountId() {
     return accountId_ != null;
   }
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
    * @return The accountId.
    */
-  public io.harness.delegate.AccountId getAccountId() {
-    return accountId_ == null ? io.harness.delegate.AccountId.getDefaultInstance() : accountId_;
+  public io.harness.delegate.NgAccountId getAccountId() {
+    return accountId_ == null ? io.harness.delegate.NgAccountId.getDefaultInstance() : accountId_;
   }
   /**
-   * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+   * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
    */
-  public io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder() {
+  public io.harness.delegate.NgAccountIdOrBuilder getAccountIdOrBuilder() {
     return getAccountId();
   }
 
   public static final int TASK_ID_FIELD_NUMBER = 2;
-  private io.harness.delegate.TaskId taskId_;
+  private io.harness.delegate.NgTaskId taskId_;
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
    * @return Whether the taskId field is set.
    */
   public boolean hasTaskId() {
     return taskId_ != null;
   }
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
    * @return The taskId.
    */
-  public io.harness.delegate.TaskId getTaskId() {
-    return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
+  public io.harness.delegate.NgTaskId getTaskId() {
+    return taskId_ == null ? io.harness.delegate.NgTaskId.getDefaultInstance() : taskId_;
   }
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
    */
-  public io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder() {
+  public io.harness.delegate.NgTaskIdOrBuilder getTaskIdOrBuilder() {
     return getTaskId();
   }
 
@@ -466,31 +466,31 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
 
-    private io.harness.delegate.AccountId accountId_;
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
-        io.harness.delegate.AccountId.Builder, io.harness.delegate.AccountIdOrBuilder> accountIdBuilder_;
+    private io.harness.delegate.NgAccountId accountId_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.NgAccountId,
+        io.harness.delegate.NgAccountId.Builder, io.harness.delegate.NgAccountIdOrBuilder> accountIdBuilder_;
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+     * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
      * @return Whether the accountId field is set.
      */
     public boolean hasAccountId() {
       return accountIdBuilder_ != null || accountId_ != null;
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+     * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
      * @return The accountId.
      */
-    public io.harness.delegate.AccountId getAccountId() {
+    public io.harness.delegate.NgAccountId getAccountId() {
       if (accountIdBuilder_ == null) {
-        return accountId_ == null ? io.harness.delegate.AccountId.getDefaultInstance() : accountId_;
+        return accountId_ == null ? io.harness.delegate.NgAccountId.getDefaultInstance() : accountId_;
       } else {
         return accountIdBuilder_.getMessage();
       }
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+     * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
      */
-    public Builder setAccountId(io.harness.delegate.AccountId value) {
+    public Builder setAccountId(io.harness.delegate.NgAccountId value) {
       if (accountIdBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -504,9 +504,9 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+     * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
      */
-    public Builder setAccountId(io.harness.delegate.AccountId.Builder builderForValue) {
+    public Builder setAccountId(io.harness.delegate.NgAccountId.Builder builderForValue) {
       if (accountIdBuilder_ == null) {
         accountId_ = builderForValue.build();
         onChanged();
@@ -517,12 +517,12 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+     * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
      */
-    public Builder mergeAccountId(io.harness.delegate.AccountId value) {
+    public Builder mergeAccountId(io.harness.delegate.NgAccountId value) {
       if (accountIdBuilder_ == null) {
         if (accountId_ != null) {
-          accountId_ = io.harness.delegate.AccountId.newBuilder(accountId_).mergeFrom(value).buildPartial();
+          accountId_ = io.harness.delegate.NgAccountId.newBuilder(accountId_).mergeFrom(value).buildPartial();
         } else {
           accountId_ = value;
         }
@@ -534,7 +534,7 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+     * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
      */
     public Builder clearAccountId() {
       if (accountIdBuilder_ == null) {
@@ -548,62 +548,62 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+     * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
      */
-    public io.harness.delegate.AccountId.Builder getAccountIdBuilder() {
+    public io.harness.delegate.NgAccountId.Builder getAccountIdBuilder() {
       onChanged();
       return getAccountIdFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+     * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
      */
-    public io.harness.delegate.AccountIdOrBuilder getAccountIdOrBuilder() {
+    public io.harness.delegate.NgAccountIdOrBuilder getAccountIdOrBuilder() {
       if (accountIdBuilder_ != null) {
         return accountIdBuilder_.getMessageOrBuilder();
       } else {
-        return accountId_ == null ? io.harness.delegate.AccountId.getDefaultInstance() : accountId_;
+        return accountId_ == null ? io.harness.delegate.NgAccountId.getDefaultInstance() : accountId_;
       }
     }
     /**
-     * <code>.io.harness.delegate.AccountId account_id = 1[json_name = "accountId"];</code>
+     * <code>.io.harness.delegate.NgAccountId account_id = 1[json_name = "accountId"];</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
-        io.harness.delegate.AccountId.Builder, io.harness.delegate.AccountIdOrBuilder>
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.NgAccountId,
+        io.harness.delegate.NgAccountId.Builder, io.harness.delegate.NgAccountIdOrBuilder>
     getAccountIdFieldBuilder() {
       if (accountIdBuilder_ == null) {
-        accountIdBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.AccountId,
-            io.harness.delegate.AccountId.Builder, io.harness.delegate.AccountIdOrBuilder>(
+        accountIdBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.NgAccountId,
+            io.harness.delegate.NgAccountId.Builder, io.harness.delegate.NgAccountIdOrBuilder>(
             getAccountId(), getParentForChildren(), isClean());
         accountId_ = null;
       }
       return accountIdBuilder_;
     }
 
-    private io.harness.delegate.TaskId taskId_;
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-        io.harness.delegate.TaskIdOrBuilder> taskIdBuilder_;
+    private io.harness.delegate.NgTaskId taskId_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.NgTaskId, io.harness.delegate.NgTaskId.Builder,
+        io.harness.delegate.NgTaskIdOrBuilder> taskIdBuilder_;
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
      * @return Whether the taskId field is set.
      */
     public boolean hasTaskId() {
       return taskIdBuilder_ != null || taskId_ != null;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
      * @return The taskId.
      */
-    public io.harness.delegate.TaskId getTaskId() {
+    public io.harness.delegate.NgTaskId getTaskId() {
       if (taskIdBuilder_ == null) {
-        return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
+        return taskId_ == null ? io.harness.delegate.NgTaskId.getDefaultInstance() : taskId_;
       } else {
         return taskIdBuilder_.getMessage();
       }
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
      */
-    public Builder setTaskId(io.harness.delegate.TaskId value) {
+    public Builder setTaskId(io.harness.delegate.NgTaskId value) {
       if (taskIdBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -617,9 +617,9 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
      */
-    public Builder setTaskId(io.harness.delegate.TaskId.Builder builderForValue) {
+    public Builder setTaskId(io.harness.delegate.NgTaskId.Builder builderForValue) {
       if (taskIdBuilder_ == null) {
         taskId_ = builderForValue.build();
         onChanged();
@@ -630,12 +630,12 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
      */
-    public Builder mergeTaskId(io.harness.delegate.TaskId value) {
+    public Builder mergeTaskId(io.harness.delegate.NgTaskId value) {
       if (taskIdBuilder_ == null) {
         if (taskId_ != null) {
-          taskId_ = io.harness.delegate.TaskId.newBuilder(taskId_).mergeFrom(value).buildPartial();
+          taskId_ = io.harness.delegate.NgTaskId.newBuilder(taskId_).mergeFrom(value).buildPartial();
         } else {
           taskId_ = value;
         }
@@ -647,7 +647,7 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
      */
     public Builder clearTaskId() {
       if (taskIdBuilder_ == null) {
@@ -661,32 +661,32 @@ public final class AbortTaskRequest extends com.google.protobuf.GeneratedMessage
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
      */
-    public io.harness.delegate.TaskId.Builder getTaskIdBuilder() {
+    public io.harness.delegate.NgTaskId.Builder getTaskIdBuilder() {
       onChanged();
       return getTaskIdFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
      */
-    public io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder() {
+    public io.harness.delegate.NgTaskIdOrBuilder getTaskIdOrBuilder() {
       if (taskIdBuilder_ != null) {
         return taskIdBuilder_.getMessageOrBuilder();
       } else {
-        return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
+        return taskId_ == null ? io.harness.delegate.NgTaskId.getDefaultInstance() : taskId_;
       }
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 2[json_name = "taskId"];</code>
+     * <code>.io.harness.delegate.NgTaskId task_id = 2[json_name = "taskId"];</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-        io.harness.delegate.TaskIdOrBuilder>
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.NgTaskId, io.harness.delegate.NgTaskId.Builder,
+        io.harness.delegate.NgTaskIdOrBuilder>
     getTaskIdFieldBuilder() {
       if (taskIdBuilder_ == null) {
-        taskIdBuilder_ =
-            new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-                io.harness.delegate.TaskIdOrBuilder>(getTaskId(), getParentForChildren(), isClean());
+        taskIdBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.NgTaskId,
+            io.harness.delegate.NgTaskId.Builder, io.harness.delegate.NgTaskIdOrBuilder>(
+            getTaskId(), getParentForChildren(), isClean());
         taskId_ = null;
       }
       return taskIdBuilder_;

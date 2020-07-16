@@ -5,8 +5,8 @@ package io.harness.perpetualtask;
 option java_multiple_files = true;
 
 import "google/protobuf/any.proto";
-import "io/harness/delegate/task.proto";
-import "io/harness/perpetualtask/ng_peprpetual_task_client.proto";
+import "io/harness/delegate/ng_task.proto";
+import "io/harness/perpetualtask/ng_perpetual_task_client.proto";
 
 message ObtainPerpetualTaskValidationDetailsRequest {
   string account_id = 1;
@@ -15,8 +15,8 @@ message ObtainPerpetualTaskValidationDetailsRequest {
 }
 
 message ObtainPerpetualTaskValidationDetailsResponse {
-  delegate.TaskSetupAbstractions setup_abstractions = 1;
-  delegate.TaskDetails details = 2;
+  delegate.NgTaskSetupAbstractions setup_abstractions = 1;
+  delegate.NgTaskDetails details = 2;
 }
 
 message ObtainPerpetualTaskExecutionParamsRequest {

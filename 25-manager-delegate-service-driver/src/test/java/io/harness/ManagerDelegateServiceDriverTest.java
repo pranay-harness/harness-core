@@ -24,12 +24,12 @@ import io.harness.delegate.AbortTaskResponse;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
 import io.harness.delegate.NgDelegateTaskServiceGrpc.NgDelegateTaskServiceBlockingStub;
 import io.harness.delegate.NgDelegateTaskServiceGrpc.NgDelegateTaskServiceImplBase;
+import io.harness.delegate.NgTaskExecutionStage;
+import io.harness.delegate.NgTaskId;
 import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
-import io.harness.delegate.TaskExecutionStage;
-import io.harness.delegate.TaskId;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -55,12 +55,12 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
   private static final String APP_ID = generateUuid();
 
   private final SendTaskResponse sendTaskResponse =
-      SendTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
+      SendTaskResponse.newBuilder().setTaskId(NgTaskId.newBuilder().setId("test").build()).build();
 
   private final SendTaskAsyncResponse sendTaskAsyncResponse =
-      SendTaskAsyncResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
+      SendTaskAsyncResponse.newBuilder().setTaskId(NgTaskId.newBuilder().setId("test").build()).build();
   private final AbortTaskResponse abortTaskResponse =
-      AbortTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.EXECUTING).build();
+      AbortTaskResponse.newBuilder().setCanceledAtStage(NgTaskExecutionStage.EXECUTING).build();
 
   private final NgDelegateTaskServiceImplBase ngDelegateTaskServiceImplBase =
       mock(NgDelegateTaskServiceImplBase.class, delegatesTo(new NgDelegateTaskServiceImplBase() {
@@ -123,7 +123,7 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
                             .build();
     SendTaskResponse sendTaskResponse =
         SendTaskResponse.newBuilder()
-            .setTaskId(TaskId.newBuilder().setId("test").build())
+            .setTaskId(NgTaskId.newBuilder().setId("test").build())
             .setResponseData(
                 ByteString.copyFrom(kryoSerializer.asDeflatedBytes(CommandExecutionResult.builder().build())))
             .build();
@@ -147,7 +147,7 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
                             .build();
 
     SendTaskAsyncResponse sendTaskAsyncResponse =
-        SendTaskAsyncResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
+        SendTaskAsyncResponse.newBuilder().setTaskId(NgTaskId.newBuilder().setId("test").build()).build();
     when(managerDelegateGrpcClient.sendTaskAsync(any(SendTaskAsyncRequest.class))).thenReturn(sendTaskAsyncResponse);
     String taskResponse = managerDelegateServiceDriver.sendTaskAsync(ACCOUNT_ID, setupAbstractions, taskData);
     assertThat(taskResponse).isNotNull().isEqualTo("test");
@@ -158,7 +158,7 @@ public class ManagerDelegateServiceDriverTest extends ManagerDelegateServiceDriv
   @Category(UnitTests.class)
   public void testAbortTask() {
     AbortTaskResponse abortTaskResponse =
-        AbortTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.EXECUTING).build();
+        AbortTaskResponse.newBuilder().setCanceledAtStage(NgTaskExecutionStage.EXECUTING).build();
     when(managerDelegateGrpcClient.abortTask(any(AbortTaskRequest.class))).thenReturn(abortTaskResponse);
     boolean aborted = managerDelegateServiceDriver.abortTask(ACCOUNT_ID, generateUuid());
     assertThat(aborted).isEqualTo(true);

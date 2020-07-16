@@ -9,7 +9,7 @@ import com.google.protobuf.util.Durations;
 
 import io.harness.NgManagerServiceDriver;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.TaskDetails;
+import io.harness.delegate.NgTaskDetails;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.grpc.utils.AnyUtils;
@@ -89,7 +89,7 @@ public class ForwardingPerpetualTaskServiceClient implements PerpetualTaskServic
   }
 
   private DelegateTask extractDelegateTask(ObtainPerpetualTaskValidationDetailsResponse response, String accountId) {
-    TaskDetails taskDetails = response.getDetails();
+    NgTaskDetails taskDetails = response.getDetails();
     Map<String, String> setupAbstractions = response.getSetupAbstractions().getValuesMap();
     return extractDelegateTask(accountId, setupAbstractions, taskDetails);
   }
@@ -100,7 +100,7 @@ public class ForwardingPerpetualTaskServiceClient implements PerpetualTaskServic
   }
 
   private DelegateTask extractDelegateTask(
-      String accountId, Map<String, String> setupAbstractions, TaskDetails taskDetails) {
+      String accountId, Map<String, String> setupAbstractions, NgTaskDetails taskDetails) {
     TaskParameters parameters =
         (TaskParameters) kryoSerializer.asInflatedObject(taskDetails.getKryoParameters().toByteArray());
     String taskId = generateUuid();

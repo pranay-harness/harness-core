@@ -10,11 +10,11 @@ import com.google.protobuf.Message;
 
 import io.grpc.stub.StreamObserver;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc;
+import io.harness.delegate.NgTaskDetails;
+import io.harness.delegate.NgTaskSetupAbstractions;
+import io.harness.delegate.NgTaskType;
 import io.harness.delegate.SendTaskResultRequest;
 import io.harness.delegate.SendTaskResultResponse;
-import io.harness.delegate.TaskDetails;
-import io.harness.delegate.TaskSetupAbstractions;
-import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
@@ -50,7 +50,7 @@ public class NgDelegateTaskResponseGrpcServer
     if (!request.getResponseData().isEmpty()) {
       responseData = (ResponseData) kryoSerializer.asInflatedObject(request.getResponseData().toByteArray());
     }
-    waitNotifyEngine.doneWith(request.getTaskId().getId(), responseData);
+    waitNotifyEngine.doneWith(request.getTaskId(), responseData);
     SendTaskResultResponse sendTaskResultResponse =
         SendTaskResultResponse.newBuilder().setAcknowledgement(true).build();
     responseObserver.onNext(sendTaskResultResponse);
@@ -64,7 +64,7 @@ public class NgDelegateTaskResponseGrpcServer
         request.getTaskType(), request.getContext(), request.getAccountId());
     final ObtainPerpetualTaskValidationDetailsResponse response =
         ObtainPerpetualTaskValidationDetailsResponse.newBuilder()
-            .setSetupAbstractions(TaskSetupAbstractions.newBuilder()
+            .setSetupAbstractions(NgTaskSetupAbstractions.newBuilder()
                                       .putAllValues(emptyIfNull(validationTask.getSetupAbstractions()))
                                       .build())
             .setDetails(buildTaskDetails(validationTask.getTaskData()))
@@ -92,9 +92,9 @@ public class NgDelegateTaskResponseGrpcServer
     responseObserver.onCompleted();
   }
 
-  private TaskDetails buildTaskDetails(TaskData taskData) {
-    return TaskDetails.newBuilder()
-        .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
+  private NgTaskDetails buildTaskDetails(TaskData taskData) {
+    return NgTaskDetails.newBuilder()
+        .setType(NgTaskType.newBuilder().setType(taskData.getTaskType()).build())
         .putAllExpressions(emptyIfNull(taskData.getExpressions()))
         .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() * 1000).build())
         .setExpressionFunctorToken(taskData.getExpressionFunctorToken())

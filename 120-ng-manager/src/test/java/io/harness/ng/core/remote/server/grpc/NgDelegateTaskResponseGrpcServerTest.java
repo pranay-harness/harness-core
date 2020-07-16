@@ -19,7 +19,6 @@ import io.harness.delegate.NgDelegateTaskResponseServiceGrpc;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc.NgDelegateTaskResponseServiceBlockingStub;
 import io.harness.delegate.SendTaskResultRequest;
 import io.harness.delegate.SendTaskResultResponse;
-import io.harness.delegate.TaskId;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.ng.core.BaseTest;
@@ -77,8 +76,8 @@ public class NgDelegateTaskResponseGrpcServerTest extends BaseTest {
   public void testSendTaskResult() {
     String taskId = "task_task_Id";
 
-    SendTaskResultResponse sendTaskResultResponse = ngDelegateTaskServiceBlockingStub.sendTaskResult(
-        SendTaskResultRequest.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build());
+    SendTaskResultResponse sendTaskResultResponse =
+        ngDelegateTaskServiceBlockingStub.sendTaskResult(SendTaskResultRequest.newBuilder().setTaskId(taskId).build());
 
     assertThat(sendTaskResultResponse).isNotNull();
     assertThat(sendTaskResultResponse.getAcknowledgement()).isTrue();

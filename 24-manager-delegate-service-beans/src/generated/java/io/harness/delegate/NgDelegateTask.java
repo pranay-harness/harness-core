@@ -42,38 +42,39 @@ public final class NgDelegateTask {
   private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
     java.lang.String[] descriptorData = {"\n*io/harness/delegate/ng_delegate_task.p"
-        + "roto\022\023io.harness.delegate\032!io/harness/de"
-        + "legate/account.proto\032\036io/harness/delegat"
-        + "e/task.proto\032\"io/harness/delegate/progre"
-        + "ss.proto\"\355\001\n\017SendTaskRequest\022=\n\naccount_"
-        + "id\030\002 \001(\0132\036.io.harness.delegate.AccountId"
-        + "R\taccountId\022Y\n\022setup_abstractions\030\003 \001(\0132"
-        + "*.io.harness.delegate.TaskSetupAbstracti"
-        + "onsR\021setupAbstractions\022:\n\007details\030\004 \001(\0132"
-        + " .io.harness.delegate.TaskDetailsR\007detai"
-        + "lsJ\004\010\001\020\002\"m\n\020SendTaskResponse\0224\n\007task_id\030"
-        + "\001 \001(\0132\033.io.harness.delegate.TaskIdR\006task"
-        + "Id\022#\n\rresponse_data\030\002 \001(\014R\014responseData\""
-        + "\362\001\n\024SendTaskAsyncRequest\022=\n\naccount_id\030\002"
-        + " \001(\0132\036.io.harness.delegate.AccountIdR\tac"
-        + "countId\022Y\n\022setup_abstractions\030\003 \001(\0132*.io"
-        + ".harness.delegate.TaskSetupAbstractionsR"
-        + "\021setupAbstractions\022:\n\007details\030\004 \001(\0132 .io"
-        + ".harness.delegate.TaskDetailsR\007detailsJ\004"
-        + "\010\001\020\002\"M\n\025SendTaskAsyncResponse\0224\n\007task_id"
-        + "\030\001 \001(\0132\033.io.harness.delegate.TaskIdR\006tas"
-        + "kId\"\207\001\n\020AbortTaskRequest\022=\n\naccount_id\030\001"
-        + " \001(\0132\036.io.harness.delegate.AccountIdR\tac"
-        + "countId\0224\n\007task_id\030\002 \001(\0132\033.io.harness.de"
-        + "legate.TaskIdR\006taskId\"h\n\021AbortTaskRespon"
-        + "se\022S\n\021canceled_at_stage\030\001 \001(\0162\'.io.harne"
-        + "ss.delegate.TaskExecutionStageR\017canceled"
-        + "AtStageB\002P\001b\006proto3"};
+        + "roto\022\023io.harness.delegate\032$io/harness/de"
+        + "legate/ng_account.proto\032!io/harness/dele"
+        + "gate/ng_task.proto\032%io/harness/delegate/"
+        + "ng_progress.proto\"\363\001\n\017SendTaskRequest\022?\n"
+        + "\naccount_id\030\002 \001(\0132 .io.harness.delegate."
+        + "NgAccountIdR\taccountId\022[\n\022setup_abstract"
+        + "ions\030\003 \001(\0132,.io.harness.delegate.NgTaskS"
+        + "etupAbstractionsR\021setupAbstractions\022<\n\007d"
+        + "etails\030\004 \001(\0132\".io.harness.delegate.NgTas"
+        + "kDetailsR\007detailsJ\004\010\001\020\002\"o\n\020SendTaskRespo"
+        + "nse\0226\n\007task_id\030\001 \001(\0132\035.io.harness.delega"
+        + "te.NgTaskIdR\006taskId\022#\n\rresponse_data\030\002 \001"
+        + "(\014R\014responseData\"\370\001\n\024SendTaskAsyncReques"
+        + "t\022?\n\naccount_id\030\002 \001(\0132 .io.harness.deleg"
+        + "ate.NgAccountIdR\taccountId\022[\n\022setup_abst"
+        + "ractions\030\003 \001(\0132,.io.harness.delegate.NgT"
+        + "askSetupAbstractionsR\021setupAbstractions\022"
+        + "<\n\007details\030\004 \001(\0132\".io.harness.delegate.N"
+        + "gTaskDetailsR\007detailsJ\004\010\001\020\002\"O\n\025SendTaskA"
+        + "syncResponse\0226\n\007task_id\030\001 \001(\0132\035.io.harne"
+        + "ss.delegate.NgTaskIdR\006taskId\"\213\001\n\020AbortTa"
+        + "skRequest\022?\n\naccount_id\030\001 \001(\0132 .io.harne"
+        + "ss.delegate.NgAccountIdR\taccountId\0226\n\007ta"
+        + "sk_id\030\002 \001(\0132\035.io.harness.delegate.NgTask"
+        + "IdR\006taskId\"j\n\021AbortTaskResponse\022U\n\021cance"
+        + "led_at_stage\030\001 \001(\0162).io.harness.delegate"
+        + ".NgTaskExecutionStageR\017canceledAtStageB\002"
+        + "P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-            io.harness.delegate.Account.getDescriptor(),
-            io.harness.delegate.Task.getDescriptor(),
-            io.harness.delegate.Progress.getDescriptor(),
+            io.harness.delegate.NgAccount.getDescriptor(),
+            io.harness.delegate.NgTask.getDescriptor(),
+            io.harness.delegate.NgProgress.getDescriptor(),
         });
     internal_static_io_harness_delegate_SendTaskRequest_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_io_harness_delegate_SendTaskRequest_fieldAccessorTable =
@@ -123,9 +124,9 @@ public final class NgDelegateTask {
             new java.lang.String[] {
                 "CanceledAtStage",
             });
-    io.harness.delegate.Account.getDescriptor();
-    io.harness.delegate.Task.getDescriptor();
-    io.harness.delegate.Progress.getDescriptor();
+    io.harness.delegate.NgAccount.getDescriptor();
+    io.harness.delegate.NgTask.getDescriptor();
+    io.harness.delegate.NgProgress.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
