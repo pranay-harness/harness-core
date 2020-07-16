@@ -1,6 +1,7 @@
 package software.wings.service.impl.trigger;
 
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.IGOR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -42,6 +43,11 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   static final String BITBUCKET_PUSH_REQ_FILE = "software/wings/service/impl/webhook/bitbucket_push_request.json";
   static final String BITBUCKET_PULL_REQ_FILE =
       "software/wings/service/impl/webhook/bitbucket_pull_request_created.json";
+  static final String BITBUCKET_REF_CHANGES_REQ_FILE =
+      "software/wings/service/impl/webhook/bitbucket_ref_changes_request.json";
+  static final String BITBUCKET_SERVER_PR_OPENED_FILE =
+      "software/wings/service/impl/webhook/bitbucket_server_pr_opened.json";
+
   @Mock HttpHeaders httpHeaders;
 
   @Test
@@ -118,6 +124,81 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
     when(httpHeaders.getHeaderString(X_GIT_LAB_EVENT)).thenReturn(GitLabEventType.PULL_REQUEST.getValue());
     Map<String, Object> payload = obtainPayload(GITLAB_PULL_REQ_FILE);
     assertThat(webhookEventUtils.obtainBranchName(GITLAB, httpHeaders, payload)).isEqualTo("harshBranch");
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void shouldObtainGitHubPushRepositoryName() throws IOException {
+    when(httpHeaders.getHeaderString(X_GIT_HUB_EVENT)).thenReturn(GitHubEventType.PUSH.getValue());
+    Map<String, Object> payload = obtainPayload(GH_PUSH_REQ_FILE);
+    assertThat(webhookEventUtils.obtainRepositoryName(GITHUB, httpHeaders, payload).get()).isEqualTo("portal");
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void shouldObtainGitHubPullRepositoryName() throws IOException {
+    when(httpHeaders.getHeaderString(X_GIT_HUB_EVENT)).thenReturn(GitHubEventType.PULL_REQUEST.getValue());
+    Map<String, Object> payload = obtainPayload(GH_PULL_REQ_FILE);
+    assertThat(webhookEventUtils.obtainRepositoryName(GITHUB, httpHeaders, payload).get()).isEqualTo("portal");
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void shouldObtainGitLabPushRepositoryName() throws IOException {
+    when(httpHeaders.getHeaderString(X_GIT_LAB_EVENT)).thenReturn(GitLabEventType.PUSH.getValue());
+    Map<String, Object> payload = obtainPayload(GITLAB_PUSH_REQ_FILE);
+    assertThat(webhookEventUtils.obtainRepositoryName(GITLAB, httpHeaders, payload).get()).isEqualTo("Diaspora");
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void shouldObtainGitLabPullRepositoryName() throws IOException {
+    when(httpHeaders.getHeaderString(X_GIT_LAB_EVENT)).thenReturn(GitLabEventType.PULL_REQUEST.getValue());
+    Map<String, Object> payload = obtainPayload(GITLAB_PULL_REQ_FILE);
+    assertThat(webhookEventUtils.obtainRepositoryName(GITLAB, httpHeaders, payload).get()).isEqualTo("HarshProject");
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void shouldObtainBitbucketPushRepositoryName() throws IOException {
+    when(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT)).thenReturn(BitBucketEventType.PUSH.getValue());
+    Map<String, Object> payload = obtainPayload(BITBUCKET_PUSH_REQ_FILE);
+    assertThat(webhookEventUtils.obtainRepositoryName(BITBUCKET, httpHeaders, payload).get()).isEqualTo("anshul-test");
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void shouldObtainBitbucketRefChangesRepositoryName() throws IOException {
+    when(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT)).thenReturn(BitBucketEventType.REFS_CHANGED.getValue());
+    Map<String, Object> payload = obtainPayload(BITBUCKET_REF_CHANGES_REQ_FILE);
+    assertThat(webhookEventUtils.obtainRepositoryName(BITBUCKET, httpHeaders, payload).get()).isEqualTo("anshul-test");
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void shouldObtainBitbucketPullRepositoryName() throws IOException {
+    when(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT))
+        .thenReturn(BitBucketEventType.PULL_REQUEST_CREATED.getValue());
+    Map<String, Object> payload = obtainPayload(BITBUCKET_PULL_REQ_FILE);
+    assertThat(webhookEventUtils.obtainRepositoryName(BITBUCKET, httpHeaders, payload).get()).isEqualTo("HarshRepo");
+  }
+
+  @Test
+  @Owner(developers = IGOR)
+  @Category(UnitTests.class)
+  public void shouldObtainBitbucketServerPrOpenedRepositoryName() throws IOException {
+    when(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT))
+        .thenReturn(BitBucketEventType.PULL_REQUEST_CREATED.getValue());
+    Map<String, Object> payload = obtainPayload(BITBUCKET_SERVER_PR_OPENED_FILE);
+    assertThat(webhookEventUtils.obtainRepositoryName(BITBUCKET, httpHeaders, payload).get())
+        .isEqualTo("git-sync-igor-bb-server");
   }
 
   private Map<String, Object> obtainPayload(String filePath) throws IOException {

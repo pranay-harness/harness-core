@@ -38,6 +38,8 @@ public class WebhookParameters {
   public static final String BIT_BUCKET_COMMIT_ID = "${push.changes[0].'new'.target.hash}";
   public static final String BIT_BUCKET_REF_CHANGE_REQUEST_COMMIT_ID = "${changes[0].toHash}";
   public static final String BIT_BUCKET_REFS_CHANGED_REF = "${changes[0].refId.split('refs/heads/')[1]}";
+  public static final String BIT_BUCKET_REPOSITORY_NAME = "${repository.name}";
+  public static final String BIT_BUCKET_ON_PREM_PULL_REPOSITORY_NAME = "${pullRequest.toRef.repository.name}";
 
   // Git Hub Pull request suggestions
   public static final String GH_PR_ID = "${pull_request.id}";
