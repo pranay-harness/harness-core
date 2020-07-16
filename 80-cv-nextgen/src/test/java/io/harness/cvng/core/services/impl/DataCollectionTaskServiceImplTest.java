@@ -49,7 +49,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
@@ -307,11 +306,10 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
                                       .get();
 
     assertThat(nextTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
-    assertThat(nextTask.getStartTime()).isEqualTo(dataCollectionTask.getEndTime().plusMillis(1));
-    assertThat(nextTask.getEndTime())
-        .isEqualTo(dataCollectionTask.getEndTime().plus(5, ChronoUnit.MINUTES).minusMillis(1));
+    assertThat(nextTask.getStartTime()).isEqualTo(dataCollectionTask.getEndTime());
+    assertThat(nextTask.getEndTime()).isEqualTo(dataCollectionTask.getEndTime().plus(5, ChronoUnit.MINUTES));
     assertThat(nextTask.getValidAfter())
-        .isEqualTo(dataCollectionTask.getEndTime().plus(5, ChronoUnit.MINUTES).minusMillis(1).toEpochMilli()
+        .isEqualTo(dataCollectionTask.getEndTime().plus(5, ChronoUnit.MINUTES).toEpochMilli()
             + DATA_COLLECTION_DELAY.toMillis());
   }
 
@@ -383,8 +381,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     assertThat(savedTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(AppDynamicsDataCollectionInfo.class);
     assertThat(taskIdFromApi).isEqualTo(taskId);
-    assertThat(savedTask.getEndTime())
-        .isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime().minusMillis(1));
+    assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
     assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
   }
 
@@ -406,15 +403,8 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     assertThat(savedTask.getStatus()).isEqualTo(ExecutionStatus.QUEUED);
     assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(SplunkDataCollectionInfo.class);
     assertThat(taskIdFromApi).isEqualTo(taskId);
-    assertThat(savedTask.getEndTime())
-        .isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime().minusMillis(1));
+    assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
     assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
-  }
-
-  private Instant getFiveMinBoundaryInstant(Instant instant) {
-    long minute = TimeUnit.MILLISECONDS.toMinutes(instant.toEpochMilli());
-    minute -= minute % 5;
-    return Instant.ofEpochMilli(TimeUnit.MINUTES.toMillis(minute));
   }
 
   private AppDynamicsCVConfig getCVConfig() {

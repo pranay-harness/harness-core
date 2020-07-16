@@ -1,4 +1,4 @@
-package io.harness.cvng.analysis.resource;
+package io.harness.cvng.analysis.resources;
 
 import static io.harness.cvng.CVConstants.TIMESERIES_ANALYSIS_RESOURCE;
 

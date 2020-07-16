@@ -1,11 +1,11 @@
 package io.harness.cvng.core.entities;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.harness.cvng.util.ErrorMessageUtils.generateErrorMessageFromParam;
+import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
 import com.google.common.base.Preconditions;
 
-import io.harness.cvng.beans.TimeRange;
+import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.models.VerificationType;
 import lombok.Data;
@@ -22,7 +22,7 @@ import java.time.temporal.ChronoUnit;
 @EqualsAndHashCode(callSuper = true)
 public abstract class LogCVConfig extends CVConfig {
   private String query;
-
+  @Override
   public TimeRange getFirstTimeDataCollectionTimeRange() {
     TimeRange baseline = getBaseline();
     return TimeRange.builder()

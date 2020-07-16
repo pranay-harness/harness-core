@@ -26,14 +26,11 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import io.harness.cvng.analysis.resource.LearningEngineTaskResource;
 import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
-import io.harness.cvng.core.resources.DataCollectionResource;
 import io.harness.cvng.core.services.CVNextGenConstants;
-import io.harness.cvng.dashboard.services.resources.HeatMapResource;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
@@ -60,7 +57,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -235,19 +231,16 @@ public class VerificationApplication extends Application<VerificationConfigurati
   }
 
   private void registerResources(Environment environment, Injector injector) {
-    registerResourcesForPackage(DataCollectionResource.class, environment, injector);
-    registerResourcesForPackage(LearningEngineTaskResource.class, environment, injector);
-    registerResourcesForPackage(HeatMapResource.class, environment, injector);
-  }
-
-  private void registerResourcesForPackage(Class clazz, Environment environment, Injector injector) {
-    Reflections reflections = new Reflections(clazz.getPackage().getName());
-
-    Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
-    for (Class<?> resource : resourceClasses) {
+    long startTimeMs = System.currentTimeMillis();
+    Reflections reflections = new Reflections(this.getClass().getPackage().getName());
+    reflections.getTypesAnnotatedWith(Path.class).forEach(resource -> {
+      if (!resource.getPackage().getName().endsWith("resources")) {
+        throw new IllegalStateException("Resource classes should be in resources package." + resource);
+      }
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
-    }
+    });
+    logger.info("Registered all the resources. Time taken(ms): {}", System.currentTimeMillis() - startTimeMs);
   }
 }

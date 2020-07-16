@@ -86,8 +86,12 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
     FieldUtils.writeField(dataCollector, "dataCollectionDSLService", dataCollectionDSLService, true);
     FieldUtils.writeField(dataCollector, "cvNextGenServiceClient", cvNextGenServiceClient, true);
     dataCollectionInfo = AppDynamicsDataCollectionInfo.builder().applicationId(123).tierId(1234).build();
-    dataCollectionTaskDTO =
-        DataCollectionTaskDTO.builder().accountId(accountId).dataCollectionInfo(dataCollectionInfo).build();
+    dataCollectionTaskDTO = DataCollectionTaskDTO.builder()
+                                .accountId(accountId)
+                                .startTime(Instant.now().minusSeconds(60))
+                                .endTime(Instant.now())
+                                .dataCollectionInfo(dataCollectionInfo)
+                                .build();
     Call<RestResponse<DataCollectionTaskDTO>> nextTaskCall = mock(Call.class);
     Call<RestResponse<DataCollectionTaskDTO>> nullCall = mock(Call.class);
 
