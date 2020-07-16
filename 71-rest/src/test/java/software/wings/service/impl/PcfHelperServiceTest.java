@@ -6,6 +6,8 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse.builder;
@@ -25,12 +27,14 @@ import software.wings.beans.PcfConfig;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class PcfHelperServiceTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
+  @Mock private FeatureFlagService mockFeatureFlagService;
   @InjectMocks private PcfHelperService pcfHelperService;
 
   @Test
@@ -43,6 +47,7 @@ public class PcfHelperServiceTest extends WingsBaseTest {
 
     when(delegateService.executeTask(any(DelegateTask.class)))
         .thenReturn(PcfCommandExecutionResponse.builder().build());
+    doReturn(true).when(mockFeatureFlagService).isEnabled(any(), anyString());
 
     pcfHelperService.validate(pcfConfig, encryptedDataDetails);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);

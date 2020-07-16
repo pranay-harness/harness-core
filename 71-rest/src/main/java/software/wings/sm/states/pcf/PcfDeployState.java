@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.PcfDummyCommandUnit.Downsize;
@@ -325,6 +326,7 @@ public class PcfDeployState extends State {
         .enforceSslValidation(setupSweepingOutputPcf.isEnforceSslValidation())
         .pcfManifestsPackage(setupSweepingOutputPcf.getPcfManifestsPackage())
         .useCfCLI(true)
+        .limitPcfThreads(featureFlagService.isEnabled(LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
         .build();
   }
 

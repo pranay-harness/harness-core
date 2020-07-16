@@ -75,6 +75,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
               .timeOutIntervalInMins(pcfCommandRouteUpdateRequest.getTimeoutIntervalInMin())
               .cfHomeDirPath(workingDirectory.getAbsolutePath())
               .useCFCLI(pcfCommandRouteUpdateRequest.isUseCfCLI())
+              .limitPcfThreads(pcfCommandRequest.isLimitPcfThreads())
               .build();
 
       PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData =

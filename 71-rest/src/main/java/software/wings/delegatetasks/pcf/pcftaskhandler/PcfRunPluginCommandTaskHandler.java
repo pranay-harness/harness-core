@@ -102,6 +102,7 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
                                               .password(String.valueOf(pcfConfig.getPassword()))
                                               .endpointUrl(pcfConfig.getEndpointUrl())
                                               .timeOutIntervalInMins(pluginCommandRequest.getTimeoutIntervalInMin())
+                                              .limitPcfThreads(pluginCommandRequest.isLimitPcfThreads())
                                               .build();
 
       final PcfRunPluginScriptRequestData pcfRunPluginScriptRequestData =

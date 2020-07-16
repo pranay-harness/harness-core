@@ -6,6 +6,7 @@ import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
@@ -74,6 +75,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -107,6 +109,7 @@ public class PcfPluginState extends State {
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private transient ApplicationManifestUtils applicationManifestUtils;
   @Inject private transient TemplateUtils templateUtils;
+  @Inject private FeatureFlagService featureFlagService;
 
   public static final String PCF_PLUGIN_COMMAND = "Execute CF Command";
   public static final String FILE_START_REPO_ROOT_REGEX = PcfConstants.FILE_START_REPO_ROOT_REGEX;
@@ -362,6 +365,7 @@ public class PcfPluginState extends State {
             .fileDataList(fileDataList)
             .encryptedDataDetails(encryptedDataDetails)
             .repoRoot(repoRoot)
+            .limitPcfThreads(featureFlagService.isEnabled(LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
             .build();
 
     stateExecutionData.setPcfCommandRequest(commandRequest);

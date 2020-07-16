@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Collections.emptyMap;
+import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 
 import com.google.inject.Inject;
 
@@ -96,6 +97,7 @@ public class PcfRollbackState extends PcfDeployState {
         .enforceSslValidation(setupSweepingOutputPcf.isEnforceSslValidation())
         .useAppAutoscalar(setupSweepingOutputPcf.isUseAppAutoscalar())
         .useCfCLI(true)
+        .limitPcfThreads(featureFlagService.isEnabled(LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
         .build();
   }
 

@@ -26,8 +26,11 @@ public class PcfConnectivityCapabilityCheckTest extends WingsBaseTest {
   private final PcfConfig pcfConfig =
       PcfConfig.builder().endpointUrl("pcfUrl").username(USER_NAME).password(PASSWORD).build();
 
-  private final PcfConnectivityCapability pcfConnectivityCapability =
-      PcfConnectivityCapability.builder().pcfConfig(pcfConfig).encryptionDetails(new ArrayList<>()).build();
+  private final PcfConnectivityCapability pcfConnectivityCapability = PcfConnectivityCapability.builder()
+                                                                          .pcfConfig(pcfConfig)
+                                                                          .limitPcfThreads(true)
+                                                                          .encryptionDetails(new ArrayList<>())
+                                                                          .build();
 
   @Mock private PcfDeploymentManager pcfDeploymentManager;
   @Inject @InjectMocks private PcfConnectivityCapabilityCheck pcfConnectivityCapabilityCheck;
@@ -36,7 +39,7 @@ public class PcfConnectivityCapabilityCheckTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldPerformCapabilityCheck() {
-    when(pcfDeploymentManager.checkConnectivity(pcfConfig)).thenReturn("SUCCESS");
+    when(pcfDeploymentManager.checkConnectivity(pcfConfig, true)).thenReturn("SUCCESS");
     CapabilityResponse capabilityResponse =
         pcfConnectivityCapabilityCheck.performCapabilityCheck(pcfConnectivityCapability);
     assertThat(capabilityResponse).isNotNull();

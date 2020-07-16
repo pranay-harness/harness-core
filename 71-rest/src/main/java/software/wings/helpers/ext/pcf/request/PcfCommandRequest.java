@@ -21,6 +21,7 @@ public class PcfCommandRequest {
   private boolean useCfCLI;
   private boolean enforceSslValidation;
   private boolean useAppAutoscalar;
+  private boolean limitPcfThreads;
 
   public enum PcfCommandType {
     SETUP,

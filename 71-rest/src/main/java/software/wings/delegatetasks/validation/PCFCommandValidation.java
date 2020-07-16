@@ -64,7 +64,7 @@ public class PCFCommandValidation extends AbstractDelegateValidateTask {
         encryptionService.decrypt(pcfConfig, encryptionDetails);
       }
 
-      String validationErrorMsg = pcfDeploymentManager.checkConnectivity(pcfConfig);
+      String validationErrorMsg = pcfDeploymentManager.checkConnectivity(pcfConfig, commandRequest.isLimitPcfThreads());
       validated = !validationErrorMsg.toLowerCase().contains(CONNECTION_TIMED_OUT);
       if (!validated) {
         printWarning("Failed to verify PCF Connectivity");

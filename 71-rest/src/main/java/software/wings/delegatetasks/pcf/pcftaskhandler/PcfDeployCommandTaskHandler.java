@@ -90,6 +90,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
                                               .spaceName(pcfCommandDeployRequest.getSpace())
                                               .timeOutIntervalInMins(pcfCommandDeployRequest.getTimeoutIntervalInMin())
                                               .useCFCLI(pcfCommandDeployRequest.isUseCfCLI())
+                                              .limitPcfThreads(pcfCommandDeployRequest.isLimitPcfThreads())
                                               .build();
 
       // This will be CF_HOME for any cli related operations

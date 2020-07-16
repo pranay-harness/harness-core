@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,6 +31,7 @@ import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse;
 import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Collections;
@@ -45,6 +47,7 @@ import java.util.stream.Collectors;
 public class PcfHelperService {
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
+  @Inject private FeatureFlagService featureFlagService;
 
   public void validate(PcfConfig pcfConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     PcfCommandExecutionResponse pcfCommandExecutionResponse;
@@ -60,6 +63,8 @@ public class PcfHelperService {
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
                                                       .pcfCommandType(PcfCommandType.VALIDATE)
+                                                      .limitPcfThreads(featureFlagService.isEnabled(
+                                                          LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
                                                       .timeoutIntervalInMin(2)
                                                       .build(),
                             encryptedDataDetails})
@@ -125,6 +130,8 @@ public class PcfHelperService {
                                                     .space(space)
                                                     .pcfCommandType(PcfCommandType.APP_DETAILS)
                                                     .timeoutIntervalInMin(5)
+                                                    .limitPcfThreads(featureFlagService.isEnabled(
+                                                        LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
                                                     .build(),
                           encryptionDetails})
                       .timeout(TimeUnit.MINUTES.toMillis(5))
@@ -188,6 +195,8 @@ public class PcfHelperService {
                         .taskType(TaskType.PCF_COMMAND_TASK.name())
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
+                                                      .limitPcfThreads(featureFlagService.isEnabled(
+                                                          LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
                                                       .pcfCommandType(PcfCommandType.DATAFETCH)
                                                       .actionType(ActionType.FETCH_ORG)
                                                       .timeoutIntervalInMin(2)
@@ -229,6 +238,8 @@ public class PcfHelperService {
                                                       .organization(organization)
                                                       .space(space)
                                                       .host(host)
+                                                      .limitPcfThreads(featureFlagService.isEnabled(
+                                                          LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
                                                       .domain(domain)
                                                       .path(path)
                                                       .tcpRoute(tcpRoute)
@@ -269,6 +280,8 @@ public class PcfHelperService {
                         .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
                                                       .pcfConfig(pcfConfig)
                                                       .organization(organization)
+                                                      .limitPcfThreads(featureFlagService.isEnabled(
+                                                          LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
                                                       .pcfCommandType(PcfCommandType.DATAFETCH)
                                                       .actionType(ActionType.FETCH_SPACE)
                                                       .timeoutIntervalInMin(2)
@@ -307,6 +320,8 @@ public class PcfHelperService {
                                                       .pcfConfig(pcfConfig)
                                                       .organization(organization)
                                                       .space(space)
+                                                      .limitPcfThreads(featureFlagService.isEnabled(
+                                                          LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
                                                       .pcfCommandType(PcfCommandType.DATAFETCH)
                                                       .actionType(ActionType.FETCH_ROUTE)
                                                       .timeoutIntervalInMin(2)
@@ -346,6 +361,8 @@ public class PcfHelperService {
                                                       .organization(organization)
                                                       .space(space)
                                                       .actionType(ActionType.RUNNING_COUNT)
+                                                      .limitPcfThreads(featureFlagService.isEnabled(
+                                                          LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
                                                       .pcfCommandType(PcfCommandType.DATAFETCH)
                                                       .applicationNamePrefix(appPrefix)
                                                       .timeoutIntervalInMin(2)

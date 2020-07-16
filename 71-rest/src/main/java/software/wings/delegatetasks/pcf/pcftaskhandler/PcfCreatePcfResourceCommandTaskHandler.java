@@ -56,6 +56,7 @@ public class PcfCreatePcfResourceCommandTaskHandler extends PcfCommandTaskHandle
                 .password(String.valueOf(pcfConfig.getPassword()))
                 .endpointUrl(pcfConfig.getEndpointUrl())
                 .timeOutIntervalInMins(pcfInfraMappingDataRequest.getTimeoutIntervalInMin())
+                .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
                 .build(),
             pcfInfraMappingDataRequest.getHost(), pcfInfraMappingDataRequest.getDomain(),
             pcfInfraMappingDataRequest.getPath(), pcfInfraMappingDataRequest.isTcpRoute(),

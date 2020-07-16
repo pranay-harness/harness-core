@@ -328,12 +328,13 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   }
 
   @Override
-  public String checkConnectivity(PcfConfig pcfConfig) {
+  public String checkConnectivity(PcfConfig pcfConfig, boolean limitPcfThreads) {
     try {
       getOrganizations(PcfRequestConfig.builder()
                            .endpointUrl(pcfConfig.getEndpointUrl())
                            .userName(pcfConfig.getUsername())
                            .password(String.valueOf(pcfConfig.getPassword()))
+                           .limitPcfThreads(limitPcfThreads)
                            .timeOutIntervalInMins(5)
                            .build());
     } catch (PivotalClientApiException e) {
