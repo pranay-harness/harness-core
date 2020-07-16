@@ -80,17 +80,24 @@ public class EnvironmentServiceImpl implements EnvironmentService {
 
   @Override
   public void upsert(@Nonnull Environment environment) {
-    Environment savedEnvironment = hPersistence.createQuery(Environment.class)
-                                       .filter(EnvironmentKeys.accountId, environment.getAccountId())
-                                       .filter(EnvironmentKeys.orgId, environment.getOrgId())
-                                       .filter(EnvironmentKeys.projectId, environment.getProjectId())
-                                       .filter(EnvironmentKeys.identifier, environment.getIdentifier())
-                                       .get();
+    Environment savedEnvironment = getEnvironment(
+        environment.getAccountId(), environment.getOrgId(), environment.getProjectId(), environment.getIdentifier());
 
     if (savedEnvironment == null) {
       save(environment);
     } else {
       update(savedEnvironment, environment);
     }
+  }
+
+  @Override
+  public Environment getEnvironment(
+      @Nonnull String accountId, String orgId, String projectId, @Nonnull String identifier) {
+    return hPersistence.createQuery(Environment.class)
+        .filter(EnvironmentKeys.accountId, accountId)
+        .filter(EnvironmentKeys.orgId, orgId)
+        .filter(EnvironmentKeys.projectId, projectId)
+        .filter(EnvironmentKeys.identifier, identifier)
+        .get();
   }
 }
