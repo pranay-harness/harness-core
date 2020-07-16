@@ -79,7 +79,19 @@ public class K8sVersionTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
+  public void testExecuteTaskInternalWithCCMnotEnabled() throws Exception {
+    kubernetesClusterConfig.setCcmConfig(null);
+    executeTaskInternalHelper();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
   public void testExecuteTaskInternal() throws Exception {
+    executeTaskInternalHelper();
+  }
+
+  public void executeTaskInternalHelper() throws Exception {
     doReturn(k8sClusterConfig).when(k8sTaskParameters).getK8sClusterConfig();
     doReturn(kubernetesClusterConfig).when(k8sClusterConfig).getCloudProvider();
     doReturn(versionInfo).when(k8sVersionTaskHandler).getK8sVersionInfo(any(K8sClusterConfig.class));

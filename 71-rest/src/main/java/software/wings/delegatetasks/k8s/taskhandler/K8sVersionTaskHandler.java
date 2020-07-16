@@ -4,7 +4,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.inject.Inject;
 
-import io.harness.ccm.config.CCMConfig;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.logging.AutoLogContext;
 import io.kubernetes.client.openapi.ApiClient;
@@ -35,17 +34,19 @@ public class K8sVersionTaskHandler extends K8sTaskHandler {
 
   public K8sTaskExecutionResponse executeTaskInternal(K8sTaskParameters k8sTaskParameters) throws ApiException {
     KubernetesClusterConfig kubernetesClusterConfig = getKubernetesConfig(k8sTaskParameters);
-    CCMConfig ccmConfig = kubernetesClusterConfig.getCcmConfig();
 
     VersionInfo versionInfo = getK8sVersionInfo(k8sTaskParameters.getK8sClusterConfig());
     K8sVersionResponse k8sVersionResponse = k8sVersionResponseBuilder(versionInfo);
 
+    boolean isCloudCostEnabled =
+        kubernetesClusterConfig.getCcmConfig() != null && kubernetesClusterConfig.getCcmConfig().isCloudCostEnabled();
+
     try (AutoLogContext ignore = new K8sVersionLogContext(kubernetesClusterConfig.getType(),
              k8sVersionResponse.getServerMajorVersion() + ":" + k8sVersionResponse.getServerMinorVersion(),
-             ccmConfig.isCloudCostEnabled(), OVERRIDE_ERROR);) {
+             isCloudCostEnabled, OVERRIDE_ERROR);) {
       logger.info("[cloudProvider={}, version={}, ccEnabled={}]", kubernetesClusterConfig.getType(),
           k8sVersionResponse.getServerMajorVersion() + ":" + k8sVersionResponse.getServerMinorVersion(),
-          ccmConfig.isCloudCostEnabled());
+          isCloudCostEnabled);
     }
 
     return K8sTaskExecutionResponse.builder()
