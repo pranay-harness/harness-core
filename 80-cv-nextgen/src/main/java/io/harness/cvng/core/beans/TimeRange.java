@@ -1,4 +1,4 @@
-package io.harness.cvng.beans;
+package io.harness.cvng.core.beans;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;

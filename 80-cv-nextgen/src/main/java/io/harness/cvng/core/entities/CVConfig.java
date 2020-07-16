@@ -1,15 +1,15 @@
 package io.harness.cvng.core.entities;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.harness.cvng.util.ErrorMessageUtils.generateErrorMessageFromParam;
+import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.beans.TimeRange;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
+import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.models.VerificationType;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;

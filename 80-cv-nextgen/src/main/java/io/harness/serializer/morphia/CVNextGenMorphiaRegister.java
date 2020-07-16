@@ -13,6 +13,7 @@ import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -34,6 +35,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(MetricPack.class);
     set.add(TimeSeriesThreshold.class);
     set.add(LogRecord.class);
+    set.add(VerificationJob.class);
   }
 
   @Override

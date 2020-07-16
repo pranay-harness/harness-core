@@ -1,7 +1,7 @@
 package io.harness.cvng.core.entities;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.harness.cvng.util.ErrorMessageUtils.generateErrorMessageFromParam;
+import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;

@@ -11,8 +11,8 @@ import com.google.inject.name.Names;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.beans.ExecutionStatus;
-import io.harness.cvng.beans.TimeRange;
 import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
@@ -145,8 +145,8 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       // Not implementing now because this requires more thought
       throw new UnsupportedOperationException("Not implemented yet");
     }
-    DataCollectionTask dataCollectionTask = getDataCollectionTask(cvConfig, prevTask.getEndTime().plusMillis(1),
-        prevTask.getEndTime().plus(5, ChronoUnit.MINUTES).minusMillis(1));
+    DataCollectionTask dataCollectionTask =
+        getDataCollectionTask(cvConfig, prevTask.getEndTime(), prevTask.getEndTime().plus(5, ChronoUnit.MINUTES));
     save(dataCollectionTask);
   }
 
@@ -165,8 +165,8 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     populateMetricPack(cvConfig);
 
     TimeRange dataCollectionRange = cvConfig.getFirstTimeDataCollectionTimeRange();
-    DataCollectionTask dataCollectionTask = getDataCollectionTask(
-        cvConfig, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime().minusMillis(1));
+    DataCollectionTask dataCollectionTask =
+        getDataCollectionTask(cvConfig, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime());
 
     String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(
         cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getConnectorId());

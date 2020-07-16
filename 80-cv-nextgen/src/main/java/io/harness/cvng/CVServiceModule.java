@@ -45,6 +45,8 @@ import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
 import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -122,6 +124,7 @@ public class CVServiceModule extends AbstractModule {
           .to(SplunkDataCollectionInfoMapper.class);
       bind(MetricPackService.class).to(MetricPackServiceImpl.class);
       bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
+      bind(VerificationJobService.class).to(VerificationJobServiceImpl.class);
       bind(AnomalyService.class).to(AnomalyServiceImpl.class);
       bind(LogRecordService.class).to(LogRecordServiceImpl.class);
     } catch (IOException e) {

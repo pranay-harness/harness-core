@@ -1,4 +1,4 @@
-package io.harness.cvng.util;
+package io.harness.cvng.core.utils;
 
 public class ErrorMessageUtils {
   private ErrorMessageUtils() {}
