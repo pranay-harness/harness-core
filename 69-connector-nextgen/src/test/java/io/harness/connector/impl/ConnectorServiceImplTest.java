@@ -86,7 +86,8 @@ public class ConnectorServiceImplTest extends CategoryTest {
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(UserNamePasswordDTO.builder().username(userName).password(password).cacert(cacert).build())
+            .credentials(
+                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
@@ -137,7 +138,8 @@ public class ConnectorServiceImplTest extends CategoryTest {
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(UserNamePasswordDTO.builder().username(userName).password(password).cacert(cacert).build())
+            .credentials(
+                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
@@ -200,7 +202,7 @@ public class ConnectorServiceImplTest extends CategoryTest {
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
     UserNamePasswordDTO userNamePasswordDTO = (UserNamePasswordDTO) credentialDTO.getAuth().getCredentials();
     assertThat(userNamePasswordDTO.getUsername()).isEqualTo(userName);
-    assertThat(userNamePasswordDTO.getPassword()).isEqualTo(password);
+    assertThat(userNamePasswordDTO.getEncryptedPassword()).isEqualTo(password);
     assertThat(userNamePasswordDTO.getCacert()).isEqualTo(cacert);
   }
 
@@ -230,7 +232,8 @@ public class ConnectorServiceImplTest extends CategoryTest {
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(UserNamePasswordDTO.builder().username(userName).password(password).cacert(cacert).build())
+            .credentials(
+                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()

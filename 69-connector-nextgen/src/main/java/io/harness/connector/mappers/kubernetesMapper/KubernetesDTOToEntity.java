@@ -126,32 +126,32 @@ public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<Kuberne
   private KubernetesAuth toUserNamePasswordKubernetesCredential(UserNamePasswordDTO userNamePasswordDTO) {
     return UserNamePasswordK8.builder()
         .userName(userNamePasswordDTO.getUsername())
-        .password(userNamePasswordDTO.getPassword())
+        .password(userNamePasswordDTO.getEncryptedPassword())
         .cacert(userNamePasswordDTO.getCacert())
         .build();
   }
 
   private KubernetesAuth toClientKeyCertKubernetesCredential(ClientKeyCertDTO clientKeyCertDTO) {
     return ClientKeyCertK8.builder()
-        .clientKey(clientKeyCertDTO.getClientKey())
-        .clientCert(clientKeyCertDTO.getClientCert())
-        .clientKeyPassphrase(clientKeyCertDTO.getClientKeyPassphrase())
+        .clientKey(clientKeyCertDTO.getEncryptedClientKey())
+        .clientCert(clientKeyCertDTO.getEncryptedClientCert())
+        .clientKeyPassphrase(clientKeyCertDTO.getEncryptedClientKeyPassphrase())
         .clientKeyAlgo(clientKeyCertDTO.getClientKeyAlgo())
         .build();
   }
 
   private KubernetesAuth toServiceAccountKubernetesCredential(ServiceAccountDTO serviceAccountDTO) {
-    return ServiceAccountK8.builder().serviceAcccountToken(serviceAccountDTO.getServiceAccountToken()).build();
+    return ServiceAccountK8.builder().serviceAcccountToken(serviceAccountDTO.getEncryptedServiceAccountToken()).build();
   }
 
   private KubernetesAuth toOpenIdConnectKubernetesCredential(OpenIdConnectDTO openIdConnectDTO) {
     return OpenIdConnectK8.builder()
         .oidcUsername(openIdConnectDTO.getOidcUsername())
-        .oidcSecret(openIdConnectDTO.getOidcSecret())
+        .oidcSecret(openIdConnectDTO.getEncryptedOidcSecret())
         .oidcScopes(openIdConnectDTO.getOidcScopes())
-        .oidcPassword(openIdConnectDTO.getOidcPassword())
+        .oidcPassword(openIdConnectDTO.getEncryptedOidcPassword())
         .oidcScopes(openIdConnectDTO.getOidcScopes())
-        .oidcClientId(openIdConnectDTO.getOidcClientId())
+        .oidcClientId(openIdConnectDTO.getEncryptedOidcClientId())
         .oidcIssuerUrl(openIdConnectDTO.getOidcIssuerUrl())
         .build();
   }

@@ -128,31 +128,31 @@ public class KubernetesValidationHelper {
     if (isNotBlank(userNamePassword.getUsername())) {
       configBuilder.withUsername(userNamePassword.getUsername().trim());
     }
-    if (isNotBlank(userNamePassword.getPassword())) {
-      configBuilder.withPassword(userNamePassword.getPassword());
+    if (userNamePassword.getPassword() != null) {
+      configBuilder.withPassword(String.valueOf(userNamePassword.getPassword()));
     }
-    if (isNotBlank(userNamePassword.getCacert())) {
+    if (userNamePassword.getCacert() != null) {
       configBuilder.withCaCertData(userNamePassword.getCacert());
     }
   }
 
   private void populateServiceAccountInConfig(ServiceAccountDTO serviceAccount, ConfigBuilder configBuilder) {
     if (serviceAccount.getServiceAccountToken() != null) {
-      configBuilder.withOauthToken(serviceAccount.getServiceAccountToken());
+      configBuilder.withOauthToken(String.valueOf(serviceAccount.getServiceAccountToken()));
     }
   }
 
   private void populateClientKeyCertInConfig(ClientKeyCertDTO clientKey, ConfigBuilder configBuilder) {
     if (clientKey.getClientCert() != null) {
-      configBuilder.withClientCertData(encode(clientKey.getClientCert().toCharArray()));
+      configBuilder.withClientCertData(encode(clientKey.getClientCert()));
     }
     if (clientKey.getClientKey() != null) {
-      configBuilder.withClientKeyData(encode(clientKey.getClientKey().toCharArray()));
+      configBuilder.withClientKeyData(encode(clientKey.getClientKey()));
     }
     if (clientKey.getClientKeyPassphrase() != null) {
-      configBuilder.withClientKeyPassphrase(clientKey.getClientKeyPassphrase());
+      configBuilder.withClientKeyPassphrase(String.valueOf(clientKey.getClientKeyPassphrase()));
     }
-    if (clientKey.getClientKeyAlgo() != null) {
+    if (isNotBlank(clientKey.getClientKeyAlgo())) {
       configBuilder.withClientKeyAlgo(clientKey.getClientKeyAlgo().trim());
     }
   }

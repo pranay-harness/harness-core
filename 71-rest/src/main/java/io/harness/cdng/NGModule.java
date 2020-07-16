@@ -2,9 +2,6 @@ package io.harness.cdng;
 
 import io.harness.cdng.artifact.service.ArtifactSourceService;
 import io.harness.cdng.artifact.service.impl.ArtifactSourceServiceImpl;
-import io.harness.cdng.common.MiscUtils;
-import io.harness.cdng.connector.impl.KubernetesConnectorDelegateServiceImpl;
-import io.harness.cdng.connector.service.KubernetesConnectorDelegateService;
 import io.harness.cdng.environment.EnvironmentService;
 import io.harness.cdng.environment.EnvironmentServiceImpl;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
@@ -37,9 +34,5 @@ public class NGModule extends DependencyModule {
     bind(EnvironmentService.class).to(EnvironmentServiceImpl.class);
     bind(PipelineService.class).to(PipelineServiceImpl.class);
     bind(NgPipelineExecutionService.class).to(NgPipelineExecutionServiceImpl.class);
-    if (!MiscUtils.isNextGenApplication()) {
-      // TODO @rk: 12/07/20 : deepak would be removing this, so commenting for now
-      bind(KubernetesConnectorDelegateService.class).to(KubernetesConnectorDelegateServiceImpl.class);
-    }
   }
 }

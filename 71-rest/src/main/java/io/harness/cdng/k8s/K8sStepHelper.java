@@ -97,7 +97,7 @@ public class K8sStepHelper {
                                                               .authType(KubernetesClusterAuthType.USER_PASSWORD)
                                                               .masterUrl(config.getMasterUrl())
                                                               .username(auth.getUsername())
-                                                              .password(auth.getPassword().toCharArray())
+                                                              .password(auth.getPassword())
                                                               .build();
         builder.withValue(kubernetesClusterConfig);
         break;

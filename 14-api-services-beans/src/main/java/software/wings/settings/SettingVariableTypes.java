@@ -267,7 +267,9 @@ public enum SettingVariableTypes {
 
   CE_GCP("Continuous Efficiency GCP"),
 
-  AZURE_VAULT("Azure Vault Secrets Manager");
+  AZURE_VAULT("Azure Vault Secrets Manager"),
+
+  KUBERNETES_CLUSTER_NG("Kubernetes Cluster");
 
   @Getter private String displayName;
 
