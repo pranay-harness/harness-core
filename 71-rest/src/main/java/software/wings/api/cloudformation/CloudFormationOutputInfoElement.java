@@ -2,14 +2,14 @@ package software.wings.api.cloudformation;
 
 import io.harness.context.ContextElementType;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Value
+@Data
 @Builder
 public class CloudFormationOutputInfoElement implements CloudFormationElement {
   private Map<String, Object> newStackOutputs;
@@ -42,6 +42,9 @@ public class CloudFormationOutputInfoElement implements CloudFormationElement {
   }
 
   public void mergeOutputs(Map<String, Object> newMap) {
+    if (newStackOutputs == null) {
+      newStackOutputs = new HashMap<>();
+    }
     newStackOutputs.putAll(newMap);
   }
 }

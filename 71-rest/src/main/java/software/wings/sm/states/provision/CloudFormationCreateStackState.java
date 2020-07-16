@@ -137,8 +137,9 @@ public class CloudFormationCreateStackState extends CloudFormationState {
       CloudFormationOutputInfoElement outputElement =
           context.getContextElement(ContextElementType.CLOUD_FORMATION_PROVISION);
       if (outputElement == null) {
-        outputElement = CloudFormationOutputInfoElement.builder().newStackOutputs(outputs).build();
-      } else {
+        outputElement = CloudFormationOutputInfoElement.builder().build();
+      }
+      if (isNotEmpty(outputs)) {
         outputElement.mergeOutputs(outputs);
       }
       ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
