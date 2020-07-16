@@ -10,6 +10,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -383,6 +385,17 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     assertThat(taskIdFromApi).isEqualTo(taskId);
     assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
     assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
+  }
+
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testDeleteDataCollectionTask() throws IllegalAccessException {
+    String taskId = generateUuid();
+    VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
+    FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
+    dataCollectionTaskService.deleteDataCollectionTask(accountId, taskId);
+    verify(verificationManagerService, times(1)).deleteDataCollectionTask(accountId, taskId);
   }
 
   @Test

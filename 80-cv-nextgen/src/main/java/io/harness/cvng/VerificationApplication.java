@@ -29,6 +29,9 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
+import io.harness.cvng.core.entities.DeletedCVConfig;
+import io.harness.cvng.core.entities.DeletedCVConfig.DeletedCVConfigKeys;
+import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
@@ -149,6 +152,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         CVConfigKeys.analysisOrchestrationIteration);
 
     registerCVConfigIterator(injector);
+    registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);
     logger.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
@@ -202,6 +206,29 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .handler(cvConfigDataCollectionHandler)
             .schedulingType(REGULAR)
             .filterExpander(query -> query.criteria(CVConfigKeys.dataCollectionTaskId).doesNotExist())
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(dataCollectionIterator);
+    dataCollectionExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+  }
+
+  private void registerCVConfigCleanupIterator(Injector injector) {
+    ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
+        5, new ThreadFactoryBuilder().setNameFormat("cv-config-cleanup-iterator").build());
+    CVConfigCleanupHandler cvConfigCleanupHandler = injector.getInstance(CVConfigCleanupHandler.class);
+    // TODO: setup alert if this goes above acceptable threshold.
+    PersistenceIterator dataCollectionIterator =
+        MongoPersistenceIterator.<DeletedCVConfig, MorphiaFilterExpander<DeletedCVConfig>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(DeletedCVConfig.class)
+            .fieldName(DeletedCVConfigKeys.dataCollectionTaskIteration)
+            .targetInterval(ofMinutes(1))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(dataCollectionExecutor)
+            .semaphore(new Semaphore(5))
+            .handler(cvConfigCleanupHandler)
+            .schedulingType(REGULAR)
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();

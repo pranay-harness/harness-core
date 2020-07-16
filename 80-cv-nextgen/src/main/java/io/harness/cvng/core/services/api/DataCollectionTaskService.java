@@ -13,5 +13,6 @@ public interface DataCollectionTaskService {
   Optional<DataCollectionTaskDTO> getNextTaskDTO(String accountId, String cvConfigId);
   DataCollectionTask getDataCollectionTask(String dataCollectionTaskId);
   void updateTaskStatus(DataCollectionTaskResult dataCollectionTaskResult);
+  void deleteDataCollectionTask(String accountId, String dataCollectionTaskId);
   String enqueueFirstTask(CVConfig cvConfig);
 }

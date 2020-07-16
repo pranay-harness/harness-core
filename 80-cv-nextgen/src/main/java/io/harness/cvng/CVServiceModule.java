@@ -19,6 +19,7 @@ import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
+import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -30,6 +31,7 @@ import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
 import io.harness.cvng.core.services.impl.CVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
+import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
@@ -110,6 +112,7 @@ public class CVServiceModule extends AbstractModule {
       bind(MetricPackService.class).to(MetricPackServiceImpl.class);
       bind(SplunkService.class).to(SplunkServiceImpl.class);
       bind(CVConfigService.class).to(CVConfigServiceImpl.class);
+      bind(DeletedCVConfigService.class).to(DeletedCVConfigServiceImpl.class);
       bind(CVConfigTransformer.class)
           .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
           .to(AppDynamicsCVConfigTransformer.class);
