@@ -1,5 +1,8 @@
 package io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet;
 
+import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
+import static software.wings.settings.SettingVariableTypes.CE_AWS;
+
 import com.google.inject.Singleton;
 
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -16,7 +19,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CECloudAccount;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-import software.wings.settings.SettingValue;
 
 import java.util.List;
 
@@ -32,8 +34,8 @@ public class AwsECSClusterSyncTasklet implements Tasklet {
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    List<SettingAttribute> ceConnectorList = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-        accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingValue.SettingVariableTypes.CE_AWS);
+    List<SettingAttribute> ceConnectorList =
+        cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(accountId, CE_CONNECTOR, CE_AWS);
     ceConnectorList.forEach(ceConnector -> {
       CEAwsConfig ceAwsConfig = (CEAwsConfig) ceConnector.getValue();
       CECloudAccount cloudAccount = CECloudAccount.builder()
