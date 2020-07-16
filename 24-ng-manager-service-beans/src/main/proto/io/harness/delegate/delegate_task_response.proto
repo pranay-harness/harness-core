@@ -4,7 +4,6 @@ package io.harness.delegate;
 
 option java_multiple_files = true;
 
-import "io/harness/delegate/account.proto";
 import "io/harness/delegate/task.proto";
 
 message SendTaskResultRequest {

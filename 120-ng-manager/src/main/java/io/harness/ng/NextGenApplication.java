@@ -30,6 +30,9 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.ng.core.perpetualtask.sample.SampleRemotePTaskServiceClient;
+import io.harness.perpetualtask.remote.RemotePerpetualTaskServiceClientRegistry;
+import io.harness.perpetualtask.remote.RemotePerpetualTaskType;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -123,6 +126,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerManagedBeans(environment, injector);
     registerQueueListeners(injector);
     registerExecutionPlanCreators(injector);
+    registerRemotePerpetualTaskServiceClients(injector);
     MaintenanceController.forceMaintenance(false);
 
     logger.info("Initializing gRPC server...");
@@ -195,5 +199,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerExecutionPlanCreators(Injector injector) {
     injector.getInstance(ExecutionPlanCreatorRegistrar.class).register();
+  }
+
+  private void registerRemotePerpetualTaskServiceClients(Injector injector) {
+    logger.info("initializing RemotePerpetualTaskServiceClients");
+    final RemotePerpetualTaskServiceClientRegistry clientRegistry =
+        injector.getInstance(RemotePerpetualTaskServiceClientRegistry.class);
+    clientRegistry.registerClient(RemotePerpetualTaskType.REMOTE_SAMPLE.getTaskType(),
+        injector.getInstance(SampleRemotePTaskServiceClient.class));
   }
 }

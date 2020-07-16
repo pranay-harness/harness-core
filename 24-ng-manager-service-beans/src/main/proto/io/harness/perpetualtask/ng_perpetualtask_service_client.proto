@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask;
+
+option java_multiple_files = true;
+
+import "google/protobuf/any.proto";
+import "io/harness/delegate/task.proto";
+import "io/harness/perpetualtask/ng_peprpetual_task_client.proto";
+
+message ObtainPerpetualTaskValidationDetailsRequest {
+  string account_id = 1;
+  string task_type = 2;
+  RemotePerpetualTaskClientContext context = 4;
+}
+
+message ObtainPerpetualTaskValidationDetailsResponse {
+  delegate.TaskSetupAbstractions setup_abstractions = 1;
+  delegate.TaskDetails details = 2;
+}
+
+message ObtainPerpetualTaskExecutionParamsRequest {
+  string task_type = 1;
+  RemotePerpetualTaskClientContext context = 3;
+}
+
+message ObtainPerpetualTaskExecutionParamsResponse {
+  google.protobuf.Any customized_params = 1;
+}
+
+message ReportPerpetualTaskStateChangeRequest {
+  string task_type = 1;
+  string perpetual_task_id = 2;
+  PerpetualTaskExecutionResponse new_task_response = 3;
+  PerpetualTaskExecutionResponse old_task_response = 4;
+}
+
+message PerpetualTaskExecutionResponse {
+  string task_state = 1;
+  int32 response_code = 2;
+  string response_message = 3;
+}
+
+message ReportPerpetualTaskStateChangeResponse {
+}

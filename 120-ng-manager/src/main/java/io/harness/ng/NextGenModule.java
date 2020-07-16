@@ -20,6 +20,8 @@ import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.NgManagerGrpcServerModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.remote.server.grpc.perpetualtask.RemotePerpetualTaskServiceClientManager;
+import io.harness.ng.core.remote.server.grpc.perpetualtask.impl.RemotePerpetualTaskServiceClientManagerImpl;
 import io.harness.ng.orchestration.NgDelegateTaskExecutor;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
@@ -110,6 +112,8 @@ public class NextGenModule extends DependencyModule {
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     stepRegistrarMapBinder.addBinding(NgStepRegistrar.class.getName()).to(NgStepRegistrar.class);
+
+    bind(RemotePerpetualTaskServiceClientManager.class).to(RemotePerpetualTaskServiceClientManagerImpl.class);
   }
 
   private ValidatorFactory getValidatorFactory() {

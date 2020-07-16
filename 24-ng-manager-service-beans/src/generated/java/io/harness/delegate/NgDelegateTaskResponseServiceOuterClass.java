@@ -21,16 +21,32 @@ public final class NgDelegateTaskResponseServiceOuterClass {
     java.lang.String[] descriptorData = {"\n;io/harness/delegate/ng_delegate_task_r"
         + "esponse_service.proto\022\023io.harness.delega"
         + "te\0320io/harness/delegate/delegate_task_re"
-        + "sponse.proto2\212\001\n\035NgDelegateTaskResponseS"
-        + "ervice\022i\n\016SendTaskResult\022*.io.harness.de"
-        + "legate.SendTaskResultRequest\032+.io.harnes"
-        + "s.delegate.SendTaskResultResponseB\002P\001b\006p"
-        + "roto3"};
+        + "sponse.proto\032>io/harness/perpetualtask/n"
+        + "g_perpetualtask_service_client.proto2\232\005\n"
+        + "\035NgDelegateTaskResponseService\022i\n\016SendTa"
+        + "skResult\022*.io.harness.delegate.SendTaskR"
+        + "esultRequest\032+.io.harness.delegate.SendT"
+        + "askResultResponse\022\265\001\n$ObtainPerpetualTas"
+        + "kValidationDetails\022E.io.harness.perpetua"
+        + "ltask.ObtainPerpetualTaskValidationDetai"
+        + "lsRequest\032F.io.harness.perpetualtask.Obt"
+        + "ainPerpetualTaskValidationDetailsRespons"
+        + "e\022\257\001\n\"ObtainPerpetualTaskExecutionParams"
+        + "\022C.io.harness.perpetualtask.ObtainPerpet"
+        + "ualTaskExecutionParamsRequest\032D.io.harne"
+        + "ss.perpetualtask.ObtainPerpetualTaskExec"
+        + "utionParamsResponse\022\243\001\n\036ReportPerpetualT"
+        + "askStateChange\022?.io.harness.perpetualtas"
+        + "k.ReportPerpetualTaskStateChangeRequest\032"
+        + "@.io.harness.perpetualtask.ReportPerpetu"
+        + "alTaskStateChangeResponseB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             io.harness.delegate.DelegateTaskResponse.getDescriptor(),
+            io.harness.perpetualtask.NgPerpetualtaskServiceClient.getDescriptor(),
         });
     io.harness.delegate.DelegateTaskResponse.getDescriptor();
+    io.harness.perpetualtask.NgPerpetualtaskServiceClient.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

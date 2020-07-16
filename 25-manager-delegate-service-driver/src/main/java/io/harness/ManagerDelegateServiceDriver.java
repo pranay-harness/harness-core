@@ -25,6 +25,11 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NoResultFoundException;
 import io.harness.grpc.ManagerDelegateGrpcClient;
+import io.harness.perpetualtask.CreateRemotePerpetualTaskRequest;
+import io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest;
+import io.harness.perpetualtask.RemotePerpetualTaskClientContext;
+import io.harness.perpetualtask.RemotePerpetualTaskSchedule;
+import io.harness.perpetualtask.ResetRemotePerpetualTaskRequest;
 import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 
@@ -106,5 +111,29 @@ public class ManagerDelegateServiceDriver {
       return (TaskParameters) parameters[0];
     }
     throw new InvalidRequestException("Only Supported for task using task parameters");
+  }
+
+  public String createRemotePerpetualTask(String perpetualTaskType, String accountId,
+      RemotePerpetualTaskClientContext clientContext, RemotePerpetualTaskSchedule schedule, boolean allowDuplicate) {
+    final CreateRemotePerpetualTaskRequest request = CreateRemotePerpetualTaskRequest.newBuilder()
+                                                         .setAccountId(accountId)
+                                                         .setAllowDuplicate(allowDuplicate)
+                                                         .setTaskType(perpetualTaskType)
+                                                         .setSchedule(schedule)
+                                                         .setContext(clientContext)
+                                                         .build();
+    return managerDelegateGrpcClient.createRemotePerpetualTask(request).getPerpetualTaskId();
+  }
+
+  public boolean resetRemotePerpetualTask(String accountId, String taskId) {
+    final ResetRemotePerpetualTaskRequest request =
+        ResetRemotePerpetualTaskRequest.newBuilder().setAccountId(accountId).setPerpetualTaskId(taskId).build();
+    return managerDelegateGrpcClient.resetRemotePerpetualTask(request).getSuccess();
+  }
+
+  public boolean deleteRemotePerpetualTask(String accountId, String taskId) {
+    final DeleteRemotePerpetualTaskRequest request =
+        DeleteRemotePerpetualTaskRequest.newBuilder().setAccountId(accountId).setPerpetualTaskId(taskId).build();
+    return managerDelegateGrpcClient.deleteRemotePerpetualTask(request).getSuccess();
   }
 }

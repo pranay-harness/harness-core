@@ -26,17 +26,15 @@ public final class DelegateTaskResponse {
   private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
     java.lang.String[] descriptorData = {"\n0io/harness/delegate/delegate_task_resp"
-        + "onse.proto\022\023io.harness.delegate\032!io/harn"
-        + "ess/delegate/account.proto\032\036io/harness/d"
-        + "elegate/task.proto\"r\n\025SendTaskResultRequ"
-        + "est\0224\n\007task_id\030\001 \001(\0132\033.io.harness.delega"
-        + "te.TaskIdR\006taskId\022#\n\rresponse_data\030\002 \001(\014"
-        + "R\014responseData\"B\n\026SendTaskResultResponse"
-        + "\022(\n\017acknowledgement\030\001 \001(\010R\017acknowledgeme"
-        + "ntB\002P\001b\006proto3"};
+        + "onse.proto\022\023io.harness.delegate\032\036io/harn"
+        + "ess/delegate/task.proto\"r\n\025SendTaskResul"
+        + "tRequest\0224\n\007task_id\030\001 \001(\0132\033.io.harness.d"
+        + "elegate.TaskIdR\006taskId\022#\n\rresponse_data\030"
+        + "\002 \001(\014R\014responseData\"B\n\026SendTaskResultRes"
+        + "ponse\022(\n\017acknowledgement\030\001 \001(\010R\017acknowle"
+        + "dgementB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-            io.harness.delegate.Account.getDescriptor(),
             io.harness.delegate.Task.getDescriptor(),
         });
     internal_static_io_harness_delegate_SendTaskResultRequest_descriptor = getDescriptor().getMessageTypes().get(0);
@@ -54,7 +52,6 @@ public final class DelegateTaskResponse {
             new java.lang.String[] {
                 "Acknowledgement",
             });
-    io.harness.delegate.Account.getDescriptor();
     io.harness.delegate.Task.getDescriptor();
   }
 
