@@ -4,25 +4,18 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
-import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
-import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import io.harness.tasks.Cd1SetupFields;
@@ -46,30 +39,11 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SpotinstAmiInstanceSyncPerpetualTaskClient
-    implements PerpetualTaskServiceClient,
-               PerpetualTaskServiceInprocClient<SpotinstAmiInstanceSyncPerpetualTaskClientParams> {
+public class SpotinstAmiInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceClient {
   public static final String ELASTIGROUP_ID = "elastigroupId";
-  @Inject PerpetualTaskService perpetualTaskService;
   @Inject InfrastructureMappingService infraMappingService;
   @Inject SettingsService settingsService;
   @Inject SecretManager secretManager;
-
-  @Override
-  public String create(String accountId, SpotinstAmiInstanceSyncPerpetualTaskClientParams clientParams) {
-    Map<String, String> paramMap = ImmutableMap.of(HARNESS_APPLICATION_ID, clientParams.getAppId(),
-        INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId(), ELASTIGROUP_ID, clientParams.getElastigroupId());
-
-    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(paramMap).build();
-
-    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
-                                         .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
-                                         .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
-                                         .build();
-
-    return perpetualTaskService.createTask(
-        PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC, accountId, clientContext, schedule, false);
-  }
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {

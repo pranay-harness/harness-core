@@ -2,14 +2,10 @@ package io.harness.perpetualtask.instancesync;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
-import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
-import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.COMPUTE_PROVIDER_NAME;
@@ -20,15 +16,11 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.AccessLevel;
@@ -54,9 +46,7 @@ import java.util.Collections;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SpotinstAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   private static final String ELASTIGROUP_ID = "elasti-group-id";
-  private static final String TASK_ID = "task-id";
 
-  @Mock PerpetualTaskService perpetualTaskService;
   @Mock InfrastructureMappingService infraMappingService;
   @Mock SettingsService settingsService;
   @Mock SecretManager secretManager;
@@ -81,21 +71,6 @@ public class SpotinstAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTes
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(awsConfig).build());
     when(secretManager.getEncryptionDetails(spotInstConfig, null, null)).thenReturn(Collections.emptyList());
     when(secretManager.getEncryptionDetails(awsConfig, null, null)).thenReturn(Collections.emptyList());
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.ABOSII)
-  @Category(UnitTests.class)
-  public void createPerpeturalTask() {
-    client.create(ACCOUNT_ID, getPerpetualTaskClientParams());
-
-    verify(perpetualTaskService, times(1))
-        .createTask(PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC, ACCOUNT_ID, getPerpetualTaskClientContext(),
-            PerpetualTaskSchedule.newBuilder()
-                .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
-                .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
-                .build(),
-            false);
   }
 
   @Test
