@@ -1,6 +1,5 @@
 package software.wings.security.encryption.migration;
 
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS;
 import static software.wings.beans.FeatureName.CONNECTORS_REF_SECRETS_MIGRATION;
 import static software.wings.beans.SettingAttribute.VALUE_TYPE_KEY;
@@ -81,7 +80,7 @@ public class SettingAttributesSecretReferenceFeatureFlagJob implements Managed {
                                             .notEqual(Boolean.TRUE)
                                             .field(VALUE_TYPE_KEY)
                                             .in(ATTRIBUTES_USING_REFERENCES)
-                                            .field(ACCOUNT_ID_KEY)
+                                            .field(SettingAttributeKeys.accountId)
                                             .equal(accountId);
         SettingAttribute settingAttribute = query.get();
         if (settingAttribute == null) {

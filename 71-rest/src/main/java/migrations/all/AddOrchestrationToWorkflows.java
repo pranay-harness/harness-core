@@ -8,6 +8,7 @@ import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 
@@ -24,7 +25,7 @@ public class AddOrchestrationToWorkflows implements Migration {
                                  .field(Workflow.ORCHESTRATION_KEY)
                                  .doesNotExist()
                                  .project(Workflow.ID_KEY, true)
-                                 .project(Workflow.APP_ID_KEY, true)
+                                 .project(WorkflowKeys.appId, true)
                                  .fetch())) {
       for (Workflow workflow : workflowIterator) {
         try {

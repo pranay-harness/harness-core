@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.alerts.AlertCategory;
 import software.wings.beans.Base;
@@ -25,6 +26,7 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@FieldNameConstants(innerTypeName = "AlertNotificationRulekeys")
 @Entity(value = "alertNotificationRules", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class AlertNotificationRule extends Base implements AccountAccess {

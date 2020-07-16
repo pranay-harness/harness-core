@@ -41,7 +41,6 @@ import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.SERVICE;
@@ -149,6 +148,7 @@ import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
@@ -1004,7 +1004,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Set<String> keywords = workflowServiceHelper.getKeywords(workflow);
     wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
-                                .filter(Workflow.APP_ID_KEY, workflow.getAppId())
+                                .filter(WorkflowKeys.appId, workflow.getAppId())
                                 .filter(Workflow.ID_KEY, workflow.getUuid()),
         wingsPersistence.createUpdateOperations(Workflow.class)
             .set("keywords", keywords)
@@ -1019,7 +1019,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
-                                .filter(Workflow.APP_ID_KEY, workflow.getAppId())
+                                .filter(WorkflowKeys.appId, workflow.getAppId())
                                 .filter(Workflow.ID_KEY, workflow.getUuid()),
         wingsPersistence.createUpdateOperations(Workflow.class)
             .set("linkedArtifactStreamIds", linkedArtifactStreamIds));
@@ -1222,7 +1222,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<Pipeline> pipelines = pipelineService.listPipelines(
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
-            .addFilter(Pipeline.APP_ID_KEY, EQ, workflow.getAppId())
+            .addFilter(PipelineKeys.appId, EQ, workflow.getAppId())
             .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
             .build());
 
@@ -3359,14 +3359,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       List<String> appsIds = appService.getAppsByAccountId(accountId).stream().map(Base::getAppId).collect(toList());
 
       if (!appsIds.isEmpty()) {
-        workflows = listWorkflows(
-            aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter(APP_ID_KEY, IN, appsIds.toArray()).build())
+        workflows = listWorkflows(aPageRequest()
+                                      .withLimit(PageRequest.UNLIMITED)
+                                      .addFilter(WorkflowKeys.appId, IN, appsIds.toArray())
+                                      .build())
                         .getResponse();
       }
     } else {
       workflows = listWorkflows(aPageRequest()
                                     .withLimit(PageRequest.UNLIMITED)
-                                    .addFilter(APP_ID_KEY, Operator.EQ, settingAttribute.getAppId())
+                                    .addFilter(WorkflowKeys.appId, Operator.EQ, settingAttribute.getAppId())
                                     .build())
                       .getResponse();
     }
@@ -3578,7 +3580,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public String fetchWorkflowName(String appId, String workflowId) {
     Workflow workflow = wingsPersistence.createQuery(Workflow.class)
                             .project(Workflow.NAME_KEY, true)
-                            .filter(APP_ID_KEY, appId)
+                            .filter(WorkflowKeys.appId, appId)
                             .filter(Pipeline.ID_KEY, workflowId)
                             .get();
     notNullCheck("Workflow does not exist", workflow, USER);
@@ -3589,7 +3591,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public List<String> obtainWorkflowNamesReferencedByEnvironment(String appId, String envId) {
     List<String> referencedWorkflows = new ArrayList<>();
     try (HIterator<Workflow> workflowHIterator =
-             new HIterator<>(wingsPersistence.createQuery(Workflow.class).filter(APP_ID_KEY, appId).fetch())) {
+             new HIterator<>(wingsPersistence.createQuery(Workflow.class).filter(WorkflowKeys.appId, appId).fetch())) {
       if (workflowHIterator != null) {
         for (Workflow workflow : workflowHIterator) {
           if (workflow.getEnvId() != null && !workflow.checkEnvironmentTemplatized()

@@ -18,7 +18,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.Role.Builder.aRole;
@@ -504,7 +503,7 @@ public class AccountServiceImpl implements AccountService {
       if (!isAbstract(entity.getModifiers())) {
         logger.info("Deleting account level entity {}", entity.getName());
         wingsPersistence.delete(
-            wingsPersistence.createQuery(entity, excludeAuthority).filter(ACCOUNT_ID_KEY, accountId));
+            wingsPersistence.createQuery(entity, excludeAuthority).filter(ApplicationKeys.accountId, accountId));
       }
     }
   }

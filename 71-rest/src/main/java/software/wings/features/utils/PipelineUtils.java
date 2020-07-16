@@ -15,9 +15,11 @@ import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import software.wings.beans.EntityType;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.features.api.Usage;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
@@ -57,8 +59,8 @@ public class PipelineUtils {
     Set<String> workflowIds = getWorkflowIdsOfPipeline(pipeline);
     if (isNotEmpty(workflowIds)) {
       workflowPageRequest = aPageRequest()
-                                .addFilter(Workflow.APP_ID_KEY, EQ, pipeline.getAppId())
-                                .addFilter("workflowType", Operator.EQ, WorkflowType.ORCHESTRATION)
+                                .addFilter(WorkflowKeys.appId, EQ, pipeline.getAppId())
+                                .addFilter(WorkflowKeys.workflowType, Operator.EQ, WorkflowType.ORCHESTRATION)
                                 .addFilter(Workflow.ID_KEY, IN, workflowIds.toArray())
                                 .build();
     }
@@ -88,7 +90,7 @@ public class PipelineUtils {
         .entityId(pipeline.getUuid())
         .entityName(pipeline.getName())
         .entityType(EntityType.PIPELINE.name())
-        .property(Pipeline.APP_ID_KEY, pipeline.getAppId())
+        .property(PipelineKeys.appId, pipeline.getAppId())
         .build();
   }
 

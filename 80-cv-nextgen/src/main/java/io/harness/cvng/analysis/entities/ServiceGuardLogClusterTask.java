@@ -5,12 +5,14 @@ import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngin
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class ServiceGuardLogClusterTask extends LearningEngineTask {
   private String testDataUrl;
   private String host;

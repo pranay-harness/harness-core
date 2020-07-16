@@ -7,7 +7,6 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.yaml.gitSync.YamlChangeSet.MAX_RETRY_COUNT_EXCEEDED_CODE;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.QUEUED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.SKIPPED;
@@ -34,6 +33,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Base;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
@@ -500,7 +500,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   private CriteriaContainer getHarnessToGitChangeSetCriteria(Query<YamlChangeSet> query, String appId) {
-    return query.and(
-        query.criteria(YamlChangeSetKeys.gitToHarness).equal(false), query.criteria(APP_ID_KEY).equal(appId));
+    return query.and(query.criteria(YamlChangeSetKeys.gitToHarness).equal(Boolean.FALSE),
+        query.criteria(ApplicationKeys.appId).equal(appId));
   }
 }

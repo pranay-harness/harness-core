@@ -59,8 +59,7 @@ public class ExceptionUtils {
                   item.getRootBeanClass(), item.getPropertyPath(), item.getInvalidValue(), item.getMessage()))
           .collect(joining(". "));
     } else if (t instanceof HarnessException) {
-      HarnessException he = (HarnessException) t;
-      Throwable cause = he.getCause();
+      Throwable cause = t.getCause();
       if (cause instanceof WingsException) {
         WingsException we = (WingsException) cause;
         return ExceptionLogger.getResponseMessageList(we, REST_API)

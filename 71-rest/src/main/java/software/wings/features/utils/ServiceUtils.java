@@ -9,6 +9,7 @@ import io.harness.beans.SearchFilter.Operator;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.EntityType;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.features.api.Usage;
 
 import java.util.List;
@@ -45,7 +46,7 @@ public class ServiceUtils {
         .entityId(service.getUuid())
         .entityName(service.getName())
         .entityType(EntityType.SERVICE.name())
-        .property(Service.APP_ID_KEY, service.getAppId())
+        .property(ServiceKeys.appId, service.getAppId())
         .build();
   }
 }

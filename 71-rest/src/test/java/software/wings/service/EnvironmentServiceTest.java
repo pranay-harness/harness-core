@@ -26,7 +26,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Environment.APP_ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -520,7 +519,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldObtainEnvironmentSummaries() {
     when(query.project(EnvironmentKeys.name, true)).thenReturn(query);
-    when(query.project(APP_ID_KEY, true)).thenReturn(query);
+    when(query.project(EnvironmentKeys.appId, true)).thenReturn(query);
     when(query.project(EnvironmentKeys.environmentType, true)).thenReturn(query);
     when(query.project(Environment.ID_KEY, true)).thenReturn(query);
     when(query.field(Environment.ID_KEY)).thenReturn(end);

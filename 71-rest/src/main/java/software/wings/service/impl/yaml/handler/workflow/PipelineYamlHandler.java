@@ -41,48 +41,41 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   @Inject private PipelineService pipelineService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
-  private Pipeline toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext, Pipeline previous)
-      throws HarnessException {
-    try {
-      Yaml yaml = context.getYaml();
-      Change change = context.getChange();
+  private Pipeline toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext, Pipeline previous) {
+    Yaml yaml = context.getYaml();
+    Change change = context.getChange();
 
-      String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
-      notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, USER);
+    String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
+    notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, USER);
 
-      context.setEntityIdMap(getPreviousStageElementMap(previous));
+    context.setEntityIdMap(getPreviousStageElementMap(previous));
 
-      List<PipelineStage> pipelineStages = Lists.newArrayList();
-      if (yaml.getPipelineStages() != null) {
-        PipelineStageYamlHandler pipelineStageYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE_STAGE);
+    List<PipelineStage> pipelineStages = Lists.newArrayList();
+    if (yaml.getPipelineStages() != null) {
+      PipelineStageYamlHandler pipelineStageYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE_STAGE);
 
-        // Pipeline stages
-        pipelineStages =
-            yaml.getPipelineStages()
-                .stream()
-                .map(stageYaml -> {
-                  try {
-                    ChangeContext.Builder clonedContext = cloneFileChangeContext(context, stageYaml);
-                    return pipelineStageYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
-                  } catch (HarnessException e) {
-                    throw new WingsException(e);
-                  }
-                })
-                .collect(toList());
-      }
-
-      String name = yamlHelper.getNameFromYamlFilePath(context.getChange().getFilePath());
-
-      return Pipeline.builder()
-          .appId(appId)
-          .description(yaml.getDescription())
-          .name(name)
-          .pipelineStages(pipelineStages)
-          .build();
-
-    } catch (WingsException ex) {
-      throw new HarnessException(ex);
+      // Pipeline stages
+      pipelineStages = yaml.getPipelineStages()
+                           .stream()
+                           .map(stageYaml -> {
+                             try {
+                               ChangeContext.Builder clonedContext = cloneFileChangeContext(context, stageYaml);
+                               return pipelineStageYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
+                             } catch (HarnessException e) {
+                               throw new WingsException(e);
+                             }
+                           })
+                           .collect(toList());
     }
+
+    String name = yamlHelper.getNameFromYamlFilePath(context.getChange().getFilePath());
+
+    return Pipeline.builder()
+        .appId(appId)
+        .description(yaml.getDescription())
+        .name(name)
+        .pipelineStages(pipelineStages)
+        .build();
   }
 
   private Map<String, String> getPreviousStageElementMap(Pipeline previous) {
@@ -130,8 +123,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   }
 
   @Override
-  public Pipeline upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public Pipeline upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Pipeline previous = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
 
     Pipeline current = toBean(changeContext, changeSetContext, previous);
@@ -159,7 +151,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
     String filePath = changeContext.getChange().getFilePath();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, filePath);

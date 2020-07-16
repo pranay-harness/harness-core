@@ -51,8 +51,6 @@ public class Base implements PersistentEntity, UuidAware, CreatedAtAware, Create
   public static final String ID_KEY = "_id";
   public static final String APP_ID_KEY = "appId";
   public static final String ACCOUNT_ID_KEY = "accountId";
-  public static final String CREATED_BY_KEY = "createdBy";
-  public static final String LAST_UPDATED_BY_KEY = "lastUpdatedBy";
   public static final String LAST_UPDATED_AT_KEY = "lastUpdatedAt";
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;

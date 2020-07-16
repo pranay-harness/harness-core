@@ -18,7 +18,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Delegate.Status.ENABLED;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
@@ -65,6 +64,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.InstanceSyncTestConstants;
 import software.wings.service.intfc.AssignDelegateService;
@@ -488,8 +488,9 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     assignDelegateService.saveConnectionResults(results);
 
-    List<DelegateConnectionResult> saved =
-        wingsPersistence.createQuery(DelegateConnectionResult.class).filter(ACCOUNT_ID_KEY, ACCOUNT_ID).asList();
+    List<DelegateConnectionResult> saved = wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                               .filter(DelegateConnectionResultKeys.accountId, ACCOUNT_ID)
+                                               .asList();
     assertThat(saved).isNotNull();
     assertThat(saved.size()).isEqualTo(1);
     assertThat(saved.get(0).getCriteria()).isEqualTo("criteria");

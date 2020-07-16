@@ -80,7 +80,7 @@ public class EnvironmentGenerator {
 
   public Environment exists(Environment environment) {
     return wingsPersistence.createQuery(Environment.class)
-        .filter(Environment.APP_ID_KEY, environment.getAppId())
+        .filter(EnvironmentKeys.appId, environment.getAppId())
         .filter(EnvironmentKeys.name, environment.getName())
         .get();
   }

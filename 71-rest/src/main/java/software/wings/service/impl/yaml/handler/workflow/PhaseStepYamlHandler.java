@@ -41,8 +41,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
 
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
-  private PhaseStep toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  private PhaseStep toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml yaml = changeContext.getYaml();
     PhaseStepType phaseStepType = Utils.getEnumFromString(PhaseStepType.class, yaml.getType());
     String phaseStepUuid = generateUuid();
@@ -177,7 +176,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // Do nothing
   }
 }

@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -11,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.alerts.AlertCategory;
 import software.wings.beans.alert.AlertNotificationRule;
+import software.wings.beans.alert.AlertNotificationRule.AlertNotificationRulekeys;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertNotificationRuleService;
@@ -46,7 +45,7 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
 
   private Optional<AlertNotificationRule> getDefaultAlertNotificationRule(String accountId) {
     List<AlertNotificationRule> rules = wingsPersistence.createQuery(AlertNotificationRule.class)
-                                            .filter(ACCOUNT_ID_KEY, accountId)
+                                            .filter(AlertNotificationRulekeys.accountId, accountId)
                                             .filter(AlertNotificationRule.ALERT_CATEGORY, AlertCategory.All)
                                             .asList();
     return rules.isEmpty() ? Optional.empty() : Optional.of(rules.get(0));
@@ -92,7 +91,7 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
 
   private Optional<AlertNotificationRule> getById(String accountId, String ruleId) {
     List<AlertNotificationRule> rules = wingsPersistence.createQuery(AlertNotificationRule.class)
-                                            .filter(ACCOUNT_ID_KEY, accountId)
+                                            .filter(AlertNotificationRulekeys.accountId, accountId)
                                             .filter(AlertNotificationRule.ID_KEY, ruleId)
                                             .asList();
     return rules.isEmpty() ? Optional.empty() : Optional.of(rules.get(0));
@@ -101,8 +100,8 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
   @Override
   @Nonnull
   public List<AlertNotificationRule> getAll(String accountId) {
-    Query<AlertNotificationRule> query =
-        wingsPersistence.createQuery(AlertNotificationRule.class).filter(ACCOUNT_ID_KEY, accountId);
+    Query<AlertNotificationRule> query = wingsPersistence.createQuery(AlertNotificationRule.class)
+                                             .filter(AlertNotificationRulekeys.accountId, accountId);
     return CollectionUtils.emptyIfNull(query.asList());
   }
 
@@ -113,13 +112,13 @@ public class AlertNotificationRuleServiceImpl implements AlertNotificationRuleSe
       throw new InvalidRequestException("Default alert notification rule can not be deleted");
     }
     wingsPersistence.delete(wingsPersistence.createQuery(AlertNotificationRule.class)
-                                .filter(ACCOUNT_ID_KEY, accountId)
+                                .filter(AlertNotificationRulekeys.accountId, accountId)
                                 .filter(AlertNotificationRule.ID_KEY, ruleId));
   }
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(AlertNotificationRule.class).filter(ACCOUNT_ID_KEY, accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(AlertNotificationRule.class)
+                                .filter(AlertNotificationRulekeys.accountId, accountId));
   }
 }

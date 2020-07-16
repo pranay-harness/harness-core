@@ -332,7 +332,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
+  public void delete(ChangeContext<Yaml> changeContext) {
     // Do nothing
   }
 }

@@ -83,6 +83,7 @@ import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -3444,8 +3445,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     createNexusArtifactStream("test-4");
     List<ArtifactStream> artifactStreams =
         artifactStreamService.list(aPageRequest()
-                                       .addFilter(ArtifactStream.APP_ID_KEY, EQ, GLOBAL_APP_ID)
-                                       .addFilter(ArtifactStream.ACCOUNT_ID_KEY, EQ, ACCOUNT_ID)
+                                       .addFilter(ArtifactStreamKeys.appId, EQ, GLOBAL_APP_ID)
+                                       .addFilter(ArtifactStreamKeys.accountId, EQ, ACCOUNT_ID)
                                        .addFilter(ArtifactKeys.settingId, EQ, SETTING_ID)
                                        .build());
     assertThat(artifactStreams)
@@ -3464,7 +3465,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     constructNexusArtifacts(APP_ID, "test-5");
     constructNexusArtifacts(GLOBAL_APP_ID, "another-5");
     List<ArtifactStream> artifactStreams = artifactStreamService.list(
-        aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, APP_ID).build(), ACCOUNT_ID, true, "test");
+        aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, APP_ID).build(), ACCOUNT_ID, true, "test");
     assertThat(artifactStreams)
         .hasSize(2)
         .extracting(ArtifactStream::getName)
@@ -3473,7 +3474,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(artifactStreams).extracting(ArtifactStream::getArtifactCount).contains(1L, 1L);
 
     artifactStreams = artifactStreamService.list(
-        aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, APP_ID).build(), ACCOUNT_ID, true, "15");
+        aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, APP_ID).build(), ACCOUNT_ID, true, "15");
     assertThat(artifactStreams).isEmpty();
   }
 
@@ -3543,7 +3544,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     constructAmazonS3Artifacts(GLOBAL_APP_ID, "test-2");
     constructAmiArtifacts(GLOBAL_APP_ID, "test-3");
     List<ArtifactStream> artifactStreams =
-        artifactStreamService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, GLOBAL_APP_ID).build(),
+        artifactStreamService.list(aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, GLOBAL_APP_ID).build(),
             ACCOUNT_ID, true, "test", ArtifactType.AWS_LAMBDA, 100);
     assertThat(artifactStreams)
         .hasSize(1)
@@ -3552,7 +3553,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .doesNotContain("test-1", "test-3");
 
     artifactStreams =
-        artifactStreamService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, GLOBAL_APP_ID).build(),
+        artifactStreamService.list(aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, GLOBAL_APP_ID).build(),
             ACCOUNT_ID, true, "test", ArtifactType.AMI, 100);
     assertThat(artifactStreams)
         .hasSize(1)
@@ -3561,7 +3562,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .doesNotContain("test-1", "test-2");
 
     artifactStreams =
-        artifactStreamService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, GLOBAL_APP_ID).build(),
+        artifactStreamService.list(aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, GLOBAL_APP_ID).build(),
             ACCOUNT_ID, true, "test", ArtifactType.OTHER, 100);
     assertThat(artifactStreams)
         .hasSize(3)
@@ -3929,13 +3930,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(artifactStream.isArtifactStreamParameterized()).isEqualTo(true);
     constructAmazonS3Artifacts(APP_ID, "test-2");
     List<ArtifactStream> artifactStreams =
-        artifactStreamService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, APP_ID).build(), ACCOUNT_ID,
+        artifactStreamService.list(aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, APP_ID).build(), ACCOUNT_ID,
             true, "test", ArtifactType.OTHER, 100);
     assertThat(artifactStreams).hasSize(2).extracting(ArtifactStream::getName).contains("test-2", "testNexus");
     when(featureFlagService.isEnabled(FeatureName.NAS_SUPPORT, ACCOUNT_ID)).thenReturn(false);
-    artifactStreams =
-        artifactStreamService.list(aPageRequest().addFilter(ArtifactStream.APP_ID_KEY, EQ, APP_ID).build(), ACCOUNT_ID,
-            true, "test", ArtifactType.OTHER, 100);
+    artifactStreams = artifactStreamService.list(aPageRequest().addFilter(ArtifactStreamKeys.appId, EQ, APP_ID).build(),
+        ACCOUNT_ID, true, "test", ArtifactType.OTHER, 100);
     assertThat(artifactStreams)
         .hasSize(1)
         .extracting(ArtifactStream::getName)

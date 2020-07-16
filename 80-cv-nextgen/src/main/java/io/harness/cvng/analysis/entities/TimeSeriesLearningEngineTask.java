@@ -4,7 +4,9 @@ import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngin
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
@@ -14,16 +16,17 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class TimeSeriesLearningEngineTask extends LearningEngineTask {
   private String testDataUrl;
   private String previousAnalysisUrl;
   private String metricTemplateUrl;
   private String previousAnomaliesUrl;
   private String cumulativeSumsUrl;
-  private Set<String> keyTransactions = new HashSet<>();
-  @Builder.Default private int tolerance = 1;
-  @Builder.Default private int dataLength = 5;
-  @Builder.Default private int windowSize = 5;
+  @Default private Set<String> keyTransactions = new HashSet<>();
+  @Default private int tolerance = 1;
+  @Default private int dataLength = 5;
+  @Default private int windowSize = 5;
 
   @Override
   public LearningEngineTaskType getType() {

@@ -23,7 +23,6 @@ import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.app.ManagerCacheRegistrar.NEW_RELIC_APPLICATION_CACHE;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.GitConfig.GIT_USER;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -245,7 +244,7 @@ public class SettingsServiceImpl implements SettingsService {
     Integer limit = DEFAULT_UNLIMITED;
     Integer previousOffset = 0;
     PageRequest<SettingAttribute> pageRequest = aPageRequest()
-                                                    .addFilter(ACCOUNT_ID_KEY, EQ, accountId)
+                                                    .addFilter(SettingAttributeKeys.accountId, EQ, accountId)
                                                     .addFilter(SettingAttributeKeys.valueType, EQ, type)
                                                     .withLimit(String.valueOf(limit))
                                                     .withOffset(String.valueOf(previousOffset))

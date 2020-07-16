@@ -42,6 +42,7 @@ import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceInstance.ServiceInstanceKeys;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
@@ -144,7 +145,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     // Test exclusion
     List<ServiceInstance> allServiceInstances =
         serviceInstanceService
-            .list(aPageRequest().addFilter(ServiceInstance.APP_ID_KEY, Operator.EQ, app.getUuid()).build())
+            .list(aPageRequest().addFilter(ServiceInstanceKeys.appId, Operator.EQ, app.getUuid()).build())
             .getResponse();
 
     // Exclude 1st service instance

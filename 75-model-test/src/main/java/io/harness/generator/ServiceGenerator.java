@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.generator.ServiceGenerator.Services.KUBERNETES_GENERIC_TEST;
 import static io.harness.generator.SettingGenerator.Settings.PCF_FUNCTIONAL_TEST_GIT_REPO;
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.beans.Service.APP_ID_KEY;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.Service.builder;
 
@@ -356,7 +355,7 @@ public class ServiceGenerator {
 
   public Service exists(Service service) {
     return wingsPersistence.createQuery(Service.class)
-        .filter(APP_ID_KEY, service.getAppId())
+        .filter(ServiceKeys.appId, service.getAppId())
         .filter(ServiceKeys.name, service.getName())
         .get();
   }

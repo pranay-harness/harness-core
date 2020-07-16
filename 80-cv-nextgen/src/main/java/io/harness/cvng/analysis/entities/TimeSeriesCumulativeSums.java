@@ -32,7 +32,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldNameConstants(innerTypeName = "TimeSeriesCumulativeSumsKeys")
-@EqualsAndHashCode(callSuper = false, exclude = {"transactionMetricSums", "compressedMetricSums"})
+@EqualsAndHashCode(callSuper = false, exclude = {"transactionMetricSums"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "timeseriesCumulativeSums", noClassnameStored = true)
 @HarnessEntity(exportable = false)

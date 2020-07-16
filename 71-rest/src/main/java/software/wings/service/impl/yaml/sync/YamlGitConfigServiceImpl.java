@@ -3,8 +3,6 @@ package software.wings.service.impl.yaml.sync;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
 
 import com.google.inject.Inject;
@@ -52,7 +50,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private List<YamlGitConfig> getActiveYamlGitConfig(String accountId) {
     final List<EntityType> supportedEntityTypes = Arrays.asList(EntityType.APPLICATION, EntityType.ACCOUNT);
     return wingsPersistence.createQuery(YamlGitConfig.class)
-        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(YamlGitConfigKeys.accountId, accountId)
         .filter(YamlGitConfigKeys.enabled, Boolean.TRUE)
         .field(YamlGitConfig.ENTITY_TYPE_KEY)
         .in(supportedEntityTypes)
@@ -105,7 +103,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
       return Collections.emptyList();
     }
     PageRequest<Application> req = aPageRequest()
-                                       .addFilter(ACCOUNT_ID_KEY, SearchFilter.Operator.EQ, accountId)
+                                       .addFilter(ApplicationKeys.accountId, SearchFilter.Operator.EQ, accountId)
                                        .addFilter("_id", IN, filteredAppIds.toArray())
                                        .addFieldsIncluded(ApplicationKeys.name)
                                        .addFieldsIncluded(ApplicationKeys.uuid)
@@ -140,7 +138,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     List<YamlGitConfig> yamlGitConfigs = wingsPersistence.createQuery(YamlGitConfig.class)
                                              .field(ID_KEY)
                                              .in(yamlGitConfigIds)
-                                             .project(APP_ID_KEY, true)
+                                             .project(ApplicationKeys.appId, true)
                                              .asList();
     if (isEmpty(yamlGitConfigs)) {
       return Collections.emptySet();

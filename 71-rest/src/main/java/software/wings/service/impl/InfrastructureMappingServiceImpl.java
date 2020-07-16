@@ -28,7 +28,6 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
@@ -2419,7 +2418,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<InfrastructureMapping> listByComputeProviderId(String accountId, String computeProviderId) {
     return wingsPersistence.createQuery(InfrastructureMapping.class)
-        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(InfrastructureMappingKeys.accountId, accountId)
         .filter(COMPUTE_PROVIDER_SETTING_ID_KEY, computeProviderId)
         .asList(new FindOptions().limit(REFERENCED_ENTITIES_TO_SHOW));
   }

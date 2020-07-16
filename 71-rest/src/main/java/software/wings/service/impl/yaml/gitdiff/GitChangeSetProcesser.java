@@ -8,7 +8,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
-import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 
 import com.google.common.base.Stopwatch;
@@ -127,7 +126,7 @@ public class GitChangeSetProcesser {
 
   private Set<String> getAppNamesWhichExistsInHarness(Set<String> appNameSet, String accountId) {
     List<Application> applications = wingsPersistence.createQuery(Application.class)
-                                         .filter(ACCOUNT_ID_KEY, accountId)
+                                         .filter(ApplicationKeys.accountId, accountId)
                                          .field(ApplicationKeys.name)
                                          .in(appNameSet)
                                          .asList();

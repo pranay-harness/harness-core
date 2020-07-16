@@ -48,6 +48,7 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.WinRmConnectionAttributes;
@@ -720,8 +721,8 @@ public class SettingGenerator {
 
   public SettingAttribute exists(SettingAttribute settingAttribute) {
     return wingsPersistence.createQuery(SettingAttribute.class)
-        .filter(SettingAttribute.ACCOUNT_ID_KEY, settingAttribute.getAccountId())
-        .filter(SettingAttribute.APP_ID_KEY, settingAttribute.getAppId())
+        .filter(SettingAttributeKeys.accountId, settingAttribute.getAccountId())
+        .filter(SettingAttributeKeys.appId, settingAttribute.getAppId())
         .filter(SettingAttribute.ENV_ID_KEY, settingAttribute.getEnvId())
         .filter(SettingAttribute.CATEGORY_KEY, settingAttribute.getCategory())
         .filter(SettingAttribute.NAME_KEY, settingAttribute.getName())
