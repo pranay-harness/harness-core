@@ -38,4 +38,12 @@ public class AnyUtils {
       throw new DataFormatException("Unable to parse as valid protobuf", e);
     }
   }
+
+  public <T extends Message> T findClassAndUnpack(Any any) {
+    try {
+      return (T) unpack(any, toClass(any));
+    } catch (ClassNotFoundException e) {
+      throw new DataFormatException("Unable to parse as valid protobuf", e);
+    }
+  }
 }

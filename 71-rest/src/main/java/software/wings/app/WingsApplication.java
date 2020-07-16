@@ -86,6 +86,7 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
+import io.harness.perpetualtask.ForwardingPerpetualTaskServiceClient;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskServiceImpl;
@@ -100,6 +101,7 @@ import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTas
 import io.harness.perpetualtask.internal.DisconnectedDelegateHandler;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
+import io.harness.perpetualtask.remote.RemotePerpetualTaskType;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.queue.QueueListener;
@@ -414,6 +416,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     registerObservers(injector);
 
     registerInprocPerpetualTaskServiceClients(injector);
+    registerRemotePerpetualTaskServiceClients(injector);
 
     registerCronJobs(injector);
 
@@ -531,6 +534,20 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(AwsLambdaInstanceSyncPerpetualTaskClient.class));
     clientRegistry.registerClient(
         PerpetualTaskType.DATA_COLLECTION_TASK, injector.getInstance(DataCollectionPerpetualTaskServiceClient.class));
+  }
+
+  private void registerRemotePerpetualTaskServiceClients(Injector injector) {
+    final PerpetualTaskServiceClientRegistry clientRegistry =
+        injector.getInstance(Key.get(PerpetualTaskServiceClientRegistry.class));
+
+    asList(RemotePerpetualTaskType.values()).forEach(remotePerpetualTaskType -> {
+      String taskType = remotePerpetualTaskType.getTaskType();
+      String serviceId = remotePerpetualTaskType.getOwnerServiceId();
+      final ForwardingPerpetualTaskServiceClient instance =
+          new ForwardingPerpetualTaskServiceClient(taskType, serviceId);
+      injector.injectMembers(instance);
+      clientRegistry.registerClient(taskType, instance);
+    });
   }
 
   private void registerDatadogPublisherIfEnabled(MainConfiguration configuration) {

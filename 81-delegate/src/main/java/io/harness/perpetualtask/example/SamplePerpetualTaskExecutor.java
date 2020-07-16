@@ -13,6 +13,7 @@ import io.harness.perpetualtask.PerpetualTaskState;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Singleton
 @Slf4j
@@ -23,14 +24,14 @@ public class SamplePerpetualTaskExecutor implements PerpetualTaskExecutor {
     SamplePerpetualTaskParams sampleParams =
         AnyUtils.unpack(params.getCustomizedParams(), SamplePerpetualTaskParams.class);
     try {
-      sleep(30000);
+      sleep(10000);
     } catch (InterruptedException e) {
       logger.error("The Sample PTask is interrupted", e);
       Thread.currentThread().interrupt();
     }
     logger.info("The country {} has a population of {}", sampleParams.getCountry(), sampleParams.getPopulation());
     return PerpetualTaskResponse.builder()
-        .responseCode(200)
+        .responseCode(ThreadLocalRandom.current().nextInt(1, 200))
         .perpetualTaskState(PerpetualTaskState.TASK_RUN_SUCCEEDED)
         .responseMessage(PerpetualTaskState.TASK_RUN_SUCCEEDED.name())
         .build();

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Singleton
@@ -27,7 +28,7 @@ public class SamplePTaskServiceImpl implements SamplePTaskService {
   @Inject private AccountService accountService;
   @Inject private PerpetualTaskService perpetualTaskService;
 
-  private ConcurrentMap<String, Integer> countryMap = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, Integer> countryMap = new ConcurrentHashMap<>();
 
   @Override
   public String create(String accountId, String countryName, int population) {
@@ -57,6 +58,6 @@ public class SamplePTaskServiceImpl implements SamplePTaskService {
 
   @Override
   public int getPopulation(String countryName) {
-    return countryMap.get(countryName);
+    return countryMap.getOrDefault(countryName, ThreadLocalRandom.current().nextInt(10, 1000));
   }
 }

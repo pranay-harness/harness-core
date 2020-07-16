@@ -126,6 +126,113 @@ public final class NgDelegateTaskServiceGrpc {
     return getAbortTaskMethod;
   }
 
+  private static volatile io.grpc.MethodDescriptor<io.harness.perpetualtask.CreateRemotePerpetualTaskRequest,
+      io.harness.perpetualtask.CreateRemotePerpetualTaskResponse> getCreateRemotePerpetualTaskMethod;
+
+  @io.grpc.stub.annotations
+      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "CreateRemotePerpetualTask",
+          requestType = io.harness.perpetualtask.CreateRemotePerpetualTaskRequest.class,
+          responseType = io.harness.perpetualtask.CreateRemotePerpetualTaskResponse.class,
+          methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+      public static io.grpc.MethodDescriptor<io.harness.perpetualtask.CreateRemotePerpetualTaskRequest,
+          io.harness.perpetualtask.CreateRemotePerpetualTaskResponse>
+      getCreateRemotePerpetualTaskMethod() {
+    io.grpc.MethodDescriptor<io.harness.perpetualtask.CreateRemotePerpetualTaskRequest,
+        io.harness.perpetualtask.CreateRemotePerpetualTaskResponse> getCreateRemotePerpetualTaskMethod;
+    if ((getCreateRemotePerpetualTaskMethod = NgDelegateTaskServiceGrpc.getCreateRemotePerpetualTaskMethod) == null) {
+      synchronized (NgDelegateTaskServiceGrpc.class) {
+        if ((getCreateRemotePerpetualTaskMethod = NgDelegateTaskServiceGrpc.getCreateRemotePerpetualTaskMethod)
+            == null) {
+          NgDelegateTaskServiceGrpc.getCreateRemotePerpetualTaskMethod = getCreateRemotePerpetualTaskMethod =
+              io.grpc.MethodDescriptor
+                  .<io.harness.perpetualtask.CreateRemotePerpetualTaskRequest,
+                      io.harness.perpetualtask.CreateRemotePerpetualTaskResponse>newBuilder()
+                  .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "CreateRemotePerpetualTask"))
+                  .setSampledToLocalTracing(true)
+                  .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.perpetualtask.CreateRemotePerpetualTaskRequest.getDefaultInstance()))
+                  .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.perpetualtask.CreateRemotePerpetualTaskResponse.getDefaultInstance()))
+                  .setSchemaDescriptor(new NgDelegateTaskServiceMethodDescriptorSupplier("CreateRemotePerpetualTask"))
+                  .build();
+        }
+      }
+    }
+    return getCreateRemotePerpetualTaskMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest,
+      io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse> getDeleteRemotePerpetualTaskMethod;
+
+  @io.grpc.stub.annotations
+      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "DeleteRemotePerpetualTask",
+          requestType = io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest.class,
+          responseType = io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse.class,
+          methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+      public static io.grpc.MethodDescriptor<io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest,
+          io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse>
+      getDeleteRemotePerpetualTaskMethod() {
+    io.grpc.MethodDescriptor<io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest,
+        io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse> getDeleteRemotePerpetualTaskMethod;
+    if ((getDeleteRemotePerpetualTaskMethod = NgDelegateTaskServiceGrpc.getDeleteRemotePerpetualTaskMethod) == null) {
+      synchronized (NgDelegateTaskServiceGrpc.class) {
+        if ((getDeleteRemotePerpetualTaskMethod = NgDelegateTaskServiceGrpc.getDeleteRemotePerpetualTaskMethod)
+            == null) {
+          NgDelegateTaskServiceGrpc.getDeleteRemotePerpetualTaskMethod = getDeleteRemotePerpetualTaskMethod =
+              io.grpc.MethodDescriptor
+                  .<io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest,
+                      io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse>newBuilder()
+                  .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "DeleteRemotePerpetualTask"))
+                  .setSampledToLocalTracing(true)
+                  .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest.getDefaultInstance()))
+                  .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse.getDefaultInstance()))
+                  .setSchemaDescriptor(new NgDelegateTaskServiceMethodDescriptorSupplier("DeleteRemotePerpetualTask"))
+                  .build();
+        }
+      }
+    }
+    return getDeleteRemotePerpetualTaskMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<io.harness.perpetualtask.ResetRemotePerpetualTaskRequest,
+      io.harness.perpetualtask.ResetRemotePerpetualTaskResponse> getResetRemotePerpetualTaskMethod;
+
+  @io.grpc.stub.annotations
+      .RpcMethod(fullMethodName = SERVICE_NAME + '/' + "ResetRemotePerpetualTask",
+          requestType = io.harness.perpetualtask.ResetRemotePerpetualTaskRequest.class,
+          responseType = io.harness.perpetualtask.ResetRemotePerpetualTaskResponse.class,
+          methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+      public static io.grpc.MethodDescriptor<io.harness.perpetualtask.ResetRemotePerpetualTaskRequest,
+          io.harness.perpetualtask.ResetRemotePerpetualTaskResponse>
+      getResetRemotePerpetualTaskMethod() {
+    io.grpc.MethodDescriptor<io.harness.perpetualtask.ResetRemotePerpetualTaskRequest,
+        io.harness.perpetualtask.ResetRemotePerpetualTaskResponse> getResetRemotePerpetualTaskMethod;
+    if ((getResetRemotePerpetualTaskMethod = NgDelegateTaskServiceGrpc.getResetRemotePerpetualTaskMethod) == null) {
+      synchronized (NgDelegateTaskServiceGrpc.class) {
+        if ((getResetRemotePerpetualTaskMethod = NgDelegateTaskServiceGrpc.getResetRemotePerpetualTaskMethod) == null) {
+          NgDelegateTaskServiceGrpc.getResetRemotePerpetualTaskMethod = getResetRemotePerpetualTaskMethod =
+              io.grpc.MethodDescriptor
+                  .<io.harness.perpetualtask.ResetRemotePerpetualTaskRequest,
+                      io.harness.perpetualtask.ResetRemotePerpetualTaskResponse>newBuilder()
+                  .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+                  .setFullMethodName(generateFullMethodName(SERVICE_NAME, "ResetRemotePerpetualTask"))
+                  .setSampledToLocalTracing(true)
+                  .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.perpetualtask.ResetRemotePerpetualTaskRequest.getDefaultInstance()))
+                  .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                      io.harness.perpetualtask.ResetRemotePerpetualTaskResponse.getDefaultInstance()))
+                  .setSchemaDescriptor(new NgDelegateTaskServiceMethodDescriptorSupplier("ResetRemotePerpetualTask"))
+                  .build();
+        }
+      }
+    }
+    return getResetRemotePerpetualTaskMethod;
+  }
+
   /**
    * Creates a new async stub that supports all call types for the service
    */
@@ -171,6 +278,27 @@ public final class NgDelegateTaskServiceGrpc {
       asyncUnimplementedUnaryCall(getAbortTaskMethod(), responseObserver);
     }
 
+    /**
+     */
+    public void createRemotePerpetualTask(io.harness.perpetualtask.CreateRemotePerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.perpetualtask.CreateRemotePerpetualTaskResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getCreateRemotePerpetualTaskMethod(), responseObserver);
+    }
+
+    /**
+     */
+    public void deleteRemotePerpetualTask(io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getDeleteRemotePerpetualTaskMethod(), responseObserver);
+    }
+
+    /**
+     */
+    public void resetRemotePerpetualTask(io.harness.perpetualtask.ResetRemotePerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.perpetualtask.ResetRemotePerpetualTaskResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getResetRemotePerpetualTaskMethod(), responseObserver);
+    }
+
     @java.
     lang.Override
     public final io.grpc.ServerServiceDefinition bindService() {
@@ -186,6 +314,18 @@ public final class NgDelegateTaskServiceGrpc {
               asyncUnaryCall(
                   new MethodHandlers<io.harness.delegate.AbortTaskRequest, io.harness.delegate.AbortTaskResponse>(
                       this, METHODID_ABORT_TASK)))
+          .addMethod(getCreateRemotePerpetualTaskMethod(),
+              asyncUnaryCall(new MethodHandlers<io.harness.perpetualtask.CreateRemotePerpetualTaskRequest,
+                  io.harness.perpetualtask.CreateRemotePerpetualTaskResponse>(
+                  this, METHODID_CREATE_REMOTE_PERPETUAL_TASK)))
+          .addMethod(getDeleteRemotePerpetualTaskMethod(),
+              asyncUnaryCall(new MethodHandlers<io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest,
+                  io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse>(
+                  this, METHODID_DELETE_REMOTE_PERPETUAL_TASK)))
+          .addMethod(getResetRemotePerpetualTaskMethod(),
+              asyncUnaryCall(new MethodHandlers<io.harness.perpetualtask.ResetRemotePerpetualTaskRequest,
+                  io.harness.perpetualtask.ResetRemotePerpetualTaskResponse>(
+                  this, METHODID_RESET_REMOTE_PERPETUAL_TASK)))
           .build();
     }
   }
@@ -226,6 +366,30 @@ public final class NgDelegateTaskServiceGrpc {
         io.grpc.stub.StreamObserver<io.harness.delegate.AbortTaskResponse> responseObserver) {
       asyncUnaryCall(getChannel().newCall(getAbortTaskMethod(), getCallOptions()), request, responseObserver);
     }
+
+    /**
+     */
+    public void createRemotePerpetualTask(io.harness.perpetualtask.CreateRemotePerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.perpetualtask.CreateRemotePerpetualTaskResponse> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(getCreateRemotePerpetualTaskMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void deleteRemotePerpetualTask(io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(getDeleteRemotePerpetualTaskMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void resetRemotePerpetualTask(io.harness.perpetualtask.ResetRemotePerpetualTaskRequest request,
+        io.grpc.stub.StreamObserver<io.harness.perpetualtask.ResetRemotePerpetualTaskResponse> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(getResetRemotePerpetualTaskMethod(), getCallOptions()), request, responseObserver);
+    }
   }
 
   /**
@@ -261,6 +425,27 @@ public final class NgDelegateTaskServiceGrpc {
      */
     public io.harness.delegate.AbortTaskResponse abortTask(io.harness.delegate.AbortTaskRequest request) {
       return blockingUnaryCall(getChannel(), getAbortTaskMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public io.harness.perpetualtask.CreateRemotePerpetualTaskResponse createRemotePerpetualTask(
+        io.harness.perpetualtask.CreateRemotePerpetualTaskRequest request) {
+      return blockingUnaryCall(getChannel(), getCreateRemotePerpetualTaskMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse deleteRemotePerpetualTask(
+        io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest request) {
+      return blockingUnaryCall(getChannel(), getDeleteRemotePerpetualTaskMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public io.harness.perpetualtask.ResetRemotePerpetualTaskResponse resetRemotePerpetualTask(
+        io.harness.perpetualtask.ResetRemotePerpetualTaskRequest request) {
+      return blockingUnaryCall(getChannel(), getResetRemotePerpetualTaskMethod(), getCallOptions(), request);
     }
   }
 
@@ -301,11 +486,37 @@ public final class NgDelegateTaskServiceGrpc {
         io.harness.delegate.AbortTaskRequest request) {
       return futureUnaryCall(getChannel().newCall(getAbortTaskMethod(), getCallOptions()), request);
     }
+
+    /**
+     */
+    public com.google.common.util.concurrent
+        .ListenableFuture<io.harness.perpetualtask.CreateRemotePerpetualTaskResponse>
+        createRemotePerpetualTask(io.harness.perpetualtask.CreateRemotePerpetualTaskRequest request) {
+      return futureUnaryCall(getChannel().newCall(getCreateRemotePerpetualTaskMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
+    public com.google.common.util.concurrent
+        .ListenableFuture<io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse>
+        deleteRemotePerpetualTask(io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest request) {
+      return futureUnaryCall(getChannel().newCall(getDeleteRemotePerpetualTaskMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<io.harness.perpetualtask.ResetRemotePerpetualTaskResponse>
+    resetRemotePerpetualTask(io.harness.perpetualtask.ResetRemotePerpetualTaskRequest request) {
+      return futureUnaryCall(getChannel().newCall(getResetRemotePerpetualTaskMethod(), getCallOptions()), request);
+    }
   }
 
   private static final int METHODID_SEND_TASK = 0;
   private static final int METHODID_SEND_TASK_ASYNC = 1;
   private static final int METHODID_ABORT_TASK = 2;
+  private static final int METHODID_CREATE_REMOTE_PERPETUAL_TASK = 3;
+  private static final int METHODID_DELETE_REMOTE_PERPETUAL_TASK = 4;
+  private static final int METHODID_RESET_REMOTE_PERPETUAL_TASK = 5;
 
   private static final class MethodHandlers<Req, Resp>
       implements io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -336,6 +547,21 @@ public final class NgDelegateTaskServiceGrpc {
         case METHODID_ABORT_TASK:
           serviceImpl.abortTask((io.harness.delegate.AbortTaskRequest) request,
               (io.grpc.stub.StreamObserver<io.harness.delegate.AbortTaskResponse>) responseObserver);
+          break;
+        case METHODID_CREATE_REMOTE_PERPETUAL_TASK:
+          serviceImpl.createRemotePerpetualTask((io.harness.perpetualtask.CreateRemotePerpetualTaskRequest) request,
+              (io.grpc.stub.StreamObserver<io.harness.perpetualtask.CreateRemotePerpetualTaskResponse>)
+                  responseObserver);
+          break;
+        case METHODID_DELETE_REMOTE_PERPETUAL_TASK:
+          serviceImpl.deleteRemotePerpetualTask((io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest) request,
+              (io.grpc.stub.StreamObserver<io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse>)
+                  responseObserver);
+          break;
+        case METHODID_RESET_REMOTE_PERPETUAL_TASK:
+          serviceImpl.resetRemotePerpetualTask((io.harness.perpetualtask.ResetRemotePerpetualTaskRequest) request,
+              (io.grpc.stub.StreamObserver<io.harness.perpetualtask.ResetRemotePerpetualTaskResponse>)
+                  responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -404,6 +630,9 @@ public final class NgDelegateTaskServiceGrpc {
                                            .addMethod(getSendTaskMethod())
                                            .addMethod(getSendTaskAsyncMethod())
                                            .addMethod(getAbortTaskMethod())
+                                           .addMethod(getCreateRemotePerpetualTaskMethod())
+                                           .addMethod(getDeleteRemotePerpetualTaskMethod())
+                                           .addMethod(getResetRemotePerpetualTaskMethod())
                                            .build();
         }
       }

@@ -17,6 +17,12 @@ import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
+import io.harness.perpetualtask.CreateRemotePerpetualTaskRequest;
+import io.harness.perpetualtask.CreateRemotePerpetualTaskResponse;
+import io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest;
+import io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse;
+import io.harness.perpetualtask.ResetRemotePerpetualTaskRequest;
+import io.harness.perpetualtask.ResetRemotePerpetualTaskResponse;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -35,16 +41,28 @@ public class ManagerDelegateGrpcClient {
   private final Function<SendTaskRequestWithTimeOut, SendTaskResponse> decoratedSendTask;
   private final Function<SendTaskAsyncRequest, SendTaskAsyncResponse> decoratedSendTaskAsync;
   private final Function<AbortTaskRequest, AbortTaskResponse> decoratedAbortTask;
+  private final Function<CreateRemotePerpetualTaskRequest, CreateRemotePerpetualTaskResponse>
+      decoratedCreatePerpetualTask;
+  private final Function<DeleteRemotePerpetualTaskRequest, DeleteRemotePerpetualTaskResponse>
+      decoratedDeletePerpetualTask;
+  private final Function<ResetRemotePerpetualTaskRequest, ResetRemotePerpetualTaskResponse> decoratedResetPerpetualTask;
 
   @Inject
   public ManagerDelegateGrpcClient(NgDelegateTaskServiceBlockingStub ngDelegateTaskServiceBlockingStub) {
     this.ngDelegateTaskServiceBlockingStub = ngDelegateTaskServiceBlockingStub;
-    decoratedSendTask =
-        Retry.decorateFunction(retry, CircuitBreaker.decorateFunction(circuitBreaker, sendTaskFunction()));
-    decoratedSendTaskAsync =
-        Retry.decorateFunction(retry, CircuitBreaker.decorateFunction(circuitBreaker, sendTaskAsyncFunction()));
-    decoratedAbortTask =
-        Retry.decorateFunction(retry, CircuitBreaker.decorateFunction(circuitBreaker, abortTaskFunction()));
+
+    decoratedSendTask = decorateFunction(sendTaskFunction());
+    decoratedSendTaskAsync = decorateFunction(sendTaskAsyncFunction());
+    decoratedAbortTask = decorateFunction(abortTaskFunction());
+    decoratedCreatePerpetualTask = decorateFunction(r
+        -> ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).createRemotePerpetualTask(r),
+        "create perpetual task");
+    decoratedResetPerpetualTask = decorateFunction(r
+        -> ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).resetRemotePerpetualTask(r),
+        "reset perpetual task");
+    decoratedDeletePerpetualTask = decorateFunction(r
+        -> ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS).deleteRemotePerpetualTask(r),
+        "delete perpetual task");
   }
 
   public SendTaskResponse sendTask(SendTaskRequest request, long timeOutInSeconds) {
@@ -59,6 +77,17 @@ public class ManagerDelegateGrpcClient {
     return decoratedAbortTask.apply(request);
   }
 
+  private <T, R> Function<T, R> decorateWithExceptionLogger(Function<T, R> inputFunction, String actionName) {
+    return t -> {
+      R response = null;
+      try {
+        response = inputFunction.apply(t);
+      } catch (StatusRuntimeException e) {
+        logExceptionMessage(e, actionName);
+      }
+      return response;
+    };
+  }
   private Function<SendTaskRequestWithTimeOut, SendTaskResponse> sendTaskFunction() {
     return r -> {
       SendTaskResponse sendTaskResponse = null;
@@ -96,6 +125,26 @@ public class ManagerDelegateGrpcClient {
       }
       return sendTaskAsyncResponse;
     };
+  }
+
+  public CreateRemotePerpetualTaskResponse createRemotePerpetualTask(CreateRemotePerpetualTaskRequest request) {
+    return decoratedCreatePerpetualTask.apply(request);
+  }
+
+  public DeleteRemotePerpetualTaskResponse deleteRemotePerpetualTask(DeleteRemotePerpetualTaskRequest request) {
+    return decoratedDeletePerpetualTask.apply(request);
+  }
+
+  public ResetRemotePerpetualTaskResponse resetRemotePerpetualTask(ResetRemotePerpetualTaskRequest request) {
+    return decoratedResetPerpetualTask.apply(request);
+  }
+
+  private <T, R> Function<T, R> decorateFunction(Function<T, R> inputFunction) {
+    return Retry.decorateFunction(retry, CircuitBreaker.decorateFunction(circuitBreaker, inputFunction));
+  }
+  private <T, R> Function<T, R> decorateFunction(Function<T, R> inputFunction, String actionName) {
+    return Retry.decorateFunction(
+        retry, CircuitBreaker.decorateFunction(circuitBreaker, decorateWithExceptionLogger(inputFunction, actionName)));
   }
 
   @VisibleForTesting

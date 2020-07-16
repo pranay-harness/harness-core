@@ -5,9 +5,17 @@ package io.harness.delegate;
 option java_multiple_files = true;
 
 import "io/harness/delegate/ng_delegate_task.proto";
+import "io/harness/perpetualtask/ng_perpetual_task.proto";
 
 service NgDelegateTaskService {
   rpc SendTask(SendTaskRequest) returns (SendTaskResponse);
   rpc SendTaskAsync(SendTaskAsyncRequest) returns (SendTaskAsyncResponse);
   rpc AbortTask(AbortTaskRequest) returns (AbortTaskResponse);
+
+  rpc CreateRemotePerpetualTask(perpetualtask.CreateRemotePerpetualTaskRequest)
+      returns (perpetualtask.CreateRemotePerpetualTaskResponse);
+  rpc DeleteRemotePerpetualTask(perpetualtask.DeleteRemotePerpetualTaskRequest)
+      returns (perpetualtask.DeleteRemotePerpetualTaskResponse);
+  rpc ResetRemotePerpetualTask(perpetualtask.ResetRemotePerpetualTaskRequest)
+      returns (perpetualtask.ResetRemotePerpetualTaskResponse);
 }

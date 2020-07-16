@@ -24,11 +24,10 @@ public class SamplePerpetualTaskServiceClient implements PerpetualTaskServiceCli
   @Override
   public SamplePerpetualTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
     Map<String, String> clientParams = clientContext.getClientParams();
-    int population = samplePTaskService.getPopulation(clientParams.get(COUNTRY_NAME));
-    return SamplePerpetualTaskParams.newBuilder()
-        .setCountry(clientParams.get(COUNTRY_NAME))
-        .setPopulation(population)
-        .build();
+    final String countryName = clientParams.get(COUNTRY_NAME);
+    int population = samplePTaskService.getPopulation(countryName);
+    logger.info("Country = [{}], population = [{}]", countryName, population);
+    return SamplePerpetualTaskParams.newBuilder().setCountry(countryName).setPopulation(population).build();
   }
 
   @Override

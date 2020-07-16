@@ -4,8 +4,10 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
+import com.google.protobuf.util.Timestamps;
 
 import io.grpc.stub.StreamObserver;
 import io.harness.beans.DelegateTask;
@@ -23,24 +25,35 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.grpc.DelegateTaskGrpcUtils;
+import io.harness.perpetualtask.CreateRemotePerpetualTaskRequest;
+import io.harness.perpetualtask.CreateRemotePerpetualTaskResponse;
+import io.harness.perpetualtask.DeleteRemotePerpetualTaskRequest;
+import io.harness.perpetualtask.DeleteRemotePerpetualTaskResponse;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskClientContext.PerpetualTaskClientContextBuilder;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.RemotePerpetualTaskSchedule;
+import io.harness.perpetualtask.ResetRemotePerpetualTaskRequest;
+import io.harness.perpetualtask.ResetRemotePerpetualTaskResponse;
 import io.harness.serializer.KryoSerializer;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.Map;
 
+@Singleton
+@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@Slf4j
 public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegateTaskServiceImplBase {
-  private DelegateService delegateService;
-  private KryoSerializer kryoSerializer;
-  private WaitNotifyEngine waitNotifyEngine;
-
-  @Inject
-  public DelegateTaskGrpcServer(
-      DelegateService delegateService, KryoSerializer kryoSerializer, WaitNotifyEngine waitNotifyEngine) {
-    this.delegateService = delegateService;
-    this.kryoSerializer = kryoSerializer;
-    this.waitNotifyEngine = waitNotifyEngine;
-  }
+  private final DelegateService delegateService;
+  private final KryoSerializer kryoSerializer;
+  private final WaitNotifyEngine waitNotifyEngine;
+  private final PerpetualTaskService perpetualTaskService;
 
   @Override
   public void sendTask(SendTaskRequest request, StreamObserver<SendTaskResponse> responseObserver) {
@@ -123,5 +136,49 @@ public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegate
                   .expressions(taskDetails.getExpressionsMap())
                   .build())
         .build();
+  }
+
+  @Override
+  public void createRemotePerpetualTask(
+      CreateRemotePerpetualTaskRequest request, StreamObserver<CreateRemotePerpetualTaskResponse> responseObserver) {
+    final String accountId = request.getAccountId();
+
+    final PerpetualTaskClientContextBuilder contextBuilder = PerpetualTaskClientContext.builder();
+
+    contextBuilder.clientParams(MapUtils.emptyIfNull(request.getContext().getTaskClientParamsMap()));
+
+    if (request.getContext().getLastContextUpdated() != null) {
+      contextBuilder.lastContextUpdated(Timestamps.toMillis(request.getContext().getLastContextUpdated()));
+    }
+    String perpetualTaskId = perpetualTaskService.createTask(request.getTaskType(), accountId, contextBuilder.build(),
+        convertSchedule(request.getSchedule()), request.getAllowDuplicate());
+
+    responseObserver.onNext(CreateRemotePerpetualTaskResponse.newBuilder().setPerpetualTaskId(perpetualTaskId).build());
+    responseObserver.onCompleted();
+  }
+
+  private PerpetualTaskSchedule convertSchedule(RemotePerpetualTaskSchedule schedule) {
+    return PerpetualTaskSchedule.newBuilder()
+        .setInterval(schedule.getInterval())
+        .setTimeout(schedule.getTimeout())
+        .build();
+  }
+
+  @Override
+  public void deleteRemotePerpetualTask(
+      DeleteRemotePerpetualTaskRequest request, StreamObserver<DeleteRemotePerpetualTaskResponse> responseObserver) {
+    final boolean success = perpetualTaskService.deleteTask(request.getAccountId(), request.getPerpetualTaskId());
+
+    responseObserver.onNext(DeleteRemotePerpetualTaskResponse.newBuilder().setSuccess(success).build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void resetRemotePerpetualTask(
+      ResetRemotePerpetualTaskRequest request, StreamObserver<ResetRemotePerpetualTaskResponse> responseObserver) {
+    final boolean success = perpetualTaskService.resetTask(request.getAccountId(), request.getPerpetualTaskId());
+
+    responseObserver.onNext(ResetRemotePerpetualTaskResponse.newBuilder().setSuccess(success).build());
+    responseObserver.onCompleted();
   }
 }

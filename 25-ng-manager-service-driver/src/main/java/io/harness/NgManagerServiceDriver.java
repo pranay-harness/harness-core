@@ -16,6 +16,12 @@ import io.harness.delegate.SendTaskResultRequest;
 import io.harness.delegate.SendTaskResultResponse;
 import io.harness.delegate.TaskId;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsRequest;
+import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsResponse;
+import io.harness.perpetualtask.ObtainPerpetualTaskValidationDetailsRequest;
+import io.harness.perpetualtask.ObtainPerpetualTaskValidationDetailsResponse;
+import io.harness.perpetualtask.ReportPerpetualTaskStateChangeRequest;
+import io.harness.perpetualtask.ReportPerpetualTaskStateChangeResponse;
 import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +35,12 @@ public class NgManagerServiceDriver {
   private final NgDelegateTaskResponseServiceBlockingStub ngDelegateTaskServiceBlockingStub;
   private final KryoSerializer kryoSerializer;
   private final Function<SendTaskResultRequest, SendTaskResultResponse> decoratedSendTaskResultFunction;
+  private final Function<ObtainPerpetualTaskExecutionParamsRequest, ObtainPerpetualTaskExecutionParamsResponse>
+      decoratedObtainPerpetualTaskParamsFunction;
+  private final Function<ObtainPerpetualTaskValidationDetailsRequest, ObtainPerpetualTaskValidationDetailsResponse>
+      decoratedObtainPerpetualTaskValidationDetailFunction;
+  private final Function<ReportPerpetualTaskStateChangeRequest, ReportPerpetualTaskStateChangeResponse>
+      decoratedReportPerpetualTaskStateChangeFunction;
   private final Retry retry;
 
   @Inject
@@ -37,7 +49,17 @@ public class NgManagerServiceDriver {
     this.ngDelegateTaskServiceBlockingStub = ngDelegateTaskServiceBlockingStub;
     this.kryoSerializer = kryoSerializer;
     retry = Retry.of(NgDelegateTaskResponseServiceGrpc.SERVICE_NAME, this ::getRetryConfig);
-    decoratedSendTaskResultFunction = Retry.decorateFunction(retry, sendTaskResultFunction());
+    decoratedSendTaskResultFunction = decorateFunction(sendTaskResultFunction());
+    decoratedObtainPerpetualTaskValidationDetailFunction = decorateFunction(request
+        -> ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+               .obtainPerpetualTaskValidationDetails(request));
+
+    decoratedObtainPerpetualTaskParamsFunction = decorateFunction(request
+        -> ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+               .obtainPerpetualTaskExecutionParams(request));
+    decoratedReportPerpetualTaskStateChangeFunction = decorateFunction(request
+        -> ngDelegateTaskServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+               .reportPerpetualTaskStateChange(request));
   }
 
   public boolean sendTaskResult(String taskId, ResponseData responseData) {
@@ -61,6 +83,18 @@ public class NgManagerServiceDriver {
       }
       return sendTaskResultResponse;
     };
+  }
+
+  private <T, R> Function<T, R> decorateFunction(Function<T, R> inputFunction) {
+    return Retry.decorateFunction(retry, t -> {
+      R response = null;
+      try {
+        response = inputFunction.apply(t);
+      } catch (StatusRuntimeException sre) {
+        logExceptionMessage(sre);
+      }
+      return response;
+    });
   }
 
   private RetryConfig getRetryConfig() {
@@ -96,5 +130,20 @@ public class NgManagerServiceDriver {
   @VisibleForTesting
   long getNumberOfFailedCallsWithoutRetryAttempt() {
     return this.retry.getMetrics().getNumberOfFailedCallsWithoutRetryAttempt();
+  }
+
+  public ObtainPerpetualTaskValidationDetailsResponse obtainPerpetualTaskValidationDetails(
+      ObtainPerpetualTaskValidationDetailsRequest request) {
+    return decoratedObtainPerpetualTaskValidationDetailFunction.apply(request);
+  }
+
+  public ObtainPerpetualTaskExecutionParamsResponse obtainPerpetualTaskExecutionParams(
+      ObtainPerpetualTaskExecutionParamsRequest request) {
+    return decoratedObtainPerpetualTaskParamsFunction.apply(request);
+  }
+
+  public ReportPerpetualTaskStateChangeResponse reportPerpetualTaskStateChange(
+      ReportPerpetualTaskStateChangeRequest request) {
+    return decoratedReportPerpetualTaskStateChangeFunction.apply(request);
   }
 }
