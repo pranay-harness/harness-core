@@ -96,7 +96,7 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
   private KubernetesAuthDTO createUserPasswordDTO(UserNamePasswordK8 userNamePasswordCredential) {
     UserNamePasswordDTO userNamePasswordDTO = UserNamePasswordDTO.builder()
                                                   .username(userNamePasswordCredential.getUserName())
-                                                  .password(userNamePasswordCredential.getPassword())
+                                                  .encryptedPassword(userNamePasswordCredential.getPassword())
                                                   .cacert(userNamePasswordCredential.getCacert())
                                                   .build();
     return KubernetesAuthDTO.builder().authType(USER_PASSWORD).credentials(userNamePasswordDTO).build();
@@ -104,9 +104,9 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
 
   private KubernetesAuthDTO createClientKeyCertDTO(ClientKeyCertK8 clientKeyCertK8) {
     ClientKeyCertDTO clientKeyCertDTO = ClientKeyCertDTO.builder()
-                                            .clientKey(clientKeyCertK8.getClientKey())
-                                            .clientCert(clientKeyCertK8.getClientCert())
-                                            .clientKeyPassphrase(clientKeyCertK8.getClientKeyPassphrase())
+                                            .encryptedClientKey(clientKeyCertK8.getClientKey())
+                                            .encryptedClientCert(clientKeyCertK8.getClientCert())
+                                            .encryptedClientKeyPassphrase(clientKeyCertK8.getClientKeyPassphrase())
                                             .clientKeyAlgo(clientKeyCertK8.getClientKeyAlgo())
                                             .build();
     return KubernetesAuthDTO.builder().authType(CLIENT_KEY_CERT).credentials(clientKeyCertDTO).build();
@@ -114,17 +114,17 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
 
   private KubernetesAuthDTO createServiceAccountDTO(ServiceAccountK8 serviceAccountK8) {
     ServiceAccountDTO serviceAccountDTO =
-        ServiceAccountDTO.builder().serviceAccountToken(serviceAccountK8.getServiceAcccountToken()).build();
+        ServiceAccountDTO.builder().encryptedServiceAccountToken(serviceAccountK8.getServiceAcccountToken()).build();
     return KubernetesAuthDTO.builder().authType(SERVICE_ACCOUNT).credentials(serviceAccountDTO).build();
   }
 
   private KubernetesAuthDTO createOpenIdConnectDTO(OpenIdConnectK8 openIdConnectK8) {
     OpenIdConnectDTO openIdConnectDTO = OpenIdConnectDTO.builder()
-                                            .oidcClientId(openIdConnectK8.getOidcClientId())
+                                            .encryptedOidcClientId(openIdConnectK8.getOidcClientId())
                                             .oidcIssuerUrl(openIdConnectK8.getOidcIssuerUrl())
-                                            .oidcPassword(openIdConnectK8.getOidcPassword())
+                                            .encryptedOidcPassword(openIdConnectK8.getOidcPassword())
                                             .oidcScopes(openIdConnectK8.getOidcScopes())
-                                            .oidcSecret(openIdConnectK8.getOidcSecret())
+                                            .encryptedOidcSecret(openIdConnectK8.getOidcSecret())
                                             .oidcUsername(openIdConnectK8.getOidcUsername())
                                             .build();
     return KubernetesAuthDTO.builder().authType(OPEN_ID_CONNECT).credentials(openIdConnectDTO).build();

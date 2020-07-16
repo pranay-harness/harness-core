@@ -72,7 +72,8 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(UserNamePasswordDTO.builder().username(userName).password(password).cacert(cacert).build())
+            .credentials(
+                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePasswordCreds =
         KubernetesClusterConfigDTO.builder()
@@ -96,17 +97,17 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testToKubernetesClusterConfigForClientKeyCert() {
-    String clientKey = "clientKey";
-    String clientCert = "clientCert";
+    String clientKey = "encryptedClientKey";
+    String clientCert = "encryptedClientCert";
     String clientKeyPhrase = "clientKeyPhrase";
     String clientKeyAlgo = "clientKeyAlgo";
     String masterUrl = "https://abc.com";
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(CLIENT_KEY_CERT)
                                               .credentials(ClientKeyCertDTO.builder()
-                                                               .clientKey(clientKey)
-                                                               .clientCert(clientCert)
-                                                               .clientKeyPassphrase(clientKeyPhrase)
+                                                               .encryptedClientKey(clientKey)
+                                                               .encryptedClientCert(clientCert)
+                                                               .encryptedClientKeyPassphrase(clientKeyPhrase)
                                                                .clientKeyAlgo(clientKeyAlgo)
                                                                .build())
                                               .build();
@@ -133,21 +134,21 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testToKubernetesClusterConfigForOIDCConnect() {
-    String oidClientId = "oidcClientId";
+    String oidClientId = "encryptedOidcClientId";
     String oidcIssuerUrl = "oidcIssuerUrl";
-    String oidcPassword = "oidcPassword";
+    String oidcPassword = "encryptedOidcPassword";
     String oidcScopes = "oidcScopes";
-    String oidcSecret = "oidcSecret";
+    String oidcSecret = "encryptedOidcSecret";
     String oidcUsername = "oidcUsername";
     String masterUrl = "https://abc.com";
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(OPEN_ID_CONNECT)
                                               .credentials(OpenIdConnectDTO.builder()
-                                                               .oidcClientId(oidClientId)
+                                                               .encryptedOidcClientId(oidClientId)
                                                                .oidcIssuerUrl(oidcIssuerUrl)
-                                                               .oidcPassword(oidcPassword)
+                                                               .encryptedOidcPassword(oidcPassword)
                                                                .oidcScopes(oidcScopes)
-                                                               .oidcSecret(oidcSecret)
+                                                               .encryptedOidcSecret(oidcSecret)
                                                                .oidcUsername(oidcUsername)
                                                                .build())
                                               .build();
@@ -181,7 +182,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(SERVICE_ACCOUNT)
-            .credentials(ServiceAccountDTO.builder().serviceAccountToken(serviceAccountKey).build())
+            .credentials(ServiceAccountDTO.builder().encryptedServiceAccountToken(serviceAccountKey).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithServiceAccountCreds =
         KubernetesClusterConfigDTO.builder()

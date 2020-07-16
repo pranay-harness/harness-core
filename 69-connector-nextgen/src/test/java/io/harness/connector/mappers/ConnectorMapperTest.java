@@ -58,7 +58,8 @@ public class ConnectorMapperTest extends CategoryTest {
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(UserNamePasswordDTO.builder().username(userName).password(password).cacert(cacert).build())
+            .credentials(
+                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePassword =
         KubernetesClusterConfigDTO.builder()
@@ -75,7 +76,8 @@ public class ConnectorMapperTest extends CategoryTest {
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(UserNamePasswordDTO.builder().username(userName).password(password).cacert(cacert).build())
+            .credentials(
+                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()

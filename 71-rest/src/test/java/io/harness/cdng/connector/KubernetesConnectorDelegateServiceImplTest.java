@@ -1,4 +1,4 @@
-package io.harness.cdng.connectornextgen;
+package io.harness.cdng.connector;
 
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.rule.OwnerRule.DEEPAK;
@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.connector.KubernetesValidationHelper;
 import io.harness.cdng.connector.impl.KubernetesConnectorDelegateServiceImpl;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
@@ -40,7 +39,8 @@ public class KubernetesConnectorDelegateServiceImplTest extends WingsBaseTest {
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(UserNamePasswordDTO.builder().username(userName).password(password).cacert(cacert).build())
+            .credentials(
+                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithUsernameCreds =
         KubernetesClusterConfigDTO.builder()
