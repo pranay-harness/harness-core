@@ -284,6 +284,23 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         instanceService.save(instance);
       }
     }
+
+    // Update the existing instances helm chart info
+    if (deploymentSummaryMap.containsKey(containerMetadata)) {
+      deploymentSummary = deploymentSummaryMap.get(containerMetadata);
+      if (deploymentSummary.getDeploymentInfo() instanceof ContainerDeploymentInfoWithLabels) {
+        ContainerDeploymentInfoWithLabels deploymentInfo =
+            (ContainerDeploymentInfoWithLabels) deploymentSummary.getDeploymentInfo();
+        SetView<String> instancesToBeUpdated =
+            Sets.intersection(latestContainerInfoMap.keySet(), instancesInDBMap.keySet());
+        for (String instanceId : instancesToBeUpdated) {
+          Instance instance = instancesInDBMap.get(instanceId);
+          if (updateHelmChartInfoForContainerInstances(deploymentInfo, instance)) {
+            instanceService.saveOrUpdate(instance);
+          }
+        }
+      }
+    }
   }
 
   private List<ContainerInfo> getContainerInfos(ResponseData responseData, InstanceSyncFlow instanceSyncFlow,
@@ -352,6 +369,22 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         ((K8sPodInfo) k8sInfo).setHelmChartInfo(helmChartInfo);
       }
     });
+  }
+
+  private boolean updateHelmChartInfoForContainerInstances(
+      ContainerDeploymentInfoWithLabels deploymentInfo, Instance instance) {
+    if (!(instance.getInstanceInfo() instanceof KubernetesContainerInfo)) {
+      return false;
+    }
+
+    KubernetesContainerInfo containerInfo = (KubernetesContainerInfo) instance.getInstanceInfo();
+    if (deploymentInfo.getHelmChartInfo() != null
+        && !deploymentInfo.getHelmChartInfo().equals(containerInfo.getHelmChartInfo())) {
+      containerInfo.setHelmChartInfo(deploymentInfo.getHelmChartInfo());
+      return true;
+    }
+
+    return false;
   }
 
   private List<K8sPod> getK8sPodsFromDelegate(

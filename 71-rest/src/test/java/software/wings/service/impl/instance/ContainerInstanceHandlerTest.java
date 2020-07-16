@@ -13,6 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -83,6 +85,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.container.Label;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder;
@@ -1125,6 +1128,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .infraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
         .instanceType(KUBERNETES_CONTAINER_INSTANCE)
         .podInstanceKey(PodInstanceKey.builder().namespace("default").podName(podName).build())
+        .containerInstanceKey(ContainerInstanceKey.builder().namespace("default").containerId(podName).build())
         .instanceInfo(instanceInfo)
         .lastWorkflowExecutionName("Current Workflow")
         .build();
@@ -1153,6 +1157,71 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
             .namespace("default")
             .helmChartInfo(helmChartInfo)
             .build());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void test_HelmChartDeployment_newHelmChartInfoOldInstances() {
+    DeploymentInfo deploymentInfoWithLabels =
+        ContainerDeploymentInfoWithLabels.builder()
+            .helmChartInfo(helmChartInfoWithVersion("1.1.0"))
+            .labels(singletonList(Label.Builder.aLabel().withName("sample").withValue("sample").build()))
+            .containerInfoList(asList(ContainerInfo.builder().workloadName("workloadName").build()))
+            .build();
+    DeploymentInfo deploymentInfoWithNames =
+        ContainerDeploymentInfoWithNames.builder().clusterName("clusterName").build();
+
+    List<Instance> instances =
+        asList(buildContainerInstanceWithHelmChartInfo("sample-pod-1", helmChartInfoWithVersion("1.0.0")),
+            buildContainerInstanceWithHelmChartInfo("sample-pod-2", helmChartInfoWithVersion("1.0.0")));
+
+    test_HelmChartDeployment_newHelmChartInfoOldInstancesWith(deploymentInfoWithLabels, instances,
+        asList(helmChartInfoWithVersion("1.1.0"), helmChartInfoWithVersion("1.1.0")));
+
+    test_HelmChartDeployment_newHelmChartInfoOldInstancesWith(deploymentInfoWithNames, instances, emptyList());
+  }
+
+  private void test_HelmChartDeployment_newHelmChartInfoOldInstancesWith(
+      DeploymentInfo deploymentInfo, List<Instance> instances, List<HelmChartInfo> expectedUpdate) {
+    DeploymentSummary deploymentSummary = DeploymentSummary.builder().deploymentInfo(deploymentInfo).build();
+
+    reset(instanceService);
+    doReturn(Sets.newHashSet("controllerName"))
+        .when(containerSync)
+        .getControllerNames(
+            any(ContainerInfrastructureMapping.class), anyMapOf(String.class, String.class), anyString());
+    doReturn(getInframapping(InfrastructureMappingType.GCP_KUBERNETES.name()))
+        .when(infraMappingService)
+        .get(anyString(), anyString());
+    doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
+    doReturn(ContainerSyncResponse.builder()
+                 .containerInfoList(instances.stream()
+                                        .map(instance
+                                            -> KubernetesContainerInfo.builder()
+                                                   .podName(instance.getContainerInstanceKey().getContainerId())
+                                                   .namespace(instance.getContainerInstanceKey().getNamespace())
+                                                   .build())
+                                        .collect(Collectors.toList()))
+                 .build())
+        .when(containerSync)
+        .getInstances(any(ContainerInfrastructureMapping.class), anyListOf(ContainerMetadata.class));
+
+    containerInstanceHandler.handleNewDeployment(
+        singletonList(deploymentSummary), false, OnDemandRollbackInfo.builder().build());
+
+    ArgumentCaptor<Instance> instanceCaptor = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(expectedUpdate.size())).saveOrUpdate(instanceCaptor.capture());
+
+    List<Instance> updatedInstances = instanceCaptor.getAllValues();
+    List<HelmChartInfo> updatedHelmChartInfo = updatedInstances.stream()
+                                                   .map(Instance::getInstanceInfo)
+                                                   .filter(KubernetesContainerInfo.class ::isInstance)
+                                                   .map(KubernetesContainerInfo.class ::cast)
+                                                   .map(KubernetesContainerInfo::getHelmChartInfo)
+                                                   .collect(Collectors.toList());
+
+    assertThat(updatedHelmChartInfo).isEqualTo(expectedUpdate);
   }
 
   @Test
