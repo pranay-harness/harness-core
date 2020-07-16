@@ -1,6 +1,8 @@
 package grpc
 
 import (
+	"time"
+
 	pb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/addon/tasks"
 	"go.uber.org/zap"
@@ -11,12 +13,13 @@ import (
 
 // handler is used to implement CIAddonServer
 type handler struct {
-	log *zap.SugaredLogger
+	stopCh chan bool
+	log    *zap.SugaredLogger
 }
 
 // NewCIAddonHandler returns a GRPC handler that implements pb.CIAddonServer
-func NewCIAddonHandler(log *zap.SugaredLogger) pb.CIAddonServer {
-	return &handler{log}
+func NewCIAddonHandler(stopCh chan bool, log *zap.SugaredLogger) pb.CIAddonServer {
+	return &handler{stopCh, log}
 }
 
 // PublishArtifacts implements uploading files or building docker images and publishing them
@@ -30,6 +33,17 @@ func (h *handler) PublishArtifacts(ctx context.Context, in *pb.PublishArtifactsR
 	t := tasks.NewPublishArtifactsTask(l)
 	err := t.Publish(ctx, in)
 	return &pb.PublishArtifactsResponse{}, err
+}
+
+// SignalStop sends a signal to stop the GRPC service.
+func (h *handler) SignalStop(ctx context.Context, in *pb.SignalStopRequest) (*pb.SignalStopResponse, error) {
+	go func() {
+		// Ensure that all the addon service tasks are complete before sending the signal.
+		// Sleep will ensure that this RPC completes successfully
+		time.Sleep(1 * time.Second)
+		h.stopCh <- true
+	}()
+	return &pb.SignalStopResponse{}, nil
 }
 
 // TaskProgress returns the current status of a task run

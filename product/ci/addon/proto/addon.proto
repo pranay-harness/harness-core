@@ -79,6 +79,12 @@ message TaskProgressRequest {
   TaskId task_id = 1;
 }
 
+message SignalStopRequest {
+}
+
+message SignalStopResponse {
+}
+
 message TaskProgressResponse {
   TaskStatus current_stage = 1;
   Error error = 2;
@@ -99,6 +105,9 @@ service CIAddon {
   // It also takes a list of local Dockerfiles, builds them and upload to specified destination location
   // call RPC TaskProgress() or TaskProgressUpdates() with this task_id to get the status
   rpc PublishArtifacts(PublishArtifactsRequest) returns (PublishArtifactsResponse);
+
+  // Synchronous RPC to send a signal to stop GRPC server
+  rpc SignalStop(SignalStopRequest) returns (SignalStopResponse);
 
   // Synchronous RPC to get progress of a given task_id
   rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);

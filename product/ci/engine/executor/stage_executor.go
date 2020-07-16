@@ -5,8 +5,15 @@ import (
 	"encoding/base64"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/pkg/errors"
+	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
+	"github.com/wings-software/portal/product/ci/engine/grpc"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
+)
+
+var (
+	newCIAddonClient = grpc.NewCIAddonClient
 )
 
 // StageExecutor represents an interface to execute a stage
@@ -33,18 +40,36 @@ type stageExecutor struct {
 
 // Executes steps in a stage
 func (e *stageExecutor) Run() error {
+	ctx := context.Background()
+	defer e.stopAddonServer(ctx)
+
 	execution, err := e.decodeStage(e.encodedStage)
 	if err != nil {
 		return err
 	}
 
-	ctx := context.Background()
 	stepExecutor := NewStepExecutor(e.stepLogPath, e.tmpFilePath, e.log)
 	for _, step := range execution.GetSteps() {
 		err := stepExecutor.Run(ctx, step)
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// Stop CI-Addon GRPC server
+func (e *stageExecutor) stopAddonServer(ctx context.Context) error {
+	ciAddonClient, err := newCIAddonClient(grpc.CIAddonPort, e.log)
+	if err != nil {
+		return errors.Wrap(err, "Could not create CI Addon client")
+	}
+	defer ciAddonClient.CloseConn()
+
+	_, err = ciAddonClient.Client().SignalStop(ctx, &addonpb.SignalStopRequest{})
+	if err != nil {
+		e.log.Warnw("Unable to send Stop server request", "error_msg", zap.Error(err))
+		return errors.Wrap(err, "Could not send stop server request")
 	}
 	return nil
 }
