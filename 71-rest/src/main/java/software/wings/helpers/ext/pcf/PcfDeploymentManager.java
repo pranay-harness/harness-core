@@ -39,7 +39,7 @@ public interface PcfDeploymentManager {
 
   List<String> getRouteMaps(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException;
 
-  String checkConnectivity(PcfConfig pcfConfig);
+  String checkConnectivity(PcfConfig pcfConfig, boolean limitPcfThreads);
 
   String createRouteMap(PcfRequestConfig pcfRequestConfig, String host, String domain, String path, boolean tcpRoute,
       boolean useRandomPort, Integer port) throws PivotalClientApiException, InterruptedException;

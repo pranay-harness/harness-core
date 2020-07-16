@@ -24,4 +24,5 @@ public class PcfRequestConfig {
   private boolean useCFCLI;
   private String cfHomeDirPath;
   private boolean loggedin;
+  private boolean limitPcfThreads;
 }

@@ -26,7 +26,8 @@ public class PcfConnectivityCapabilityCheck implements CapabilityCheck {
       if (pcfConnectivityCapability.getEncryptionDetails() != null) {
         encryptionService.decrypt(pcfConfig, pcfConnectivityCapability.getEncryptionDetails());
       }
-      String validationErrorMsg = pcfDeploymentManager.checkConnectivity(pcfConfig);
+      String validationErrorMsg =
+          pcfDeploymentManager.checkConnectivity(pcfConfig, pcfConnectivityCapability.isLimitPcfThreads());
       return CapabilityResponse.builder()
           .delegateCapability(pcfConnectivityCapability)
           .validated(!validationErrorMsg.toLowerCase().contains(CONNECTION_TIMED_OUT))

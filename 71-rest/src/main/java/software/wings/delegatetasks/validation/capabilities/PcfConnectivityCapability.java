@@ -15,6 +15,7 @@ import javax.validation.constraints.NotNull;
 public class PcfConnectivityCapability implements ExecutionCapability {
   @NotNull private PcfConfig pcfConfig;
   List<EncryptedDataDetail> encryptionDetails;
+  boolean limitPcfThreads;
   private final CapabilityType capabilityType = CapabilityType.PCF_CONNECTIVITY;
 
   @Override

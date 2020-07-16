@@ -31,9 +31,11 @@ public class PcfRunPluginCommandRequest
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
       Integer timeoutIntervalInMin, boolean useCLIForPcfAppCreation, boolean enforceSslValidation,
       boolean useAppAutoscalar, String renderedScriptString, List<String> filePathsInScript,
-      List<FileData> fileDataList, List<EncryptedDataDetail> encryptedDataDetails, String repoRoot) {
+      List<FileData> fileDataList, List<EncryptedDataDetail> encryptedDataDetails, String repoRoot,
+      boolean limitPcfThreads) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar);
+        workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar,
+        limitPcfThreads);
     this.renderedScriptString = renderedScriptString;
     this.filePathsInScript = filePathsInScript;
     this.fileDataList = fileDataList;
@@ -43,8 +45,11 @@ public class PcfRunPluginCommandRequest
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(
-        PcfConnectivityCapability.builder().pcfConfig(getPcfConfig()).encryptionDetails(encryptedDataDetails).build(),
+    return Arrays.asList(PcfConnectivityCapability.builder()
+                             .pcfConfig(getPcfConfig())
+                             .encryptionDetails(encryptedDataDetails)
+                             .limitPcfThreads(isLimitPcfThreads())
+                             .build(),
         ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
             "PCF", Arrays.asList("/bin/sh", "-c", "cf --version")));
   }

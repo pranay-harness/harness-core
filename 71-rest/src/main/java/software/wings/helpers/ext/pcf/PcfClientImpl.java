@@ -1883,11 +1883,16 @@ public class PcfClientImpl implements PcfClient {
   ConnectionContext getConnectionContext(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
     try {
       long timeout = pcfRequestConfig.getTimeOutIntervalInMins() <= 0 ? 5 : pcfRequestConfig.getTimeOutIntervalInMins();
-      return DefaultConnectionContext.builder()
-          .apiHost(pcfRequestConfig.getEndpointUrl())
-          .skipSslValidation(true)
-          .connectTimeout(Duration.ofMinutes(timeout))
-          .build();
+      DefaultConnectionContext.Builder builder = DefaultConnectionContext.builder()
+                                                     .apiHost(pcfRequestConfig.getEndpointUrl())
+                                                     .skipSslValidation(true)
+                                                     .connectTimeout(Duration.ofMinutes(timeout));
+      if (pcfRequestConfig.isLimitPcfThreads()) {
+        builder.threadPoolSize(1);
+      } else {
+        logger.info(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Not limiting Pcf threads for Connection Context");
+      }
+      return builder.build();
     } catch (Exception t) {
       throw new PivotalClientApiException(ExceptionUtils.getMessage(t));
     }

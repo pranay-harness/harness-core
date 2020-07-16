@@ -98,6 +98,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
                                               .timeOutIntervalInMins(pcfCommandSetupRequest.getTimeoutIntervalInMin())
                                               .useCFCLI(pcfCommandSetupRequest.isUseCfCLI())
                                               .cfHomeDirPath(workingDirectory.getAbsolutePath())
+                                              .limitPcfThreads(pcfCommandSetupRequest.isLimitPcfThreads())
                                               .build();
 
       PcfAppAutoscalarRequestData pcfAppAutoscalarRequestData =

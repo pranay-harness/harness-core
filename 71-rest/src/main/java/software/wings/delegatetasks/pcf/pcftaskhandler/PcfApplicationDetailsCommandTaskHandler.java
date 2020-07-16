@@ -56,6 +56,7 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
                                               .endpointUrl(pcfConfig.getEndpointUrl())
                                               .orgName(pcfCommandRequest.getOrganization())
                                               .spaceName(pcfCommandRequest.getSpace())
+                                              .limitPcfThreads(pcfCommandRequest.isLimitPcfThreads())
                                               .build();
 
       ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);

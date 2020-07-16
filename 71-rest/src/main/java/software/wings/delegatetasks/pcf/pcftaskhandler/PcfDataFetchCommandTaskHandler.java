@@ -100,6 +100,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
     List<ApplicationSummary> applicationSummaries = pcfDeploymentManager.getPreviousReleases(
         PcfRequestConfig.builder()
             .endpointUrl(pcfConfig.getEndpointUrl())
+            .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
             .orgName(pcfInfraMappingDataRequest.getOrganization())
             .spaceName(pcfInfraMappingDataRequest.getSpace())
             .userName(pcfConfig.getUsername())
@@ -133,6 +134,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
     List<String> routes = pcfDeploymentManager.getRouteMaps(
         PcfRequestConfig.builder()
             .orgName(pcfInfraMappingDataRequest.getOrganization())
+            .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
             .spaceName(pcfInfraMappingDataRequest.getSpace())
             .userName(pcfConfig.getUsername())
             .password(String.valueOf(pcfConfig.getPassword()))
@@ -150,6 +152,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
         PcfRequestConfig.builder()
             .orgName(pcfInfraMappingDataRequest.getOrganization())
             .spaceName(pcfInfraMappingDataRequest.getSpace())
+            .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
             .userName(pcfConfig.getUsername())
             .password(String.valueOf(pcfConfig.getPassword()))
             .endpointUrl(pcfConfig.getEndpointUrl())
@@ -168,6 +171,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
             .password(String.valueOf(pcfConfig.getPassword()))
             .endpointUrl(pcfConfig.getEndpointUrl())
             .timeOutIntervalInMins(pcfInfraMappingDataRequest.getTimeoutIntervalInMin())
+            .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
             .build());
 
     pcfInfraMappingDataResponse.setOrganizations(orgs);

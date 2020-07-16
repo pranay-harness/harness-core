@@ -23,6 +23,7 @@ public class PcfCommandTaskParameters implements ExecutionCapabilityDemander {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
     List<ExecutionCapability> capabilities = new ArrayList<>();
     capabilities.add(PcfConnectivityCapability.builder()
+                         .limitPcfThreads(pcfCommandRequest.isLimitPcfThreads())
                          .pcfConfig(pcfCommandRequest.getPcfConfig())
                          .encryptionDetails(encryptedDataDetails)
                          .build());

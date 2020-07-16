@@ -21,6 +21,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
@@ -229,6 +230,8 @@ public class PcfStateHelper {
                                               .enforceSslValidation(setupSweepingOutputPcf.isEnforceSslValidation())
                                               .useAppAutoscalar(setupSweepingOutputPcf.isUseAppAutoscalar())
                                               .useCfCLI(queueRequestData.isUseCfCli())
+                                              .limitPcfThreads(featureFlagService.isEnabled(
+                                                  LIMIT_PCF_THREADS, queueRequestData.getPcfConfig().getAccountId()))
                                               .build();
 
     PcfRouteUpdateStateExecutionData stateExecutionData =
