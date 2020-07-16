@@ -78,7 +78,6 @@ import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -982,10 +981,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution != null && workflowExecution.getArtifacts() != null) {
       for (Artifact artifact : workflowExecution.getArtifacts()) {
-        ArtifactStream artifactStream =
-            Preconditions.checkNotNull(wingsPersistence.get(ArtifactStream.class, artifact.getArtifactStreamId()),
-                "Artifact stream has been deleted");
-        artifact.setArtifactStreamName(artifactStream.getName());
+        ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, artifact.getArtifactStreamId());
+        artifact.setArtifactStreamName(
+            artifactStream == null ? artifact.getArtifactSourceName() : artifactStream.getName());
       }
     }
     return workflowExecution;
