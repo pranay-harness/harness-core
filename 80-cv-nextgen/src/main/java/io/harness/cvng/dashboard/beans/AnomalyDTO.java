@@ -18,9 +18,9 @@ public class AnomalyDTO implements Comparable<AnomalyDTO> {
 
   @Override
   public int compareTo(AnomalyDTO o) {
-    int riskDiff = o.status.compareTo(status);
-    if (riskDiff != 0) {
-      return riskDiff;
+    int statusDiff = o.status.compareTo(status);
+    if (statusDiff != 0) {
+      return statusDiff;
     }
 
     int startTimeDiff = o.startTimestamp.compareTo(startTimestamp);
@@ -35,8 +35,8 @@ public class AnomalyDTO implements Comparable<AnomalyDTO> {
   @Builder
   public static class AnomalyDetailDTO implements Comparable<AnomalyDetailDTO> {
     String cvConfigId;
-    Double riskScore;
-    SortedSet<AnomalyTxnDetail> txnDetails;
+    double riskScore;
+    SortedSet<AnomalyMetricDetail> metricDetails;
 
     @Override
     public int compareTo(AnomalyDetailDTO o) {
@@ -51,9 +51,26 @@ public class AnomalyDTO implements Comparable<AnomalyDTO> {
 
   @Value
   @Builder
+  public static class AnomalyMetricDetail implements Comparable<AnomalyMetricDetail> {
+    String metricName;
+    double riskScore;
+    SortedSet<AnomalyTxnDetail> txnDetails;
+
+    @Override
+    public int compareTo(AnomalyMetricDetail o) {
+      int riskDiff = Double.compare(o.riskScore, riskScore);
+      if (riskDiff != 0) {
+        return riskDiff;
+      }
+
+      return metricName.compareTo(o.metricName);
+    }
+  }
+
+  @Value
+  @Builder
   public static class AnomalyTxnDetail implements Comparable<AnomalyTxnDetail> {
     String groupName;
-    String metricName;
     double riskScore;
 
     @Override
@@ -63,12 +80,7 @@ public class AnomalyDTO implements Comparable<AnomalyDTO> {
         return riskDiff;
       }
 
-      int groupDiff = groupName.compareTo(o.groupName);
-      if (groupDiff != 0) {
-        return groupDiff;
-      }
-
-      return metricName.compareTo(o.metricName);
+      return groupName.compareTo(o.groupName);
     }
   }
 }

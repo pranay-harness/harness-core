@@ -21,6 +21,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.dashboard.beans.AnomalyDTO;
 import io.harness.cvng.dashboard.beans.AnomalyDTO.AnomalyDetailDTO;
+import io.harness.cvng.dashboard.beans.AnomalyDTO.AnomalyMetricDetail;
 import io.harness.cvng.dashboard.beans.AnomalyDTO.AnomalyTxnDetail;
 import io.harness.cvng.dashboard.entities.Anomaly;
 import io.harness.cvng.dashboard.entities.Anomaly.AnomalousMetric;
@@ -40,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.SortedSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class AnomalyServiceImplTest extends CVNextGenBaseTest {
@@ -255,14 +257,23 @@ public class AnomalyServiceImplTest extends CVNextGenBaseTest {
     AnomalyDetailDTO anomalyDetail = anomalyDetails.first();
     assertThat(anomalyDetail.getCvConfigId()).isEqualTo(cvConfig.getUuid());
     assertThat(anomalyDetail.getRiskScore()).isEqualTo(0.1 * (numOfAnomalies * numOfAnomalousMetrics - 1));
-    assertThat(anomalyDetail.getTxnDetails().size()).isEqualTo(numOfAnomalies * numOfAnomalousMetrics);
+    assertThat(anomalyDetail.getMetricDetails().size()).isEqualTo(numOfAnomalousMetrics);
 
-    int i = numOfAnomalies * numOfAnomalousMetrics - 1;
-    for (AnomalyTxnDetail txnDetail : anomalyDetail.getTxnDetails()) {
-      assertThat(txnDetail.getGroupName()).isEqualTo("g-" + i);
-      assertThat(txnDetail.getMetricName()).isEqualTo("m-" + i);
-      assertThat(txnDetail.getRiskScore()).isEqualTo(0.1 * i);
+    int i = numOfAnomalousMetrics;
+    int maxIndex = numOfAnomalies * numOfAnomalousMetrics - 1;
+    for (AnomalyMetricDetail metricDetail : anomalyDetail.getMetricDetails()) {
+      assertThat(metricDetail.getMetricName()).isEqualTo("m-" + (i - 1));
+      assertThat(metricDetail.getRiskScore()).isEqualTo(maxIndex * 0.1, offset(0.0001));
+      assertThat(metricDetail.getTxnDetails().size()).isEqualTo(numOfAnomalies);
+
+      int j = 0;
+      for (AnomalyTxnDetail txnDetail : metricDetail.getTxnDetails()) {
+        assertThat(txnDetail.getGroupName()).isEqualTo("g-" + (maxIndex - j * numOfAnomalousMetrics));
+        assertThat(txnDetail.getRiskScore()).isEqualTo(maxIndex * 0.1 - j, offset(0.0001));
+        j++;
+      }
       i--;
+      maxIndex--;
     }
 
     anomalyService.closeAnomaly(accountId, cvConfig.getUuid(), instant.plus(1, ChronoUnit.HOURS));
@@ -314,11 +325,14 @@ public class AnomalyServiceImplTest extends CVNextGenBaseTest {
     for (int i = 0; i < numOfCvConfigs; i++) {
       cvConfigs.add(createAndSaveAppDConfig(CVMonitoringCategory.PERFORMANCE));
     }
-    for (Instant instant = now; instant.toEpochMilli() < now.plus(1, ChronoUnit.HOURS).toEpochMilli();
-         instant = instant.plus(5, ChronoUnit.MINUTES)) {
-      for (int i = 0; i < cvConfigs.size(); i++) {
+    int numOfIntervals = (int) (TimeUnit.HOURS.toMinutes(1) / 5);
+    for (int i = 0; i < cvConfigs.size(); i++) {
+      int j = 0;
+      for (Instant instant = now; instant.toEpochMilli() < now.plus(1, ChronoUnit.HOURS).toEpochMilli();
+           instant = instant.plus(5, ChronoUnit.MINUTES)) {
         anomalyService.openAnomaly(accountId, cvConfigs.get(i).getUuid(), instant,
-            getAnomalousMetrics(numOfAnomalousTxns, i * numOfAnomalousTxns));
+            getAnomalousMetrics(numOfAnomalousTxns, j * numOfAnomalousTxns));
+        j++;
       }
     }
 
@@ -333,25 +347,37 @@ public class AnomalyServiceImplTest extends CVNextGenBaseTest {
     SortedSet<AnomalyDetailDTO> anomalyDetails = anomaly.getAnomalyDetails();
     assertThat(anomalyDetails.size()).isEqualTo(numOfCvConfigs);
     // verify that anomaly details are sorted by risk score
-    int index = numOfCvConfigs;
     for (AnomalyDetailDTO anomalyDetail : anomalyDetails) {
-      assertThat(anomalyDetail.getCvConfigId()).isEqualTo(cvConfigs.get(index - 1).getUuid());
-      assertThat(anomalyDetail.getRiskScore()).isEqualTo((numOfAnomalousTxns * index - 1) * 0.1);
-      AtomicInteger txnIndex = new AtomicInteger(numOfAnomalousTxns * index - 1);
-      anomalyDetail.getTxnDetails().forEach(anomalyTxnDetail -> {
-        assertThat(anomalyTxnDetail.getGroupName()).isEqualTo("g-" + txnIndex.get());
-        assertThat(anomalyTxnDetail.getMetricName()).isEqualTo("m-" + txnIndex.get());
-        assertThat(anomalyTxnDetail.getRiskScore()).isEqualTo(0.1 * txnIndex.get(), offset(0.00001));
-        txnIndex.decrementAndGet();
+      final AtomicInteger maxIndex = new AtomicInteger(numOfAnomalousTxns * numOfIntervals - 1);
+      assertThat(anomalyDetail.getRiskScore()).isEqualTo(maxIndex.get() * 0.1);
+      assertThat(anomalyDetail.getMetricDetails().size()).isEqualTo(numOfAnomalousTxns);
+
+      AtomicInteger metricIndex = new AtomicInteger(numOfAnomalousTxns);
+      anomalyDetail.getMetricDetails().forEach(anomalyMetricDetail -> {
+        int metricNameIndex = metricIndex.decrementAndGet();
+        assertThat(anomalyMetricDetail.getMetricName()).isEqualTo("m-" + metricNameIndex);
+        assertThat(anomalyMetricDetail.getRiskScore()).isEqualTo(maxIndex.get() * 0.1);
+        assertThat(anomalyMetricDetail.getTxnDetails().size()).isEqualTo(numOfIntervals);
+
+        AtomicInteger txnNameIndex = new AtomicInteger(maxIndex.get());
+        anomalyMetricDetail.getTxnDetails().forEach(anomalyTxnDetail -> {
+          assertThat(anomalyTxnDetail.getGroupName()).isEqualTo("g-" + txnNameIndex.get());
+          assertThat(anomalyTxnDetail.getRiskScore()).isEqualTo(txnNameIndex.get() * 0.1, offset(0.00001));
+          txnNameIndex.addAndGet(-numOfAnomalousTxns);
+        });
+        maxIndex.decrementAndGet();
       });
-      index--;
     }
   }
 
   private List<AnomalousMetric> getAnomalousMetrics(int numOfMetrics, int offset) {
     List<AnomalousMetric> rv = new ArrayList<>();
     for (int i = offset; i < offset + numOfMetrics; i++) {
-      rv.add(AnomalousMetric.builder().groupName("g-" + i).metricName("m-" + i).riskScore(0.1 * i).build());
+      rv.add(AnomalousMetric.builder()
+                 .groupName("g-" + i)
+                 .metricName("m-" + (i % numOfMetrics))
+                 .riskScore(0.1 * i)
+                 .build());
     }
 
     return rv;
