@@ -3,6 +3,7 @@ package io.harness.ng.core.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
+import io.harness.ng.ModuleType;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -20,7 +21,7 @@ public class CreateProjectDTO {
   @ApiModelProperty(required = true) @NotEmpty @EntityIdentifier String identifier;
   @ApiModelProperty(required = true) @NotEmpty @EntityName String name;
   @ApiModelProperty(required = true) @NotEmpty String color;
-  @ApiModelProperty(required = true) @NotNull List<String> purposeList;
+  @ApiModelProperty(required = true) @NotNull List<ModuleType> modules;
   String description;
   @ApiModelProperty(required = true) @NotNull List<String> owners;
   @ApiModelProperty(required = true) @NotNull List<String> tags;

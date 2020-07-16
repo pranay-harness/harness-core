@@ -481,6 +481,7 @@ preferences {"name": "createdAt_1", "background": true} {"createdAt": 1}
 preferences {"name": "keywords_1", "background": true} {"keywords": 1}
 preferences {"name": "preference_index", "background": true} {"accountId": 1, "userId": 1, "name": 1}
 projects {"name": "accountIdentifierIndex", "background": true} {"accountIdentifier": 1}
+projects {"name": "modulesIndex", "background": true} {"modules": 1}
 projects {"name": "unique_accountIdentifier_organizationIdentifier_projectIdentifier", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "identifier": 1}
 pruneQueue2 {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 pruneQueue2 {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}

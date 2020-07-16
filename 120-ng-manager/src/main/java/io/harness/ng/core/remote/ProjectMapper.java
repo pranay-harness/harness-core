@@ -19,7 +19,7 @@ public class ProjectMapper {
         .owners(createProjectDTO.getOwners())
         .color(createProjectDTO.getColor())
         .tags(createProjectDTO.getTags())
-        .purposeList(createProjectDTO.getPurposeList())
+        .modules(createProjectDTO.getModules())
         .build();
   }
 
@@ -34,7 +34,7 @@ public class ProjectMapper {
         .owners(project.getOwners())
         .color(project.getColor())
         .tags(project.getTags())
-        .purposeList(project.getPurposeList())
+        .modules(project.getModules())
         .build();
   }
 
