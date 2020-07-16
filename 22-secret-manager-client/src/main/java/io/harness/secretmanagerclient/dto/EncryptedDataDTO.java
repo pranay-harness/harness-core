@@ -1,4 +1,4 @@
-package io.harness.ng.core.dto;
+package io.harness.secretmanagerclient.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.security.encryption.EncryptedDataParams;

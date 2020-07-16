@@ -5,12 +5,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-import io.harness.managerclient.KryoConverterFactory;
 import io.harness.managerclient.ManagerCIResource;
 import io.harness.managerclient.ManagerClientFactory;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 
 import java.util.Set;

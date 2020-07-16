@@ -1,4 +1,4 @@
-package io.harness.managerclient;
+package io.harness.serializer.kryo;
 
 import static java.util.Arrays.stream;
 

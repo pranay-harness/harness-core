@@ -11,9 +11,9 @@ import com.google.common.collect.Lists;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.BaseTest;
-import io.harness.ng.core.remote.client.rest.factory.SecretManagerClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;

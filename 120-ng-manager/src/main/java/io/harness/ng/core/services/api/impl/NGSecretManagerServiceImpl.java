@@ -1,12 +1,12 @@
 package io.harness.ng.core.services.api.impl;
 
-import static io.harness.ng.core.utils.SecretUtils.getResponse;
+import static io.harness.secretmanagerclient.utils.SecretManagerClientUtils.getResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.ng.core.remote.client.rest.factory.SecretManagerClient;
 import io.harness.ng.core.services.api.NGSecretManagerService;
+import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SecretManagerConfig;

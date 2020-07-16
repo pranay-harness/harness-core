@@ -1,13 +1,13 @@
-package io.harness.ng.core.remote.client.rest.factory;
+package io.harness.secretmanagerclient.remote;
 
 import io.harness.beans.PageResponse;
 import io.harness.encryption.SecretType;
-import io.harness.managerclient.KryoRequest;
-import io.harness.managerclient.KryoResponse;
-import io.harness.ng.core.dto.EncryptedDataDTO;
-import io.harness.ng.core.dto.SecretTextDTO;
 import io.harness.rest.RestResponse;
+import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.kryo.KryoRequest;
+import io.harness.serializer.kryo.KryoResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;

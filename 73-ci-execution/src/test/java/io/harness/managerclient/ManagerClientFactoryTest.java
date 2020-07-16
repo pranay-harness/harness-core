@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
+import io.harness.serializer.kryo.KryoConverterFactory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

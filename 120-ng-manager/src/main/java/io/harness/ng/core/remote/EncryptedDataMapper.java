@@ -1,6 +1,6 @@
 package io.harness.ng.core.remote;
 
-import io.harness.ng.core.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import lombok.experimental.UtilityClass;
 import software.wings.security.encryption.EncryptedData;
 

@@ -4,11 +4,13 @@ import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.managerclient.KryoConverterFactory;
 import io.harness.ng.core.BaseTest;
-import io.harness.ng.core.SecretManagerClientConfig;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.SecretManagerClientConfig;
+import io.harness.secretmanagerclient.remote.SecretManagerClient;
+import io.harness.secretmanagerclient.remote.SecretManagerHttpClientFactory;
 import io.harness.security.ServiceTokenGenerator;
+import io.harness.serializer.kryo.KryoConverterFactory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;

@@ -9,6 +9,8 @@ import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.secretmanagerclient.SecretManagerClientConfig;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
@@ -36,7 +38,8 @@ public class CoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(new CoreModule());
     modules.add(new CorePersistenceTestModule());
     modules.add(KryoModule.getInstance());
-    modules.add(new SecretManagementModule(
+    modules.add(new SecretManagementModule());
+    modules.add(new SecretManagementClientModule(
         SecretManagerClientConfig.builder().baseUrl("http://localhost:8080/").build(), "test_secret"));
     modules.add(new ProviderModule() {
       @Provides

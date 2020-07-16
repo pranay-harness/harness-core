@@ -1,4 +1,4 @@
-package io.harness.ng.core.remote.client.rest.factory;
+package io.harness.secretmanagerclient.remote;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
@@ -13,11 +13,11 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.managerclient.KryoConverterFactory;
 import io.harness.network.Http;
-import io.harness.ng.core.SecretManagerClientConfig;
+import io.harness.secretmanagerclient.SecretManagerClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.JsonSubtypeResolver;
+import io.harness.serializer.kryo.KryoConverterFactory;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import okhttp3.ConnectionPool;
@@ -25,12 +25,12 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.jersey.JsonViews;
 
 import java.util.function.Supplier;
+import javax.validation.constraints.NotNull;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Singleton

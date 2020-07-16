@@ -1,4 +1,4 @@
-package io.harness.managerclient;
+package io.harness.serializer.kryo;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

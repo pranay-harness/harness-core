@@ -16,11 +16,12 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.BaseTest;
-import io.harness.ng.core.dto.EncryptedDataDTO;
-import io.harness.ng.core.dto.SecretTextDTO;
-import io.harness.ng.core.remote.client.rest.factory.SecretManagerClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.exception.SecretManagementClientException;
+import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import okio.BufferedSource;
@@ -29,7 +30,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.service.impl.security.SecretManagementException;
 
 import java.io.IOException;
 
@@ -93,7 +93,7 @@ public class NGSecretServiceImplTest extends BaseTest {
     boolean exceptionThrown = false;
     try {
       ngSecretService.getSecretById(ACCOUNT_ID, SECRET_ID);
-    } catch (SecretManagementException sme) {
+    } catch (SecretManagementClientException sme) {
       exceptionThrown = true;
       assertThat(sme.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
     }
@@ -111,12 +111,13 @@ public class NGSecretServiceImplTest extends BaseTest {
     boolean exceptionThrown = false;
     try {
       ngSecretService.getSecretById(ACCOUNT_ID, SECRET_ID);
-    } catch (SecretManagementException sme) {
+    } catch (SecretManagementClientException sme) {
       exceptionThrown = true;
       assertThat(sme.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
     }
     assertThat(exceptionThrown).isTrue();
   }
+
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
@@ -166,7 +167,7 @@ public class NGSecretServiceImplTest extends BaseTest {
     boolean exceptionThrown = false;
     try {
       ngSecretService.createSecret(ACCOUNT_ID, true, randomSecretText);
-    } catch (SecretManagementException ex) {
+    } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
     }
@@ -187,7 +188,7 @@ public class NGSecretServiceImplTest extends BaseTest {
     boolean exceptionThrown = false;
     try {
       ngSecretService.createSecret(ACCOUNT_ID, true, randomSecretText);
-    } catch (SecretManagementException ex) {
+    } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
     }
@@ -240,7 +241,7 @@ public class NGSecretServiceImplTest extends BaseTest {
     boolean exceptionThrown = false;
     try {
       ngSecretService.updateSecret(ACCOUNT_ID, UUID, randomSecretText);
-    } catch (SecretManagementException ex) {
+    } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
     }
@@ -260,7 +261,7 @@ public class NGSecretServiceImplTest extends BaseTest {
     boolean exceptionThrown = false;
     try {
       ngSecretService.updateSecret(ACCOUNT_ID, UUID, randomSecretText);
-    } catch (SecretManagementException ex) {
+    } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
     }
@@ -311,7 +312,7 @@ public class NGSecretServiceImplTest extends BaseTest {
     boolean exceptionThrown = false;
     try {
       ngSecretService.deleteSecret(ACCOUNT_ID, UUID);
-    } catch (SecretManagementException ex) {
+    } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
     }
@@ -330,7 +331,7 @@ public class NGSecretServiceImplTest extends BaseTest {
     boolean exceptionThrown = false;
     try {
       ngSecretService.deleteSecret(ACCOUNT_ID, UUID);
-    } catch (SecretManagementException ex) {
+    } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
     }

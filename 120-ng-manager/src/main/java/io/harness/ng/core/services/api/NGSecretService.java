@@ -1,8 +1,8 @@
 package io.harness.ng.core.services.api;
 
 import io.harness.encryption.SecretType;
-import io.harness.ng.core.dto.EncryptedDataDTO;
-import io.harness.ng.core.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.SecretTextDTO;
 
 import java.util.List;
 

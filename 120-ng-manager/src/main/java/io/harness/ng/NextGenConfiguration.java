@@ -11,7 +11,7 @@ import io.harness.grpc.GrpcServerConfig;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.NextGenConfig;
-import io.harness.ng.core.SecretManagerClientConfig;
+import io.harness.secretmanagerclient.SecretManagerClientConfig;
 import lombok.Getter;
 import org.reflections.Reflections;
 
