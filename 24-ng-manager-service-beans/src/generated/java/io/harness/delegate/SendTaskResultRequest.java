@@ -16,6 +16,7 @@ public final class SendTaskResultRequest extends com.google.protobuf.GeneratedMe
     super(builder);
   }
   private SendTaskResultRequest() {
+    taskId_ = "";
     responseData_ = com.google.protobuf.ByteString.EMPTY;
   }
 
@@ -48,16 +49,9 @@ public final class SendTaskResultRequest extends com.google.protobuf.GeneratedMe
             done = true;
             break;
           case 10: {
-            io.harness.delegate.TaskId.Builder subBuilder = null;
-            if (taskId_ != null) {
-              subBuilder = taskId_.toBuilder();
-            }
-            taskId_ = input.readMessage(io.harness.delegate.TaskId.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom(taskId_);
-              taskId_ = subBuilder.buildPartial();
-            }
+            java.lang.String s = input.readStringRequireUtf8();
 
+            taskId_ = s;
             break;
           }
           case 18: {
@@ -95,26 +89,35 @@ public final class SendTaskResultRequest extends com.google.protobuf.GeneratedMe
   }
 
   public static final int TASK_ID_FIELD_NUMBER = 1;
-  private io.harness.delegate.TaskId taskId_;
+  private volatile java.lang.Object taskId_;
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-   * @return Whether the taskId field is set.
-   */
-  public boolean hasTaskId() {
-    return taskId_ != null;
-  }
-  /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>string task_id = 1[json_name = "taskId"];</code>
    * @return The taskId.
    */
-  public io.harness.delegate.TaskId getTaskId() {
-    return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
+  public java.lang.String getTaskId() {
+    java.lang.Object ref = taskId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      taskId_ = s;
+      return s;
+    }
   }
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>string task_id = 1[json_name = "taskId"];</code>
+   * @return The bytes for taskId.
    */
-  public io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder() {
-    return getTaskId();
+  public com.google.protobuf.ByteString getTaskIdBytes() {
+    java.lang.Object ref = taskId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      taskId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
   }
 
   public static final int RESPONSE_DATA_FIELD_NUMBER = 2;
@@ -142,8 +145,8 @@ public final class SendTaskResultRequest extends com.google.protobuf.GeneratedMe
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (taskId_ != null) {
-      output.writeMessage(1, getTaskId());
+    if (!getTaskIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, taskId_);
     }
     if (!responseData_.isEmpty()) {
       output.writeBytes(2, responseData_);
@@ -158,8 +161,8 @@ public final class SendTaskResultRequest extends com.google.protobuf.GeneratedMe
       return size;
 
     size = 0;
-    if (taskId_ != null) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(1, getTaskId());
+    if (!getTaskIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, taskId_);
     }
     if (!responseData_.isEmpty()) {
       size += com.google.protobuf.CodedOutputStream.computeBytesSize(2, responseData_);
@@ -179,12 +182,8 @@ public final class SendTaskResultRequest extends com.google.protobuf.GeneratedMe
     }
     io.harness.delegate.SendTaskResultRequest other = (io.harness.delegate.SendTaskResultRequest) obj;
 
-    if (hasTaskId() != other.hasTaskId())
+    if (!getTaskId().equals(other.getTaskId()))
       return false;
-    if (hasTaskId()) {
-      if (!getTaskId().equals(other.getTaskId()))
-        return false;
-    }
     if (!getResponseData().equals(other.getResponseData()))
       return false;
     if (!unknownFields.equals(other.unknownFields))
@@ -199,10 +198,8 @@ public final class SendTaskResultRequest extends com.google.protobuf.GeneratedMe
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    if (hasTaskId()) {
-      hash = (37 * hash) + TASK_ID_FIELD_NUMBER;
-      hash = (53 * hash) + getTaskId().hashCode();
-    }
+    hash = (37 * hash) + TASK_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getTaskId().hashCode();
     hash = (37 * hash) + RESPONSE_DATA_FIELD_NUMBER;
     hash = (53 * hash) + getResponseData().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
@@ -317,12 +314,8 @@ public final class SendTaskResultRequest extends com.google.protobuf.GeneratedMe
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      if (taskIdBuilder_ == null) {
-        taskId_ = null;
-      } else {
-        taskId_ = null;
-        taskIdBuilder_ = null;
-      }
+      taskId_ = "";
+
       responseData_ = com.google.protobuf.ByteString.EMPTY;
 
       return this;
@@ -355,11 +348,7 @@ public final class SendTaskResultRequest extends com.google.protobuf.GeneratedMe
     lang.Override
     public io.harness.delegate.SendTaskResultRequest buildPartial() {
       io.harness.delegate.SendTaskResultRequest result = new io.harness.delegate.SendTaskResultRequest(this);
-      if (taskIdBuilder_ == null) {
-        result.taskId_ = taskId_;
-      } else {
-        result.taskId_ = taskIdBuilder_.build();
-      }
+      result.taskId_ = taskId_;
       result.responseData_ = responseData_;
       onBuilt();
       return result;
@@ -403,8 +392,9 @@ public final class SendTaskResultRequest extends com.google.protobuf.GeneratedMe
     public Builder mergeFrom(io.harness.delegate.SendTaskResultRequest other) {
       if (other == io.harness.delegate.SendTaskResultRequest.getDefaultInstance())
         return this;
-      if (other.hasTaskId()) {
-        mergeTaskId(other.getTaskId());
+      if (!other.getTaskId().isEmpty()) {
+        taskId_ = other.taskId_;
+        onChanged();
       }
       if (other.getResponseData() != com.google.protobuf.ByteString.EMPTY) {
         setResponseData(other.getResponseData());
@@ -436,117 +426,73 @@ public final class SendTaskResultRequest extends com.google.protobuf.GeneratedMe
       return this;
     }
 
-    private io.harness.delegate.TaskId taskId_;
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-        io.harness.delegate.TaskIdOrBuilder> taskIdBuilder_;
+    private java.lang.Object taskId_ = "";
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-     * @return Whether the taskId field is set.
-     */
-    public boolean hasTaskId() {
-      return taskIdBuilder_ != null || taskId_ != null;
-    }
-    /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>string task_id = 1[json_name = "taskId"];</code>
      * @return The taskId.
      */
-    public io.harness.delegate.TaskId getTaskId() {
-      if (taskIdBuilder_ == null) {
-        return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
+    public java.lang.String getTaskId() {
+      java.lang.Object ref = taskId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        taskId_ = s;
+        return s;
       } else {
-        return taskIdBuilder_.getMessage();
+        return (java.lang.String) ref;
       }
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>string task_id = 1[json_name = "taskId"];</code>
+     * @return The bytes for taskId.
      */
-    public Builder setTaskId(io.harness.delegate.TaskId value) {
-      if (taskIdBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        taskId_ = value;
-        onChanged();
+    public com.google.protobuf.ByteString getTaskIdBytes() {
+      java.lang.Object ref = taskId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        taskId_ = b;
+        return b;
       } else {
-        taskIdBuilder_.setMessage(value);
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string task_id = 1[json_name = "taskId"];</code>
+     * @param value The taskId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setTaskId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
       }
 
+      taskId_ = value;
+      onChanged();
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-     */
-    public Builder setTaskId(io.harness.delegate.TaskId.Builder builderForValue) {
-      if (taskIdBuilder_ == null) {
-        taskId_ = builderForValue.build();
-        onChanged();
-      } else {
-        taskIdBuilder_.setMessage(builderForValue.build());
-      }
-
-      return this;
-    }
-    /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-     */
-    public Builder mergeTaskId(io.harness.delegate.TaskId value) {
-      if (taskIdBuilder_ == null) {
-        if (taskId_ != null) {
-          taskId_ = io.harness.delegate.TaskId.newBuilder(taskId_).mergeFrom(value).buildPartial();
-        } else {
-          taskId_ = value;
-        }
-        onChanged();
-      } else {
-        taskIdBuilder_.mergeFrom(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>string task_id = 1[json_name = "taskId"];</code>
+     * @return This builder for chaining.
      */
     public Builder clearTaskId() {
-      if (taskIdBuilder_ == null) {
-        taskId_ = null;
-        onChanged();
-      } else {
-        taskId_ = null;
-        taskIdBuilder_ = null;
-      }
-
+      taskId_ = getDefaultInstance().getTaskId();
+      onChanged();
       return this;
     }
     /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+     * <code>string task_id = 1[json_name = "taskId"];</code>
+     * @param value The bytes for taskId to set.
+     * @return This builder for chaining.
      */
-    public io.harness.delegate.TaskId.Builder getTaskIdBuilder() {
+    public Builder setTaskIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      taskId_ = value;
       onChanged();
-      return getTaskIdFieldBuilder().getBuilder();
-    }
-    /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-     */
-    public io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder() {
-      if (taskIdBuilder_ != null) {
-        return taskIdBuilder_.getMessageOrBuilder();
-      } else {
-        return taskId_ == null ? io.harness.delegate.TaskId.getDefaultInstance() : taskId_;
-      }
-    }
-    /**
-     * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-     */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-        io.harness.delegate.TaskIdOrBuilder>
-    getTaskIdFieldBuilder() {
-      if (taskIdBuilder_ == null) {
-        taskIdBuilder_ =
-            new com.google.protobuf.SingleFieldBuilderV3<io.harness.delegate.TaskId, io.harness.delegate.TaskId.Builder,
-                io.harness.delegate.TaskIdOrBuilder>(getTaskId(), getParentForChildren(), isClean());
-        taskId_ = null;
-      }
-      return taskIdBuilder_;
+      return this;
     }
 
     private com.google.protobuf.ByteString responseData_ = com.google.protobuf.ByteString.EMPTY;

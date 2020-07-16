@@ -8,19 +8,15 @@ public interface SendTaskResultRequestOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.SendTaskResultRequest)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
-   * @return Whether the taskId field is set.
-   */
-  boolean hasTaskId();
-  /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>string task_id = 1[json_name = "taskId"];</code>
    * @return The taskId.
    */
-  io.harness.delegate.TaskId getTaskId();
+  java.lang.String getTaskId();
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>string task_id = 1[json_name = "taskId"];</code>
+   * @return The bytes for taskId.
    */
-  io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder();
+  com.google.protobuf.ByteString getTaskIdBytes();
 
   /**
    * <code>bytes response_data = 2[json_name = "responseData"];</code>

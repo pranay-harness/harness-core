@@ -1,6 +1,7 @@
 package io.harness.grpc;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.NgTaskExecutionStage;
 import io.harness.delegate.TaskExecutionStage;
 import lombok.experimental.UtilityClass;
 
@@ -18,6 +19,21 @@ public class DelegateTaskGrpcUtils {
         return TaskExecutionStage.ABORTED;
       default:
         return TaskExecutionStage.TYPE_UNSPECIFIED;
+    }
+  }
+
+  public static NgTaskExecutionStage mapTaskStatusToNgTaskExecutionStage(DelegateTask.Status taskStatus) {
+    switch (taskStatus) {
+      case QUEUED:
+        return NgTaskExecutionStage.QUEUEING;
+      case STARTED:
+        return NgTaskExecutionStage.EXECUTING;
+      case ERROR:
+        return NgTaskExecutionStage.FAILED;
+      case ABORTED:
+        return NgTaskExecutionStage.ABORTED;
+      default:
+        return NgTaskExecutionStage.TYPE_UNSPECIFIED;
     }
   }
 }

@@ -14,13 +14,13 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.AbortTaskRequest;
 import io.harness.delegate.AbortTaskResponse;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
+import io.harness.delegate.NgTaskDetails;
+import io.harness.delegate.NgTaskExecutionStage;
+import io.harness.delegate.NgTaskId;
 import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
-import io.harness.delegate.TaskDetails;
-import io.harness.delegate.TaskExecutionStage;
-import io.harness.delegate.TaskId;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
@@ -61,7 +61,7 @@ public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegate
       DelegateTask task = extractDelegateTask(request);
       ResponseData responseData = delegateService.executeTask(task);
       responseObserver.onNext(SendTaskResponse.newBuilder()
-                                  .setTaskId(TaskId.newBuilder().setId(task.getUuid()).build())
+                                  .setTaskId(NgTaskId.newBuilder().setId(task.getUuid()).build())
                                   .setResponseData(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(responseData)))
                                   .build());
       responseObserver.onCompleted();
@@ -80,7 +80,7 @@ public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegate
       String taskId = delegateService.queueTask(task);
       waitNotifyEngine.waitForAllOn(ORCHESTRATION, DelegateTaskResumeCallback.builder().taskId(taskId).build(), taskId);
       responseObserver.onNext(
-          SendTaskAsyncResponse.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build());
+          SendTaskAsyncResponse.newBuilder().setTaskId(NgTaskId.newBuilder().setId(taskId).build()).build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
       responseObserver.onError(ex);
@@ -94,32 +94,32 @@ public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegate
     if (task != null) {
       responseObserver.onNext(
           AbortTaskResponse.newBuilder()
-              .setCanceledAtStage(DelegateTaskGrpcUtils.mapTaskStatusToTaskExecutionStage(task.getStatus()))
+              .setCanceledAtStage(DelegateTaskGrpcUtils.mapTaskStatusToNgTaskExecutionStage(task.getStatus()))
               .build());
       responseObserver.onCompleted();
       return;
     }
     responseObserver.onNext(
-        AbortTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.TYPE_UNSPECIFIED).build());
+        AbortTaskResponse.newBuilder().setCanceledAtStage(NgTaskExecutionStage.TYPE_UNSPECIFIED).build());
     responseObserver.onCompleted();
   }
 
   private DelegateTask extractDelegateTask(SendTaskRequest request) {
-    TaskDetails taskDetails = request.getDetails();
+    NgTaskDetails taskDetails = request.getDetails();
     String accountId = request.getAccountId().getId();
     Map<String, String> setupAbstractions = request.getSetupAbstractions().getValuesMap();
     return extractDelegateTask(accountId, setupAbstractions, taskDetails);
   }
 
   private DelegateTask extractDelegateTask(SendTaskAsyncRequest request) {
-    TaskDetails taskDetails = request.getDetails();
+    NgTaskDetails taskDetails = request.getDetails();
     String accountId = request.getAccountId().getId();
     Map<String, String> setupAbstractions = request.getSetupAbstractions().getValuesMap();
     return extractDelegateTask(accountId, setupAbstractions, taskDetails);
   }
 
   private DelegateTask extractDelegateTask(
-      String accountId, Map<String, String> setupAbstractions, TaskDetails taskDetails) {
+      String accountId, Map<String, String> setupAbstractions, NgTaskDetails taskDetails) {
     TaskParameters parameters =
         (TaskParameters) kryoSerializer.asInflatedObject(taskDetails.getKryoParameters().toByteArray());
     String taskId = generateUuid();

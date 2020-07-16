@@ -18,18 +18,18 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AbortTaskRequest;
 import io.harness.delegate.AbortTaskResponse;
-import io.harness.delegate.AccountId;
+import io.harness.delegate.NgAccountId;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
 import io.harness.delegate.NgDelegateTaskServiceGrpc.NgDelegateTaskServiceBlockingStub;
+import io.harness.delegate.NgTaskDetails;
+import io.harness.delegate.NgTaskExecutionStage;
+import io.harness.delegate.NgTaskId;
+import io.harness.delegate.NgTaskSetupAbstractions;
+import io.harness.delegate.NgTaskType;
 import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
-import io.harness.delegate.TaskDetails;
-import io.harness.delegate.TaskExecutionStage;
-import io.harness.delegate.TaskId;
-import io.harness.delegate.TaskSetupAbstractions;
-import io.harness.delegate.TaskType;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.rule.Owner;
@@ -80,9 +80,9 @@ public class DelegateTaskGrpcServerTest extends WingsBaseTest {
     when(delegateService.abortTask(any(), any()))
         .thenReturn(DelegateTask.builder().status(DelegateTask.Status.STARTED).build());
     AbortTaskResponse abortTaskResponse = ngDelegateTaskServiceBlockingStub.abortTask(
-        AbortTaskRequest.newBuilder().setTaskId(TaskId.newBuilder().setId(taskId).build()).build());
+        AbortTaskRequest.newBuilder().setTaskId(NgTaskId.newBuilder().setId(taskId).build()).build());
     assertThat(abortTaskResponse).isNotNull();
-    assertThat(abortTaskResponse.getCanceledAtStage()).isEqualTo(TaskExecutionStage.EXECUTING);
+    assertThat(abortTaskResponse.getCanceledAtStage()).isEqualTo(NgTaskExecutionStage.EXECUTING);
   }
 
   @Test
@@ -110,28 +110,28 @@ public class DelegateTaskGrpcServerTest extends WingsBaseTest {
   }
 
   private SendTaskRequest buildSendTaskRequest() {
-    TaskDetails taskDetails = buildTaskDetails();
+    NgTaskDetails taskDetails = buildTaskDetails();
     return SendTaskRequest.newBuilder()
-        .setAccountId(AccountId.newBuilder().setId(generateUuid()).build())
+        .setAccountId(NgAccountId.newBuilder().setId(generateUuid()).build())
         .setSetupAbstractions(
-            TaskSetupAbstractions.newBuilder().putAllValues(ImmutableMap.of("accountId", generateUuid())).build())
+            NgTaskSetupAbstractions.newBuilder().putAllValues(ImmutableMap.of("accountId", generateUuid())).build())
         .setDetails(taskDetails)
         .build();
   }
 
   private SendTaskAsyncRequest buildSendTaskAsyncRequest() {
-    TaskDetails taskDetails = buildTaskDetails();
+    NgTaskDetails taskDetails = buildTaskDetails();
     return SendTaskAsyncRequest.newBuilder()
-        .setAccountId(AccountId.newBuilder().setId(generateUuid()).build())
+        .setAccountId(NgAccountId.newBuilder().setId(generateUuid()).build())
         .setSetupAbstractions(
-            TaskSetupAbstractions.newBuilder().putAllValues(ImmutableMap.of("accountId", generateUuid())).build())
+            NgTaskSetupAbstractions.newBuilder().putAllValues(ImmutableMap.of("accountId", generateUuid())).build())
         .setDetails(taskDetails)
         .build();
   }
 
-  private TaskDetails buildTaskDetails() {
-    return TaskDetails.newBuilder()
-        .setType(TaskType.newBuilder().setType("TYPE").build())
+  private NgTaskDetails buildTaskDetails() {
+    return NgTaskDetails.newBuilder()
+        .setType(NgTaskType.newBuilder().setType("TYPE").build())
         .setKryoParameters(ByteString.copyFrom(
             kryoSerializer.asDeflatedBytes(HttpTaskParameters.builder().method("GET").url(HTTP_URL_200).build())))
         .setExecutionTimeout(Duration.newBuilder().setSeconds(3).setNanos(100).build())

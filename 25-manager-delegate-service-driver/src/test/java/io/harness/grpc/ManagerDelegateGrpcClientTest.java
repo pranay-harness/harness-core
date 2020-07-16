@@ -15,14 +15,14 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AbortTaskRequest;
 import io.harness.delegate.AbortTaskResponse;
-import io.harness.delegate.AccountId;
+import io.harness.delegate.NgAccountId;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
+import io.harness.delegate.NgTaskExecutionStage;
+import io.harness.delegate.NgTaskId;
 import io.harness.delegate.SendTaskAsyncRequest;
 import io.harness.delegate.SendTaskAsyncResponse;
 import io.harness.delegate.SendTaskRequest;
 import io.harness.delegate.SendTaskResponse;
-import io.harness.delegate.TaskExecutionStage;
-import io.harness.delegate.TaskId;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -37,12 +37,12 @@ public class ManagerDelegateGrpcClientTest extends CategoryTest {
   private static final String ACCOUNT_ID = generateUuid();
 
   private final SendTaskResponse sendTaskResponse =
-      SendTaskResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
+      SendTaskResponse.newBuilder().setTaskId(NgTaskId.newBuilder().setId("test").build()).build();
 
   private final SendTaskAsyncResponse sendTaskAsyncResponse =
-      SendTaskAsyncResponse.newBuilder().setTaskId(TaskId.newBuilder().setId("test").build()).build();
+      SendTaskAsyncResponse.newBuilder().setTaskId(NgTaskId.newBuilder().setId("test").build()).build();
   private final AbortTaskResponse abortTaskResponse =
-      AbortTaskResponse.newBuilder().setCanceledAtStage(TaskExecutionStage.EXECUTING).build();
+      AbortTaskResponse.newBuilder().setCanceledAtStage(NgTaskExecutionStage.EXECUTING).build();
 
   private final NgDelegateTaskServiceGrpc.NgDelegateTaskServiceImplBase ngDelegateTaskServiceImplBase =
       mock(NgDelegateTaskServiceGrpc.NgDelegateTaskServiceImplBase.class,
@@ -95,7 +95,7 @@ public class ManagerDelegateGrpcClientTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testSendTask() {
     SendTaskRequest sendTaskRequest =
-        SendTaskRequest.newBuilder().setAccountId(AccountId.newBuilder().setId(ACCOUNT_ID).build()).build();
+        SendTaskRequest.newBuilder().setAccountId(NgAccountId.newBuilder().setId(ACCOUNT_ID).build()).build();
     SendTaskResponse taskResponse = managerDelegateGrpcClient.sendTask(sendTaskRequest, 5);
     assertThat(taskResponse).isNotNull();
     assertThat(taskResponse).isEqualTo(sendTaskResponse);
@@ -106,7 +106,7 @@ public class ManagerDelegateGrpcClientTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testSendTaskAsync() {
     SendTaskAsyncRequest sendTaskAsyncRequest =
-        SendTaskAsyncRequest.newBuilder().setAccountId(AccountId.newBuilder().setId(ACCOUNT_ID).build()).build();
+        SendTaskAsyncRequest.newBuilder().setAccountId(NgAccountId.newBuilder().setId(ACCOUNT_ID).build()).build();
     SendTaskAsyncResponse taskResponse = managerDelegateGrpcClient.sendTaskAsync(sendTaskAsyncRequest);
     assertThat(taskResponse).isNotNull();
     assertThat(taskResponse).isEqualTo(sendTaskAsyncResponse);

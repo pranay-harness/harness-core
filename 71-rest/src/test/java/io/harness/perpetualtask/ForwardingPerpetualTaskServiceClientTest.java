@@ -15,10 +15,10 @@ import io.harness.CategoryTest;
 import io.harness.NgManagerServiceDriver;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.TaskDetails;
-import io.harness.delegate.TaskMode;
-import io.harness.delegate.TaskSetupAbstractions;
-import io.harness.delegate.TaskType;
+import io.harness.delegate.NgTaskDetails;
+import io.harness.delegate.NgTaskMode;
+import io.harness.delegate.NgTaskSetupAbstractions;
+import io.harness.delegate.NgTaskType;
 import io.harness.perpetualtask.example.SamplePerpetualTaskParams;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -88,10 +88,10 @@ public class ForwardingPerpetualTaskServiceClientTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getValidationTask() {
     doReturn(ObtainPerpetualTaskValidationDetailsResponse.newBuilder()
-                 .setSetupAbstractions(TaskSetupAbstractions.newBuilder().build())
-                 .setDetails(TaskDetails.newBuilder()
-                                 .setMode(TaskMode.SYNC)
-                                 .setType(TaskType.newBuilder().setType("HTTP").build())
+                 .setSetupAbstractions(NgTaskSetupAbstractions.newBuilder().build())
+                 .setDetails(NgTaskDetails.newBuilder()
+                                 .setMode(NgTaskMode.SYNC)
+                                 .setType(NgTaskType.newBuilder().setType("HTTP").build())
                                  .build())
                  .build())
         .when(ngManagerServiceDriver)

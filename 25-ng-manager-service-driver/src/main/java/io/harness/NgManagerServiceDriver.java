@@ -14,7 +14,6 @@ import io.harness.delegate.NgDelegateTaskResponseServiceGrpc;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc.NgDelegateTaskResponseServiceBlockingStub;
 import io.harness.delegate.SendTaskResultRequest;
 import io.harness.delegate.SendTaskResultResponse;
-import io.harness.delegate.TaskId;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsRequest;
 import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsResponse;
@@ -65,7 +64,7 @@ public class NgManagerServiceDriver {
   public boolean sendTaskResult(String taskId, ResponseData responseData) {
     SendTaskResultRequest resultRequest =
         SendTaskResultRequest.newBuilder()
-            .setTaskId(TaskId.newBuilder().setId(taskId).build())
+            .setTaskId(taskId)
             .setResponseData(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(responseData)))
             .build();
     SendTaskResultResponse response = decoratedSendTaskResultFunction.apply(resultRequest);

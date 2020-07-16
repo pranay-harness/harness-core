@@ -8,17 +8,17 @@ public interface SendTaskAsyncResponseOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.delegate.SendTaskAsyncResponse)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
    * @return Whether the taskId field is set.
    */
   boolean hasTaskId();
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
    * @return The taskId.
    */
-  io.harness.delegate.TaskId getTaskId();
+  io.harness.delegate.NgTaskId getTaskId();
   /**
-   * <code>.io.harness.delegate.TaskId task_id = 1[json_name = "taskId"];</code>
+   * <code>.io.harness.delegate.NgTaskId task_id = 1[json_name = "taskId"];</code>
    */
-  io.harness.delegate.TaskIdOrBuilder getTaskIdOrBuilder();
+  io.harness.delegate.NgTaskIdOrBuilder getTaskIdOrBuilder();
 }

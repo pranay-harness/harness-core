@@ -4,38 +4,38 @@ package io.harness.delegate;
 
 option java_multiple_files = true;
 
-import "io/harness/delegate/account.proto";
-import "io/harness/delegate/task.proto";
-import "io/harness/delegate/progress.proto";
+import "io/harness/delegate/ng_account.proto";
+import "io/harness/delegate/ng_task.proto";
+import "io/harness/delegate/ng_progress.proto";
 
 message SendTaskRequest {
   reserved 1;
-  AccountId account_id = 2;
-  TaskSetupAbstractions setup_abstractions = 3;
-  TaskDetails details = 4;
+  NgAccountId account_id = 2;
+  NgTaskSetupAbstractions setup_abstractions = 3;
+  NgTaskDetails details = 4;
 }
 
 message SendTaskResponse {
-  TaskId task_id = 1;
+  NgTaskId task_id = 1;
   bytes response_data = 2;
 }
 
 message SendTaskAsyncRequest {
   reserved 1;
-  AccountId account_id = 2;
-  TaskSetupAbstractions setup_abstractions = 3;
-  TaskDetails details = 4;
+  NgAccountId account_id = 2;
+  NgTaskSetupAbstractions setup_abstractions = 3;
+  NgTaskDetails details = 4;
 }
 
 message SendTaskAsyncResponse {
-  TaskId task_id = 1;
+  NgTaskId task_id = 1;
 }
 
 message AbortTaskRequest {
-  AccountId account_id = 1;
-  TaskId task_id = 2;
+  NgAccountId account_id = 1;
+  NgTaskId task_id = 2;
 }
 
 message AbortTaskResponse {
-  TaskExecutionStage canceled_at_stage = 1;
+  NgTaskExecutionStage canceled_at_stage = 1;
 }

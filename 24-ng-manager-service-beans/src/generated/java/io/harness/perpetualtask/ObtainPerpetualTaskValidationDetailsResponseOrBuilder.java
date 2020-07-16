@@ -9,32 +9,32 @@ public interface ObtainPerpetualTaskValidationDetailsResponseOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.perpetualtask.ObtainPerpetualTaskValidationDetailsResponse)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 1[json_name = "setupAbstractions"];</code>
+   * <code>.io.harness.delegate.NgTaskSetupAbstractions setup_abstractions = 1[json_name = "setupAbstractions"];</code>
    * @return Whether the setupAbstractions field is set.
    */
   boolean hasSetupAbstractions();
   /**
-   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 1[json_name = "setupAbstractions"];</code>
+   * <code>.io.harness.delegate.NgTaskSetupAbstractions setup_abstractions = 1[json_name = "setupAbstractions"];</code>
    * @return The setupAbstractions.
    */
-  io.harness.delegate.TaskSetupAbstractions getSetupAbstractions();
+  io.harness.delegate.NgTaskSetupAbstractions getSetupAbstractions();
   /**
-   * <code>.io.harness.delegate.TaskSetupAbstractions setup_abstractions = 1[json_name = "setupAbstractions"];</code>
+   * <code>.io.harness.delegate.NgTaskSetupAbstractions setup_abstractions = 1[json_name = "setupAbstractions"];</code>
    */
-  io.harness.delegate.TaskSetupAbstractionsOrBuilder getSetupAbstractionsOrBuilder();
+  io.harness.delegate.NgTaskSetupAbstractionsOrBuilder getSetupAbstractionsOrBuilder();
 
   /**
-   * <code>.io.harness.delegate.TaskDetails details = 2[json_name = "details"];</code>
+   * <code>.io.harness.delegate.NgTaskDetails details = 2[json_name = "details"];</code>
    * @return Whether the details field is set.
    */
   boolean hasDetails();
   /**
-   * <code>.io.harness.delegate.TaskDetails details = 2[json_name = "details"];</code>
+   * <code>.io.harness.delegate.NgTaskDetails details = 2[json_name = "details"];</code>
    * @return The details.
    */
-  io.harness.delegate.TaskDetails getDetails();
+  io.harness.delegate.NgTaskDetails getDetails();
   /**
-   * <code>.io.harness.delegate.TaskDetails details = 2[json_name = "details"];</code>
+   * <code>.io.harness.delegate.NgTaskDetails details = 2[json_name = "details"];</code>
    */
-  io.harness.delegate.TaskDetailsOrBuilder getDetailsOrBuilder();
+  io.harness.delegate.NgTaskDetailsOrBuilder getDetailsOrBuilder();
 }
