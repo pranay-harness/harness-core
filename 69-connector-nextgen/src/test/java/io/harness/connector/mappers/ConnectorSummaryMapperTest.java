@@ -74,7 +74,8 @@ public class ConnectorSummaryMapperTest extends CategoryTest {
     connector.setCreatedAt(1L);
     connector.setLastModifiedAt(1L);
 
-    ConnectorSummaryDTO connectorSummaryDTO = connectorSummaryMapper.writeConnectorSummaryDTO(connector);
+    ConnectorSummaryDTO connectorSummaryDTO =
+        connectorSummaryMapper.writeConnectorSummaryDTO(connector, null, null, null);
 
     assertThat(connectorSummaryDTO).isNotNull();
     assertThat(connectorSummaryDTO.getConnectorDetials()).isNotNull();

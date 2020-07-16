@@ -59,7 +59,7 @@ public class ConnectorPersistenceConfig extends SpringPersistenceConfig {
   private Map<String, Class<?>> collectAliasMap() {
     Map<String, Class<?>> aliases = new ConcurrentHashMap<>();
     try {
-      Reflections reflections = new Reflections("io.harness.connector.entities");
+      Reflections reflections = new Reflections("io.harness.connector.entities", "io.harness.ng.core.entities");
       Collection<Class<?>> classes = reflections.getTypesAnnotatedWith(TypeAlias.class);
       for (Class<? extends Object> typeAliasedClass : classes) {
         TypeAlias typeAliasAnnot = typeAliasedClass.getAnnotation(TypeAlias.class);

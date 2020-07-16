@@ -9,6 +9,7 @@ import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
 import lombok.Data;
 import lombok.Singular;
@@ -32,7 +33,7 @@ import javax.validation.constraints.Size;
 @CdUniqueIndex(name = "unique_fullyQualifiedIdentifier", fields = { @Field("fullyQualifiedIdentifier") })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("connectors")
-public abstract class Connector implements PersistentEntity {
+public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
@@ -40,9 +41,9 @@ public abstract class Connector implements PersistentEntity {
   // todo deepak: Where we should keep the scope, it will be used by everyone
   @NotEmpty Scope scope;
   String description;
-  @Trimmed @NotEmpty String accountId;
-  @Trimmed String orgId;
-  @Trimmed String projectId;
+  @Trimmed @NotEmpty String accountIdentifier;
+  @Trimmed String orgIdentifier;
+  @Trimmed String projectIdentifier;
   @NotEmpty String fullyQualifiedIdentifier;
   @NotEmpty ConnectorType type;
   @NotEmpty List<ConnectorCategory> categories;
@@ -53,5 +54,5 @@ public abstract class Connector implements PersistentEntity {
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
-  public enum Scope { ACCOUNT, PROJECT, ORGANIZATION }
+  public enum Scope { ACCOUNT, ORGANIZATION, PROJECT }
 }

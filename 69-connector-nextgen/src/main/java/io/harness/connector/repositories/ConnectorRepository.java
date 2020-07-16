@@ -6,4 +6,4 @@ import org.springframework.transaction.annotation.Transactional;
 
 @HarnessRepo
 @Transactional
-public interface ConnectorRepository extends ConnectorBaseRepository<Connector> {}
+public interface ConnectorRepository extends ConnectorBaseRepository<Connector>, ConnectorCustomRepository {}

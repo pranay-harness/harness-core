@@ -3,6 +3,7 @@ package io.harness.connector.apis.resource;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorFilter;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.impl.ConnectorServiceImpl;
@@ -36,6 +38,7 @@ public class ConnectorResourceTest extends CategoryTest {
   @InjectMocks private ConnectorResource connectorResource;
   ConnectorDTO connectorDTO;
   ConnectorRequestDTO randomConnectorRequestDTO;
+  String accountIdentifier = "accountIdentifier";
 
   @Before
   public void setUp() throws Exception {
@@ -66,9 +69,9 @@ public class ConnectorResourceTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void create() {
-    doReturn(connectorDTO).when(connectorService).create(any());
-    ConnectorDTO connectorRequestDTO = connectorResource.create(randomConnectorRequestDTO);
-    Mockito.verify(connectorService, times(1)).create(any());
+    doReturn(connectorDTO).when(connectorService).create(any(), any());
+    ConnectorDTO connectorRequestDTO = connectorResource.create(randomConnectorRequestDTO, accountIdentifier);
+    Mockito.verify(connectorService, times(1)).create(any(), any());
     assertThat(connectorRequestDTO).isNotNull();
   }
 
@@ -76,9 +79,9 @@ public class ConnectorResourceTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void update() {
-    when(connectorService.update(any())).thenReturn(connectorDTO);
-    ConnectorDTO connectorRequestDTO = connectorResource.update(randomConnectorRequestDTO);
-    Mockito.verify(connectorService, times(1)).update(any());
+    when(connectorService.update(any(), any())).thenReturn(connectorDTO);
+    ConnectorDTO connectorRequestDTO = connectorResource.update(randomConnectorRequestDTO, accountIdentifier);
+    Mockito.verify(connectorService, times(1)).update(any(), any());
     assertThat(connectorRequestDTO).isNotNull();
   }
 
@@ -98,9 +101,10 @@ public class ConnectorResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void list() {
     final Page<ConnectorSummaryDTO> page = new PageImpl<>(Arrays.asList(ConnectorSummaryDTO.builder().build()));
-    when(connectorService.list(null, 100, 0)).thenReturn(page);
-    Page<ConnectorSummaryDTO> connectorSummaryList = connectorResource.list(100, 0, null);
-    Mockito.verify(connectorService, times(1)).list(null, 100, 0);
+    ConnectorFilter connectorFilter = ConnectorFilter.builder().build();
+    when(connectorService.list(connectorFilter, 100, 0, accountIdentifier)).thenReturn(page);
+    Page<ConnectorSummaryDTO> connectorSummaryList = connectorResource.list(100, 0, connectorFilter, accountIdentifier);
+    Mockito.verify(connectorService, times(1)).list(eq(connectorFilter), eq(100), eq(0), eq(accountIdentifier));
     assertThat(connectorSummaryList).isNotNull();
   }
 

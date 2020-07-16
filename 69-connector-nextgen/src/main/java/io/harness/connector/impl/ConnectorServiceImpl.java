@@ -1,10 +1,13 @@
 package io.harness.connector.impl;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.connector.ConnectorFilterHelper;
+import io.harness.connector.ConnectorScopeHelper;
 import io.harness.connector.FullyQualitifedIdentifierHelper;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorFilter;
@@ -27,12 +30,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.repository.support.PageableExecutionUtils;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -42,9 +41,8 @@ import java.util.Optional;
 public class ConnectorServiceImpl implements ConnectorService {
   private final ConnectorMapper connectorMapper;
   private final ConnectorRepository connectorRepository;
-  // todo @deepak move this mongoTemplate to custom repository
-  private final MongoTemplate mongoTemplate;
   private final ConnectorFilterHelper connectorFilterHelper;
+  private final ConnectorScopeHelper connectorScopeHelper;
   private final ConnectorSummaryMapper connectorSummaryMapper;
   @Inject private Map<String, ConnectionValidator> connectionValidatorMap;
   private final KubernetesConnectionValidator kubernetesConnectionValidator;
@@ -58,18 +56,32 @@ public class ConnectorServiceImpl implements ConnectorService {
     if (connector.isPresent()) {
       return Optional.of(connectorMapper.writeDTO(connector.get()));
     }
-    return Optional.empty();
+    throw new InvalidRequestException(
+        createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+  }
+
+  private String createConnectorNotFoundMessage(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+    StringBuilder stringBuilder = new StringBuilder(256);
+    stringBuilder.append("No connector exists with the identifier ")
+        .append(connectorIdentifier)
+        .append(" in account ")
+        .append(accountIdentifier);
+    if (isNotBlank(orgIdentifier)) {
+      stringBuilder.append(", organisation ").append(orgIdentifier);
+    }
+    if (isNotBlank(projectIdentifier)) {
+      stringBuilder.append(", project ").append(projectIdentifier);
+    }
+    return stringBuilder.toString();
   }
 
   @Override
-  public Page<ConnectorSummaryDTO> list(ConnectorFilter connectorFilter, int page, int size) {
-    Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(connectorFilter);
+  public Page<ConnectorSummaryDTO> list(ConnectorFilter connectorFilter, int page, int size, String accountIdentifier) {
+    Criteria criteria = connectorFilterHelper.createCriteriaFromConnectorFilter(connectorFilter, accountIdentifier);
     Pageable pageable = getPageRequest(page, size);
-    Query query = new Query(criteria).with(pageable);
-    List<Connector> connectors = mongoTemplate.find(query, Connector.class);
-    Page<Connector> connectorsList = PageableExecutionUtils.getPage(
-        connectors, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Connector.class));
-    return connectorsList.map(connector -> connectorSummaryMapper.writeConnectorSummaryDTO(connector));
+    Page<Connector> connectors = connectorRepository.findAll(criteria, pageable);
+    return connectorScopeHelper.createConnectorSummaryListForConnectors(connectors);
   }
 
   private Pageable getPageRequest(int page, int size) {
@@ -77,8 +89,8 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public ConnectorDTO create(ConnectorRequestDTO connectorRequestDTO) {
-    Connector connectorEntity = connectorMapper.toConnector(connectorRequestDTO);
+  public ConnectorDTO create(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier) {
+    Connector connectorEntity = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
     Connector savedConnectorEntity = null;
     try {
       savedConnectorEntity = connectorRepository.save(connectorEntity);
@@ -90,11 +102,11 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public ConnectorDTO update(ConnectorRequestDTO connectorRequestDTO) {
+  public ConnectorDTO update(ConnectorRequestDTO connectorRequestDTO, String accountIdentifier) {
     Objects.requireNonNull(connectorRequestDTO.getIdentifier());
-    String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(
-        connectorRequestDTO.getAccountIdentifier(), connectorRequestDTO.getOrgIdentifier(),
-        connectorRequestDTO.getProjectIdentifer(), connectorRequestDTO.getIdentifier());
+    String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
+        connectorRequestDTO.getOrgIdentifier(), connectorRequestDTO.getProjectIdentifer(),
+        connectorRequestDTO.getIdentifier());
     Optional<Connector> existingConnector =
         connectorRepository.findByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
     if (!existingConnector.isPresent()) {

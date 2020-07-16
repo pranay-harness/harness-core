@@ -50,6 +50,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>22-ng-project-n-orgs</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>25-manager-delegate-service-driver</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>

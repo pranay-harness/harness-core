@@ -24,7 +24,6 @@ public class ConnectorRequestDTO {
   String name;
   String identifier;
   String description;
-  String accountIdentifier;
   String orgIdentifier;
   String projectIdentifer;
   List<String> tags;
@@ -38,7 +37,6 @@ public class ConnectorRequestDTO {
     this.name = name;
     this.identifier = identifier;
     this.description = description;
-    this.accountIdentifier = accountIdentifier;
     this.orgIdentifier = orgIdentifier;
     this.projectIdentifer = projectIdentifer;
     this.tags = tags;

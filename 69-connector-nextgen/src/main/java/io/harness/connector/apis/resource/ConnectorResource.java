@@ -15,6 +15,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 
 import java.util.Optional;
@@ -42,30 +43,33 @@ public class ConnectorResource {
   @GET
   @Path("{connectorIdentifier}")
   @ApiOperation(value = "Get Connector", nickname = "getConnector")
-  public Optional<ConnectorDTO> get(@QueryParam("accountIdentifier") String accountIdentifier,
+  public Optional<ConnectorDTO> get(@NotEmpty @QueryParam("accountIdentifier") String accountIdentifier,
       @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
       @PathParam("connectorIdentifier") String connectorIdentifier) {
-    // todo @deepak: Make the account connector Identifier compulsary
+    // todo @deepak: Make the changes to use accountIdentifier in pathparam
     return connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
   }
 
   @GET
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorList")
   public Page<ConnectorSummaryDTO> list(@QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("100") int size, ConnectorFilter connectorFilter) {
-    return connectorService.list(connectorFilter, page, size);
+      @QueryParam("size") @DefaultValue("100") int size, ConnectorFilter connectorFilter,
+      @NotEmpty @QueryParam("accountIdentifier") String accountIdentifier) {
+    return connectorService.list(connectorFilter, page, size, accountIdentifier);
   }
 
   @POST
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
-  public ConnectorDTO create(@NotNull @Valid ConnectorRequestDTO connectorRequestDTO) {
-    return connectorService.create(connectorRequestDTO);
+  public ConnectorDTO create(@NotNull @Valid ConnectorRequestDTO connectorRequestDTO,
+      @NotEmpty @QueryParam("accountIdentifier") String accountIdentifier) {
+    return connectorService.create(connectorRequestDTO, accountIdentifier);
   }
 
   @PUT
   @ApiOperation(value = "Updates a Connector", nickname = "updateConnector")
-  public ConnectorDTO update(@NotNull @Valid ConnectorRequestDTO connectorRequestDTO) {
-    return connectorService.update(connectorRequestDTO);
+  public ConnectorDTO update(@NotNull @Valid ConnectorRequestDTO connectorRequestDTO,
+      @NotEmpty @QueryParam("accountIdentifier") String accountIdentifier) {
+    return connectorService.update(connectorRequestDTO, accountIdentifier);
   }
 
   @DELETE
@@ -81,9 +85,9 @@ public class ConnectorResource {
   @Path("validate")
   @ApiOperation(value = "Get the connectivity status of the Connector", nickname = "getConnectorStatus")
   public RestResponse<ConnectorValidationResult> validate(
-      ConnectorRequestDTO connectorDTO, @QueryParam("accountId") String accountId) {
+      ConnectorRequestDTO connectorDTO, @QueryParam("accountIdentifier") String accountIdentifier) {
     return RestResponse.Builder.aRestResponse()
-        .withResource(connectorService.validate(connectorDTO, accountId))
+        .withResource(connectorService.validate(connectorDTO, accountIdentifier))
         .build();
   }
 }

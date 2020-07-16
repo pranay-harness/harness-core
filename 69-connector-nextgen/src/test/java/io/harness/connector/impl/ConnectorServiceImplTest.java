@@ -27,6 +27,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,7 @@ public class ConnectorServiceImplTest extends CategoryTest {
   ConnectorRequestDTO connectorRequestDTO;
   ConnectorDTO connectorDTO;
   KubernetesClusterConfig connector;
+  String accountIdentifier = "accountIdentifier";
 
   // todo @deepak: Make this tests use ConnectorBaseTests instead of category tests
   @Before
@@ -110,7 +112,7 @@ public class ConnectorServiceImplTest extends CategoryTest {
   }
 
   private ConnectorDTO createConnector() {
-    return connectorService.create(connectorRequestDTO);
+    return connectorService.create(connectorRequestDTO, accountIdentifier);
   }
 
   @Test
@@ -148,7 +150,7 @@ public class ConnectorServiceImplTest extends CategoryTest {
                                                      .connectorType(KUBERNETES_CLUSTER)
                                                      .connectorConfig(connectorDTOWithDelegateCreds)
                                                      .build();
-    ConnectorDTO connectorDTOOutput = connectorService.update(newConnectorRequestDTO);
+    ConnectorDTO connectorDTOOutput = connectorService.update(newConnectorRequestDTO, accountIdentifier);
     assertThat(connectorDTOOutput).isNotNull();
     assertThat(connectorDTOOutput.getName()).isEqualTo(name);
     assertThat(connectorDTOOutput.getIdentifier()).isEqualTo(identifier);
@@ -170,7 +172,7 @@ public class ConnectorServiceImplTest extends CategoryTest {
     createConnector();
     createConnector();
     createConnector();
-    Page<ConnectorSummaryDTO> connectorSummaryDTOS = connectorService.list(null, 0, 100);
+    Page<ConnectorSummaryDTO> connectorSummaryDTOS = connectorService.list(null, 0, 100, accountIdentifier);
     assertThat(connectorSummaryDTOS.getTotalElements()).isEqualTo(3);
   }
 
@@ -202,7 +204,7 @@ public class ConnectorServiceImplTest extends CategoryTest {
     assertThat(userNamePasswordDTO.getCacert()).isEqualTo(cacert);
   }
 
-  @Test
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testDelete() {
