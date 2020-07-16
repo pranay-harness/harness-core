@@ -3,6 +3,7 @@ package io.harness.serializer.morphia;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
+import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.LogCVConfig;
 import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.MetricCVConfig;
@@ -28,6 +29,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(HeatMap.class);
     set.add(DataCollectionTask.class);
     set.add(CVConfig.class);
+    set.add(DeletedCVConfig.class);
     set.add(SplunkCVConfig.class);
     set.add(AppDynamicsCVConfig.class);
     set.add(LogCVConfig.class);

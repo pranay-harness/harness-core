@@ -98,6 +98,11 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   @Override
+  public void deleteDataCollectionTask(String accountId, String dataCollectionTaskId) {
+    verificationManagerService.deleteDataCollectionTask(accountId, dataCollectionTaskId);
+  }
+
+  @Override
   public void updateTaskStatus(DataCollectionTaskResult result) {
     logger.info("Updating status {}", result);
     UpdateOperations<DataCollectionTask> updateOperations =
@@ -139,12 +144,11 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
 
   private void createNextTask(DataCollectionTask prevTask) {
     CVConfig cvConfig = cvConfigService.get(prevTask.getCvConfigId());
-    populateMetricPack(cvConfig);
     if (cvConfig == null) {
-      // TODO: delete perpetual task. We need a logic to make sure perpetual tasks are always deleted.
-      // Not implementing now because this requires more thought
-      throw new UnsupportedOperationException("Not implemented yet");
+      logger.info("CVConfig no longer exists {}", prevTask.getCvConfigId());
+      return;
     }
+    populateMetricPack(cvConfig);
     DataCollectionTask dataCollectionTask =
         getDataCollectionTask(cvConfig, prevTask.getEndTime(), prevTask.getEndTime().plus(5, ChronoUnit.MINUTES));
     save(dataCollectionTask);

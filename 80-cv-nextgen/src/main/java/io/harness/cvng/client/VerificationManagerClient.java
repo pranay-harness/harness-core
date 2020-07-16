@@ -15,6 +15,7 @@ import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.rest.RestResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
@@ -31,6 +32,10 @@ public interface VerificationManagerClient {
   @POST(CV_DATA_COLLECTION_PATH + "/create-task")
   Call<RestResponse<String>> createDataCollectionTask(@Query("accountId") String accountId,
       @Query("cvConfigId") String cvConfigId, @Query("connectorId") String connectorId);
+
+  @DELETE(CV_DATA_COLLECTION_PATH + "/delete-task")
+  Call<RestResponse<Void>> deleteDataCollectionTask(
+      @Query("accountId") String accountId, @Query("taskId") String taskId);
 
   @GET(SPLUNK_RESOURCE_PATH + SPLUNK_SAVED_SEARCH_PATH)
   Call<RestResponse<List<SplunkSavedSearch>>> getSavedSearches(

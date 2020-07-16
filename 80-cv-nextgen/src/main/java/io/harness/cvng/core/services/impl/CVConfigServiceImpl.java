@@ -8,7 +8,9 @@ import com.google.inject.Inject;
 
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
+import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.persistence.HPersistence;
 import org.mongodb.morphia.query.Query;
@@ -23,6 +25,7 @@ import javax.validation.constraints.NotNull;
 public class CVConfigServiceImpl implements CVConfigService {
   @Inject private HPersistence hPersistence;
   @Inject private AnomalyService anomalyService;
+  @Inject private DeletedCVConfigService deletedCVConfigService;
 
   @Override
   public CVConfig save(CVConfig cvConfig) {
@@ -62,6 +65,11 @@ public class CVConfigServiceImpl implements CVConfigService {
     if (cvConfig == null) {
       return;
     }
+    deletedCVConfigService.save(DeletedCVConfig.builder()
+                                    .cvConfig(cvConfig)
+                                    .accountId(cvConfig.getAccountId())
+                                    .dataCollectionTaskId(cvConfig.getDataCollectionTaskId())
+                                    .build());
     anomalyService.closeAnomaly(cvConfig.getAccountId(), cvConfigId, Instant.now());
     hPersistence.delete(CVConfig.class, cvConfigId);
   }
