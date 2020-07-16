@@ -1,13 +1,22 @@
 package software.wings.service;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.perpetualtask.PerpetualTaskType.PCF_INSTANCE_SYNC;
 import static io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient.PCF_APPLICATION_NAME;
 import static java.util.stream.Collectors.toSet;
+import static software.wings.service.InstanceSyncConstants.HARNESS_ACCOUNT_ID;
+import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
+import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
+import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 
-import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import lombok.AccessLevel;
@@ -21,14 +30,33 @@ import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.service.intfc.instance.InstanceService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PCFInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
   @Inject InstanceService instanceService;
-  @Inject PcfInstanceSyncPerpetualTaskClient pcfPerpetualTaskClient;
+  @Inject private PerpetualTaskService perpetualTaskService;
+
+  public String create(String accountId, PcfInstanceSyncPerpetualTaskClientParams clientParams) {
+    Map<String, String> paramMap = new HashMap<>();
+    paramMap.put(HARNESS_ACCOUNT_ID, clientParams.getAccountId());
+    paramMap.put(INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId());
+    paramMap.put(HARNESS_APPLICATION_ID, clientParams.getAppId());
+    paramMap.put(PCF_APPLICATION_NAME, clientParams.getApplicationName());
+
+    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(paramMap).build();
+
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
+                                         .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
+                                         .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
+                                         .build();
+
+    return perpetualTaskService.createTask(PCF_INSTANCE_SYNC, accountId, clientContext, schedule, false);
+  }
 
   @Override
   public List<String> createPerpetualTasksForNewDeployment(List<DeploymentSummary> deploymentSummaries,
@@ -80,7 +108,7 @@ public class PCFInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetua
               .inframappingId(infraMappingId)
               .applicationName(applicationName)
               .build();
-      perpetualTaskIds.add(pcfPerpetualTaskClient.create(accountId, pcfInstanceSyncParams));
+      perpetualTaskIds.add(create(accountId, pcfInstanceSyncParams));
     }
 
     return perpetualTaskIds;
