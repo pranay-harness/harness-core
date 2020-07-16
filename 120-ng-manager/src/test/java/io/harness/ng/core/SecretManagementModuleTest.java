@@ -15,9 +15,11 @@ import io.harness.ng.core.services.api.NGSecretManagerService;
 import io.harness.ng.core.services.api.NGSecretService;
 import io.harness.ng.core.services.api.impl.NGSecretManagerServiceImpl;
 import io.harness.ng.core.services.api.impl.NGSecretServiceImpl;
-import io.harness.ng.core.services.api.impl.SecretManagerClientServiceImpl;
 import io.harness.rule.Owner;
-import io.harness.secretmanagerclient.SecretManagerClientService;
+import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.secretmanagerclient.SecretManagerClientConfig;
+import io.harness.secretmanagerclient.services.SecretManagerClientServiceImpl;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
 import org.junit.Test;
@@ -29,6 +31,7 @@ import java.util.Set;
 
 public class SecretManagementModuleTest extends BaseTest {
   private SecretManagementModule secretManagementModule;
+  private SecretManagementClientModule secretManagementClientModule;
 
   @Test
   @Owner(developers = VIKAS)
@@ -37,7 +40,8 @@ public class SecretManagementModuleTest extends BaseTest {
     SecretManagerClientConfig secretManagerClientConfig =
         SecretManagerClientConfig.builder().baseUrl("http://localhost:7143").build();
     String serviceSecret = "test_secret";
-    secretManagementModule = new SecretManagementModule(secretManagerClientConfig, serviceSecret);
+    secretManagementModule = new SecretManagementModule();
+    secretManagementClientModule = new SecretManagementClientModule(secretManagerClientConfig, serviceSecret);
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {
@@ -48,6 +52,7 @@ public class SecretManagementModuleTest extends BaseTest {
       }
     });
     modules.add(secretManagementModule);
+    modules.add(secretManagementClientModule);
     Injector injector = Guice.createInjector(modules);
 
     NGSecretManagerService ngSecretManagerService = injector.getInstance(NGSecretManagerService.class);

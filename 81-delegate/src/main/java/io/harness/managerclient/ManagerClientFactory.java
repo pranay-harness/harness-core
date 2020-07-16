@@ -11,6 +11,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.security.TokenGenerator;
+import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.version.VersionInfoManager;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;

@@ -1,4 +1,4 @@
-package io.harness.secretmanagerclient;
+package io.harness.secretmanagerclient.services.api;
 
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;

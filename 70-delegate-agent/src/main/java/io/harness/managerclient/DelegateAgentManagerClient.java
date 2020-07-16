@@ -12,6 +12,8 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
+import io.harness.serializer.kryo.KryoRequest;
+import io.harness.serializer.kryo.KryoResponse;
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;

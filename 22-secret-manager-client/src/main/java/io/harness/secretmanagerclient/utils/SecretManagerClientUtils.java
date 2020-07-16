@@ -1,20 +1,20 @@
-package io.harness.ng.core.utils;
+package io.harness.secretmanagerclient.utils;
 
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.rest.RestResponse;
+import io.harness.secretmanagerclient.exception.SecretManagementClientException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.service.impl.security.SecretManagementException;
 
 import java.io.IOException;
 
 @UtilityClass
 @Slf4j
-public class SecretUtils {
+public class SecretManagerClientUtils {
   public static <T> T getResponse(Call<RestResponse<T>> request) {
     try {
       Response<RestResponse<T>> response = request.execute();
@@ -26,10 +26,10 @@ public class SecretUtils {
         }
       }
     } catch (IOException ex) {
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to connect", ex, USER);
+      throw new SecretManagementClientException(SECRET_MANAGEMENT_ERROR, "Unable to connect", ex, USER);
     }
 
-    throw new SecretManagementException(
+    throw new SecretManagementClientException(
         SECRET_MANAGEMENT_ERROR, "Some error occurred, please contact Harness support.", USER);
   }
 }

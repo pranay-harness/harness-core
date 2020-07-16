@@ -3,14 +3,14 @@ package io.harness.ng.core.remote;
 import com.google.inject.Inject;
 
 import io.harness.encryption.SecretType;
-import io.harness.ng.core.dto.EncryptedDataDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.dto.SecretTextDTO;
 import io.harness.ng.core.entities.SampleEncryptableSettingImplementation;
 import io.harness.ng.core.services.api.NGSecretService;
-import io.harness.secretmanagerclient.SecretManagerClientService;
+import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

@@ -1,4 +1,4 @@
-package io.harness.ng.core.dto;
+package io.harness.secretmanagerclient.dto;
 
 import io.harness.security.encryption.EncryptedDataParams;
 import lombok.Data;

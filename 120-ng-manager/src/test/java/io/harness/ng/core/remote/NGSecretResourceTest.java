@@ -15,12 +15,12 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.BaseTest;
-import io.harness.ng.core.dto.EncryptedDataDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.dto.SecretTextDTO;
 import io.harness.ng.core.services.api.NGSecretService;
 import io.harness.rule.Owner;
-import io.harness.secretmanagerclient.SecretManagerClientService;
+import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

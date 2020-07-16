@@ -1,11 +1,11 @@
-package io.harness.ng.core.services.api.impl;
+package io.harness.secretmanagerclient.services;
 
-import static io.harness.ng.core.utils.SecretUtils.getResponse;
+import static io.harness.secretmanagerclient.utils.SecretManagerClientUtils.getResponse;
 
 import com.google.inject.Inject;
 
-import io.harness.ng.core.remote.client.rest.factory.SecretManagerClient;
-import io.harness.secretmanagerclient.SecretManagerClientService;
+import io.harness.secretmanagerclient.remote.SecretManagerClient;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 

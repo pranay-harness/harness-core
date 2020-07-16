@@ -1,4 +1,4 @@
-package io.harness.ng.core;
+package io.harness.secretmanagerclient;
 
 import lombok.AccessLevel;
 import lombok.Builder;

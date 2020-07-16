@@ -1,15 +1,15 @@
 package io.harness.ng.core.services.api.impl;
 
-import static io.harness.ng.core.utils.SecretUtils.getResponse;
+import static io.harness.secretmanagerclient.utils.SecretManagerClientUtils.getResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.encryption.SecretType;
-import io.harness.ng.core.dto.EncryptedDataDTO;
-import io.harness.ng.core.dto.SecretTextDTO;
-import io.harness.ng.core.remote.client.rest.factory.SecretManagerClient;
 import io.harness.ng.core.services.api.NGSecretService;
+import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

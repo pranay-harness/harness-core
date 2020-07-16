@@ -27,6 +27,7 @@ import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.registries.registrar.StepRegistrar;
+import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.serializer.kryo.NgStepRegistrar;
@@ -80,7 +81,8 @@ public class NextGenModule extends DependencyModule {
     install(new CoreModule());
     install(new ConnectorModule());
     install(new GitSyncModule());
-    install(new SecretManagementModule(
+    install(new SecretManagementModule());
+    install(new SecretManagementClientModule(
         this.appConfig.getSecretManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ManagerDelegateServiceDriverModule(this.appConfig.getGrpcClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NextGenConfiguration.SERVICE_ID));
