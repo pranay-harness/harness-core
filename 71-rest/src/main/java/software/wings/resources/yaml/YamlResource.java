@@ -479,7 +479,6 @@ public class YamlResource {
   @Path("/settings/{uuid}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<SettingAttribute> updateSettingAttribute(@QueryParam("accountId") String accountId,
       @PathParam("uuid") String uuid, @QueryParam("type") String type, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
@@ -523,9 +522,9 @@ public class YamlResource {
   @Path("/environments/{envId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE, skipAuth = true)
-  public RestResponse<Environment> updateEnvironment(
-      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
+  public RestResponse<Environment> updateEnvironment(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, YamlPayload yamlPayload, @PathParam("envId") String envId) {
     return yamlService.update(yamlPayload, accountId);
   }
 
