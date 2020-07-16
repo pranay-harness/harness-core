@@ -12,7 +12,6 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -20,7 +19,7 @@ import javax.validation.constraints.NotNull;
 @JsonInclude(NON_NULL)
 public class UpdateOrganizationDTO {
   @ApiModelProperty(required = true) @NotEmpty @EntityName String name;
-  @ApiModelProperty(required = true) @NotEmpty String color;
-  @ApiModelProperty(required = true) @NotEmpty String description;
-  @ApiModelProperty(required = true) @NotNull List<String> tags;
+  String color;
+  String description;
+  List<String> tags;
 }

@@ -6,6 +6,7 @@ import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
+import io.harness.ng.ModuleType;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.persistence.PersistentEntity;
@@ -35,6 +36,7 @@ import javax.validation.constraints.Size;
     { @Field(ProjectKeys.accountIdentifier)
       , @Field(ProjectKeys.orgIdentifier), @Field(ProjectKeys.identifier) })
 @CdIndex(name = "accountIdentifierIndex", fields = { @Field(ProjectKeys.accountIdentifier) })
+@CdIndex(name = "modulesIndex", fields = { @Field(ProjectKeys.modules) })
 @Entity(value = "projects", noClassnameStored = true)
 @Document("projects")
 @TypeAlias("projects")
@@ -46,7 +48,7 @@ public class Project implements PersistentEntity, NGAccountAccess {
 
   @NotEmpty @EntityName String name;
   @Trimmed @NotEmpty String color;
-  @NotNull @Size(max = 1024) List<String> purposeList;
+  @NotNull @Size(max = 1024) List<ModuleType> modules;
   @NotNull @Size(max = 1024) String description;
   @Singular @Size(min = 1, max = 128) List<String> owners;
   @NotNull @Singular @Size(max = 128) List<String> tags;
