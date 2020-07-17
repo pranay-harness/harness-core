@@ -1,41 +1,40 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.util.Durations;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionPTaskClientParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
-import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactStreamService;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @OwnedBy(CDC)
 @Slf4j
 @Singleton
 public class ArtifactStreamPTaskHelper {
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private PerpetualTaskService perpetualTaskService;
 
-  private PerpetualTaskServiceInprocClient<ArtifactCollectionPTaskClientParams> getClient() {
-    return (PerpetualTaskServiceInprocClient<ArtifactCollectionPTaskClientParams>) clientRegistry.getClient(
-        PerpetualTaskType.ARTIFACT_COLLECTION);
-  }
+  private static final String ARTIFACT_STREAM_ID = "artifactStreamId";
 
   public void createPerpetualTask(ArtifactStream artifactStream) {
     Validator.notNullCheck("Artifact stream id is missing", artifactStream.getUuid());
@@ -46,12 +45,11 @@ public class ArtifactStreamPTaskHelper {
 
     try (AutoLogContext ignore1 = new AccountLogContext(artifactStream.getAccountId(), OVERRIDE_ERROR);
          AutoLogContext ignore2 = new ArtifactStreamLogContext(artifactStream.getUuid(), OVERRIDE_ERROR)) {
-      PerpetualTaskServiceInprocClient<ArtifactCollectionPTaskClientParams> client = getClient();
       ArtifactCollectionPTaskClientParams artifactCollectionPTaskClientParams =
           ArtifactCollectionPTaskClientParams.builder().artifactStreamId(artifactStream.getUuid()).build();
       logger.info("Creating perpetual task");
 
-      String perpetualTaskId = client.create(artifactStream.getAccountId(), artifactCollectionPTaskClientParams);
+      String perpetualTaskId = create(artifactStream.getAccountId(), artifactCollectionPTaskClientParams);
       logger.info("Created perpetual task: {}", perpetualTaskId);
 
       boolean updated = false;
@@ -71,5 +69,24 @@ public class ArtifactStreamPTaskHelper {
       // should not fail the save operation and try assigning to perpetual task later.
       logger.error(format("Unable to create perpetual task for artifact stream: %s", artifactStream.getUuid()), ex);
     }
+  }
+
+  private String create(String accountId, ArtifactCollectionPTaskClientParams clientParams) {
+    Map<String, String> clientParamMap = new HashMap<>();
+    if (isEmpty(clientParams.getArtifactStreamId())) {
+      throw new InvalidRequestException(
+          "Failed to create Perpetual Task as Artifact Stream Id is missing from clientParams");
+    }
+    clientParamMap.put(ARTIFACT_STREAM_ID, clientParams.getArtifactStreamId());
+
+    PerpetualTaskClientContext clientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
+
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
+                                         .setInterval(Durations.fromMinutes(1))
+                                         .setTimeout(Durations.fromMinutes(2))
+                                         .build();
+    return perpetualTaskService.createTask(
+        PerpetualTaskType.ARTIFACT_COLLECTION, accountId, clientContext, schedule, false);
   }
 }

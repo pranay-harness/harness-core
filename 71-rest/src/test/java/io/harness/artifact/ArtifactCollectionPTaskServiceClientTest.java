@@ -71,20 +71,6 @@ public class ArtifactCollectionPTaskServiceClientTest extends CategoryTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldCreatePerpetualTask() {
-    ArtifactCollectionPTaskClientParams taskClientParams =
-        ArtifactCollectionPTaskClientParams.builder().artifactStreamId(artifactStreamId).build();
-
-    assertThat(artifactCollectionPTaskServiceClient.create(accountId, taskClientParams)).isEqualTo(taskId);
-
-    verify(perpetualTaskService)
-        .createTask(eq(PerpetualTaskType.ARTIFACT_COLLECTION), eq(accountId), isA(PerpetualTaskClientContext.class),
-            isA(PerpetualTaskSchedule.class), eq(false));
-  }
-
-  @Test
-  @Owner(developers = SRINIVAS)
-  @Category(UnitTests.class)
   public void shouldGetValidationTask() {
     PerpetualTaskClientContext perpetualTaskClientContext =
         PerpetualTaskClientContext.builder().clientParams(clientParamsMap).build();

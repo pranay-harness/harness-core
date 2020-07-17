@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -14,13 +15,15 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 
 import io.harness.CategoryTest;
-import io.harness.artifact.ArtifactCollectionPTaskClientParams;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.PerpetualTaskType;
@@ -30,6 +33,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -40,6 +44,9 @@ import software.wings.service.intfc.ArtifactStreamService;
 
 public class ArtifactStreamPTaskHelperTest extends CategoryTest {
   private static final String PERPETUAL_TASK_ID = "PERPETUAL_TASK_ID";
+  private static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
+  private static final long INTERVAL_MINUTES = 1;
+  private static final long TIMEOUT_MINUTES = 2;
 
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private PerpetualTaskServiceClientRegistry clientRegistry;
@@ -54,7 +61,8 @@ public class ArtifactStreamPTaskHelperTest extends CategoryTest {
   public void setUp() {
     when(clientRegistry.getClient(eq(PerpetualTaskType.ARTIFACT_COLLECTION)))
         .thenReturn(artifactCollectionPTaskServiceClient);
-    when(artifactCollectionPTaskServiceClient.create(eq(ACCOUNT_ID), any(ArtifactCollectionPTaskClientParams.class)))
+    when(perpetualTaskService.createTask(eq(PerpetualTaskType.ARTIFACT_COLLECTION), eq(ACCOUNT_ID),
+             any(PerpetualTaskClientContext.class), any(PerpetualTaskSchedule.class), eq(false)))
         .thenReturn(PERPETUAL_TASK_ID);
   }
 
@@ -69,21 +77,36 @@ public class ArtifactStreamPTaskHelperTest extends CategoryTest {
     ArtifactStream artifactStream = prepareArtifactStream();
     when(artifactStreamService.attachPerpetualTaskId(eq(artifactStream), eq(PERPETUAL_TASK_ID))).thenReturn(true);
     artifactStreamPTaskHelper.createPerpetualTask(artifactStream);
-    verify(artifactCollectionPTaskServiceClient, times(1))
-        .create(eq(ACCOUNT_ID), any(ArtifactCollectionPTaskClientParams.class));
+
+    ArgumentCaptor<PerpetualTaskClientContext> clientContextCaptor =
+        ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    ArgumentCaptor<PerpetualTaskSchedule> scheduleCaptor = ArgumentCaptor.forClass(PerpetualTaskSchedule.class);
+
+    verify(perpetualTaskService, times(1))
+        .createTask(eq(PerpetualTaskType.ARTIFACT_COLLECTION), eq(ACCOUNT_ID), clientContextCaptor.capture(),
+            scheduleCaptor.capture(), eq(false));
+    clientContextCaptor.getAllValues().forEach(clientContext -> {
+      assertThat(clientContext.getClientParams().get(ARTIFACT_STREAM_ID_KEY)).isEqualTo(ARTIFACT_STREAM_ID);
+    });
+    scheduleCaptor.getAllValues().forEach(schedule -> {
+      assertThat(schedule.getInterval()).isEqualTo(Durations.fromMinutes(INTERVAL_MINUTES));
+      assertThat(schedule.getTimeout()).isEqualTo(Durations.fromMinutes(TIMEOUT_MINUTES));
+    });
     verify(perpetualTaskService, never()).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     when(artifactStreamService.attachPerpetualTaskId(eq(artifactStream), eq(PERPETUAL_TASK_ID))).thenReturn(false);
     artifactStreamPTaskHelper.createPerpetualTask(artifactStream);
-    verify(artifactCollectionPTaskServiceClient, times(2))
-        .create(eq(ACCOUNT_ID), any(ArtifactCollectionPTaskClientParams.class));
+    verify(perpetualTaskService, times(2))
+        .createTask(eq(PerpetualTaskType.ARTIFACT_COLLECTION), eq(ACCOUNT_ID), any(PerpetualTaskClientContext.class),
+            any(PerpetualTaskSchedule.class), eq(false));
     verify(perpetualTaskService, times(1)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     when(artifactStreamService.attachPerpetualTaskId(eq(artifactStream), eq(PERPETUAL_TASK_ID)))
         .thenThrow(new RuntimeException());
     artifactStreamPTaskHelper.createPerpetualTask(artifactStream);
-    verify(artifactCollectionPTaskServiceClient, times(3))
-        .create(eq(ACCOUNT_ID), any(ArtifactCollectionPTaskClientParams.class));
+    verify(perpetualTaskService, times(3))
+        .createTask(eq(PerpetualTaskType.ARTIFACT_COLLECTION), eq(ACCOUNT_ID), any(PerpetualTaskClientContext.class),
+            any(PerpetualTaskSchedule.class), eq(false));
     verify(perpetualTaskService, times(2)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     ArtifactStream artifactStreamWithPerpetualTaskId = prepareArtifactStream();
