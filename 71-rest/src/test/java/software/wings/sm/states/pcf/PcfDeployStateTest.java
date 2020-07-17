@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -113,6 +114,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
@@ -408,5 +410,49 @@ public class PcfDeployStateTest extends WingsBaseTest {
         SetupSweepingOutputPcf.builder().resizeStrategy(ResizeStrategy.DOWNSIZE_OLD_FIRST).build());
     commandUnitNames = commandUnits.stream().map(commandUnit -> commandUnit.getName()).collect(toList());
     assertThat(commandUnitNames).containsExactly(Downsize, Upsize, Wrapup);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testInstanceStatusSummariesPopulationInHandleAsync() {
+    ExecutionContext context = mock(ExecutionContext.class);
+    doReturn(PcfDeployStateExecutionData.builder().build()).when(context).getStateExecutionData();
+
+    doReturn(SweepingOutputInstance.builder()).when(context).prepareSweepingOutputBuilder(any());
+    doReturn(null).when(sweepingOutputService).save(any());
+    doNothing().when(activityService).updateStatus(anyString(), anyString(), any());
+    Map<String, ResponseData> response = new HashMap<>();
+
+    doReturn(PhaseElement.builder().phaseName("name").build()).when(context).getContextElement(any(), any());
+
+    response.put("1",
+        PcfCommandExecutionResponse.builder()
+            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+            .pcfCommandResponse(PcfDeployCommandResponse.builder()
+                                    .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                                    .pcfInstanceElements(Arrays.asList(PcfInstanceElement.builder()
+                                                                           .uuid("uuid1")
+                                                                           .applicationId("1")
+                                                                           .displayName("app1")
+                                                                           .isUpsize(true)
+                                                                           .instanceIndex("4")
+                                                                           .build(),
+                                        PcfInstanceElement.builder()
+                                            .uuid("uuid2")
+                                            .isUpsize(true)
+                                            .displayName("app0")
+                                            .applicationId("0")
+                                            .instanceIndex("2")
+                                            .build()))
+                                    .build())
+            .build());
+
+    ExecutionResponse executionResponse = pcfDeployState.handleAsyncInternal(context, response);
+
+    PcfDeployStateExecutionData pcfDeployStateExecutionData = context.getStateExecutionData();
+    assertThat(pcfDeployStateExecutionData.getNewInstanceStatusSummaries().size()).isEqualTo(2);
+    InstanceStatusSummary instanceStatusSummary = pcfDeployStateExecutionData.getNewInstanceStatusSummaries().get(0);
+    assertThat(instanceStatusSummary.getInstanceElement().getUuid()).isEqualTo("uuid1");
   }
 }

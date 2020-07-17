@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
 
@@ -25,6 +26,7 @@ public class PcfDeployStateExecutionData extends StateExecutionData implements D
   private List<PcfServiceData> instanceData;
   private String updateDetails;
   private SetupSweepingOutputPcf setupSweepingOutputPcf;
+  private List<InstanceStatusSummary> newInstanceStatusSummaries;
 
   private Integer updateCount;
 

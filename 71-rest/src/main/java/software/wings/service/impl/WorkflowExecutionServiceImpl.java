@@ -74,6 +74,7 @@ import static software.wings.sm.StateType.ENV_LOOP_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_LOOP_STATE;
 import static software.wings.sm.StateType.ENV_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.sm.StateType.PCF_RESIZE;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
@@ -147,6 +148,7 @@ import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
 import software.wings.api.WorkflowElement.WorkflowElementBuilder;
 import software.wings.api.k8s.K8sStateExecutionData;
+import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Application;
@@ -3413,6 +3415,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               instanceStatusSummaries.addAll(k8sStateExecutionData.getNewInstanceStatusSummaries());
             }
           }
+        } else if (nextStateType == PCF_RESIZE) {
+          PcfDeployStateExecutionData pcfDeployStateExecutionData =
+              (PcfDeployStateExecutionData) next.fetchStateExecutionData();
+          instanceStatusSummaries.addAll(pcfDeployStateExecutionData.getNewInstanceStatusSummaries());
         }
         last = next;
       }

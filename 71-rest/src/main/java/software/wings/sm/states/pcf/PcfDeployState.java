@@ -6,12 +6,14 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.FeatureName.LIMIT_PCF_THREADS;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.PcfDummyCommandUnit.Downsize;
 import static software.wings.beans.command.PcfDummyCommandUnit.Upsize;
 import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -29,6 +31,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
@@ -62,9 +65,11 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -375,6 +380,17 @@ public class PcfDeployState extends State {
               .filter(pcfInstanceElement -> !pcfInstanceElement.isNewInstance())
               .collect(toList());
 
+    List<InstanceStatusSummary> instanceStatusSummaries =
+        pcfInstanceElements.stream()
+            .map(pcfInstanceElement
+                -> anInstanceStatusSummary()
+                       .withInstanceElement((InstanceElement) cloneMinAsInstanceElement(pcfInstanceElement))
+                       .withStatus(ExecutionStatus.SUCCESS)
+                       .build())
+            .collect(toList());
+
+    stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+
     if (!isRollback()) {
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
                                      .name(pcfStateHelper.obtainDeploySweepingOutputName(context, false))
@@ -459,6 +475,14 @@ public class PcfDeployState extends State {
     }
 
     canaryCommandUnits.add(new PcfDummyCommandUnit(Wrapup));
+
     return canaryCommandUnits;
+  }
+
+  private ContextElement cloneMinAsInstanceElement(PcfInstanceElement pcfInstanceElement) {
+    return anInstanceElement()
+        .uuid(pcfInstanceElement.getUuid())
+        .displayName(pcfInstanceElement.getDisplayName())
+        .build();
   }
 }
