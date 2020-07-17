@@ -1,9 +1,9 @@
 package software.wings.graphql.datafetcher.ce.recommendation.entity;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 public class ContainerRecommendation {
   String containerName;
@@ -11,4 +11,5 @@ public class ContainerRecommendation {
   ResourceRequirement burstable;
   ResourceRequirement guaranteed;
   int numDays;
+  int totalSamplesCount;
 }

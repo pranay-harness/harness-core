@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.k8s.metrics.collector;
 
+import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.RECOMMENDER_VERSION;
+import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.checkpointToProto;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Objects.requireNonNull;
 
@@ -8,7 +10,6 @@ import com.google.common.collect.ImmutableMap;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.harness.ccm.health.HealthStatusService;
-import io.harness.ccm.recommender.k8sworkload.RecommenderUtils;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.ContainerStateProto;
@@ -194,11 +195,11 @@ public class K8sMetricCollector {
               .setContainerName(e.getKey().getContainerName())
               .setMemoryPeak(containerState.getMemoryPeak())
               .setMemoryPeakTime(HTimestamps.fromInstant(containerState.getMemoryPeakTime()))
-              .setCpuHistogram(RecommenderUtils.checkpointToProto(histogramCheckpoint))
+              .setCpuHistogram(checkpointToProto(histogramCheckpoint))
               .setFirstSampleStart(HTimestamps.fromInstant(containerState.getFirstSampleStart()))
               .setLastSampleStart(HTimestamps.fromInstant(containerState.getLastSampleStart()))
               .setTotalSamplesCount(containerState.getTotalSamplesCount())
-              .setVersion(1)
+              .setVersion(RECOMMENDER_VERSION)
               .build();
         })
         .forEach(containerStateProto

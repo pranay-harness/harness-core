@@ -32,6 +32,7 @@ type ContainerRecommendation {
   burstable: ResourceRequirements
   guaranteed: ResourceRequirements
   numDays: Int
+  totalSamplesCount: Int
 }
 
 type ResourceRequirements {

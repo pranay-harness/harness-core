@@ -1,8 +1,8 @@
 package io.harness.perpetualtask.k8s.metrics.recommender;
 
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.MIN_SAMPLE_WEIGHT;
+import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogram;
 
-import io.harness.ccm.recommender.k8sworkload.RecommenderUtils;
 import io.harness.histogram.Histogram;
 import lombok.Data;
 
@@ -28,7 +28,7 @@ public class ContainerState {
     this.namespace = namespace;
     this.podName = podName;
     this.containerName = containerName;
-    this.cpuHistogram = RecommenderUtils.newCpuHistogram();
+    this.cpuHistogram = newCpuHistogram();
   }
 
   public void addCpuSample(double containerCpuCores, String timestamp) {

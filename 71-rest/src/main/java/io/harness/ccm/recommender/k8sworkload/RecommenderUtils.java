@@ -13,6 +13,10 @@ import java.time.Duration;
 
 @UtilityClass
 public class RecommenderUtils {
+  // Change this when changing any of the parameters here, if the client & server side histograms
+  // become incompatible (eg: if changing the histogram options)
+  public static final int RECOMMENDER_VERSION = 1;
+
   // The minimal weight of any sample (prior to including decaying factor)
   public static final double MIN_SAMPLE_WEIGHT = 0.1;
 
