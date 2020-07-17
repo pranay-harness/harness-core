@@ -5,20 +5,16 @@ import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
-import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
-import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -39,38 +35,20 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AwsAmiInstanceSyncPerpetualTaskClient
-    implements PerpetualTaskServiceClient,
-               PerpetualTaskServiceInprocClient<AwsAmiInstanceSyncPerpetualTaskClientParams> {
+public class AwsAmiInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceClient {
   public static final String ASG_NAME = "asgName";
-  @Inject PerpetualTaskService perpetualTaskService;
   @Inject SecretManager secretManager;
   @Inject SettingsService settingsService;
   @Inject InfrastructureMappingService infraMappingService;
-
-  @Override
-  public String create(String accountId, AwsAmiInstanceSyncPerpetualTaskClientParams clientParams) {
-    Map<String, String> paramMap = ImmutableMap.of(HARNESS_APPLICATION_ID, clientParams.getAppId(),
-        INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId(), ASG_NAME, clientParams.getAsgName());
-
-    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(paramMap).build();
-
-    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
-                                         .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
-                                         .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
-                                         .build();
-
-    return perpetualTaskService.createTask(
-        PerpetualTaskType.AWS_AMI_INSTANCE_SYNC, accountId, clientContext, schedule, false);
-  }
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
     final PerpetualTaskData perpetualTaskData = getPerpetualTaskData(clientContext);
 
-    ByteString configBytes = ByteString.copyFrom(KryoUtils.asBytes(perpetualTaskData.getAwsConfig()));
+    ByteString configBytes = ByteString.copyFrom(kryoSerializer.asBytes(perpetualTaskData.getAwsConfig()));
     ByteString encryptedConfigBytes =
-        ByteString.copyFrom(KryoUtils.asBytes(perpetualTaskData.getEncryptedDataDetails()));
+        ByteString.copyFrom(kryoSerializer.asBytes(perpetualTaskData.getEncryptedDataDetails()));
 
     return AwsAmiInstanceSyncPerpetualTaskParams.newBuilder()
         .setRegion(perpetualTaskData.getRegion())

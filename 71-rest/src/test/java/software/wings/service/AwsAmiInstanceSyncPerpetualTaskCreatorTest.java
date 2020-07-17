@@ -8,14 +8,19 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
+import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
-import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -38,9 +43,15 @@ import java.util.List;
 
 public class AwsAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Mock private InstanceService instanceService;
-  @Mock private AwsAmiInstanceSyncPerpetualTaskClient perpetualTaskClient;
+  @Mock private PerpetualTaskService perpetualTaskService;
 
   @InjectMocks @Inject private AwsAmiInstanceSyncPerpetualTaskCreator perpetualTaskCreator;
+
+  public static final String ASG_NAME = "asgName";
+  public static final PerpetualTaskSchedule SCHEDULE = PerpetualTaskSchedule.newBuilder()
+                                                           .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
+                                                           .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
+                                                           .build();
 
   @Test
   @Owner(developers = OwnerRule.YOGESH)
@@ -48,21 +59,26 @@ public class AwsAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   public void createPerpetualTasks() {
     doReturn(getAsgInstances()).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn("perpetual-task-id")
-        .when(perpetualTaskClient)
-        .create(eq(InstanceSyncTestConstants.ACCOUNT_ID), any(AwsAmiInstanceSyncPerpetualTaskClientParams.class));
+        .when(perpetualTaskService)
+        .createTask(eq(PerpetualTaskType.AWS_AMI_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID), any(), any(),
+            eq(false));
 
-    final List<String> perpetualTaskIds = perpetualTaskCreator.createPerpetualTasks(getAmiInfraMapping());
+    perpetualTaskCreator.createPerpetualTasks(getAmiInfraMapping());
 
-    ArgumentCaptor<AwsAmiInstanceSyncPerpetualTaskClientParams> captor =
-        ArgumentCaptor.forClass(AwsAmiInstanceSyncPerpetualTaskClientParams.class);
-    verify(perpetualTaskClient, times(3)).create(eq(InstanceSyncTestConstants.ACCOUNT_ID), captor.capture());
+    ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    verify(perpetualTaskService, times(3))
+        .createTask(eq(PerpetualTaskType.AWS_AMI_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
+            captor.capture(), eq(SCHEDULE), eq(false));
 
-    assertThat(captor.getAllValues().stream().map(AwsAmiInstanceSyncPerpetualTaskClientParams::getAsgName))
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(ASG_NAME)))
         .containsExactlyInAnyOrder("asg-1", "asg-2", "asg-3");
   }
 
   private AwsAmiInfrastructureMapping getAmiInfraMapping() {
     AwsAmiInfrastructureMapping infraMapping = new AwsAmiInfrastructureMapping();
+
+    infraMapping.setAppId(InstanceSyncTestConstants.APP_ID);
     infraMapping.setAccountId(InstanceSyncTestConstants.ACCOUNT_ID);
     infraMapping.setUuid(InstanceSyncTestConstants.INFRA_MAPPING_ID);
     return infraMapping;
@@ -79,7 +95,7 @@ public class AwsAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
                                .build())
             .build());
 
-    final List<String> perpetualTaskIds = perpetualTaskCreator.createPerpetualTasksForNewDeployment(
+    perpetualTaskCreator.createPerpetualTasksForNewDeployment(
         asList(DeploymentSummary.builder()
                    .appId(InstanceSyncTestConstants.APP_ID)
                    .accountId(InstanceSyncTestConstants.ACCOUNT_ID)
@@ -94,11 +110,13 @@ public class AwsAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
                 .build()),
         existingRecords, new AwsAmiInfrastructureMapping());
 
-    ArgumentCaptor<AwsAmiInstanceSyncPerpetualTaskClientParams> captor =
-        ArgumentCaptor.forClass(AwsAmiInstanceSyncPerpetualTaskClientParams.class);
-    verify(perpetualTaskClient, times(1)).create(eq(InstanceSyncTestConstants.ACCOUNT_ID), captor.capture());
+    ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    verify(perpetualTaskService, times(1))
+        .createTask(eq(PerpetualTaskType.AWS_AMI_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
+            captor.capture(), eq(SCHEDULE), eq(false));
 
-    assertThat(captor.getAllValues().stream().map(AwsAmiInstanceSyncPerpetualTaskClientParams::getAsgName))
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(ASG_NAME)))
         .containsExactlyInAnyOrder("asg-2");
   }
 
