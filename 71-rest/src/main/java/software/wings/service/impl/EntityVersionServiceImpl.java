@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityVersionCollection.Builder.anEntityVersionCollection;
@@ -11,7 +12,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.persistence.HQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -35,7 +35,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
 
   @Override
   public PageResponse<EntityVersionCollection> listEntityVersions(PageRequest<EntityVersionCollection> pageRequest) {
-    return wingsPersistence.query(EntityVersionCollection.class, pageRequest, HQuery.excludeAuthority);
+    return wingsPersistence.query(EntityVersionCollection.class, pageRequest, excludeAuthority);
   }
 
   @Override

@@ -1,9 +1,10 @@
 package software.wings.graphql.datafetcher.workflow.batch;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HQuery;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.collections4.CollectionUtils;
@@ -51,7 +52,7 @@ public class WorkflowBatchDataLoader implements MappedBatchLoader<String, QLWork
 
   public Map<String, QLWorkflow> getWorkflowMap(@NotNull Set<String> workflowIds) {
     Query<Workflow> query =
-        wingsPersistence.createQuery(Workflow.class, HQuery.excludeAuthority).field(WorkflowKeys.uuid).in(workflowIds);
+        wingsPersistence.createQuery(Workflow.class, excludeAuthority).field(WorkflowKeys.uuid).in(workflowIds);
     Map<String, QLWorkflow> workflowMap = new HashMap<>();
 
     try (HIterator<Workflow> workflows = new HIterator<>(query.fetch())) {

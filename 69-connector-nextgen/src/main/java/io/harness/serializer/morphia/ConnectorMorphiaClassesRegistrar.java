@@ -11,11 +11,12 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelega
 import io.harness.connector.entities.embedded.kubernetescluster.OpenIdConnectK8;
 import io.harness.connector.entities.embedded.kubernetescluster.ServiceAccountK8;
 import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
 
-public class ConnectorMorphiaClassesRegistrar implements io.harness.morphia.MorphiaRegistrar {
+public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(Connector.class);

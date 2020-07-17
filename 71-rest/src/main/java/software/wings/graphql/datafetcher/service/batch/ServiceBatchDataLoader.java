@@ -1,9 +1,10 @@
 package software.wings.graphql.datafetcher.service.batch;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HQuery;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +46,7 @@ public class ServiceBatchDataLoader implements MappedBatchLoader<String, QLServi
 
   public Map<String, QLService> getServiceMap(@NotNull Set<String> serviceIds) {
     Query<Service> query =
-        wingsPersistence.createQuery(Service.class, HQuery.excludeAuthority).field(ServiceKeys.uuid).in(serviceIds);
+        wingsPersistence.createQuery(Service.class, excludeAuthority).field(ServiceKeys.uuid).in(serviceIds);
     Map<String, QLService> serviceMap = new HashMap<>();
 
     try (HIterator<Service> services = new HIterator<>(query.fetch())) {

@@ -1,5 +1,6 @@
 package io.harness.commandlibrary.server.service.impl;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
@@ -18,7 +19,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnsupportedOperationException;
-import io.harness.persistence.HQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Sort;
@@ -59,7 +59,7 @@ public class CommandVersionServiceImpl implements CommandVersionService {
 
   @Override
   public List<CommandVersionEntity> getAllVersionEntitiesForCommand(String commandStoreName, String commandName) {
-    return emptyIfNull(wingsPersistence.createQuery(CommandVersionEntity.class, HQuery.excludeAuthority)
+    return emptyIfNull(wingsPersistence.createQuery(CommandVersionEntity.class, excludeAuthority)
                            .filter(CommandVersionEntity.CommandVersionsKeys.commandStoreName, commandStoreName)
                            .filter(CommandVersionEntity.CommandVersionsKeys.commandName, commandName)
                            .order(Sort.descending(CommandVersionEntity.CommandVersionsKeys.createdAt))
