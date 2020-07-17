@@ -155,6 +155,11 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
     return instanceData;
   }
 
+  @Override
+  public InstanceData fetchInstanceData(String instanceId) {
+    return hPersistence.createQuery(InstanceData.class).filter(InstanceDataKeys.instanceId, instanceId).get();
+  }
+
   private void updateDeploymentEvent(InstanceData instanceData) {
     CostEventData costEventData = CostEventData.builder()
                                       .settingId(instanceData.getSettingId())

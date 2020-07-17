@@ -2,6 +2,8 @@ package io.harness.batch.processing.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.common.collect.ImmutableSet;
+
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
@@ -77,7 +79,7 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   }
 
   private String getAwsBillingMetaData(String accountId) {
-    if (!accountId.equals("zEaak-FLS425IEO7OLzMUg")) {
+    if (!ImmutableSet.of("zEaak-FLS425IEO7OLzMUg", "ng2HGKFpStaPsVqGr3B3gA").contains(accountId)) {
       return null;
     }
     List<SettingAttribute> settingAttributes = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(

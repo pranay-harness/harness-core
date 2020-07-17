@@ -16,6 +16,8 @@ public interface InstanceDataDao {
 
   InstanceData upsert(InstanceInfo instanceInfo);
 
+  InstanceData fetchInstanceData(String instanceId);
+
   boolean updateInstanceState(
       InstanceData instanceData, Instant instant, String instantField, InstanceState instanceState);
 

@@ -110,6 +110,10 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                 (instanceData.getInstanceType() == InstanceType.EC2_INSTANCE) ? null : instanceData.getClusterId();
             String instanceName = (instanceData.getInstanceName() == null) ? instanceData.getInstanceId()
                                                                            : instanceData.getInstanceName();
+            String region = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, instanceData);
+            if (null == region) {
+              region = "on_prem";
+            }
 
             Resource totalResource = instanceData.getTotalResource();
             Resource limitResource = Resource.builder().cpuUnits(0.0).memoryMb(0.0).build();
@@ -149,7 +153,7 @@ public class InstanceBillingDataWriter implements ItemWriter<InstanceData> {
                     .launchType(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.LAUNCH_TYPE, instanceData))
                     .taskId(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.TASK_ID, instanceData))
                     .namespace(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NAMESPACE, instanceData))
-                    .region(getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, instanceData))
+                    .region(region)
                     .clusterType(
                         getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLUSTER_TYPE, instanceData))
                     .cloudProvider(

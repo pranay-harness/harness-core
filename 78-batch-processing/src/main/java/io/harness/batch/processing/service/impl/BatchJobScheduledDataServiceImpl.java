@@ -37,7 +37,9 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
         SettingAttribute ceConnector = cloudToHarnessMappingService.getFirstSettingAttributeByCategory(
             accountId, SettingAttribute.SettingCategory.CE_CONNECTOR);
         if (null != ceConnector) {
-          return Instant.ofEpochMilli(ceConnector.getCreatedAt()).truncatedTo(ChronoUnit.DAYS);
+          return Instant.ofEpochMilli(ceConnector.getCreatedAt())
+              .truncatedTo(ChronoUnit.DAYS)
+              .minus(2, ChronoUnit.DAYS);
         }
       } else {
         instant = lastReceivedPublishedMessageDao.getFirstEventReceivedTime(accountId);
@@ -46,6 +48,11 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
 
     if (null != instant && batchJobType.getBatchJobBucket() == BatchJobBucket.IN_CLUSTER) {
       Instant startInstant = Instant.now().minus(MAX_IN_CLUSTER_DATA, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant.isAfter(instant) ? startInstant : instant;
+    }
+
+    if (null != instant && batchJobType == BatchJobType.AWS_ECS_CLUSTER_SYNC) {
+      Instant startInstant = Instant.now().minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
     return instant;

@@ -18,6 +18,8 @@ public interface InstanceDataService {
 
   InstanceData fetchInstanceData(String accountId, String instanceId);
 
+  InstanceData fetchInstanceData(String instanceId);
+
   InstanceData fetchInstanceData(String accountId, String clusterId, String instanceId);
 
   InstanceData fetchInstanceDataWithName(String accountId, String clusterId, String instanceId, Long occurredAt);

@@ -2,6 +2,7 @@ package io.harness.batch.processing.pricing.gcp.bigquery.impl;
 
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.computeProductFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.cost;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.effectiveCost;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.networkProductFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.productFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.resourceId;
@@ -130,6 +131,9 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
           case cost:
             dataBuilder.cost(getNumericValue(row, field));
             break;
+          case effectiveCost:
+            dataBuilder.effectiveCost(getDoubleValue(row, field));
+            break;
           default:
             break;
         }
@@ -158,8 +162,11 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
 
       if (computeProductFamily.equals(vmInstanceServiceBillingData.getProductFamily())
           || vmInstanceServiceBillingData.getProductFamily() == null) {
-        vmInstanceBillingData =
-            vmInstanceBillingData.toBuilder().computeCost(vmInstanceServiceBillingData.getCost()).build();
+        double cost = vmInstanceServiceBillingData.getCost();
+        if (null != vmInstanceServiceBillingData.getEffectiveCost()) {
+          cost = vmInstanceServiceBillingData.getEffectiveCost();
+        }
+        vmInstanceBillingData = vmInstanceBillingData.toBuilder().computeCost(cost).build();
       }
 
       vmInstanceBillingDataMap.put(resourceId, vmInstanceBillingData);
@@ -183,6 +190,14 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       return value.getNumericValue().doubleValue();
     }
     return 0;
+  }
+
+  private Double getDoubleValue(FieldValueList row, Field field) {
+    FieldValue value = row.get(field.getName());
+    if (!value.isNull()) {
+      return value.getNumericValue().doubleValue();
+    }
+    return null;
   }
 
   public BigQuery getBigQueryService() {
