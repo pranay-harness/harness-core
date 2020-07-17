@@ -18,6 +18,7 @@ import io.harness.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EmailStateExecutionData;
+import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContext;
@@ -27,6 +28,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -70,14 +72,17 @@ public class EmailState extends State {
                                                           .withSubject(subject)
                                                           .build();
     try {
+      ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
+
+      emailStateExecutionData.setToAddress(expressionEvaluator.substitute(toAddress, Collections.emptyMap()));
+      emailStateExecutionData.setCcAddress(expressionEvaluator.substitute(ccAddress, Collections.emptyMap()));
+      emailStateExecutionData.setSubject(expressionEvaluator.substitute(subject, Collections.emptyMap()));
+      emailStateExecutionData.setBody(expressionEvaluator.substitute(body, Collections.emptyMap()));
+
       String evaluatedTo = context.renderExpression(toAddress);
       String evaluatedCc = context.renderExpression(ccAddress);
       String evaluatedSubject = context.renderExpression(subject);
       String evaluatedBody = context.renderExpression(body);
-      emailStateExecutionData.setSubject(evaluatedSubject);
-      emailStateExecutionData.setBody(evaluatedBody);
-      emailStateExecutionData.setToAddress(evaluatedTo);
-      emailStateExecutionData.setCcAddress(evaluatedCc);
       logger.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
       emailNotificationService.send(EmailData.builder()
                                         .to(getEmailAddressList(evaluatedTo))
