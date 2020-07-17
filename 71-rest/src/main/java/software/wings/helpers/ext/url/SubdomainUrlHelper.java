@@ -3,6 +3,7 @@ package software.wings.helpers.ext.url;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.configuration.DeployMode;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -144,8 +145,11 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
         : request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
   }
 
-  public String getDelegateMetadataUrl(String accountId) {
+  public String getDelegateMetadataUrl(String accountId, String managerHost, String deployMode) {
     logger.info("Generating delegate metadata URL for account {}", accountId);
+    if (StringUtils.isNotBlank(managerHost) && DeployMode.isOnPrem(deployMode)) {
+      return managerHost + "/storage/wingsdelegates/delegateprod.txt";
+    }
     Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
     String delegateMetadataUrl = urlConfiguration.getDelegateMetadataUrl().trim();
     delegateMetadataUrl =
@@ -154,8 +158,11 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
     return delegateMetadataUrl;
   }
 
-  public String getWatcherMetadataUrl(String accountId) {
+  public String getWatcherMetadataUrl(String accountId, String managerHost, String deployMode) {
     logger.info("Generating watcher metadata URL for account {}", accountId);
+    if (StringUtils.isNotBlank(managerHost) && DeployMode.isOnPrem(deployMode)) {
+      return managerHost + "/storage/wingswatchers/watcherprod.txt";
+    }
     Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
     String watcherMetadataUrl = urlConfiguration.getWatcherMetadataUrl().trim();
     watcherMetadataUrl = overrideMetadataUrl(subdomainUrl.isPresent() ? subdomainUrl.get() : null, watcherMetadataUrl);

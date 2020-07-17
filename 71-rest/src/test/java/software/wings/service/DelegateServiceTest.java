@@ -220,7 +220,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void setUp() {
     CdnConfig cdnConfig = new CdnConfig();
     cdnConfig.setUrl("http://localhost:9500");
-    when(subdomainUrlHelper.getDelegateMetadataUrl(any())).thenReturn("http://localhost:8888/delegateci.txt");
+    when(subdomainUrlHelper.getDelegateMetadataUrl(any(), any(), any()))
+        .thenReturn("http://localhost:8888/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(mainConfiguration.getKubectlVersion()).thenReturn("v1.12.2");
     when(mainConfiguration.getOcVersion()).thenReturn("v4.2.16");
@@ -229,7 +230,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     jreConfigMap.put("openjdk8u242", getOpenjdkJreConfig());
     when(mainConfiguration.getCurrentJre()).thenReturn("openjdk8u242");
     when(mainConfiguration.getJreConfigs()).thenReturn(jreConfigMap);
-    when(subdomainUrlHelper.getWatcherMetadataUrl(any())).thenReturn("http://localhost:8888/watcherci.txt");
+    when(subdomainUrlHelper.getWatcherMetadataUrl(any(), any(), any()))
+        .thenReturn("http://localhost:8888/watcherci.txt");
     FileUploadLimit fileUploadLimit = new FileUploadLimit();
     fileUploadLimit.setProfileResultLimit(1000000000L);
     when(mainConfiguration.getFileUploadLimits()).thenReturn(fileUploadLimit);
