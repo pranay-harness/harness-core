@@ -1,0 +1,22 @@
+package io.harness.batch.processing.config.k8s.recommendation.estimators;
+
+import io.harness.batch.processing.config.k8s.recommendation.ContainerState;
+
+import java.util.Map;
+
+interface ResourceEstimator {
+  // cpu in millicores, memory in bytes
+  Map<String, Long> getResourceEstimation(ContainerState containerState);
+
+  default ResourceEstimator withMargin(double marginFraction) {
+    return MarginEstimator.of(marginFraction, this);
+  }
+
+  default ResourceEstimator withMinResources(Map<String, Long> minResources) {
+    return MinResourceEstimator.of(minResources, this);
+  }
+
+  default ResourceEstimator withConfidenceMultiplier(double multiplier, double exponent) {
+    return ConfidenceMultiplierEstimator.of(multiplier, exponent, this);
+  }
+}

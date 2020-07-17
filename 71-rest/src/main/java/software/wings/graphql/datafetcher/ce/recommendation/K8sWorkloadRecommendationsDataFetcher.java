@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import graphql.schema.DataFetchingEnvironment;
+import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
@@ -52,7 +53,7 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
           .build(clusterId
               -> Optional.ofNullable(wingsPersistence.get(ClusterRecord.class, clusterId))
                      .map(ClusterRecord::getCluster)
-                     .map(s -> s.getClusterName())
+                     .map(Cluster::getClusterName)
                      .orElse(""));
 
   @Override
@@ -92,6 +93,7 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
                    .burstable(entityToDto(containerRecommendation.getBurstable()))
                    .guaranteed(entityToDto(containerRecommendation.getGuaranteed()))
                    .numDays(containerRecommendation.getNumDays())
+                   .totalSamplesCount(containerRecommendation.getTotalSamplesCount())
                    .build())
         .collect(Collectors.toList());
   }

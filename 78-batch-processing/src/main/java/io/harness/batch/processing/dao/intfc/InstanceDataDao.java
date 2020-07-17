@@ -32,4 +32,6 @@ public interface InstanceDataDao {
       String accountId, String clusterName, List<InstanceState> instanceState, Instant startTime);
 
   InstanceData getActiveInstance(String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider);
+
+  InstanceData getK8sPodInstance(String accountId, String clusterId, String namespace, String podName);
 }

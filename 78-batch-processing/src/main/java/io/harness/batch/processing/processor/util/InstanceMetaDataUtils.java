@@ -9,11 +9,11 @@ import java.util.Map;
 @UtilityClass
 @Slf4j
 public class InstanceMetaDataUtils {
-  public String getValueForKeyFromInstanceMetaData(String metaDataKey, InstanceData instanceData) {
+  public static String getValueForKeyFromInstanceMetaData(String metaDataKey, InstanceData instanceData) {
     return getValueForKeyFromInstanceMetaData(metaDataKey, instanceData.getMetaData());
   }
 
-  public String getValueForKeyFromInstanceMetaData(String metaDataKey, Map<String, String> metaData) {
+  public static String getValueForKeyFromInstanceMetaData(String metaDataKey, Map<String, String> metaData) {
     if (null != metaData && metaData.containsKey(metaDataKey)) {
       return metaData.get(metaDataKey);
     }

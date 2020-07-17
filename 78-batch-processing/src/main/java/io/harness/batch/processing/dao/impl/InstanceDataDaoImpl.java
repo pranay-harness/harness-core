@@ -260,4 +260,18 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
     query.filter(InstanceDataKeys.CLOUD_PROVIDER, cloudProvider);
     return query.get();
   }
+
+  @Override
+  public InstanceData getK8sPodInstance(String accountId, String clusterId, String namespace, String podName) {
+    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
+                                    .field(InstanceDataKeys.accountId)
+                                    .equal(accountId)
+                                    .field(InstanceDataKeys.clusterId)
+                                    .equal(clusterId)
+                                    .field(InstanceDataKeys.instanceName)
+                                    .equal(podName)
+                                    .field(InstanceDataKeys.metaData + "." + InstanceMetaDataConstants.NAMESPACE)
+                                    .equal(namespace);
+    return query.get();
+  }
 }

@@ -22,6 +22,7 @@ public enum BatchJobType {
   ECS_EVENT(200, 1, ChronoUnit.DAYS, emptyList(), IN_CLUSTER),
   K8S_EVENT(300, 1, ChronoUnit.DAYS, emptyList(), IN_CLUSTER),
   K8S_WATCH_EVENT(350, 1, ChronoUnit.DAYS, singletonList(K8S_EVENT), IN_CLUSTER),
+  K8S_WORKLOAD_RECOMMENDATION(375, 1, ChronoUnit.DAYS, singletonList(K8S_EVENT), IN_CLUSTER),
   ECS_UTILIZATION(400, 1, ChronoUnit.HOURS, singletonList(ECS_EVENT), IN_CLUSTER),
   K8S_UTILIZATION(500, 1, ChronoUnit.HOURS, singletonList(K8S_EVENT), IN_CLUSTER),
   INSTANCE_BILLING(600, 1, ChronoUnit.DAYS, Arrays.asList(ECS_UTILIZATION, K8S_UTILIZATION), IN_CLUSTER),

@@ -345,6 +345,9 @@ k8sWorkload {"name": "accountId_clusterId_namespace_name", "background": true} {
 k8sWorkload {"name": "accountId_clusterId_uid", "background": true} {"accountId": 1, "clusterId": 1, "uid": 1}
 k8sWorkload {"name": "accountId_name_labels", "background": true} {"accountId": 1, "name": 1, "labels": 1}
 k8sWorkload {"name": "no_dup_cluster", "unique": true} {"clusterId": 1, "uid": 1}
+k8sWorkloadRecommendation {"name": "estimatedSavings_1", "background": true} {"estimatedSavings": 1}
+k8sWorkloadRecommendation {"name": "no_dup", "unique": true} {"accountId": 1, "clusterId": 1, "namespace": 1, "workloadName": 1, "workloadType": 1}
+k8sWorkloadRecommendation {"name": "ttl_1", "background": true, "expireAfterSeconds": 0} {"ttl": 1}
 k8sYaml {"name": "accountId_hash", "background": true} {"accountId": 1, "hash": 1}
 k8sYaml {"name": "hash_1", "unique": true} {"hash": 1}
 kmsConfig {"name": "appId_1", "background": true} {"appId": 1}

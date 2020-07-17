@@ -1,17 +1,20 @@
 package io.harness.histogram;
 
-import com.google.common.collect.ImmutableMap;
-
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Singular;
-import lombok.Value;
 
 import java.time.Instant;
+import java.util.Map;
 
-@Value
+@Data
 @Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class HistogramCheckpoint {
   Instant referenceTimestamp;
-  @Singular ImmutableMap<Integer, Integer> bucketWeights;
+  @Singular Map<Integer, Integer> bucketWeights;
   double totalWeight;
 }

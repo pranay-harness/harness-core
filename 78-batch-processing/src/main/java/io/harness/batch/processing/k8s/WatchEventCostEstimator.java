@@ -43,7 +43,7 @@ public class WatchEventCostEstimator {
         resourceToCost(resourceClaimDiff.getNewResourceClaim()));
   }
 
-  private BigDecimal resourceToCost(ResourceClaim resourceClaim) {
+  private static BigDecimal resourceToCost(ResourceClaim resourceClaim) {
     return BigDecimal.valueOf(resourceClaim.getCpuNano())
         .divide(BigDecimal.valueOf(1_000_000_000L), RoundingMode.FLOOR)
         .multiply(getAvgCpuCostPerCpuCore())
@@ -52,15 +52,21 @@ public class WatchEventCostEstimator {
                  .multiply(getAvgMemCostPerMemGb()));
   }
 
+  public static BigDecimal resourceToCost(BigDecimal cpuCores, BigDecimal memoryBytes) {
+    return cpuCores.multiply(getAvgCpuCostPerCpuCore())
+        .add(memoryBytes.divide(BigDecimal.valueOf(1024L * 1024 * 1024), RoundingMode.FLOOR)
+                 .multiply(getAvgMemCostPerMemGb()));
+  }
+
   // The workload is spread across multiple nodes and each of these can have different unit cpu/memory costs.
   // We're using average here.
 
   // TODO: Need to check how to get the average cpu & memory cost for the workload. Hardcoded values for AWS used
-  private BigDecimal getAvgCpuCostPerCpuCore() {
+  private static BigDecimal getAvgCpuCostPerCpuCore() {
     return BigDecimal.valueOf(0.0255);
   }
 
-  private BigDecimal getAvgMemCostPerMemGb() {
+  private static BigDecimal getAvgMemCostPerMemGb() {
     return BigDecimal.valueOf(0.01275);
   }
 }
