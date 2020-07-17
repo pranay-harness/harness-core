@@ -112,7 +112,8 @@ public class CloudBillingHelper {
   public Boolean fetchIfRawTableQueryRequired(List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupByList) {
     boolean labelsFilterPresent = filters.stream().anyMatch(billingFilter
         -> billingFilter.getLabelsValue() != null || billingFilter.getLabelsKey() != null
-            || billingFilter.getTagsValue() != null || billingFilter.getTagsKey() != null);
+            || billingFilter.getLabels() != null || billingFilter.getTagsValue() != null
+            || billingFilter.getTagsKey() != null || billingFilter.getTags() != null);
 
     boolean labelsGroupByPresent = groupByList.stream().anyMatch(billingGroupBy
         -> billingGroupBy.getEntityGroupBy() == labelsKey || billingGroupBy.getEntityGroupBy() == labelsValue

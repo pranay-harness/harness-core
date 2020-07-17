@@ -29,6 +29,8 @@ public class RawBillingTableSchema {
   public static final DbColumn endTime;
   public static final DbColumn labelsKey;
   public static final DbColumn labelsValue;
+  public static final DbColumn labels;
+  public static final DbColumn tags;
   public static final DbColumn tagsKey;
   public static final DbColumn tagsValue;
   public static final DbColumn awsBlendedRate;
@@ -76,5 +78,8 @@ public class RawBillingTableSchema {
     awsUsageAccountId = table.addColumn("usageaccountid");
     awsInstanceType = table.addColumn("instancetype");
     awsUsageType = table.addColumn("usagetype");
+
+    labels = table.addColumn("labels");
+    tags = table.addColumn("tags");
   }
 }

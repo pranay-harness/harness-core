@@ -29,6 +29,8 @@ public class CloudBillingFilter {
   public static final String BILLING_GCP_LABEL_VALUE = "billing/gcp/labelsValue";
   public static final String BILLING_AWS_TAG_KEY = "billing/aws/tagsKey";
   public static final String BILLING_AWS_TAG_VALUE = "billing/aws/tagsValue";
+  public static final String BILLING_AWS_TAG = "billing/aws/tags";
+  public static final String BILLING_GCP_LABEL = "billing/gcp/labels";
 
   CloudBillingTimeFilter startTime;
   CloudBillingTimeFilter endTime;
@@ -48,6 +50,8 @@ public class CloudBillingFilter {
   CloudBillingIdFilter labelsValue;
   CloudBillingIdFilter tagsKey;
   CloudBillingIdFilter tagsValue;
+  CloudBillingIdFilter tags;
+  CloudBillingIdFilter labels;
 
   public CloudBillingTimeFilter getStartTime() {
     if (startTime == null) {
@@ -127,6 +131,22 @@ public class CloudBillingFilter {
     }
     tagsValue.setVariable(BILLING_AWS_TAG_VALUE);
     return tagsValue;
+  }
+
+  public CloudBillingIdFilter getConcatTags() {
+    if (tags == null) {
+      return null;
+    }
+    tags.setVariable(BILLING_AWS_TAG);
+    return tags;
+  }
+
+  public CloudBillingIdFilter getConcatLabels() {
+    if (labels == null) {
+      return null;
+    }
+    labels.setVariable(BILLING_GCP_LABEL);
+    return labels;
   }
 
   public CloudBillingIdFilter getProject() {
@@ -248,6 +268,9 @@ public class CloudBillingFilter {
     if (labelsValue != null) {
       return getLabelsValue().toRawTableCondition();
     }
+    if (labels != null) {
+      return getConcatLabels().toRawTableCondition();
+    }
     if (preAggregatedTableStartTime != null) {
       return getPreAggregatedStartTime().toRawTableCondition();
     }
@@ -284,6 +307,9 @@ public class CloudBillingFilter {
     }
     if (tagsValue != null) {
       return getTagsValue().toAwsRawTableCondition();
+    }
+    if (tags != null) {
+      return getConcatTags().toAwsRawTableCondition();
     }
     if (preAggregatedTableStartTime != null) {
       return getPreAggregatedStartTime().toAwsRawTableCondition();
