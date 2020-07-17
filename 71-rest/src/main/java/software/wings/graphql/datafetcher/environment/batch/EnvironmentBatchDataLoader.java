@@ -1,9 +1,10 @@
 package software.wings.graphql.datafetcher.environment.batch;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HQuery;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +45,7 @@ public class EnvironmentBatchDataLoader implements MappedBatchLoader<String, QLE
   }
 
   public Map<String, QLEnvironment> getEnvironmentMap(@NotNull Set<String> environmentIds) {
-    Query<Environment> query = wingsPersistence.createQuery(Environment.class, HQuery.excludeAuthority)
+    Query<Environment> query = wingsPersistence.createQuery(Environment.class, excludeAuthority)
                                    .field(EnvironmentKeys.uuid)
                                    .in(environmentIds);
     Map<String, QLEnvironment> environmentMap = new HashMap<>();

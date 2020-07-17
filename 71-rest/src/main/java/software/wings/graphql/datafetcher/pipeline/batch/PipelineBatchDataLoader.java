@@ -1,9 +1,10 @@
 package software.wings.graphql.datafetcher.pipeline.batch;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HQuery;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.collections4.CollectionUtils;
@@ -48,7 +49,7 @@ public class PipelineBatchDataLoader implements MappedBatchLoader<String, QLPipe
 
   public Map<String, QLPipeline> getPipelineMap(@NotNull Set<String> pipelineIds) {
     Query<Pipeline> query =
-        wingsPersistence.createQuery(Pipeline.class, HQuery.excludeAuthority).field(PipelineKeys.uuid).in(pipelineIds);
+        wingsPersistence.createQuery(Pipeline.class, excludeAuthority).field(PipelineKeys.uuid).in(pipelineIds);
     Map<String, QLPipeline> pipelineMap = new HashMap<>();
 
     try (HIterator<Pipeline> pipelines = new HIterator<>(query.fetch())) {

@@ -1,5 +1,7 @@
 package migrations.all;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 
@@ -46,7 +48,7 @@ public class DeleteOrphanNotificationGroups implements Migration {
                                .map(NotificationGroup::getUuid)
                                .collect(Collectors.toList());
 
-      Query<Workflow> query = persistence.createQuery(Workflow.class, HQuery.excludeAuthority);
+      Query<Workflow> query = persistence.createQuery(Workflow.class, excludeAuthority);
 
       try (HIterator<Workflow> iterator = new HIterator<>(query.fetch())) {
         for (Workflow workflow : iterator) {

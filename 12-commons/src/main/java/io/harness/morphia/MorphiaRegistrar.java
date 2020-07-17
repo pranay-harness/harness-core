@@ -1,5 +1,7 @@
 package io.harness.morphia;
 
+import static java.lang.String.format;
+
 import io.harness.exception.GeneralException;
 import io.harness.reflection.CodeUtils;
 
@@ -29,7 +31,7 @@ public interface MorphiaRegistrar {
   static void putClass(Map<String, Class> map, String name, Class clazz) {
     map.merge(name, clazz, (v1, v2) -> {
       if (v1.equals(v2)) {
-        throw new GeneralException("Do not register the same value twice");
+        throw new GeneralException(format("Do not register %s value twice", clazz.getName()));
       } else {
         throw new GeneralException("Registering different class for the same name is very dangerous");
       }

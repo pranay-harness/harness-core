@@ -19,16 +19,12 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.state.core.barrier.BarrierOutcome;
 import io.harness.state.core.dummy.DummySectionOutcome;
 import io.harness.state.core.dummy.DummySectionStepTransput;
-import io.harness.waiter.ListNotifyResponseData;
-import io.harness.waiter.StringNotifyResponseData;
 
 @OwnedBy(CDC)
 public class OrchestrationKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(ContextElementType.class, 4004);
-    kryo.register(ListNotifyResponseData.class, 5133);
-    kryo.register(StringNotifyResponseData.class, 5271);
     kryo.register(ExecutionStatus.class, 5136);
     kryo.register(OrchestrationWorkflowType.class, 5148);
     kryo.register(WorkflowType.class, 5025);

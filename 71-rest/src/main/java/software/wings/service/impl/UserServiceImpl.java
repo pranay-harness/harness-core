@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.sql.Date.from;
 import static java.util.Arrays.asList;
@@ -87,7 +88,6 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
-import io.harness.persistence.HQuery;
 import io.harness.persistence.UuidAware;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -3018,7 +3018,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private Query<User> getListUserQuery(String accountId, boolean listPendingUsers) {
-    Query<User> listUserQuery = wingsPersistence.createQuery(User.class, HQuery.excludeAuthority);
+    Query<User> listUserQuery = wingsPersistence.createQuery(User.class, excludeAuthority);
 
     if (listPendingUsers) {
       listUserQuery.or(listUserQuery.criteria(UserKeys.accounts).hasThisOne(accountId),
@@ -3032,7 +3032,7 @@ public class UserServiceImpl implements UserService {
 
   @VisibleForTesting
   Query<User> getSearchUserQuery(String accountId, String searchTerm) {
-    Query<User> searchUsersQuery = wingsPersistence.createQuery(User.class, HQuery.excludeAuthority);
+    Query<User> searchUsersQuery = wingsPersistence.createQuery(User.class, excludeAuthority);
     searchUsersQuery.criteria(UserKeys.accounts).hasThisOne(accountId);
     searchUsersQuery.or(searchUsersQuery.criteria(UserKeys.name).startsWithIgnoreCase(quote(searchTerm)),
         searchUsersQuery.criteria(UserKeys.email).startsWithIgnoreCase(quote(searchTerm)));

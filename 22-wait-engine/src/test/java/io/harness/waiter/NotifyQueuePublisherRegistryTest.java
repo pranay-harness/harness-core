@@ -6,14 +6,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.WaitEngineTest;
 import io.harness.category.element.UnitTests;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class NotifyQueuePublisherRegistryTest extends OrchestrationTest {
+public class NotifyQueuePublisherRegistryTest extends WaitEngineTest {
   @Inject private NotifyQueuePublisherRegister notifyQueuePublisherRegister;
   @Inject QueuePublisher<NotifyEvent> publisher;
 

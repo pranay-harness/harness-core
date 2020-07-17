@@ -1,5 +1,6 @@
 package io.harness.serializer.morphia;
 
+import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.entities.Organization;
@@ -7,7 +8,7 @@ import io.harness.ng.core.entities.Project;
 
 import java.util.Set;
 
-public class ProjectAndOrgMorphiaClassesRegistrar implements io.harness.morphia.MorphiaRegistrar {
+public class ProjectAndOrgMorphiaClassesRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(Project.class);

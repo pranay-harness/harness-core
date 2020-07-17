@@ -26,10 +26,6 @@ import io.harness.state.core.section.chain.SectionChainPassThroughData;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
-import io.harness.waiter.ListNotifyResponseData;
-import io.harness.waiter.NotifyEvent;
-import io.harness.waiter.NotifyResponse;
-import io.harness.waiter.WaitInstance;
 
 import java.util.Set;
 
@@ -38,18 +34,14 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(DelegateTask.class);
-    set.add(NotifyEvent.class);
-    set.add(NotifyResponse.class);
     set.add(StateInspection.class);
     set.add(SweepingOutputInstance.class);
-    set.add(WaitInstance.class);
     set.add(DelayEvent.class);
   }
 
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("state.inspection.ExpressionVariableUsage", ExpressionVariableUsage.class);
-    h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
 
     // Engine Callback
     h.put("engine.resume.EngineResumeAllCallback", EngineResumeAllCallback.class);

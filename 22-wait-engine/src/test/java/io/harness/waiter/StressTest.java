@@ -6,7 +6,7 @@ import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.WaitEngineTest;
 import io.harness.category.element.StressTests;
 import io.harness.maintenance.MaintenanceGuard;
 import io.harness.persistence.HPersistence;
@@ -15,6 +15,7 @@ import io.harness.testlib.RealMongo;
 import io.harness.threading.Concurrent;
 import io.harness.threading.Morpheus;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -25,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class StressTest extends OrchestrationTest {
+public class StressTest extends WaitEngineTest {
   private static final SecureRandom random = new SecureRandom();
 
   @Inject private HPersistence persistence;
@@ -36,6 +37,7 @@ public class StressTest extends OrchestrationTest {
   @Owner(developers = GEORGE)
   @Category(StressTests.class)
   @RealMongo
+  @Ignore("Ignore this stress test to make it easy to run only unit tests")
   public void stress() throws IOException {
     persistence.ensureIndexForTesting(NotifyEvent.class);
     persistence.ensureIndexForTesting(WaitInstance.class);

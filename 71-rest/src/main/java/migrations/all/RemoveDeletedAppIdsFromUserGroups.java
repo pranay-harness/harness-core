@@ -1,12 +1,12 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.beans.Application.ApplicationKeys;
 
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
-import io.harness.persistence.HQuery;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
@@ -42,7 +42,7 @@ public class RemoveDeletedAppIdsFromUserGroups implements Migration {
                                        .map(Application::getAppId)
                                        .collect(Collectors.toSet());
 
-      Query<UserGroup> query = persistence.createQuery(UserGroup.class, HQuery.excludeAuthority);
+      Query<UserGroup> query = persistence.createQuery(UserGroup.class, excludeAuthority);
 
       try (HIterator<UserGroup> iterator = new HIterator<>(query.fetch())) {
         for (UserGroup userGroup : iterator) {
