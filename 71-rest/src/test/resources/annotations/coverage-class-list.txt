@@ -20,7 +20,7 @@
 29-orchestration-beans/src/main/java/io/harness/execution/NodeExecution.java
 29-orchestration-beans/src/main/java/io/harness/execution/PlanExecution.java
 29-orchestration-beans/src/main/java/io/harness/execution/events/OrchestrationEvent.java
-29-orchestration-beans/src/main/java/io/harness/execution/events/OrchestrationEventHandlerAsyncWrapper.java
+29-orchestration-beans/src/main/java/io/harness/execution/events/OrchestrationEventHandlerProxy.java
 29-orchestration-beans/src/main/java/io/harness/execution/events/OrchestrationEventType.java
 29-orchestration-beans/src/main/java/io/harness/execution/status/Status.java
 29-orchestration-beans/src/main/java/io/harness/facilitator/DefaultFacilitatorParams.java

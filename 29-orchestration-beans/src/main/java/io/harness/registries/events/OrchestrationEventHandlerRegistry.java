@@ -8,7 +8,7 @@ import com.google.inject.Injector;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.events.OrchestrationEventHandler;
-import io.harness.execution.events.OrchestrationEventHandlerAsyncWrapper;
+import io.harness.execution.events.OrchestrationEventHandlerProxy;
 import io.harness.execution.events.OrchestrationEventType;
 import io.harness.execution.events.OrchestrationSubject;
 import io.harness.registries.Registry;
@@ -27,10 +27,8 @@ public class OrchestrationEventHandlerRegistry
   public void register(
       OrchestrationEventType registryKey, Class<? extends OrchestrationEventHandler> registrableEntity) {
     registry.computeIfAbsent(registryKey, val -> new OrchestrationSubject())
-        .register(OrchestrationEventHandlerAsyncWrapper.builder()
-                      .injector(injector)
-                      .eventHandlerClass(registrableEntity)
-                      .build());
+        .register(
+            OrchestrationEventHandlerProxy.builder().injector(injector).eventHandlerClass(registrableEntity).build());
   }
 
   @Override
