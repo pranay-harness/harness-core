@@ -148,8 +148,8 @@ public class EmailStateTest extends WingsBaseTest {
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but()
-                       .withSubject("Deployed app123.application.com")
-                       .withBody("Deployed to host app123.application.com")
+                       .withSubject("Deployed ${host.hostName}")
+                       .withBody("Deployed to host ${host.hostName}")
                        .build());
     assertThat(executionResponse.getErrorMessage()).isNull();
 
@@ -225,20 +225,18 @@ public class EmailStateTest extends WingsBaseTest {
     assertThat(executionResponse.getStateExecutionData())
         .isInstanceOf(EmailStateExecutionData.class)
         .isEqualTo(expected.but()
-                       .withSubject("Deployment triggered by: admin")
-                       .withBody("Deployment triggered by: admin")
+                       .withSubject("Deployment triggered by: ${deploymentTriggeredBy}")
+                       .withBody("Deployment triggered by: ${deploymentTriggeredBy}")
                        .build());
     assertThat(executionResponse.getErrorMessage()).isNull();
 
     verify(emailNotificationService)
-        .send(
-
-            EmailData.builder()
-                .to(Lists.newArrayList("to1", "to2"))
-                .accountId(ACCOUNT_ID)
-                .cc(Lists.newArrayList("cc1", "cc2"))
-                .subject("Deployment triggered by: admin")
-                .body("Deployment triggered by: admin")
-                .build());
+        .send(EmailData.builder()
+                  .to(Lists.newArrayList("to1", "to2"))
+                  .accountId(ACCOUNT_ID)
+                  .cc(Lists.newArrayList("cc1", "cc2"))
+                  .subject("Deployment triggered by: admin")
+                  .body("Deployment triggered by: admin")
+                  .build());
   }
 }
