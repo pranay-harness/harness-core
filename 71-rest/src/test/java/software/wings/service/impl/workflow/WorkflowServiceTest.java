@@ -37,6 +37,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.ECS;
+import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
@@ -183,6 +184,8 @@ import static software.wings.sm.StepType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StepType.AZURE_NODE_SELECT;
 import static software.wings.sm.StepType.BAMBOO;
 import static software.wings.sm.StepType.BARRIER;
+import static software.wings.sm.StepType.CLOUD_FORMATION_CREATE_STACK;
+import static software.wings.sm.StepType.CLOUD_FORMATION_DELETE_STACK;
 import static software.wings.sm.StepType.ECS_STEADY_STATE_CHECK;
 import static software.wings.sm.StepType.EMAIL;
 import static software.wings.sm.StepType.HELM_DEPLOY;
@@ -4373,10 +4376,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   private void validateCommonCategories(WorkflowCategorySteps workflowCategorySteps) {
-    validateCommonCategories(workflowCategorySteps, false);
+    validateCommonCategories(workflowCategorySteps, false, false);
   }
 
-  private void validateCommonCategories(WorkflowCategorySteps workflowCategorySteps, boolean isK8sPhaseStep) {
+  private void validateCommonCategories(
+      WorkflowCategorySteps workflowCategorySteps, boolean isK8sPhaseStep, boolean isHelmPhaseStep) {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
@@ -4395,7 +4399,17 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
         .contains(tuple(CI_SYSTEM.name(), CI_SYSTEM.getDisplayName(), asList(StepType.JENKINS.name(), BAMBOO.name())));
-    if (isK8sPhaseStep) {
+    if (isHelmPhaseStep) {
+      assertThat(workflowCategorySteps.getCategories())
+          .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
+              WorkflowCategoryStepsMeta::getStepIds)
+          .contains(tuple(UTILITY.name(), UTILITY.getDisplayName(), asList(SHELL_SCRIPT.name(), HTTP.name())));
+      assertThat(workflowCategorySteps.getCategories())
+          .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
+              WorkflowCategoryStepsMeta::getStepIds)
+          .contains(tuple(WorkflowStepType.INFRASTRUCTURE_PROVISIONER.name(),
+              WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(), asList(TERRAFORM_APPLY.name())));
+    } else if (isK8sPhaseStep) {
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
               WorkflowCategoryStepsMeta::getStepIds)
@@ -4416,7 +4430,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
               WorkflowCategoryStepsMeta::getStepIds)
           .contains(tuple(WorkflowStepType.INFRASTRUCTURE_PROVISIONER.name(),
-              WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(), asList(TERRAFORM_APPLY.name())));
+              WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(),
+              asList(
+                  CLOUD_FORMATION_CREATE_STACK.name(), CLOUD_FORMATION_DELETE_STACK.name(), TERRAFORM_APPLY.name())));
     }
   }
 
@@ -4498,7 +4514,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(
             tuple(WorkflowStepType.HELM.name(), WorkflowStepType.HELM.getDisplayName(), asList(HELM_DEPLOY.name())));
 
-    validateCommonCategories(workflowCategorySteps);
+    validateCommonCategories(workflowCategorySteps, false, true);
 
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
@@ -4509,6 +4525,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void categoriesForK8SWorkflow() throws IllegalArgumentException {
+    when(serviceResourceService.getDeploymentType(any(), any(), anyString())).thenReturn(KUBERNETES);
     Workflow workflow = workflowService.createWorkflow(constructK8SWorkflow());
     String phaseId =
         ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases().get(0).getUuid();
@@ -4524,7 +4541,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(tuple(WorkflowStepType.KUBERNETES.name(), WorkflowStepType.KUBERNETES.getDisplayName(),
             asList(K8S_CANARY_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name(), KUBERNETES_SWAP_SERVICE_SELECTORS.name(),
                 K8S_TRAFFIC_SPLIT.name(), K8S_SCALE.name(), K8S_DELETE.name(), K8S_APPLY.name())));
-    validateCommonCategories(workflowCategorySteps, true);
+    validateCommonCategories(workflowCategorySteps, true, false);
 
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
@@ -4606,7 +4623,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
             asList(K8S_BLUE_GREEN_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name(),
                 KUBERNETES_SWAP_SERVICE_SELECTORS.name(), K8S_TRAFFIC_SPLIT.name(), K8S_SCALE.name(), K8S_DELETE.name(),
                 K8S_APPLY.name())));
-    validateCommonCategories(workflowCategorySteps, true);
+    validateCommonCategories(workflowCategorySteps, true, false);
 
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
