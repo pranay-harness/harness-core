@@ -3,10 +3,12 @@ package io.harness.ccm.billing.graphql;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_INSTANCE_TYPE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_LINKED_ACCOUNT;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_SERVICE;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_TAG;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_TAG_KEY;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_TAG_VALUE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_USAGE_TYPE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_BILLING_ACCOUNT_ID;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_LABEL;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_LABEL_KEY;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_LABEL_VALUE;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_PRODUCT;
@@ -41,6 +43,8 @@ public class CloudBillingIdFilter implements Filter {
   private String variable;
   private String[] values;
 
+  private static final String awsCustomSqlTags = "CONCAT(tags.key, ':', tags.value)";
+  private static final String gcpCustomSqlLabels = "CONCAT(labels.key, ':', labels.value)";
   private static final String[] listOfNullTranslatedFilters = {PreAggregateConstants.entityConstantNoRegion,
       PreAggregateConstants.entityConstantAwsNoLinkedAccount, PreAggregateConstants.entityConstantAwsNoUsageType,
       PreAggregateConstants.entityConstantAwsNoInstanceType, PreAggregateConstants.entityConstantAwsNoService,
@@ -128,6 +132,9 @@ public class CloudBillingIdFilter implements Filter {
       case BILLING_GCP_LABEL_VALUE:
         dbColumn = RawBillingTableSchema.labelsValue;
         break;
+      case BILLING_GCP_LABEL:
+        dbColumn = RawBillingTableSchema.labels;
+        break;
       default:
         return null;
     }
@@ -161,6 +168,9 @@ public class CloudBillingIdFilter implements Filter {
       case BILLING_AWS_TAG_VALUE:
         dbColumn = RawBillingTableSchema.tagsValue;
         break;
+      case BILLING_AWS_TAG:
+        dbColumn = RawBillingTableSchema.tags;
+        break;
       default:
         return null;
     }
@@ -172,6 +182,12 @@ public class CloudBillingIdFilter implements Filter {
     if (dbColumnName.equals(RawBillingTableSchema.labelsKey) || dbColumnName.equals(RawBillingTableSchema.labelsValue)
         || dbColumnName.equals(RawBillingTableSchema.tagsKey) || dbColumnName.equals(RawBillingTableSchema.tagsValue)) {
       dbColumn = new CustomSql(dbColumnName.getColumnNameSQL());
+    }
+    if (dbColumnName.equals(RawBillingTableSchema.labels)) {
+      dbColumn = new CustomSql(gcpCustomSqlLabels);
+    }
+    if (dbColumnName.equals(RawBillingTableSchema.tags)) {
+      dbColumn = new CustomSql(awsCustomSqlTags);
     }
     Condition condition;
     boolean containsNullStringConst = containsNullFilter(Arrays.asList(values));

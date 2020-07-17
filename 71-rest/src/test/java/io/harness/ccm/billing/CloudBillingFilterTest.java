@@ -274,4 +274,27 @@ public class CloudBillingFilterTest extends CategoryTest {
     Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
     assertThat(condition.toString()).isEqualTo("(tags.value = 'val1')");
   }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testAwsRawTableToConditionTags() {
+    String[] tags = {"tagKey1:tagValue1", "tagKey2:tagValue2"};
+    rawTableCloudBillingFilter.setTags(CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(tags).build());
+    Condition condition = rawTableCloudBillingFilter.toAwsRawTableCondition();
+    assertThat(condition.toString())
+        .isEqualTo("(CONCAT(tags.key, ':', tags.value) IN ('tagKey1:tagValue1','tagKey2:tagValue2') )");
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void testRawTableToConditionLabels() {
+    String[] labels = {"labelKey1:labelValue1", "labelKey2:labelValue2"};
+    rawTableCloudBillingFilter.setLabels(
+        CloudBillingIdFilter.builder().operator(QLIdOperator.IN).values(labels).build());
+    Condition condition = rawTableCloudBillingFilter.toRawTableCondition();
+    assertThat(condition.toString())
+        .isEqualTo("(CONCAT(labels.key, ':', labels.value) IN ('labelKey1:labelValue1','labelKey2:labelValue2') )");
+  }
 }

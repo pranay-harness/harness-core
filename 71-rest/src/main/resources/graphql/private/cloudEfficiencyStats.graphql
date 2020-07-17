@@ -123,6 +123,8 @@ input CloudBillingFilter {
   labelsValue: IdFilter
   tagsKey: IdFilter
   tagsValue: IdFilter
+  labels: IdFilter
+  tags: IdFilter
 }
 
 input CloudBillingGroupBy {
