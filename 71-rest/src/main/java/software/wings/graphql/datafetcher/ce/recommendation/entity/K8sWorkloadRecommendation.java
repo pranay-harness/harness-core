@@ -52,4 +52,6 @@ public class K8sWorkloadRecommendation
   @FdIndex Double estimatedSavings;
 
   @EqualsAndHashCode.Exclude @FdTtlIndex Instant ttl;
+
+  boolean populated;
 }

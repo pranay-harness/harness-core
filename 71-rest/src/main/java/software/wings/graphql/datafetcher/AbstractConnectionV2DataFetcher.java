@@ -80,6 +80,7 @@ public abstract class AbstractConnectionV2DataFetcher<F, S, O> extends BaseDataF
     } catch (WingsException ex) {
       throw new WingsException(getCombinedErrorMessages(ex), ex, ex.getReportTargets());
     } catch (Exception ex) {
+      logger.error("Encountered exception", ex);
       throw new WingsException(GENERIC_EXCEPTION_MSG, USER_SRE);
     } finally {
       authRuleInstrumentation.unsetAllThreadLocal();

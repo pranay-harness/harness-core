@@ -37,7 +37,7 @@ import software.wings.security.annotations.AuthRule;
 
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,9 +60,12 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLK8SWorkloadRecommendationConnection fetchConnection(List<QLK8sWorkloadFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
-    Query<K8sWorkloadRecommendation> query =
-        populateFilters(wingsPersistence, filters, K8sWorkloadRecommendation.class, true)
-            .order(Sort.descending(K8sWorkloadRecommendationKeys.estimatedSavings));
+    @SuppressWarnings("unchecked")
+    Query<K8sWorkloadRecommendation> query = (Query<K8sWorkloadRecommendation>) populateFilters(
+        wingsPersistence, filters, K8sWorkloadRecommendation.class, true)
+                                                 .order(Sort.descending(K8sWorkloadRecommendationKeys.estimatedSavings))
+                                                 .field(K8sWorkloadRecommendationKeys.populated)
+                                                 .equal(Boolean.TRUE);
     QLK8SWorkloadRecommendationConnectionBuilder connectionBuilder = QLK8SWorkloadRecommendationConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, k8sWorkloadRecommendation -> {
       Collection<? extends QLContainerRecommendation> containerRecommendations =
@@ -99,6 +102,9 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
   }
 
   private QLResourceRequirement entityToDto(ResourceRequirement resourceRequirement) {
+    if (resourceRequirement == null) {
+      return QLResourceRequirement.builder().build();
+    }
     return QLResourceRequirement.builder()
         .requests(entityToDto(resourceRequirement.getRequests()))
         .limits(entityToDto(resourceRequirement.getLimits()))
@@ -108,8 +114,12 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
 
   private String resourceRequirementToYaml(ResourceRequirement resourceRequirement) {
     V1ResourceRequirementsBuilder builder = new V1ResourceRequirementsBuilder();
-    resourceRequirement.getRequests().forEach((k, v) -> builder.addToRequests(k, Quantity.fromString(v)));
-    resourceRequirement.getLimits().forEach((k, v) -> builder.addToLimits(k, Quantity.fromString(v)));
+    Optional.ofNullable(resourceRequirement.getRequests())
+        .orElseGet(Collections::emptyMap)
+        .forEach((k, v) -> builder.addToRequests(k, Quantity.fromString(v)));
+    Optional.ofNullable(resourceRequirement.getLimits())
+        .orElseGet(Collections::emptyMap)
+        .forEach((k, v) -> builder.addToLimits(k, Quantity.fromString(v)));
     V1ResourceRequirements resourceRequirements = builder.build();
     return getYaml().dump(resourceRequirements);
   }
@@ -124,9 +134,12 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
   }
 
   private List<QLResourceEntry> entityToDto(Map<String, String> resourceEntryMap) {
+    if (isEmpty(resourceEntryMap)) {
+      return Collections.emptyList();
+    }
     return resourceEntryMap.entrySet()
         .stream()
-        .sorted(Comparator.comparing(e -> e.getKey()))
+        .sorted(Map.Entry.comparingByKey())
         .map(e -> QLResourceEntry.of(e.getKey(), e.getValue()))
         .collect(Collectors.toList());
   }

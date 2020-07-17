@@ -81,6 +81,7 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
   @Category(UnitTests.class)
   public void shouldFetchRecommendation() throws Exception {
     K8sWorkloadRecommendation recommendation = K8sWorkloadRecommendation.builder()
+                                                   .populated(true)
                                                    .accountId(ACCOUNT1_ID)
                                                    .clusterId(CLUSTER1_ID)
                                                    .namespace("default")
