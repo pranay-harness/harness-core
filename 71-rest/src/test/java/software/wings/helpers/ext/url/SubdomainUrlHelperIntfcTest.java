@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.configuration.DeployMode;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
@@ -188,22 +189,28 @@ public class SubdomainUrlHelperIntfcTest extends WingsBaseTest {
   @Owner(developers = MEHUL)
   @Category(UnitTests.class)
   public void getDelegateMetadataUrl() {
-    String result1 = subdomainUrlHelper.getDelegateMetadataUrl(null);
+    String result1 = subdomainUrlHelper.getDelegateMetadataUrl(null, null, null);
     assertThat(result1).isEqualTo(DELEGATE_METADATA_URL);
-    String result2 = subdomainUrlHelper.getDelegateMetadataUrl(ACCOUNT_ID_1);
+    String result2 = subdomainUrlHelper.getDelegateMetadataUrl(ACCOUNT_ID_1, null, null);
     assertThat(result2).isEqualTo(DELEGATE_METADATA_URL);
-    assertThat(subdomainUrlHelper.getDelegateMetadataUrl(ACCOUNT_ID_2)).isEqualTo(DELEGATE_METADATA_URL_WITH_SUBDOMAIN);
+    assertThat(subdomainUrlHelper.getDelegateMetadataUrl(ACCOUNT_ID_2, null, null))
+        .isEqualTo(DELEGATE_METADATA_URL_WITH_SUBDOMAIN);
+    String result3 = subdomainUrlHelper.getDelegateMetadataUrl(ACCOUNT_ID_1, "testurl", DeployMode.ONPREM.name());
+    assertThat(result3).isEqualTo("testurl/storage/wingsdelegates/delegateprod.txt");
   }
 
   @Test
   @Owner(developers = MEHUL)
   @Category(UnitTests.class)
   public void getWatcherMetadataUrl() {
-    String result1 = subdomainUrlHelper.getWatcherMetadataUrl(null);
+    String result1 = subdomainUrlHelper.getWatcherMetadataUrl(null, null, null);
     assertThat(result1).isEqualTo(WATCHER_METADATA_URL);
-    String result2 = subdomainUrlHelper.getWatcherMetadataUrl(ACCOUNT_ID_1);
+    String result2 = subdomainUrlHelper.getWatcherMetadataUrl(ACCOUNT_ID_1, null, null);
     assertThat(result2).isEqualTo(WATCHER_METADATA_URL);
-    assertThat(subdomainUrlHelper.getWatcherMetadataUrl(ACCOUNT_ID_2)).isEqualTo(WATCHER_METADATA_URL_WITH_SUBDOMAIN);
+    assertThat(subdomainUrlHelper.getWatcherMetadataUrl(ACCOUNT_ID_2, null, null))
+        .isEqualTo(WATCHER_METADATA_URL_WITH_SUBDOMAIN);
+    String result3 = subdomainUrlHelper.getWatcherMetadataUrl(ACCOUNT_ID_1, "testurl", DeployMode.ONPREM.name());
+    assertThat(result3).isEqualTo("testurl/storage/wingswatchers/watcherprod.txt");
   }
 
   @Test

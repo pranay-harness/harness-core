@@ -743,7 +743,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String fetchDelegateMetadataFromStorage() {
-    String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(null);
+    String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(null, null, null);
     try {
       logger.info("Fetching delegate metadata from storage: {}", delegateMetadataUrl);
       String result = Http.getResponseStringFromUrl(delegateMetadataUrl, 10, 10).trim();
@@ -779,7 +779,8 @@ public class DelegateServiceImpl implements DelegateService {
         featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, inquiry.getAccountId()) && cdnConfig != null;
 
     try {
-      String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(inquiry.getAccountId());
+      String delegateMetadataUrl = subdomainUrlHelper.getDelegateMetadataUrl(
+          inquiry.getAccountId(), inquiry.getManagerHost(), mainConfiguration.getDeployMode().name());
       delegateStorageUrl = delegateMetadataUrl.substring(0, delegateMetadataUrl.lastIndexOf('/'));
       delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
 
@@ -800,7 +801,7 @@ public class DelegateServiceImpl implements DelegateService {
         jarRelativePath = substringAfter(delegateMatadata, " ").trim();
         delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;
       }
-      if ("local".equals(getEnv())) {
+      if ("local".equals(getEnv()) || DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
         jarFileExists = true;
       } else {
         int responseCode = -1;
@@ -829,7 +830,8 @@ public class DelegateServiceImpl implements DelegateService {
       if (useCDN) {
         watcherMetadataUrl = infraDownloadService.getCdnWatcherMetaDataFileUrl();
       } else {
-        watcherMetadataUrl = subdomainUrlHelper.getWatcherMetadataUrl(inquiry.getAccountId());
+        watcherMetadataUrl = subdomainUrlHelper.getWatcherMetadataUrl(
+            inquiry.getAccountId(), inquiry.getManagerHost(), mainConfiguration.getDeployMode().name());
       }
       remoteWatcherUrlCdn = infraDownloadService.getCdnWatcherBaseUrl();
       watcherStorageUrl = watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/'));

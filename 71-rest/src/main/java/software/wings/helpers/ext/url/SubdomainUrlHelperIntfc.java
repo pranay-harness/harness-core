@@ -9,9 +9,9 @@ public interface SubdomainUrlHelperIntfc {
 
   String getManagerUrl(HttpServletRequest request, String accountId);
 
-  String getDelegateMetadataUrl(String accountId);
+  String getDelegateMetadataUrl(String accountId, String managerHost, String deployMode);
 
-  String getWatcherMetadataUrl(String accountId);
+  String getWatcherMetadataUrl(String accountId, String managerHost, String deployMode);
 
   String getPortalBaseUrlWithoutSeparator(String accountId);
 }
