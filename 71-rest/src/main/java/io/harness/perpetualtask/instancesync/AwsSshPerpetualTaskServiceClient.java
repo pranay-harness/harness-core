@@ -4,24 +4,18 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import com.google.protobuf.util.Durations;
 
 import com.amazonaws.services.ec2.model.Filter;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
-import io.harness.perpetualtask.AwsSshPTClientParams;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
-import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoUtils;
 import io.harness.tasks.Cd1SetupFields;
@@ -43,34 +37,16 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class AwsSshPerpetualTaskServiceClient
-    implements PerpetualTaskServiceClient, PerpetualTaskServiceInprocClient<AwsSshPTClientParams> {
+public class AwsSshPerpetualTaskServiceClient implements PerpetualTaskServiceClient {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private SecretManager secretManager;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private AwsUtils awsUtils;
   @Inject private SettingsService settingsService;
-
-  @Override
-  public String create(String accountId, AwsSshPTClientParams clientParams) {
-    Map<String, String> clientParamMap = ImmutableMap.of(InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID,
-        clientParams.getInframappingId(), InstanceSyncConstants.HARNESS_APPLICATION_ID, clientParams.getAppId());
-
-    PerpetualTaskClientContext clientContext =
-        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
-
-    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
-                                         .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))
-                                         .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
-                                         .build();
-    return perpetualTaskService.createTask(
-        PerpetualTaskType.AWS_SSH_INSTANCE_SYNC, accountId, clientContext, schedule, false);
-  }
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {

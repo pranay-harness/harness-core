@@ -3,7 +3,6 @@ package io.harness.perpetualtask.instancesync;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
@@ -11,16 +10,11 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.INF
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
-import io.harness.perpetualtask.AwsSshPTClientParams;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.tasks.Cd1SetupFields;
@@ -28,7 +22,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
@@ -48,7 +41,6 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
-  @Mock private PerpetualTaskService perpetualTaskService;
   @Mock private SecretManager secretManager;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private ServiceResourceService serviceResourceService;
@@ -56,26 +48,6 @@ public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
 
   @InjectMocks @Inject private AwsSshPerpetualTaskServiceClient client;
-
-  @Test
-  @Owner(developers = OwnerRule.YOGESH)
-  @Category(UnitTests.class)
-  public void create() {
-    client.create(InstanceSyncTestConstants.ACCOUNT_ID,
-        AwsSshPTClientParams.builder().appId(APP_ID).inframappingId(INFRA_MAPPING_ID).build());
-
-    Mockito.verify(perpetualTaskService, Mockito.times(1))
-        .createTask(eq(PerpetualTaskType.AWS_SSH_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
-            eq(PerpetualTaskClientContext.builder()
-                    .clientParams(ImmutableMap.of(InstanceSyncConstants.HARNESS_APPLICATION_ID, APP_ID,
-                        InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID, INFRA_MAPPING_ID))
-                    .build()),
-            eq(PerpetualTaskSchedule.newBuilder()
-                    .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))
-                    .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
-                    .build()),
-            eq(false));
-  }
 
   @Test
   @Owner(developers = OwnerRule.YOGESH)
