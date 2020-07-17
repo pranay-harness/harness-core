@@ -1242,7 +1242,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     String resolveEnvId = workflowService.resolveEnvironmentId(workflow, executionArgs.getWorkflowVariables());
     envId = resolveEnvId != null ? resolveEnvId : envId;
     User user = UserThreadLocal.get();
-    if (trigger == null && user != null) {
+    // The workflow execution is direct workflow execution and not in Pipeline or trigger.
+    if (trigger == null && user != null && isEmpty(pipelineExecutionId)) {
       deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
       authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
     }
