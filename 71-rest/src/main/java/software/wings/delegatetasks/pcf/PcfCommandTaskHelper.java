@@ -522,6 +522,7 @@ public class PcfCommandTaskHelper {
     List<InstanceDetail> instances = detailsAfterUpsize.getInstanceDetails().stream().collect(toList());
     instances.forEach(instance
         -> pcfInstanceElements.add(PcfInstanceElement.builder()
+                                       .uuid(detailsAfterUpsize.getId() + instance.getIndex())
                                        .applicationId(detailsAfterUpsize.getId())
                                        .displayName(detailsAfterUpsize.getName())
                                        .instanceIndex(instance.getIndex())

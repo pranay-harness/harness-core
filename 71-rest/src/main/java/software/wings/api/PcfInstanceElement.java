@@ -49,7 +49,7 @@ public class PcfInstanceElement implements ContextElement, VerificationElement {
 
   @Override
   public String getUuid() {
-    return null;
+    return uuid;
   }
 
   // @TODO why needed ?
