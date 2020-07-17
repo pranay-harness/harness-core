@@ -1,0 +1,27 @@
+{
+  "tid": 10,
+  "action": "coreui_Browse",
+  "method": "read",
+  "result": {
+    "success": true,
+    "data": [
+      {
+        "id": "npm-app1/npm-app1-1.0.0.tgz",
+        "text": "npm-app1-1.0.0.tgz",
+        "type": "asset",
+        "leaf": true,
+        "componentId": "93b9b9eb9a7ecb0666ccdcf5dde9e57a",
+        "assetId": "7f6379d32f8dd78f7b7bfbcc748f1ce7"
+      },
+      {
+        "id": "npm-app1/npm-app1-1.1.0.tgz",
+        "text": "npm-app1-1.1.0.tgz",
+        "type": "asset",
+        "leaf": true,
+        "componentId": "71afea540e23dde56db0a72c40b822c0",
+        "assetId": "7f6379d32f8dd78f91bb6f15fc8972cc"
+      }
+    ]
+  },
+  "type": "rpc"
+}

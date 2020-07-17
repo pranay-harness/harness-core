@@ -15,4 +15,5 @@ public class FolderPath {
   private String path;
   private String uri;
   private boolean folder;
+  private String node; // used in Nexus 3 private apis
 }

@@ -64,6 +64,9 @@ public interface NexusService {
   List<String> getGroupIdPaths(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryFormat);
 
+  List<String> getGroupIdPathsUsingPrivateApis(
+      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryFormat);
+
   /***
    *
    * @param nexusConfig
@@ -84,6 +87,17 @@ public interface NexusService {
    */
   List<String> getArtifactNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
       String path, String repositoryFormat);
+
+  /***
+   *
+   * @param nexusConfig
+   * @param repoId the repoId
+   * @param path the path
+   * @param repositoryFormat the repositoryFormat
+   * @return
+   */
+  List<String> getArtifactNamesUsingPrivateApis(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoId, String path, String repositoryFormat);
 
   /**
    * @param nexusConfig

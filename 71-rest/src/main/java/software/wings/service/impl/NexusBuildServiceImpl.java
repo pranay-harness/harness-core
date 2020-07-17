@@ -159,6 +159,12 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
+  public List<String> getArtifactPathsUsingPrivateApis(String repoId, String groupId, NexusConfig config,
+      List<EncryptedDataDetail> encryptionDetails, String repositoryFormat) {
+    return nexusService.getArtifactNamesUsingPrivateApis(config, encryptionDetails, repoId, groupId, repositoryFormat);
+  }
+
+  @Override
   public List<String> getGroupIds(
       String repositoryName, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, null);
@@ -168,6 +174,12 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   public List<String> getGroupIds(
       String repositoryName, String repositoryFormat, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, repositoryFormat);
+  }
+
+  @Override
+  public List<String> getGroupIdsUsingPrivateApis(
+      String repositoryName, String repositoryFormat, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    return nexusService.getGroupIdPathsUsingPrivateApis(config, encryptionDetails, repositoryName, repositoryFormat);
   }
 
   @Override

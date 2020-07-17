@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/nexus/service/extdirect",
+    "bodyPatterns": [ {
+      "equalToJson" : "{\"action\":\"coreui_Browse\",\"method\":\"read\",\"data\":[{\"repositoryName\":\"npm-hosted\",\"node\":\"npm-app1\"}],\"type\":\"rpc\",\"tid\":10}"
+    }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-npm-packages-nexus3x-level2.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
