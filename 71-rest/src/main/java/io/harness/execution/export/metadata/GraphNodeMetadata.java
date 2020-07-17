@@ -6,6 +6,7 @@ import static io.harness.data.structure.CollectionUtils.nullIfEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+import io.harness.state.inspection.ExpressionVariableUsage;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -42,7 +43,7 @@ public class GraphNodeMetadata implements GraphNodeVisitable, ExecutionDetailsMe
 
   // executionContext contain variables used at runtime and their values.
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore boolean hasInspection;
-  @NonFinal @Setter Map<String, String> executionContext;
+  @NonFinal @Setter List<ExpressionVariableUsage.Item> executionContext;
 
   // interruptHistory contains the interrupt history.
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore int interruptHistoryCount;
