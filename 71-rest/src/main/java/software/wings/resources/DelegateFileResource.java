@@ -48,11 +48,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.StreamingOutput;
 
-/**
- * Created by rishi on 12/19/16.
- */
-@Api("delegateFiles")
-@Path("/delegateFiles")
+@Api("agent/delegateFiles")
+@Path("agent/delegateFiles")
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
@@ -68,7 +65,7 @@ public class DelegateFileResource {
     private String fileId;
   }
 
-  @Inject MongoIdempotentRegistry<FileIdempotentResult> idempotentRegistry;
+  @Inject MongoIdempotentRegistry<DelegateFileResource.FileIdempotentResult> idempotentRegistry;
 
   @DelegateAuth
   @POST
@@ -81,13 +78,14 @@ public class DelegateFileResource {
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     logger.info("Received save artifact request for delegateId : {}, taskId: {}, accountId: {}, fileDetail: {}",
-        delegateId, taskId, accountId, fileDetail);
+        delegateId.replaceAll("[\r\n]", ""), taskId.replaceAll("[\r\n]", ""), accountId.replaceAll("[\r\n]", ""),
+        fileDetail.toString().replaceAll("[\r\n]", ""));
 
     // TODO: Do more check, so one delegate does not overload system
 
     IdempotentId idempotentid = new IdempotentId(taskId + ":" + fileDetail.getFileName());
 
-    try (IdempotentLock<FileIdempotentResult> idempotent =
+    try (IdempotentLock<DelegateFileResource.FileIdempotentResult> idempotent =
              idempotentRegistry.create(idempotentid, ofMinutes(1), ofSeconds(1), ofHours(2))) {
       if (idempotent.alreadyExecuted()) {
         return new RestResponse<>(idempotent.getResult().getFileId());
@@ -102,7 +100,7 @@ public class DelegateFileResource {
           fileBucket);
       logger.info("fileId: {} and fileName {}", fileId, fileMetadata.getFileName());
 
-      idempotent.succeeded(FileIdempotentResult.builder().fileId(fileId).build());
+      idempotent.succeeded(DelegateFileResource.FileIdempotentResult.builder().fileId(fileId).build());
       return new RestResponse<>(fileId);
     }
   }
@@ -115,7 +113,8 @@ public class DelegateFileResource {
   public RestResponse<String> getFileId(@QueryParam("entityId") @NotEmpty String entityId,
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("version") int version,
       @QueryParam("accountId") @NotEmpty String accountId) {
-    logger.debug("entityId: {}, fileBucket: {}, version: {}", entityId, fileBucket, version);
+    logger.debug("entityId: {}, fileBucket: {}, version: {}", entityId.replaceAll("[\r\n]", ""),
+        fileBucket.toString().replaceAll("[\r\n]", ""), version);
     return new RestResponse<>(fileService.getFileIdByVersion(entityId, version, fileBucket));
   }
 
@@ -142,7 +141,8 @@ public class DelegateFileResource {
   @ExceptionMetered
   public StreamingOutput downloadFile(@QueryParam("fileId") @NotEmpty String fileId,
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId) {
-    logger.info("fileId: {}, fileBucket: {}", fileId, fileBucket);
+    logger.info(
+        "fileId: {}, fileBucket: {}", fileId.replaceAll("[\r\n]", ""), fileBucket.toString().replaceAll("[\r\n]", ""));
     return output -> fileService.downloadToStream(fileId, output, fileBucket);
   }
 
@@ -153,7 +153,8 @@ public class DelegateFileResource {
   @ExceptionMetered
   public RestResponse<DelegateFile> getFileInfo(@QueryParam("fileId") String fileId,
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId) {
-    logger.info("fileId: {}, fileBucket: {}", fileId, fileBucket);
+    logger.info(
+        "fileId: {}, fileBucket: {}", fileId.replaceAll("[\r\n]", ""), fileBucket.toString().replaceAll("[\r\n]", ""));
 
     FileMetadata fileMetadata = fileService.getFileMetadata(fileId, fileBucket);
 

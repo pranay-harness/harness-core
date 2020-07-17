@@ -21,8 +21,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-@Api("infra-download")
-@Path("/infra-download")
+@Api("/agent/infra-download")
+@Path("/agent/infra-download")
 public class HarnessInfraDownloadResource {
   @Inject InfraDownloadService infraDownloadService;
 
