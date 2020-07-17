@@ -118,9 +118,9 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     if (instanceFamily == null || region == null || cloudProvider == null) {
       return pricingData;
     }
-    Resource computeVMResource = instanceResourceService.getComputeVMResource(instanceFamily, region, cloudProvider);
     String awsDataSetId = customBillingMetaDataService.getAwsDataSetId(instanceData.getAccountId());
     if (cloudProvider == CloudProvider.AWS && null != awsDataSetId) {
+      Resource computeVMResource = instanceResourceService.getComputeVMResource(instanceFamily, region, cloudProvider);
       VMInstanceBillingData vmInstanceBillingData =
           awsCustomBillingService.getComputeVMPricingInfo(instanceData, startTime, endTime);
       if (null != vmInstanceBillingData) {
