@@ -9,6 +9,7 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VMInstanceServiceBillingData {
   private double cost;
+  private Double effectiveCost;
   private String resourceId;
   private String serviceCode;
   private String productFamily;

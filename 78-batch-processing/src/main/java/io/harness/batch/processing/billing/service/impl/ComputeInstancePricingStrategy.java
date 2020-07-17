@@ -116,7 +116,6 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
       double instanceActiveSeconds, String instanceFamily, String region, CloudProvider cloudProvider) {
     PricingData pricingData = null;
     if (instanceFamily == null || region == null || cloudProvider == null) {
-      logger.error("Required columns are null {}", instanceData);
       return pricingData;
     }
     Resource computeVMResource = instanceResourceService.getComputeVMResource(instanceFamily, region, cloudProvider);

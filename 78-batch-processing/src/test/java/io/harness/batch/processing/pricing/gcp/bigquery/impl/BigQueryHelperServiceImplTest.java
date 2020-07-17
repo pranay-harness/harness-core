@@ -3,11 +3,12 @@ package io.harness.batch.processing.pricing.gcp.bigquery.impl;
 import static com.google.cloud.bigquery.FieldValue.Attribute.PRIMITIVE;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.computeProductFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.cost;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.effectiveCost;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.networkProductFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.productFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.resourceId;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.serviceCode;
-import static io.harness.rule.OwnerRule.ROHIT;
+import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -60,12 +61,13 @@ public class BigQueryHelperServiceImplTest extends CategoryTest {
   private final String GCP_PROJECTID = "gcpProjectId";
   private final String networkCost = "10.0";
   private final String computeCost = "20.0";
+  private final String effCost = "30.0";
   private final Instant NOW = Instant.now();
   private final Instant START_TIME = NOW.minus(1, ChronoUnit.HOURS);
   private final Instant END_TIME = NOW;
 
   @Test
-  @Owner(developers = ROHIT)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetAwsEC2BillingData() throws InterruptedException {
     BillingDataPipelineConfig billingDataPipelineConfig =
@@ -77,12 +79,14 @@ public class BigQueryHelperServiceImplTest extends CategoryTest {
     FieldList fieldList = FieldList.of(Field.newBuilder(resourceId, StandardSQLTypeName.STRING).build(),
         Field.newBuilder(serviceCode, StandardSQLTypeName.STRING).build(),
         Field.newBuilder(productFamily, StandardSQLTypeName.STRING).build(),
-        Field.newBuilder(cost, StandardSQLTypeName.FLOAT64).build());
+        Field.newBuilder(cost, StandardSQLTypeName.FLOAT64).build(),
+        Field.newBuilder(effectiveCost, StandardSQLTypeName.FLOAT64).build());
     List<FieldValue> fieldValues = new ArrayList<>();
     fieldValues.add(FieldValue.of(PRIMITIVE, RESOURCE_ID));
     fieldValues.add(FieldValue.of(PRIMITIVE, serviceCode));
     fieldValues.add(FieldValue.of(PRIMITIVE, networkProductFamily));
     fieldValues.add(FieldValue.of(PRIMITIVE, networkCost));
+    fieldValues.add(FieldValue.of(PRIMITIVE, null));
     FieldValueList valueList = FieldValueList.of(fieldValues, fieldList);
     FieldValueList fieldValueList = FieldValueList.of(valueList, fieldList);
     List<FieldValue> fieldValuesCompute = new ArrayList<>();
@@ -90,6 +94,7 @@ public class BigQueryHelperServiceImplTest extends CategoryTest {
     fieldValuesCompute.add(FieldValue.of(PRIMITIVE, serviceCode));
     fieldValuesCompute.add(FieldValue.of(PRIMITIVE, computeProductFamily));
     fieldValuesCompute.add(FieldValue.of(PRIMITIVE, computeCost));
+    fieldValuesCompute.add(FieldValue.of(PRIMITIVE, null));
     FieldValueList valueListCompute = FieldValueList.of(fieldValuesCompute, fieldList);
     FieldValueList fieldValueListCompute = FieldValueList.of(valueListCompute, fieldList);
     Iterable<FieldValueList> fieldValueListIterator = Arrays.asList(fieldValueList, fieldValueListCompute);
@@ -101,6 +106,51 @@ public class BigQueryHelperServiceImplTest extends CategoryTest {
     Map<String, VMInstanceBillingData> resourceBillingData = new HashMap<>();
     resourceBillingData.put(RESOURCE_ID,
         VMInstanceBillingData.builder().resourceId(RESOURCE_ID).networkCost(10.0).computeCost(20.0).build());
+    Map<String, VMInstanceBillingData> awsEC2BillingData =
+        bigQueryHelperService.getAwsEC2BillingData(resourceIds, START_TIME, END_TIME, DATA_SET_ID);
+    assertThat(awsEC2BillingData).isEqualTo(resourceBillingData);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetAwsEC2BillingDataForRI() throws InterruptedException {
+    BillingDataPipelineConfig billingDataPipelineConfig =
+        BillingDataPipelineConfig.builder().gcpProjectId(GCP_PROJECTID).build();
+
+    when(mainConfig.getBillingDataPipelineConfig()).thenReturn(billingDataPipelineConfig);
+    doReturn(bigQuery).when(bigQueryHelperService).getBigQueryService();
+
+    FieldList fieldList = FieldList.of(Field.newBuilder(resourceId, StandardSQLTypeName.STRING).build(),
+        Field.newBuilder(serviceCode, StandardSQLTypeName.STRING).build(),
+        Field.newBuilder(productFamily, StandardSQLTypeName.STRING).build(),
+        Field.newBuilder(cost, StandardSQLTypeName.FLOAT64).build(),
+        Field.newBuilder(effectiveCost, StandardSQLTypeName.FLOAT64).build());
+    List<FieldValue> fieldValues = new ArrayList<>();
+    fieldValues.add(FieldValue.of(PRIMITIVE, RESOURCE_ID));
+    fieldValues.add(FieldValue.of(PRIMITIVE, serviceCode));
+    fieldValues.add(FieldValue.of(PRIMITIVE, networkProductFamily));
+    fieldValues.add(FieldValue.of(PRIMITIVE, networkCost));
+    fieldValues.add(FieldValue.of(PRIMITIVE, null));
+    FieldValueList valueList = FieldValueList.of(fieldValues, fieldList);
+    FieldValueList fieldValueList = FieldValueList.of(valueList, fieldList);
+    List<FieldValue> fieldValuesCompute = new ArrayList<>();
+    fieldValuesCompute.add(FieldValue.of(PRIMITIVE, RESOURCE_ID));
+    fieldValuesCompute.add(FieldValue.of(PRIMITIVE, serviceCode));
+    fieldValuesCompute.add(FieldValue.of(PRIMITIVE, computeProductFamily));
+    fieldValuesCompute.add(FieldValue.of(PRIMITIVE, computeCost));
+    fieldValuesCompute.add(FieldValue.of(PRIMITIVE, effCost));
+    FieldValueList valueListCompute = FieldValueList.of(fieldValuesCompute, fieldList);
+    FieldValueList fieldValueListCompute = FieldValueList.of(valueListCompute, fieldList);
+    Iterable<FieldValueList> fieldValueListIterator = Arrays.asList(fieldValueList, fieldValueListCompute);
+    doReturn(fieldList).when(bigQueryHelperService).getFieldList(any());
+    doReturn(fieldValueListIterator).when(bigQueryHelperService).getFieldValueLists(any());
+    when(tableResult.getSchema()).thenReturn(Schema.of(fieldList));
+
+    List<String> resourceIds = Collections.singletonList(RESOURCE_ID);
+    Map<String, VMInstanceBillingData> resourceBillingData = new HashMap<>();
+    resourceBillingData.put(RESOURCE_ID,
+        VMInstanceBillingData.builder().resourceId(RESOURCE_ID).networkCost(10.0).computeCost(30.0).build());
     Map<String, VMInstanceBillingData> awsEC2BillingData =
         bigQueryHelperService.getAwsEC2BillingData(resourceIds, START_TIME, END_TIME, DATA_SET_ID);
     assertThat(awsEC2BillingData).isEqualTo(resourceBillingData);

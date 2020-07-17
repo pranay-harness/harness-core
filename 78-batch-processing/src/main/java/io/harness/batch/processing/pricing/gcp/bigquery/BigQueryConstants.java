@@ -4,7 +4,7 @@ public class BigQueryConstants {
   private BigQueryConstants() {}
 
   public static final String AWS_EC2_BILLING_QUERY =
-      "SELECT SUM(unblendedcost) as cost, resourceid, servicecode, productfamily  "
+      "SELECT SUM(blendedcost) as cost, sum(effectivecost) as effectivecost, resourceid, servicecode, productfamily  "
       + "FROM `%s` "
       + "WHERE resourceid IN "
       + "( '%s' )  AND "
@@ -17,6 +17,7 @@ public class BigQueryConstants {
       + "usagestartdate  >= '%s' AND usagestartdate < '%s' LIMIT 1";
 
   public static final String cost = "cost";
+  public static final String effectiveCost = "effectivecost";
   public static final String resourceId = "resourceid";
   public static final String serviceCode = "servicecode";
   public static final String productFamily = "productfamily";
