@@ -5,24 +5,17 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verify;
-import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
-import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.AccessLevel;
@@ -31,7 +24,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
@@ -49,35 +41,12 @@ import java.util.concurrent.TimeUnit;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AwsLambdaInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
-  @Mock PerpetualTaskService perpetualTaskService;
   @Mock SecretManager secretManager;
   @Mock SettingsService settingsService;
   @Mock InfrastructureMappingService infraMappingService;
   private final long startDate = 1590653005287l;
 
   @InjectMocks @Inject AwsLambdaInstanceSyncPerpetualTaskClient client;
-
-  @Test
-  @Owner(developers = OwnerRule.ACASIAN)
-  @Category(UnitTests.class)
-  public void create() {
-    client.create(ACCOUNT_ID,
-        AwsLambdaInstanceSyncPerpetualTaskClientParams.builder()
-            .inframappingId(INFRA_MAPPING_ID)
-            .appId(APP_ID)
-            .functionName("function")
-            .qualifier("version")
-            .startDate(String.valueOf(startDate))
-            .build());
-
-    verify(perpetualTaskService, Mockito.times(1))
-        .createTask(PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC, ACCOUNT_ID, getClientContext(),
-            PerpetualTaskSchedule.newBuilder()
-                .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
-                .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
-                .build(),
-            false);
-  }
 
   @Test
   @Owner(developers = OwnerRule.ACASIAN)
