@@ -4,14 +4,11 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.service.InstanceSyncConstants.CONTAINER_SERVICE_NAME;
-import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.NAMESPACE;
 import static software.wings.service.InstanceSyncConstants.RELEASE_NAME;
-import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_ID;
@@ -19,16 +16,12 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.INF
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.tasks.Cd1SetupFields;
@@ -74,7 +67,6 @@ import java.util.concurrent.TimeUnit;
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
-  @Mock PerpetualTaskService perpetualTaskService;
   @Mock InfrastructureMappingService infraMappingService;
   @Mock ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Mock AwsCommandHelper awsCommandHelper;
@@ -83,52 +75,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
   @Mock SettingsService settingsService;
 
   @InjectMocks @Inject ContainerInstanceSyncPerpetualTaskClient client;
-
-  @Test
-  @Owner(developers = OwnerRule.ACASIAN)
-  @Category(UnitTests.class)
-  public void createK8s() {
-    client.create(ACCOUNT_ID,
-        ContainerInstanceSyncPerpetualTaskClientParams.builder()
-            .inframappingId(INFRA_MAPPING_ID)
-            .appId(APP_ID)
-            .namespace("namespace")
-            .releaseName("release_name")
-            .containerSvcName("container_service_name")
-            .containerType("K8S")
-            .build());
-
-    verify(perpetualTaskService, Mockito.times(1))
-        .createTask(PerpetualTaskType.CONTAINER_INSTANCE_SYNC, ACCOUNT_ID, getClientContext(true),
-            PerpetualTaskSchedule.newBuilder()
-                .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
-                .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
-                .build(),
-            false);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.ACASIAN)
-  @Category(UnitTests.class)
-  public void createNonK8s() {
-    client.create(ACCOUNT_ID,
-        ContainerInstanceSyncPerpetualTaskClientParams.builder()
-            .inframappingId(INFRA_MAPPING_ID)
-            .appId(APP_ID)
-            .namespace("namespace")
-            .releaseName("release_name")
-            .containerSvcName("container_service_name")
-            .containerType(null)
-            .build());
-
-    verify(perpetualTaskService, Mockito.times(1))
-        .createTask(PerpetualTaskType.CONTAINER_INSTANCE_SYNC, ACCOUNT_ID, getClientContext(false),
-            PerpetualTaskSchedule.newBuilder()
-                .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
-                .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
-                .build(),
-            false);
-  }
 
   @Test
   @Owner(developers = OwnerRule.ACASIAN)

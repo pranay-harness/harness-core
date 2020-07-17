@@ -5,29 +5,23 @@ import static software.wings.service.InstanceSyncConstants.CONTAINER_SERVICE_NAM
 import static software.wings.service.InstanceSyncConstants.CONTAINER_TYPE;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
-import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.NAMESPACE;
 import static software.wings.service.InstanceSyncConstants.RELEASE_NAME;
-import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 import static software.wings.service.InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES;
 import static software.wings.utils.Utils.emptyIfNull;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import com.google.protobuf.util.Durations;
 
 import io.harness.beans.DelegateTask;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
-import io.harness.perpetualtask.PerpetualTaskServiceInprocClient;
-import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.KryoUtils;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
@@ -53,46 +47,20 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.k8s.K8sStateHelper;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ContainerInstanceSyncPerpetualTaskClient
-    implements PerpetualTaskServiceClient,
-               PerpetualTaskServiceInprocClient<ContainerInstanceSyncPerpetualTaskClientParams> {
-  static final boolean ALLOW_DUPLICATE = false;
-  @Inject PerpetualTaskService perpetualTaskService;
+public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceClient {
   @Inject InfrastructureMappingService infraMappingService;
   @Inject ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject transient AwsCommandHelper awsCommandHelper;
   @Inject transient K8sStateHelper k8sStateHelper;
   @Inject SecretManager secretManager;
   @Inject SettingsService settingsService;
-
-  @Override
-  public String create(String accountId, ContainerInstanceSyncPerpetualTaskClientParams clientParams) {
-    Map<String, String> clientParamMap = new HashMap<>();
-    clientParamMap.put(HARNESS_APPLICATION_ID, clientParams.getAppId());
-    clientParamMap.put(INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId());
-    clientParamMap.put(NAMESPACE, clientParams.getNamespace());
-    clientParamMap.put(RELEASE_NAME, clientParams.getReleaseName());
-    clientParamMap.put(CONTAINER_SERVICE_NAME, clientParams.getContainerSvcName());
-    clientParamMap.put(CONTAINER_TYPE, emptyIfNull(clientParams.getContainerType()));
-
-    PerpetualTaskClientContext clientContext =
-        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
-
-    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
-                                         .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
-                                         .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
-                                         .build();
-
-    return perpetualTaskService.createTask(
-        PerpetualTaskType.CONTAINER_INSTANCE_SYNC, accountId, clientContext, schedule, ALLOW_DUPLICATE);
-  }
+  @Inject KryoSerializer kryoSerializer;
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
@@ -102,8 +70,8 @@ public class ContainerInstanceSyncPerpetualTaskClient
   }
 
   private Message buildContainerInstanceSyncTaskParams(ContainerInstanceSyncPerpetualTaskData taskData) {
-    ByteString settingAttribute = ByteString.copyFrom(KryoUtils.asBytes(taskData.getSettingAttribute()));
-    ByteString encryptionDetails = ByteString.copyFrom(KryoUtils.asBytes(taskData.getEncryptionDetails()));
+    ByteString settingAttribute = ByteString.copyFrom(kryoSerializer.asBytes(taskData.getSettingAttribute()));
+    ByteString encryptionDetails = ByteString.copyFrom(kryoSerializer.asBytes(taskData.getEncryptionDetails()));
 
     return ContainerInstanceSyncPerpetualTaskParams.newBuilder()
         .setContainerType(taskData.getContainerType())

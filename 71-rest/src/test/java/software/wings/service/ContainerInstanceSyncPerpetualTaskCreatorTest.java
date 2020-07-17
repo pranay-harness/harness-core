@@ -10,16 +10,20 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.service.InstanceSyncConstants.CONTAINER_SERVICE_NAME;
 import static software.wings.service.InstanceSyncConstants.CONTAINER_TYPE;
+import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.NAMESPACE;
 import static software.wings.service.InstanceSyncConstants.RELEASE_NAME;
+import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
-import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClient;
-import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClientParams;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -46,7 +50,11 @@ import java.util.List;
 
 public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Mock private InstanceService instanceService;
-  @Mock private ContainerInstanceSyncPerpetualTaskClient perpetualTaskClient;
+  @Mock private PerpetualTaskService perpetualTaskService;
+  private static final PerpetualTaskSchedule SCHEDULE = PerpetualTaskSchedule.newBuilder()
+                                                            .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
+                                                            .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
+                                                            .build();
 
   @InjectMocks @Inject private ContainerInstanceSyncPerpetualTaskCreator perpetualTaskCreator;
 
@@ -58,22 +66,27 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
         .when(instanceService)
         .getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn("perpetual-task-id")
-        .when(perpetualTaskClient)
-        .create(eq(InstanceSyncTestConstants.ACCOUNT_ID), any(ContainerInstanceSyncPerpetualTaskClientParams.class));
+        .when(perpetualTaskService)
+        .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID), any(),
+            any(), eq(false));
 
     final List<String> perpetualTaskIds =
         perpetualTaskCreator.createPerpetualTasks(getContainerInfrastructureMapping());
 
-    ArgumentCaptor<ContainerInstanceSyncPerpetualTaskClientParams> captor =
-        ArgumentCaptor.forClass(ContainerInstanceSyncPerpetualTaskClientParams.class);
-    verify(perpetualTaskClient, times(3)).create(eq(InstanceSyncTestConstants.ACCOUNT_ID), captor.capture());
+    ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    verify(perpetualTaskService, times(3))
+        .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
+            captor.capture(), eq(SCHEDULE), eq(false));
 
     assertThat(perpetualTaskIds).isNotEmpty();
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getContainerType))
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(CONTAINER_TYPE)))
         .containsOnly("K8S");
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getNamespace))
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(NAMESPACE)))
         .containsExactlyInAnyOrder("namespace-1", "namespace-2", "namespace-3");
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getReleaseName))
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(RELEASE_NAME)))
         .containsExactlyInAnyOrder("release-1", "release-2", "release-3");
   }
 
@@ -85,21 +98,28 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
         .when(instanceService)
         .getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn("perpetual-task-id")
-        .when(perpetualTaskClient)
-        .create(eq(InstanceSyncTestConstants.ACCOUNT_ID), any(ContainerInstanceSyncPerpetualTaskClientParams.class));
+        .when(perpetualTaskService)
+        .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID), any(),
+            any(), eq(false));
 
     final List<String> perpetualTaskIds =
         perpetualTaskCreator.createPerpetualTasks(getContainerInfrastructureMapping());
 
-    ArgumentCaptor<ContainerInstanceSyncPerpetualTaskClientParams> captor =
-        ArgumentCaptor.forClass(ContainerInstanceSyncPerpetualTaskClientParams.class);
-    verify(perpetualTaskClient, times(3)).create(eq(InstanceSyncTestConstants.ACCOUNT_ID), captor.capture());
+    ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    verify(perpetualTaskService, times(3))
+        .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
+            captor.capture(), eq(SCHEDULE), eq(false));
 
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getContainerType))
-        .containsOnlyNulls();
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getNamespace))
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(CONTAINER_TYPE)))
+        .containsOnly("");
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(NAMESPACE)))
         .containsExactlyInAnyOrder("namespace-1", "namespace-2", "namespace-3");
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getContainerSvcName))
+    assertThat(captor.getAllValues()
+                   .stream()
+                   .map(PerpetualTaskClientContext::getClientParams)
+                   .map(x -> x.get(CONTAINER_SERVICE_NAME)))
         .containsExactlyInAnyOrder("service-1", "service-2", "service-3");
   }
 
@@ -111,19 +131,25 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
         .when(instanceService)
         .getInstancesForAppAndInframapping(anyString(), anyString());
     doReturn("perpetual-task-id")
-        .when(perpetualTaskClient)
-        .create(eq(InstanceSyncTestConstants.ACCOUNT_ID), any(ContainerInstanceSyncPerpetualTaskClientParams.class));
+        .when(perpetualTaskService)
+        .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID), any(),
+            any(), eq(false));
 
     final List<String> perpetualTaskIds =
         perpetualTaskCreator.createPerpetualTasks(getContainerInfrastructureMapping());
 
-    ArgumentCaptor<ContainerInstanceSyncPerpetualTaskClientParams> captor =
-        ArgumentCaptor.forClass(ContainerInstanceSyncPerpetualTaskClientParams.class);
-    verify(perpetualTaskClient, times(3)).create(eq(InstanceSyncTestConstants.ACCOUNT_ID), captor.capture());
+    ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    verify(perpetualTaskService, times(3))
+        .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
+            captor.capture(), eq(SCHEDULE), eq(false));
 
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getContainerType))
-        .containsOnlyNulls();
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getContainerSvcName))
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(CONTAINER_TYPE)))
+        .containsOnly("");
+    assertThat(captor.getAllValues()
+                   .stream()
+                   .map(PerpetualTaskClientContext::getClientParams)
+                   .map(x -> x.get(CONTAINER_SERVICE_NAME)))
         .containsExactlyInAnyOrder("service-1", "service-2", "service-3");
   }
 
@@ -155,15 +181,19 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
                 .build()),
         existingRecords, new DirectKubernetesInfrastructureMapping());
 
-    ArgumentCaptor<ContainerInstanceSyncPerpetualTaskClientParams> captor =
-        ArgumentCaptor.forClass(ContainerInstanceSyncPerpetualTaskClientParams.class);
-    verify(perpetualTaskClient, times(1)).create(eq(InstanceSyncTestConstants.ACCOUNT_ID), captor.capture());
+    ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    verify(perpetualTaskService, times(1))
+        .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
+            captor.capture(), eq(SCHEDULE), eq(false));
 
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getContainerType))
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(CONTAINER_TYPE)))
         .containsExactlyInAnyOrder("K8S");
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getNamespace))
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(NAMESPACE)))
         .containsExactlyInAnyOrder("namespace-2");
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getReleaseName))
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(RELEASE_NAME)))
         .containsExactlyInAnyOrder("release-2");
   }
 
@@ -200,15 +230,21 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
                 .build()),
         existingRecords, new EcsInfrastructureMapping());
 
-    ArgumentCaptor<ContainerInstanceSyncPerpetualTaskClientParams> captor =
-        ArgumentCaptor.forClass(ContainerInstanceSyncPerpetualTaskClientParams.class);
-    verify(perpetualTaskClient, times(1)).create(eq(InstanceSyncTestConstants.ACCOUNT_ID), captor.capture());
+    ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    verify(perpetualTaskService, times(1))
+        .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
+            captor.capture(), eq(SCHEDULE), eq(false));
 
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getContainerType))
-        .containsOnlyNulls();
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getNamespace))
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(CONTAINER_TYPE)))
+        .containsOnly("");
+    assertThat(
+        captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(NAMESPACE)))
         .containsExactlyInAnyOrder("namespace-2");
-    assertThat(captor.getAllValues().stream().map(ContainerInstanceSyncPerpetualTaskClientParams::getContainerSvcName))
+    assertThat(captor.getAllValues()
+                   .stream()
+                   .map(PerpetualTaskClientContext::getClientParams)
+                   .map(x -> x.get(CONTAINER_SERVICE_NAME)))
         .containsExactlyInAnyOrder("service-2");
   }
 
