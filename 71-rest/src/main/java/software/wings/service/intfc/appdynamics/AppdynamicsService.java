@@ -8,7 +8,6 @@ import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -17,16 +16,13 @@ import javax.validation.constraints.NotNull;
  * Created by rsingh on 4/17/17.
  */
 public interface AppdynamicsService {
-  List<NewRelicApplication> getApplications(@NotNull String settingId) throws IOException;
+  List<NewRelicApplication> getApplications(@NotNull String settingId);
+  List<NewRelicApplication> getApplications(@NotNull String settingId, String appId, String workflowExecutionId);
 
-  Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId) throws IOException;
-  Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, ThirdPartyApiCallLog apiCallLog)
-      throws IOException;
-
-  Set<AppdynamicsTier> getDependentTiers(String settingId, long appdynamicsAppId, AppdynamicsTier tier)
-      throws IOException;
-  Set<AppdynamicsTier> getDependentTiers(String settingId, long appdynamicsAppId, AppdynamicsTier tier,
-      ThirdPartyApiCallLog apiCallLog) throws IOException;
+  Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId);
+  Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, ThirdPartyApiCallLog apiCallLog);
+  Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, String appId, String workflowExecutionId,
+      ThirdPartyApiCallLog apiCallLog);
 
   /**
    * Api to fetch metric data for given node.
@@ -37,13 +33,17 @@ public interface AppdynamicsService {
       AppdynamicsSetupTestNodeData appdynamicsSetupTestNodeData);
 
   NewRelicApplication getAppDynamicsApplication(String connectorId, String appDynamicsApplicationId);
+  NewRelicApplication getAppDynamicsApplication(
+      String connectorId, String appDynamicsApplicationId, String appId, String workflowExecutionId);
   AppdynamicsTier getTier(String connectorId, long appdynamicsAppId, String tierId);
-  AppdynamicsTier getTier(String connectorId, long appdynamicsAppId, String tierId, ThirdPartyApiCallLog apiCallLog);
+  AppdynamicsTier getTier(String connectorId, long appdynamicsAppId, String tierId, String appId,
+      String workflowExecutionId, ThirdPartyApiCallLog apiCallLog);
 
-  String getAppDynamicsApplicationByName(String analysisServerConfigId, String applicationName);
+  String getAppDynamicsApplicationByName(
+      String analysisServerConfigId, String applicationName, String appId, String workflowExecutionId);
 
-  String getTierByName(
-      String analysisServerConfigId, String applicationId, String tierName, ThirdPartyApiCallLog apiCallLog);
+  String getTierByName(String analysisServerConfigId, String applicationId, String tierName, String appId,
+      String workflowExecutionId, ThirdPartyApiCallLog apiCallLog);
 
   Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String projectIdentifier, String connectorId,
       long appdAppId, long appdTierId, String requestGuid, List<MetricPackDTO> metricPacks);

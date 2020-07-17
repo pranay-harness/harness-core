@@ -128,7 +128,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     appDynamicsState.setTierId(tierId);
     appDynamicsState.setTimeDuration("6000");
 
-    when(appdynamicsService.getTiers(anyString(), anyLong(), any()))
+    when(appdynamicsService.getTiers(anyString(), anyLong(), anyString(), anyString(), any()))
         .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().id(Long.parseLong(tierId)).name("tier").build()));
     FieldUtils.writeField(appDynamicsState, "appService", appService, true);
     FieldUtils.writeField(appDynamicsState, "configuration", configuration, true);
@@ -211,7 +211,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     appDynamicsState.setApplicationId(applicationIdExpression);
     String applicationName = generateUuid();
     when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn(applicationName);
-    when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
+    when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName), anyString(), anyString()))
+        .thenReturn(applicationId);
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
     doReturn(NodePair.builder()
                  .controlNodes(Collections.emptySet())
@@ -235,7 +236,8 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     appDynamicsState.setApplicationId(applicationIdExpression);
     String applicationName = generateUuid();
     when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn(applicationName);
-    when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
+    when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName), anyString(), anyString()))
+        .thenReturn(applicationId);
     when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn("tierName");
     AppDynamicsState spyAppDynamicsState = setupNonTemplatized(false);
     doReturn(NodePair.builder()
@@ -264,8 +266,10 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     String tierName = "appDTierName";
     when(executionContext.renderExpression(eq(tierIdExpression))).thenReturn(tierName);
     when(executionContext.renderExpression(eq(applicationIdExpression))).thenReturn(applicationName);
-    when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName))).thenReturn(applicationId);
-    when(appdynamicsService.getTierByName(any(), any(), eq(tierName), any())).thenReturn(tierId);
+    when(appdynamicsService.getAppDynamicsApplicationByName(any(), eq(applicationName), anyString(), anyString()))
+        .thenReturn(applicationId);
+    when(appdynamicsService.getTierByName(any(), any(), eq(tierName), anyString(), anyString(), any()))
+        .thenReturn(tierId);
     doReturn(NodePair.builder()
                  .controlNodes(Collections.emptySet())
                  .testNodes(Collections.singleton("node"))
@@ -386,7 +390,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .thenReturn(settingAttribute.getUuid());
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_App}")).thenReturn("30444");
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("30889");
-    when(appdynamicsService.getTiers(anyString(), anyLong(), any()))
+    when(appdynamicsService.getTiers(anyString(), anyLong(), anyString(), anyString(), any()))
         .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().id(30889).name("tier").build()));
     when(workflowStandardParams.getEnv())
         .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
@@ -612,7 +616,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void shouldTestTriggered() throws IOException {
+  public void shouldTestTriggered() {
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
                                               .controllerUrl("appd-url")
@@ -629,6 +633,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     wingsPersistence.save(WorkflowExecution.builder()
                               .appId(appId)
                               .uuid(workflowExecutionId)
+                              .startTs(System.currentTimeMillis())
                               .triggeredBy(EmbeddedUser.builder().name("Deployment Trigger workflow").build())
                               .build());
 
@@ -636,11 +641,12 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(appdynamicsService.getAppDynamicsApplication(anyString(), anyString())).thenReturn(null);
     doThrow(new WingsException("Can not find application by name"))
         .when(appdynamicsService)
-        .getAppDynamicsApplicationByName(anyString(), anyString());
-    when(appdynamicsService.getTier(anyString(), anyLong(), anyString(), any())).thenReturn(null);
+        .getAppDynamicsApplicationByName(anyString(), anyString(), anyString(), anyString());
+    when(appdynamicsService.getTier(anyString(), anyLong(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(null);
     doThrow(new WingsException("Can not find tier by name"))
         .when(appdynamicsService)
-        .getTier(anyString(), anyLong(), anyString(), any());
+        .getTier(anyString(), anyLong(), anyString(), anyString(), anyString(), any());
 
     doReturn(asList(TemplateExpression.builder()
                         .fieldName("analysisServerConfigId")
@@ -710,19 +716,20 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     long tierId = 30889;
     doReturn(AppdynamicsTier.builder().name(generateUuid()).id(tierId).build())
         .when(appdynamicsService)
-        .getTier(anyString(), anyLong(), anyString(), any());
+        .getTier(anyString(), anyLong(), anyString(), anyString(), anyString(), any());
     doReturn(Sets.newHashSet(AppdynamicsTier.builder().name(generateUuid()).id(tierId).build()))
         .when(appdynamicsService)
-        .getTiers(anyString(), anyLong(), any());
+        .getTiers(anyString(), anyLong(), anyString(), anyString(), any());
     executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(RUNNING);
 
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("test_tier");
 
-    when(appdynamicsService.getTier(anyString(), anyLong(), anyString(), any())).thenReturn(null);
+    when(appdynamicsService.getTier(anyString(), anyLong(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(null);
     doThrow(new WingsException("No tier found"))
         .when(appdynamicsService)
-        .getTierByName(anyString(), anyString(), anyString(), any());
+        .getTierByName(anyString(), anyString(), anyString(), anyString(), anyString(), any());
 
     executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
@@ -732,7 +739,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(appdynamicsService.getAppDynamicsApplication(anyString(), anyString())).thenReturn(null);
     doThrow(new WingsException("No app found"))
         .when(appdynamicsService)
-        .getAppDynamicsApplicationByName(anyString(), anyString());
+        .getAppDynamicsApplicationByName(anyString(), anyString(), anyString(), anyString());
 
     executionResponse = spyAppDynamicsState.execute(executionContext);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ERROR);
@@ -742,7 +749,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testTriggerAnalysisDataCollectionExpression_whenOnlyConnectorTemplatized() throws IOException {
+  public void testTriggerAnalysisDataCollectionExpression_whenOnlyConnectorTemplatized() {
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
                                               .controllerUrl("appd-url")
@@ -761,13 +768,14 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     when(executionContext.renderExpression("${appd.application}")).thenReturn("appd-application");
     when(executionContext.renderExpression("${appd.tier}")).thenReturn("appd-tier");
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
-    when(appdynamicsService.getAppDynamicsApplicationByName(appdConfigId, "appd-application"))
+    when(appdynamicsService.getAppDynamicsApplicationByName(
+             appdConfigId, "appd-application", appId, workflowExecutionId))
         .thenReturn(applicationId);
-    when(appdynamicsService.getTierByName(
-             eq(appdConfigId), eq(applicationId), eq("appd-tier"), any(ThirdPartyApiCallLog.class)))
+    when(appdynamicsService.getTierByName(eq(appdConfigId), eq(applicationId), eq("appd-tier"), anyString(),
+             anyString(), any(ThirdPartyApiCallLog.class)))
         .thenReturn(tierId);
-    when(appdynamicsService.getTiers(
-             eq(appdConfigId), eq(Long.parseLong(applicationId)), any(ThirdPartyApiCallLog.class)))
+    when(appdynamicsService.getTiers(eq(appdConfigId), eq(Long.parseLong(applicationId)), anyString(), anyString(),
+             any(ThirdPartyApiCallLog.class)))
         .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().name(generateUuid()).id(Long.parseLong(tierId)).build()));
 
     doReturn(asList(TemplateExpression.builder()
@@ -816,13 +824,14 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
 
     when(executionContext.renderExpression("${appd.tier}")).thenReturn("appd-tier");
     AppDynamicsState spyAppDynamicsState = spy(appDynamicsState);
-    when(appdynamicsService.getAppDynamicsApplicationByName(appdConfigId, "appd-application"))
+    when(appdynamicsService.getAppDynamicsApplicationByName(
+             appdConfigId, "appd-application", appId, workflowExecutionId))
         .thenReturn(applicationId);
-    when(appdynamicsService.getTierByName(
-             eq(appdConfigId), eq(applicationId), eq("appd-tier"), any(ThirdPartyApiCallLog.class)))
+    when(appdynamicsService.getTierByName(eq(appdConfigId), eq(applicationId), eq("appd-tier"), anyString(),
+             anyString(), any(ThirdPartyApiCallLog.class)))
         .thenReturn(tierId);
-    when(appdynamicsService.getTiers(
-             eq(appdConfigId), eq(Long.parseLong(applicationId)), any(ThirdPartyApiCallLog.class)))
+    when(appdynamicsService.getTiers(eq(appdConfigId), eq(Long.parseLong(applicationId)), anyString(), anyString(),
+             any(ThirdPartyApiCallLog.class)))
         .thenReturn(Sets.newHashSet(AppdynamicsTier.builder().name(generateUuid()).id(Long.parseLong(tierId)).build()));
 
     doReturn(asList(TemplateExpression.builder()
@@ -963,7 +972,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     long appId = 4L;
     long tierId = 4L;
     AppDynamicsState spyState = Mockito.spy(appDynamicsState);
-    doNothing().when(spyState).updateHostToGroupNameMap(any(), any(), any(), any(), any(), any());
+    doNothing().when(spyState).updateHostToGroupNameMap(any(), any(), any(), any(), any());
     doReturn(connectorId).when(spyState).getResolvedConnectorId(any(), any(), any());
     doReturn(String.valueOf(appId))
         .when(spyState)
@@ -995,7 +1004,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     String appName = "appName";
 
     AppDynamicsState spyState = Mockito.spy(appDynamicsState);
-    doNothing().when(spyState).updateHostToGroupNameMap(any(), any(), any(), any(), any(), any());
+    doNothing().when(spyState).updateHostToGroupNameMap(any(), any(), any(), any(), any());
 
     WorkflowExecutionServiceImpl spyService = Mockito.spy(WorkflowExecutionServiceImpl.class);
 
@@ -1008,9 +1017,13 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .getResolvedFieldValue(any(), eq(AppDynamicsStateKeys.tierId), any());
 
     doReturn(null).when(appdynamicsService).getAppDynamicsApplication(any(), any());
-    doReturn(String.valueOf(appId)).when(appdynamicsService).getAppDynamicsApplicationByName(any(), any());
+    doReturn(String.valueOf(appId))
+        .when(appdynamicsService)
+        .getAppDynamicsApplicationByName(any(), any(), anyString(), anyString());
     doReturn(null).when(appdynamicsService).getTier(any(), eq(appId), any());
-    doReturn(String.valueOf(tierId)).when(appdynamicsService).getTierByName(any(), any(), any(), any());
+    doReturn(String.valueOf(tierId))
+        .when(appdynamicsService)
+        .getTierByName(any(), any(), any(), anyString(), anyString(), any());
     doReturn(true).when(spyService).isTriggerBasedDeployment(any());
     doReturn(generateUuid()).when(spyState).getWorkflowId(any());
 
@@ -1049,9 +1062,11 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .getResolvedFieldValue(any(), eq(AppDynamicsStateKeys.tierId), any());
 
     doReturn(null).when(appdynamicsService).getAppDynamicsApplication(any(), any());
-    doReturn(String.valueOf(appId)).when(appdynamicsService).getAppDynamicsApplicationByName(any(), any());
+    doReturn(String.valueOf(appId))
+        .when(appdynamicsService)
+        .getAppDynamicsApplicationByName(any(), any(), anyString(), anyString());
     doReturn(null).when(appdynamicsService).getTier(any(), eq(appId), any());
-    doReturn(null).when(appdynamicsService).getTierByName(any(), any(), any(), any());
+    doReturn(null).when(appdynamicsService).getTierByName(any(), any(), any(), anyString(), anyString(), any());
     doReturn(true).when(spyService).isTriggerBasedDeployment(any());
 
     Map<String, String> hostMap = new HashMap<>();
@@ -1084,7 +1099,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
         .getResolvedFieldValue(any(), eq(AppDynamicsStateKeys.tierId), any());
 
     doReturn(null).when(appdynamicsService).getAppDynamicsApplication(any(), any());
-    doReturn(null).when(appdynamicsService).getAppDynamicsApplicationByName(any(), any());
+    doReturn(null).when(appdynamicsService).getAppDynamicsApplicationByName(any(), any(), anyString(), anyString());
     doReturn(true).when(spyService).isTriggerBasedDeployment(any());
 
     Map<String, String> hostMap = new HashMap<>();

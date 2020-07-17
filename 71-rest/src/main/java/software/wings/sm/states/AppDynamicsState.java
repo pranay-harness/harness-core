@@ -12,7 +12,6 @@ import static software.wings.utils.Misc.isLong;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -56,12 +55,10 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -203,22 +200,23 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     boolean isTriggerBased = workflowExecutionService.isTriggerBasedDeployment(context);
     if (isTriggerBased) {
       // Resolve application using name / id
-      NewRelicApplication appDynamicsApplication =
-          appdynamicsService.getAppDynamicsApplication(resolvedConnectorId, resolvedApplicationId);
+      NewRelicApplication appDynamicsApplication = appdynamicsService.getAppDynamicsApplication(
+          resolvedConnectorId, resolvedApplicationId, context.getAppId(), context.getWorkflowExecutionId());
       if (appDynamicsApplication == null) {
-        resolvedApplicationId =
-            appdynamicsService.getAppDynamicsApplicationByName(resolvedConnectorId, resolvedApplicationId);
+        resolvedApplicationId = appdynamicsService.getAppDynamicsApplicationByName(
+            resolvedConnectorId, resolvedApplicationId, context.getAppId(), context.getWorkflowExecutionId());
       }
 
       Preconditions.checkNotNull(resolvedApplicationId, "AppDynamics application is not valid");
 
       // Resolve tier using name/id
-      final AppdynamicsTier tier =
-          appdynamicsService.getTier(resolvedConnectorId, Long.parseLong(resolvedApplicationId), resolvedTierId,
-              ThirdPartyApiCallLog.createApiCallLog(
-                  appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
+      final AppdynamicsTier tier = appdynamicsService.getTier(resolvedConnectorId,
+          Long.parseLong(resolvedApplicationId), resolvedTierId, context.getAppId(), context.getWorkflowExecutionId(),
+          ThirdPartyApiCallLog.createApiCallLog(
+              appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
       if (tier == null) {
         resolvedTierId = appdynamicsService.getTierByName(analysisServerConfigId, applicationId, resolvedTierId,
+            context.getAppId(), context.getWorkflowExecutionId(),
             ThirdPartyApiCallLog.createApiCallLog(
                 appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
       }
@@ -226,8 +224,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
       Preconditions.checkNotNull(resolvedTierId, "AppDynamics tier is not null");
     }
 
-    updateHostToGroupNameMap(resolvedConnectorId, resolvedApplicationId, tierId, hostsToCollect, context.getAppId(),
-        context.getStateExecutionInstanceId());
+    updateHostToGroupNameMap(resolvedConnectorId, resolvedApplicationId, tierId, hostsToCollect, context);
 
     return AppDynamicsDataCollectionInfoV2.builder()
         .connectorId(resolvedConnectorId)
@@ -247,13 +244,13 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
   @VisibleForTesting
   void updateHostToGroupNameMap(String connectorId, String appDApplicationId, String tierId,
-      Map<String, String> hostsToGroupName, String appId, String stateExecutionId) {
-    ThirdPartyApiCallLog apiCallLog =
-        ThirdPartyApiCallLog.createApiCallLog(appService.getAccountIdByAppId(appId), stateExecutionId);
+      Map<String, String> hostsToGroupName, ExecutionContext context) {
+    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(
+        appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId());
 
     // Update host to group name map with corresponding tier name
-    final AppdynamicsTier tier =
-        appdynamicsService.getTier(connectorId, Long.parseLong(appDApplicationId), tierId, apiCallLog);
+    final AppdynamicsTier tier = appdynamicsService.getTier(connectorId, Long.parseLong(appDApplicationId), tierId,
+        context.getAppId(), context.getWorkflowExecutionId(), apiCallLog);
     Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = new HashMap<>();
     hostsToGroupName.keySet().forEach(key -> hostsToGroupName.put(key, tier.getName()));
 
@@ -263,7 +260,8 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     metricGroups.put(tier.getName(),
         TimeSeriesMlAnalysisGroupInfo.builder().groupName(tier.getName()).mlAnalysisType(analysisType).build());
 
-    metricAnalysisService.saveMetricGroups(appId, StateType.APP_DYNAMICS, stateExecutionId, metricGroups);
+    metricAnalysisService.saveMetricGroups(
+        context.getAppId(), StateType.APP_DYNAMICS, context.getStateExecutionInstanceId(), metricGroups);
   }
 
   @Override
@@ -288,39 +286,21 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     TimeSeriesMlAnalysisType analyzedTierAnalysisType = getComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE
         ? PREDICTIVE
         : TimeSeriesMlAnalysisType.COMPARATIVE;
-    try {
-      renderExpressions(context);
-      Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(analysisServerConfigId, Long.parseLong(applicationId),
-          ThirdPartyApiCallLog.createApiCallLog(
-              appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
-      tiers.stream().filter(tier -> tier.getId() == Long.parseLong(tierId)).forEach(tier -> {
-        metricGroups.put(tier.getName(),
-            TimeSeriesMlAnalysisGroupInfo.builder()
-                .groupName(tier.getName())
-                .mlAnalysisType(analyzedTierAnalysisType)
-                .build());
-        analyzedTier.setName(tier.getName());
-        analyzedTier.setId(Long.parseLong(tierId));
-      });
-      Preconditions.checkState(!isEmpty(analyzedTier.getName()), "failed for " + analyzedTier);
-
-      if (!isEmpty(dependentTiersToAnalyze)) {
-        dependentTiers = Lists.newArrayList(
-            appdynamicsService.getDependentTiers(analysisServerConfigId, Long.parseLong(applicationId), analyzedTier,
-                ThirdPartyApiCallLog.createApiCallLog(
-                    appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId())));
-
-        for (Iterator<AppdynamicsTier> iterator = dependentTiers.iterator(); iterator.hasNext();) {
-          AppdynamicsTier tier = iterator.next();
-          if (!dependentTiersToAnalyze.contains(tier)) {
-            iterator.remove();
-          }
-        }
-      }
-    } catch (IOException e) {
-      throw new WingsException(
-          "Error executing appdynamics state with id : " + context.getStateExecutionInstanceId(), e);
-    }
+    renderExpressions(context);
+    Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(analysisServerConfigId, Long.parseLong(applicationId),
+        context.getAppId(), context.getWorkflowExecutionId(),
+        ThirdPartyApiCallLog.createApiCallLog(
+            appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
+    tiers.stream().filter(tier -> tier.getId() == Long.parseLong(tierId)).forEach(tier -> {
+      metricGroups.put(tier.getName(),
+          TimeSeriesMlAnalysisGroupInfo.builder()
+              .groupName(tier.getName())
+              .mlAnalysisType(analyzedTierAnalysisType)
+              .build());
+      analyzedTier.setName(tier.getName());
+      analyzedTier.setId(Long.parseLong(tierId));
+    });
+    Preconditions.checkState(!isEmpty(analyzedTier.getName()), "failed for " + analyzedTier);
 
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
     List<DelegateTask> delegateTasks = new ArrayList<>();
@@ -368,7 +348,8 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   }
 
   private String getTierByName(ExecutionContext context, String tierName) {
-    return appdynamicsService.getTierByName(analysisServerConfigId, applicationId, tierName,
+    return appdynamicsService.getTierByName(analysisServerConfigId, applicationId, tierName, context.getAppId(),
+        context.getWorkflowExecutionId(),
         ThirdPartyApiCallLog.createApiCallLog(
             appService.getAccountIdByAppId(context.getAppId()), context.getStateExecutionInstanceId()));
   }
@@ -376,7 +357,8 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   private void renderExpressions(ExecutionContext context) {
     if (!isLong(applicationId)) {
       String applicationName = context.renderExpression(applicationId);
-      applicationId = appdynamicsService.getAppDynamicsApplicationByName(analysisServerConfigId, applicationName);
+      applicationId = appdynamicsService.getAppDynamicsApplicationByName(
+          analysisServerConfigId, applicationName, context.getAppId(), context.getWorkflowExecutionId());
       Preconditions.checkState(isLong(applicationId),
           "Not able to resolve applicationId for application name %s. Please check your expression or application name",
           applicationName);
