@@ -5,12 +5,21 @@ import static io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetu
 import static io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient.QUALIFIER;
 import static io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient.START_DATE;
 import static java.lang.Long.parseLong;
+import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
+import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
+import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 
-import io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import lombok.AccessLevel;
@@ -26,6 +35,7 @@ import software.wings.beans.infrastructure.instance.ServerlessInstance;
 import software.wings.service.intfc.instance.ServerlessInstanceService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,7 +43,7 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AwsLambdaInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
   @Inject ServerlessInstanceService serverlessInstanceService;
-  @Inject AwsLambdaInstanceSyncPerpetualTaskClient client;
+  @Inject PerpetualTaskService perpetualTaskService;
 
   @Override
   public List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
@@ -97,8 +107,28 @@ public class AwsLambdaInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
                    .qualifier(lambdaFunction.getFunctionVersion())
                    .startDate(String.valueOf(lambdaFunction.getStartDate()))
                    .build())
-        .map(clientParams -> client.create(accountId, clientParams))
+        .map(clientParams -> create(accountId, clientParams))
         .collect(Collectors.toList());
+  }
+
+  private String create(String accountId, AwsLambdaInstanceSyncPerpetualTaskClientParams clientParams) {
+    Map<String, String> paramMap = ImmutableMap.<String, String>builder()
+                                       .put(HARNESS_APPLICATION_ID, clientParams.getAppId())
+                                       .put(INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId())
+                                       .put(FUNCTION_NAME, clientParams.getFunctionName())
+                                       .put(QUALIFIER, clientParams.getQualifier())
+                                       .put(START_DATE, clientParams.getStartDate())
+                                       .build();
+
+    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(paramMap).build();
+
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
+                                         .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
+                                         .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
+                                         .build();
+
+    return perpetualTaskService.createTask(
+        PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC, accountId, clientContext, schedule, false);
   }
 
   private Set<AwsLambdaFunction> getActiveLambdaFunctions(InfrastructureMapping infrastructureMapping) {
