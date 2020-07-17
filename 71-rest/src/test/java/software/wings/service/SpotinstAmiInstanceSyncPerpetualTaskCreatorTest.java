@@ -83,7 +83,7 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTe
 
     scheduleCaptor.getAllValues().forEach(schedule -> {
       assertThat(schedule.getInterval()).isEqualTo(Durations.fromMinutes(INTERVAL_MINUTES));
-      assertThat(schedule.getInterval()).isEqualTo(Durations.fromSeconds(TIMEOUT_SECONDS));
+      assertThat(schedule.getTimeout()).isEqualTo(Durations.fromSeconds(TIMEOUT_SECONDS));
     });
   }
 
@@ -147,7 +147,7 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTe
 
     scheduleCaptor.getAllValues().forEach(schedule -> {
       assertThat(schedule.getInterval()).isEqualTo(Durations.fromMinutes(INTERVAL_MINUTES));
-      assertThat(schedule.getInterval()).isEqualTo(Durations.fromSeconds(TIMEOUT_SECONDS));
+      assertThat(schedule.getTimeout()).isEqualTo(Durations.fromSeconds(TIMEOUT_SECONDS));
     });
   }
 
