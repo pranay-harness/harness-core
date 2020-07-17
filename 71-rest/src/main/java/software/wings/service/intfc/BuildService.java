@@ -102,11 +102,25 @@ public interface BuildService<T> {
    *
    * @param jobName the job name
    * @param groupId the Group Id
-   * @param config  the jenkins config
+   * @param config  the nexus config
    * @param config  the repositoryType
    * @return the artifact paths
    */
   default List<String> getArtifactPaths(
+      String jobName, String groupId, T config, List<EncryptedDataDetail> encryptionDetails, String repositoryType) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Gets artifact paths using nexus3 private apis.
+   *
+   * @param jobName the job name
+   * @param groupId the Group Id
+   * @param config  the nexus config
+   * @param config  the repositoryType
+   * @return the artifact paths
+   */
+  default List<String> getArtifactPathsUsingPrivateApis(
       String jobName, String groupId, T config, List<EncryptedDataDetail> encryptionDetails, String repositoryType) {
     throw new UnsupportedOperationException();
   }
@@ -213,6 +227,11 @@ public interface BuildService<T> {
   }
 
   default List<String> getGroupIds(
+      String repositoryName, String repositoryType, T config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<String> getGroupIdsUsingPrivateApis(
       String repositoryName, String repositoryType, T config, List<EncryptedDataDetail> encryptionDetails) {
     throw new UnsupportedOperationException();
   }

@@ -1,0 +1,19 @@
+{
+  "tid": 10,
+  "action": "coreui_Browse",
+  "method": "read",
+  "result": {
+    "success": true,
+    "data": [
+      {
+        "id": "npm-app1",
+        "text": "npm-app1",
+        "type": "asset",
+        "leaf": false,
+        "componentId": null,
+        "assetId": "912d0fe7b8192392bc45c84eaacfb527"
+      }
+    ]
+  },
+  "type": "rpc"
+}

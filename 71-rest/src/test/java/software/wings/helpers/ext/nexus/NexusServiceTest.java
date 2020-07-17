@@ -1644,4 +1644,44 @@ public class NexusServiceTest extends WingsBaseTest {
         .isEqualTo(
             "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources");
   }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetGroupIdsForMavenNexus3xUsingPrivateApis() {
+    assertThat(nexusService.getGroupIdPathsUsingPrivateApis(
+                   nexusThreeConfig, null, "maven-releases", RepositoryFormat.maven.name()))
+        .hasSize(1)
+        .contains("mygroup");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetArtifactNamesForMavenNexus3xUsingPrivateApis() {
+    assertThat(nexusService.getArtifactNamesUsingPrivateApis(
+                   nexusThreeConfig, null, "maven-releases", "mygroup", RepositoryFormat.maven.name()))
+        .hasSize(1)
+        .contains("myartifact");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetPackageNamesForNugetNexus3xUsingPrivateApis() {
+    assertThat(nexusService.getGroupIdPathsUsingPrivateApis(
+                   nexusThreeConfig, null, "nuget-hosted", RepositoryFormat.nuget.name()))
+        .hasSize(3)
+        .contains("AdamsLair.Duality.Samples.BasicMenu", "NuGet.Package.Sample", "NuGet.Sample.Package");
+  }
+
+  @Test
+  @Owner(developers = AADITI)
+  @Category(UnitTests.class)
+  public void shouldGetPackageNamesForNPMNexus3xUsingPrivateApis() {
+    assertThat(
+        nexusService.getGroupIdPathsUsingPrivateApis(nexusThreeConfig, null, "npm-hosted", RepositoryFormat.npm.name()))
+        .hasSize(1)
+        .contains("npm-app1");
+  }
 }

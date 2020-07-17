@@ -52,12 +52,22 @@ public interface NexusBuildService extends BuildService<NexusConfig> {
       List<EncryptedDataDetail> encryptionDetails, String repositoryFormat);
 
   @Override
+  @DelegateTaskType(TaskType.NEXUS_GET_ARTIFACT_PATHS)
+  List<String> getArtifactPathsUsingPrivateApis(String jobName, String groupId, NexusConfig config,
+      List<EncryptedDataDetail> encryptionDetails, String repositoryFormat);
+
+  @Override
   @DelegateTaskType(TaskType.NEXUS_GET_GROUP_IDS)
   List<String> getGroupIds(String repositoryName, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
 
   @Override
   @DelegateTaskType(TaskType.NEXUS_GET_GROUP_IDS)
   List<String> getGroupIds(
+      String repositoryName, String repositoryType, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
+
+  @Override
+  @DelegateTaskType(TaskType.NEXUS_GET_GROUP_IDS)
+  List<String> getGroupIdsUsingPrivateApis(
       String repositoryName, String repositoryType, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
 
   @Override

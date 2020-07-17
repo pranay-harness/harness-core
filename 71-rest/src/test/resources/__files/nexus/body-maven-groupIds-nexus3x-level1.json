@@ -1,0 +1,19 @@
+{
+  "tid": 10,
+  "action": "coreui_Browse",
+  "method": "read",
+  "result": {
+    "success": true,
+    "data": [
+      {
+        "id": "mygroup",
+        "text": "mygroup",
+        "type": "folder",
+        "leaf": false,
+        "componentId": null,
+        "assetId": null
+      }
+    ]
+  },
+  "type": "rpc"
+}

@@ -33,6 +33,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
@@ -184,8 +185,16 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue value = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
-    return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
-                               .getArtifactPaths(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
+    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
+        && value instanceof NexusConfig && ((NexusConfig) value).getVersion().equals("3.x")
+        && repositoryFormat.equals("maven")) {
+      return Sets.newTreeSet(
+          getBuildService(settingAttribute, appId)
+              .getArtifactPathsUsingPrivateApis(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
+    } else {
+      return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
+                                 .getArtifactPaths(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
+    }
   }
 
   @Override
@@ -353,6 +362,13 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
+        && settingValue instanceof NexusConfig && ((NexusConfig) settingValue).getVersion().equals("3.x")
+        && repositoryFormat.equals("maven")) {
+      return Sets.newTreeSet(
+          getBuildService(settingAttribute, appId)
+              .getGroupIdsUsingPrivateApis(repoType, repositoryFormat, settingValue, encryptedDataDetails));
+    }
     return Sets.newTreeSet(getBuildService(settingAttribute, appId)
                                .getGroupIds(repoType, repositoryFormat, settingValue, encryptedDataDetails));
   }
@@ -614,8 +630,16 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-    return Sets.newTreeSet(getBuildService(settingAttribute, appId)
-                               .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
+    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
+        && settingValue instanceof NexusConfig && ((NexusConfig) settingValue).getVersion().equals("3.x")
+        && (repositoryFormat.equals("npm") || repositoryFormat.equals("nuget"))) {
+      return Sets.newTreeSet(
+          getBuildService(settingAttribute, appId)
+              .getGroupIdsUsingPrivateApis(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
+    } else {
+      return Sets.newTreeSet(getBuildService(settingAttribute, appId)
+                                 .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
+    }
   }
 
   @Override

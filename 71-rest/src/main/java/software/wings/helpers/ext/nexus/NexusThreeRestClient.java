@@ -16,6 +16,8 @@ import software.wings.helpers.ext.nexus.model.DockerImageTagResponse;
 import software.wings.helpers.ext.nexus.model.Nexus3AssetResponse;
 import software.wings.helpers.ext.nexus.model.Nexus3ComponentResponse;
 import software.wings.helpers.ext.nexus.model.Nexus3Repository;
+import software.wings.helpers.ext.nexus.model.Nexus3Request;
+import software.wings.helpers.ext.nexus.model.Nexus3Response;
 import software.wings.helpers.ext.nexus.model.RepositoryRequest;
 import software.wings.helpers.ext.nexus.model.RepositoryResponse;
 
@@ -153,4 +155,12 @@ public interface NexusThreeRestClient {
       @Query("maven.groupId") String groupId, @Query("maven.artifactId") String artifactId,
       @Query("version") String version, @Query("maven.extension") String extension,
       @Query("maven.classifier") String classifier);
+
+  @Headers("Accept: application/json")
+  @POST("service/extdirect")
+  Call<Nexus3Response> getGroupIds(@Header("Authorization") String authorization, @Body Nexus3Request nexus3Request);
+
+  @Headers("Accept: application/json")
+  @POST("service/extdirect")
+  Call<Nexus3Response> getGroupIds(@Body Nexus3Request nexus3Request);
 }
