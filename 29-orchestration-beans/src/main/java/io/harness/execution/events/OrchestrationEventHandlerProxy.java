@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 
 @OwnedBy(HarnessTeam.CDC)
 @Builder
-public class OrchestrationEventHandlerAsyncWrapper implements AsyncInformObserver {
+public class OrchestrationEventHandlerProxy implements AsyncInformObserver {
   private static ExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
   @NonNull Injector injector;
@@ -24,7 +24,7 @@ public class OrchestrationEventHandlerAsyncWrapper implements AsyncInformObserve
     return executor;
   }
 
-  public void fire(OrchestrationEvent event) {
+  public void handleEvent(OrchestrationEvent event) {
     OrchestrationEventHandler eventHandler = injector.getInstance(eventHandlerClass);
     eventHandler.handleEvent(event);
   }
