@@ -4,14 +4,27 @@ import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.service.InstanceSyncConstants.CONTAINER_SERVICE_NAME;
+import static software.wings.service.InstanceSyncConstants.CONTAINER_TYPE;
+import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
+import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
+import static software.wings.service.InstanceSyncConstants.NAMESPACE;
+import static software.wings.service.InstanceSyncConstants.RELEASE_NAME;
+import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 import static software.wings.service.impl.ContainerMetadataType.K8S;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -33,10 +46,13 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.ContainerMetadataType;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.utils.Utils;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,7 +60,10 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
   @Inject InstanceService instanceService;
+  @Inject PerpetualTaskService perpetualTaskService;
   @Inject ContainerInstanceSyncPerpetualTaskClient containerInstanceSyncPerpetualTaskClient;
+
+  static final boolean ALLOW_DUPLICATE = false;
 
   @Override
   public List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
@@ -155,8 +174,29 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
                    .releaseName(containerMetadata.getReleaseName())
                    .containerType(nonNull(containerMetadata.getType()) ? containerMetadata.getType().name() : null)
                    .build())
-        .map(params -> containerInstanceSyncPerpetualTaskClient.create(accountId, params))
+        .map(params -> create(accountId, params))
         .collect(Collectors.toList());
+  }
+
+  private String create(String accountId, ContainerInstanceSyncPerpetualTaskClientParams clientParams) {
+    Map<String, String> clientParamMap = new HashMap<>();
+    clientParamMap.put(HARNESS_APPLICATION_ID, clientParams.getAppId());
+    clientParamMap.put(INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId());
+    clientParamMap.put(NAMESPACE, clientParams.getNamespace());
+    clientParamMap.put(RELEASE_NAME, clientParams.getReleaseName());
+    clientParamMap.put(CONTAINER_SERVICE_NAME, clientParams.getContainerSvcName());
+    clientParamMap.put(CONTAINER_TYPE, Utils.emptyIfNull(clientParams.getContainerType()));
+
+    PerpetualTaskClientContext clientContext =
+        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
+
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
+                                         .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
+                                         .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
+                                         .build();
+
+    return perpetualTaskService.createTask(
+        PerpetualTaskType.CONTAINER_INSTANCE_SYNC, accountId, clientContext, schedule, ALLOW_DUPLICATE);
   }
 
   private Set<ContainerMetadata> extractContainerMetadata(DeploymentInfo deploymentInfo) {
