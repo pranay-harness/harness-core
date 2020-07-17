@@ -29,6 +29,7 @@ import org.mockito.junit.MockitoRule;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StateInspectionProcessorTest extends CategoryTest {
   @Mock private StateInspectionService stateInspectionService;
@@ -102,9 +103,17 @@ public class StateInspectionProcessorTest extends CategoryTest {
             StateInspection.builder().stateExecutionInstanceId("nid4").data(prepareData(null)).build()));
     stateInspectionProcessor.process();
     verify(stateInspectionService, times(2)).listUsingSecondary(any());
-    assertThat(nodeMetadata1.getExecutionContext().keySet()).containsExactlyInAnyOrder("k1");
+    assertThat(nodeMetadata1.getExecutionContext()
+                   .stream()
+                   .map(ExpressionVariableUsage.Item::getExpression)
+                   .collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("k1");
     assertThat(nodeMetadata2.getExecutionContext()).isNull();
-    assertThat(nodeMetadata3.getExecutionContext().keySet()).containsExactlyInAnyOrder("k3");
+    assertThat(nodeMetadata3.getExecutionContext()
+                   .stream()
+                   .map(ExpressionVariableUsage.Item::getExpression)
+                   .collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("k3");
     assertThat(nodeMetadata4.getExecutionContext()).isNull();
   }
 

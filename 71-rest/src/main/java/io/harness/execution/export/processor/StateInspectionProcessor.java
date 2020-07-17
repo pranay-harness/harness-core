@@ -1,7 +1,6 @@
 package io.harness.execution.export.processor;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.CollectionUtils.nullIfEmptyMap;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
@@ -78,10 +77,9 @@ public class StateInspectionProcessor implements ExportExecutionsProcessor, Grap
     }
 
     nodeMetadata.setExecutionContext(
-        nullIfEmptyMap(expressionVariableUsage.getVariables()
-                           .stream()
-                           .filter(variable -> variable.getExpression() != null && variable.getValue() != null)
-                           .collect(Collectors.toMap(
-                               ExpressionVariableUsage.Item::getExpression, ExpressionVariableUsage.Item::getValue))));
+        expressionVariableUsage.getVariables()
+            .stream()
+            .filter(variable -> variable.getExpression() != null && variable.getValue() != null)
+            .collect(Collectors.toList()));
   }
 }
