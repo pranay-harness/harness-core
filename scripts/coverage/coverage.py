@@ -84,7 +84,8 @@ def calculate_coverage(coverage_file_path):
         lines_to_cover = extract_from_json(result, metric_key, "lines_to_cover")
         branch_coverage = extract_from_json(result, metric_key, "branch_coverage")
         conditions_to_cover = extract_from_json(result, metric_key, "conditions_to_cover")
-
+    if lines_to_cover is None:
+        return None
     return [coverage_file_path, coverage, lines_to_cover, branch_coverage, conditions_to_cover]
 
 
@@ -103,8 +104,10 @@ def main(list_file_path):
 
     for coverage_file in files:
         try:
-            rows.append(calculate_coverage(coverage_file))
             print("Fetching Coverage for File {}".format(coverage_file))
+            row = calculate_coverage(coverage_file)
+            if row is not None:
+                rows.append(row)
         except Exception as e:
             print("Error in processing file {}, Error: {}".format(coverage_file, str(e)))
     export_file(rows)
