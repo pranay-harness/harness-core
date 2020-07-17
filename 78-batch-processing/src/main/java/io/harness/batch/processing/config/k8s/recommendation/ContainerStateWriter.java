@@ -174,6 +174,8 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
           long days = between(containerState.getFirstSampleStart(), containerState.getLastSampleStart()).toDays();
           containerRecommendation.setNumDays((int) days);
           containerRecommendation.setTotalSamplesCount(containerState.getTotalSamplesCount());
+          // indicates we've populated at least one container for a recommendation
+          recommendation.setPopulated(true);
         }
       }
       recommendation.setEstimatedSavings(Math.max(0, savings.doubleValue()));
