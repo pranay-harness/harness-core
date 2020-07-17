@@ -65,17 +65,6 @@ public class AppdynamicsResource {
     return new RestResponse<>(appdynamicsService.getTiers(settingId, appdynamicsAppId));
   }
 
-  @GET
-  @Path("/dependent-tiers")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Set<AppdynamicsTier>> getDependentTiers(@QueryParam("accountId") String accountId,
-      @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") long appdynamicsAppId,
-      @QueryParam("tierId") long tierId, @QueryParam("tierName") String tierName) throws IOException {
-    return new RestResponse<>(appdynamicsService.getDependentTiers(
-        settingId, appdynamicsAppId, AppdynamicsTier.builder().id(tierId).name(tierName).build()));
-  }
-
   /**
    * Api to fetch Metric data for given node.
    * @param accountId

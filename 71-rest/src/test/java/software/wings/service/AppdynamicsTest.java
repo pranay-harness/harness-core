@@ -1,6 +1,5 @@
 package software.wings.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -124,24 +123,5 @@ public class AppdynamicsTest extends WingsBaseTest {
     Set<AppdynamicsTier> tiers =
         appdynamicsService.getTiers(settingAttribute.getUuid(), applications.iterator().next().getId());
     assertThat(tiers.isEmpty()).isFalse();
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Repeat(times = 5, successes = 1)
-  @Category(UnitTests.class)
-  public void getDependentTiers() throws IOException {
-    List<NewRelicApplication> applications = appdynamicsService.getApplications(settingAttribute.getUuid());
-    assertThat(applications.isEmpty()).isFalse();
-    NewRelicApplication app = applications.iterator().next();
-    Set<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), app.getId());
-    assertThat(tiers.isEmpty()).isFalse();
-
-    AppdynamicsTier tier = tiers.iterator().next();
-    if (tier.getName().equals("docker-tier")) {
-      Set<AppdynamicsTier> dependentTiers =
-          appdynamicsService.getDependentTiers(settingAttribute.getUuid(), app.getId(), tier);
-      assertThat(isEmpty(dependentTiers)).isTrue();
-    }
   }
 }

@@ -32,9 +32,7 @@ import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.security.SecretManager;
 
-import java.io.IOException;
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -53,7 +51,12 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Inject private MLServiceUtils mlServiceUtils;
 
   @Override
-  public List<NewRelicApplication> getApplications(final String settingId) throws IOException {
+  public List<NewRelicApplication> getApplications(final String settingId) {
+    return this.getApplications(settingId, null, null);
+  }
+
+  @Override
+  public List<NewRelicApplication> getApplications(String settingId, String appId, String workflowExecutionId) {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
@@ -61,20 +64,26 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails(appDynamicsConfig, appId, workflowExecutionId);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getAllApplications(appDynamicsConfig, encryptionDetails);
   }
 
   @Override
-  public Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId) throws IOException {
+  public Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId) {
     return this.getTiers(
         settingId, appdynamicsAppId, ThirdPartyApiCallLog.createApiCallLog(GLOBAL_ACCOUNT_ID, NO_STATE_EXECUTION_ID));
   }
 
   @Override
-  public Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, ThirdPartyApiCallLog apiCallLog)
-      throws IOException {
+  public Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, ThirdPartyApiCallLog apiCallLog) {
+    return this.getTiers(settingId, appdynamicsAppId, null, null, apiCallLog);
+  }
+
+  @Override
+  public Set<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId, String appId,
+      String workflowExecutionId, ThirdPartyApiCallLog apiCallLog) {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(settingAttribute.getAccountId())
@@ -82,65 +91,10 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails(appDynamicsConfig, appId, workflowExecutionId);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getTiers(appDynamicsConfig, appdynamicsAppId, encryptionDetails, apiCallLog);
-  }
-
-  @Override
-  public Set<AppdynamicsTier> getDependentTiers(String settingId, long appdynamicsAppId, AppdynamicsTier tier)
-      throws IOException {
-    return getDependentTiers(settingId, appdynamicsAppId, tier,
-        ThirdPartyApiCallLog.createApiCallLog(GLOBAL_ACCOUNT_ID, NO_STATE_EXECUTION_ID));
-  }
-  @Override
-  public Set<AppdynamicsTier> getDependentTiers(String settingId, long appdynamicsAppId, AppdynamicsTier tier,
-      ThirdPartyApiCallLog apiCallLog) throws IOException {
-    final SettingAttribute settingAttribute = settingsService.get(settingId);
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(settingAttribute.getAccountId())
-                                          .appId(GLOBAL_APP_ID)
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .build();
-    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
-
-    Set<AppdynamicsTier> tierDependencies =
-        delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-            .getTierDependencies(appDynamicsConfig, appdynamicsAppId, encryptionDetails, apiCallLog);
-
-    return getDependentTiers(tierDependencies, tier);
-  }
-
-  private Set<AppdynamicsTier> getDependentTiers(Set<AppdynamicsTier> tierMap, AppdynamicsTier analyzedTier) {
-    Set<AppdynamicsTier> dependentTiers = new HashSet<>();
-    for (AppdynamicsTier tier : tierMap) {
-      String dependencyPath = getDependencyPath(tier, analyzedTier);
-      if (!isEmpty(dependencyPath)) {
-        tier.setDependencyPath(dependencyPath);
-        dependentTiers.add(tier);
-      }
-    }
-    return dependentTiers;
-  }
-
-  private String getDependencyPath(AppdynamicsTier tier, AppdynamicsTier analyzedTier) {
-    if (isEmpty(tier.getExternalTiers())) {
-      return null;
-    }
-
-    if (tier.getExternalTiers().contains(analyzedTier)) {
-      return tier.getName() + "->" + analyzedTier.getName();
-    }
-
-    for (AppdynamicsTier externalTier : tier.getExternalTiers()) {
-      String dependencyPath = getDependencyPath(externalTier, analyzedTier);
-      if (dependencyPath != null) {
-        return tier.getName() + "->" + dependencyPath;
-      }
-    }
-
-    return null;
   }
 
   @Override
@@ -172,8 +126,14 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
 
   @Override
   public NewRelicApplication getAppDynamicsApplication(String connectorId, String appDynamicsApplicationId) {
+    return this.getAppDynamicsApplication(connectorId, appDynamicsApplicationId, null, null);
+  }
+
+  @Override
+  public NewRelicApplication getAppDynamicsApplication(
+      String connectorId, String appDynamicsApplicationId, String appId, String workflowExecutionId) {
     try {
-      List<NewRelicApplication> apps = getApplications(connectorId);
+      List<NewRelicApplication> apps = getApplications(connectorId, appId, workflowExecutionId);
       NewRelicApplication appDynamicsApp = null;
       for (NewRelicApplication app : apps) {
         if (String.valueOf(app.getId()).equals(appDynamicsApplicationId)) {
@@ -189,16 +149,16 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
 
   @Override
   public AppdynamicsTier getTier(String connectorId, long appdynamicsAppId, String tierId) {
-    return getTier(connectorId, appdynamicsAppId, tierId,
+    return getTier(connectorId, appdynamicsAppId, tierId, null, null,
         ThirdPartyApiCallLog.createApiCallLog(GLOBAL_ACCOUNT_ID, NO_STATE_EXECUTION_ID));
   }
 
   @Override
-  public AppdynamicsTier getTier(
-      String connectorId, long appdynamicsAppId, String tierId, ThirdPartyApiCallLog apiCallLog) {
+  public AppdynamicsTier getTier(String connectorId, long appdynamicsAppId, String tierId, String appId,
+      String workflowExecutionId, ThirdPartyApiCallLog apiCallLog) {
     try {
       AppdynamicsTier appdynamicsTier = null;
-      Set<AppdynamicsTier> tiers = getTiers(connectorId, appdynamicsAppId, apiCallLog);
+      Set<AppdynamicsTier> tiers = getTiers(connectorId, appdynamicsAppId, appId, workflowExecutionId, apiCallLog);
       for (AppdynamicsTier tier : tiers) {
         if (String.valueOf(tier.getId()).equals(tierId)) {
           appdynamicsTier = tier;
@@ -212,10 +172,11 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public String getAppDynamicsApplicationByName(String analysisServerConfigId, String applicationName) {
+  public String getAppDynamicsApplicationByName(
+      String analysisServerConfigId, String applicationName, String appId, String workflowExecutionId) {
     try {
       String applicationId = null;
-      List<NewRelicApplication> apps = getApplications(analysisServerConfigId);
+      List<NewRelicApplication> apps = getApplications(analysisServerConfigId, appId, workflowExecutionId);
       for (NewRelicApplication app : apps) {
         if (String.valueOf(app.getName()).equals(applicationName)) {
           applicationId = String.valueOf(app.getId());
@@ -232,11 +193,12 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public String getTierByName(
-      String analysisServerConfigId, String applicationId, String tierName, ThirdPartyApiCallLog apiCallLog) {
+  public String getTierByName(String analysisServerConfigId, String applicationId, String tierName, String appId,
+      String workflowExecutionId, ThirdPartyApiCallLog apiCallLog) {
     try {
       String tierId = null;
-      Set<AppdynamicsTier> tiers = getTiers(analysisServerConfigId, Long.parseLong(applicationId), apiCallLog);
+      Set<AppdynamicsTier> tiers =
+          getTiers(analysisServerConfigId, Long.parseLong(applicationId), appId, workflowExecutionId, apiCallLog);
       for (AppdynamicsTier tier : tiers) {
         if (String.valueOf(tier.getName()).equals(tierName)) {
           tierId = String.valueOf(tier.getId());
