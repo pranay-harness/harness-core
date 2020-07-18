@@ -1,0 +1,40 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"properties": {
+		"pipeline": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"identifier": {
+					"type": "string"
+				},
+				"description1": {
+					"type": "string"
+				},
+				"orgIdentifier": {
+					"type": "string"
+				},
+				"projectIdentifier": {
+					"type": "string"
+				},
+				"variables": {
+					"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/variables/variables.json#/definitions/variables"
+				},
+				"stages": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"stage": {
+								"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/stage.json#/definitions/stage"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

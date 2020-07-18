@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "definitions": {
+        "service": {
+			"type": "object",
+            "properties": {
+				"name": {
+					"type": "string"
+				},
+				"identifier": {
+					"type": "string"
+				},
+				"serviceDef": {
+					"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/service/serviceDef/serviceDef.json#/definitions/serviceDef"
+				},
+				"stageOverrides": {
+					"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/overrides/overrides.json#/definitions/stageOverrides"
+				}
+            }
+        }
+    }
+}

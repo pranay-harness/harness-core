@@ -1,0 +1,14 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"definitions": {
+		"k8sRollingRollback": {
+			"type": "object",
+			"properties": {
+				"timeout": {
+					"type": "integer"
+				}
+			}
+		}
+	}
+}

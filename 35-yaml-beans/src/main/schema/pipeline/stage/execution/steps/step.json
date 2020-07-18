@@ -1,0 +1,74 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"definitions": {
+		"step": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"identifier": {
+					"type": "string"
+				},
+				"type": {
+					"enum": [
+						"K8sRolloutDeploy",
+						"K8sRollingRollback",
+						"ShellScript"
+					]
+				}
+			},
+			"allOf": [
+				{
+					"if": {
+						"properties": {
+							"type": {
+								"const": "K8sRolloutDeploy"
+							}
+						}
+					},
+					"then": {
+						"properties": {
+							"spec": {
+								"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/execution/steps/k8sRolloutDeploy.json#/definitions/k8sRolloutDeploy"
+							}
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": {
+							"type": {
+								"const": "K8sRollingRollback"
+							}
+						}
+					},
+					"then": {
+						"properties": {
+							"spec": {
+								"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/execution/steps/k8sRollingRollback.json#/definitions/k8sRollingRollback"
+							}
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": {
+							"type": {
+								"const": "ShellScript"
+							}
+						}
+					},
+					"then": {
+						"properties": {
+							"spec": {
+								"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/execution/steps/shellScript.json#/definitions/shellScript"
+							}
+						}
+					}
+				}
+			]
+		}
+	}
+}

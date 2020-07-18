@@ -1,0 +1,76 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"definitions": {
+		"kubernetes": {
+			"type": "object",
+			"properties": {
+				"artifacts": {
+					"type": "object",
+					"properties": {
+						"primary": {
+							"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/service/serviceDef/artifact/artifact.json#/definitions/artifact"
+						}
+					}
+				},
+				"artifactOverrideSets": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"overrideSet": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"identifier": {
+											"type": "string"
+										},
+										"artifacts": {
+											"type": "object",
+											"properties": {
+												"sidecars": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"sidecar": {
+																"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/service/serviceDef/artifact/artifactWithIdentifier.json#/definitions/artifact"
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"manifests": {
+					"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/service/serviceDef/manifests/manifests.json#/definitions/manifests"
+				},
+				"manifestOverrideSets": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"overrideSet": {
+								"type": "object",
+								"properties": {
+									"identifier": {
+										"type": "string"
+									},
+									"manifests": {
+										"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/service/serviceDef/manifests/manifests.json#/definitions/manifests"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
