@@ -3,13 +3,18 @@ package io.harness.perpetualtask;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
+import com.google.protobuf.Any;
+import com.google.protobuf.Message;
 import com.google.protobuf.util.Durations;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.AbortTaskRequest;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskServiceClient;
+import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.rule.Owner;
@@ -20,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 
 import java.time.Instant;
@@ -29,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class PerpetualTaskServiceImplTest extends WingsBaseTest {
+  @Mock private PerpetualTaskServiceClient client;
+
   @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
 
   @InjectMocks @Inject private PerpetualTaskServiceImpl perpetualTaskService;
@@ -46,6 +54,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   public void setup() throws IllegalAccessException {
     PerpetualTaskServiceClientRegistry clientRegistry = new PerpetualTaskServiceClientRegistry();
     clientRegistry.registerClient(PerpetualTaskType.ECS_CLUSTER, new EcsPerpetualTaskServiceClient());
+    clientRegistry.registerClient(PerpetualTaskType.K8S_WATCH, client);
     FieldUtils.writeField(perpetualTaskService, "broadcastAggregateSet", testBroadcastAggregateSet, true);
     FieldUtils.writeField(perpetualTaskService, "clientRegistry", clientRegistry, true);
   }
@@ -64,6 +73,90 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     String taskIdDuplicate = perpetualTaskService.createTask(
         PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false);
     assertThat(taskIdDuplicate).isEqualTo(taskId);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testResetTaskWithoutTaskParams() {
+    String accountId = UUIDGenerator.generateUuid();
+    String delegateId = UUIDGenerator.generateUuid();
+    String taskId = UUIDGenerator.generateUuid();
+
+    PerpetualTaskClientContext clientContext = clientContext();
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+    perpetualTaskRecord.setAccountId(accountId);
+    perpetualTaskRecord.setDelegateId(delegateId);
+    perpetualTaskRecord.setUuid(taskId);
+    perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED.name());
+    perpetualTaskRecordDao.save(perpetualTaskRecord);
+
+    boolean resetTask = perpetualTaskService.resetTask(accountId, taskId, null);
+
+    PerpetualTaskRecord record = perpetualTaskService.getTaskRecord(taskId);
+
+    assertThat(record).isNotNull();
+    assertThat(record.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED.name());
+    assertThat(resetTask).isTrue();
+    assertThat(record.getClientContext().getClientParams()).isEqualTo(clientContext.getClientParams());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testResetTaskWithTaskParams() {
+    String accountId = UUIDGenerator.generateUuid();
+    String delegateId = UUIDGenerator.generateUuid();
+    String taskId = UUIDGenerator.generateUuid();
+
+    PerpetualTaskClientContext clientContext = clientContextWithTaskParams();
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+    perpetualTaskRecord.setAccountId(accountId);
+    perpetualTaskRecord.setDelegateId(delegateId);
+    perpetualTaskRecord.setUuid(taskId);
+    perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED.name());
+    perpetualTaskRecordDao.save(perpetualTaskRecord);
+
+    PerpetualTaskExecutionBundle taskExecutionBundle =
+        PerpetualTaskExecutionBundle.newBuilder()
+            .setTaskParams(Any.pack(AwsSshInstanceSyncPerpetualTaskParams.getDefaultInstance()))
+            .build();
+
+    boolean resetTask = perpetualTaskService.resetTask(accountId, taskId, taskExecutionBundle);
+
+    PerpetualTaskRecord record = perpetualTaskService.getTaskRecord(taskId);
+
+    assertThat(record).isNotNull();
+    assertThat(record.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED.name());
+    assertThat(resetTask).isTrue();
+    assertThat(record.getClientContext().getExecutionBundle()).isEqualTo(taskExecutionBundle.toByteArray());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testResetTaskWithClientContextNull() {
+    String accountId = UUIDGenerator.generateUuid();
+    String delegateId = UUIDGenerator.generateUuid();
+    String taskId = UUIDGenerator.generateUuid();
+
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+    perpetualTaskRecord.setAccountId(accountId);
+    perpetualTaskRecord.setDelegateId(delegateId);
+    perpetualTaskRecord.setUuid(taskId);
+    perpetualTaskRecord.setState(PerpetualTaskState.TASK_ASSIGNED.name());
+    perpetualTaskRecordDao.save(perpetualTaskRecord);
+
+    boolean resetTask = perpetualTaskService.resetTask(accountId, taskId, null);
+
+    PerpetualTaskRecord record = perpetualTaskService.getTaskRecord(taskId);
+
+    assertThat(record).isNotNull();
+    assertThat(record.getState()).isEqualTo(PerpetualTaskState.TASK_UNASSIGNED.name());
+    assertThat(resetTask).isTrue();
+    assertThat(record.getClientContext()).isNotNull();
   }
 
   @Test
@@ -204,12 +297,52 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     assertThat(testBroadcastAggregateSet).size().isEqualTo(2);
   }
 
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testPerpetualTaskContext() {
+    PerpetualTaskClientContext clientContext = clientContext();
+    PerpetualTaskRecord perpetualTaskRecord = PerpetualTaskRecord.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
+                                                  .clientContext(clientContext())
+                                                  .delegateId(DELEGATE_ID)
+                                                  .intervalSeconds(1L)
+                                                  .timeoutMillis(2L)
+                                                  .build();
+    perpetualTaskRecord.setClientContext(clientContext);
+
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
+                                         .setInterval(Durations.fromSeconds(perpetualTaskRecord.getIntervalSeconds()))
+                                         .setTimeout(Durations.fromMillis(perpetualTaskRecord.getTimeoutMillis()))
+                                         .build();
+
+    Message perpetualTaskParams = AbortTaskRequest.newBuilder().build();
+    when(client.getTaskParams(clientContext)).thenReturn(perpetualTaskParams);
+
+    String taskId = perpetualTaskRecordDao.save(perpetualTaskRecord);
+
+    PerpetualTaskExecutionContext perpetualTaskContext = perpetualTaskService.perpetualTaskContext(taskId);
+
+    PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
+
+    assertThat(task).isNotNull();
+    assertThat(perpetualTaskContext).isNotNull();
+    assertThat(task.getUuid()).isEqualTo(taskId);
+    assertThat(perpetualTaskContext.getTaskSchedule()).isEqualTo(schedule);
+  }
+
   public PerpetualTaskClientContext clientContext() {
     Map<String, String> clientParamMap = new HashMap<>();
     clientParamMap.put(REGION, REGION);
     clientParamMap.put(SETTING_ID, SETTING_ID);
     clientParamMap.put(CLUSTER_NAME, CLUSTER_NAME);
     return PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
+  }
+
+  public PerpetualTaskClientContext clientContextWithTaskParams() {
+    byte[] taskParameters = new byte[] {1, 2, 3, 4};
+    return PerpetualTaskClientContext.builder().executionBundle(taskParameters).build();
   }
 
   public PerpetualTaskSchedule perpetualTaskSchedule() {

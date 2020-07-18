@@ -8,7 +8,7 @@ public interface PerpetualTaskService {
   String createTask(String perpetualTaskType, String accountId, PerpetualTaskClientContext clientContext,
       PerpetualTaskSchedule schedule, boolean allowDuplicate);
 
-  boolean resetTask(String accountId, String taskId);
+  boolean resetTask(String accountId, String taskId, PerpetualTaskExecutionBundle taskExecutionBundle);
 
   boolean deleteTask(String accountId, String taskId);
 

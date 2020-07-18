@@ -124,7 +124,7 @@ public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
         BuildSourceExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
     artifactCollectionResponseHandler.processArtifactCollectionResult(
         ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
-    verify(perpetualTaskService, never()).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
+    verify(perpetualTaskService, never()).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID, null);
   }
 
   @Test
@@ -139,7 +139,7 @@ public class ArtifactCollectionResponseHandlerTest extends CategoryTest {
     ARTIFACT_STREAM.setFailedCronAttempts(3499);
     artifactCollectionResponseHandler.processArtifactCollectionResult(
         ACCOUNT_ID, PERPETUAL_TASK_ID, buildSourceExecutionResponse);
-    verify(perpetualTaskService, times(1)).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID);
+    verify(perpetualTaskService, times(1)).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID, null);
     verify(alertService, times(1)).openAlert(eq(ACCOUNT_ID), any(), eq(AlertType.ARTIFACT_COLLECTION_FAILED), any());
   }
 

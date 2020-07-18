@@ -3,6 +3,7 @@ package io.harness.perpetualtask.internal;
 import com.google.inject.Inject;
 
 import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -37,14 +38,24 @@ public class PerpetualTaskRecordDao {
     persistence.updateField(PerpetualTaskRecord.class, taskId, PerpetualTaskRecordKeys.state, state);
   }
 
-  public boolean resetDelegateIdForTask(String accountId, String taskId) {
+  public boolean resetDelegateIdForTask(
+      String accountId, String taskId, String state, PerpetualTaskExecutionBundle taskExecutionBundle) {
     Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
                                            .filter(PerpetualTaskRecordKeys.accountId, accountId)
                                            .filter(PerpetualTaskRecordKeys.uuid, taskId);
+
     UpdateOperations<PerpetualTaskRecord> updateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.delegateId, "")
+            .set(PerpetualTaskRecordKeys.state, state)
             .unset(PerpetualTaskRecordKeys.assignerIterations);
+
+    if (taskExecutionBundle != null) {
+      updateOperations.set(PerpetualTaskRecordKeys.task_parameters, taskExecutionBundle.toByteArray());
+    } else {
+      updateOperations.unset(PerpetualTaskRecordKeys.task_parameters);
+    }
+
     UpdateResults update = persistence.update(query, updateOperations);
     return update.getUpdatedCount() > 0;
   }
@@ -79,15 +90,20 @@ public class PerpetualTaskRecordDao {
 
   public Optional<PerpetualTaskRecord> getExistingPerpetualTask(
       String accountId, String perpetualTaskType, PerpetualTaskClientContext clientContext) {
-    PerpetualTaskRecord perpetualTaskRecord = persistence.createQuery(PerpetualTaskRecord.class)
-                                                  .field(PerpetualTaskRecordKeys.accountId)
-                                                  .equal(accountId)
-                                                  .field(PerpetualTaskRecordKeys.perpetualTaskType)
-                                                  .equal(perpetualTaskType)
-                                                  .field(PerpetualTaskRecordKeys.client_params)
-                                                  .equal(clientContext.getClientParams())
-                                                  .get();
-    return Optional.ofNullable(perpetualTaskRecord);
+    Query<PerpetualTaskRecord> perpetualTaskRecordQuery = persistence.createQuery(PerpetualTaskRecord.class)
+                                                              .field(PerpetualTaskRecordKeys.accountId)
+                                                              .equal(accountId)
+                                                              .field(PerpetualTaskRecordKeys.perpetualTaskType)
+                                                              .equal(perpetualTaskType);
+
+    if (clientContext.getClientParams() != null) {
+      perpetualTaskRecordQuery.field(PerpetualTaskRecordKeys.client_params).equal(clientContext.getClientParams());
+    }
+    if (clientContext.getExecutionBundle() != null) {
+      perpetualTaskRecordQuery.field(PerpetualTaskRecordKeys.task_parameters).equal(clientContext.getExecutionBundle());
+    }
+
+    return Optional.ofNullable(perpetualTaskRecordQuery.get());
   }
 
   public boolean saveHeartbeat(PerpetualTaskRecord task, long heartbeatMillis) {

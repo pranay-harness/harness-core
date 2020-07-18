@@ -16,7 +16,7 @@ public class PerpetualTaskClientContext {
 
   // Alternatively the caller might provide the task parameters directly to be stored with the task.
   // In this case we are not going to make a request back for them.
-  private byte[] taskParameters;
+  private byte[] executionBundle;
 
   // Last time the context was updated.
   private long lastContextUpdated;

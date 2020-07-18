@@ -176,7 +176,7 @@ public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegate
   @Override
   public void resetRemotePerpetualTask(
       ResetRemotePerpetualTaskRequest request, StreamObserver<ResetRemotePerpetualTaskResponse> responseObserver) {
-    final boolean success = perpetualTaskService.resetTask(request.getAccountId(), request.getPerpetualTaskId());
+    final boolean success = perpetualTaskService.resetTask(request.getAccountId(), request.getPerpetualTaskId(), null);
 
     responseObserver.onNext(ResetRemotePerpetualTaskResponse.newBuilder().setSuccess(success).build());
     responseObserver.onCompleted();

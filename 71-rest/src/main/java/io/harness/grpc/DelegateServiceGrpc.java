@@ -200,7 +200,7 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
     if (request.getContext().hasTaskClientParams()) {
       contextBuilder.clientParams(request.getContext().getTaskClientParams().getParamsMap());
     } else if (request.getContext().hasExecutionBundle()) {
-      contextBuilder.taskParameters(request.getContext().toByteArray());
+      contextBuilder.executionBundle(request.getContext().toByteArray());
     }
 
     if (request.getContext().getLastContextUpdated() != null) {
@@ -228,7 +228,8 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
   @Override
   public void resetPerpetualTask(
       ResetPerpetualTaskRequest request, StreamObserver<ResetPerpetualTaskResponse> responseObserver) {
-    perpetualTaskService.resetTask(request.getAccountId().getId(), request.getPerpetualTaskId().getId());
+    perpetualTaskService.resetTask(
+        request.getAccountId().getId(), request.getPerpetualTaskId().getId(), request.getTaskExecutionBundle());
 
     responseObserver.onNext(ResetPerpetualTaskResponse.newBuilder().build());
     responseObserver.onCompleted();

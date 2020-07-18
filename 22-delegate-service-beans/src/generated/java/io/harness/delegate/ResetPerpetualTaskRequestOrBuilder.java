@@ -36,4 +36,22 @@ public interface ResetPerpetualTaskRequestOrBuilder extends
    * <code>.io.harness.perpetualtask.PerpetualTaskId perpetual_task_id = 2[json_name = "perpetualTaskId"];</code>
    */
   io.harness.perpetualtask.PerpetualTaskIdOrBuilder getPerpetualTaskIdOrBuilder();
+
+  /**
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+   * "taskExecutionBundle"];</code>
+   * @return Whether the taskExecutionBundle field is set.
+   */
+  boolean hasTaskExecutionBundle();
+  /**
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+   * "taskExecutionBundle"];</code>
+   * @return The taskExecutionBundle.
+   */
+  io.harness.perpetualtask.PerpetualTaskExecutionBundle getTaskExecutionBundle();
+  /**
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+   * "taskExecutionBundle"];</code>
+   */
+  io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder getTaskExecutionBundleOrBuilder();
 }
