@@ -92,26 +92,31 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         PipelineStageElement.builder().disableAssertion(disableAssertion).build();
     boolean skipAlways = pipelineStageElement.checkDisableAssertion();
     Map<String, Object> properties = new HashMap<>();
-    Map<String, String> workflowVariables = new LinkedHashMap<>();
+    Map<String, String> workflowVariablesPse = new LinkedHashMap<>();
     Workflow workflow;
     if (!yaml.getType().equals(StateType.APPROVAL.name())) {
       workflow = workflowService.readWorkflowByName(appId, yaml.getWorkflowName());
       notNullCheck("Invalid workflow with the given name:" + yaml.getWorkflowName(), workflow, USER);
       properties.put("workflowId", workflow.getUuid());
 
-      String envId = resolveEnvironmentId(yaml, appId, properties, workflowVariables, workflow, skipAlways);
-
-      if (isNotEmpty(yaml.getWorkflowVariables())) {
-        yaml.getWorkflowVariables().forEach((PipelineStage.WorkflowVariable variable) -> {
-          String entityType = variable.getEntityType();
+      String envId = resolveEnvironmentId(yaml, appId, properties, workflow);
+      List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+      if (isNotEmpty(yaml.getWorkflowVariables()) && isNotEmpty(workflowVariables)) {
+        for (WorkflowVariable variable : yaml.getWorkflowVariables()) {
           String variableName = variable.getName();
+          Variable variableOrg =
+              workflowVariables.stream().filter(t -> t.getName().equals(variableName)).findFirst().orElse(null);
+          if (variableOrg == null) {
+            continue;
+          }
+          String entityType = variable.getEntityType();
           String variableValue = variable.getValue();
           String workflowVariableValueForBean = workflowYAMLHelper.getWorkflowVariableValueBean(
-              change.getAccountId(), envId, appId, entityType, variableValue, skipAlways);
+              change.getAccountId(), envId, appId, entityType, variableValue, skipAlways, variableOrg);
           if (workflowVariableValueForBean != null) {
-            workflowVariables.put(variableName, workflowVariableValueForBean);
+            workflowVariablesPse.put(variableName, workflowVariableValueForBean);
           }
-        });
+        }
       }
       logger.info("The pipeline env stage properties for appId {} wrokflowId {} are {}", appId, workflow.getUuid(),
           String.valueOf(properties));
@@ -136,7 +141,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
                                .name(yaml.getName())
                                .type(yaml.getType())
                                .properties(properties)
-                               .workflowVariables(workflowVariables)
+                               .workflowVariables(workflowVariablesPse)
                                .build();
 
     stage.setPipelineStageElements(Lists.newArrayList(pipelineStageElement));
@@ -163,8 +168,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     }
   }
 
-  private String resolveEnvironmentId(Yaml yaml, String appId, Map<String, Object> properties,
-      Map<String, String> workflowVariables, Workflow workflow, boolean skipEmpty) {
+  private String resolveEnvironmentId(Yaml yaml, String appId, Map<String, Object> properties, Workflow workflow) {
     String envId = null;
 
     if (workflow.checkEnvironmentTemplatized()) {

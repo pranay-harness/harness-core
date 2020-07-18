@@ -5,16 +5,18 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.NameAccess;
 import io.harness.persistence.UuidAccess;
 import org.jetbrains.annotations.Nullable;
 import software.wings.beans.EntityType;
-import software.wings.beans.security.UserGroup;
+import software.wings.beans.Variable;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
@@ -25,7 +27,6 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @OwnedBy(CDC)
@@ -39,32 +40,52 @@ public class WorkflowYAMLHelper {
   @Inject SettingsService settingsService;
   @Inject UserGroupService userGroupService;
 
-  public String getWorkflowVariableValueBean(
-      String accountId, String envId, String appId, String entityType, String variableValue, boolean skipEmpty) {
+  public String getWorkflowVariableValueBean(String accountId, String envId, String appId, String entityType,
+      String variableValue, boolean skipEmpty, Variable variable) {
     if (entityType == null || (skipEmpty && isEmpty(variableValue)) || matchesVariablePattern(variableValue)) {
       return variableValue;
     }
     EntityType entityTypeEnum = EntityType.valueOf(entityType);
-    List<String> values = new ArrayList<>();
+    if (entityTypeEnum != variable.obtainEntityType()) {
+      throw new InvalidRequestException(
+          format("Cannot change Entity type from YAML for variable: %s original EntityType is %s", variable.getName(),
+              variable.obtainEntityType()));
+    }
+
+    if (variableValue.contains(",")) {
+      return handleMultipleValuesBean(accountId, envId, appId, variableValue, variable);
+    }
+
+    UuidAccess uuidAccess = getUuidAccess(accountId, envId, appId, variableValue, variable.obtainEntityType());
+    if (uuidAccess != null) {
+      return uuidAccess.getUuid();
+    } else {
+      return variableValue;
+    }
+  }
+
+  private String handleMultipleValuesBean(
+      String accountId, String envId, String appId, String variableValue, Variable variable) {
+    if (!variable.isAllowMultipleValues()) {
+      throw new InvalidRequestException(format("Variable %s doesnt allow multiple values", variable.getName()));
+    }
+
     List<String> returnValues = new ArrayList<>();
-
-    String valuesArray[] = variableValue.split(",");
-    values = Arrays.asList(valuesArray);
-
-    for (String str : values) {
-      UuidAccess uuidAccess = getUuidAccess(accountId, envId, appId, str, entityTypeEnum);
+    String[] values = variableValue.trim().split("\\s*,\\s*");
+    for (String value : values) {
+      UuidAccess uuidAccess = getUuidAccess(accountId, envId, appId, value, variable.obtainEntityType());
       if (uuidAccess != null) {
         returnValues.add(uuidAccess.getUuid());
       } else {
-        return variableValue;
+        returnValues.add(value);
       }
     }
     return String.join(",", returnValues);
   }
 
   public String getWorkflowVariableValueBean(
-      String accountId, String envId, String appId, String entityType, String variableValue) {
-    return getWorkflowVariableValueBean(accountId, envId, appId, entityType, variableValue, false);
+      String accountId, String envId, String appId, String entityType, String variableValue, Variable variable) {
+    return getWorkflowVariableValueBean(accountId, envId, appId, entityType, variableValue, false, variable);
   }
 
   public String getWorkflowVariableValueYaml(
@@ -73,29 +94,29 @@ public class WorkflowYAMLHelper {
       return entryValue;
     }
 
-    List<String> userGroupValueName = new ArrayList<>();
-    if (entityType.equals(EntityType.USER_GROUP)) {
-      List<String> values = new ArrayList<>();
-      String valuesArray[] = entryValue.split(",");
-      values = Arrays.asList(valuesArray);
-      for (String value : values) {
-        UserGroup userGroup = userGroupService.get(value);
-        String name = userGroup.getName();
-        if (name != null) {
-          userGroupValueName.add(name);
-        } else {
-          userGroupValueName.add(entryValue);
-        }
-      }
-      return String.join("\n", userGroupValueName);
+    if (entryValue.contains(",")) {
+      return handleMultipleValues(appId, entryValue, entityType);
     }
-
     NameAccess x = getNameAccess(appId, entryValue, entityType);
     if (x != null) {
       return x.getName();
     } else {
       return entryValue;
     }
+  }
+
+  private String handleMultipleValues(String appId, String entryValue, EntityType entityType) {
+    String[] values = entryValue.trim().split("\\s*,\\s*");
+    List<String> nameValues = new ArrayList<>();
+    for (String value : values) {
+      NameAccess x = getNameAccess(appId, value, entityType);
+      if (x != null) {
+        nameValues.add(x.getName());
+      } else {
+        nameValues.add(value);
+      }
+    }
+    return String.join(",", nameValues);
   }
 
   public String getWorkflowVariableValueYaml(String appId, String entryValue, EntityType entityType) {
@@ -120,6 +141,8 @@ public class WorkflowYAMLHelper {
       case GCP_CONFIG:
       case GIT_CONFIG:
         return settingsService.get(entryValue);
+      case USER_GROUP:
+        return userGroupService.get(entryValue);
       default:
         return null;
     }

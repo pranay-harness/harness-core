@@ -1575,8 +1575,12 @@ public class PipelineServiceTest extends WingsBaseTest {
 
   private PipelineStage prepareStageApproval() {
     return PipelineStage.builder()
-        .pipelineStageElements(Collections.singletonList(
-            PipelineStageElement.builder().name("STAGE1").type(APPROVAL.name()).disable(false).build()))
+        .pipelineStageElements(Collections.singletonList(PipelineStageElement.builder()
+                                                             .name("STAGE1")
+                                                             .type(APPROVAL.name())
+                                                             .properties(new HashMap<>())
+                                                             .disable(false)
+                                                             .build()))
         .build();
   }
 }

@@ -334,7 +334,7 @@ public class PipelineExecutionController {
       InfrastructureDefinition infrastructureDefinition =
           infrastructureDefinitionService.getInfraDefByName(appId, envIdForInfra, val);
       notNullCheck(
-          "Infrastructure Definition  [" + value + "] doesn't exist in specified application and environment " + appId,
+          "Infrastructure Definition  [" + val + "] doesn't exist in specified application and environment " + appId,
           infrastructureDefinition, USER);
       infraValues.add(infrastructureDefinition.getUuid());
     }

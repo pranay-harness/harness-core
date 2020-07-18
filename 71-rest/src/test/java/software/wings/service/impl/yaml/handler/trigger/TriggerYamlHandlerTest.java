@@ -353,6 +353,7 @@ public class TriggerYamlHandlerTest extends BaseYamlHandlerTest {
   @Category(UnitTests.class)
   public void testCrudTrigger8() throws IOException {
     Workflow workflow = aWorkflow().uuid("workflow-id").name("w1").build();
+    workflow.setOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build());
     doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
     doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
     testCRUD(validTriggerFiles.Trigger8, TriggerConditionType.NEW_ARTIFACT, WorkflowType.ORCHESTRATION);

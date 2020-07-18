@@ -19,6 +19,7 @@ public enum VariableDisplayType {
   CF_AWS_CONFIG_ID("AWS Cloud Provider"),
   SS_SSH_CONNECTION_ATTRIBUTE("SSH Connection Attribute"),
   SS_WINRM_CONNECTION_ATTRIBUTE("WinRM Connection Attribute"),
+  USER_GROUP("User Group"),
   HELM_GIT_CONFIG_ID("Helm Git Connector Id");
 
   public String getDisplayName() {
