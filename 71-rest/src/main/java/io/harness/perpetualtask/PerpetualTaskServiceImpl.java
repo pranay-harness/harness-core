@@ -6,6 +6,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.Durations;
 
@@ -37,8 +38,8 @@ import java.util.stream.Collectors;
 public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   private Set<Pair<String, String>> broadcastAggregateSet = new ConcurrentHashSet<>();
 
-  private final PerpetualTaskRecordDao perpetualTaskRecordDao;
-  private final PerpetualTaskServiceClientRegistry clientRegistry;
+  private PerpetualTaskRecordDao perpetualTaskRecordDao;
+  private PerpetualTaskServiceClientRegistry clientRegistry;
   private final BroadcasterFactory broadcasterFactory;
 
   @Inject
@@ -106,11 +107,10 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   @Override
-  public boolean resetTask(String accountId, String taskId) {
+  public boolean resetTask(String accountId, String taskId, PerpetualTaskExecutionBundle taskExecutionBundle) {
     logger.info("Resetting the perpetual task with id={}.", taskId);
-    // TODO: this should be a single call to the DB
-    perpetualTaskRecordDao.setTaskState(taskId, PerpetualTaskState.TASK_UNASSIGNED.name());
-    return perpetualTaskRecordDao.resetDelegateIdForTask(accountId, taskId);
+    return perpetualTaskRecordDao.resetDelegateIdForTask(
+        accountId, taskId, PerpetualTaskState.TASK_UNASSIGNED.name(), taskExecutionBundle);
   }
 
   @Override
@@ -170,8 +170,22 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
   }
 
   private PerpetualTaskExecutionParams getTaskParams(PerpetualTaskRecord perpetualTaskRecord) {
-    PerpetualTaskServiceClient client = clientRegistry.getClient(perpetualTaskRecord.getPerpetualTaskType());
-    Message perpetualTaskParams = client.getTaskParams(perpetualTaskRecord.getClientContext());
+    Message perpetualTaskParams = null;
+
+    if (perpetualTaskRecord.getClientContext().getClientParams() != null) {
+      PerpetualTaskServiceClient client = clientRegistry.getClient(perpetualTaskRecord.getPerpetualTaskType());
+      perpetualTaskParams = client.getTaskParams(perpetualTaskRecord.getClientContext());
+    } else {
+      PerpetualTaskExecutionBundle perpetualTaskExecutionBundle = null;
+      try {
+        perpetualTaskExecutionBundle =
+            PerpetualTaskExecutionBundle.parseFrom(perpetualTaskRecord.getClientContext().getExecutionBundle());
+      } catch (InvalidProtocolBufferException e) {
+        logger.error("Failed to parse perpetual task execution bundle from task parameters", e);
+        return null;
+      }
+      perpetualTaskParams = perpetualTaskExecutionBundle.getTaskParams();
+    }
     return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(perpetualTaskParams)).build();
   }
 

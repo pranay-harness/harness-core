@@ -52,7 +52,7 @@ public class SamplePTaskServiceImpl implements SamplePTaskService {
   @Override
   public boolean update(String accountId, String taskId, String countryName, int population) {
     countryMap.put(countryName, population);
-    perpetualTaskService.resetTask(accountId, taskId);
+    perpetualTaskService.resetTask(accountId, taskId, null);
     return true;
   }
 

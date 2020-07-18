@@ -148,7 +148,7 @@ public class ArtifactCollectionResponseHandler {
   private void onFailure(String perpetualTaskId, ArtifactStream artifactStream) {
     int failedCronAttempts = artifactStream.getFailedCronAttempts() + 1;
     if (failedCronAttempts % 25 == 0) {
-      perpetualTaskService.resetTask(artifactStream.getAccountId(), perpetualTaskId);
+      perpetualTaskService.resetTask(artifactStream.getAccountId(), perpetualTaskId, null);
     }
 
     artifactStreamService.updateFailedCronAttempts(

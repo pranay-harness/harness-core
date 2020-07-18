@@ -82,11 +82,11 @@ public class ArtifactStreamPTaskManagerTest extends CategoryTest {
     ArtifactStream artifactStream = prepareArtifactStream();
     artifactStream.setPerpetualTaskId(PERPETUAL_TASK_ID);
     manager.onUpdated(artifactStream);
-    verify(perpetualTaskService, times(1)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(1)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID), eq(null));
 
-    when(perpetualTaskService.resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID)).thenReturn(false);
+    when(perpetualTaskService.resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID, null)).thenReturn(false);
     manager.onUpdated(artifactStream);
-    verify(perpetualTaskService, times(2)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(2)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID), eq(null));
   }
 
   @Test

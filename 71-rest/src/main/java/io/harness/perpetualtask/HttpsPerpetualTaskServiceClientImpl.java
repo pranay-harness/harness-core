@@ -51,9 +51,9 @@ public class HttpsPerpetualTaskServiceClientImpl implements HttpsPerpetualTaskSe
         }
       }
 
-      if (clientContext.getTaskParameters() != null) {
+      if (clientContext.getExecutionBundle() != null) {
         PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
-            PerpetualTaskExecutionBundle.parseFrom(clientContext.getTaskParameters());
+            PerpetualTaskExecutionBundle.parseFrom(clientContext.getExecutionBundle());
         return perpetualTaskExecutionBundle.getTaskParams();
       }
 

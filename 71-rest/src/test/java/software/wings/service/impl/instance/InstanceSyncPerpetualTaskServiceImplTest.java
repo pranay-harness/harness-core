@@ -120,7 +120,7 @@ public class InstanceSyncPerpetualTaskServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void resetPerpetualTask() {
     instanceSyncPerpetualTaskService.resetPerpetualTask(ACCOUNT_ID, PERPETUAL_TASK_ID_1);
-    verify(perpetualTaskService, times(1)).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID_1);
+    verify(perpetualTaskService, times(1)).resetTask(ACCOUNT_ID, PERPETUAL_TASK_ID_1, null);
   }
 
   @Test

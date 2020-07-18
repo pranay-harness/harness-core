@@ -143,35 +143,38 @@ public final class DelegateServiceOuterClass {
         + "gate.AccountIdR\taccountId\022U\n\021perpetual_t"
         + "ask_id\030\002 \001(\0132).io.harness.perpetualtask."
         + "PerpetualTaskIdR\017perpetualTaskId\"\035\n\033Dele"
-        + "tePerpetualTaskResponse\"\261\001\n\031ResetPerpetu"
+        + "tePerpetualTaskResponse\"\235\002\n\031ResetPerpetu"
         + "alTaskRequest\022=\n\naccount_id\030\001 \001(\0132\036.io.h"
         + "arness.delegate.AccountIdR\taccountId\022U\n\021"
         + "perpetual_task_id\030\002 \001(\0132).io.harness.per"
         + "petualtask.PerpetualTaskIdR\017perpetualTas"
-        + "kId\"\034\n\032ResetPerpetualTaskResponse2\214\007\n\017De"
-        + "legateService\022o\n\020RegisterCallback\022,.io.h"
-        + "arness.delegate.RegisterCallbackRequest\032"
-        + "-.io.harness.delegate.RegisterCallbackRe"
-        + "sponse\022]\n\nSubmitTask\022&.io.harness.delega"
-        + "te.SubmitTaskRequest\032\'.io.harness.delega"
-        + "te.SubmitTaskResponse\022]\n\nCancelTask\022&.io"
-        + ".harness.delegate.CancelTaskRequest\032\'.io"
-        + ".harness.delegate.CancelTaskResponse\022c\n\014"
-        + "TaskProgress\022(.io.harness.delegate.TaskP"
-        + "rogressRequest\032).io.harness.delegate.Tas"
-        + "kProgressResponse\022z\n\023TaskProgressUpdates"
-        + "\022/.io.harness.delegate.TaskProgressUpdat"
-        + "esRequest\0320.io.harness.delegate.TaskProg"
-        + "ressUpdatesResponse0\001\022x\n\023CreatePerpetual"
-        + "Task\022/.io.harness.delegate.CreatePerpetu"
-        + "alTaskRequest\0320.io.harness.delegate.Crea"
-        + "tePerpetualTaskResponse\022x\n\023DeletePerpetu"
-        + "alTask\022/.io.harness.delegate.DeletePerpe"
-        + "tualTaskRequest\0320.io.harness.delegate.De"
-        + "letePerpetualTaskResponse\022u\n\022ResetPerpet"
-        + "ualTask\022..io.harness.delegate.ResetPerpe"
-        + "tualTaskRequest\032/.io.harness.delegate.Re"
-        + "setPerpetualTaskResponseB\002P\001b\006proto3"};
+        + "kId\022j\n\025task_execution_bundle\030\003 \001(\01326.io."
+        + "harness.perpetualtask.PerpetualTaskExecu"
+        + "tionBundleR\023taskExecutionBundle\"\034\n\032Reset"
+        + "PerpetualTaskResponse2\214\007\n\017DelegateServic"
+        + "e\022o\n\020RegisterCallback\022,.io.harness.deleg"
+        + "ate.RegisterCallbackRequest\032-.io.harness"
+        + ".delegate.RegisterCallbackResponse\022]\n\nSu"
+        + "bmitTask\022&.io.harness.delegate.SubmitTas"
+        + "kRequest\032\'.io.harness.delegate.SubmitTas"
+        + "kResponse\022]\n\nCancelTask\022&.io.harness.del"
+        + "egate.CancelTaskRequest\032\'.io.harness.del"
+        + "egate.CancelTaskResponse\022c\n\014TaskProgress"
+        + "\022(.io.harness.delegate.TaskProgressReque"
+        + "st\032).io.harness.delegate.TaskProgressRes"
+        + "ponse\022z\n\023TaskProgressUpdates\022/.io.harnes"
+        + "s.delegate.TaskProgressUpdatesRequest\0320."
+        + "io.harness.delegate.TaskProgressUpdatesR"
+        + "esponse0\001\022x\n\023CreatePerpetualTask\022/.io.ha"
+        + "rness.delegate.CreatePerpetualTaskReques"
+        + "t\0320.io.harness.delegate.CreatePerpetualT"
+        + "askResponse\022x\n\023DeletePerpetualTask\022/.io."
+        + "harness.delegate.DeletePerpetualTaskRequ"
+        + "est\0320.io.harness.delegate.DeletePerpetua"
+        + "lTaskResponse\022u\n\022ResetPerpetualTask\022..io"
+        + ".harness.delegate.ResetPerpetualTaskRequ"
+        + "est\032/.io.harness.delegate.ResetPerpetual"
+        + "TaskResponseB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             io.harness.delegate.Account.getDescriptor(),
@@ -305,6 +308,7 @@ public final class DelegateServiceOuterClass {
             new java.lang.String[] {
                 "AccountId",
                 "PerpetualTaskId",
+                "TaskExecutionBundle",
             });
     internal_static_io_harness_delegate_ResetPerpetualTaskResponse_descriptor =
         getDescriptor().getMessageTypes().get(15);

@@ -180,7 +180,7 @@ public class CEPerpetualTaskManager {
     // find all the existing perpetual Tasks for these clusters
     List<String> taskIds = Arrays.asList(clusterRecord.getPerpetualTaskIds());
     // reset all the existing perpetual tasks
-    taskIds.forEach(taskId -> perpetualTaskService.resetTask(clusterRecord.getAccountId(), taskId));
+    taskIds.forEach(taskId -> perpetualTaskService.resetTask(clusterRecord.getAccountId(), taskId, null));
   }
 
   // delete all of the perpetual tasks associated with the Cluster

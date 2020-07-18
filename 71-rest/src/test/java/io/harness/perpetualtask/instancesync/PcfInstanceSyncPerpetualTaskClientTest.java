@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
@@ -13,6 +14,7 @@ import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPIN
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -55,7 +57,8 @@ public class PcfInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   public void setUp() throws Exception {
     PcfConfig pcfConfig = PcfConfig.builder().accountId(ACCOUNT_ID).build();
     when(perpetualTaskService.deleteTask(any(), any())).thenReturn(true);
-    when(perpetualTaskService.resetTask(stringCaptor.capture(), any())).thenReturn(true);
+    when(perpetualTaskService.resetTask(stringCaptor.capture(), any(), isNull(PerpetualTaskExecutionBundle.class)))
+        .thenReturn(true);
     when(perpetualTaskService.createTask(any(), anyString(), any(), scheduleArgumentCaptor.capture(), anyBoolean()))
         .thenReturn(TASK_ID);
     when(infraMappingService.get(anyString(), anyString()))

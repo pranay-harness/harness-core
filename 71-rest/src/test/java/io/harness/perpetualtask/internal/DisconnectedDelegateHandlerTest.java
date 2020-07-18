@@ -50,7 +50,7 @@ public class DisconnectedDelegateHandlerTest extends CategoryTest {
                  .build();
     when(delegateDao.get(eq(delegateId))).thenReturn(delegate);
     when(delegateService.checkDelegateConnected(eq(accountId), eq(delegateId))).thenReturn(false);
-    when(perpetualTaskService.resetTask(eq(accountId), eq(delegateId))).thenReturn(true);
+    when(perpetualTaskService.resetTask(eq(accountId), eq(delegateId), eq(null))).thenReturn(true);
   }
 
   @Test
@@ -58,6 +58,6 @@ public class DisconnectedDelegateHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldResetWhenDelegateDisconnected() {
     handler.handle(record);
-    verify(perpetualTaskService).resetTask(eq(accountId), eq(taskId));
+    verify(perpetualTaskService).resetTask(eq(accountId), eq(taskId), eq(null));
   }
 }

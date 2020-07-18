@@ -31,6 +31,7 @@ import io.harness.delegate.TaskProgressUpdatesResponse;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
+import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.serializer.KryoSerializer;
@@ -122,10 +123,14 @@ public class DelegateServiceGrpcClient {
                                  .build());
   }
 
-  public void resetPerpetualTask(AccountId accountId, PerpetualTaskId perpetualTaskId) {
+  public void resetPerpetualTask(
+      AccountId accountId, PerpetualTaskId perpetualTaskId, PerpetualTaskExecutionBundle taskExecutionBundle) {
     delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
-        .resetPerpetualTask(
-            ResetPerpetualTaskRequest.newBuilder().setAccountId(accountId).setPerpetualTaskId(perpetualTaskId).build());
+        .resetPerpetualTask(ResetPerpetualTaskRequest.newBuilder()
+                                .setAccountId(accountId)
+                                .setPerpetualTaskId(perpetualTaskId)
+                                .setTaskExecutionBundle(taskExecutionBundle)
+                                .build());
   }
 
   public DelegateCallbackToken registerCallback(DelegateCallback delegateCallback) {

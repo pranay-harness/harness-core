@@ -61,7 +61,7 @@ public class ArtifactStreamSettingAttributePTaskManager implements SettingAttrib
 
   private void resetPerpetualTask(ArtifactStream artifactStream) {
     if (artifactStream.getPerpetualTaskId() != null) {
-      if (!perpetualTaskService.resetTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId())) {
+      if (!perpetualTaskService.resetTask(artifactStream.getAccountId(), artifactStream.getPerpetualTaskId(), null)) {
         logger.error(
             format("Unable to reset artifact collection perpetual task: %s", artifactStream.getPerpetualTaskId()));
       }

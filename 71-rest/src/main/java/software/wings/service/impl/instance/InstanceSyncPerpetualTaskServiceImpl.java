@@ -110,7 +110,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
 
   @Override
   public void resetPerpetualTask(String accountId, String perpetualTaskId) {
-    perpetualTaskService.resetTask(accountId, perpetualTaskId);
+    perpetualTaskService.resetTask(accountId, perpetualTaskId, null);
   }
 
   private Optional<InstanceSyncPerpetualTaskInfo> getByAccountIdAndInfrastructureMappingId(

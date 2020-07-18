@@ -100,5 +100,6 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
     public static final String client_context_last_updated =
         clientContext + "." + PerpetualTaskClientContextKeys.lastContextUpdated;
     public static final String client_params = clientContext + "." + PerpetualTaskClientContextKeys.clientParams;
+    public static final String task_parameters = clientContext + "." + PerpetualTaskClientContextKeys.executionBundle;
   }
 }

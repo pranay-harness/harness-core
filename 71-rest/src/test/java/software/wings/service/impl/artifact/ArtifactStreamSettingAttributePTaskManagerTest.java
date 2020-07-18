@@ -73,15 +73,15 @@ public class ArtifactStreamSettingAttributePTaskManagerTest extends CategoryTest
 
     disableFeatureFlag();
     manager.onUpdated(settingAttribute, settingAttribute);
-    verify(perpetualTaskService, never()).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, never()).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID), eq(null));
 
     enableFeatureFlag();
     manager.onUpdated(settingAttribute, settingAttribute);
-    verify(perpetualTaskService, times(1)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(1)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID), eq(null));
 
     when(artifactStreamService.listAllBySettingId(SETTING_ID)).thenReturn(Collections.emptyList());
     manager.onUpdated(settingAttribute, settingAttribute);
-    verify(perpetualTaskService, times(1)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
+    verify(perpetualTaskService, times(1)).resetTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID), eq(null));
   }
 
   @Test(expected = Test.None.class)

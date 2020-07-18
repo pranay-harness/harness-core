@@ -101,6 +101,7 @@ message DeletePerpetualTaskResponse {
 message ResetPerpetualTaskRequest {
   AccountId account_id = 1;
   perpetualtask.PerpetualTaskId perpetual_task_id = 2;
+  perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3;
 }
 
 message ResetPerpetualTaskResponse {

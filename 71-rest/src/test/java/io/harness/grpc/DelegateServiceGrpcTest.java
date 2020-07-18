@@ -42,6 +42,7 @@ import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
+import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -290,8 +291,8 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
   @Category(UnitTests.class)
   public void testResetPerpetualTask() {
     try {
-      delegateServiceGrpcClient.resetPerpetualTask(
-          AccountId.newBuilder().build(), PerpetualTaskId.newBuilder().build());
+      delegateServiceGrpcClient.resetPerpetualTask(AccountId.newBuilder().build(), PerpetualTaskId.getDefaultInstance(),
+          PerpetualTaskExecutionBundle.getDefaultInstance());
     } catch (Exception e) {
       fail("Should not have thrown any exception");
     }

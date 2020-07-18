@@ -173,8 +173,8 @@ public class CEPerpetualTaskManagerTest extends CategoryTest {
     String[] tasks = {podTaskId, nodeTaskId};
     clusterRecord.setPerpetualTaskIds(tasks);
     manager.resetPerpetualTasks(cloudProvider);
-    verify(perpetualTaskService).resetTask(accountId, podTaskId);
-    verify(perpetualTaskService).resetTask(accountId, nodeTaskId);
+    verify(perpetualTaskService).resetTask(accountId, podTaskId, null);
+    verify(perpetualTaskService).resetTask(accountId, nodeTaskId, null);
   }
 
   @Test
@@ -213,8 +213,8 @@ public class CEPerpetualTaskManagerTest extends CategoryTest {
     String[] tasks = {podTaskId, nodeTaskId};
     clusterRecord.setPerpetualTaskIds(tasks);
     manager.resetPerpetualTasks(clusterRecord);
-    verify(perpetualTaskService).resetTask(accountId, podTaskId);
-    verify(perpetualTaskService).resetTask(accountId, nodeTaskId);
+    verify(perpetualTaskService).resetTask(accountId, podTaskId, null);
+    verify(perpetualTaskService).resetTask(accountId, nodeTaskId, null);
   }
 
   @Test

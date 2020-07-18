@@ -71,6 +71,20 @@ public final class ResetPerpetualTaskRequest extends com.google.protobuf.Generat
 
             break;
           }
+          case 26: {
+            io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder subBuilder = null;
+            if (taskExecutionBundle_ != null) {
+              subBuilder = taskExecutionBundle_.toBuilder();
+            }
+            taskExecutionBundle_ =
+                input.readMessage(io.harness.perpetualtask.PerpetualTaskExecutionBundle.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(taskExecutionBundle_);
+              taskExecutionBundle_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -148,6 +162,33 @@ public final class ResetPerpetualTaskRequest extends com.google.protobuf.Generat
     return getPerpetualTaskId();
   }
 
+  public static final int TASK_EXECUTION_BUNDLE_FIELD_NUMBER = 3;
+  private io.harness.perpetualtask.PerpetualTaskExecutionBundle taskExecutionBundle_;
+  /**
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+   * "taskExecutionBundle"];</code>
+   * @return Whether the taskExecutionBundle field is set.
+   */
+  public boolean hasTaskExecutionBundle() {
+    return taskExecutionBundle_ != null;
+  }
+  /**
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+   * "taskExecutionBundle"];</code>
+   * @return The taskExecutionBundle.
+   */
+  public io.harness.perpetualtask.PerpetualTaskExecutionBundle getTaskExecutionBundle() {
+    return taskExecutionBundle_ == null ? io.harness.perpetualtask.PerpetualTaskExecutionBundle.getDefaultInstance()
+                                        : taskExecutionBundle_;
+  }
+  /**
+   * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+   * "taskExecutionBundle"];</code>
+   */
+  public io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder getTaskExecutionBundleOrBuilder() {
+    return getTaskExecutionBundle();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -169,6 +210,9 @@ public final class ResetPerpetualTaskRequest extends com.google.protobuf.Generat
     if (perpetualTaskId_ != null) {
       output.writeMessage(2, getPerpetualTaskId());
     }
+    if (taskExecutionBundle_ != null) {
+      output.writeMessage(3, getTaskExecutionBundle());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -184,6 +228,9 @@ public final class ResetPerpetualTaskRequest extends com.google.protobuf.Generat
     }
     if (perpetualTaskId_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getPerpetualTaskId());
+    }
+    if (taskExecutionBundle_ != null) {
+      size += com.google.protobuf.CodedOutputStream.computeMessageSize(3, getTaskExecutionBundle());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -212,6 +259,12 @@ public final class ResetPerpetualTaskRequest extends com.google.protobuf.Generat
       if (!getPerpetualTaskId().equals(other.getPerpetualTaskId()))
         return false;
     }
+    if (hasTaskExecutionBundle() != other.hasTaskExecutionBundle())
+      return false;
+    if (hasTaskExecutionBundle()) {
+      if (!getTaskExecutionBundle().equals(other.getTaskExecutionBundle()))
+        return false;
+    }
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -231,6 +284,10 @@ public final class ResetPerpetualTaskRequest extends com.google.protobuf.Generat
     if (hasPerpetualTaskId()) {
       hash = (37 * hash) + PERPETUAL_TASK_ID_FIELD_NUMBER;
       hash = (53 * hash) + getPerpetualTaskId().hashCode();
+    }
+    if (hasTaskExecutionBundle()) {
+      hash = (37 * hash) + TASK_EXECUTION_BUNDLE_FIELD_NUMBER;
+      hash = (53 * hash) + getTaskExecutionBundle().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -357,6 +414,12 @@ public final class ResetPerpetualTaskRequest extends com.google.protobuf.Generat
         perpetualTaskId_ = null;
         perpetualTaskIdBuilder_ = null;
       }
+      if (taskExecutionBundleBuilder_ == null) {
+        taskExecutionBundle_ = null;
+      } else {
+        taskExecutionBundle_ = null;
+        taskExecutionBundleBuilder_ = null;
+      }
       return this;
     }
 
@@ -396,6 +459,11 @@ public final class ResetPerpetualTaskRequest extends com.google.protobuf.Generat
         result.perpetualTaskId_ = perpetualTaskId_;
       } else {
         result.perpetualTaskId_ = perpetualTaskIdBuilder_.build();
+      }
+      if (taskExecutionBundleBuilder_ == null) {
+        result.taskExecutionBundle_ = taskExecutionBundle_;
+      } else {
+        result.taskExecutionBundle_ = taskExecutionBundleBuilder_.build();
       }
       onBuilt();
       return result;
@@ -444,6 +512,9 @@ public final class ResetPerpetualTaskRequest extends com.google.protobuf.Generat
       }
       if (other.hasPerpetualTaskId()) {
         mergePerpetualTaskId(other.getPerpetualTaskId());
+      }
+      if (other.hasTaskExecutionBundle()) {
+        mergeTaskExecutionBundle(other.getTaskExecutionBundle());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -700,6 +771,137 @@ public final class ResetPerpetualTaskRequest extends com.google.protobuf.Generat
         perpetualTaskId_ = null;
       }
       return perpetualTaskIdBuilder_;
+    }
+
+    private io.harness.perpetualtask.PerpetualTaskExecutionBundle taskExecutionBundle_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskExecutionBundle,
+        io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder,
+        io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder> taskExecutionBundleBuilder_;
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+     * "taskExecutionBundle"];</code>
+     * @return Whether the taskExecutionBundle field is set.
+     */
+    public boolean hasTaskExecutionBundle() {
+      return taskExecutionBundleBuilder_ != null || taskExecutionBundle_ != null;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+     * "taskExecutionBundle"];</code>
+     * @return The taskExecutionBundle.
+     */
+    public io.harness.perpetualtask.PerpetualTaskExecutionBundle getTaskExecutionBundle() {
+      if (taskExecutionBundleBuilder_ == null) {
+        return taskExecutionBundle_ == null ? io.harness.perpetualtask.PerpetualTaskExecutionBundle.getDefaultInstance()
+                                            : taskExecutionBundle_;
+      } else {
+        return taskExecutionBundleBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+     * "taskExecutionBundle"];</code>
+     */
+    public Builder setTaskExecutionBundle(io.harness.perpetualtask.PerpetualTaskExecutionBundle value) {
+      if (taskExecutionBundleBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        taskExecutionBundle_ = value;
+        onChanged();
+      } else {
+        taskExecutionBundleBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+     * "taskExecutionBundle"];</code>
+     */
+    public Builder setTaskExecutionBundle(
+        io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder builderForValue) {
+      if (taskExecutionBundleBuilder_ == null) {
+        taskExecutionBundle_ = builderForValue.build();
+        onChanged();
+      } else {
+        taskExecutionBundleBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+     * "taskExecutionBundle"];</code>
+     */
+    public Builder mergeTaskExecutionBundle(io.harness.perpetualtask.PerpetualTaskExecutionBundle value) {
+      if (taskExecutionBundleBuilder_ == null) {
+        if (taskExecutionBundle_ != null) {
+          taskExecutionBundle_ = io.harness.perpetualtask.PerpetualTaskExecutionBundle.newBuilder(taskExecutionBundle_)
+                                     .mergeFrom(value)
+                                     .buildPartial();
+        } else {
+          taskExecutionBundle_ = value;
+        }
+        onChanged();
+      } else {
+        taskExecutionBundleBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+     * "taskExecutionBundle"];</code>
+     */
+    public Builder clearTaskExecutionBundle() {
+      if (taskExecutionBundleBuilder_ == null) {
+        taskExecutionBundle_ = null;
+        onChanged();
+      } else {
+        taskExecutionBundle_ = null;
+        taskExecutionBundleBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+     * "taskExecutionBundle"];</code>
+     */
+    public io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder getTaskExecutionBundleBuilder() {
+      onChanged();
+      return getTaskExecutionBundleFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+     * "taskExecutionBundle"];</code>
+     */
+    public io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder getTaskExecutionBundleOrBuilder() {
+      if (taskExecutionBundleBuilder_ != null) {
+        return taskExecutionBundleBuilder_.getMessageOrBuilder();
+      } else {
+        return taskExecutionBundle_ == null ? io.harness.perpetualtask.PerpetualTaskExecutionBundle.getDefaultInstance()
+                                            : taskExecutionBundle_;
+      }
+    }
+    /**
+     * <code>.io.harness.perpetualtask.PerpetualTaskExecutionBundle task_execution_bundle = 3[json_name =
+     * "taskExecutionBundle"];</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskExecutionBundle,
+        io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder,
+        io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder>
+    getTaskExecutionBundleFieldBuilder() {
+      if (taskExecutionBundleBuilder_ == null) {
+        taskExecutionBundleBuilder_ =
+            new com.google.protobuf.SingleFieldBuilderV3<io.harness.perpetualtask.PerpetualTaskExecutionBundle,
+                io.harness.perpetualtask.PerpetualTaskExecutionBundle.Builder,
+                io.harness.perpetualtask.PerpetualTaskExecutionBundleOrBuilder>(
+                getTaskExecutionBundle(), getParentForChildren(), isClean());
+        taskExecutionBundle_ = null;
+      }
+      return taskExecutionBundleBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

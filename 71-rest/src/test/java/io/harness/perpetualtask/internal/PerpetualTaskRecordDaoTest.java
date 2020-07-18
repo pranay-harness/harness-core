@@ -1,13 +1,18 @@
 package io.harness.perpetualtask.internal;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
+import com.google.protobuf.Any;
 
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskType;
+import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskParams;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,12 +50,50 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
-  public void testResetDelegateIdForTask() {
-    String taskId = perpetualTaskRecordDao.save(getPerpetualTaskRecord());
-    perpetualTaskRecordDao.resetDelegateIdForTask(ACCOUNT_ID, taskId);
+  public void testResetDelegateIdForTaskWithClientParams() {
+    String state = UUIDGenerator.generateUuid();
+
+    PerpetualTaskClientContext clientContext = getClientContext();
+    PerpetualTaskRecord perpetualTaskRecord = getPerpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+
+    String taskId = perpetualTaskRecordDao.save(perpetualTaskRecord);
+    perpetualTaskRecordDao.resetDelegateIdForTask(ACCOUNT_ID, taskId, state, null);
+    PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
+
+    assertThat(task).isNotNull();
+    assertThat(task.getDelegateId()).isEqualTo("");
+    assertThat(task.getClientContext()).isEqualTo(clientContext);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testResetDelegateIdForTaskWithTaskParams() {
+    String state = UUIDGenerator.generateUuid();
+
+    PerpetualTaskClientContext clientContext = getClientContextWithTaskParams();
+    PerpetualTaskRecord perpetualTaskRecord = getPerpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+
+    String taskId = perpetualTaskRecordDao.save(perpetualTaskRecord);
+
+    perpetualTaskRecordDao.resetDelegateIdForTask(ACCOUNT_ID, taskId, state, null);
     PerpetualTaskRecord task = perpetualTaskRecordDao.getTask(taskId);
     assertThat(task).isNotNull();
     assertThat(task.getDelegateId()).isEqualTo("");
+    assertThat(task.getClientContext().getExecutionBundle()).isNull();
+
+    PerpetualTaskExecutionBundle executionBundle =
+        PerpetualTaskExecutionBundle.newBuilder()
+            .setTaskParams(Any.pack(AwsSshInstanceSyncPerpetualTaskParams.getDefaultInstance()))
+            .build();
+    perpetualTaskRecordDao.resetDelegateIdForTask(ACCOUNT_ID, taskId, state, executionBundle);
+
+    task = perpetualTaskRecordDao.getTask(taskId);
+    assertThat(task).isNotNull();
+    assertThat(task.getDelegateId()).isEqualTo("");
+    assertThat(task.getClientContext().getExecutionBundle()).isEqualTo(executionBundle.toByteArray());
   }
 
   @Test
@@ -93,18 +136,35 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = HITESH)
+  @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void testGetExistingPerpetualTask() {
-    PerpetualTaskClientContext clientContext = getClientContext();
+  public void testGetExistingPerpetualTaskWithTaskParams() {
+    PerpetualTaskClientContext clientContext = getClientContextWithTaskParams();
     PerpetualTaskRecord perpetualTaskRecord = getPerpetualTaskRecord();
     perpetualTaskRecord.setClientContext(clientContext);
-    String taskId = perpetualTaskRecordDao.save(perpetualTaskRecord);
+    perpetualTaskRecordDao.save(perpetualTaskRecord);
     Optional<PerpetualTaskRecord> existingPerpetualTask =
         perpetualTaskRecordDao.getExistingPerpetualTask(ACCOUNT_ID, PerpetualTaskType.K8S_WATCH, clientContext);
     PerpetualTaskRecord savedPerpetualTaskRecord = existingPerpetualTask.get();
     assertThat(savedPerpetualTaskRecord).isNotNull();
-    assertThat(savedPerpetualTaskRecord.getClientContext()).isEqualTo(clientContext);
+    assertThat(savedPerpetualTaskRecord.getClientContext().getExecutionBundle())
+        .isEqualTo(clientContext.getExecutionBundle());
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
+  public void testGetExistingPerpetualTaskWithClientParams() {
+    PerpetualTaskClientContext clientContext = getClientContext();
+    PerpetualTaskRecord perpetualTaskRecord = getPerpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+    perpetualTaskRecordDao.save(perpetualTaskRecord);
+    Optional<PerpetualTaskRecord> existingPerpetualTask =
+        perpetualTaskRecordDao.getExistingPerpetualTask(ACCOUNT_ID, PerpetualTaskType.K8S_WATCH, clientContext);
+    PerpetualTaskRecord savedPerpetualTaskRecord = existingPerpetualTask.get();
+    assertThat(savedPerpetualTaskRecord).isNotNull();
+    assertThat(savedPerpetualTaskRecord.getClientContext().getClientParams())
+        .isEqualTo(clientContext.getClientParams());
   }
 
   public PerpetualTaskClientContext getClientContext() {
@@ -113,6 +173,11 @@ public class PerpetualTaskRecordDaoTest extends WingsBaseTest {
     clientParamMap.put(CLUSTER_ID, CLUSTER_ID);
     clientParamMap.put(CLUSTER_NAME, CLUSTER_NAME);
     return PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
+  }
+
+  public PerpetualTaskClientContext getClientContextWithTaskParams() {
+    byte[] taskParameters = new byte[] {1, 2, 3, 4};
+    return PerpetualTaskClientContext.builder().executionBundle(taskParameters).build();
   }
 
   public PerpetualTaskRecord getPerpetualTaskRecord() {
