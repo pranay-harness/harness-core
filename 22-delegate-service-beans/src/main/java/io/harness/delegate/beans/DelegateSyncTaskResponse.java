@@ -13,7 +13,7 @@ import java.util.Date;
 
 @Value
 @Builder
-@Entity(value = "delegateSyncTaskResponses", noClassnameStored = true)
+@Entity(value = "!!!custom_delegateSyncTaskResponses", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "DelegateSyncTaskResponseKeys")
 public class DelegateSyncTaskResponse implements PersistentEntity {
   @Id private String uuid;

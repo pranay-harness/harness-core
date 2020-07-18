@@ -1,6 +1,7 @@
 package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
 import com.google.common.collect.ImmutableSet;
@@ -12,6 +13,7 @@ import com.google.inject.name.Named;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
+import io.harness.exception.UnexpectedException;
 import io.harness.govern.DependencyModule;
 import io.harness.logging.MorphiaLoggerFactory;
 import io.harness.mongo.index.migrator.Migrator;
@@ -67,8 +69,14 @@ public class MongoModule extends DependencyModule {
   @Provides
   @Named("primaryDatastore")
   @Singleton
-  public AdvancedDatastore primaryDatastore(
-      MongoConfig mongoConfig, Morphia morphia, ObjectFactory objectFactory, IndexManager indexManager) {
+  public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, @Named("morphiaClasses") Set<Class> classes,
+      Morphia morphia, ObjectFactory objectFactory, IndexManager indexManager) {
+    for (Class clazz : classes) {
+      if (morphia.getMapper().getMCMap().get(clazz.getName()).getCollectionName().startsWith("!!!custom_")) {
+        throw new UnexpectedException(format("The custom collection name for %s is not provided", clazz.getName()));
+      }
+    }
+
     MongoClientOptions primaryMongoClientOptions = MongoClientOptions.builder()
                                                        .retryWrites(defaultMongoClientOptions.getRetryWrites())
                                                        .connectTimeout(mongoConfig.getConnectTimeout())
