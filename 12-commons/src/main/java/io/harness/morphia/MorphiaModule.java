@@ -6,6 +6,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 import io.harness.exception.GeneralException;
 import io.harness.exception.UnexpectedException;
@@ -21,7 +22,10 @@ import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -74,11 +78,30 @@ public class MorphiaModule extends DependencyModule {
 
   @Provides
   @Singleton
-  public Morphia morphia(@Named("morphiaClasses") Set<Class> classes, ObjectFactory objectFactory) {
+  public Morphia morphia(@Named("morphiaClasses") Set<Class> classes,
+      @Named("morphiaClasses") Map<Class, String> customCollectionName, ObjectFactory objectFactory) {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(objectFactory);
     morphia.getMapper().getOptions().setMapSubPackages(true);
-    morphia.map(classes);
+
+    Set<Class> classesCopy = new HashSet<>(classes);
+
+    try {
+      Method method =
+          morphia.getMapper().getClass().getDeclaredMethod("addMappedClass", MappedClass.class, boolean.class);
+      method.setAccessible(true);
+
+      for (Map.Entry<Class, String> entry : customCollectionName.entrySet()) {
+        classesCopy.remove(entry.getKey());
+
+        HMappedClass mappedClass = new HMappedClass(entry.getValue(), entry.getKey(), morphia.getMapper());
+
+        method.invoke(morphia.getMapper(), mappedClass, Boolean.TRUE);
+      }
+    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+      throw new UnexpectedException("We cannot add morphia MappedClass", e);
+    }
+    morphia.map(classesCopy);
     return morphia;
   }
 
@@ -137,6 +160,8 @@ public class MorphiaModule extends DependencyModule {
 
   @Override
   protected void configure() {
+    MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
+
     if (!inSpring) {
       MapBinder<String, TestExecution> testExecutionMapBinder =
           MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
