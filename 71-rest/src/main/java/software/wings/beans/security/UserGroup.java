@@ -15,6 +15,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
+import io.harness.persistence.NameAccess;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -55,7 +56,7 @@ import javax.annotation.Nullable;
 @FieldNameConstants(innerTypeName = "UserGroupKeys")
 @Entity(value = "userGroups", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class UserGroup extends Base implements NotificationReceiverInfo, AccountAccess {
+public class UserGroup extends Base implements NotificationReceiverInfo, AccountAccess, NameAccess {
   public static final String MEMBER_IDS_KEY = "memberIds";
   public static final String NAME_KEY = "name";
   public static final String ACCOUNT_ID_KEY = "accountId";

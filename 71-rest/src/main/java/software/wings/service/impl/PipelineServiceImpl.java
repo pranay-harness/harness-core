@@ -607,12 +607,13 @@ public class PipelineServiceImpl implements PipelineService {
     List<String> infraMappingIds = new ArrayList<>();
     List<String> infraDefinitionIds = new ArrayList<>();
     Set<String> invalidStages = new HashSet<>();
-    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-      validateMultipleValuesAllowed(pipeline, pipelineVariables);
-    }
-
     if (workflowCache == null) {
       workflowCache = new HashMap<>();
+    }
+
+    setSinglePipelineDetails(pipeline, false, workflowCache);
+    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
+      validateMultipleValuesAllowed(pipeline, pipelineVariables);
     }
 
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
@@ -776,6 +777,12 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void setSinglePipelineDetails(Pipeline pipeline, boolean withFinalValuesOnly) {
+    Map<String, Workflow> workflowCache = new HashMap<>();
+    setSinglePipelineDetails(pipeline, withFinalValuesOnly, workflowCache);
+  }
+
+  private void setSinglePipelineDetails(
+      Pipeline pipeline, boolean withFinalValuesOnly, Map<String, Workflow> workflowCache) {
     boolean hasSshInfraMapping = false;
     boolean templatized = false;
     boolean pipelineParameterized = false;
@@ -784,7 +791,6 @@ public class PipelineServiceImpl implements PipelineService {
     List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
     List<Variable> pipelineVariables = new ArrayList<>();
     List<DeploymentType> deploymentTypes = new ArrayList<>();
-    Map<String, Workflow> workflowCache = new HashMap<>();
     for (PipelineStage pipelineStage : pipelineStages) {
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
         if (pse.checkDisableAssertion()) {
