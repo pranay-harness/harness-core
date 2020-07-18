@@ -1,0 +1,17 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "definitions": {
+        "execution": {
+			"type": "object",
+            "properties": {
+				"steps": {
+					"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/execution/steps/steps.json#/definitions/steps"
+				},
+				"rollbackSteps": {
+					"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/execution/steps/steps.json#/definitions/steps"
+				}
+            }
+        }
+    }
+}

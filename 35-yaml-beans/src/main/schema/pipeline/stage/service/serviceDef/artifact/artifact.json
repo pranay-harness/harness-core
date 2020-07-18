@@ -1,0 +1,30 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"definitions": {
+		"artifact": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"enum": [
+						"Dockerhub"
+					]
+				}
+			},
+			"if": {
+				"properties": {
+					"type": {
+						"const": "Dockerhub"
+					}
+				}
+			},
+			"then": {
+				"properties": {
+					"spec": {
+						"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/service/serviceDef/artifact/dockerHub.json#/definitions/dockerHub"
+					}
+				}
+			}
+		}
+	}
+}

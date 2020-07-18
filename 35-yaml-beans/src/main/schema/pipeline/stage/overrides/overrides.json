@@ -1,0 +1,23 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"definitions": {
+		"stageOverrides": {
+			"type": "object",
+			"properties": {
+				"useManifestOverrideSets": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"useArtifactOverrideSets": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	}
+}

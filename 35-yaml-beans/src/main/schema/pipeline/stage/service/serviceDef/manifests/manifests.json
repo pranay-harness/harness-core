@@ -1,0 +1,17 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"definitions": {
+		"manifests": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"manifest": {
+						"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/service/serviceDef/manifests/manifest.json#/definitions/manifest"
+					}
+				}
+			}
+		}
+	}
+}

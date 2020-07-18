@@ -1,0 +1,30 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"definitions": {
+		"serviceDef": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"enum": [
+						"Kubernetes"
+					]
+				}
+			},
+			"if": {
+				"properties": {
+					"type": {
+						"const": "Kubernetes"
+					}
+				}
+			},
+			"then": {
+				"properties": {
+					"spec": {
+						"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/pipeline/stage/service/serviceDef/kubernetes.json#/definitions/kubernetes"
+					}
+				}
+			}
+		}
+	}
+}

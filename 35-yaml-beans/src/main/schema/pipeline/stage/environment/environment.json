@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "definitions": {
+        "environment": {
+			"type": "object",
+            "properties": {
+				"name": {
+					"type": "string"
+				},
+				"identifier": {
+					"type": "string"
+				},
+				"type": {
+					"enum": ["Production", "Non-Production"]
+				},
+				"tags": {
+					"$ref": "/Users/rktummala/IdeaProjects/vscode-yaml/schema/tags/tags.json#/definitions/tags"
+				}
+            }
+        }
+    }
+}
