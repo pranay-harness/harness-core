@@ -9,10 +9,10 @@ import com.google.inject.Inject;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import migrations.Migration;
-import org.mongodb.morphia.query.Query;
 import software.wings.beans.Application;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.GenericEntityFilter;
 import software.wings.service.intfc.UserGroupService;
@@ -42,10 +42,14 @@ public class RemoveDeletedAppIdsFromUserGroups implements Migration {
                                        .map(Application::getAppId)
                                        .collect(Collectors.toSet());
 
-      Query<UserGroup> query = persistence.createQuery(UserGroup.class, excludeAuthority);
-
-      try (HIterator<UserGroup> iterator = new HIterator<>(query.fetch())) {
-        for (UserGroup userGroup : iterator) {
+      try (HIterator<UserGroup> userGroupIterator =
+               new HIterator<>(persistence.createQuery(UserGroup.class, excludeAuthority)
+                                   .project(UserGroup.ID_KEY, true)
+                                   .project(UserGroupKeys.accountId, true)
+                                   .project(UserGroupKeys.appPermissions, true)
+                                   .fetch())) {
+        while (userGroupIterator.hasNext()) {
+          final UserGroup userGroup = userGroupIterator.next();
           Set<String> deletedAppIds = getDeletedAppIds(userGroup, existingAppIds);
           userGroupService.removeAppIdsFromAppPermissions(userGroup, deletedAppIds);
         }

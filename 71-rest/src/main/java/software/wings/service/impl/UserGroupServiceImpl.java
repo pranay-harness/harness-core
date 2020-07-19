@@ -833,6 +833,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     if (isModified) {
+      logger.info("Pruning app ids from user group: " + userGroup.getUuid());
       UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
       setUnset(operations, UserGroupKeys.appPermissions, userGroup.getAppPermissions());
       update(userGroup, operations);
@@ -931,13 +932,19 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public void pruneByApplication(String appId) {
-    List<UserGroup> userGroups = wingsPersistence.createQuery(UserGroup.class, excludeAuthority).asList();
-
     Set<String> deletedIds = new HashSet<>();
     deletedIds.add(appId);
 
-    for (UserGroup userGroup : userGroups) {
-      removeAppIdsFromAppPermissions(userGroup, deletedIds);
+    try (HIterator<UserGroup> userGroupIterator =
+             new HIterator<>(wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+                                 .project(UserGroup.ID_KEY, true)
+                                 .project(UserGroupKeys.accountId, true)
+                                 .project(UserGroupKeys.appPermissions, true)
+                                 .fetch())) {
+      while (userGroupIterator.hasNext()) {
+        final UserGroup userGroup = userGroupIterator.next();
+        removeAppIdsFromAppPermissions(userGroup, deletedIds);
+      }
     }
   }
 }
