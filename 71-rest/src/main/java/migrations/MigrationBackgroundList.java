@@ -228,7 +228,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(132, RemoveDuplicateUserGroupNameMigration.class))
         .add(Pair.of(133, MigrateServiceNowCriteriaInPipelines.class))
         .add(Pair.of(134, MigrateServiceNowCriteriaInWorkflows.class))
-        .add(Pair.of(135, RemoveDeletedAppIdsFromUserGroups.class))
+        .add(Pair.of(135, BaseMigration.class))
+        .add(Pair.of(136, RemoveDeletedAppIdsFromUserGroups.class))
         .build();
   }
 }
