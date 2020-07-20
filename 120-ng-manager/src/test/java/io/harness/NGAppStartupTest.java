@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit.DropwizardAppRule;
-import io.harness.category.element.IntegrationTests;
+import io.harness.category.element.UnitTests;
 import io.harness.ng.NextGenApplication;
 import io.harness.ng.NextGenConfiguration;
 import io.harness.rule.Owner;
@@ -24,7 +24,7 @@ public class NGAppStartupTest {
 
   @Test
   @Owner(developers = VIKAS)
-  @Category(IntegrationTests.class)
+  @Category(UnitTests.class)
   public void testAppStartup() {
     final Client client = new JerseyClientBuilder().build();
     final Response response =
