@@ -1128,6 +1128,7 @@ public class StateMachineExecutor implements StateInspectionListener {
       childStateExecutionInstance.setParentInstanceId(stateExecutionInstance.getUuid());
       childStateExecutionInstance.setAppId(stateExecutionInstance.getAppId());
       childStateExecutionInstance.setNotifyElements(null);
+
       if (childStateExecutionInstance.getStateName() == null
           && childStateExecutionInstance.getChildStateMachineId() != null) {
         if (sm.getChildStateMachines().get(childStateExecutionInstance.getChildStateMachineId()) == null) {
@@ -1138,12 +1139,18 @@ public class StateMachineExecutor implements StateInspectionListener {
             sm.getChildStateMachines().get(childStateExecutionInstance.getChildStateMachineId()).getInitialStateName();
         childStateExecutionInstance.setDisplayName(initialStateName);
         childStateExecutionInstance.setStateName(initialStateName);
-        childStateExecutionInstance.setSelectionLogsTrackingForTasksEnabled(
-            sm.getChildStateMachines()
-                .get(childStateExecutionInstance.getChildStateMachineId())
-                .getInitialState()
-                .isSelectionLogsTrackingForTasksEnabled());
       }
+
+      if (childStateExecutionInstance.getChildStateMachineId() != null) {
+        StateMachine stateMachine =
+            sm.getChildStateMachines().get(childStateExecutionInstance.getChildStateMachineId());
+        if (stateMachine != null) {
+          State state = stateMachine.getStatesMap().get(childStateExecutionInstance.getStateName());
+          childStateExecutionInstance.setSelectionLogsTrackingForTasksEnabled(
+              state.isSelectionLogsTrackingForTasksEnabled());
+        }
+      }
+
       triggerExecution(sm, childStateExecutionInstance);
     }
   }
