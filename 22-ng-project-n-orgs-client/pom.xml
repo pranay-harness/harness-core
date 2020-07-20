@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>22-ng-project-n-orgs-api</artifactId>
+    <artifactId>22-ng-project-n-orgs-client</artifactId>
     <dependencies>
         <dependency>
             <groupId>io.github.resilience4j</groupId>
@@ -32,7 +32,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-ng-project-n-orgs</artifactId>
+            <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>

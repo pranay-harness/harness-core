@@ -56,12 +56,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>22-ng-project-n-orgs-api</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>22-secret-manager-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

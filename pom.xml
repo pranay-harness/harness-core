@@ -21,7 +21,7 @@
         <module>22-delegate-service-beans</module>
         <module>22-ng-delegate-service-beans</module>
         <module>22-ng-project-n-orgs</module>
-        <module>22-ng-project-n-orgs-api</module>
+        <module>22-ng-project-n-orgs-client</module>
         <module>22-secret-manager-client</module>
         <module>22-wait-engine</module>
         <module>23-delegate-service-driver</module>
