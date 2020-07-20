@@ -19,7 +19,6 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
-import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagType;
@@ -105,8 +104,8 @@ public class ExecutionQueryHelper {
 
       if (filter.getStatus() != null) {
         field = query.field(WorkflowExecutionKeys.status);
-        QLStringFilter stringFilter = filter.getStatus();
-        utils.setStringFilter(field, stringFilter);
+        QLIdFilter idFilter = filter.getStatus();
+        utils.setIdFilter(field, idFilter);
       }
 
       if (filter.getTrigger() != null) {
@@ -127,9 +126,9 @@ public class ExecutionQueryHelper {
         utils.setTimeFilter(field, timeFilter);
       }
 
-      if (filter.getPipelineExecution() != null) {
+      if (filter.getPipelineExecutionId() != null) {
         field = query.field(WorkflowExecutionKeys.pipelineExecutionId);
-        QLIdFilter idFilter = filter.getPipelineExecution();
+        QLIdFilter idFilter = filter.getPipelineExecutionId();
         utils.setIdFilter(field, idFilter);
       }
 

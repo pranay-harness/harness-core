@@ -26,6 +26,7 @@ input ExecutionFilter {
   workflow: IdFilter
   pipeline: IdFilter
   creationTime: TimeFilter
+  pipelineExecutionId: IdFilter
   tag: DeploymentTagFilter
 }
 
