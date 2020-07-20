@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.gitsync.common.EntityScope.Scope;
-import io.harness.ng.ProjectAccess;
+import io.harness.ng.core.ProjectAccess;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
