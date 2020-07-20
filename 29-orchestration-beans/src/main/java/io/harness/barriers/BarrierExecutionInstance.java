@@ -37,6 +37,7 @@ public final class BarrierExecutionInstance implements PersistentEntity, UuidAwa
   @NotNull private String identifier;
   @NotNull private String planExecutionId;
   @NotNull private State barrierState;
+  @NotNull private String barrierGroupId;
 
   @Builder.Default private long expiredIn = 600_000; // 10 minutes
 

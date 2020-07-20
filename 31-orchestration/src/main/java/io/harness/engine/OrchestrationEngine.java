@@ -33,7 +33,6 @@ import io.harness.delay.DelayEventHelper;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.advise.AdviseHandler;
 import io.harness.engine.advise.AdviseHandlerFactory;
-import io.harness.engine.barriers.BarrierService;
 import io.harness.engine.executables.ExecutableInvoker;
 import io.harness.engine.executables.ExecutableInvokerFactory;
 import io.harness.engine.executables.InvokerPackage;
@@ -61,7 +60,6 @@ import io.harness.registries.resolver.ResolverRegistry;
 import io.harness.registries.state.StepRegistry;
 import io.harness.resolvers.Resolver;
 import io.harness.state.Step;
-import io.harness.state.core.barrier.BarrierStep;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
@@ -104,7 +102,6 @@ public class OrchestrationEngine {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private InterruptService interruptService;
-  @Inject private BarrierService barrierService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   public void startNodeExecution(String nodeExecutionId) {
@@ -134,10 +131,8 @@ public class OrchestrationEngine {
           ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
       StepParameters resolvedStepParameters =
           (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
-      if (resolvedStepParameters != null) {
-        nodeExecution = Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
-            ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
-      }
+
+      nodeExecution = updateNodeExecution(nodeExecution, resolvedStepParameters);
 
       facilitateExecution(ambiance, nodeExecution, inputPackage);
     } catch (Exception exception) {
@@ -145,14 +140,22 @@ public class OrchestrationEngine {
     }
   }
 
+  private NodeExecution updateNodeExecution(NodeExecution nodeExecution, StepParameters resolvedStepParameters) {
+    return Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
+      if (resolvedStepParameters != null) {
+        setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters);
+        setUnset(
+            ops, NodeExecutionKeys.expiryTs, resolvedStepParameters.timeout().toMillis() + System.currentTimeMillis());
+      } else {
+        setUnset(
+            ops, NodeExecutionKeys.expiryTs, new StepParameters() {}.timeout().toMillis() + System.currentTimeMillis());
+      }
+    }));
+  }
+
   public void triggerExecution(Ambiance ambiance, PlanNode node) {
     // if this node is a barrier, we want to set the same id as in the BarrierExecutionInstance
-    String uuid;
-    if (BarrierStep.STEP_TYPE.getType().equals(node.getStepType().getType())) {
-      uuid = barrierService.findByPlanNodeId(node.getUuid()).getUuid();
-    } else {
-      uuid = generateUuid();
-    }
+    String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (ambiance.obtainCurrentRuntimeId() != null) {
       previousNodeExecution = nodeExecutionService.update(

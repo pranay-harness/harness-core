@@ -21,6 +21,8 @@ import io.harness.state.core.barrier.BarrierStep;
 import io.harness.state.core.barrier.BarrierStepParameters;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -61,7 +63,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   }
 
   private void constructBarriers(PlanExecution planExecution) {
-    barrierService.saveAll(
+    Map<String, List<BarrierExecutionInstance>> barrierIdentifierMap =
         planExecution.getPlan()
             .getNodes()
             .stream()
@@ -76,6 +78,17 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                        .barrierState(State.STANDING)
                        .expiredIn(((BarrierStepParameters) planNode.getStepParameters()).getTimeoutInMillis())
                        .build())
-            .collect(Collectors.toList()));
+            .collect(Collectors.groupingBy(BarrierExecutionInstance::getIdentifier));
+
+    // for each instance with the same identifier we set the barrierGroupId, which will be used with Wait Notify Engine
+    barrierIdentifierMap.forEach((key, value) -> {
+      String barrierGroupId = generateUuid();
+      value.forEach(barrierExecutionInstance -> barrierExecutionInstance.setBarrierGroupId(barrierGroupId));
+    });
+
+    List<BarrierExecutionInstance> barrierExecutionInstances =
+        barrierIdentifierMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+
+    barrierService.saveAll(barrierExecutionInstances);
   }
 }

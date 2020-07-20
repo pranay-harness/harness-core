@@ -16,8 +16,6 @@ import java.util.function.Consumer;
 public interface NodeExecutionService {
   NodeExecution get(String nodeExecutionId);
 
-  List<NodeExecution> findByIdIn(List<String> ids);
-
   List<NodeExecution> fetchNodeExecutions(String planExecutionId);
 
   List<NodeExecution> fetchNodeExecutionsWithoutOldRetries(String planExecutionId);
@@ -41,4 +39,6 @@ public interface NodeExecutionService {
 
   List<NodeExecution> fetchChildrenNodeExecutionsByStatuses(
       String planExecutionId, List<String> parentIds, EnumSet<Status> statuses);
+
+  List<NodeExecution> findBarrierNodesByPlanExecutionIdAndIdentifier(String planExecutionId, String identifier);
 }

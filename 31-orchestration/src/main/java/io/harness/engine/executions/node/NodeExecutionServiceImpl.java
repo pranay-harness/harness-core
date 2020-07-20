@@ -12,9 +12,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.Status;
+import io.harness.state.core.barrier.BarrierStep;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -32,11 +34,6 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   public NodeExecution get(String nodeExecutionId) {
     return nodeExecutionRepository.findById(nodeExecutionId)
         .orElseThrow(() -> new InvalidRequestException("Node Execution is null for id: " + nodeExecutionId));
-  }
-
-  @Override
-  public List<NodeExecution> findByIdIn(List<String> ids) {
-    return (List<NodeExecution>) nodeExecutionRepository.findAllById(ids);
   }
 
   @Override
@@ -83,6 +80,14 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       String planExecutionId, List<String> parentIds, EnumSet<Status> statuses) {
     return nodeExecutionRepository.findByAmbiancePlanExecutionIdAndParentIdInAndStatusIn(
         planExecutionId, parentIds, statuses);
+  }
+
+  @Override
+  public List<NodeExecution> findBarrierNodesByPlanExecutionIdAndIdentifier(String planExecutionId, String identifier) {
+    Query query = query(new Criteria().andOperator(where(NodeExecutionKeys.planExecutionId).is(planExecutionId),
+        where("node.stepType").is(BarrierStep.STEP_TYPE), where("node.stepParameters.identifier").is(identifier)));
+
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override

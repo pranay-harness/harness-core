@@ -7,6 +7,7 @@ import static io.harness.distribution.barrier.Barrier.builder;
 import static io.harness.distribution.barrier.Forcer.State.ABANDONED;
 import static io.harness.distribution.barrier.Forcer.State.APPROACHING;
 import static io.harness.distribution.barrier.Forcer.State.ARRIVED;
+import static io.harness.execution.status.Status.ABORTED;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
@@ -36,8 +37,6 @@ import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.persistence.HPersistence;
 import io.harness.waiter.WaitNotifyEngine;
-import lombok.Builder;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -47,7 +46,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -55,7 +53,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   private static final String LEVEL = "level";
   private static final String PLAN = "plan";
   private static final String STEP = "step";
-  private static final String BARRIER_NODE_IDS = "barrierNodeIds";
+  private static final String BARRIER_NODES_SIZE = "barrierNodesSize";
+  private static final String BARRIER = "barrier";
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private BarrierNodeRepository barrierNodeRepository;
@@ -109,7 +108,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
   @Override
   public BarrierExecutionInstance findByPlanNodeId(String planNodeId) {
-    return barrierNodeRepository.findByPlanNodeId(planNodeId);
+    return barrierNodeRepository.findByPlanNodeId(planNodeId)
+        .orElseThrow(() -> new InvalidRequestException("Barrier not found for planNodeId: " + planNodeId));
   }
 
   @Override
@@ -127,15 +127,16 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       case STANDING:
         return barrierExecutionInstance;
       case DOWN:
+        logger.info("The barrier [{}] was done with", barrierExecutionInstance.getUuid());
         waitNotifyEngine.doneWith(
-            barrierExecutionInstance.getIdentifier(), BarrierResponseData.builder().failed(false).build());
+            barrierExecutionInstance.getBarrierGroupId(), BarrierResponseData.builder().failed(false).build());
         break;
       case ENDURE:
-        waitNotifyEngine.doneWith(barrierExecutionInstance.getIdentifier(),
+        waitNotifyEngine.doneWith(barrierExecutionInstance.getBarrierGroupId(),
             BarrierResponseData.builder().failed(true).errorMessage("The barrier was abandoned").build());
         break;
       case TIMED_OUT:
-        waitNotifyEngine.doneWith(barrierExecutionInstance.getIdentifier(),
+        waitNotifyEngine.doneWith(barrierExecutionInstance.getBarrierGroupId(),
             BarrierResponseData.builder().failed(true).errorMessage("The barrier timed out").build());
         break;
       default:
@@ -162,12 +163,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
         .metadata(ImmutableMap.of(LEVEL, PLAN))
         .children(Collections.singletonList(Forcer.builder()
                                                 .id(new ForcerId(barrierExecutionInstance.getUuid()))
-                                                .metadata(ImmutableMap.of(LEVEL, STEP, BARRIER_NODE_IDS,
-                                                    BarrierNodeId.builder()
-                                                        .barrierNodeIds(barrierInstances.stream()
-                                                                            .map(BarrierExecutionInstance::getUuid)
-                                                                            .collect(Collectors.toList()))
-                                                        .build()))
+                                                .metadata(ImmutableMap.of(LEVEL, STEP, BARRIER_NODES_SIZE,
+                                                    barrierInstances.size(), BARRIER, barrierExecutionInstance))
                                                 .build()))
         .build();
   }
@@ -175,32 +172,43 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Override
   public Forcer.State getForcerState(ForcerId forcerId, Map<String, Object> metadata) {
     if (PLAN.equals(metadata.get(LEVEL))) {
-      PlanExecution planExecution = planExecutionService.get(forcerId.getValue());
-
-      if (planExecution == null) {
+      PlanExecution planExecution;
+      try {
+        planExecution = planExecutionService.get(forcerId.getValue());
+      } catch (InvalidRequestException e) {
+        logger.error("Plan Execution was not found. State set to APPROACHING", e);
         return APPROACHING;
       }
 
       if (Status.positiveStatuses().contains(planExecution.getStatus())) {
         return ARRIVED;
-      } else if (Status.brokeStatuses().contains(planExecution.getStatus())) {
+      } else if (Status.brokeStatuses().contains(planExecution.getStatus()) || planExecution.getStatus() == ABORTED) {
         return ABANDONED;
       }
     } else {
-      List<String> barrierNodeIds = ((BarrierNodeId) metadata.get(BARRIER_NODE_IDS)).getBarrierNodeIds();
-      List<NodeExecution> nodeExecutions = nodeExecutionService.findByIdIn(barrierNodeIds);
+      int barrierExecutionInstancesSize = (Integer) metadata.get(BARRIER_NODES_SIZE);
+
+      BarrierExecutionInstance barrierExecutionInstance = (BarrierExecutionInstance) metadata.get(BARRIER);
+      List<NodeExecution> nodeExecutions = nodeExecutionService.findBarrierNodesByPlanExecutionIdAndIdentifier(
+          barrierExecutionInstance.getPlanExecutionId(), barrierExecutionInstance.getIdentifier());
+
       if (nodeExecutions.stream().anyMatch(node -> node.getStatus() == Status.SUCCEEDED)) {
+        logger.info("Barrier {} is down because the node is Succeeded {}", forcerId.getValue(), nodeExecutions);
         return ARRIVED;
       }
       if (nodeExecutions.stream().anyMatch(
-              node -> node.getStatus() == Status.ABORTED || node.getStatus() == Status.DISCONTINUING)) {
+              node -> node.getStatus() == ABORTED || node.getStatus() == Status.DISCONTINUING)) {
+        logger.info("Barrier {} was aborted", forcerId.getValue());
         return ABANDONED;
       }
-      if (barrierNodeIds.size() == nodeExecutions.size()
+      if (barrierExecutionInstancesSize == nodeExecutions.size()
           && nodeExecutions.stream().allMatch(node -> node.getStatus() == Status.ASYNC_WAITING)) {
+        logger.info(
+            "Barrier {} is down because all barriers are in the ASYNC_WAITING {}", forcerId.getValue(), nodeExecutions);
         return ARRIVED;
       }
       if (nodeExecutions.stream().anyMatch(node -> System.currentTimeMillis() > node.getExpiryTs())) {
+        logger.info("Barrier {} was timed out", forcerId.getValue());
         return Forcer.State.TIMED_OUT;
       }
       if (nodeExecutions.stream().anyMatch(node -> node.getStatus() == Status.FAILED)) {
@@ -209,11 +217,5 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     }
 
     return APPROACHING;
-  }
-
-  @Value
-  @Builder
-  private static class BarrierNodeId {
-    List<String> barrierNodeIds;
   }
 }

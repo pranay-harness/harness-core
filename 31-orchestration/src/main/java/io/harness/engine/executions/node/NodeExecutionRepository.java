@@ -6,6 +6,7 @@ import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
+import io.harness.state.StepType;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.EnumSet;
@@ -27,4 +28,7 @@ public interface NodeExecutionRepository extends CrudRepository<NodeExecution, S
 
   List<NodeExecution> findByAmbiancePlanExecutionIdAndParentIdInAndStatusIn(
       String planExecutionId, List<String> parentIds, EnumSet<Status> statuses);
+
+  List<NodeExecution> findByAmbiancePlanExecutionIdAndNodeStepTypeAndNodeIdentifier(
+      String planExecutionId, StepType stepType, String identifier);
 }
