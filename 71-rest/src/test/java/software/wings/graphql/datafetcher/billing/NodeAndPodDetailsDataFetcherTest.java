@@ -76,8 +76,8 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
   private static final String INSTANCE_NAME = "instanceName";
   private static final Instant USAGE_START_TIME = Instant.now();
   private static final Instant USAGE_STOP_TIME = Instant.now();
-  private static final double CPU_UNITS = 4014;
-  private static final double MEMORY_MB = 12401;
+  private static final double CPU_UNITS = 4096;
+  private static final double MEMORY_MB = 8192;
   private static final String INSTANCE_CATEGORY = "instance_category";
   private static final String OPERATING_SYSTEM = "operating_system";
   private static final String INSTANCE_TYPE_NODE = "K8S_NODE";
@@ -156,11 +156,11 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getIdleCost()).isEqualTo(3.0);
     assertThat(data.getData().get(0).getUnallocatedCost()).isEqualTo(4.0);
     assertThat(data.getData().get(0).getNetworkCost()).isEqualTo(3.0);
-    assertThat(data.getData().get(0).getCpuAllocatable()).isEqualTo(CPU_UNITS);
-    assertThat(data.getData().get(0).getMemoryAllocatable()).isEqualTo(MEMORY_MB);
+    assertThat(data.getData().get(0).getCpuAllocatable()).isEqualTo(CPU_UNITS / 1024);
+    assertThat(data.getData().get(0).getMemoryAllocatable()).isEqualTo(MEMORY_MB / 1024);
     assertThat(data.getData().get(0).getMachineType()).isEqualTo("linux");
     assertThat(data.getData().get(0).getInstanceCategory()).isEqualTo("SPOT");
-    assertThat(data.getData().get(0).getCpuAllocatable()).isEqualTo(CPU_UNITS);
+    assertThat(data.getData().get(0).getCpuAllocatable()).isEqualTo(CPU_UNITS / 1024);
     assertThat(data.getData().get(0).getCreateTime()).isEqualTo(USAGE_START_TIME.toEpochMilli());
   }
 
@@ -190,9 +190,9 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
     assertThat(data.getData().get(0).getIdleCost()).isEqualTo(3.0);
     assertThat(data.getData().get(0).getUnallocatedCost()).isEqualTo(4.0);
-    assertThat(data.getData().get(0).getCpuRequested()).isEqualTo(CPU_UNITS);
-    assertThat(data.getData().get(0).getMemoryRequested()).isEqualTo(MEMORY_MB);
-    assertThat(data.getData().get(0).getCpuRequested()).isEqualTo(CPU_UNITS);
+    assertThat(data.getData().get(0).getCpuRequested()).isEqualTo(CPU_UNITS / 1024);
+    assertThat(data.getData().get(0).getMemoryRequested()).isEqualTo(MEMORY_MB / 1024);
+    assertThat(data.getData().get(0).getCpuRequested()).isEqualTo(CPU_UNITS / 1024);
     assertThat(data.getData().get(0).getCreateTime()).isEqualTo(USAGE_START_TIME.toEpochMilli());
   }
 

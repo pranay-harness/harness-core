@@ -205,8 +205,8 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
           .systemCost(costDataEntry.getSystemCost())
           .unallocatedCost(costDataEntry.getUnallocatedCost())
           .networkCost(costDataEntry.getNetworkCost())
-          .cpuAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits()))
-          .memoryAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb()))
+          .cpuAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits() / 1024))
+          .memoryAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb() / 1024))
           .machineType(entry.getMetaData().get(OPERATING_SYSTEM))
           .instanceCategory(entry.getMetaData().get(INSTANCE_CATEGORY))
           .createTime(entry.getUsageStartTime().toEpochMilli());
@@ -241,8 +241,8 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
           .systemCost(costDataEntry.getSystemCost())
           .unallocatedCost(costDataEntry.getUnallocatedCost())
           .networkCost(costDataEntry.getNetworkCost())
-          .cpuRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits()))
-          .memoryRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb()))
+          .cpuRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits() / 1024))
+          .memoryRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb() / 1024))
           .createTime(entry.getUsageStartTime().toEpochMilli());
       if (entry.getUsageStopTime() != null) {
         builder.deleteTime(entry.getUsageStopTime().toEpochMilli());
