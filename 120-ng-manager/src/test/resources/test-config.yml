@@ -1,0 +1,73 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: http
+      port: 7457
+      maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: https
+      port: 7091
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+  requestLog:
+    appenders: []
+  maxThreads: 1024
+
+nextGen:
+  managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+allowedOrigins:
+  - https://localhost:8181
+  - https://127.0.0.1:8181
+  - http://localhost:8000
+  - http://127.0.0.1:8000
+  - https://localhost:8000
+  - https://127.0.0.1:8000
+
+logging:
+  level: INFO
+  loggers:
+    org.glassfish.jersey: WARN
+    allbegray.slack: WARN
+    org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+  appenders:
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+
+mongo:
+  uri: mongodb://localhost:27017/ng-harness
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+
+# [secondary-db]: Uncomment the following if you want to connect to another database
+#secondary-mongo:
+#  uri: mongodb://localhost:27017/cd-nextgen-secondary
+#  connectTimeout: 30000
+#  serverSelectionTimeout: 90000
+#  maxConnectionIdleTime: 600000
+#  connectionsPerHost: 300
+#  indexManagerMode: AUTO
+
+secretManagerClient:
+  baseUrl: http://localhost:3457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+grpcClient:
+  target: localhost:9880
+  authority: localhost
+
+grpcServer:
+  connectors:
+    - port: 9980
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 9979
