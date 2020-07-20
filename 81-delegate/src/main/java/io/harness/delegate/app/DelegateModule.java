@@ -13,6 +13,8 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import io.harness.cdng.connector.impl.KubernetesConnectorDelegateServiceImpl;
 import io.harness.cdng.connector.service.KubernetesConnectorDelegateService;
+import io.harness.cdng.gitclient.GitClientNG;
+import io.harness.cdng.gitclient.GitClientNGImpl;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.message.MessageService;
@@ -653,6 +655,7 @@ public class DelegateModule extends DependencyModule {
     bind(TerraformConfigInspectService.class).toInstance(new TerraformConfigInspectServiceImpl());
     bind(DataCollectionDSLService.class).to(DataCollectionServiceImpl.class);
     bind(KubernetesConnectorDelegateService.class).to(KubernetesConnectorDelegateServiceImpl.class);
+    bind(GitClientNG.class).to(GitClientNGImpl.class);
   }
 
   @Override

@@ -1,15 +1,26 @@
 package io.harness.delegate.beans.connector.gitconnector;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.encryption.Encrypted;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import software.wings.settings.SettingVariableTypes;
 
-@Value
+@Data
 @Builder
-public class GitHTTPAuthenticationDTO implements GitAuthenticationDTO {
-  @JsonProperty("type") GitConnectionType gitType;
+@EqualsAndHashCode(callSuper = true)
+public class GitHTTPAuthenticationDTO extends GitAuthenticationDTO {
+  @JsonProperty("type") GitConnectionType gitConnectionType;
   String url;
   String username;
-  String passwordReference;
+  @Encrypted(fieldName = "password", isReference = true) char[] password;
+  @JsonProperty("passwordReference") String encryptedPassword;
   String branchName;
+  String accountId;
+
+  @Override
+  public SettingVariableTypes getSettingType() {
+    return SettingVariableTypes.GIT_NG;
+  }
 }

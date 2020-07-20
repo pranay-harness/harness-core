@@ -8,11 +8,13 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GitConfigDTO extends ConnectorConfigDTO {

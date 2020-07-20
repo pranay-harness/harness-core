@@ -4,6 +4,8 @@ import io.harness.cdng.artifact.service.ArtifactSourceService;
 import io.harness.cdng.artifact.service.impl.ArtifactSourceServiceImpl;
 import io.harness.cdng.environment.EnvironmentService;
 import io.harness.cdng.environment.EnvironmentServiceImpl;
+import io.harness.cdng.gitclient.GitClientNG;
+import io.harness.cdng.gitclient.GitClientNGImpl;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.service.PipelineService;
@@ -34,5 +36,6 @@ public class NGModule extends DependencyModule {
     bind(EnvironmentService.class).to(EnvironmentServiceImpl.class);
     bind(PipelineService.class).to(PipelineServiceImpl.class);
     bind(NgPipelineExecutionService.class).to(NgPipelineExecutionServiceImpl.class);
+    bind(GitClientNG.class).to(GitClientNGImpl.class);
   }
 }

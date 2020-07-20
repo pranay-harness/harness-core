@@ -43,10 +43,10 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfig> {
     UserNamePasswordGitAuthentication userNamePasswordAuth =
         (UserNamePasswordGitAuthentication) gitConfig.getAuthenticationDetails();
     return GitHTTPAuthenticationDTO.builder()
-        .gitType(gitConfig.getConnectionType())
+        .gitConnectionType(gitConfig.getConnectionType())
         .url(gitConfig.getUrl())
         .username(userNamePasswordAuth.getUserName())
-        .passwordReference(userNamePasswordAuth.getPasswordReference())
+        .encryptedPassword(userNamePasswordAuth.getPasswordReference())
         .branchName(gitConfig.getBranchName())
         .build();
   }
@@ -55,9 +55,9 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfig> {
     // todo @deepak: Add the cast checks here
     GitSSHAuthentication gitSSHAuthentication = (GitSSHAuthentication) gitConfig.getAuthenticationDetails();
     return GitSSHAuthenticationDTO.builder()
-        .gitType(gitConfig.getConnectionType())
+        .gitConnectionType(gitConfig.getConnectionType())
         .url(gitConfig.getUrl())
-        .sshKeyReference(gitSSHAuthentication.getSshKeyReference())
+        .encryptedSshKey(gitSSHAuthentication.getSshKeyReference())
         .branchName(gitConfig.getBranchName())
         .build();
   }

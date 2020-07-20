@@ -1,14 +1,25 @@
 package io.harness.delegate.beans.connector.gitconnector;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.encryption.Encrypted;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import software.wings.settings.SettingVariableTypes;
 
-@Value
+@Data
 @Builder
-public class GitSSHAuthenticationDTO implements GitAuthenticationDTO {
-  @JsonProperty("type") GitConnectionType gitType;
+@EqualsAndHashCode(callSuper = true)
+public class GitSSHAuthenticationDTO extends GitAuthenticationDTO {
+  @JsonProperty("type") GitConnectionType gitConnectionType;
   String url;
-  String sshKeyReference;
+  @Encrypted(fieldName = "sshKey", isReference = true) char[] sshKey;
+  @JsonProperty("sshKeyReference") String encryptedSshKey;
   String branchName;
+  String accountId;
+
+  @Override
+  public SettingVariableTypes getSettingType() {
+    return SettingVariableTypes.GIT_NG;
+  }
 }
