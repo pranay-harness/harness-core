@@ -290,7 +290,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     EncryptedData secretByName = secretManager.getSecretByName(accountId, secretName);
     if (secretByName != null) {
       Optional<EncryptedDataDetail> encryptedDataDetail =
-          secretManager.encryptedDataDetails(accountId, secretName, secretByName.getUuid());
+          secretManager.encryptedDataDetails(accountId, secretName, secretByName.getUuid(), null);
       if (encryptedDataDetail.isPresent()) {
         if (secretByName.getType() == CONFIG_FILE) {
           return Optional.of(EncryptedVariableWithType.builder()

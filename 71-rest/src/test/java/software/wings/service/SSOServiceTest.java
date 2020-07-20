@@ -79,9 +79,9 @@ public class SSOServiceTest extends WingsBaseTest {
   public void setup() {
     EncryptedRecordData encryptedData = mock(EncryptedRecordData.class);
     EncryptedDataDetail encryptedDataDetail = mock(EncryptedDataDetail.class);
-    when(SECRET_MANAGER.encryptedDataDetails(eq(ACCOUNT_ID), eq(LdapConstants.BIND_PASSWORD_KEY), any()))
+    when(SECRET_MANAGER.encryptedDataDetails(eq(ACCOUNT_ID), eq(LdapConstants.BIND_PASSWORD_KEY), any(), eq(null)))
         .thenReturn(Optional.of(encryptedDataDetail));
-    when(SECRET_MANAGER.encryptedDataDetails(eq(ACCOUNT_ID), eq(LdapConstants.USER_PASSWORD_KEY), any()))
+    when(SECRET_MANAGER.encryptedDataDetails(eq(ACCOUNT_ID), eq(LdapConstants.USER_PASSWORD_KEY), any(), eq(null)))
         .thenReturn(Optional.of(encryptedDataDetail));
     when(SECRET_MANAGER.deleteSecretUsingUuid(anyString())).thenReturn(true);
     when(encryptedDataDetail.getEncryptedData()).thenReturn(encryptedData);

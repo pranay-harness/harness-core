@@ -178,6 +178,7 @@ import static software.wings.sm.StateType.SCALYR;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.STAGING_ORIGINAL_EXECUTION;
 import static software.wings.sm.StateType.SUB_WORKFLOW;
+import static software.wings.sm.StateType.TEMPLATIZED_SECRET_MANAGER;
 import static software.wings.sm.StateType.WAIT;
 import static software.wings.sm.StepType.APPROVAL;
 import static software.wings.sm.StepType.ARTIFACT_COLLECTION;
@@ -4403,7 +4404,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
               WorkflowCategoryStepsMeta::getStepIds)
-          .contains(tuple(UTILITY.name(), UTILITY.getDisplayName(), asList(SHELL_SCRIPT.name(), HTTP.name())));
+          .contains(tuple(UTILITY.name(), UTILITY.getDisplayName(),
+              asList(SHELL_SCRIPT.name(), HTTP.name(), TEMPLATIZED_SECRET_MANAGER.name())));
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
               WorkflowCategoryStepsMeta::getStepIds)
@@ -4414,7 +4416,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
               WorkflowCategoryStepsMeta::getStepIds)
           .contains(tuple(UTILITY.name(), UTILITY.getDisplayName(),
-              asList(SHELL_SCRIPT.name(), HTTP.name(), NEW_RELIC_DEPLOYMENT_MARKER.name())));
+              asList(SHELL_SCRIPT.name(), HTTP.name(), NEW_RELIC_DEPLOYMENT_MARKER.name(),
+                  StepType.TEMPLATIZED_SECRET_MANAGER.name())));
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
               WorkflowCategoryStepsMeta::getStepIds)
@@ -4425,7 +4428,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
               WorkflowCategoryStepsMeta::getStepIds)
-          .contains(tuple(UTILITY.name(), UTILITY.getDisplayName(), asList(SHELL_SCRIPT.name(), HTTP.name())));
+          .contains(tuple(UTILITY.name(), UTILITY.getDisplayName(),
+              asList(SHELL_SCRIPT.name(), HTTP.name(), TEMPLATIZED_SECRET_MANAGER.name())));
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
               WorkflowCategoryStepsMeta::getStepIds)

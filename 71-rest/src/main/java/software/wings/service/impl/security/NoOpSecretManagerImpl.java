@@ -9,6 +9,7 @@ import lombok.NonNull;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.SecretManagerConfig;
+import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
@@ -90,7 +91,8 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId) {
+  public Optional<EncryptedDataDetail> encryptedDataDetails(
+      String accountId, String fieldName, String refId, String workflowExecutionId) {
     throw new UnsupportedOperationException();
   }
 
@@ -305,6 +307,18 @@ public class NoOpSecretManagerImpl implements SecretManager {
   @Override
   public void clearDefaultFlagOfSecretManagers(String accountId) {
     // NoOp Function
+  }
+
+  @Override
+  public SecretManagerRuntimeParameters configureSecretManagerRuntimeCredentialsForExecution(
+      String accountId, String kmsId, String executionId, Map<String, String> runtimeParameters) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Optional<SecretManagerRuntimeParameters> getSecretManagerRuntimeCredentialsForExecution(
+      String executionId, String secretManagerId) {
+    throw new UnsupportedOperationException();
   }
 
   @Override

@@ -73,7 +73,8 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
 
   public EncryptedDataDetail getEncryptedDataDetails(SecretManager secretManager) {
     return secretManager
-        .encryptedDataDetails(accountId, LdapConstants.BIND_PASSWORD_KEY, connectionSettings.getEncryptedBindPassword())
+        .encryptedDataDetails(
+            accountId, LdapConstants.BIND_PASSWORD_KEY, connectionSettings.getEncryptedBindPassword(), null)
         .get();
   }
 

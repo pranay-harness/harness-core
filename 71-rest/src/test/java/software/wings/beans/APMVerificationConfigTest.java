@@ -202,7 +202,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
     apmVerificationConfig.encryptFields(secretManager, false);
 
-    when(secretManager.encryptedDataDetails("111", "api_key", "xyz"))
+    when(secretManager.encryptedDataDetails("111", "api_key", "xyz", null))
         .thenReturn(Optional.of(EncryptedDataDetail.builder().fieldName("api_key").build()));
     List<EncryptedDataDetail> encryptedDataDetails = apmVerificationConfig.encryptedDataDetails(secretManager);
     assertThat(encryptedDataDetails).hasSize(1);
@@ -243,7 +243,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     when(secretManager.encrypt("111", "123", null)).thenReturn("xyz");
     apmVerificationConfig.encryptFields(secretManager, false);
 
-    when(secretManager.encryptedDataDetails("111", "api_key", "xyz"))
+    when(secretManager.encryptedDataDetails("111", "api_key", "xyz", null))
         .thenReturn(Optional.of(EncryptedDataDetail.builder().fieldName("api_key").build()));
     List<EncryptedDataDetail> encryptedDataDetails = apmVerificationConfig.encryptedDataDetails(secretManager);
     assertThat(encryptedDataDetails).hasSize(1);
@@ -264,7 +264,7 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     Optional<EncryptedDataDetail> encryptedDataDetail =
         Optional.of(EncryptedDataDetail.builder().fieldName("api_key_2").build());
 
-    when(secretManager.encryptedDataDetails("111", "api_key_2", "abc")).thenReturn(encryptedDataDetail);
+    when(secretManager.encryptedDataDetails("111", "api_key_2", "abc", null)).thenReturn(encryptedDataDetail);
     when(encryptionService.getDecryptedValue(encryptedDataDetail.get())).thenReturn("abc".toCharArray());
     apmVerificationConfig.setHeadersList(headers);
     apmVerificationConfig.setAccountId("111");
@@ -297,8 +297,9 @@ public class APMVerificationConfigTest extends WingsBaseTest {
     Optional<EncryptedDataDetail> optionEncryptedDataDetail =
         Optional.of(EncryptedDataDetail.builder().fieldName("option_key_2").build());
 
-    when(secretManager.encryptedDataDetails("111", "api_key", headerSecretRef)).thenReturn(headerEncryptedDataDetail);
-    when(secretManager.encryptedDataDetails("111", "option_key", optionSecretRef))
+    when(secretManager.encryptedDataDetails("111", "api_key", headerSecretRef, null))
+        .thenReturn(headerEncryptedDataDetail);
+    when(secretManager.encryptedDataDetails("111", "option_key", optionSecretRef, null))
         .thenReturn(optionEncryptedDataDetail);
     when(encryptionService.getDecryptedValue(headerEncryptedDataDetail.get()))
         .thenReturn("decryptedHeader".toCharArray());

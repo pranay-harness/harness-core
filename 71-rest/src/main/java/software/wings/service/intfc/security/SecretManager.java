@@ -9,6 +9,7 @@ import io.harness.stream.BoundedInputStream;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.SecretManagerConfig;
+import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
@@ -67,7 +68,8 @@ public interface SecretManager extends OwnedByAccount {
   EncryptedData encrypt(String accountId, SettingVariableTypes settingType, char[] secret, EncryptedData encryptedData,
       SecretText secretText);
 
-  Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId);
+  Optional<EncryptedDataDetail> encryptedDataDetails(
+      String accountId, String fieldName, String refId, String workflowExecutionId);
 
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object);
 
@@ -179,4 +181,10 @@ public interface SecretManager extends OwnedByAccount {
         .base64Encoded(encryptedData.isBase64Encoded())
         .build();
   }
+
+  SecretManagerRuntimeParameters configureSecretManagerRuntimeCredentialsForExecution(
+      String accountId, String kmsId, String executionId, Map<String, String> runtimeParameters);
+
+  Optional<SecretManagerRuntimeParameters> getSecretManagerRuntimeCredentialsForExecution(
+      String executionId, String secretManagerId);
 }

@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface RuntimeCredentialsInjector {
   Optional<SecretManagerConfig> updateRuntimeCredentials(
-      SecretManagerConfig secretManagerConfig, Map<String, String> runtimeParameters);
+      SecretManagerConfig secretManagerConfig, Map<String, String> runtimeParameters, boolean shouldUpdateVaultConfig);
 }

@@ -70,7 +70,7 @@ public class LdapBasedAuthHandler implements AuthHandler {
       EncryptedDataDetail settingsEncryptedDataDetail = settings.getEncryptedDataDetails(secretManager);
       String encryptedPassword = secretManager.encrypt(settings.getAccountId(), password, null);
       EncryptedDataDetail passwordEncryptedDataDetail =
-          secretManager.encryptedDataDetails(settings.getAccountId(), "password", encryptedPassword).get();
+          secretManager.encryptedDataDetails(settings.getAccountId(), "password", encryptedPassword, null).get();
       try {
         SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                               .accountId(settings.getAccountId())
