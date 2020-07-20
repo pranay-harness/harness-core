@@ -100,6 +100,7 @@ import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.SkipStateExecutionData;
 import software.wings.api.SplunkStateExecutionData;
+import software.wings.api.TemplatizedSecretManagerStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
@@ -1738,5 +1739,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EncryptedVariableWithType.class, 7454);
     kryo.register(EncryptedVariableWithType.Type.class, 7455);
     kryo.register(ContainerSecrets.class, 7456);
+    kryo.register(TemplatizedSecretManagerStateExecutionData.class, 7457);
   }
 }

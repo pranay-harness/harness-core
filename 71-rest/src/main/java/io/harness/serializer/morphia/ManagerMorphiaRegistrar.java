@@ -259,6 +259,7 @@ import software.wings.beans.RollingOrchestrationWorkflow;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.ScalyrConfig;
 import software.wings.beans.Schema;
+import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceNowConfig;
@@ -695,6 +696,7 @@ import software.wings.sm.states.StackDriverState;
 import software.wings.sm.states.StagingOriginalExecution;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
+import software.wings.sm.states.TemplatizedSecretManagerState;
 import software.wings.sm.states.WaitState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
@@ -1059,6 +1061,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(YamlHistory.class);
     set.add(YamlSuccessfulChange.class);
     set.add(YamlVersion.class);
+    set.add(SecretManagerRuntimeParameters.class);
   }
 
   @Override
@@ -1553,6 +1556,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.StagingOriginalExecution", StagingOriginalExecution.class);
     w.put("sm.states.SubWorkflowState", SubWorkflowState.class);
     w.put("sm.states.SumoLogicAnalysisState", SumoLogicAnalysisState.class);
+    w.put("sm.states.TemplatizedSecretManagerState", TemplatizedSecretManagerState.class);
     w.put("sm.states.WaitState", WaitState.class);
     w.put("sm.WorkflowStandardParams", WorkflowStandardParams.class);
     w.put("verification.apm.APMCVServiceConfiguration", APMCVServiceConfiguration.class);

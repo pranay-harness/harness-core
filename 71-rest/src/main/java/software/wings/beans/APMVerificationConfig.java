@@ -126,7 +126,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
         for (KeyValues keyValue : headersList) {
           if (enabledConnectorsRefSecrets && keyValue.encrypted) {
             final Optional<EncryptedDataDetail> encryptedDataDetail =
-                secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.value);
+                secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.value, null);
             if (!encryptedDataDetail.isPresent()) {
               throw new IllegalStateException("could not find record " + keyValue.value + " for " + keyValue.key);
             }
@@ -134,7 +134,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
           } else if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
             headers.put(keyValue.getKey(),
                 new String(encryptionService.getDecryptedValue(
-                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue).get())));
+                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue, null).get())));
           } else {
             headers.put(keyValue.getKey(), keyValue.getValue());
           }
@@ -146,7 +146,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
         for (KeyValues keyValue : optionsList) {
           if (enabledConnectorsRefSecrets && keyValue.encrypted) {
             final Optional<EncryptedDataDetail> encryptedDataDetail =
-                secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.value);
+                secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.value, null);
             if (!encryptedDataDetail.isPresent()) {
               throw new IllegalStateException("could not find record " + keyValue.value + " for " + keyValue.key);
             }
@@ -154,7 +154,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
           } else if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
             options.put(keyValue.getKey(),
                 new String(encryptionService.getDecryptedValue(
-                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue).get())));
+                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue, null).get())));
           } else {
             options.put(keyValue.getKey(), keyValue.getValue());
           }
@@ -226,7 +226,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
               keyValue.stream()
                   .filter(entry -> entry.encrypted)
                   .map(entry
-                      -> secretManager.encryptedDataDetails(accountId, entry.key, entry.encryptedValue)
+                      -> secretManager.encryptedDataDetails(accountId, entry.key, entry.encryptedValue, null)
                              .<WingsException>orElseThrow(
                                  ()
                                      -> new VerificationOperationException(
@@ -245,7 +245,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
           headersList.stream()
               .filter(entry -> entry.encrypted)
               .map(entry
-                  -> secretManager.encryptedDataDetails(accountId, entry.key, entry.encryptedValue)
+                  -> secretManager.encryptedDataDetails(accountId, entry.key, entry.encryptedValue, null)
                          .<WingsException>orElseThrow(
                              ()
                                  -> new VerificationOperationException(
@@ -257,7 +257,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
           optionsList.stream()
               .filter(entry -> entry.encrypted)
               .map(entry
-                  -> secretManager.encryptedDataDetails(accountId, entry.key, entry.encryptedValue)
+                  -> secretManager.encryptedDataDetails(accountId, entry.key, entry.encryptedValue, null)
                          .<WingsException>orElseThrow(
                              ()
                                  -> new VerificationOperationException(

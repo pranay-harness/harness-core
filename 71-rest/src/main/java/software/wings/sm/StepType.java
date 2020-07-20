@@ -186,6 +186,7 @@ import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.StackDriverLogState;
 import software.wings.sm.states.StackDriverState;
 import software.wings.sm.states.SumoLogicAnalysisState;
+import software.wings.sm.states.TemplatizedSecretManagerState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
 import software.wings.sm.states.k8s.K8sApplyState;
@@ -574,6 +575,10 @@ public enum StepType {
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, WorkflowServiceHelper.NEW_RELIC_DEPLOYMENT_MARKER,
       asList(UTILITY), asList(VERIFY_SERVICE, K8S_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+
+  TEMPLATIZED_SECRET_MANAGER(TemplatizedSecretManagerState.class, WorkflowServiceHelper.TEMPLATIZED_SECRET_MANAGER,
+      asList(UTILITY), asList(PhaseStepType.values()), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
 
   // Command

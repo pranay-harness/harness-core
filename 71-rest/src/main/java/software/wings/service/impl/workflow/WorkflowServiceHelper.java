@@ -293,6 +293,7 @@ public class WorkflowServiceHelper {
   public static final String BAMBOO = "Bamboo";
   public static final String SHELL_SCRIPT = "Shell Script";
   public static final String HTTP = "HTTP";
+  public static final String TEMPLATIZED_SECRET_MANAGER = "Templatized Secret Manager";
   public static final String NEW_RELIC_DEPLOYMENT_MARKER = "New Relic Deployment Marker";
   public static final String COMMAND_NAME = "Command";
 

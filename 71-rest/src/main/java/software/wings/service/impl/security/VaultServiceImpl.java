@@ -659,7 +659,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public Optional<SecretManagerConfig> updateRuntimeCredentials(
-      SecretManagerConfig secretManagerConfig, Map<String, String> runtimeParameters) {
+      SecretManagerConfig secretManagerConfig, Map<String, String> runtimeParameters, boolean shouldUpdateVaultConfig) {
     if (isEmpty(secretManagerConfig.getTemplatizedFields()) || isEmpty(runtimeParameters)) {
       return Optional.empty();
     }
@@ -678,7 +678,13 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         vaultConfig.setAuthToken(templatizedFieldValue);
       }
     }
-    updateVaultConfig(vaultConfig.getAccountId(), vaultConfig, false);
+    if (shouldUpdateVaultConfig) {
+      updateVaultConfig(vaultConfig.getAccountId(), vaultConfig, false);
+    } else if (secretManagerConfig.getTemplatizedFields().contains(VaultConfigKeys.appRoleId)
+        || secretManagerConfig.getTemplatizedFields().contains(VaultConfigKeys.secretId)) {
+      VaultAppRoleLoginResult loginResult = appRoleLogin(vaultConfig);
+      vaultConfig.setAuthToken(loginResult.getClientToken());
+    }
     return Optional.of(vaultConfig);
   }
 }

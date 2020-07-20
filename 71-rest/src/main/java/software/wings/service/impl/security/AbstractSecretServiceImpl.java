@@ -51,7 +51,7 @@ public abstract class AbstractSecretServiceImpl {
   @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
   @Inject private AuditServiceHelper auditServiceHelper;
 
-  EncryptedData encryptLocal(char[] value) {
+  static EncryptedData encryptLocal(char[] value) {
     final String encryptionKey = UUID.randomUUID().toString();
     final SimpleEncryption simpleEncryption = new SimpleEncryption(encryptionKey);
     char[] encryptChars = simpleEncryption.encryptChars(value);
@@ -63,7 +63,7 @@ public abstract class AbstractSecretServiceImpl {
         .build();
   }
 
-  char[] decryptLocal(EncryptedData data) {
+  static char[] decryptLocal(EncryptedData data) {
     final SimpleEncryption simpleEncryption = new SimpleEncryption(data.getEncryptionKey());
     return simpleEncryption.decryptChars(data.getEncryptedValue());
   }

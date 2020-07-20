@@ -353,7 +353,7 @@ public class SSOServiceImpl implements SSOService {
     String encryptedPassword = secretManager.encrypt(ldapSettings.getAccountId(), password, null);
     EncryptedDataDetail passwordEncryptedDataDetail =
         secretManager
-            .encryptedDataDetails(ldapSettings.getAccountId(), LdapConstants.USER_PASSWORD_KEY, encryptedPassword)
+            .encryptedDataDetails(ldapSettings.getAccountId(), LdapConstants.USER_PASSWORD_KEY, encryptedPassword, null)
             .get();
     try {
       SyncTaskContext syncTaskContext = SyncTaskContext.builder()

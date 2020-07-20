@@ -511,6 +511,7 @@ searchDistributedLocks {"name": "uuid_1", "background": true} {"uuid": 1}
 secretChangeLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId": 1, "encryptedDataId": 1}
 secretChangeLogs {"name": "appId_1", "background": true} {"appId": 1}
 secretChangeLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
+secretManagerRuntimeParameters {"name": "executionId_1", "background": true} {"executionId": 1}
 secretManagers {"name": "accountId_1", "background": true} {"accountId": 1}
 secretManagers {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretManagers {"name": "nextTokenRenewIteration_1", "background": true} {"nextTokenRenewIteration": 1}

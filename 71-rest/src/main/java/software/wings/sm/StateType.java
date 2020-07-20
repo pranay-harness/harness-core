@@ -176,6 +176,7 @@ import software.wings.sm.states.StackDriverState;
 import software.wings.sm.states.StagingOriginalExecution;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
+import software.wings.sm.states.TemplatizedSecretManagerState;
 import software.wings.sm.states.WaitState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
@@ -272,6 +273,9 @@ public enum StateType implements StateTypeDescriptor {
    * Http state type.
    */
   HTTP(HttpState.class, OTHERS, 2, "HTTP", asList(), ORCHESTRATION_STENCILS, COMMON),
+
+  TEMPLATIZED_SECRET_MANAGER(TemplatizedSecretManagerState.class, OTHERS, 3, "Templatized Secret Manager", asList(),
+      ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Email state type.
