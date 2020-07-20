@@ -23,6 +23,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -40,6 +41,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.stream.BoundedInputStream;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,6 +53,7 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
+import software.wings.api.TerraformPlanParam;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Activity;
@@ -95,6 +98,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.GitUtilsManager;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -118,6 +122,7 @@ public abstract class TerraformProvisionState extends State {
   private static final String WORKSPACE_KEY = "tf_workspace";
   private static final String ENCRYPTED_VARIABLES_KEY = "encrypted_variables";
   private static final String ENCRYPTED_BACKEND_CONFIGS_KEY = "encrypted_backend_configs";
+  private static final String TF_NAME_PREFIX = "tfPlan_%s";
 
   @Inject private transient AppService appService;
   @Inject private transient ActivityService activityService;
@@ -150,6 +155,7 @@ public abstract class TerraformProvisionState extends State {
 
   @Getter @Setter private boolean runPlanOnly;
   @Getter @Setter private boolean inheritApprovedPlan;
+  @Getter @Setter private boolean exportPlanToApplyStep;
   @Getter @Setter private String workspace;
   @Getter @Setter private String delegateTag;
 
@@ -214,6 +220,12 @@ public abstract class TerraformProvisionState extends State {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
 
+    if (exportPlanToApplyStep) {
+      saveTerraformPlanToSecretManager(terraformExecutionData.getTfPlanFile(), context);
+      fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
+          terraformExecutionData.getStateFileId(), null, FileBucket.TERRAFORM_STATE);
+    }
+
     TerraformProvisionInheritPlanElement inheritPlanElement =
         TerraformProvisionInheritPlanElement.builder()
             .entityId(generateEntityId(context, terraformExecutionData.getWorkspace()))
@@ -235,6 +247,59 @@ public abstract class TerraformProvisionState extends State {
         .executionStatus(terraformExecutionData.getExecutionStatus())
         .errorMessage(terraformExecutionData.getErrorMessage())
         .build();
+  }
+
+  private void saveTerraformPlanToSecretManager(byte[] terraformPlan, ExecutionContext context) {
+    // if the plan exists in the secret manager, we need to overwrite it
+    byte[] oldTerraformPLan = getTerraformPlanFromSecretManager(context);
+    if (oldTerraformPLan != null) {
+      deleteTerraformPlanFromSecretManager(context);
+    }
+
+    String planName = String.format(TF_NAME_PREFIX, context.getWorkflowExecutionId());
+
+    String terraformPlanSecretManagerId = secretManager.saveFile(context.getAccountId(), null, planName,
+        terraformPlan.length, null, new BoundedInputStream(new ByteArrayInputStream(terraformPlan)), true);
+
+    sweepingOutputService.save(
+        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+            .name(planName)
+            .value(TerraformPlanParam.builder().terraformPlanSecretManagerId(terraformPlanSecretManagerId).build())
+            .build());
+  }
+
+  @VisibleForTesting
+  byte[] getTerraformPlanFromSecretManager(ExecutionContext context) {
+    String planName = String.format(TF_NAME_PREFIX, context.getWorkflowExecutionId());
+    SweepingOutputInstance sweepingOutputInstance =
+        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(planName).build());
+
+    // if the reference to the plan file exists, use that plan in the apply step
+    if (sweepingOutputInstance != null) {
+      String terraformPlanSecretManagerId =
+          ((TerraformPlanParam) sweepingOutputInstance.getValue()).getTerraformPlanSecretManagerId();
+      return secretManager.getFileContents(context.getAccountId(), terraformPlanSecretManagerId);
+    }
+    return null;
+  }
+
+  @VisibleForTesting
+  void deleteTerraformPlanFromSecretManager(ExecutionContext context) {
+    String planName = String.format(TF_NAME_PREFIX, context.getWorkflowExecutionId());
+    SweepingOutputInstance sweepingOutputInstance =
+        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(planName).build());
+
+    if (sweepingOutputInstance == null) {
+      // we didn't find the plan reference in the sweeping output, there's nothing to delete
+      return;
+    }
+
+    String terraformPlanSecretManagerId =
+        ((TerraformPlanParam) sweepingOutputInstance.getValue()).getTerraformPlanSecretManagerId();
+    secretManager.deleteFile(context.getAccountId(), terraformPlanSecretManagerId);
+
+    // delete the plan reference from sweeping output
+    sweepingOutputService.deleteById(context.getAppId(), sweepingOutputInstance.getUuid());
   }
 
   protected String getMarkerName() {
@@ -262,6 +327,9 @@ public abstract class TerraformProvisionState extends State {
     String activityId = responseEntry.getKey();
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) responseEntry.getValue();
     terraformExecutionData.setActivityId(activityId);
+
+    // delete the plan if it exists
+    deleteTerraformPlanFromSecretManager(context);
 
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     if (!(this instanceof DestroyTerraformProvisionState)) {
@@ -494,6 +562,8 @@ public abstract class TerraformProvisionState extends State {
             .targets(targets)
             .tfVarFiles(element.getTfVarFiles())
             .runPlanOnly(false)
+            .exportPlanToApplyStep(false)
+            .terraformPlan(getTerraformPlanFromSecretManager(context))
             .workspace(workspace)
             .delegateTag(element.getDelegateTag())
             .build();
@@ -689,6 +759,8 @@ public abstract class TerraformProvisionState extends State {
             .encryptedBackendConfigs(encryptedBackendConfigs)
             .targets(targets)
             .runPlanOnly(runPlanOnly)
+            .exportPlanToApplyStep(exportPlanToApplyStep)
+            .terraformPlan(null)
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
             .workspace(workspace)
             .delegateTag(delegateTag)

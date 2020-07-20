@@ -68,6 +68,14 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
   }
 
   @Override
+  public void deleteById(String appId, String uuid) {
+    final Query<SweepingOutputInstance> query = wingsPersistence.createQuery(SweepingOutputInstance.class)
+                                                    .filter(SweepingOutputKeys.appId, appId)
+                                                    .filter(SweepingOutputKeys.uuid, uuid);
+    wingsPersistence.delete(query);
+  }
+
+  @Override
   public void copyOutputsForAnotherWorkflowExecution(
       String appId, String fromWorkflowExecutionId, String toWorkflowExecutionId) {
     if (fromWorkflowExecutionId.equals(toWorkflowExecutionId)) {

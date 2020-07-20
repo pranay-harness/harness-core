@@ -41,6 +41,8 @@ public interface SweepingOutputService {
 
   void cleanForStateExecutionInstance(@NotNull StateExecutionInstance stateExecutionInstance);
 
+  void deleteById(@NotNull String appId, @NotNull String uuid);
+
   List<InstanceDetails> fetchInstanceDetailsFromSweepingOutput(SweepingOutputInquiry inquiry, boolean newInstancesOnly);
 
   List<InstanceElement> fetchInstanceElementsFromSweepingOutput(
