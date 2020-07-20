@@ -10,13 +10,13 @@ import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.client.Config;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.connector.k8Connector.ClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.ServiceAccountDTO;
-import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,7 +36,7 @@ public class KubernetesConnectionDelegateValidationHelperTest extends WingsBaseT
     String masterUrl = "https://abc.com/";
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(KubernetesAuthType.USER_PASSWORD)
-                                              .credentials(UserNamePasswordDTO.builder()
+                                              .credentials(KubernetesUserNamePasswordDTO.builder()
                                                                .username(userName)
                                                                .password(password.toCharArray())
                                                                .cacert(cacert)
@@ -66,7 +66,7 @@ public class KubernetesConnectionDelegateValidationHelperTest extends WingsBaseT
     String masterUrl = "https://abc.com/";
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(CLIENT_KEY_CERT)
-                                              .credentials(ClientKeyCertDTO.builder()
+                                              .credentials(KubernetesClientKeyCertDTO.builder()
                                                                .clientKey(clientKey.toCharArray())
                                                                .clientCert(clientCert.toCharArray())
                                                                .clientKeyPassphrase(clientKeyPhrase.toCharArray())
@@ -96,7 +96,8 @@ public class KubernetesConnectionDelegateValidationHelperTest extends WingsBaseT
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(SERVICE_ACCOUNT)
-            .credentials(ServiceAccountDTO.builder().serviceAccountToken(serviceAccountKey.toCharArray()).build())
+            .credentials(
+                KubernetesServiceAccountDTO.builder().serviceAccountToken(serviceAccountKey.toCharArray()).build())
             .build();
     KubernetesClusterConfigDTO connectorDTOWithServiceAccountCreds =
         KubernetesClusterConfigDTO.builder()

@@ -6,10 +6,9 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@TypeAlias("clientKeyCertK8")
-public class ClientKeyCertK8 implements KubernetesAuth {
-  String clientCert;
-  String clientKey;
-  String clientKeyPassphrase;
-  String clientKeyAlgo;
+@TypeAlias("userNamePasswordK8")
+public class K8sUserNamePassword implements KubernetesAuth {
+  String userName;
+  String password;
+  String cacert;
 }

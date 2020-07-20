@@ -1,4 +1,4 @@
-package io.harness.connector.repositories;
+package io.harness.connector.repositories.base;
 
 import com.google.inject.Inject;
 

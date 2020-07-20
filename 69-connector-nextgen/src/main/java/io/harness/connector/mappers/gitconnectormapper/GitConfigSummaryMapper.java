@@ -1,4 +1,4 @@
-package io.harness.connector.mappers;
+package io.harness.connector.mappers.gitconnectormapper;
 
 import com.google.inject.Singleton;
 

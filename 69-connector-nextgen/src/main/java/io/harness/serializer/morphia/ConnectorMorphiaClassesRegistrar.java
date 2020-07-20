@@ -4,13 +4,13 @@ import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication;
-import io.harness.connector.entities.embedded.kubernetescluster.ClientKeyCertK8;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sClientKeyCert;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sOpenIdConnect;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sServiceAccount;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassword;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
-import io.harness.connector.entities.embedded.kubernetescluster.OpenIdConnectK8;
-import io.harness.connector.entities.embedded.kubernetescluster.ServiceAccountK8;
-import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -28,10 +28,10 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails", KubernetesDelegateDetails.class);
     h.put("connector.entities.embedded.kubernetescluster.KubernetesClusterDetails", KubernetesClusterDetails.class);
-    h.put("connector.entities.embedded.kubernetescluster.ClientKeyCertK8", ClientKeyCertK8.class);
-    h.put("connector.entities.embedded.kubernetescluster.OpenIdConnectK8", OpenIdConnectK8.class);
-    h.put("connector.entities.embedded.kubernetescluster.ServiceAccountK8", ServiceAccountK8.class);
-    h.put("connector.entities.embedded.kubernetescluster.UserNamePasswordK8", UserNamePasswordK8.class);
+    h.put("connector.entities.embedded.kubernetescluster.K8sClientKeyCert", K8sClientKeyCert.class);
+    h.put("connector.entities.embedded.kubernetescluster.K8sOpenIdConnect", K8sOpenIdConnect.class);
+    h.put("connector.entities.embedded.kubernetescluster.K8sServiceAccount", K8sServiceAccount.class);
+    h.put("connector.entities.embedded.kubernetescluster.K8sUserNamePassword", K8sUserNamePassword.class);
     h.put("connector.entities.embedded.gitconnector.GitSSHAuthentication", GitSSHAuthentication.class);
     h.put("connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication",
         UserNamePasswordGitAuthentication.class);

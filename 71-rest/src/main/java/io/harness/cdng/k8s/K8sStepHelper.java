@@ -15,7 +15,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -92,7 +92,7 @@ public class K8sStepHelper {
       case KUBERNETES_CLUSTER:
         KubernetesClusterConfigDTO connectorConfig = (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig();
         KubernetesClusterDetailsDTO config = (KubernetesClusterDetailsDTO) connectorConfig.getConfig();
-        UserNamePasswordDTO auth = (UserNamePasswordDTO) config.getAuth().getCredentials();
+        KubernetesUserNamePasswordDTO auth = (KubernetesUserNamePasswordDTO) config.getAuth().getCredentials();
         KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder()
                                                               .authType(KubernetesClusterAuthType.USER_PASSWORD)
                                                               .masterUrl(config.getMasterUrl())

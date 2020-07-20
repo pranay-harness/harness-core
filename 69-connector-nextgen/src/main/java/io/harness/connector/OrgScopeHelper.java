@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class OrgScopeHelper {
   OrganizationService organizationService;
+
   public Map<String, String> createOrgIdentifierOrgNameMap(List<String> orgIdentifierList) {
     if (isEmpty(orgIdentifierList)) {
       return Collections.emptyMap();

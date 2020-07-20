@@ -9,19 +9,19 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.Connector;
-import io.harness.connector.entities.embedded.kubernetescluster.ClientKeyCertK8;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sClientKeyCert;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sOpenIdConnect;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassword;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
-import io.harness.connector.entities.embedded.kubernetescluster.OpenIdConnectK8;
-import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
-import io.harness.delegate.beans.connector.k8Connector.ClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.OpenIdConnectDTO;
-import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -66,12 +66,12 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     String userName = "userName";
     String password = "password";
     String cacert = "cacert";
-    UserNamePasswordK8 userNamePasswordK8 =
-        UserNamePasswordK8.builder().userName(userName).password(password).cacert(cacert).build();
+    K8sUserNamePassword k8sUserNamePassword =
+        K8sUserNamePassword.builder().userName(userName).password(password).cacert(cacert).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)
-                                                            .auth(userNamePasswordK8)
+                                                            .auth(k8sUserNamePassword)
                                                             .build();
     Connector connector = KubernetesClusterConfig.builder()
                               .credentialType(MANUAL_CREDENTIALS)
@@ -85,10 +85,11 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
-    UserNamePasswordDTO userNamePasswordDTO = (UserNamePasswordDTO) credentialDTO.getAuth().getCredentials();
-    assertThat(userNamePasswordDTO.getUsername()).isEqualTo(userName);
-    assertThat(userNamePasswordDTO.getEncryptedPassword()).isEqualTo(password);
-    assertThat(userNamePasswordDTO.getCacert()).isEqualTo(cacert);
+    KubernetesUserNamePasswordDTO kubernetesUserNamePasswordDTO =
+        (KubernetesUserNamePasswordDTO) credentialDTO.getAuth().getCredentials();
+    assertThat(kubernetesUserNamePasswordDTO.getUsername()).isEqualTo(userName);
+    assertThat(kubernetesUserNamePasswordDTO.getEncryptedPassword()).isEqualTo(password);
+    assertThat(kubernetesUserNamePasswordDTO.getCacert()).isEqualTo(cacert);
   }
 
   @Test
@@ -100,16 +101,16 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     String clientKeyPhrase = "clientKeyPhrase";
     String clientKeyAlgo = "clientKeyAlgo";
     String masterUrl = "https://abc.com";
-    ClientKeyCertK8 clientKeyCertK8 = ClientKeyCertK8.builder()
-                                          .clientKey(clientKey)
-                                          .clientCert(clientCert)
-                                          .clientKeyPassphrase(clientKeyPhrase)
-                                          .clientKeyAlgo(clientKeyAlgo)
-                                          .build();
+    K8sClientKeyCert k8sClientKeyCert = K8sClientKeyCert.builder()
+                                            .clientKey(clientKey)
+                                            .clientCert(clientCert)
+                                            .clientKeyPassphrase(clientKeyPhrase)
+                                            .clientKeyAlgo(clientKeyAlgo)
+                                            .build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterUrl)
                                                             .authType(KubernetesAuthType.CLIENT_KEY_CERT)
-                                                            .auth(clientKeyCertK8)
+                                                            .auth(k8sClientKeyCert)
                                                             .build();
     Connector connector = KubernetesClusterConfig.builder()
                               .credentialType(MANUAL_CREDENTIALS)
@@ -123,11 +124,12 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
-    ClientKeyCertDTO clientKeyCertDTO = (ClientKeyCertDTO) credentialDTO.getAuth().getCredentials();
-    assertThat(clientKeyCertDTO.getEncryptedClientKey()).isEqualTo(clientKey);
-    assertThat(clientKeyCertDTO.getEncryptedClientCert()).isEqualTo(clientCert);
-    assertThat(clientKeyCertDTO.getEncryptedClientKeyPassphrase()).isEqualTo(clientKeyPhrase);
-    assertThat(clientKeyCertDTO.getClientKeyAlgo()).isEqualTo(clientKeyAlgo);
+    KubernetesClientKeyCertDTO kubernetesClientKeyCertDTO =
+        (KubernetesClientKeyCertDTO) credentialDTO.getAuth().getCredentials();
+    assertThat(kubernetesClientKeyCertDTO.getEncryptedClientKey()).isEqualTo(clientKey);
+    assertThat(kubernetesClientKeyCertDTO.getEncryptedClientCert()).isEqualTo(clientCert);
+    assertThat(kubernetesClientKeyCertDTO.getEncryptedClientKeyPassphrase()).isEqualTo(clientKeyPhrase);
+    assertThat(kubernetesClientKeyCertDTO.getClientKeyAlgo()).isEqualTo(clientKeyAlgo);
   }
 
   @Test
@@ -141,18 +143,18 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     String oidcSecret = "encryptedOidcSecret";
     String oidcUsername = "oidcUsername";
     String masterUrl = "https://abc.com";
-    OpenIdConnectK8 openIdConnectK8 = OpenIdConnectK8.builder()
-                                          .oidcClientId(oidClientId)
-                                          .oidcIssuerUrl(oidcIssuerUrl)
-                                          .oidcPassword(oidcPassword)
-                                          .oidcScopes(oidcScopes)
-                                          .oidcSecret(oidcSecret)
-                                          .oidcUsername(oidcUsername)
-                                          .build();
+    K8sOpenIdConnect k8sOpenIdConnect = K8sOpenIdConnect.builder()
+                                            .oidcClientId(oidClientId)
+                                            .oidcIssuerUrl(oidcIssuerUrl)
+                                            .oidcPassword(oidcPassword)
+                                            .oidcScopes(oidcScopes)
+                                            .oidcSecret(oidcSecret)
+                                            .oidcUsername(oidcUsername)
+                                            .build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterUrl)
                                                             .authType(KubernetesAuthType.OPEN_ID_CONNECT)
-                                                            .auth(openIdConnectK8)
+                                                            .auth(k8sOpenIdConnect)
                                                             .build();
     Connector connector = KubernetesClusterConfig.builder()
                               .credentialType(MANUAL_CREDENTIALS)
@@ -166,12 +168,13 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) connectorDTO.getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
-    OpenIdConnectDTO openIdConnectDTO = (OpenIdConnectDTO) credentialDTO.getAuth().getCredentials();
-    assertThat(openIdConnectDTO.getEncryptedOidcClientId()).isEqualTo(oidClientId);
-    assertThat(openIdConnectDTO.getOidcIssuerUrl()).isEqualTo(oidcIssuerUrl);
-    assertThat(openIdConnectDTO.getEncryptedOidcPassword()).isEqualTo(oidcPassword);
-    assertThat(openIdConnectDTO.getOidcScopes()).isEqualTo(oidcScopes);
-    assertThat(openIdConnectDTO.getEncryptedOidcSecret()).isEqualTo(oidcSecret);
-    assertThat(openIdConnectDTO.getOidcUsername()).isEqualTo(oidcUsername);
+    KubernetesOpenIdConnectDTO kubernetesOpenIdConnectDTO =
+        (KubernetesOpenIdConnectDTO) credentialDTO.getAuth().getCredentials();
+    assertThat(kubernetesOpenIdConnectDTO.getEncryptedOidcClientId()).isEqualTo(oidClientId);
+    assertThat(kubernetesOpenIdConnectDTO.getOidcIssuerUrl()).isEqualTo(oidcIssuerUrl);
+    assertThat(kubernetesOpenIdConnectDTO.getEncryptedOidcPassword()).isEqualTo(oidcPassword);
+    assertThat(kubernetesOpenIdConnectDTO.getOidcScopes()).isEqualTo(oidcScopes);
+    assertThat(kubernetesOpenIdConnectDTO.getEncryptedOidcSecret()).isEqualTo(oidcSecret);
+    assertThat(kubernetesOpenIdConnectDTO.getOidcUsername()).isEqualTo(oidcUsername);
   }
 }

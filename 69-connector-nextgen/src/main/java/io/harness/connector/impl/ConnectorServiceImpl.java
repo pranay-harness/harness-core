@@ -16,7 +16,7 @@ import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.mappers.ConnectorSummaryMapper;
-import io.harness.connector.repositories.ConnectorRepository;
+import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;

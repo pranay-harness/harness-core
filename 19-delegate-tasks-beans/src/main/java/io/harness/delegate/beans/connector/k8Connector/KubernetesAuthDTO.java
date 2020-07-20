@@ -24,10 +24,10 @@ public class KubernetesAuthDTO {
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @JsonSubTypes({
-    @JsonSubTypes.Type(value = UserNamePasswordDTO.class, name = "UsernamePassword")
-    , @JsonSubTypes.Type(value = ClientKeyCertDTO.class, name = "ClientKeyCert"),
-        @JsonSubTypes.Type(value = ServiceAccountDTO.class, name = "ServiceAccount"),
-        @JsonSubTypes.Type(value = OpenIdConnectDTO.class, name = "OpenIdConnect")
+    @JsonSubTypes.Type(value = KubernetesUserNamePasswordDTO.class, name = "UsernamePassword")
+    , @JsonSubTypes.Type(value = KubernetesClientKeyCertDTO.class, name = "ClientKeyCert"),
+        @JsonSubTypes.Type(value = KubernetesServiceAccountDTO.class, name = "ServiceAccount"),
+        @JsonSubTypes.Type(value = KubernetesOpenIdConnectDTO.class, name = "OpenIdConnect")
   })
   KubernetesAuthCredentialDTO credentials;
 }

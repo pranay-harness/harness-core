@@ -10,24 +10,24 @@ import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredenti
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.connector.entities.embedded.kubernetescluster.ClientKeyCertK8;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sClientKeyCert;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sOpenIdConnect;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sServiceAccount;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassword;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesAuth;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
-import io.harness.connector.entities.embedded.kubernetescluster.OpenIdConnectK8;
-import io.harness.connector.entities.embedded.kubernetescluster.ServiceAccountK8;
-import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
-import io.harness.delegate.beans.connector.k8Connector.ClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.OpenIdConnectDTO;
-import io.harness.delegate.beans.connector.k8Connector.ServiceAccountDTO;
-import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.UnsupportedOperationException;
 
@@ -65,20 +65,20 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
     KubernetesAuthDTO manualCredentials = null;
     switch (kubernetesClusterDetails.getAuthType()) {
       case USER_PASSWORD:
-        UserNamePasswordK8 userNamePasswordK8 = castToUserNamePassowordDTO(kubernetesClusterDetails.getAuth());
-        manualCredentials = createUserPasswordDTO(userNamePasswordK8);
+        K8sUserNamePassword k8sUserNamePassword = castToUserNamePassowordDTO(kubernetesClusterDetails.getAuth());
+        manualCredentials = createUserPasswordDTO(k8sUserNamePassword);
         break;
       case CLIENT_KEY_CERT:
-        ClientKeyCertK8 clientKeyCertK8 = castToClientKeyCertDTO(kubernetesClusterDetails.getAuth());
-        manualCredentials = createClientKeyCertDTO(clientKeyCertK8);
+        K8sClientKeyCert k8sClientKeyCert = castToClientKeyCertDTO(kubernetesClusterDetails.getAuth());
+        manualCredentials = createClientKeyCertDTO(k8sClientKeyCert);
         break;
       case SERVICE_ACCOUNT:
-        ServiceAccountK8 serviceAccountK8 = castToServiceAccountDTO(kubernetesClusterDetails.getAuth());
-        manualCredentials = createServiceAccountDTO(serviceAccountK8);
+        K8sServiceAccount k8sServiceAccount = castToServiceAccountDTO(kubernetesClusterDetails.getAuth());
+        manualCredentials = createServiceAccountDTO(k8sServiceAccount);
         break;
       case OPEN_ID_CONNECT:
-        OpenIdConnectK8 openIdConnectK8 = castToOpenIdConnectDTO(kubernetesClusterDetails.getAuth());
-        manualCredentials = createOpenIdConnectDTO(openIdConnectK8);
+        K8sOpenIdConnect k8sOpenIdConnect = castToOpenIdConnectDTO(kubernetesClusterDetails.getAuth());
+        manualCredentials = createOpenIdConnectDTO(k8sOpenIdConnect);
         break;
       default:
         throw new UnsupportedOperationException(
@@ -93,46 +93,51 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
         .build();
   }
 
-  private KubernetesAuthDTO createUserPasswordDTO(UserNamePasswordK8 userNamePasswordCredential) {
-    UserNamePasswordDTO userNamePasswordDTO = UserNamePasswordDTO.builder()
-                                                  .username(userNamePasswordCredential.getUserName())
-                                                  .encryptedPassword(userNamePasswordCredential.getPassword())
-                                                  .cacert(userNamePasswordCredential.getCacert())
-                                                  .build();
-    return KubernetesAuthDTO.builder().authType(USER_PASSWORD).credentials(userNamePasswordDTO).build();
+  private KubernetesAuthDTO createUserPasswordDTO(K8sUserNamePassword userNamePasswordCredential) {
+    KubernetesUserNamePasswordDTO kubernetesUserNamePasswordDTO =
+        KubernetesUserNamePasswordDTO.builder()
+            .username(userNamePasswordCredential.getUserName())
+            .encryptedPassword(userNamePasswordCredential.getPassword())
+            .cacert(userNamePasswordCredential.getCacert())
+            .build();
+    return KubernetesAuthDTO.builder().authType(USER_PASSWORD).credentials(kubernetesUserNamePasswordDTO).build();
   }
 
-  private KubernetesAuthDTO createClientKeyCertDTO(ClientKeyCertK8 clientKeyCertK8) {
-    ClientKeyCertDTO clientKeyCertDTO = ClientKeyCertDTO.builder()
-                                            .encryptedClientKey(clientKeyCertK8.getClientKey())
-                                            .encryptedClientCert(clientKeyCertK8.getClientCert())
-                                            .encryptedClientKeyPassphrase(clientKeyCertK8.getClientKeyPassphrase())
-                                            .clientKeyAlgo(clientKeyCertK8.getClientKeyAlgo())
-                                            .build();
-    return KubernetesAuthDTO.builder().authType(CLIENT_KEY_CERT).credentials(clientKeyCertDTO).build();
+  private KubernetesAuthDTO createClientKeyCertDTO(K8sClientKeyCert k8SClientKeyCert) {
+    KubernetesClientKeyCertDTO kubernetesClientKeyCertDTO =
+        KubernetesClientKeyCertDTO.builder()
+            .encryptedClientKey(k8SClientKeyCert.getClientKey())
+            .encryptedClientCert(k8SClientKeyCert.getClientCert())
+            .encryptedClientKeyPassphrase(k8SClientKeyCert.getClientKeyPassphrase())
+            .clientKeyAlgo(k8SClientKeyCert.getClientKeyAlgo())
+            .build();
+    return KubernetesAuthDTO.builder().authType(CLIENT_KEY_CERT).credentials(kubernetesClientKeyCertDTO).build();
   }
 
-  private KubernetesAuthDTO createServiceAccountDTO(ServiceAccountK8 serviceAccountK8) {
-    ServiceAccountDTO serviceAccountDTO =
-        ServiceAccountDTO.builder().encryptedServiceAccountToken(serviceAccountK8.getServiceAcccountToken()).build();
-    return KubernetesAuthDTO.builder().authType(SERVICE_ACCOUNT).credentials(serviceAccountDTO).build();
+  private KubernetesAuthDTO createServiceAccountDTO(K8sServiceAccount k8SServiceAccount) {
+    KubernetesServiceAccountDTO kubernetesServiceAccountDTO =
+        KubernetesServiceAccountDTO.builder()
+            .encryptedServiceAccountToken(k8SServiceAccount.getServiceAcccountToken())
+            .build();
+    return KubernetesAuthDTO.builder().authType(SERVICE_ACCOUNT).credentials(kubernetesServiceAccountDTO).build();
   }
 
-  private KubernetesAuthDTO createOpenIdConnectDTO(OpenIdConnectK8 openIdConnectK8) {
-    OpenIdConnectDTO openIdConnectDTO = OpenIdConnectDTO.builder()
-                                            .encryptedOidcClientId(openIdConnectK8.getOidcClientId())
-                                            .oidcIssuerUrl(openIdConnectK8.getOidcIssuerUrl())
-                                            .encryptedOidcPassword(openIdConnectK8.getOidcPassword())
-                                            .oidcScopes(openIdConnectK8.getOidcScopes())
-                                            .encryptedOidcSecret(openIdConnectK8.getOidcSecret())
-                                            .oidcUsername(openIdConnectK8.getOidcUsername())
-                                            .build();
-    return KubernetesAuthDTO.builder().authType(OPEN_ID_CONNECT).credentials(openIdConnectDTO).build();
+  private KubernetesAuthDTO createOpenIdConnectDTO(K8sOpenIdConnect k8SOpenIdConnect) {
+    KubernetesOpenIdConnectDTO kubernetesOpenIdConnectDTO =
+        KubernetesOpenIdConnectDTO.builder()
+            .encryptedOidcClientId(k8SOpenIdConnect.getOidcClientId())
+            .oidcIssuerUrl(k8SOpenIdConnect.getOidcIssuerUrl())
+            .encryptedOidcPassword(k8SOpenIdConnect.getOidcPassword())
+            .oidcScopes(k8SOpenIdConnect.getOidcScopes())
+            .encryptedOidcSecret(k8SOpenIdConnect.getOidcSecret())
+            .oidcUsername(k8SOpenIdConnect.getOidcUsername())
+            .build();
+    return KubernetesAuthDTO.builder().authType(OPEN_ID_CONNECT).credentials(kubernetesOpenIdConnectDTO).build();
   }
 
-  private UserNamePasswordK8 castToUserNamePassowordDTO(KubernetesAuth kubernetesAuth) {
+  private K8sUserNamePassword castToUserNamePassowordDTO(KubernetesAuth kubernetesAuth) {
     try {
-      return (UserNamePasswordK8) kubernetesAuth;
+      return (K8sUserNamePassword) kubernetesAuth;
     } catch (ClassCastException ex) {
       throw new UnexpectedException(
           String.format("The credential type and credentials doesn't match, expected [%s] credentials", USER_PASSWORD),
@@ -140,9 +145,9 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
     }
   }
 
-  private ClientKeyCertK8 castToClientKeyCertDTO(KubernetesAuth kubernetesAuth) {
+  private K8sClientKeyCert castToClientKeyCertDTO(KubernetesAuth kubernetesAuth) {
     try {
-      return (ClientKeyCertK8) kubernetesAuth;
+      return (K8sClientKeyCert) kubernetesAuth;
     } catch (ClassCastException ex) {
       throw new UnexpectedException(
           String.format("The credential type and credentials doesn't match, expected [%s] credentials", USER_PASSWORD),
@@ -150,9 +155,9 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
     }
   }
 
-  private ServiceAccountK8 castToServiceAccountDTO(KubernetesAuth kubernetesAuth) {
+  private K8sServiceAccount castToServiceAccountDTO(KubernetesAuth kubernetesAuth) {
     try {
-      return (ServiceAccountK8) kubernetesAuth;
+      return (K8sServiceAccount) kubernetesAuth;
     } catch (ClassCastException ex) {
       throw new UnexpectedException(
           String.format("The credential type and credentials doesn't match, expected [%s] credentials", USER_PASSWORD),
@@ -160,9 +165,9 @@ public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<Kuberne
     }
   }
 
-  private OpenIdConnectK8 castToOpenIdConnectDTO(KubernetesAuth kubernetesAuth) {
+  private K8sOpenIdConnect castToOpenIdConnectDTO(KubernetesAuth kubernetesAuth) {
     try {
-      return (OpenIdConnectK8) kubernetesAuth;
+      return (K8sOpenIdConnect) kubernetesAuth;
     } catch (ClassCastException ex) {
       throw new UnexpectedException(
           String.format("The credential type and credentials doesn't match, expected [%s] credentials", USER_PASSWORD),
