@@ -4,11 +4,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.cdng.artifact.bean.ArtifactAttributes;
-import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
-import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
-import io.harness.cdng.artifact.bean.connector.ConnectorConfig;
-import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
+import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
+import io.harness.cdng.artifact.delegate.beans.ArtifactSourceAttributes;
+import io.harness.cdng.artifact.delegate.beans.DockerArtifactSourceAttributes;
+import io.harness.cdng.artifact.delegate.beans.connector.ConnectorConfig;
+import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
 import io.harness.cdng.artifact.delegate.resource.DockerRegistryService;
 import io.harness.data.structure.EmptyPredicate;
 

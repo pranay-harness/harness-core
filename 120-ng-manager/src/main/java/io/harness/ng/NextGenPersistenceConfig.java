@@ -9,8 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
-@EnableMongoRepositories(
-    basePackages = {"io.harness.ng", "io.harness.cdng"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
+@EnableMongoRepositories(basePackages = {"io.harness.ng"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 public class NextGenPersistenceConfig extends SpringPersistenceConfig {
   @Inject
   public NextGenPersistenceConfig(Injector injector) {

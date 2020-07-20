@@ -3,8 +3,8 @@ package io.harness.cdng.artifact.delegate.resource;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.cdng.artifact.bean.ArtifactAttributes;
-import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
+import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
+import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;

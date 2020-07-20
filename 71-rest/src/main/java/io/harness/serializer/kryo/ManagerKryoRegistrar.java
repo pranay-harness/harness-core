@@ -19,6 +19,15 @@ import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
 import io.harness.ccm.config.CCMConfig;
+import io.harness.cdng.artifact.delegate.beans.DockerArtifactAttributes;
+import io.harness.cdng.artifact.delegate.beans.DockerArtifactSourceAttributes;
+import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
+import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
+import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
+import io.harness.cdng.manifest.yaml.FetchType;
+import io.harness.cdng.manifest.yaml.GitStore;
+import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
 import io.harness.cvng.perpetualtask.CVDataCollectionInfo;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
@@ -1740,6 +1749,17 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EncryptedVariableWithType.class, 7454);
     kryo.register(EncryptedVariableWithType.Type.class, 7455);
     kryo.register(ContainerSecrets.class, 7456);
+
+    kryo.register(StoreConfig.class, 8022);
+    kryo.register(GitStore.class, 8023);
+    kryo.register(GitFetchRequest.class, 8025);
+    kryo.register(io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig.class, 8026);
+    kryo.register(FetchType.class, 8030);
+    kryo.register(DockerArtifactSourceAttributes.class, 8004);
+    kryo.register(DockerArtifactAttributes.class, 8005);
+    kryo.register(DockerhubConnectorConfig.class, 8006);
+    kryo.register(ArtifactTaskParameters.class, 8002);
+    kryo.register(ArtifactTaskResponse.class, 8003);
     kryo.register(TemplatizedSecretManagerStateExecutionData.class, 7457);
     kryo.register(TerraformPlanParam.class, 7458);
   }

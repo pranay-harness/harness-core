@@ -12,9 +12,9 @@ import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.artifact.bean.ArtifactAttributes;
-import io.harness.cdng.artifact.bean.DockerArtifactAttributes;
-import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
+import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
+import io.harness.cdng.artifact.delegate.beans.DockerArtifactAttributes;
+import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.rule.Owner;
 import org.junit.BeforeClass;

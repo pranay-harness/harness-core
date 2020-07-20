@@ -10,19 +10,15 @@ import com.google.inject.Singleton;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.graph.GraphGenerationService;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
-import io.harness.exception.GeneralException;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.interrupts.Interrupt;
-import io.harness.plan.Plan;
 import io.harness.presentation.Graph;
 import io.harness.presentation.visualization.GraphVisualizer;
-import io.harness.yaml.utils.YamlPipelineUtils;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
@@ -105,21 +101,9 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   @Override
-  public PlanExecution testInfraState() throws IOException {
-    return orchestrationService.startExecution(
-        CustomExecutionUtils.provideInfraStateTestPlan(), getAbstractions(), getEmbeddedUser());
-  }
-
-  @Override
   public PlanExecution testGraphPlan() {
     return orchestrationService.startExecution(
         CustomExecutionUtils.provideGraphTestPlan(), getAbstractions(), getEmbeddedUser());
-  }
-
-  @Override
-  public PlanExecution testArtifactState() {
-    return orchestrationService.startExecution(
-        CustomExecutionUtils.provideArtifactStateTestPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
@@ -132,12 +116,6 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   public PlanExecution executeMultipleBarriersPlan() {
     return orchestrationService.startExecution(
         CustomExecutionUtils.providePlanWithMultipleBarriers(), getAbstractions(), getEmbeddedUser());
-  }
-
-  @Override
-  public PlanExecution testServiceState() {
-    return orchestrationService.startExecution(
-        CustomExecutionUtils.provideServiceStateTestPlan(), getAbstractions(), getEmbeddedUser());
   }
 
   @Override
@@ -158,20 +136,6 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   public void getGraphVisualization(String executionPlanId, OutputStream output) throws IOException {
     Graph graph = graphGenerationService.generateGraph(executionPlanId);
     graphVisualizer.generateImage(graph, output);
-  }
-
-  @Override
-  public PlanExecution testExecutionPlanCreator(
-      String pipelineYaml, String accountId, String appId, EmbeddedUser user) {
-    final CDPipeline cdPipeline;
-    try {
-      cdPipeline = YamlPipelineUtils.read(pipelineYaml, CDPipeline.class);
-      final Plan planForPipeline = executionPlanCreatorService.createPlanForPipeline(cdPipeline, accountId);
-      return orchestrationService.startExecution(planForPipeline,
-          ImmutableMap.of("accountId", accountId, "appId", appId), user != null ? user : getEmbeddedUser());
-    } catch (IOException e) {
-      throw new GeneralException("error while testing execution plan", e);
-    }
   }
 
   private EmbeddedUser getEmbeddedUser() {

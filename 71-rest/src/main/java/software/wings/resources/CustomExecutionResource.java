@@ -9,9 +9,7 @@ import io.harness.presentation.Graph;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;
 
-import java.io.IOException;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -92,12 +90,6 @@ public class CustomExecutionResource {
   }
 
   @GET
-  @Path("/test-infra-state")
-  public RestResponse<PlanExecution> testInfraState() throws IOException {
-    return new RestResponse<>(customExecutionService.testInfraState());
-  }
-
-  @GET
   @Path("/test-graph-plan")
   public RestResponse<PlanExecution> testGraphPlan() {
     return new RestResponse<>(customExecutionService.testGraphPlan());
@@ -114,26 +106,6 @@ public class CustomExecutionResource {
   @Produces("image/png")
   public StreamingOutput getGraphVisualization(@QueryParam("planExecutionId") String planExecutionId) {
     return output -> customExecutionService.getGraphVisualization(planExecutionId, output);
-  }
-
-  @POST
-  @Path("/test-execution-plan")
-  @Produces("application/json")
-  public RestResponse<PlanExecution> testExecutionPlan(
-      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, String pipelineYaml) {
-    return new RestResponse<>(customExecutionService.testExecutionPlanCreator(pipelineYaml, accountId, appId, null));
-  }
-
-  @GET
-  @Path("/test-artifact-state")
-  public RestResponse<PlanExecution> testArtifactStep() {
-    return new RestResponse<>(customExecutionService.testArtifactState());
-  }
-
-  @GET
-  @Path("/test-service-state")
-  public RestResponse<PlanExecution> testServiceStep() {
-    return new RestResponse<>(customExecutionService.testServiceState());
   }
 
   @GET

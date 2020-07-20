@@ -1,9 +1,5 @@
 package io.harness.cdng.orchestration;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-
-import io.harness.beans.DelegateTask;
-import io.harness.cdng.common.MiscUtils;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.SimpleHDelegateTask;
@@ -27,19 +23,7 @@ public class StepUtils {
 
   public static Task prepareDelegateTaskInput(
       String accountId, TaskData taskData, Map<String, String> setupAbstractions) {
-    if (MiscUtils.isNextGenApplication()) {
-      return createHDelegateTask(accountId, taskData, setupAbstractions);
-    }
-    return createDelegateTask(accountId, taskData, setupAbstractions);
-  }
-
-  private DelegateTask createDelegateTask(String accountId, TaskData taskData, Map<String, String> setupAbstractions) {
-    return DelegateTask.builder()
-        .setupAbstractions(setupAbstractions)
-        .waitId(generateUuid())
-        .data(taskData)
-        .accountId(accountId)
-        .build();
+    return createHDelegateTask(accountId, taskData, setupAbstractions);
   }
 
   private Task createHDelegateTask(String accountId, TaskData taskData, Map<String, String> setupAbstractions) {
