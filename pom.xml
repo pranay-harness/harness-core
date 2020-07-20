@@ -15,11 +15,13 @@
         <module>20-delegate-tasks</module>
         <module>20-delegate-beans</module>
         <module>21-delegate-agent-beans</module>
+        <module>21-ng-core</module>
         <module>21-persistence</module>
         <module>21-sm-core</module>
         <module>22-delegate-service-beans</module>
         <module>22-ng-delegate-service-beans</module>
         <module>22-ng-project-n-orgs</module>
+        <module>22-ng-project-n-orgs-api</module>
         <module>22-secret-manager-client</module>
         <module>22-wait-engine</module>
         <module>23-delegate-service-driver</module>

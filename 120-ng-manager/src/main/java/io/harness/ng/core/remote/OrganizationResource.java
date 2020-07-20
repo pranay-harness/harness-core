@@ -66,10 +66,10 @@ public class OrganizationResource {
   }
 
   @GET
-  @Path("{organizationIdentifier}")
+  @Path("{orgIdentifier}")
   @ApiOperation(value = "Get an Organization", nickname = "getOrganization")
   public ResponseDTO<Optional<OrganizationDTO>> get(@PathParam("accountIdentifier") String accountIdentifier,
-      @PathParam("organizationIdentifier") String organizationIdentifier) {
+      @PathParam("orgIdentifier") String organizationIdentifier) {
     Optional<Organization> organizationOptional = organizationService.get(accountIdentifier, organizationIdentifier);
     return ResponseDTO.newResponse(organizationOptional.map(OrganizationMapper::writeDto));
   }
@@ -89,11 +89,10 @@ public class OrganizationResource {
   }
 
   @PUT
-  @Path("{organizationIdentifier}")
+  @Path("{orgIdentifier}")
   @ApiOperation(value = "Update Organization by identifier", nickname = "putOrganization")
   public ResponseDTO<Optional<OrganizationDTO>> update(@PathParam("accountIdentifier") String accountIdentifier,
-      @PathParam("organizationIdentifier") String orgIdentifier,
-      @NotNull @Valid UpdateOrganizationDTO updateOrganizationDTO) {
+      @PathParam("orgIdentifier") String orgIdentifier, @NotNull @Valid UpdateOrganizationDTO updateOrganizationDTO) {
     Optional<Organization> organizationOptional = organizationService.get(accountIdentifier, orgIdentifier);
     if (organizationOptional.isPresent()) {
       Organization organization = organizationOptional.get();
@@ -105,10 +104,10 @@ public class OrganizationResource {
   }
 
   @DELETE
-  @Path("{organizationIdentifier}")
+  @Path("{orgIdentifier}")
   @ApiOperation(value = "Delete Organization by identifier", nickname = "deleteOrganization")
   public ResponseDTO<Boolean> delete(@PathParam("accountIdentifier") String accountIdentifier,
-      @PathParam("organizationIdentifier") String organizationIdentifier) {
+      @PathParam("orgIdentifier") String organizationIdentifier) {
     return ResponseDTO.newResponse(organizationService.delete(accountIdentifier, organizationIdentifier));
   }
 }

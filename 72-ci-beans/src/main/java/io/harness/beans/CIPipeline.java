@@ -7,7 +7,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.mongo.index.FdIndex;
-import io.harness.ng.ProjectAccess;
+import io.harness.ng.core.ProjectAccess;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
