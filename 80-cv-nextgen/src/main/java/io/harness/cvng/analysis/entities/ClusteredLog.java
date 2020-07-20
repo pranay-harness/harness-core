@@ -1,7 +1,10 @@
 package io.harness.cvng.analysis.entities;
 
+import static io.harness.cvng.core.utils.DateTimeUtils.instantToEpochMinute;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
@@ -33,8 +36,19 @@ public class ClusteredLog implements PersistentEntity, CreatedAtAware, UpdatedAt
   @NotEmpty @FdIndex private String cvConfigId;
   private LogClusterLevel clusterLevel;
   private String log;
-  private Instant logTime;
+  private Instant timestamp;
   private String host;
   private String clusterLabel;
   private int clusterCount;
+
+  public LogClusterDTO toDTO() {
+    return LogClusterDTO.builder()
+        .cvConfigId(cvConfigId)
+        .clusterCount(clusterCount)
+        .clusterLabel(clusterLabel)
+        .host(host)
+        .log(log)
+        .epochMinute(instantToEpochMinute(timestamp))
+        .build();
+  }
 }

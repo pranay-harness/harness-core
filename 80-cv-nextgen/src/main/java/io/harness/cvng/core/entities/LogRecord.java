@@ -1,9 +1,12 @@
 package io.harness.cvng.core.entities;
 
+import static io.harness.cvng.core.utils.DateTimeUtils.instantToEpochMinute;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.AccountAccess;
@@ -42,4 +45,13 @@ public class LogRecord implements PersistentEntity, UuidAware, CreatedAtAware, A
   @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
   private String log;
+
+  public LogClusterDTO toLogClusterDTO() {
+    return LogClusterDTO.builder()
+        .cvConfigId(this.getCvConfigId())
+        .host(this.getHost())
+        .epochMinute(instantToEpochMinute(this.getTimestamp()))
+        .log(this.getLog())
+        .build();
+  }
 }

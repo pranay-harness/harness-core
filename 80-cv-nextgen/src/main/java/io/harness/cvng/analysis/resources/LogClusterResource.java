@@ -14,7 +14,9 @@ import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
 
 import java.time.Instant;
+import java.util.List;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -30,10 +32,24 @@ public class LogClusterResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<LogClusterDTO> getTestData(@QueryParam("cvConfigId") String cvConfigId,
-      @QueryParam("logClusterLevel") LogClusterLevel logClusterLevel,
-      @QueryParam("logRecordInstant") String logRecordInstant, @QueryParam("host") String host) {
+  public RestResponse<List<LogClusterDTO>> getTestData(@QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("clusterLevel") LogClusterLevel logClusterLevel, @QueryParam("timestamp") String logRecordInstant,
+      @QueryParam("host") String host) {
     return new RestResponse<>(
         logClusterService.getDataForLogCluster(cvConfigId, Instant.parse(logRecordInstant), host, logClusterLevel));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path("/serviceguard-save-clustered-logs")
+  @Timed
+  @LearningEngineAuth
+  @ExceptionMetered
+  public RestResponse<Boolean> saveClusteredData(@QueryParam("taskId") String taskId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("timestamp") String timestamp,
+      @QueryParam("host") String host, @QueryParam("clusterLevel") LogClusterLevel clusterLevel,
+      List<LogClusterDTO> clusterDTO) {
+    logClusterService.saveClusteredData(clusterDTO, cvConfigId, Instant.parse(timestamp), taskId, host, clusterLevel);
+    return new RestResponse<>(true);
   }
 }

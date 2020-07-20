@@ -6,6 +6,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
@@ -13,6 +14,7 @@ import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
+import io.harness.cvng.statemachine.entities.ServiceGuardLogClusterState;
 import io.harness.cvng.statemachine.entities.TimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
@@ -50,7 +52,6 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
     stateMachine.setStatus(AnalysisStatus.RUNNING);
     injector.injectMembers(stateMachine.getCurrentState());
     stateMachine.getCurrentState().execute();
-
     hPersistence.save(stateMachine);
   }
 
@@ -101,25 +102,26 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
             analysisStateMachine.getAnalysisEndTime());
         return;
       case TRANSITION:
-        logger.info("Analysis is currently in TRANSITION for {} and analysis range {} to {}. We will return.",
+        logger.info(
+            "Analysis is currently in TRANSITION for {} and analysis range {} to {}. We will call handleTransition.",
             analysisStateMachine.getCvConfigId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleTransition();
         break;
       case TIMEOUT:
-        logger.info("Analysis has TIMED OUT for {} and analysis range {} to {}. We will return.",
+        logger.info("Analysis has TIMED OUT for {} and analysis range {} to {}. We will call handleTimeout.",
             analysisStateMachine.getCvConfigId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleTimeout();
         break;
       case FAILED:
-        logger.info("Analysis has FAILED for {} and analysis range {} to {}. We will return.",
+        logger.info("Analysis has FAILED for {} and analysis range {} to {}. We will call handleFailure.",
             analysisStateMachine.getCvConfigId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleFailure();
         break;
       case RETRY:
-        logger.info("Analysis is going to be RETRIED for {} and analysis range {} to {}. We will return.",
+        logger.info("Analysis is going to be RETRIED for {} and analysis range {} to {}. We will call handleRetry.",
             analysisStateMachine.getCvConfigId(), analysisStateMachine.getAnalysisStartTime(),
             analysisStateMachine.getAnalysisEndTime());
         nextState = currentState.handleRetry();
@@ -132,13 +134,13 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
         throw new AnalysisStateMachineException("Unexpected state in analysis statemachine execution: " + status);
     }
     analysisStateMachine.setCurrentState(nextState);
+    injector.injectMembers(nextState);
     if (AnalysisStatus.getFinalStates().contains(nextState.getStatus())) {
       analysisStateMachine.setStatus(nextState.getStatus());
     } else if (nextState.getStatus() == AnalysisStatus.CREATED) {
       nextState.execute();
     }
 
-    injector.injectMembers(nextState);
     if (nextState.getStatus() == AnalysisStatus.SUCCESS) {
       // the state machine is done, time to mark it as success
       logger.info("Analysis state machine has completed successfully for cvConfig: {} and analysis range {} to {}",
@@ -203,6 +205,9 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       switch (verificationType) {
         case TIME_SERIES:
           firstState = TimeSeriesAnalysisState.builder().build();
+          break;
+        case LOG:
+          firstState = ServiceGuardLogClusterState.builder().clusterLevel(LogClusterLevel.L1).build();
           break;
         default:
           throw new AnalysisStateMachineException(
