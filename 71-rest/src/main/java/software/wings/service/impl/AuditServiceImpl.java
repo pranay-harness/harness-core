@@ -490,7 +490,9 @@ public class AuditServiceImpl implements AuditService {
         case DELEGATE_APPROVAL:
         case LOGIN:
         case CREATE: {
-          saveEntityYamlForAudit(newEntity, record, accountId);
+          if (!(newEntity instanceof ServiceVariable) || !((ServiceVariable) newEntity).isSyncFromGit()) {
+            saveEntityYamlForAudit(newEntity, record, accountId);
+          }
           resourceLookupService.updateResourceLookupRecordIfNeeded(record, accountId, newEntity, oldEntity);
           break;
         }
@@ -499,7 +501,9 @@ public class AuditServiceImpl implements AuditService {
         case UPDATE_TAG:
         case UPDATE: {
           loadLatestYamlDetailsForEntity(record, accountId);
-          saveEntityYamlForAudit(newEntity, record, accountId);
+          if (!(newEntity instanceof ServiceVariable) || !((ServiceVariable) newEntity).isSyncFromGit()) {
+            saveEntityYamlForAudit(newEntity, record, accountId);
+          }
           resourceLookupService.updateResourceLookupRecordIfNeeded(record, accountId, newEntity, oldEntity);
           break;
         }

@@ -174,8 +174,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       // variables if the remaining 800 variables are not added yet. This does not apply when new service is created
       // as this is not allowed in harness UI. If the service is created in git, then we wont be pushing it to git
       // again.
-      saveOrUpdateServiceVariables(yaml, previousService.getServiceVariables(), previousService.getAppId(),
-          previousService.getUuid(), syncFromGit);
+      saveOrUpdateServiceVariables(
+          yaml, previousService.getServiceVariables(), previousService.getAppId(), previousService.getUuid());
 
       currentService = serviceResourceService.update(currentService, true);
 
@@ -188,7 +188,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       }
       currentService =
           serviceResourceService.save(currentService, true, serviceResourceService.hasInternalCommands(currentService));
-      saveOrUpdateServiceVariables(yaml, emptyList(), currentService.getAppId(), currentService.getUuid(), syncFromGit);
+      saveOrUpdateServiceVariables(yaml, emptyList(), currentService.getAppId(), currentService.getUuid());
     }
 
     changeContext.setEntity(currentService);
@@ -293,8 +293,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     return configVarsToDelete;
   }
 
-  private void saveOrUpdateServiceVariables(Yaml updatedYaml, List<ServiceVariable> previousServiceVariables,
-      String appId, String serviceId, boolean syncFromGit) {
+  private void saveOrUpdateServiceVariables(
+      Yaml updatedYaml, List<ServiceVariable> previousServiceVariables, String appId, String serviceId) {
     Map<String, ServiceVariable> serviceVariableMap =
         previousServiceVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, identity()));
 
@@ -305,36 +305,24 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     // We are passing true for syncFromGit because we don't want to generate multiple yaml change sets if user is adding
     // many service variables through yaml. After performing all add/update/delete, we will call pushToGit which will
     // push everything to git
-    ServiceVariable lastUpdatedServiceVariable = null;
     String accountId = appService.get(appId).getAccountId();
 
-    try {
-      // Delete service variables
-      for (ServiceVariable serviceVariable : configVarsToDelete) {
-        serviceVariableService.delete(appId, serviceVariable.getUuid(), true);
-        lastUpdatedServiceVariable = serviceVariable;
-      }
-
-      // Add service variables
-      for (NameValuePair.Yaml yaml : configVarsToAdd) {
-        ServiceVariable serviceVariable =
-            serviceVariableService.save(createNewServiceVariable(accountId, appId, serviceId, yaml), true);
-        lastUpdatedServiceVariable = serviceVariable;
-      }
-
-      // Update service variables
-      lastUpdatedServiceVariable =
-          updateServiceVariables(accountId, configVarsToUpdate, serviceVariableMap, lastUpdatedServiceVariable);
-
-    } finally {
-      if (!syncFromGit && lastUpdatedServiceVariable != null) {
-        serviceVariableService.pushServiceVariablesToGit(lastUpdatedServiceVariable);
-      }
+    // Delete service variables
+    for (ServiceVariable serviceVariable : configVarsToDelete) {
+      serviceVariableService.delete(appId, serviceVariable.getUuid(), true);
     }
+
+    // Add service variables
+    for (NameValuePair.Yaml yaml : configVarsToAdd) {
+      serviceVariableService.save(createNewServiceVariable(accountId, appId, serviceId, yaml), true);
+    }
+
+    // Update service variables
+    updateServiceVariables(accountId, configVarsToUpdate, serviceVariableMap);
   }
 
-  private ServiceVariable updateServiceVariables(String accountId, List<NameValuePair.Yaml> configVarsToUpdate,
-      Map<String, ServiceVariable> serviceVariableMap, ServiceVariable lastUpdatedServiceVariable) {
+  private void updateServiceVariables(
+      String accountId, List<NameValuePair.Yaml> configVarsToUpdate, Map<String, ServiceVariable> serviceVariableMap) {
     for (NameValuePair.Yaml configVar : configVarsToUpdate) {
       ServiceVariable serviceVariable = serviceVariableMap.get(configVar.getName());
       String value = configVar.getValue();
@@ -366,10 +354,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
           continue;
       }
 
-      lastUpdatedServiceVariable = serviceVariableService.update(serviceVariable, true);
+      serviceVariableService.update(serviceVariable, true);
     }
-
-    return lastUpdatedServiceVariable;
   }
 
   private ServiceVariable createNewServiceVariable(
