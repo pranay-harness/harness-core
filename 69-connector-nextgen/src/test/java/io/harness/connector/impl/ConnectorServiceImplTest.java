@@ -15,18 +15,18 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassword;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
-import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
 import io.harness.connector.mappers.ConnectorMapper;
-import io.harness.connector.repositories.ConnectorRepository;
+import io.harness.connector.repositories.base.ConnectorRepository;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -67,12 +67,12 @@ public class ConnectorServiceImplTest extends CategoryTest {
   // todo @deepak: Make this tests use ConnectorBaseTests instead of category tests
   @Before
   public void setUp() throws Exception {
-    UserNamePasswordK8 userNamePasswordK8 =
-        UserNamePasswordK8.builder().userName(userName).password(password).cacert(cacert).build();
+    K8sUserNamePassword k8sUserNamePassword =
+        K8sUserNamePassword.builder().userName(userName).password(password).cacert(cacert).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterUrl)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)
-                                                            .auth(userNamePasswordK8)
+                                                            .auth(k8sUserNamePassword)
                                                             .build();
     connector = KubernetesClusterConfig.builder()
                     .credential(kubernetesClusterDetails)
@@ -83,12 +83,14 @@ public class ConnectorServiceImplTest extends CategoryTest {
     connector.setName(name);
     MockitoAnnotations.initMocks(this);
 
-    KubernetesAuthDTO kubernetesAuthDTO =
-        KubernetesAuthDTO.builder()
-            .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(
-                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
-            .build();
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(KubernetesAuthType.USER_PASSWORD)
+                                              .credentials(KubernetesUserNamePasswordDTO.builder()
+                                                               .username(userName)
+                                                               .encryptedPassword(password)
+                                                               .cacert(cacert)
+                                                               .build())
+                                              .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
@@ -135,12 +137,14 @@ public class ConnectorServiceImplTest extends CategoryTest {
     String masterUrl = "https://abc.com1";
     String name = "name1";
     createConnector();
-    KubernetesAuthDTO kubernetesAuthDTO =
-        KubernetesAuthDTO.builder()
-            .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(
-                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
-            .build();
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(KubernetesAuthType.USER_PASSWORD)
+                                              .credentials(KubernetesUserNamePasswordDTO.builder()
+                                                               .username(userName)
+                                                               .encryptedPassword(password)
+                                                               .cacert(cacert)
+                                                               .build())
+                                              .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
@@ -200,10 +204,11 @@ public class ConnectorServiceImplTest extends CategoryTest {
     KubernetesClusterDetailsDTO credentialDTO = (KubernetesClusterDetailsDTO) kubernetesCluster.getConfig();
     assertThat(credentialDTO).isNotNull();
     assertThat(credentialDTO.getMasterUrl()).isNotNull();
-    UserNamePasswordDTO userNamePasswordDTO = (UserNamePasswordDTO) credentialDTO.getAuth().getCredentials();
-    assertThat(userNamePasswordDTO.getUsername()).isEqualTo(userName);
-    assertThat(userNamePasswordDTO.getEncryptedPassword()).isEqualTo(password);
-    assertThat(userNamePasswordDTO.getCacert()).isEqualTo(cacert);
+    KubernetesUserNamePasswordDTO kubernetesUserNamePasswordDTO =
+        (KubernetesUserNamePasswordDTO) credentialDTO.getAuth().getCredentials();
+    assertThat(kubernetesUserNamePasswordDTO.getUsername()).isEqualTo(userName);
+    assertThat(kubernetesUserNamePasswordDTO.getEncryptedPassword()).isEqualTo(password);
+    assertThat(kubernetesUserNamePasswordDTO.getCacert()).isEqualTo(cacert);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -229,12 +234,14 @@ public class ConnectorServiceImplTest extends CategoryTest {
     String masterUrl = "https://abc.com";
     String identifier = "identifier";
     String name = "name";
-    KubernetesAuthDTO kubernetesAuthDTO =
-        KubernetesAuthDTO.builder()
-            .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(
-                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
-            .build();
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(KubernetesAuthType.USER_PASSWORD)
+                                              .credentials(KubernetesUserNamePasswordDTO.builder()
+                                                               .username(userName)
+                                                               .encryptedPassword(password)
+                                                               .cacert(cacert)
+                                                               .build())
+                                              .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)

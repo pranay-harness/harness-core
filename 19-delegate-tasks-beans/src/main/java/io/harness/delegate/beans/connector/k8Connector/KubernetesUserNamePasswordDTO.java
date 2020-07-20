@@ -8,7 +8,7 @@ import software.wings.settings.SettingVariableTypes;
 
 @Data
 @Builder
-public class UserNamePasswordDTO extends KubernetesAuthCredentialDTO {
+public class KubernetesUserNamePasswordDTO extends KubernetesAuthCredentialDTO {
   String username;
   @Encrypted(fieldName = "password", isReference = true) char[] password;
   @JsonProperty("passwordRef") String encryptedPassword;

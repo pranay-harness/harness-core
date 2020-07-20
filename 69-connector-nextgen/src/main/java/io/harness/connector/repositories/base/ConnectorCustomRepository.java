@@ -1,4 +1,4 @@
-package io.harness.connector.repositories;
+package io.harness.connector.repositories.base;
 
 import io.harness.connector.entities.Connector;
 import org.springframework.data.domain.Page;

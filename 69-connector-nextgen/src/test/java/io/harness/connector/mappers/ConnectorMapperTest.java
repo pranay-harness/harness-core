@@ -11,9 +11,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.apis.dto.ConnectorRequestDTO;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassword;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
-import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigCastHelper;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
@@ -21,7 +21,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -55,12 +55,14 @@ public class ConnectorMapperTest extends CategoryTest {
     when(kubernetesConfigCastHelper.castToManualKubernetesCredentials(any())).thenCallRealMethod();
     when(kubernetesDTOToEntity.toConnectorEntity(any())).thenCallRealMethod();
 
-    KubernetesAuthDTO kubernetesAuthDTO =
-        KubernetesAuthDTO.builder()
-            .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(
-                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
-            .build();
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(KubernetesAuthType.USER_PASSWORD)
+                                              .credentials(KubernetesUserNamePasswordDTO.builder()
+                                                               .username(userName)
+                                                               .encryptedPassword(password)
+                                                               .cacert(cacert)
+                                                               .build())
+                                              .build();
     KubernetesClusterConfigDTO connectorDTOWithUserNamePassword =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
@@ -73,12 +75,14 @@ public class ConnectorMapperTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testToConnector() {
-    KubernetesAuthDTO kubernetesAuthDTO =
-        KubernetesAuthDTO.builder()
-            .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(
-                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
-            .build();
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(KubernetesAuthType.USER_PASSWORD)
+                                              .credentials(KubernetesUserNamePasswordDTO.builder()
+                                                               .username(userName)
+                                                               .encryptedPassword(password)
+                                                               .cacert(cacert)
+                                                               .build())
+                                              .build();
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
@@ -104,12 +108,12 @@ public class ConnectorMapperTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testWriteDTO() {
-    UserNamePasswordK8 userNamePasswordK8 =
-        UserNamePasswordK8.builder().userName(userName).password(password).cacert(cacert).build();
+    K8sUserNamePassword k8sUserNamePassword =
+        K8sUserNamePassword.builder().userName(userName).password(password).cacert(cacert).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)
-                                                            .auth(userNamePasswordK8)
+                                                            .auth(k8sUserNamePassword)
                                                             .build();
     Connector connector = KubernetesClusterConfig.builder()
                               .credentialType(MANUAL_CREDENTIALS)

@@ -13,6 +13,7 @@ import io.harness.connector.apis.dto.ConnectorSummaryDTO.ConnectorSummaryDTOBuil
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
+import io.harness.connector.mappers.gitconnectormapper.GitConfigSummaryMapper;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
 import io.harness.exception.UnsupportedOperationException;
 import lombok.AccessLevel;

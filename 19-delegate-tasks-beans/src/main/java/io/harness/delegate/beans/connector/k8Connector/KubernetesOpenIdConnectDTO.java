@@ -3,22 +3,26 @@ package io.harness.delegate.beans.connector.k8Connector;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import software.wings.settings.SettingVariableTypes;
 
-@Data
+@Value
 @Builder
-public class ClientKeyCertDTO extends KubernetesAuthCredentialDTO {
-  @Encrypted(fieldName = "clientCert", isReference = true) char[] clientCert;
-  @JsonProperty("clientCertRef") String encryptedClientCert;
+public class KubernetesOpenIdConnectDTO extends KubernetesAuthCredentialDTO {
+  String oidcIssuerUrl;
 
-  @Encrypted(fieldName = "clientKey", isReference = true) char[] clientKey;
-  @JsonProperty("clientKeyRef") String encryptedClientKey;
+  @Encrypted(fieldName = "oidcClientId", isReference = true) char[] oidcClientId;
+  @JsonProperty("oidcClientIdRef") String encryptedOidcClientId;
 
-  @Encrypted(fieldName = "clientKeyPassphrase", isReference = true) char[] clientKeyPassphrase;
-  @JsonProperty("clientKeyPassphraseRef") String encryptedClientKeyPassphrase;
+  String oidcUsername;
 
-  @JsonProperty("clientKeyAlgo") String clientKeyAlgo;
+  @Encrypted(fieldName = "oidcPassword", isReference = true) char[] oidcPassword;
+  @JsonProperty("oidcPasswordRef") String encryptedOidcPassword;
+
+  @Encrypted(fieldName = "oidcSecret", isReference = true) char[] oidcSecret;
+  @JsonProperty("oidcSecretRef") String encryptedOidcSecret;
+
+  String oidcScopes;
 
   private static final String DUMMY_ACCOUNT_ID = "AccountId";
 

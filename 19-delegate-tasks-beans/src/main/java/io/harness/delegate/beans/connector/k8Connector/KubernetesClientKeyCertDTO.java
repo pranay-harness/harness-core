@@ -8,9 +8,17 @@ import software.wings.settings.SettingVariableTypes;
 
 @Data
 @Builder
-public class ServiceAccountDTO extends KubernetesAuthCredentialDTO {
-  @Encrypted(fieldName = "serviceAccountToken", isReference = true) char[] serviceAccountToken;
-  @JsonProperty("serviceAcccountTokenRef") String encryptedServiceAccountToken;
+public class KubernetesClientKeyCertDTO extends KubernetesAuthCredentialDTO {
+  @Encrypted(fieldName = "clientCert", isReference = true) char[] clientCert;
+  @JsonProperty("clientCertRef") String encryptedClientCert;
+
+  @Encrypted(fieldName = "clientKey", isReference = true) char[] clientKey;
+  @JsonProperty("clientKeyRef") String encryptedClientKey;
+
+  @Encrypted(fieldName = "clientKeyPassphrase", isReference = true) char[] clientKeyPassphrase;
+  @JsonProperty("clientKeyPassphraseRef") String encryptedClientKeyPassphrase;
+
+  @JsonProperty("clientKeyAlgo") String clientKeyAlgo;
 
   private static final String DUMMY_ACCOUNT_ID = "AccountId";
 

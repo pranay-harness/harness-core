@@ -31,12 +31,12 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
 import io.fabric8.kubernetes.client.dsl.ScalableResource;
-import io.harness.delegate.beans.connector.k8Connector.ClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.ServiceAccountDTO;
-import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import software.wings.service.impl.KubernetesHelperService;
@@ -111,20 +111,24 @@ public class KubernetesValidationHelper {
     KubernetesAuthDTO kubernetesCredentialDTO = kubernetesClusterDetailsDTO.getAuth();
     switch (kubernetesCredentialDTO.getAuthType()) {
       case USER_PASSWORD:
-        populateUserNamePasswordInConfig((UserNamePasswordDTO) kubernetesCredentialDTO.getCredentials(), configBuilder);
+        populateUserNamePasswordInConfig(
+            (KubernetesUserNamePasswordDTO) kubernetesCredentialDTO.getCredentials(), configBuilder);
         break;
       case SERVICE_ACCOUNT:
-        populateServiceAccountInConfig((ServiceAccountDTO) kubernetesCredentialDTO.getCredentials(), configBuilder);
+        populateServiceAccountInConfig(
+            (KubernetesServiceAccountDTO) kubernetesCredentialDTO.getCredentials(), configBuilder);
         break;
       case CLIENT_KEY_CERT:
-        populateClientKeyCertInConfig((ClientKeyCertDTO) kubernetesCredentialDTO.getCredentials(), configBuilder);
+        populateClientKeyCertInConfig(
+            (KubernetesClientKeyCertDTO) kubernetesCredentialDTO.getCredentials(), configBuilder);
         break;
       default:
         break;
     }
   }
 
-  private void populateUserNamePasswordInConfig(UserNamePasswordDTO userNamePassword, ConfigBuilder configBuilder) {
+  private void populateUserNamePasswordInConfig(
+      KubernetesUserNamePasswordDTO userNamePassword, ConfigBuilder configBuilder) {
     if (isNotBlank(userNamePassword.getUsername())) {
       configBuilder.withUsername(userNamePassword.getUsername().trim());
     }
@@ -136,13 +140,13 @@ public class KubernetesValidationHelper {
     }
   }
 
-  private void populateServiceAccountInConfig(ServiceAccountDTO serviceAccount, ConfigBuilder configBuilder) {
+  private void populateServiceAccountInConfig(KubernetesServiceAccountDTO serviceAccount, ConfigBuilder configBuilder) {
     if (serviceAccount.getServiceAccountToken() != null) {
       configBuilder.withOauthToken(String.valueOf(serviceAccount.getServiceAccountToken()));
     }
   }
 
-  private void populateClientKeyCertInConfig(ClientKeyCertDTO clientKey, ConfigBuilder configBuilder) {
+  private void populateClientKeyCertInConfig(KubernetesClientKeyCertDTO clientKey, ConfigBuilder configBuilder) {
     if (clientKey.getClientCert() != null) {
       configBuilder.withClientCertData(encode(clientKey.getClientCert()));
     }

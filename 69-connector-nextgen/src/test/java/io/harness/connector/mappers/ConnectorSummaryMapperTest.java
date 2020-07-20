@@ -12,9 +12,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorSummaryDTO;
 import io.harness.connector.apis.dto.k8connector.KubernetesConfigSummaryDTO;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassword;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
-import io.harness.connector.entities.embedded.kubernetescluster.UserNamePasswordK8;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesConfigSummaryMapper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.rule.Owner;
@@ -54,12 +54,12 @@ public class ConnectorSummaryMapperTest extends CategoryTest {
     String name = "name";
     String identifier = "identiifier";
     List<String> tags = Arrays.asList("tag1", "tag2");
-    UserNamePasswordK8 userNamePasswordK8 =
-        UserNamePasswordK8.builder().userName(userName).password(password).cacert(cacert).build();
+    K8sUserNamePassword k8sUserNamePassword =
+        K8sUserNamePassword.builder().userName(userName).password(password).cacert(cacert).build();
     KubernetesClusterDetails kubernetesClusterDetails = KubernetesClusterDetails.builder()
                                                             .masterUrl(masterURL)
                                                             .authType(KubernetesAuthType.USER_PASSWORD)
-                                                            .auth(userNamePasswordK8)
+                                                            .auth(k8sUserNamePassword)
                                                             .build();
     Connector connector = KubernetesClusterConfig.builder()
                               .credentialType(MANUAL_CREDENTIALS)

@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class ProjectScopeHelper {
   ProjectService projectService;
+
   public Map<String, String> createProjectIdentifierProjectNameMap(List<String> projectIdentifiersList) {
     if (isEmpty(projectIdentifiersList)) {
       return Collections.emptyMap();

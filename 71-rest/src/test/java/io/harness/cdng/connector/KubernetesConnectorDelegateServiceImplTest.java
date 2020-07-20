@@ -14,7 +14,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.UserNamePasswordDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,12 +36,14 @@ public class KubernetesConnectorDelegateServiceImplTest extends WingsBaseTest {
     String masterUrl = "https://abc.com";
     String identifier = "identifier";
     String name = "name";
-    KubernetesAuthDTO kubernetesAuthDTO =
-        KubernetesAuthDTO.builder()
-            .authType(KubernetesAuthType.USER_PASSWORD)
-            .credentials(
-                UserNamePasswordDTO.builder().username(userName).encryptedPassword(password).cacert(cacert).build())
-            .build();
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(KubernetesAuthType.USER_PASSWORD)
+                                              .credentials(KubernetesUserNamePasswordDTO.builder()
+                                                               .username(userName)
+                                                               .encryptedPassword(password)
+                                                               .cacert(cacert)
+                                                               .build())
+                                              .build();
     KubernetesClusterConfigDTO connectorDTOWithUsernameCreds =
         KubernetesClusterConfigDTO.builder()
             .kubernetesCredentialType(MANUAL_CREDENTIALS)
