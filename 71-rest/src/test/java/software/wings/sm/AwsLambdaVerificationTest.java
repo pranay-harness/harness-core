@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -90,5 +91,13 @@ public class AwsLambdaVerificationTest extends WingsBaseTest {
     assertThat(delegateTask.getAppId()).isEqualTo(APP_ID);
     assertThat(delegateTask.getEnvId()).isEqualTo(ENV_ID);
     assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo(INFRA_MAPPING_ID);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    assertThat(awsLambdaVerification.getTimeoutMillis()).isEqualTo(2 * 60 * 1000);
+    assertThat(awsLambdaVerification.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(2 * 60 * 1000);
   }
 }

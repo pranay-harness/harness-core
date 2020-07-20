@@ -7,6 +7,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -206,6 +207,11 @@ public class AwsLambdaVerification extends State {
     } catch (Exception e) {
       throw new WingsException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  @Override
+  public Integer getTimeoutMillis() {
+    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES));
   }
 
   @Override
