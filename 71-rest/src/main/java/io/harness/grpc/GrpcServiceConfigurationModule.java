@@ -24,6 +24,7 @@ import io.harness.grpc.exception.GrpcExceptionMapper;
 import io.harness.grpc.exception.WingsExceptionGrpcMapper;
 import io.harness.grpc.ng.manager.DelegateTaskGrpcServer;
 import io.harness.grpc.pingpong.PingPongService;
+import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.grpc.server.GrpcServerExceptionHandler;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpc;

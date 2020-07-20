@@ -18,7 +18,7 @@ import io.harness.govern.DependencyModule;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.CoreModule;
-import io.harness.ng.core.NgManagerGrpcServerModule;
+import io.harness.ng.core.NgAsyncTaskGrpcServerModule;
 import io.harness.ng.core.SecretManagementModule;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.RemotePerpetualTaskServiceClientManager;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.impl.RemotePerpetualTaskServiceClientManagerImpl;
@@ -86,8 +86,8 @@ public class NextGenModule extends DependencyModule {
         this.appConfig.getSecretManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ManagerDelegateServiceDriverModule(this.appConfig.getGrpcClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NextGenConfiguration.SERVICE_ID));
-    install(new NgManagerGrpcServerModule(
-        this.appConfig.getGrpcServerConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
+    install(new NgAsyncTaskGrpcServerModule(
+        this.appConfig.getGrpcServerConfig(), "manager", this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ProviderModule() {
       @Provides
       @Singleton

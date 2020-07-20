@@ -4,16 +4,18 @@ import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc.NgDelegateTaskResponseServiceBlockingStub;
@@ -21,7 +23,6 @@ import io.harness.delegate.SendTaskResultRequest;
 import io.harness.delegate.SendTaskResultResponse;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
-import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.remote.server.grpc.perpetualtask.RemotePerpetualTaskServiceClientManager;
 import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsRequest;
 import io.harness.perpetualtask.ObtainPerpetualTaskExecutionParamsResponse;
@@ -37,21 +38,24 @@ import io.harness.perpetualtask.remote.ValidationTaskDetails;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.waiter.WaitNotifyEngine;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
+import javax.validation.constraints.NotNull;
 
-public class NgDelegateTaskResponseGrpcServerTest extends BaseTest {
+public class NgDelegateTaskResponseGrpcServerTest extends CategoryTest {
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();
 
   private NgDelegateTaskResponseServiceBlockingStub ngDelegateTaskServiceBlockingStub;
 
-  @Inject private KryoSerializer kryoSerializer;
+  @Mock private KryoSerializer kryoSerializer;
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private RemotePerpetualTaskServiceClientManager pTaskServiceClientManager;
 
@@ -68,6 +72,8 @@ public class NgDelegateTaskResponseGrpcServerTest extends BaseTest {
 
     ngDelegateTaskServiceBlockingStub = NgDelegateTaskResponseServiceGrpc.newBlockingStub(
         grpcCleanupRule.register(InProcessChannelBuilder.forName(serverName).directExecutor().build()));
+
+    when(kryoSerializer.asDeflatedBytes(anyObject())).thenReturn("task parameterss".getBytes());
   }
 
   @Test
