@@ -5,7 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 
+import java.time.Duration;
+
 @OwnedBy(CDC)
 @Redesign
-//@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "class") TODO JsonTypeInfo remove
-public interface StepParameters {}
+public interface StepParameters {
+  default Duration timeout() {
+    return Duration.ofDays(10);
+  }
+}

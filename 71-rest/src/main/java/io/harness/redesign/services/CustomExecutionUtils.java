@@ -1580,6 +1580,7 @@ public class CustomExecutionUtils {
     String dummyNodeId4 = generateUuid();
     String barrierNodeId1 = generateUuid();
     String barrierNodeId2 = generateUuid();
+    String barrierNodeId3 = generateUuid();
     String waitNodeId = generateUuid();
     return Plan.builder()
         .uuid(generateUuid())
@@ -1659,6 +1660,21 @@ public class CustomExecutionUtils {
                   .name("barrier2")
                   .stepType(BarrierStep.STEP_TYPE)
                   .stepParameters(BarrierStepParameters.builder().identifier("BAR1").timeoutInMillis(60000).build())
+                  .facilitatorObtainment(FacilitatorObtainment.builder()
+                                             .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
+                                             .build())
+                  .adviserObtainment(
+                      AdviserObtainment.builder()
+                          .type(AdviserType.builder().type(AdviserType.ON_SUCCESS).build())
+                          .parameters(OnSuccessAdviserParameters.builder().nextNodeId(barrierNodeId3).build())
+                          .build())
+                  .build())
+        .node(PlanNode.builder()
+                  .uuid(barrierNodeId3)
+                  .identifier("barrier3")
+                  .name("barrier3")
+                  .stepType(BarrierStep.STEP_TYPE)
+                  .stepParameters(BarrierStepParameters.builder().identifier("BAR2").timeoutInMillis(60000).build())
                   .facilitatorObtainment(FacilitatorObtainment.builder()
                                              .type(FacilitatorType.builder().type(FacilitatorType.BARRIER).build())
                                              .build())

@@ -11,8 +11,6 @@ import io.harness.barriers.BarrierExecutionInstance;
 import io.harness.barriers.BarrierResponseData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.engine.barriers.BarrierService;
-import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.execution.NodeExecution;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
@@ -35,8 +33,9 @@ import java.util.Map;
 public class BarrierStep implements Step, SyncExecutable, AsyncExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("BARRIER").build();
 
+  private static final String BARRIER = "barrier";
+
   @Inject private BarrierService barrierService;
-  @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
   public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
@@ -44,43 +43,50 @@ public class BarrierStep implements Step, SyncExecutable, AsyncExecutable {
     final String identifier = ((BarrierStepParameters) stepParameters).getIdentifier();
     logger.warn("There is only one barrier present for planExecution [{}] with [{}] identifier, passing through it...",
         ambiance.getPlanExecutionId(), identifier);
-    BarrierExecutionInstance barrierExecutionInstance = barrierService.get(ambiance.obtainCurrentRuntimeId());
+    BarrierExecutionInstance barrierExecutionInstance =
+        barrierService.findByPlanNodeId(ambiance.obtainCurrentLevel().getSetupId());
     barrierExecutionInstance.setBarrierState(DOWN);
     HPersistence.retry(() -> barrierService.save(barrierExecutionInstance));
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
-        .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name("barrier")
-                         .outcome(BarrierOutcome.builder()
-                                      .message("There is only one barrier present. Barrier went down")
-                                      .identifier(identifier)
-                                      .build())
-                         .build())
+        .stepOutcome(
+            StepResponse.StepOutcome.builder()
+                .name(BARRIER)
+                .outcome(BarrierOutcome.builder()
+                             .message("There is only one barrier present with this identifier. Barrier went down")
+                             .identifier(identifier)
+                             .build())
+                .build())
         .build();
   }
 
   @Override
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    BarrierExecutionInstance barrierExecutionInstance = barrierService.get(ambiance.obtainCurrentRuntimeId());
-    NodeExecution nodeExecution = nodeExecutionService.get(barrierExecutionInstance.getUuid());
-    nodeExecution.setExpiryTs(barrierExecutionInstance.getExpiredIn() + System.currentTimeMillis());
+    BarrierStepParameters parameters = (BarrierStepParameters) stepParameters;
+    BarrierExecutionInstance barrierExecutionInstance =
+        barrierService.findByPlanNodeId(ambiance.obtainCurrentLevel().getSetupId());
 
-    nodeExecutionService.save(nodeExecution);
+    logger.info(
+        "Barrier Step getting executed. RuntimeId: [{}], barrierUuid [{}], barrierIdentifier [{}], barrierGroupId [{}]",
+        ambiance.obtainCurrentLevel().getRuntimeId(), barrierExecutionInstance.getUuid(), parameters.getIdentifier(),
+        barrierExecutionInstance.getBarrierGroupId());
+
     barrierService.update(barrierExecutionInstance);
 
-    return AsyncExecutableResponse.builder().callbackId(barrierExecutionInstance.getIdentifier()).build();
+    return AsyncExecutableResponse.builder().callbackId(barrierExecutionInstance.getBarrierGroupId()).build();
   }
 
   @Override
   public StepResponse handleAsyncResponse(
       Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+    // if barrier is still in STANDING => update barrier state
     BarrierExecutionInstance barrierExecutionInstance =
-        updateBarrierExecutionInstance(ambiance.obtainCurrentRuntimeId());
+        updateBarrierExecutionInstance(ambiance.obtainCurrentLevel().getSetupId());
 
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     BarrierResponseData responseData =
-        (BarrierResponseData) responseDataMap.get(barrierExecutionInstance.getIdentifier());
+        (BarrierResponseData) responseDataMap.get(barrierExecutionInstance.getBarrierGroupId());
     if (responseData.isFailed()) {
       stepResponseBuilder.status(Status.FAILED)
           .failureInfo(FailureInfo.builder().errorMessage(responseData.getErrorMessage()).build());
@@ -90,7 +96,7 @@ public class BarrierStep implements Step, SyncExecutable, AsyncExecutable {
 
     return stepResponseBuilder
         .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name("barrier")
+                         .name(BARRIER)
                          .outcome(BarrierOutcome.builder().identifier(barrierExecutionInstance.getIdentifier()).build())
                          .build())
         .build();
@@ -99,11 +105,11 @@ public class BarrierStep implements Step, SyncExecutable, AsyncExecutable {
   @Override
   public void handleAbort(
       Ambiance ambiance, StepParameters stateParameters, AsyncExecutableResponse executableResponse) {
-    updateBarrierExecutionInstance(ambiance.obtainCurrentRuntimeId());
+    updateBarrierExecutionInstance(ambiance.obtainCurrentLevel().getSetupId());
   }
 
-  private BarrierExecutionInstance updateBarrierExecutionInstance(String barrierExecutionId) {
-    BarrierExecutionInstance barrierExecutionInstance = barrierService.get(barrierExecutionId);
+  private BarrierExecutionInstance updateBarrierExecutionInstance(String planNodeId) {
+    BarrierExecutionInstance barrierExecutionInstance = barrierService.findByPlanNodeId(planNodeId);
     return barrierService.update(barrierExecutionInstance);
   }
 }

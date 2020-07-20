@@ -1,6 +1,7 @@
 package io.harness.engine.barriers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.distribution.barrier.Barrier.State.DOWN;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -102,5 +103,25 @@ public class BarrierServiceImplTest extends OrchestrationTest {
 
     assertThat(barrierExecutionInstanceList).isNotNull();
     assertThat(barrierExecutionInstanceList).containsExactlyInAnyOrderElementsOf(barrierExecutionInstances);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void shouldUpdateState() {
+    String uuid = generateUuid();
+    String planExecutionId = generateUuid();
+    BarrierExecutionInstance barrierExecutionInstance =
+        BarrierExecutionInstance.builder().uuid(uuid).identifier("identifier").planExecutionId(planExecutionId).build();
+    barrierService.save(barrierExecutionInstance);
+
+    BarrierExecutionInstance savedBarrierExecutionInstance = barrierService.get(barrierExecutionInstance.getUuid());
+    assertThat(savedBarrierExecutionInstance).isNotNull();
+
+    barrierService.updateState(savedBarrierExecutionInstance.getUuid(), DOWN);
+    BarrierExecutionInstance savedBarrier = barrierService.get(savedBarrierExecutionInstance.getUuid());
+    assertThat(savedBarrier).isNotNull();
+    assertThat(savedBarrier.getBarrierState()).isEqualTo(DOWN);
   }
 }
