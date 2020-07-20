@@ -4,6 +4,7 @@ import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -160,13 +161,16 @@ public class MorphiaModule extends DependencyModule {
 
   @Override
   protected void configure() {
-    MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
-
     if (!inSpring) {
+      MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
       MapBinder<String, TestExecution> testExecutionMapBinder =
           MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
       testExecutionMapBinder.addBinding("Morphia test registration").toInstance(() -> testAutomaticSearch());
       testExecutionMapBinder.addBinding("Morphia test registrars").toInstance(() -> testAllRegistrars());
+    } else {
+      bind(new TypeLiteral<Map<Class, String>>() {})
+          .annotatedWith(Names.named("morphiaClasses"))
+          .toInstance(Collections.emptyMap());
     }
   }
 }

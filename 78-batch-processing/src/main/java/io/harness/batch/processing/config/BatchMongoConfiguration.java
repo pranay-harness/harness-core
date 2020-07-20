@@ -42,7 +42,7 @@ public class BatchMongoConfiguration {
   @Bean
   @Profile("!test")
   public MongoModule mongoModule() {
-    return new MongoModule();
+    return new MongoModule(true);
   }
 
   // Below are cumulative dependencies of MongoModule. Couldn't find a way to use cumulativeDependencies to add

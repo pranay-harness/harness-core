@@ -46,13 +46,20 @@ public class MongoModule extends DependencyModule {
     return datastore;
   }
 
-  public MongoModule() {
+  private boolean inSpring;
+
+  public MongoModule(boolean inSpring) {
+    this.inSpring = inSpring;
     try {
       registerLogger(MorphiaLoggerFactory.class);
     } catch (Exception e) {
       // happens when MorphiaLoggerFactory.get has already been called.
       logger.warn("Failed to register logger", e);
     }
+  }
+
+  public MongoModule() {
+    this(false);
   }
 
   @Override
@@ -71,9 +78,11 @@ public class MongoModule extends DependencyModule {
   @Singleton
   public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, @Named("morphiaClasses") Set<Class> classes,
       Morphia morphia, ObjectFactory objectFactory, IndexManager indexManager) {
-    for (Class clazz : classes) {
-      if (morphia.getMapper().getMCMap().get(clazz.getName()).getCollectionName().startsWith("!!!custom_")) {
-        throw new UnexpectedException(format("The custom collection name for %s is not provided", clazz.getName()));
+    if (!inSpring) {
+      for (Class clazz : classes) {
+        if (morphia.getMapper().getMCMap().get(clazz.getName()).getCollectionName().startsWith("!!!custom_")) {
+          throw new UnexpectedException(format("The custom collection name for %s is not provided", clazz.getName()));
+        }
       }
     }
 
