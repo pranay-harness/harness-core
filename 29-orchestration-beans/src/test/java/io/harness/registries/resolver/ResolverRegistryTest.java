@@ -45,7 +45,7 @@ public class ResolverRegistryTest extends OrchestrationBeansTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestGetType() {
-    assertThat(resolverRegistry.getType()).isEqualTo(RegistryType.RESOLVER);
+    assertThat(resolverRegistry.getType()).isEqualTo(RegistryType.RESOLVER.name());
   }
 
   @Value

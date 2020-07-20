@@ -42,7 +42,7 @@ public class FacilitatorRegistry implements Registry<FacilitatorType, Class<? ex
   }
 
   @Override
-  public RegistryType getType() {
-    return RegistryType.FACILITATOR;
+  public String getType() {
+    return RegistryType.FACILITATOR.name();
   }
 }

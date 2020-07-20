@@ -43,7 +43,7 @@ public class AdviserRegistry implements Registry<AdviserType, Class<? extends Ad
   }
 
   @Override
-  public RegistryType getType() {
-    return RegistryType.ADVISER;
+  public String getType() {
+    return RegistryType.ADVISER.name();
   }
 }

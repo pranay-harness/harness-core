@@ -47,7 +47,7 @@ public class FacilitatorRegistryTest extends OrchestrationBeansTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestGetType() {
-    assertThat(facilitatorRegistry.getType()).isEqualTo(RegistryType.FACILITATOR);
+    assertThat(facilitatorRegistry.getType()).isEqualTo(RegistryType.FACILITATOR.name());
   }
 
   @Value

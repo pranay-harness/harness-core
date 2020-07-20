@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.multibindings.MapBinder;
 
 import io.harness.govern.DependencyModule;
-import io.harness.registries.RegistryModule;
+import io.harness.registries.OrchestrationRegistryModule;
 import io.harness.registries.registrar.AdviserRegistrar;
 import io.harness.registries.registrar.FacilitatorRegistrar;
 import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
@@ -41,6 +41,6 @@ public class OrchestrationBeansModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of(RegistryModule.getInstance());
+    return ImmutableSet.of(OrchestrationRegistryModule.getInstance());
   }
 }

@@ -42,7 +42,7 @@ public class StepRegistry implements Registry<StepType, Class<? extends Step>> {
   }
 
   @Override
-  public RegistryType getType() {
-    return RegistryType.STEP;
+  public String getType() {
+    return RegistryType.STEP.name();
   }
 }

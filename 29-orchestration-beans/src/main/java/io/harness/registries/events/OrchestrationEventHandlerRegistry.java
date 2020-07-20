@@ -1,7 +1,5 @@
 package io.harness.registries.events;
 
-import static io.harness.registries.RegistryType.ORCHESTRATION_EVENT;
-
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -37,7 +35,7 @@ public class OrchestrationEventHandlerRegistry
   }
 
   @Override
-  public RegistryType getType() {
-    return ORCHESTRATION_EVENT;
+  public String getType() {
+    return RegistryType.ORCHESTRATION_EVENT.name();
   }
 }

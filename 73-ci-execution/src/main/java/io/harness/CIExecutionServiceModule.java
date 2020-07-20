@@ -9,7 +9,6 @@ import io.harness.govern.DependencyModule;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.impl.CIPipelineExecutionServiceImpl;
 import io.harness.registrars.ExecutionRegistrar;
-import io.harness.registries.RegistryModule;
 import io.harness.registries.registrar.StepRegistrar;
 
 import java.util.Set;
@@ -33,7 +32,7 @@ public class CIExecutionServiceModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of(RegistryModule.getInstance(), ExecutionPlanModule.getInstance(),
+    return ImmutableSet.of(ExecutionPlanModule.getInstance(),
         OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .build()),

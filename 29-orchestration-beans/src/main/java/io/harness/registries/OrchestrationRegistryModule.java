@@ -2,7 +2,6 @@ package io.harness.registries;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -14,7 +13,6 @@ import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEventType;
 import io.harness.facilitator.Facilitator;
 import io.harness.facilitator.FacilitatorType;
-import io.harness.govern.DependencyModule;
 import io.harness.references.RefType;
 import io.harness.registries.adviser.AdviserRegistry;
 import io.harness.registries.events.OrchestrationEventHandlerRegistry;
@@ -38,12 +36,12 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 @Slf4j
-public class RegistryModule extends DependencyModule {
-  private static RegistryModule instance;
+public class OrchestrationRegistryModule extends RegistryModule {
+  private static OrchestrationRegistryModule instance;
 
-  public static synchronized RegistryModule getInstance() {
+  public static synchronized OrchestrationRegistryModule getInstance() {
     if (instance == null) {
-      instance = new RegistryModule();
+      instance = new OrchestrationRegistryModule();
     }
     return instance;
   }
@@ -121,15 +119,5 @@ public class RegistryModule extends DependencyModule {
       handlerRegistry.register(eventHandlerPair.getLeft(), eventHandlerPair.getRight());
     });
     return handlerRegistry;
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of();
-  }
-
-  @Override
-  protected void configure() {
-    // Nothing to configure
   }
 }

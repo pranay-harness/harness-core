@@ -42,7 +42,7 @@ public class AdviserRegistryTest extends OrchestrationBeansTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestGetType() {
-    assertThat(adviserRegistry.getType()).isEqualTo(RegistryType.ADVISER);
+    assertThat(adviserRegistry.getType()).isEqualTo(RegistryType.ADVISER.name());
   }
 
   private static class Type1Adviser implements Adviser {
