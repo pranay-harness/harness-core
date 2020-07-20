@@ -9,7 +9,6 @@ import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 import static io.harness.threading.Morpheus.sleep;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -48,6 +47,7 @@ import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -258,7 +258,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       try {
         jenkinsBuildWithDetailsFuture = jenkinsExecutor.submit(jenkinsBuild::details);
         jenkinsBuildWithDetails = jenkinsBuildWithDetailsFuture.get(180, TimeUnit.SECONDS);
-        BuildWithDetails finalJenkinsBuildWithDetails = jenkinsBuildWithDetails;
+        final BuildWithDetails finalJenkinsBuildWithDetails = jenkinsBuildWithDetails;
         saveConsoleLogs = jenkinsExecutor.submit(() -> {
           saveConsoleLogsAsync(
               jenkinsBuild, finalJenkinsBuildWithDetails, consoleLogsSent, activityId, unitName, appId);
@@ -305,32 +305,20 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     String consoleOutputText = jenkinsBuildWithDetails.getConsoleOutputText();
     if (isNotBlank(consoleOutputText)) {
       String[] consoleLines = consoleOutputText.split("\r\n");
-      if (consoleLines.length > NUM_OF_LOGS_TO_KEEP) {
-        Log log = aLog()
-                      .withActivityId(activityId)
-                      .withCommandUnitName(stateName)
-                      .withAppId(appId)
-                      .withLogLevel(LogLevel.INFO)
-                      .withLogLine("-------------------------- truncating "
-                          + (consoleLines.length - NUM_OF_LOGS_TO_KEEP) + " lines --------------------------")
-                      .withExecutionResult(commandExecutionStatus)
-                      .build();
-        logService.save(getAccountId(), log);
-      }
-      for (int i = NUM_OF_LOGS_TO_KEEP > consoleLines.length ? consoleLogsAlreadySent.get()
-                                                             : consoleLines.length - NUM_OF_LOGS_TO_KEEP;
-           i < consoleLines.length; i++) {
-        Log log = aLog()
-                      .withActivityId(activityId)
-                      .withCommandUnitName(stateName)
-                      .withAppId(appId)
-                      .withLogLevel(LogLevel.INFO)
-                      .withLogLine(consoleLines[i])
-                      .withExecutionResult(commandExecutionStatus)
-                      .build();
-        logService.save(getAccountId(), log);
-        consoleLogsAlreadySent.incrementAndGet();
-      }
+      Arrays.stream(consoleLines, consoleLogsAlreadySent.get(), consoleLines.length)
+          .map(line
+              -> aLog()
+                     .withActivityId(activityId)
+                     .withCommandUnitName(stateName)
+                     .withAppId(appId)
+                     .withLogLevel(LogLevel.INFO)
+                     .withLogLine(line)
+                     .withExecutionResult(commandExecutionStatus)
+                     .build())
+          .forEachOrdered(log -> {
+            logService.save(getAccountId(), log);
+            consoleLogsAlreadySent.incrementAndGet();
+          });
     }
   }
 
