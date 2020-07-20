@@ -2,10 +2,12 @@ package software.wings.service.impl.yaml.service;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.yaml.Change.Builder.aFileChange;
 import static software.wings.beans.yaml.Change.ChangeType.DELETE;
 import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
@@ -33,17 +35,21 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.YamlProcessingException;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.yaml.YamlPayload;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class YamlServiceImplTest extends WingsBaseTest {
@@ -146,5 +152,34 @@ public class YamlServiceImplTest extends WingsBaseTest {
     final ArrayList<Change> changeList = Lists.newArrayList(change1, change2, change3, change4);
     yamlService.sortByProcessingOrder(changeList);
     assertThat(changeList).isEqualTo(Arrays.asList(change4, change2, change3, change1));
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldThrowInvalidYamlNameException() {
+    YamlPayload yamlPayload = new YamlPayload();
+    yamlPayload.setYamlPayload("harnessApiVersion: '1.0'\n"
+        + "type: ROLLING\n"
+        + "concurrencyStrategy: INFRA\n"
+        + "envName: qa\n"
+        + "phases:\n"
+        + "- type: KUBERNETES\n"
+        + "  computeProviderName: Harness Sample K8s Cloud Provider\n"
+        + "  daemonSet: false\n"
+        + "  infraDefinitionName: K8s\n"
+        + "  name: Rolling.\n");
+
+    GitFileChange change = GitFileChange.Builder.aGitFileChange()
+                               .withChangeType(ChangeType.MODIFY)
+                               .withFileContent(yamlPayload.getYaml())
+                               .withFilePath(generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER,
+                                   "app123", SERVICES_FOLDER, "service1", MANIFEST_FOLDER, INDEX_YAML))
+                               .withAccountId("TestAccountID")
+                               .build();
+
+    assertThatThrownBy(() -> yamlService.processChangeSet(Collections.singletonList(change)))
+        .isInstanceOf(YamlProcessingException.class)
+        .hasMessageEndingWith("Error while processing some yaml files in the changeset.");
   }
 }
