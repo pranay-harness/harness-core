@@ -1,8 +1,14 @@
 package software.wings.cloudprovider.gke;
 
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -11,14 +17,17 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
+import io.kubernetes.client.openapi.models.V1ResourceAttributes;
+import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatus;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.KubernetesConfig;
@@ -27,7 +36,9 @@ import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.time.Clock;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 public class KubernetesContainerServiceTest extends CategoryTest {
   private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder().namespace("default").build();
@@ -37,36 +48,71 @@ public class KubernetesContainerServiceTest extends CategoryTest {
   @Mock private TimeLimiter timeLimiter;
   @Mock private Clock clock;
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
+  @Mock private AuthorizationV1Api apiClient;
+  @Mock private K8sResourcePermissionImpl k8sResourcePermission;
 
-  @InjectMocks private KubernetesContainerServiceImpl kubernetesContainerService;
+  @InjectMocks @Spy private KubernetesContainerServiceImpl kubernetesContainerService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public KubernetesServer server = new KubernetesServer(true, true);
 
   private KubernetesClient client;
-  private String kubectlPath = "/kubectlPath";
-  private String kubeconfigFileContent = "";
+  List<V1ResourceAttributes> resourceList;
+  List<V1SubjectAccessReviewStatus> response;
+
+  final String REASON = "REASON_HERE";
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     client = server.getClient();
     when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG, Collections.emptyList())).thenReturn(client);
-    when(k8sGlobalConfigService.getKubectlPath()).thenReturn(kubectlPath);
+
+    resourceList = Arrays.asList(new V1ResourceAttributes().verb("verb").resource("resource").group("group"));
+    response = Arrays.asList(new V1SubjectAccessReviewStatus());
+    doReturn(resourceList).when(k8sResourcePermission).v1ResourceAttributesListBuilder(any(), any(), any());
   }
 
   @Test
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
-  public void shouldValidateWithoutCE() {
+  public void shouldValidateWithAndWithoutCE() {
     assertThatCode(() -> kubernetesContainerService.validate(KUBERNETES_CONFIG, Collections.emptyList(), false))
+        .doesNotThrowAnyException();
+
+    doNothing().when(kubernetesContainerService).validateCEPermissions(any());
+    assertThatCode(() -> kubernetesContainerService.validate(KUBERNETES_CONFIG, Collections.emptyList(), true))
         .doesNotThrowAnyException();
   }
 
   @Test
-  @Owner(developers = HANTANG)
+  @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void shouldValidateWithCE() {
-    when(containerDeploymentDelegateHelper.getConfigFileContent(KUBERNETES_CONFIG)).thenReturn(kubeconfigFileContent);
-    assertThatThrownBy(() -> kubernetesContainerService.validate(KUBERNETES_CONFIG, Collections.emptyList(), true))
-        .isInstanceOf(InvalidRequestException.class);
+  public void shouldValidateWithCEAllPermissionGranted() {
+    response.get(0).allowed(true).reason(null);
+
+    doReturn(response)
+        .when(k8sResourcePermission)
+        .validate(any(AuthorizationV1Api.class), any(List.class), any(int.class));
+    doReturn("").when(k8sResourcePermission).buildResponse(any(), any());
+
+    assertThatCode(() -> kubernetesContainerService.validateCEPermissions(KUBERNETES_CONFIG))
+        .doesNotThrowAnyException();
+    verify(k8sResourcePermission, times(0)).validate(any(AuthorizationV1Api.class), any(V1ResourceAttributes.class));
+    verify(k8sResourcePermission, times(0))
+        .validate(any(AuthorizationV1Api.class), any(String.class), any(String.class), any(String.class));
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void shouldValidateWithCEOnePermissionNotGranted() {
+    response.get(0).allowed(false).reason(REASON);
+
+    doReturn(response)
+        .when(k8sResourcePermission)
+        .validate(any(AuthorizationV1Api.class), any(List.class), any(int.class));
+    doReturn(REASON).when(k8sResourcePermission).buildResponse(any(), any());
+
+    assertThatThrownBy(() -> kubernetesContainerService.validateCEPermissions(KUBERNETES_CONFIG))
+        .hasMessageContaining(REASON);
   }
 }

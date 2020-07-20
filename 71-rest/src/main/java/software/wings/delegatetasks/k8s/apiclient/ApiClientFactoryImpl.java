@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.credentials.AccessTokenAuthentication;
 import io.kubernetes.client.util.credentials.ClientCertificateAuthentication;
@@ -30,12 +31,20 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
 
   @Override
   public ApiClient getClient(K8sClusterConfig k8sClusterConfig) {
-    // should we cache the client ?
-    return createNewApiClient(k8sClusterConfig);
+    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+    return fromKubernetesConfig(kubernetesConfig);
   }
 
-  private ApiClient createNewApiClient(K8sClusterConfig k8sClusterConfig) {
-    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+  public static AuthorizationV1Api getAuthorizationClient(KubernetesConfig kubernetesConfig) {
+    return new AuthorizationV1Api(fromKubernetesConfig(kubernetesConfig));
+  }
+
+  public static ApiClient fromKubernetesConfig(KubernetesConfig kubernetesConfig) {
+    // should we cache the client ?
+    return createNewApiClient(kubernetesConfig);
+  }
+
+  private static ApiClient createNewApiClient(KubernetesConfig kubernetesConfig) {
     // this is insecure, but doing this for parity with how our fabric8 client behaves.
     ClientBuilder clientBuilder = new ClientBuilder().setVerifyingSsl(false);
     if (isNotBlank(kubernetesConfig.getMasterUrl())) {

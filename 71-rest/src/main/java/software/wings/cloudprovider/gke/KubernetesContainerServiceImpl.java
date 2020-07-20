@@ -2,14 +2,9 @@ package software.wings.cloudprovider.gke;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
-import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
-import static io.harness.filesystem.FileIo.writeUtf8StringToFile;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -26,7 +21,6 @@ import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 import static software.wings.beans.command.ContainerApiVersions.KUBERNETES_V1;
 import static software.wings.beans.command.KubernetesSetupCommandUnit.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static software.wings.common.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
-import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 import static software.wings.utils.KubernetesConvention.DASH;
 import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
@@ -93,9 +87,10 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.k8s.kubectl.AuthCommand;
-import io.harness.k8s.kubectl.Kubectl;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
+import io.kubernetes.client.openapi.models.V1ResourceAttributes;
+import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatus;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
@@ -111,23 +106,20 @@ import me.snowdrop.istio.client.IstioClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
-import org.zeroturnaround.exec.ProcessResult;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.ContainerInfoBuilder;
 import software.wings.cloudprovider.ContainerInfo.Status;
-import software.wings.delegatetasks.k8s.K8sTaskHelper;
+import software.wings.delegatetasks.k8s.apiclient.ApiClientFactoryImpl;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.utils.Misc;
 
-import java.nio.file.Paths;
 import java.time.Clock;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -148,14 +140,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
   private static final String RUNNING = "Running";
-  private static final String KUBECONFIG_FILENAME = "config";
-  private static final String WORKING_DIR_BASE = "./repository/k8s/";
 
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
   @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
+  @Inject private K8sResourcePermissionImpl k8sResourcePermission;
 
   @Override
   public List<Namespace> listNamespaces(
@@ -402,82 +393,26 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
   }
 
-  private void validateCEPermissions(KubernetesConfig kubernetesConfig) {
-    String workingDirectory = null;
-    Kubectl kubectl = null;
+  public void validateCEPermissions(KubernetesConfig kubernetesConfig) {
+    AuthorizationV1Api apiClient = ApiClientFactoryImpl.getAuthorizationClient(kubernetesConfig);
 
-    try {
-      workingDirectory = Paths.get(WORKING_DIR_BASE, convertBase64UuidToCanonicalForm(generateUuid()))
-                             .normalize()
-                             .toAbsolutePath()
-                             .toString();
-      logger.info("Working directory: {}", workingDirectory);
+    List<V1ResourceAttributes> cePermissions = new ArrayList<>();
 
-      String kubeconfigFileContent = containerDeploymentDelegateHelper.getConfigFileContent(kubernetesConfig);
+    cePermissions.addAll(k8sResourcePermission.v1ResourceAttributesListBuilder(new String[] {""},
+        new String[] {"pods", "nodes", "events", "namespaces"}, new String[] {"get", "list", "watch"}));
+    cePermissions.addAll(k8sResourcePermission.v1ResourceAttributesListBuilder(new String[] {"apps", "extensions"},
+        new String[] {"statefulsets", "deployments", "daemonsets", "replicasets"},
+        new String[] {"get", "list", "watch"}));
+    cePermissions.addAll(k8sResourcePermission.v1ResourceAttributesListBuilder(
+        new String[] {"batch"}, new String[] {"jobs", "cronjobs"}, new String[] {"get", "list", "watch"}));
+    cePermissions.addAll(k8sResourcePermission.v1ResourceAttributesListBuilder(
+        new String[] {"metrics.k8s.io"}, new String[] {"pods", "nodes"}, new String[] {"get", "list"}));
 
-      createDirectoryIfDoesNotExist(workingDirectory);
-      waitForDirectoryToBeAccessibleOutOfProcess(workingDirectory, 10);
-      writeUtf8StringToFile(Paths.get(workingDirectory, KUBECONFIG_FILENAME).toString(), kubeconfigFileContent);
-
-      createDirectoryIfDoesNotExist(Paths.get(workingDirectory, MANIFEST_FILES_DIR).toString());
-
-      String kubectlPath = k8sGlobalConfigService.getKubectlPath();
-      String configPath = KUBECONFIG_FILENAME;
-
-      kubectl = Kubectl.client(kubectlPath, configPath);
-      logger.info("kubectl path: {}", kubectlPath);
-
-    } catch (Exception ex) {
-      logger.error("Exception", ex);
-    }
-
-    if (workingDirectory == null || kubectl == null) {
-      throw new InvalidRequestException("Failed to initialize kubectl");
-    }
-
-    List<String> verbs = new ArrayList<>(Arrays.asList("watch"));
-    List<String> resources = new ArrayList<>(Arrays.asList("nodes", "pods", "events"));
-
-    validateAuth(kubectl, workingDirectory, resources, verbs);
-  }
-
-  private void validateAuth(Kubectl kubectl, String workingDirectory, List<String> resources, List<String> verbs) {
-    int m = resources.size();
-    int n = verbs.size();
-    boolean[][] permissions = new boolean[m][n];
-
-    for (int i = 0; i < m; i++) {
-      for (int j = 0; j < n; j++) {
-        try {
-          AuthCommand authCommand = kubectl.auth().verb(verbs.get(j)).resources(resources.get(i)).allNamespaces(true);
-          ProcessResult authResult = K8sTaskHelper.executeCommandSilent(authCommand, workingDirectory);
-          if (authResult != null
-              && (authResult.getExitValue() == 0 && "yes".equals(authResult.getOutput().getUTF8().trim()))) {
-            permissions[i][j] = true;
-          }
-        } catch (Exception ex) {
-          logger.error("Exception", ex);
-        }
-      }
-    }
-
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < m; i++) {
-      List<String> unauthorizedVerbs = new ArrayList<>();
-      for (int j = 0; j < n; j++) {
-        if (!permissions[i][j]) {
-          unauthorizedVerbs.add(verbs.get(j));
-        }
-      }
-      if (unauthorizedVerbs.size() > 0) {
-        sb.append(
-            String.format("[%s] %s in all namespaces%n", StringUtils.join(unauthorizedVerbs, ","), resources.get(i)));
-      }
-    }
-
-    if (sb.length() != 0) {
-      throw new InvalidRequestException("The provided serviceaccount is missing the following permissions.\n"
-          + sb.toString() + "Please grant these required permissions to the service account.");
+    List<V1SubjectAccessReviewStatus> response = k8sResourcePermission.validate(apiClient, cePermissions, 12);
+    String result = k8sResourcePermission.buildResponse(cePermissions, response);
+    if (!result.isEmpty()) {
+      throw new InvalidRequestException("The provided serviceaccount is missing the following permissions.\n" + result
+          + "Please grant these required permissions to the service account.");
     }
   }
 
