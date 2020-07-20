@@ -1,6 +1,5 @@
-package io.harness.grpc;
+package io.harness.grpc.server;
 
-import io.harness.grpc.server.Connector;
 import lombok.Data;
 
 import java.util.List;

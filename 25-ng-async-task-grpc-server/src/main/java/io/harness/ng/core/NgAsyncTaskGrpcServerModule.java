@@ -17,21 +17,23 @@ import io.grpc.ServerInterceptor;
 import io.grpc.health.v1.HealthGrpc;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc;
-import io.harness.grpc.GrpcServerConfig;
 import io.harness.grpc.auth.ServiceAuthServerInterceptor;
 import io.harness.grpc.auth.SkippedAuthServerInterceptor;
+import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.ng.core.remote.server.grpc.NgDelegateTaskResponseGrpcServer;
 
 import java.util.Set;
 
-public final class NgManagerGrpcServerModule extends AbstractModule {
+public final class NgAsyncTaskGrpcServerModule extends AbstractModule {
   private final GrpcServerConfig grpcServerConfig;
+  private final String serviceName;
   private final String serviceSecret;
 
   @Inject
-  public NgManagerGrpcServerModule(GrpcServerConfig grpcServerConfig, String serviceSecret) {
+  public NgAsyncTaskGrpcServerModule(GrpcServerConfig grpcServerConfig, String serviceName, String serviceSecret) {
     this.grpcServerConfig = grpcServerConfig;
+    this.serviceName = serviceName;
     this.serviceSecret = serviceSecret;
   }
 
@@ -44,7 +46,7 @@ public final class NgManagerGrpcServerModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), ServerInterceptor.class);
     serverInterceptorMultibinder.addBinding().toProvider(
         ()
-            -> new ServiceAuthServerInterceptor(ImmutableMap.of("manager", serviceSecret),
+            -> new ServiceAuthServerInterceptor(ImmutableMap.of(serviceName, serviceSecret),
                 ImmutableSet.of(NgDelegateTaskResponseServiceGrpc.SERVICE_NAME)));
     serverInterceptorMultibinder.addBinding().toProvider(
         ()

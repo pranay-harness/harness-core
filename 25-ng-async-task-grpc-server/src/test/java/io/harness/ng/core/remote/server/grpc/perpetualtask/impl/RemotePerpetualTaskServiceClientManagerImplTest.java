@@ -20,7 +20,6 @@ import io.harness.perpetualtask.remote.RemotePerpetualTaskServiceClient;
 import io.harness.perpetualtask.remote.RemotePerpetualTaskServiceClientRegistry;
 import io.harness.perpetualtask.remote.ValidationTaskDetails;
 import io.harness.rule.Owner;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,6 +28,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+
+import javax.validation.constraints.NotNull;
 
 public class RemotePerpetualTaskServiceClientManagerImplTest extends CategoryTest {
   public static final String ACCOUNT_ID = "accountId";
