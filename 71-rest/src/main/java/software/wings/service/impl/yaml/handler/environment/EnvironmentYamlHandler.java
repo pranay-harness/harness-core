@@ -299,13 +299,12 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       // again.
       List<ServiceVariable> currentVariableList = getAllVariableOverridesForEnv(previous);
       saveOrUpdateVariableOverrides(
-          yaml.getVariableOverrides(), currentVariableList, previous.getAppId(), previous.getUuid(), syncFromGit);
+          yaml.getVariableOverrides(), currentVariableList, previous.getAppId(), previous.getUuid());
 
       current = environmentService.update(current, true);
     } else {
       current = environmentService.save(current);
-      saveOrUpdateVariableOverrides(
-          yaml.getVariableOverrides(), emptyList(), current.getAppId(), current.getUuid(), syncFromGit);
+      saveOrUpdateVariableOverrides(yaml.getVariableOverrides(), emptyList(), current.getAppId(), current.getUuid());
     }
 
     changeContext.setEntity(current);
@@ -431,7 +430,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   }
 
   private void saveOrUpdateVariableOverrides(List<VariableOverrideYaml> latestVariableOverrideList,
-      List<ServiceVariable> currentVariables, String appId, String envId, boolean syncFromGit) {
+      List<ServiceVariable> currentVariables, String appId, String envId) {
     Map<ServiceVariableKey, ServiceVariable> variableMap = new HashMap<>();
     for (ServiceVariable serviceVariable : currentVariables) {
       String serviceName = getParentServiceName(serviceVariable);
@@ -446,35 +445,24 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     // We are passing true for syncFromGit because we don't want to generate multiple yaml change sets if user is adding
     // many service variables through yaml. After performing all add/update/delete, we will call pushToGit which will
     // push everything to git
-    ServiceVariable lastUpdatedServiceVariable = null;
     String accountId = appService.get(appId).getAccountId();
 
-    try {
-      // Delete service variables
-      for (ServiceVariable serviceVariable : configVarsToDelete) {
-        serviceVariableService.delete(appId, serviceVariable.getUuid(), true);
-        lastUpdatedServiceVariable = serviceVariable;
-      }
-
-      // Add service variables
-      for (VariableOverrideYaml configVar : configVarsToAdd) {
-        ServiceVariable serviceVariable =
-            serviceVariableService.save(createNewVariableOverride(appId, envId, configVar), true);
-        lastUpdatedServiceVariable = serviceVariable;
-      }
-
-      // Update service variables
-      lastUpdatedServiceVariable =
-          updateServiceVariables(accountId, configVarsToUpdate, variableMap, lastUpdatedServiceVariable);
-    } finally {
-      if (!syncFromGit && lastUpdatedServiceVariable != null) {
-        serviceVariableService.pushServiceVariablesToGit(lastUpdatedServiceVariable);
-      }
+    // Delete service variables
+    for (ServiceVariable serviceVariable : configVarsToDelete) {
+      serviceVariableService.delete(appId, serviceVariable.getUuid(), true);
     }
+
+    // Add service variables
+    for (VariableOverrideYaml configVar : configVarsToAdd) {
+      serviceVariableService.save(createNewVariableOverride(appId, envId, configVar), true);
+    }
+
+    // Update service variables
+    updateServiceVariables(accountId, configVarsToUpdate, variableMap);
   }
 
-  private ServiceVariable updateServiceVariables(String accountId, List<VariableOverrideYaml> configVarsToUpdate,
-      Map<ServiceVariableKey, ServiceVariable> variableMap, ServiceVariable lastUpdatedServiceVariable) {
+  private void updateServiceVariables(String accountId, List<VariableOverrideYaml> configVarsToUpdate,
+      Map<ServiceVariableKey, ServiceVariable> variableMap) {
     for (VariableOverrideYaml configVar : configVarsToUpdate) {
       ServiceVariableKey serviceVariableKey =
           ServiceVariableKey.builder().name(configVar.getName()).serviceName(configVar.getServiceName()).build();
@@ -508,10 +496,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
           continue;
       }
 
-      lastUpdatedServiceVariable = serviceVariableService.update(serviceVariable, true);
+      serviceVariableService.update(serviceVariable, true);
     }
-
-    return lastUpdatedServiceVariable;
   }
 
   private ServiceVariable createNewVariableOverride(String appId, String envId, VariableOverrideYaml overrideYaml) {

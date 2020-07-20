@@ -186,11 +186,12 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     executorService.submit(() -> addAndSaveSearchTags(serviceVariable));
 
+    newServiceVariable.setSyncFromGit(syncFromGit);
+
     // Type.UPDATE is intentionally passed. Don't change this.
     String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
     yamlPushService.pushYamlChangeSet(
         accountId, newServiceVariable, newServiceVariable, Event.Type.UPDATE, syncFromGit, false);
-
     return newServiceVariable;
   }
 
@@ -322,7 +323,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
                                 .filter(ServiceVariableKeys.appId, appId)
                                 .filter(ID_KEY, settingId));
-
+    serviceVariable.setSyncFromGit(syncFromGit);
     // Type.UPDATE is intentionally passed. Don't change this.
     String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
     yamlPushService.pushYamlChangeSet(
