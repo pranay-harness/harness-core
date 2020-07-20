@@ -40,3 +40,43 @@ resource "google_monitoring_alert_policy" "ce_event_drops" {
     }
   }
 }
+
+// Metrics Based on k8s versions installed on the cluster
+resource "google_logging_metric" "k8s_version" {
+  name = join("_", [local.name_prefix, "k8s_version"])
+  description = "K8s version associated with every K8sTasks except INSTANCE_SYNC. Owner: CE"
+  filter = join("\n", [
+    local.filter_prefix,
+    "jsonPayload.logger=\"software.wings.delegatetasks.k8s.taskhandler.K8sVersionTaskHandler\""
+  ])
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type = "INT64"
+    labels {
+      key = "cloudProvider"
+      value_type = "STRING"
+      description = "Cloud Provider"
+    }
+    labels {
+      key = "version"
+      value_type = "STRING"
+      description = "K8s Version of the cluster in format <majorVersion:minorVersion>"
+    }
+    labels {
+      key = "ccEnabled"
+      value_type = "BOOL"
+      description = "Cloud Cost is Enabled or Not <true:false>"
+    }
+    labels {
+      key = "accountId"
+      value_type = "STRING"
+      description = "The accountId"
+    }
+  }
+  label_extractors = {
+    "cloudProvider" : "EXTRACT(jsonPayload.harness.cloudProvider)"
+    "version" : "EXTRACT(jsonPayload.harness.version)"
+    "ccEnabled" : "EXTRACT(jsonPayload.harness.ccEnabled)"
+    "accountId" : "EXTRACT(jsonPayload.harness.accountId)"
+  }
+}
