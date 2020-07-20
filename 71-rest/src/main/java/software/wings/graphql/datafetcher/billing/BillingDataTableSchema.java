@@ -78,6 +78,7 @@ public class BillingDataTableSchema {
   DbColumn memoryActualIdleCost;
   DbColumn unallocatedCost;
   DbColumn systemCost;
+  DbColumn networkCost;
   DbColumn maxCpuUtilizationValue;
   DbColumn maxMemoryUtilizationValue;
   DbColumn avgCpuUtilizationValue;
@@ -142,6 +143,7 @@ public class BillingDataTableSchema {
     memoryActualIdleCost = billingDataTable.addColumn("memoryactualidlecost", doubleType, null);
     unallocatedCost = billingDataTable.addColumn("unallocatedcost", doubleType, null);
     systemCost = billingDataTable.addColumn("systemcost", doubleType, null);
+    networkCost = billingDataTable.addColumn("networkcost", doubleType, null);
     maxCpuUtilizationValue = billingDataTable.addColumn("maxcpuutilizationvalue", doubleType, null);
     maxMemoryUtilizationValue = billingDataTable.addColumn("maxmemoryutilizationvalue", doubleType, null);
     avgCpuUtilizationValue = billingDataTable.addColumn("avgcpuutilizationvalue", doubleType, null);

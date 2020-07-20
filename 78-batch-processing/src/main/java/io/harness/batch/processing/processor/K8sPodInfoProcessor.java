@@ -94,8 +94,8 @@ public class K8sPodInfoProcessor implements ItemProcessor<PublishedMessage, Inst
         metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData.getCloudProviderInstanceId());
       }
     } else {
-      logger.warn(
-          "Node detail not found settingId {} node name {}", podInfo.getCloudProviderId(), podInfo.getNodeName());
+      logger.warn("Node detail not found settingId {} node name {} podid {} podname {}", podInfo.getCloudProviderId(),
+          podInfo.getNodeName(), podUid, podInfo.getPodName());
     }
 
     Map<String, String> labelsMap = podInfo.getLabelsMap();

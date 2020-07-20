@@ -137,6 +137,9 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     when(billingDataHelper.roundingDoubleFieldValue(BillingDataMetaDataFields.MEMORYIDLECOST, resultSet))
         .thenAnswer(i
             -> Math.round(resultSet.getDouble(BillingDataMetaDataFields.MEMORYIDLECOST.getFieldName()) * 100D) / 100D);
+    when(billingDataHelper.roundingDoubleFieldValue(BillingDataMetaDataFields.NETWORKCOST, resultSet))
+        .thenAnswer(
+            i -> Math.round(resultSet.getDouble(BillingDataMetaDataFields.NETWORKCOST.getFieldName()) * 100D) / 100D);
     when(billingDataHelper.getRoundedDoubleValue(anyDouble())).thenAnswer(i -> i.getArguments()[0]);
   }
 
@@ -197,7 +200,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     String[] clusterValues = new String[] {CLUSTER1_ID};
     String[] namespaceValues = new String[] {NAMESPACE1};
     List<QLCCMAggregationFunction> aggregationFunction =
-        Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation());
+        Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation(), makeNetworkCostAggregation());
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(makeTimeFilter(filterTime));
     filters.add(makeClusterFilter(clusterValues));
@@ -206,6 +209,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
         ACCOUNT1_ID, aggregationFunction, filters, Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET);
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
     assertThat(data.getData().get(0).getIdleCost()).isEqualTo(5.0);
+    assertThat(data.getData().get(0).getNetworkCost()).isEqualTo(2.5);
   }
 
   @Test
@@ -557,6 +561,13 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
         .build();
   }
 
+  public QLCCMAggregationFunction makeNetworkCostAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName("networkcost")
+        .build();
+  }
+
   public QLCCMAggregationFunction makeIdleCostAggregation() {
     return QLCCMAggregationFunction.builder().operationType(QLCCMAggregateOperation.SUM).columnName("idlecost").build();
   }
@@ -720,6 +731,7 @@ public class BillingEntityDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getInt("TOTALNAMESPACES")).thenAnswer((Answer<Integer>) invocation -> 0);
     when(resultSet.getInt("TOTALWORKLOADS")).thenAnswer((Answer<Integer>) invocation -> 0);
     when(resultSet.getDouble("MAXCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.5);
+    when(resultSet.getDouble("NETWORKCOST")).thenAnswer((Answer<Double>) invocation -> 2.5);
     when(resultSet.getDouble("MAXMEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.5);
     when(resultSet.getDouble("AVGCPUUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.4);
     when(resultSet.getDouble("AVGMEMORYUTILIZATION")).thenAnswer((Answer<Double>) invocation -> 0.4);
