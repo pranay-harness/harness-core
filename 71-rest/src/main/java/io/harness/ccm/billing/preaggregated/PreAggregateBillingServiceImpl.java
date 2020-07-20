@@ -46,7 +46,8 @@ public class PreAggregateBillingServiceImpl implements PreAggregateBillingServic
       SqlObject leftJoin) {
     Preconditions.checkNotNull(
         groupByObjects, "Queries to getPreAggregateBillingTimeSeriesStats need at least one groupBy");
-    SelectQuery query = dataHelper.getQuery(aggregateFunction, groupByObjects, conditions, sort, true);
+    SelectQuery query = dataHelper.getQuery(
+        aggregateFunction, groupByObjects, conditions, sort, true, leftJoin != null, tableName.contains(awsRawTable));
     if (leftJoin != null) {
       query.addFromTable(RawBillingTableSchema.table);
       query.addCustomJoin(leftJoin);

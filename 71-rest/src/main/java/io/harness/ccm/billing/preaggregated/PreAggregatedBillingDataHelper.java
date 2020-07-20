@@ -264,6 +264,12 @@ public class PreAggregatedBillingDataHelper {
 
   public SelectQuery getQuery(List<SqlObject> aggregateFunction, List<Object> groupByObjects,
       List<Condition> conditions, List<SqlObject> sort, boolean addTimeTruncGroupBy) {
+    return getQuery(aggregateFunction, groupByObjects, conditions, sort, addTimeTruncGroupBy, false, false);
+  }
+
+  public SelectQuery getQuery(List<SqlObject> aggregateFunction, List<Object> groupByObjects,
+      List<Condition> conditions, List<SqlObject> sort, boolean addTimeTruncGroupBy, boolean isQueryRawTable,
+      boolean isAWSCloudProvider) {
     List<Object> selectObjects = new ArrayList<>();
     List<Object> sqlGroupByObjects = new ArrayList<>();
     List<Object> sortObjects = new ArrayList<>();
@@ -275,7 +281,7 @@ public class PreAggregatedBillingDataHelper {
     if (groupByObjects != null) {
       groupByObjects.stream().filter(g -> g instanceof DbColumn).forEach(sqlGroupByObjects::add);
       if (addTimeTruncGroupBy) {
-        processAndAddTimeTruncatedGroupBy(groupByObjects, sqlGroupByObjects);
+        processAndAddTimeTruncatedGroupBy(groupByObjects, sqlGroupByObjects, isQueryRawTable, isAWSCloudProvider);
       }
       processAndAddGroupBy(sqlGroupByObjects, selectObjects);
     }
@@ -293,24 +299,15 @@ public class PreAggregatedBillingDataHelper {
     return bigQuerySql.getQuery().validate();
   }
 
-  private void processAndAddTimeTruncatedGroupBy(List<Object> groupByObjects, List<Object> sqlGroupByObjects) {
+  private void processAndAddTimeTruncatedGroupBy(List<Object> groupByObjects, List<Object> sqlGroupByObjects,
+      boolean isQueryRawTable, boolean isAWSCloudProvider) {
     Optional<Object> timeTruncatedGroupBy =
         groupByObjects.stream().filter(g -> g instanceof TruncExpression).findFirst();
+    DbColumn rawTableStartTime =
+        isAWSCloudProvider ? RawBillingTableSchema.awsStartTime : RawBillingTableSchema.startTime;
 
-    boolean isLabelsPresent = groupByObjects.stream().anyMatch(g
-        -> g instanceof DbColumn
-            && ((((DbColumn) g).getColumnNameSQL().equals(RawBillingTableSchema.labelsKey.getColumnNameSQL()))
-                   || ((DbColumn) g).getColumnNameSQL().equals(RawBillingTableSchema.labelsValue.getColumnNameSQL())));
-
-    boolean isTagsPresent = groupByObjects.stream().anyMatch(g
-        -> g instanceof DbColumn
-            && ((((DbColumn) g).getColumnNameSQL().equals(RawBillingTableSchema.tagsKey.getColumnNameSQL()))
-                   || ((DbColumn) g).getColumnNameSQL().equals(RawBillingTableSchema.tagsValue.getColumnNameSQL())));
-
-    DbColumn rawTableStartTime = isLabelsPresent ? RawBillingTableSchema.startTime : RawBillingTableSchema.awsStartTime;
-
-    timeTruncatedGroupBy = Optional.of(
-        new TruncExpression(isLabelsPresent || isTagsPresent ? rawTableStartTime : PreAggregatedTableSchema.startTime,
+    timeTruncatedGroupBy =
+        Optional.of(new TruncExpression(isQueryRawTable ? rawTableStartTime : PreAggregatedTableSchema.startTime,
             getTimeTruncationInterval(timeTruncatedGroupBy), PreAggregateConstants.startTimeTruncatedConstant));
 
     sqlGroupByObjects.add(timeTruncatedGroupBy.get());

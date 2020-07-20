@@ -373,7 +373,8 @@ public class BillingStatsTimeSeriesDataFetcher
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field.getDataType()) {
           case STRING:
-            if (addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE) {
+            if ((addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE)
+                || field == BillingDataMetaDataFields.INSTANCENAME) {
               additionalInfo = resultSet.getString(field.getFieldName());
               break;
             }
