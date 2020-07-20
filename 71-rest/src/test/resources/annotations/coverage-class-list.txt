@@ -1,6 +1,9 @@
 12-commons/src/main/java/io/harness/expression/EngineExpressionEvaluator.java
 12-commons/src/main/java/io/harness/expression/EngineVariableResolver.java
 12-commons/src/main/java/io/harness/expression/ExpressionEvaluatorUtils.java
+12-commons/src/main/java/io/harness/registries/RegistryModule.java
+12-commons/src/main/java/io/harness/registries/exceptions/DuplicateRegistryException.java
+12-commons/src/main/java/io/harness/registries/exceptions/UnregisteredKeyAccessException.java
 24-common-entities/src/main/java/io/harness/entity/ServiceSecretKey.java
 29-orchestration-beans/src/main/java/io/harness/adviser/AdviseType.java
 29-orchestration-beans/src/main/java/io/harness/adviser/AdviserObtainment.java
@@ -45,12 +48,10 @@
 29-orchestration-beans/src/main/java/io/harness/references/OutcomeRefObject.java
 29-orchestration-beans/src/main/java/io/harness/references/RefType.java
 29-orchestration-beans/src/main/java/io/harness/references/SweepingOutputRefObject.java
-29-orchestration-beans/src/main/java/io/harness/registries/RegistryModule.java
+29-orchestration-beans/src/main/java/io/harness/registries/OrchestrationRegistryModule.java
 29-orchestration-beans/src/main/java/io/harness/registries/RegistryType.java
 29-orchestration-beans/src/main/java/io/harness/registries/adviser/AdviserRegistry.java
 29-orchestration-beans/src/main/java/io/harness/registries/events/OrchestrationEventHandlerRegistry.java
-29-orchestration-beans/src/main/java/io/harness/registries/exceptions/DuplicateRegistryException.java
-29-orchestration-beans/src/main/java/io/harness/registries/exceptions/UnregisteredKeyAccessException.java
 29-orchestration-beans/src/main/java/io/harness/registries/facilitator/FacilitatorRegistry.java
 29-orchestration-beans/src/main/java/io/harness/registries/resolver/ResolverRegistry.java
 29-orchestration-beans/src/main/java/io/harness/registries/state/StepRegistry.java

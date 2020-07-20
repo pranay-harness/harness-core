@@ -42,7 +42,7 @@ public class StepRegistryTest extends OrchestrationBeansTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestGetType() {
-    assertThat(stepRegistry.getType()).isEqualTo(RegistryType.STEP);
+    assertThat(stepRegistry.getType()).isEqualTo(RegistryType.STEP.name());
   }
 
   @Value

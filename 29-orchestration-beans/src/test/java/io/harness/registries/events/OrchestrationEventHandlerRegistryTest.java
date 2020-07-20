@@ -1,6 +1,5 @@
 package io.harness.registries.events;
 
-import static io.harness.registries.RegistryType.ORCHESTRATION_EVENT;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -12,6 +11,7 @@ import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventHandler;
 import io.harness.execution.events.OrchestrationEventType;
 import io.harness.execution.events.OrchestrationSubject;
+import io.harness.registries.RegistryType;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -33,7 +33,7 @@ public class OrchestrationEventHandlerRegistryTest extends OrchestrationBeansTes
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void getType() {
-    assertThat(registry.getType()).isEqualTo(ORCHESTRATION_EVENT);
+    assertThat(registry.getType()).isEqualTo(RegistryType.ORCHESTRATION_EVENT.name());
   }
 
   private static class StartHandler1 implements OrchestrationEventHandler {
