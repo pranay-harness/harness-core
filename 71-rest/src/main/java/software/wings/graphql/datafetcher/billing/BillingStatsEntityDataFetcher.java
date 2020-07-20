@@ -136,6 +136,7 @@ public class BillingStatsEntityDataFetcher
       String name = BillingStatsDefaultKeys.NAME;
       Double totalCost = BillingStatsDefaultKeys.TOTALCOST;
       Double idleCost = BillingStatsDefaultKeys.IDLECOST;
+      Double networkCost = BillingStatsDefaultKeys.NETWORKCOST;
       Double cpuIdleCost = BillingStatsDefaultKeys.CPUIDLECOST;
       Double memoryIdleCost = BillingStatsDefaultKeys.MEMORYIDLECOST;
       Double costTrend = BillingStatsDefaultKeys.COSTTREND;
@@ -205,6 +206,9 @@ public class BillingStatsEntityDataFetcher
           case CPUIDLECOST:
             cpuIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
             break;
+          case NETWORKCOST:
+            networkCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
           case MEMORYIDLECOST:
             memoryIdleCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
             break;
@@ -254,6 +258,7 @@ public class BillingStatsEntityDataFetcher
           .name(name)
           .type(type)
           .totalCost(totalCost)
+          .networkCost(networkCost)
           .idleCost(idleCost)
           .cpuIdleCost(cpuIdleCost)
           .memoryIdleCost(memoryIdleCost)

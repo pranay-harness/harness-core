@@ -21,6 +21,7 @@ public class QLNodeAndPodDetailsTableRow {
   double totalCost;
   double idleCost;
   double systemCost;
+  double networkCost;
   double unallocatedCost;
   double cpuAllocatable;
   double memoryAllocatable;

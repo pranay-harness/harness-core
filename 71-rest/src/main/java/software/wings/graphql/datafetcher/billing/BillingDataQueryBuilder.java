@@ -326,6 +326,11 @@ public class BillingDataQueryBuilder {
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getActualIdleCost()),
                 BillingDataMetaDataFields.IDLECOST.getFieldName()));
         fieldNames.add(BillingDataMetaDataFields.IDLECOST);
+      } else if (aggregationFunction.getColumnName().equals(schema.getNetworkCost().getColumnNameSQL())) {
+        selectQuery.addCustomColumns(
+            Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getNetworkCost()),
+                BillingDataMetaDataFields.NETWORKCOST.getFieldName()));
+        fieldNames.add(BillingDataMetaDataFields.NETWORKCOST);
       } else if (aggregationFunction.getColumnName().equals(schema.getUnallocatedCost().getColumnNameSQL())) {
         selectQuery.addCustomColumns(
             Converter.toColumnSqlObject(FunctionCall.sum().addColumnParams(schema.getUnallocatedCost()),

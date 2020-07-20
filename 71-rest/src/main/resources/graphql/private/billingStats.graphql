@@ -173,6 +173,7 @@ type BillingEntityDataPoint {
   avgCpuUtilization: Number
   avgMemoryUtilization: Number
   unallocatedCost: Number
+  networkCost: Number
 }
 
 type GcpBillingEntityDataPoint {
@@ -398,6 +399,7 @@ type NodeAndPodDataPoint {
   totalCost: Number
   idleCost: Number
   systemCost: Number
+  networkCost: Number
   unallocatedCost: Number
   cpuAllocatable: Number
   memoryAllocatable: Number

@@ -64,7 +64,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
   @Mock ResultSet resultSet;
 
   final int[] count = {0};
-  final double[] doubleVal = {0, 0, 0};
+  final double[] doubleVal = {0, 0, 0, 0};
   final long currentTime = System.currentTimeMillis();
   final long[] calendar = {currentTime};
 
@@ -144,8 +144,8 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     filters.add(makeTimeFilter(0L));
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeNodeEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeAscByAmountSortingCriteria());
-    List<QLCCMAggregationFunction> aggregationFunctions =
-        Arrays.asList(makeBillingAmtAggregation(), makeIdleCostAggregation(), makeUnallocatedCostAggregation());
+    List<QLCCMAggregationFunction> aggregationFunctions = Arrays.asList(makeBillingAmtAggregation(),
+        makeIdleCostAggregation(), makeUnallocatedCostAggregation(), makeNetworkCostAggregation());
 
     QLNodeAndPodDetailsTableData data = (QLNodeAndPodDetailsTableData) nodeAndPodDetailsDataFetcher.fetch(
         ACCOUNT_ID, aggregationFunctions, filters, groupBy, sortCriteria);
@@ -155,6 +155,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     assertThat(data.getData().get(0).getTotalCost()).isEqualTo(10.0);
     assertThat(data.getData().get(0).getIdleCost()).isEqualTo(3.0);
     assertThat(data.getData().get(0).getUnallocatedCost()).isEqualTo(4.0);
+    assertThat(data.getData().get(0).getNetworkCost()).isEqualTo(3.0);
     assertThat(data.getData().get(0).getCpuAllocatable()).isEqualTo(CPU_UNITS);
     assertThat(data.getData().get(0).getMemoryAllocatable()).isEqualTo(MEMORY_MB);
     assertThat(data.getData().get(0).getMachineType()).isEqualTo("linux");
@@ -207,6 +208,7 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     when(resultSet.getDouble("IDLECOST")).thenAnswer((Answer<Double>) invocation -> 3.0 + doubleVal[1]++);
     when(resultSet.getDouble("ACTUALIDLECOST")).thenAnswer((Answer<Double>) invocation -> 3.0 + doubleVal[1]++);
     when(resultSet.getDouble("UNALLOCATEDCOST")).thenAnswer((Answer<Double>) invocation -> 4.0 + doubleVal[2]++);
+    when(resultSet.getDouble("NETWORKCOST")).thenAnswer((Answer<Double>) invocation -> 3.0 + doubleVal[3]++);
     when(resultSet.getString("INSTANCEID")).thenAnswer((Answer<String>) invocation -> INSTANCE_ID);
 
     returnResultSet(1);
@@ -272,6 +274,13 @@ public class NodeAndPodDetailsDataFetcherTest extends AbstractDataFetcherTest {
     return QLCCMAggregationFunction.builder()
         .operationType(QLCCMAggregateOperation.SUM)
         .columnName("billingamount")
+        .build();
+  }
+
+  public QLCCMAggregationFunction makeNetworkCostAggregation() {
+    return QLCCMAggregationFunction.builder()
+        .operationType(QLCCMAggregateOperation.SUM)
+        .columnName("networkcost")
         .build();
   }
 

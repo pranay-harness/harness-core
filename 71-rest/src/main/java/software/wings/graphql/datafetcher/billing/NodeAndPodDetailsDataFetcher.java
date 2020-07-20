@@ -115,6 +115,7 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
       Double totalCost = BillingStatsDefaultKeys.TOTALCOST;
       Double idleCost = BillingStatsDefaultKeys.IDLECOST;
       Double systemCost = BillingStatsDefaultKeys.SYSTEMCOST;
+      Double networkCost = BillingStatsDefaultKeys.NETWORKCOST;
       Double unallocatedCost = BillingStatsDefaultKeys.UNALLOCATEDCOST;
 
       for (BillingDataQueryMetadata.BillingDataMetaDataFields field : queryData.getFieldNames()) {
@@ -134,6 +135,9 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
           case SYSTEMCOST:
             systemCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
             break;
+          case NETWORKCOST:
+            networkCost = billingDataHelper.roundingDoubleFieldValue(field, resultSet);
+            break;
           default:
             break;
         }
@@ -146,6 +150,7 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
                                   .idleCost(idleCost)
                                   .systemCost(systemCost)
                                   .unallocatedCost(unallocatedCost)
+                                  .networkCost(networkCost)
                                   .build());
     }
     return QLNodeAndPodDetailsTableData.builder().data(entityTableListData).build();
@@ -199,6 +204,7 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
           .idleCost(costDataEntry.getIdleCost())
           .systemCost(costDataEntry.getSystemCost())
           .unallocatedCost(costDataEntry.getUnallocatedCost())
+          .networkCost(costDataEntry.getNetworkCost())
           .cpuAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits()))
           .memoryAllocatable(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb()))
           .machineType(entry.getMetaData().get(OPERATING_SYSTEM))
@@ -234,6 +240,7 @@ public class NodeAndPodDetailsDataFetcher extends AbstractStatsDataFetcherWithAg
           .idleCost(costDataEntry.getIdleCost())
           .systemCost(costDataEntry.getSystemCost())
           .unallocatedCost(costDataEntry.getUnallocatedCost())
+          .networkCost(costDataEntry.getNetworkCost())
           .cpuRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getCpuUnits()))
           .memoryRequested(billingDataHelper.getRoundedDoubleValue(entry.getTotalResource().getMemoryMb()))
           .createTime(entry.getUsageStartTime().toEpochMilli());

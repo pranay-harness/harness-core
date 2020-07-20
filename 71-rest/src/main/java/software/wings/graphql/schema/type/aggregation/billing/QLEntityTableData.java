@@ -18,6 +18,7 @@ public class QLEntityTableData implements QLData {
   String type;
   Double totalCost;
   Double idleCost;
+  Double networkCost;
   Double cpuIdleCost;
   Double memoryIdleCost;
   Double costTrend;
