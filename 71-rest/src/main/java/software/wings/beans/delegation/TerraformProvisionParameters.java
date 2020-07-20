@@ -56,8 +56,11 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private final List<String> targets;
   private final List<String> tfVarFiles;
   private final boolean runPlanOnly;
+  private final boolean exportPlanToApplyStep;
   private final String workspace;
   private final String delegateTag;
+
+  private final byte[] terraformPlan;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {

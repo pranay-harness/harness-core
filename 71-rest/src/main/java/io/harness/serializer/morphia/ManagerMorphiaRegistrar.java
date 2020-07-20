@@ -109,6 +109,7 @@ import software.wings.api.SpotinstAmiDeploymentInfo;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
+import software.wings.api.TerraformPlanParam;
 import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
@@ -1179,6 +1180,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.SpotinstAmiDeploymentInfo", SpotinstAmiDeploymentInfo.class);
     w.put("api.terraform.TerraformProvisionInheritPlanElement", TerraformProvisionInheritPlanElement.class);
     w.put("api.TerraformApplyMarkerParam", TerraformApplyMarkerParam.class);
+    w.put("api.TerraformPlanParam", TerraformPlanParam.class);
     w.put("api.TerraformExecutionData", TerraformExecutionData.class);
     w.put("api.TerraformOutputInfoElement", TerraformOutputInfoElement.class);
     w.put("audit.EntityAuditRecord", EntityAuditRecord.class);

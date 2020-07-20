@@ -86,6 +86,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final String TERRAFORM_STATE_FILE_NAME = "terraform.tfstate";
   private static final String WORKSPACE_DIR_BASE = "terraform.tfstate.d";
   private static final String WORKSPACE_STATE_FILE_PATH_FORMAT = WORKSPACE_DIR_BASE + "/%s/terraform.tfstate";
+  private static final String WORKSPACE_PLAN_FILE_PATH_FORMAT = WORKSPACE_DIR_BASE + "/$WORKSPACE_NAME/tfplan";
+  private static final String TERRAFORM_PLAN_FILE_OUTPUT_NAME = "tfplan";
   private static final String TERRAFORM_PLAN_FILE_NAME = "terraform.tfplan";
   private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform-%s.tfvars";
   private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs-%s";
@@ -265,11 +267,16 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
             code = executeShellCommand(command, scriptDirectory, parameters, activityLogOutputStream);
           }
-          if (code == 0) {
+          // if the plan exists we should use the approved plan, instead create a plan
+          if (code == 0 && parameters.getTerraformPlan() == null) {
             command = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, varParams);
             commandToLog = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, uiLogs);
             saveExecutionLog(parameters, commandToLog, CommandExecutionStatus.RUNNING, INFO);
             code = executeShellCommand(command, scriptDirectory, parameters, planLogOutputStream);
+          } else if (code == 0 && parameters.getTerraformPlan() != null) {
+            // case when we are inheriting the approved  plan
+            saveTerraformPlanContentToFile(parameters, scriptDirectory);
+            saveExecutionLog(parameters, "Using approved terraform plan", CommandExecutionStatus.RUNNING, INFO);
           }
           if (code == 0 && !parameters.isRunPlanOnly()) {
             command = "terraform apply -input=false tfplan";
@@ -383,11 +390,16 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         }
       }
 
+      byte[] terraformPlan = parameters.isRunPlanOnly() && parameters.isExportPlanToApplyStep()
+          ? getTerraformPlanFile(scriptDirectory, parameters.getWorkspace())
+          : null;
+
       final TerraformExecutionDataBuilder terraformExecutionDataBuilder =
           TerraformExecutionData.builder()
               .entityId(delegateFile.getEntityId())
               .stateFileId(delegateFile.getFileId())
               .planLogFileId(APPLY == parameters.getCommand() ? planLogFile.getFileId() : null)
+              .tfPlanFile(terraformPlan)
               .commandExecuted(parameters.getCommand())
               .sourceRepoReference(sourceRepoReference)
               .variables(parameters.getRawVariables())
@@ -569,6 +581,26 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
 
     return null;
+  }
+
+  @VisibleForTesting
+  public byte[] getTerraformPlanFile(String scriptDirectory, String workspace) throws IOException {
+    return isEmpty(workspace) ? Files.readAllBytes(Paths.get(scriptDirectory, TERRAFORM_PLAN_FILE_OUTPUT_NAME))
+                              : Files.readAllBytes(Paths.get(scriptDirectory,
+                                    WORKSPACE_PLAN_FILE_PATH_FORMAT.replace("$WORKSPACE_NAME", workspace)));
+  }
+
+  @VisibleForTesting
+  public void saveTerraformPlanContentToFile(TerraformProvisionParameters parameters, String scriptDirectory)
+      throws IOException {
+    File tfPlanFile = isEmpty(parameters.getWorkspace())
+        ? Paths.get(scriptDirectory, TERRAFORM_PLAN_FILE_OUTPUT_NAME).toFile()
+        : Paths
+              .get(scriptDirectory,
+                  WORKSPACE_PLAN_FILE_PATH_FORMAT.replace("$WORKSPACE_NAME", parameters.getWorkspace()))
+              .toFile();
+
+    FileUtils.copyInputStreamToFile(new ByteArrayInputStream(parameters.getTerraformPlan()), tfPlanFile);
   }
 
   private String getLatestCommitSHAFromLocalRepo(GitOperationContext gitOperationContext) {

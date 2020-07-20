@@ -1,32 +1,41 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FileMetadata;
+import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.stream.BoundedInputStream;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +45,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
+import software.wings.api.TerraformExecutionData;
+import software.wings.api.TerraformPlanParam;
+import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -48,6 +60,9 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.settings.UsageRestrictions;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -59,6 +74,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -71,6 +87,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Mock private GitUtilsManager gitUtilsManager;
   @Mock private FileService fileService;
   @Mock private SecretManager secretManager;
+  @Mock private SweepingOutputService sweepingOutputService;
   @Mock private ExecutionContextImpl executionContext;
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
   @InjectMocks private TerraformProvisionState destroyProvisionState = new DestroyTerraformProvisionState("tf");
@@ -344,6 +361,77 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(parameters.getBackendConfigs()).isNotEmpty();
     assertThat(parameters.getVariables()).isEmpty();
     assertParametersBackendConfigs(parameters);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseSavePlan() {
+    state.setRunPlanOnly(true);
+    state.setExportPlanToApplyStep(true);
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", TerraformExecutionData.builder().tfPlanFile("TFPlanFileContent".getBytes()).build());
+    doReturn("workflowExecutionId").when(executionContext).getWorkflowExecutionId();
+    state.setProvisionerId(PROVISIONER_ID);
+    doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(TerraformInfrastructureProvisioner.builder().build())
+        .when(infrastructureProvisionerService)
+        .get(APP_ID, PROVISIONER_ID);
+    doReturn(SweepingOutputInstance.builder())
+        .when(executionContext)
+        .prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW);
+    ExecutionResponse executionResponse = state.handleAsyncResponse(executionContext, response);
+    assertThat(
+        ((TerraformProvisionInheritPlanElement) executionResponse.getContextElements().get(0)).getProvisionerId())
+        .isEqualTo(PROVISIONER_ID);
+    verify(secretManager, times(1))
+        .saveFile(anyString(), anyString(), anyString(), anyInt(), any(UsageRestrictions.class),
+            any(BoundedInputStream.class), anyBoolean());
+    verify(sweepingOutputService, times(1)).save(any(SweepingOutputInstance.class));
+    verify(executionContext, times(1)).prepareSweepingOutputBuilder(any(SweepingOutputInstance.Scope.class));
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testGetTerraformPlanFromSecretManager() {
+    String terraformPlanSecretManagerId = "terraformPlanSecretManagerId";
+    when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
+    when(executionContext.getAccountId()).thenReturn(ACCOUNT_ID);
+    SweepingOutputInstance sweepingOutputInstance =
+        SweepingOutputInstance.builder()
+            .value(TerraformPlanParam.builder().terraformPlanSecretManagerId(terraformPlanSecretManagerId).build())
+            .build();
+    when(executionContext.prepareSweepingOutputInquiryBuilder()).thenReturn(SweepingOutputInquiry.builder());
+    when(sweepingOutputService.find(any(SweepingOutputInquiry.class))).thenReturn(sweepingOutputInstance);
+    byte[] terraformPlanContent = "terraformPlanContent".getBytes();
+    when(secretManager.getFileContents(anyString(), anyString())).thenReturn(terraformPlanContent);
+    byte[] retrievedFileContent = state.getTerraformPlanFromSecretManager(executionContext);
+    assertThat(retrievedFileContent).isEqualTo(terraformPlanContent);
+    verify(secretManager, times(1)).getFileContents(ACCOUNT_ID, terraformPlanSecretManagerId);
+    verify(sweepingOutputService, times(1)).find(any(SweepingOutputInquiry.class));
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testDeleteTerraformPlanFromSecretManager() {
+    String terraformPlanSecretManagerId = "terraformPlanSecretManagerId";
+    String sweepingOutputInstanceUUID = "sweepingOutputInstanceUUID";
+    when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
+    when(executionContext.getAccountId()).thenReturn(ACCOUNT_ID);
+    when(executionContext.getAppId()).thenReturn(APP_ID);
+    SweepingOutputInstance sweepingOutputInstance =
+        SweepingOutputInstance.builder()
+            .uuid(sweepingOutputInstanceUUID)
+            .value(TerraformPlanParam.builder().terraformPlanSecretManagerId(terraformPlanSecretManagerId).build())
+            .build();
+    when(executionContext.prepareSweepingOutputInquiryBuilder()).thenReturn(SweepingOutputInquiry.builder());
+    when(sweepingOutputService.find(any(SweepingOutputInquiry.class))).thenReturn(sweepingOutputInstance);
+    state.deleteTerraformPlanFromSecretManager(executionContext);
+    verify(sweepingOutputService, times(1)).find(any(SweepingOutputInquiry.class));
+    verify(secretManager, times(1)).deleteFile(ACCOUNT_ID, terraformPlanSecretManagerId);
+    verify(sweepingOutputService, times(1)).deleteById(APP_ID, sweepingOutputInstanceUUID);
   }
 
   private void assertParametersVariables(TerraformProvisionParameters parameters) {

@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.terraform;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,8 +12,10 @@ import static org.mockito.Mockito.doReturn;
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.filesystem.FileIo;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;
@@ -26,6 +29,7 @@ import software.wings.delegatetasks.TerraformProvisionTask;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.WingsTestConstants;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -86,5 +90,44 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     String uiLogs = inlineUILogBuffer.toString();
     assertThat(varParams).isEqualTo(" -var='k1=v1'  -var='k2=v2' ");
     assertThat(uiLogs).isEqualTo(" -var='k1=v1'  -var='k2=HarnessSecret:[k2]' ");
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testSaveAndGetTerraformPlanFile() throws IOException {
+    byte[] planContent = "terraformPlanContent".getBytes();
+    String scriptDirectory = "repository/terraformTest";
+    String workspacePath = "workspace";
+    TerraformProvisionParameters terraformProvisionParameters =
+        TerraformProvisionParameters.builder().workspace(workspacePath).terraformPlan(planContent).build();
+    terraformProvisionTask.saveTerraformPlanContentToFile(terraformProvisionParameters, scriptDirectory);
+    List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
+    assertThat(fileDataList.size()).isEqualTo(1);
+    assertThat(fileDataList.get(0).getFileBytes()).isEqualTo(planContent);
+
+    byte[] retrievedTerraformPlanContent = terraformProvisionTask.getTerraformPlanFile(scriptDirectory, workspacePath);
+    assertThat(retrievedTerraformPlanContent).isEqualTo(planContent);
+
+    FileIo.deleteDirectoryAndItsContentIfExists(scriptDirectory);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testSaveAndGetTerraformPlanFileWorkspaceEmpty() throws IOException {
+    byte[] planContent = "terraformPlanContent".getBytes();
+    String scriptDirectory = "repository/terraformTest";
+    TerraformProvisionParameters terraformProvisionParameters =
+        TerraformProvisionParameters.builder().terraformPlan(planContent).build();
+    terraformProvisionTask.saveTerraformPlanContentToFile(terraformProvisionParameters, scriptDirectory);
+    List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
+    assertThat(fileDataList.size()).isEqualTo(1);
+    assertThat(fileDataList.get(0).getFileBytes()).isEqualTo(planContent);
+
+    byte[] retrievedTerraformPlanContent = terraformProvisionTask.getTerraformPlanFile(scriptDirectory, null);
+    assertThat(retrievedTerraformPlanContent).isEqualTo(planContent);
+
+    FileIo.deleteDirectoryAndItsContentIfExists(scriptDirectory);
   }
 }

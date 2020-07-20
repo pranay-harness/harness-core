@@ -37,6 +37,8 @@ public class TerraformExecutionData extends StateExecutionData implements Delega
   private String workspace;
   private String delegateTag;
 
+  private byte[] tfPlanFile;
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
