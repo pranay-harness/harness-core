@@ -374,7 +374,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         configuration.getGrpcServerConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
 
     modules.add(new NgManagerServiceDriverModule(
-        configuration.getGrpcClientConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
+        configuration.getGrpcClientConfig(), "manager", configuration.getPortal().getJwtNextGenManagerSecret()));
 
     modules.add(new ProviderModule() {
       @Provides

@@ -27,11 +27,13 @@ public class NgManagerServiceDriverModuleTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testConfigure() {
     String serviceSecret = "service_secret";
+    String serviceId = "manager";
     String authority = "localhost";
     String target = "localhost:9980";
 
     GrpcClientConfig grpcClientConfig = GrpcClientConfig.builder().target(target).authority(authority).build();
-    NgManagerServiceDriverModule driverModule = new NgManagerServiceDriverModule(grpcClientConfig, serviceSecret);
+    NgManagerServiceDriverModule driverModule =
+        new NgManagerServiceDriverModule(grpcClientConfig, serviceSecret, serviceId);
 
     List<Module> modules = new ArrayList<>();
     modules.add(driverModule);
