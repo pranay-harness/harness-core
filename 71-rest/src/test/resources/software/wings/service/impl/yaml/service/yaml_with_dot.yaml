@@ -1,0 +1,10 @@
+harnessApiVersion: '1.0'
+type: ROLLING
+concurrencyStrategy: INFRA
+envName: qa
+phases:
+  - type: KUBERNETES
+    computeProviderName: Harness Sample K8s Cloud Provider
+    daemonSet: false
+    infraDefinitionName: K8s
+    name: Rolling.

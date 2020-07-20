@@ -118,6 +118,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidYamlNameException;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.security.UserThreadLocal;
@@ -146,6 +147,7 @@ import java.io.StringWriter;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -590,6 +592,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           logger.warn("Unable to load yaml from string for file: " + yamlFilePath, ex);
           addToFailedYamlMap(failedYamlFileChangeMap, change, ExceptionUtils.getMessage(ex));
         }
+      } catch (InvalidYamlNameException ex) {
+        logger.warn("Not a well formed yaml. Wrong field format", ex);
+        addToFailedYamlMap(failedYamlFileChangeMap, change, ExceptionUtils.getMessage(ex));
       } catch (Exception ex) {
         logger.warn("Unable to load yaml from string for file: " + yamlFilePath, ex);
         addToFailedYamlMap(failedYamlFileChangeMap, change, ExceptionUtils.getMessage(ex));
@@ -887,7 +892,18 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     Yaml yamlObj = new Yaml();
 
     // We just load the yaml to see if its well formed.
-    yamlObj.load(yamlString);
+    LinkedHashMap<String, Object> load = (LinkedHashMap<String, Object>) yamlObj.load(yamlString);
+
+    List<String> phaseNames = ((List<LinkedHashMap<String, String>>) load.get("phases"))
+                                  .stream()
+                                  .map(map -> map.get("name"))
+                                  .collect(toList());
+
+    phaseNames.forEach(name -> {
+      if (name.contains(".")) {
+        throw new InvalidYamlNameException("Invalid phase name [" + name + "]. Dots are not permitted");
+      }
+    });
   }
 
   /**
