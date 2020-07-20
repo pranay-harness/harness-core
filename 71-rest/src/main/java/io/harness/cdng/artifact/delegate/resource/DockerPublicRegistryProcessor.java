@@ -6,10 +6,10 @@ import static software.wings.helpers.ext.docker.DockerRegistryServiceImpl.isSucc
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
-import io.harness.cdng.artifact.bean.ArtifactAttributes;
-import io.harness.cdng.artifact.bean.DockerArtifactAttributes;
-import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
+import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
+import io.harness.cdng.artifact.delegate.beans.DockerArtifactAttributes;
 import io.harness.cdng.artifact.delegate.beans.DockerPublicImageTagResponse;
+import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.RegexFunctor;
 import io.harness.network.Http;

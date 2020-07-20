@@ -1,7 +1,5 @@
 package io.harness.cdng.tasks.manifestFetch;
 
-import static io.harness.cdng.manifest.yaml.FetchType.BRANCH;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogLevel.WARN;
@@ -9,6 +7,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 
 import com.google.inject.Inject;
 
+import io.harness.cdng.manifest.yaml.FetchType;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
@@ -56,8 +55,9 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
     GitFetchRequest gitFetchRequest = (GitFetchRequest) parameters;
 
     logger.info("Running GitFetchFilesTask for activityId {}", gitFetchRequest.getActivityId());
-    String executionLogName =
-        isEmpty(gitFetchRequest.getExecutionLogName()) ? FetchFiles : gitFetchRequest.getExecutionLogName();
+    String executionLogName = EmptyPredicate.isEmpty(gitFetchRequest.getExecutionLogName())
+        ? FetchFiles
+        : gitFetchRequest.getExecutionLogName();
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(delegateLogService,
         gitFetchRequest.getAccountId(), gitFetchRequest.getAppId(), gitFetchRequest.getActivityId(), executionLogName);
@@ -119,7 +119,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
     }
 
     GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitStore.getConnectorIdentifier(),
-        gitStore.getBranch(), gitStore.getBranch(), filePathsToFetch, BRANCH == gitStore.getGitFetchType());
+        gitStore.getBranch(), gitStore.getBranch(), filePathsToFetch, FetchType.BRANCH == gitStore.getGitFetchType());
     gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(gitFetchFilesResult, executionLogCallback);
 
     return gitFetchFilesResult;

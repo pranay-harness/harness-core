@@ -1,7 +1,7 @@
 package io.harness.cdng.artifact.delegate.resource;
 
-import io.harness.cdng.artifact.bean.ArtifactAttributes;
-import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
+import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
+import io.harness.cdng.artifact.delegate.beans.connector.DockerhubConnectorConfig;
 
 public interface DockerRegistryService {
   int MAX_NO_OF_TAGS_PER_IMAGE = 10000;

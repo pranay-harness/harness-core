@@ -13,7 +13,7 @@ import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaModule;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.ManagerRegistrars;
+import io.harness.serializer.NGRegistrars;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
@@ -51,7 +51,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(ManagerRegistrars.kryoRegistrars)
+            .addAll(NGRegistrars.kryoRegistrars)
             .add(TestPersistenceKryoRegistrar.class)
             .build();
       }

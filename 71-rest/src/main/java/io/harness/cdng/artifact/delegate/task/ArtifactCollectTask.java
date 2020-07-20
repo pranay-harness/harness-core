@@ -4,8 +4,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import io.harness.cdng.artifact.bean.ArtifactAttributes;
 import io.harness.cdng.artifact.delegate.DelegateArtifactService;
+import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;

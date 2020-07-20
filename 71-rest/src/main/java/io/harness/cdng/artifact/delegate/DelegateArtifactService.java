@@ -1,8 +1,8 @@
 package io.harness.cdng.artifact.delegate;
 
-import io.harness.cdng.artifact.bean.ArtifactAttributes;
-import io.harness.cdng.artifact.bean.ArtifactSourceAttributes;
-import io.harness.cdng.artifact.bean.connector.ConnectorConfig;
+import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
+import io.harness.cdng.artifact.delegate.beans.ArtifactSourceAttributes;
+import io.harness.cdng.artifact.delegate.beans.connector.ConnectorConfig;
 
 public interface DelegateArtifactService {
   default ArtifactAttributes getLastSuccessfulBuild(

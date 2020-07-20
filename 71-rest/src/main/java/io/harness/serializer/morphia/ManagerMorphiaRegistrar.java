@@ -22,10 +22,15 @@ import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpServiceAccount;
 import io.harness.ccm.health.CeExceptionRecord;
+import io.harness.cdng.artifact.delegate.beans.DockerArtifactAttributes;
+import io.harness.cdng.artifact.delegate.beans.DockerArtifactSourceAttributes;
+import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
+import io.harness.cdng.artifact.delegate.task.ArtifactTaskResponse;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.execution.export.request.ExportExecutionsRequest;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
+import io.harness.grpc.ng.manager.DelegateTaskResumeCallback;
 import io.harness.mongo.index.migrator.AggregateResult;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -1073,6 +1078,11 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     h.put("ccm.cluster.entities.DirectKubernetesCluster", DirectKubernetesCluster.class);
     h.put("ccm.cluster.entities.EcsCluster", EcsCluster.class);
     h.put("ccm.cluster.entities.GcpKubernetesCluster", GcpKubernetesCluster.class);
+    h.put("grpc.ng.manager.DelegateTaskResumeCallback", DelegateTaskResumeCallback.class);
+    h.put("cdng.artifact.delegate.task.ArtifactTaskParameters", ArtifactTaskParameters.class);
+    h.put("cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes", DockerArtifactSourceAttributes.class);
+    h.put("cdng.artifact.bean.DockerArtifactAttributes", DockerArtifactAttributes.class);
+    h.put("cdng.artifact.delegate.task.ArtifactTaskResponse", ArtifactTaskResponse.class);
 
     // Redesign Classes
     h.put("redesign.advisers.HttpResponseCodeSwitchAdviserParameters", HttpResponseCodeSwitchAdviserParameters.class);

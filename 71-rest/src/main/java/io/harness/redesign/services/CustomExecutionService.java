@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EmbeddedUser;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.presentation.Graph;
@@ -35,15 +34,11 @@ public interface CustomExecutionService {
 
   PlanExecution executeSectionChainRollbackPlan();
 
-  PlanExecution testInfraState() throws IOException;
-
   PlanExecution testGraphPlan();
 
   Graph getGraph(String executionPlanId);
 
   void getGraphVisualization(String executionPlanId, OutputStream output) throws IOException;
-
-  PlanExecution testArtifactState();
 
   PlanExecution executeSingleBarrierPlan();
 
@@ -52,8 +47,4 @@ public interface CustomExecutionService {
   // Interrupts
 
   Interrupt registerInterrupt(String planExecutionId);
-
-  PlanExecution testExecutionPlanCreator(String pipelineYaml, String accountId, String appId, EmbeddedUser user);
-
-  PlanExecution testServiceState();
 }

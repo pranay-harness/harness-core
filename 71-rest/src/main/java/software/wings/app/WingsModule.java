@@ -36,7 +36,6 @@ import io.harness.ccm.config.CCMSettingServiceImpl;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.ccm.health.HealthStatusServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;
-import io.harness.cdng.NGModule;
 import io.harness.config.PipelineConfig;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
@@ -1281,7 +1280,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
         OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .build()),
-        PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance(), NGModule.getInstance(),
+        PersistentLockModule.getInstance(), ExecutionPlanModule.getInstance(),
         DelegateServiceDriverModule.getInstance());
   }
 

@@ -1,6 +1,6 @@
 package io.harness.cdng.artifact.delegate.task;
 
-import io.harness.cdng.artifact.bean.ArtifactAttributes;
+import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
