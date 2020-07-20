@@ -15,4 +15,5 @@ public interface LearningEngineTaskService {
   Map<String, ExecutionStatus> getTaskStatus(Set<String> taskIds);
   void markCompleted(String taskId);
   void markFailure(String taskId);
+  String createFailureUrl(String taskId);
 }

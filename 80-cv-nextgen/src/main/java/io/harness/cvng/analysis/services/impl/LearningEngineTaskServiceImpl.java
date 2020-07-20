@@ -1,5 +1,8 @@
 package io.harness.cvng.analysis.services.impl;
 
+import static io.harness.cvng.CVConstants.LEARNING_RESOURCE;
+import static io.harness.cvng.CVConstants.MARK_FAILURE_PATH;
+import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -13,11 +16,13 @@ import io.harness.cvng.analysis.exceptions.ServiceGuardAnalysisException;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -94,6 +99,19 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
     return null;
   }
 
+  @Override
+  public String createFailureUrl(String taskId) {
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + LEARNING_RESOURCE + "/" + MARK_FAILURE_PATH);
+    uriBuilder.addParameter("taskId", taskId);
+    try {
+      return uriBuilder.build().toString();
+    } catch (URISyntaxException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  @Override
   public void markCompleted(String taskId) {
     if (taskId == null) {
       throw new ServiceGuardAnalysisException("Invalid task ID in markFailure");
@@ -105,6 +123,7 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
         updateOperations);
   }
 
+  @Override
   public void markFailure(String taskId) {
     if (taskId == null) {
       throw new ServiceGuardAnalysisException("Invalid task ID in markFailure");

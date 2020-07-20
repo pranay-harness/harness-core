@@ -1,6 +1,7 @@
 package io.harness.cvng.analysis.resources;
 
 import static io.harness.cvng.CVConstants.LEARNING_RESOURCE;
+import static io.harness.cvng.CVConstants.MARK_FAILURE_PATH;
 
 import com.google.inject.Inject;
 
@@ -38,7 +39,7 @@ public class LearningEngineTaskResource {
   }
 
   @GET
-  @Path("mark-failure")
+  @Path(MARK_FAILURE_PATH)
   @Timed
   @ExceptionMetered
   @LearningEngineAuth

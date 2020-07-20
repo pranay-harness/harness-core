@@ -1,6 +1,5 @@
 package io.harness.cvng.analysis.services.impl;
 
-import static io.harness.cvng.CVConstants.LEARNING_RESOURCE;
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.cvng.CVConstants.TIMESERIES_ANALYSIS_RESOURCE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -88,7 +87,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     timeSeriesLearningEngineTask.setAnalysisEndEpochMinute(
         TimeUnit.MILLISECONDS.toMinutes(input.getEndTime().toEpochMilli()));
     timeSeriesLearningEngineTask.setAnalysisSaveUrl(createAnalysisSaveUrl(input, taskId));
-    timeSeriesLearningEngineTask.setFailureUrl(createFailureUrl(taskId));
+    timeSeriesLearningEngineTask.setFailureUrl(learningEngineTaskService.createFailureUrl(taskId));
     timeSeriesLearningEngineTask.setUuid(taskId);
 
     return timeSeriesLearningEngineTask;
@@ -101,13 +100,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     uriBuilder.addParameter("cvConfigId", input.getCvConfigId());
     uriBuilder.addParameter("analysisStartTime", input.getStartTime().toString());
     uriBuilder.addParameter("analysisEndTime", input.getEndTime().toString());
-    return getUriString(uriBuilder);
-  }
-
-  private String createFailureUrl(String taskId) {
-    URIBuilder uriBuilder = new URIBuilder();
-    uriBuilder.setPath(SERVICE_BASE_URL + "/" + LEARNING_RESOURCE + "/mark-failure");
-    uriBuilder.addParameter("taskId", taskId);
     return getUriString(uriBuilder);
   }
 
