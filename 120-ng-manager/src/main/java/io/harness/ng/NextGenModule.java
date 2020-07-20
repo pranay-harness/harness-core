@@ -5,12 +5,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Names;
 
 import io.harness.ManagerDelegateServiceDriverModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.cdng.NGModule;
 import io.harness.connector.ConnectorModule;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
@@ -114,6 +116,10 @@ public class NextGenModule extends DependencyModule {
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     stepRegistrarMapBinder.addBinding(NgStepRegistrar.class.getName()).to(NgStepRegistrar.class);
+
+    MapBinder<Class, String> morphiaClasses =
+        MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
+    morphiaClasses.addBinding(DelegateSyncTaskResponse.class).toInstance("delegateSyncTaskResponses");
 
     bind(RemotePerpetualTaskServiceClientManager.class).to(RemotePerpetualTaskServiceClientManagerImpl.class);
   }
