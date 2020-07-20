@@ -12,6 +12,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+// Instead of DependencyModule we should use AbstractModule and install(Module.getInstance())
+// Note install works on java object. It is important to use getInstance() instead operator new
+@Deprecated
 public abstract class DependencyModule extends AbstractModule {
   public abstract Set<DependencyModule> dependencies();
 
