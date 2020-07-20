@@ -46,10 +46,10 @@ public class GitDTOToEntityTest extends CategoryTest {
     GitSyncConfig gitSyncConfig =
         GitSyncConfig.builder().isSyncEnabled(true).customCommitAttributes(customCommitAttributes).build();
     GitHTTPAuthenticationDTO httpAuthentication = GitHTTPAuthenticationDTO.builder()
-                                                      .gitType(ACCOUNT)
+                                                      .gitConnectionType(ACCOUNT)
                                                       .url(url)
                                                       .username(userName)
-                                                      .passwordReference(passwordReference)
+                                                      .encryptedPassword(passwordReference)
                                                       .build();
     GitConfigDTO gitConfigDTO =
         GitConfigDTO.builder().gitSyncConfig(gitSyncConfig).gitAuthType(HTTP).gitAuth(httpAuthentication).build();
@@ -80,7 +80,7 @@ public class GitDTOToEntityTest extends CategoryTest {
     GitSyncConfig gitSyncConfig =
         GitSyncConfig.builder().isSyncEnabled(true).customCommitAttributes(customCommitAttributes).build();
     GitSSHAuthenticationDTO httpAuthentication =
-        GitSSHAuthenticationDTO.builder().gitType(ACCOUNT).url(url).sshKeyReference(sshKeyReference).build();
+        GitSSHAuthenticationDTO.builder().gitConnectionType(ACCOUNT).url(url).encryptedSshKey(sshKeyReference).build();
     GitConfigDTO gitConfigDTO =
         GitConfigDTO.builder().gitSyncConfig(gitSyncConfig).gitAuthType(SSH).gitAuth(httpAuthentication).build();
     GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);

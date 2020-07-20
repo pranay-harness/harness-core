@@ -269,7 +269,9 @@ public enum SettingVariableTypes {
 
   AZURE_VAULT("Azure Vault Secrets Manager"),
 
-  KUBERNETES_CLUSTER_NG("Kubernetes Cluster");
+  KUBERNETES_CLUSTER_NG("Kubernetes Cluster"),
+
+  GIT_NG("Git Ng");
 
   @Getter private String displayName;
 

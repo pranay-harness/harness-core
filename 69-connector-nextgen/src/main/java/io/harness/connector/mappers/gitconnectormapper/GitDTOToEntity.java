@@ -50,9 +50,9 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
   private GitConnectionType getGitConnectionLevel(GitConfigDTO gitConfigDTO) {
     switch (gitConfigDTO.getGitAuthType()) {
       case HTTP:
-        return ((GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth()).getGitType();
+        return ((GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth()).getGitConnectionType();
       case SSH:
-        return ((GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth()).getGitType();
+        return ((GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth()).getGitConnectionType();
       default:
         throw new InvalidRequestException(
             String.format("The git auth type  %s doesn't exists", gitConfigDTO.getGitAuth()));
@@ -89,12 +89,12 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
       GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO) {
     return UserNamePasswordGitAuthentication.builder()
         .userName(gitHTTPAuthenticationDTO.getUsername())
-        .passwordReference(gitHTTPAuthenticationDTO.getPasswordReference())
+        .passwordReference(gitHTTPAuthenticationDTO.getEncryptedPassword())
         .build();
   }
 
   private GitSSHAuthentication getSSHGitAuthentication(GitSSHAuthenticationDTO gitSSHAuthenticationDTO) {
-    return GitSSHAuthentication.builder().sshKeyReference(gitSSHAuthenticationDTO.getSshKeyReference()).build();
+    return GitSSHAuthentication.builder().sshKeyReference(gitSSHAuthenticationDTO.getEncryptedSshKey()).build();
   }
 
   private String getGitURL(GitConfigDTO gitConfig) {

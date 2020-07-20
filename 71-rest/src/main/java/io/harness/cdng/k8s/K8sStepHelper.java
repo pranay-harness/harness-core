@@ -107,7 +107,7 @@ public class K8sStepHelper {
         GitConfig gitConfig = GitConfig.builder()
                                   .repoUrl(gitAuth.getUrl())
                                   .username(gitAuth.getUsername())
-                                  .password(gitAuth.getPasswordReference().toCharArray())
+                                  .password(gitAuth.getPassword())
                                   .branch(gitAuth.getBranchName())
                                   .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
                                   .accountId(connectorDTO.getAccountIdentifier())

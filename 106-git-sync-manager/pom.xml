@@ -9,18 +9,6 @@
     <artifactId>106-git-sync-manager</artifactId>
     <dependencies>
         <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server-memory-backend</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.flapdoodle.embed</groupId>
-            <artifactId>de.flapdoodle.embed.mongo</artifactId>
-        </dependency>
-        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
@@ -39,6 +27,21 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server-memory-backend</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <scope>test</scope>
         </dependency>
         <!-- TEST -->
         <dependency>

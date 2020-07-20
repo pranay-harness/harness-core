@@ -8,6 +8,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.cdng.artifact.delegate.task.ArtifactCollectTask;
 import io.harness.cdng.connector.tasks.KubernetesConnectionDelegateValidation;
 import io.harness.cdng.connector.tasks.KubernetesTestConnectionDelegateTask;
+import io.harness.cdng.git.tasks.NGGitCommandTask;
+import io.harness.cdng.git.tasks.NGGitConnectionValidation;
 import io.harness.cdng.tasks.manifestFetch.GitFetchTaskNG;
 import io.harness.cdng.tasks.manifestFetch.GitFetchValidationNG;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -423,7 +425,8 @@ public enum TaskType {
   AWS_S3_TASK(TaskGroup.AWS, AwsS3Task.class, AwsConnectionValidation.class),
   // This task if only for  next gen experience
   VALIDATE_KUBERNETES_CONFIG(
-      TaskGroup.CONTAINER, KubernetesTestConnectionDelegateTask.class, KubernetesConnectionDelegateValidation.class);
+      TaskGroup.CONTAINER, KubernetesTestConnectionDelegateTask.class, KubernetesConnectionDelegateValidation.class),
+  NG_GIT_COMMAND(TaskGroup.GIT, NGGitCommandTask.class, NGGitConnectionValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

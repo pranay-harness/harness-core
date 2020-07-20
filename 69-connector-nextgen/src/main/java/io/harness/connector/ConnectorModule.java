@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
 import io.harness.connector.impl.ConnectorServiceImpl;
+import io.harness.connector.impl.GitConnectorValidator;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
@@ -26,6 +27,7 @@ public class ConnectorModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, ConnectionValidator.class);
     connectorValidatorMapBinder.addBinding(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())
         .to(KubernetesConnectionValidator.class);
+    connectorValidatorMapBinder.addBinding(ConnectorType.GIT.getDisplayName()).to(GitConnectorValidator.class);
 
     MapBinder<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ConnectorDTOToEntityMapper.class);
