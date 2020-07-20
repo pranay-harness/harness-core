@@ -6,6 +6,7 @@ import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -23,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
@@ -64,12 +66,16 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.Key;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiDeployStateExecutionData;
@@ -125,6 +131,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({AwsStateHelper.class})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Mock private AwsHelperService mockAwsHelperService;
   @Mock private SettingsService mockSettingsService;
@@ -455,5 +464,14 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     assertThat(stateLocal.isFinalDeployState(110, AmiServiceSetupElement.builder().build())).isTrue();
     stateLocal.setInstanceUnitType(COUNT);
     assertThat(stateLocal.isFinalDeployState(2, AmiServiceSetupElement.builder().desiredInstances(1).build())).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    mockStatic(AwsStateHelper.class);
+    when(AwsStateHelper.getStateTimeoutFromContext(any())).thenReturn(10);
+    assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
   }
 }

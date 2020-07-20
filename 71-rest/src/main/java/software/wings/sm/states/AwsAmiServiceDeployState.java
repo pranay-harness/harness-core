@@ -159,6 +159,11 @@ public class AwsAmiServiceDeployState extends State {
     }
   }
 
+  @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    return AwsStateHelper.getStateTimeoutFromContext(context);
+  }
+
   protected Activity crateActivity(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();

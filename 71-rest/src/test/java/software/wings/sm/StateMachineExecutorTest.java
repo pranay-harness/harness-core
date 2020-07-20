@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
@@ -971,5 +972,49 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(response.getExecutionStatus()).isEqualTo(SKIPPED);
     assertThat(((SkipStateExecutionData) response.getStateExecutionData()).getSkipAssertionExpression())
         .isEqualTo(expr);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testUpdateExecutionInstanceTimeoutWhenTriggerExecution() {
+    String appId = generateUuid();
+    StateMachine sm = new StateMachine();
+    sm.setAppId(appId);
+    State stateA = new StateSync("stateA");
+    stateA.setTimeoutMillis(10);
+    sm.addState(stateA);
+    sm.setInitialStateName(stateA.getName());
+    sm = workflowService.createStateMachine(sm);
+    StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance().appId(appId).appId("appId").displayName("state1").stateName("stateA").build();
+    assertThat(stateExecutionInstance.getStateTimeout()).isEqualTo(null);
+    stateMachineExecutor.triggerExecution(sm, stateExecutionInstance);
+    StateExecutionInstance updatedStateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
+    assertThat(updatedStateExecutionInstance.getStateTimeout()).isEqualTo(10);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testUpdateExecutionInstanceTimeoutWhenStartExecution() {
+    String appId = generateUuid();
+    StateMachine sm = new StateMachine();
+    sm.setAppId(appId);
+    State stateA = new StateSync("stateA");
+    stateA.setTimeoutMillis(10);
+    sm.addState(stateA);
+    sm.setInitialStateName(stateA.getName());
+    sm = workflowService.createStateMachine(sm);
+    StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance().appId(appId).appId("appId").displayName("state1").stateName("stateA").build();
+
+    assertThat(stateExecutionInstance.getStateTimeout()).isEqualTo(null);
+    wingsPersistence.save(stateExecutionInstance);
+    stateMachineExecutor.startExecution(sm, stateExecutionInstance);
+    StateExecutionInstance updatedStateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
+    assertThat(updatedStateExecutionInstance.getStateTimeout()).isEqualTo(10);
   }
 }

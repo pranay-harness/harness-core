@@ -82,6 +82,7 @@ import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -304,7 +305,6 @@ public class StateMachineExecutor implements StateInspectionListener {
     notNullCheck("state", state);
     stateExecutionInstance.setRollback(state.isRollback());
     stateExecutionInstance.setStateType(state.getStateType());
-    stateExecutionInstance.setStateTimeout(Long.valueOf(getDefaultTimeout(state)));
 
     if (state instanceof EnvState) {
       EnvState envState = (EnvState) state;
@@ -336,16 +336,16 @@ public class StateMachineExecutor implements StateInspectionListener {
   }
 
   @NotNull
-  private Integer getDefaultTimeout(State state) {
-    Integer timeout = state.getTimeoutMillis();
+  private Integer getDefaultTimeout(State state, ExecutionContext context) {
+    Integer timeout = state.getTimeoutMillis(context);
     if (timeout != null) {
       return timeout;
     }
     return DEFAULT_STATE_TIMEOUT_MILLIS;
   }
 
-  private Long evaluateExpiryTs(State state) {
-    Integer timeout = getDefaultTimeout(state);
+  private Long evaluateExpiryTs(State state, ExecutionContext context) {
+    Integer timeout = getDefaultTimeout(state, context);
     if (pipelineConfig != null && pipelineConfig.isEnabled()) {
       if (StateType.ENV_STATE.name().equals(state.getStateType())) {
         timeout = pipelineConfig.getEnvStateTimeout();
@@ -375,6 +375,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     stateExecutionInstance = saveStateExecutionInstance(stateMachine, stateExecutionInstance);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
     injector.injectMembers(context);
+    updateStateExecutionInstanceTimeout(stateMachine, stateExecutionInstance, context);
     executorService.execute(new SmExecutionDispatcher(context, this));
     return stateExecutionInstance;
   }
@@ -424,6 +425,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   public void startExecution(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
     injector.injectMembers(context);
+    updateStateExecutionInstanceTimeout(stateMachine, stateExecutionInstance, context);
     startExecution(context);
   }
 
@@ -484,7 +486,7 @@ public class StateMachineExecutor implements StateInspectionListener {
               .withErrorMsg("Waiting " + currentState.getWaitInterval() + " seconds before execution")
               .build();
       updated = updateStateExecutionData(stateExecutionInstance, stateExecutionData, RUNNING, null, null, null, null,
-          null, evaluateExpiryTs(currentState));
+          null, evaluateExpiryTs(currentState, context));
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
@@ -622,9 +624,9 @@ public class StateMachineExecutor implements StateInspectionListener {
         if (status != PAUSED) {
           status = RUNNING;
           expiryTs = stateExecutionInstance.getStatus() == status ? stateExecutionInstance.getExpiryTs()
-                                                                  : evaluateExpiryTs(currentState);
+                                                                  : evaluateExpiryTs(currentState, context);
         } else if (StateType.APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
-          expiryTs = evaluateExpiryTs(currentState);
+          expiryTs = evaluateExpiryTs(currentState, context);
         }
         NotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
             stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
@@ -658,7 +660,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     } else {
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
           status, executionResponse.getErrorMessage(), executionResponse.getContextElements(),
-          executionResponse.getNotifyElements(), RUNNING == status ? evaluateExpiryTs(currentState) : expiryTs);
+          executionResponse.getNotifyElements(),
+          RUNNING == status ? evaluateExpiryTs(currentState, context) : expiryTs);
       if (!updated) {
         return reloadStateExecutionInstanceAndCheckStatus(stateExecutionInstance);
       }
@@ -679,6 +682,23 @@ public class StateMachineExecutor implements StateInspectionListener {
       }
     }
     return stateExecutionInstance;
+  }
+
+  private void updateStateExecutionInstanceTimeout(
+      StateMachine stateMachine, StateExecutionInstance stateExecutionInstance, ExecutionContext context) {
+    State state =
+        stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    Integer executionInstanceTimeout = getDefaultTimeout(state, context);
+    final Query<StateExecutionInstance> stateExecutionInstanceQuery =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .field(StateExecutionInstanceKeys.uuid)
+            .equal(stateExecutionInstance.getUuid());
+    final UpdateOperations<StateExecutionInstance> updateOperations =
+        wingsPersistence.createUpdateOperations(StateExecutionInstance.class)
+            .set(StateExecutionInstanceKeys.stateTimeout, executionInstanceTimeout);
+
+    wingsPersistence.findAndModify(
+        stateExecutionInstanceQuery, updateOperations, new FindAndModifyOptions().returnNew(false));
   }
 
   private StateExecutionInstance reloadStateExecutionInstanceAndCheckStatus(

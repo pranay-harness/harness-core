@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,6 +11,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -29,9 +31,14 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.beans.Activity;
@@ -50,6 +57,9 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({AwsStateHelper.class})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
   @Mock private SettingsService mockSettingsService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
@@ -125,5 +135,14 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
     AwsAmiSwitchRoutesResponse delegateResponse = AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    PowerMockito.mockStatic(AwsStateHelper.class);
+    when(AwsStateHelper.getStateTimeoutFromContext(any())).thenReturn(10);
+    assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
   }
 }

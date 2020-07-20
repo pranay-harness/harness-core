@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 
@@ -35,5 +36,15 @@ public class AwsCodeDeployStateTest extends WingsBaseTest {
     on(awsCodeDeployState).set("steadyStateTimeout", 20);
     invalidFields = awsCodeDeployState.validateFields();
     assertThat(invalidFields).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    awsCodeDeployState.setSteadyStateTimeout(0);
+    assertThat(awsCodeDeployState.getTimeoutMillis()).isNull();
+    awsCodeDeployState.setSteadyStateTimeout(10);
+    assertThat(awsCodeDeployState.getTimeoutMillis()).isEqualTo(10 * 60 * 1000);
   }
 }

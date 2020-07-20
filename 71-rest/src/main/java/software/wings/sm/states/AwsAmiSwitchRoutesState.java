@@ -23,6 +23,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiSwitchRoutesStateExecutionData;
 import software.wings.beans.Activity;
@@ -53,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class AwsAmiSwitchRoutesState extends State {
   public static final String SWAP_AUTO_SCALING_ROUTES = "Swap AutoScaling Routes";
   @Attributes(title = "Downsize Old Auto Scaling Group")
@@ -94,6 +96,11 @@ public class AwsAmiSwitchRoutesState extends State {
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    return AwsStateHelper.getStateTimeoutFromContext(context);
   }
 
   @Override
