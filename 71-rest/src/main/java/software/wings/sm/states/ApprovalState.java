@@ -308,13 +308,12 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   private ExecutionResponse handleSkipCondition(ExecutionContext context, ApprovalStateExecutionData executionData) {
     try {
       if (isTrueExpression(disableAssertion, context, executionData)) {
-        return respondWithStatus(context, executionData, null,
-            ExecutionResponse.builder()
-                .executionStatus(SKIPPED)
-                .errorMessage(getName() + " step in " + context.getPipelineStageName() + " has been skipped"
-                    + ("true".equals(disableAssertion) ? ""
-                                                       : " based on assertion expression [" + disableAssertion + "]"))
-                .stateExecutionData(executionData));
+        return ExecutionResponse.builder()
+            .executionStatus(SKIPPED)
+            .errorMessage(getName() + " step in " + context.getPipelineStageName() + " has been skipped"
+                + ("true".equals(disableAssertion) ? "" : " based on assertion expression [" + disableAssertion + "]"))
+            .stateExecutionData(executionData)
+            .build();
       }
     } catch (JexlException je) {
       logger.error("Skip Assertion Evaluation Failed", je);
