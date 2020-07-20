@@ -81,6 +81,7 @@ import io.harness.k8s.kubectl.ScaleCommand;
 import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.K8sContainer;
+import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;

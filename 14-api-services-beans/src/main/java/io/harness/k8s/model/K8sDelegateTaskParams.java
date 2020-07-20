@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.k8s;
+package io.harness.k8s.model;
 
 import lombok.Builder;
 import lombok.Value;

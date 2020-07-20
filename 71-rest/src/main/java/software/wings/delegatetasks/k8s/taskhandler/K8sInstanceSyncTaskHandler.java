@@ -7,12 +7,12 @@ import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFro
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.KubernetesConfig;
-import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters;

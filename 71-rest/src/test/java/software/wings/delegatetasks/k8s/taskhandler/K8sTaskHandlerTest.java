@@ -7,13 +7,13 @@ import static org.mockito.Mockito.doThrow;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
-import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
