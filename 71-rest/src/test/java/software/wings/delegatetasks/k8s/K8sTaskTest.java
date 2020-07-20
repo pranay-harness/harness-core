@@ -20,6 +20,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

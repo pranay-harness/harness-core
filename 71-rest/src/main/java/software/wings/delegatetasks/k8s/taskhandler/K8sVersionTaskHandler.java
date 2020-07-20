@@ -5,6 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.AutoLogContext;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -13,7 +14,6 @@ import io.kubernetes.client.openapi.models.VersionInfo;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.delegatetasks.k8s.apiclient.ApiClientFactoryImpl;
 import software.wings.delegatetasks.k8s.logging.K8sVersionLogContext;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;

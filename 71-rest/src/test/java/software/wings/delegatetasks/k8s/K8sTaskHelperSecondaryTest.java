@@ -17,6 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.manifest.ManifestHelper;
+import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.rule.Owner;
 import org.apache.sshd.common.file.util.MockPath;
