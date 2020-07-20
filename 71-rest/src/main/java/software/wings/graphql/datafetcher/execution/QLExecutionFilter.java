@@ -9,7 +9,6 @@ import lombok.Value;
 import software.wings.graphql.schema.type.aggregation.EntityFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
-import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
 
@@ -23,7 +22,7 @@ public class QLExecutionFilter implements EntityFilter {
   private QLIdFilter service;
   private QLIdFilter cloudProvider;
   private QLIdFilter environment;
-  private QLStringFilter status;
+  private QLIdFilter status;
   private QLTimeFilter endTime;
   private QLTimeFilter startTime;
   private QLNumberFilter duration;
@@ -32,6 +31,6 @@ public class QLExecutionFilter implements EntityFilter {
   private QLIdFilter workflow;
   private QLIdFilter pipeline;
   private QLTimeFilter creationTime;
-  private QLIdFilter pipelineExecution;
+  private QLIdFilter pipelineExecutionId;
   private QLDeploymentTagFilter tag;
 }

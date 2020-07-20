@@ -64,7 +64,7 @@ public class ExecutionConnectionDataFetcher
 
     if (isNotEmpty(filters)) {
       for (QLExecutionFilter filter : filters) {
-        includePipelineId = includePipelineId || (filter.getPipelineExecution() != null);
+        includePipelineId = includePipelineId || (filter.getPipelineExecutionId() != null);
       }
     }
     if (!includePipelineId) {
@@ -136,7 +136,7 @@ public class ExecutionConnectionDataFetcher
     } else if (NameService.cloudProvider.equals(key)) {
       return QLExecutionFilter.builder().cloudProvider(idFilter).build();
     } else if (NameService.pipelineExecution.equals(key)) {
-      return QLExecutionFilter.builder().pipelineExecution(idFilter).build();
+      return QLExecutionFilter.builder().pipelineExecutionId(idFilter).build();
     }
     throw new WingsException("Unsupported field " + key + " while generating filter");
   }
