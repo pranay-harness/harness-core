@@ -119,7 +119,6 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
         .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any());
     verify(mockEcsDeployCommandTaskHelper, times(2)).restoreAutoScalarConfigs(any(), any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(2)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
-    verify(mockEcsDeployCommandTaskHelper).setDesiredToOriginal(any(), any());
   }
 
   @Test

@@ -1036,7 +1036,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
               .get(0);
 
       // If service task count is already equal to desired count, don't try to resize
-      if (service.getDesiredCount().intValue() != desiredCount) {
+      if (service.getDesiredCount() != desiredCount) {
         List<ServiceEvent> serviceEvents = new ArrayList<>();
         if (isNotEmpty(service.getEvents())) {
           serviceEvents.addAll(service.getEvents());
@@ -1058,7 +1058,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         updateServiceCount(serviceCountRequestData);
         executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
         waitForTasksToBeInRunningStateButDontThrowException(serviceCountRequestData);
-        if (desiredCount > previousCount) { // don't do it for downsize.
+        if (desiredCount > service.getDesiredCount()) { // don't do it for downsize.
           waitForServiceToReachSteadyState(serviceSteadyStateTimeout, serviceCountRequestData);
         }
       }
