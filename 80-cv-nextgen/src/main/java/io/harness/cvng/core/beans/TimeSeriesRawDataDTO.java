@@ -1,18 +1,17 @@
-package io.harness.cvng.analysis.beans;
+package io.harness.cvng.core.beans;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.Value;
 
 import java.util.List;
 import java.util.Map;
 
-@Data
+@Value
 @Builder
-public class TimeSeriesTestDataDTO {
+public class TimeSeriesRawDataDTO {
   private String cvConfigId;
-  private Map<String, Map<String, List<Double>>> transactionMetricValues;
-
-  private Map<String, Map<String, List<MetricData>>> metricGroupValues;
+  private Map<String, Map<String, List<MetricData>>> transactionMetricValues;
 
   @Data
   @Builder

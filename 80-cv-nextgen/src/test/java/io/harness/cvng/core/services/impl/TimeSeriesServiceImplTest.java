@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
+import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
@@ -310,11 +311,11 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
     List<TimeSeriesRecord> records = getTimeSeriesRecords();
     hPersistence.save(records);
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
-    Map<String, Map<String, List<Double>>> testData =
+    Map<String, Map<String, List<MetricData>>> testData =
         timeSeriesService
             .getMetricGroupDataForRange(
                 cvConfigId, start, start.plus(5, ChronoUnit.MINUTES), "Average Response Time (ms)", null)
-            .getTransactionMetricValues();
+            .getMetricGroupValues();
 
     assertThat(testData).isNotNull();
     assertThat(testData.size()).isEqualTo(1);
@@ -331,11 +332,11 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
     List<TimeSeriesRecord> records = getTimeSeriesRecords();
     hPersistence.save(records);
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
-    Map<String, Map<String, List<Double>>> testData =
+    Map<String, Map<String, List<MetricData>>> testData =
         timeSeriesService
             .getMetricGroupDataForRange(cvConfigId, start, start.plus(5, ChronoUnit.MINUTES),
                 "Average Response Time (ms)", Arrays.asList("/api/settings", "/api/service-templates"))
-            .getTransactionMetricValues();
+            .getMetricGroupValues();
 
     assertThat(testData).isNotNull();
     assertThat(testData.size()).isEqualTo(1);

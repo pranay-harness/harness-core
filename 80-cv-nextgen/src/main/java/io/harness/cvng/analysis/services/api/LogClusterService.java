@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @author praveensugavanam
+ */
 public interface LogClusterService {
   List<String> scheduleClusteringTasks(AnalysisInput input, LogClusterLevel clusterLevel);
   Map<String, ExecutionStatus> getTaskStatus(String cvConfigId, Set<String> taskIds);

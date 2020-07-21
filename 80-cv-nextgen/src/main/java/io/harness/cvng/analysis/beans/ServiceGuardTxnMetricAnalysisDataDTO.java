@@ -15,6 +15,7 @@ public class ServiceGuardTxnMetricAnalysisDataDTO {
   private boolean longTermPattern;
   private long lastSeenTime;
   private int risk;
+  private double score;
   private boolean isKeyTransaction;
   private List<Double> shortTermHistory;
   private List<TimeSeriesAnomalies> anomalousPatterns;

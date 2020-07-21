@@ -39,8 +39,8 @@ public class TimeSeriesResource {
   @ExceptionMetered
   public RestResponse<TimeSeriesTestDataDTO> getMetricDefinitions(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("cvConfigId") @NotNull String cvConfigId,
-      @QueryParam("startTimeEpochMillis") @NotNull long startTimeEpochMillis,
-      @QueryParam("endTimeEpochMillis") @NotNull long endTimeEpochMillis,
+      @QueryParam("startTimeEpochMillis") @NotNull Long startTimeEpochMillis,
+      @QueryParam("endTimeEpochMillis") @NotNull Long endTimeEpochMillis,
       @QueryParam("metricName") @NotNull String metricName,
       @QueryParam("groupNameList") @NotNull List<String> groupNameList) {
     return new RestResponse<>(

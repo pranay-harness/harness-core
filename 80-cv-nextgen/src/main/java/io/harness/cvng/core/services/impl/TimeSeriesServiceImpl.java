@@ -11,6 +11,7 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
+import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO.MetricData;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
@@ -148,15 +149,15 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
     TimeSeriesTestDataDTO timeseriesData = getTxnMetricDataForRange(cvConfigId, startTime, endTime, metricName, null);
 
-    Map<String, Map<String, List<Double>>> metricNameGroupNameValMap = new HashMap<>();
+    Map<String, Map<String, List<MetricData>>> metricNameGroupNameValMap = new HashMap<>();
     if (timeseriesData != null) {
-      timeseriesData.getTransactionMetricValues().forEach((groupName, metricValueMap) -> {
+      timeseriesData.getMetricGroupValues().forEach((groupName, metricValueMap) -> {
         if (!metricNameGroupNameValMap.containsKey(metricName)) {
           metricNameGroupNameValMap.put(metricName, new HashMap<>());
         }
 
         if (isNotEmpty(groupNames) && groupNames.contains(groupName)) {
-          List<Double> values = metricValueMap.get(metricName);
+          List<MetricData> values = metricValueMap.get(metricName);
           if (!metricNameGroupNameValMap.containsKey(metricName)) {
             metricNameGroupNameValMap.put(metricName, new HashMap<>());
           }
@@ -170,7 +171,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
       return TimeSeriesTestDataDTO.builder()
           .cvConfigId(cvConfigId)
-          .transactionMetricValues(metricNameGroupNameValMap)
+          .metricGroupValues(metricNameGroupNameValMap)
           .build();
     }
     return null;
@@ -228,13 +229,11 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
       metricValueList.put(record.getMetricName(), valueList);
     });
 
-    Map<String, Map<String, List<Double>>> sortedValueMap = getSortedListOfTimeSeriesRecords(metricValueList);
-
-    return TimeSeriesTestDataDTO.builder().cvConfigId(cvConfigId).transactionMetricValues(sortedValueMap).build();
+    return getSortedListOfTimeSeriesRecords(cvConfigId, metricValueList);
   }
 
-  private Map<String, Map<String, List<Double>>> getSortedListOfTimeSeriesRecords(
-      Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>> unsortedTimeseries) {
+  private TimeSeriesTestDataDTO getSortedListOfTimeSeriesRecords(
+      String cvConfigId, Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>> unsortedTimeseries) {
     if (isNotEmpty(unsortedTimeseries)) {
       Map<String, Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>>> txnMetricMap = new HashMap<>();
 
@@ -255,19 +254,33 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
       // next sort the list under each txn->metric
       Map<String, Map<String, List<Double>>> txnMetricValueMap = new HashMap<>();
+      Map<String, Map<String, List<MetricData>>> metricGroupValueMap = new HashMap<>();
       for (String txnName : txnMetricMap.keySet()) {
         Map<String, List<TimeSeriesRecord.TimeSeriesGroupValue>> metricValueMap = txnMetricMap.get(txnName);
         txnMetricValueMap.put(txnName, new HashMap<>());
-
+        metricGroupValueMap.put(txnName, new HashMap<>());
         for (String metricName : metricValueMap.keySet()) {
           List<TimeSeriesRecord.TimeSeriesGroupValue> valueList = metricValueMap.get(metricName);
           Collections.sort(valueList);
           txnMetricValueMap.get(txnName).put(metricName, new ArrayList<>());
+          metricGroupValueMap.get(txnName).put(metricName, new ArrayList<>());
           valueList.forEach(value -> { txnMetricValueMap.get(txnName).get(metricName).add(value.getMetricValue()); });
+          valueList.forEach(value -> {
+            metricGroupValueMap.get(txnName)
+                .get(metricName)
+                .add(MetricData.builder()
+                         .value(value.getMetricValue())
+                         .timestamp(value.getTimeStamp().toEpochMilli())
+                         .build());
+          });
         }
       }
 
-      return txnMetricValueMap;
+      return TimeSeriesTestDataDTO.builder()
+          .cvConfigId(cvConfigId)
+          .transactionMetricValues(txnMetricValueMap)
+          .metricGroupValues(metricGroupValueMap)
+          .build();
     }
     return null;
   }
