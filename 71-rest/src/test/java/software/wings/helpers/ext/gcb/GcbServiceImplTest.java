@@ -7,6 +7,8 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static software.wings.helpers.ext.gcb.GcbServiceImpl.GCB_BASE_URL;
+import static software.wings.helpers.ext.gcb.GcbServiceImpl.GCS_BASE_URL;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -67,8 +69,8 @@ public class GcbServiceImplTest {
 
   @Before
   public void setUp() throws IOException {
-    doReturn(gcbRestClient).when(gcbService).getRestClient(GcbRestClient.class, GcbRestClient.baseUrl);
-    doReturn(gcsRestClient).when(gcbService).getRestClient(GcsRestClient.class, GcsRestClient.baseUrl);
+    doReturn(gcbRestClient).when(gcbService).getRestClient(GcbRestClient.class, GCB_BASE_URL);
+    doReturn(gcsRestClient).when(gcbService).getRestClient(GcsRestClient.class, GCS_BASE_URL);
     doReturn(VALID_AUTH_TOKEN).when(gcbService).getBasicAuthHeader(anyObject(), anyObject());
     when(gcpConfig.getServiceAccountKeyFileContent()).thenReturn("{\"project_id\":\"projectId\"}".toCharArray());
   }
