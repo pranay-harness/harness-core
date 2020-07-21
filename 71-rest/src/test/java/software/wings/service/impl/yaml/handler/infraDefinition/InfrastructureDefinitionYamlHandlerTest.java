@@ -119,6 +119,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     private static final String PHYSICAL_INFRA = "physical_infra.yaml";
     private static final String PHYSICAL_INFRA_WINRM = "physical_infra_winrm.yaml";
     private static final String PHYSICAL_INFRA_PROVISIONER = "physicalInfra_provisioner.yaml";
+    private static final String DIRECT_KUBERNETES_PROVISIONER = "direct_kubernetes_provisioner.yaml";
   }
   private ArgumentCaptor<InfrastructureDefinition> captor = ArgumentCaptor.forClass(InfrastructureDefinition.class);
 
@@ -206,6 +207,8 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   public void TestCRUDAndGet_DIRECT_KUBERNETES() throws IOException {
     doReturn(directKubernetesInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
     testCRUD(validYamlInfraStructureFiles.DIRECT_KUBERNETES, InfrastructureType.DIRECT_KUBERNETES,
+        DeploymentType.KUBERNETES, CloudProviderType.KUBERNETES_CLUSTER);
+    testCRUD(validYamlInfraStructureFiles.DIRECT_KUBERNETES_PROVISIONER, InfrastructureType.DIRECT_KUBERNETES,
         DeploymentType.KUBERNETES, CloudProviderType.KUBERNETES_CLUSTER);
   }
 
