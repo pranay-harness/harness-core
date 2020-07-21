@@ -815,6 +815,10 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     for (AppPermission permission : groupAppPermissions) {
+      if (!isAppPermissionSelected(permission)) {
+        continue;
+      }
+
       GenericEntityFilter filter = permission.getAppFilter();
       Set<String> ids = filter.getIds();
 
@@ -836,7 +840,10 @@ public class UserGroupServiceImpl implements UserGroupService {
       logger.info("Pruning app ids from user group: " + userGroup.getUuid());
       UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
       setUnset(operations, UserGroupKeys.appPermissions, userGroup.getAppPermissions());
-      update(userGroup, operations);
+      Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
+                                   .filter(ID_KEY, userGroup.getUuid())
+                                   .filter(UserGroupKeys.accountId, userGroup.getAccountId());
+      wingsPersistence.update(query, operations);
     }
   }
 

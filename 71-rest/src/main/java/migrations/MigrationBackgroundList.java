@@ -232,6 +232,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(135, BaseMigration.class))
         .add(Pair.of(136, RemoveDeletedAppIdsFromUserGroups.class))
         .add(Pair.of(137, AddAccountIdToEntityVersion.class))
+        .add(Pair.of(138, RemoveDeletedAppIdsFromUserGroups.class))
         .build();
   }
 }
