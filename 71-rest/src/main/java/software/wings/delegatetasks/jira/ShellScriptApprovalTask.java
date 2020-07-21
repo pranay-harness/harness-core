@@ -3,8 +3,8 @@ package software.wings.delegatetasks.jira;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.LogLevel.INFO;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.inject.Inject;
 

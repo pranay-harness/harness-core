@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf;
 import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.pcf.model.PcfConstants.APP_TOKEN;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_APP_AUTOSCALAR_BINDING;
@@ -32,7 +33,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static software.wings.beans.Log.LogColor.Green;
 import static software.wings.beans.Log.LogColor.Red;
 import static software.wings.beans.Log.LogColor.White;
-import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 

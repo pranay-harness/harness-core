@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.asyncTaskData;
+import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.VGLIJIN;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,7 +16,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.TaskType.GCB;
 import static software.wings.beans.command.GcbTaskParams.GcbTaskType.POLL;
 import static software.wings.beans.command.GcbTaskParams.GcbTaskType.START;

@@ -1,13 +1,13 @@
 package software.wings.delegatetasks;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.logging.LogLevel.INFO;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.sm.states.GcbState.GcbDelegateResponse.gcbDelegateResponseOf;
 import static software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec.RemoteFileSource.BRANCH;
 

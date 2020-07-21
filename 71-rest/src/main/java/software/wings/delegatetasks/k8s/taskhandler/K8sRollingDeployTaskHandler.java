@@ -7,12 +7,12 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloads;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
+import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.INFO;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Log.LogColor.Cyan;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogColor.Yellow;
-import static software.wings.beans.Log.LogLevel.ERROR;
-import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
 import static software.wings.beans.command.K8sDummyCommandUnit.Apply;

@@ -15,13 +15,13 @@ import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.logging.LogLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
-import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;

@@ -1,9 +1,9 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.logging.LogLevel.ERROR;
 import static java.lang.String.format;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
-import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import com.google.common.base.Charsets;

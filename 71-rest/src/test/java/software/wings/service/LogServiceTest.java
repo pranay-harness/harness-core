@@ -3,10 +3,10 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.service.impl.LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 

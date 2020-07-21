@@ -1,11 +1,11 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.LogLevel.ERROR;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
 import com.google.inject.Inject;

@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,6 @@ import org.apache.commons.io.FileUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
-import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
