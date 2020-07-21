@@ -21,6 +21,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GraphNode;
@@ -77,6 +78,13 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   @Inject private TemplateService templateService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+
+  private static final String GCB_OPTIONS = "gcbOptions";
+  private static final String GCP_CONFIG_ID = "gcpConfigId";
+  private static final String GCP_CONFIG_NAME = "gcpConfigName";
+  private static final String REPOSITORY_SPEC = "repositorySpec";
+  private static final String GIT_CONFIG_ID = "gitConfigId";
+  private static final String GIT_CONFIG_NAME = "gitConfigName";
 
   private GraphNode toBean(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeContextList)
       throws HarnessException {
@@ -334,6 +342,31 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         notNullCheck("Provisioner is null for the given provisionerId:" + provisionerId, provisioner, USER);
         outputProperties.put("provisionerName", provisioner.getName());
         return;
+      case GCB_OPTIONS:
+        var gcbOptions = (Map<String, Object>) objectValue;
+        String gcpConfigId = (String) gcbOptions.get(GCP_CONFIG_ID);
+        if (gcpConfigId != null) {
+          SettingAttribute gcpSettingAttribute = settingsService.get(gcpConfigId);
+          notNullCheck("GCP is null for the given gcpConfigId:" + gcpConfigId, gcpSettingAttribute, USER);
+          gcbOptions.put(GCP_CONFIG_NAME, gcpSettingAttribute.getName());
+        } else {
+          gcbOptions.put(GCP_CONFIG_NAME, null);
+        }
+        if (gcbOptions.containsKey(REPOSITORY_SPEC)) {
+          var repositorySpec = (Map<String, Object>) gcbOptions.get(REPOSITORY_SPEC);
+          String gitConfigId = (String) repositorySpec.get(GIT_CONFIG_ID);
+          if (gitConfigId != null) {
+            SettingAttribute gitSettingAttribute = settingsService.get(gitConfigId);
+            notNullCheck("Git connector is null for the given gitConfigId:" + gitConfigId, gitSettingAttribute, USER);
+            repositorySpec.put(GIT_CONFIG_NAME, gitSettingAttribute.getName());
+          } else {
+            repositorySpec.put(GIT_CONFIG_NAME, null);
+          }
+          repositorySpec.remove(GIT_CONFIG_ID);
+        }
+        gcbOptions.remove(GCP_CONFIG_ID);
+        outputProperties.put(GCB_OPTIONS, gcbOptions);
+        return;
       default:
         outputProperties.put(name, objectValue);
         return;
@@ -383,6 +416,34 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         InfrastructureProvisioner provisioner = infrastructureProvisionerService.getByName(appId, provisionerName);
         notNullCheck("Provisioner is null for the given name:" + provisionerName, provisioner, USER);
         properties.put("provisionerId", provisioner.getUuid());
+        return;
+      case GCB_OPTIONS:
+        var gcbOptions = (Map<String, Object>) objectValue;
+        if (gcbOptions.containsKey(GCP_CONFIG_NAME)) {
+          String gcpConfigName = (String) gcbOptions.get(GCP_CONFIG_NAME);
+          if (gcpConfigName != null) {
+            SettingAttribute gcpSettingAttribute = settingsService.getSettingAttributeByName(accountId, gcpConfigName);
+            notNullCheck("GCP is null for the given gcpConfigName:" + gcpConfigName, gcpSettingAttribute, USER);
+            gcbOptions.put(GCP_CONFIG_ID, gcpSettingAttribute.getUuid());
+          } else {
+            gcbOptions.put(GCP_CONFIG_ID, null);
+          }
+          gcbOptions.remove(GCP_CONFIG_NAME);
+        }
+        if (gcbOptions.containsKey(REPOSITORY_SPEC)) {
+          var repositorySpec = (Map<String, Object>) gcbOptions.get(REPOSITORY_SPEC);
+          String gitConfigName = (String) repositorySpec.get(GIT_CONFIG_NAME);
+          if (gitConfigName != null) {
+            SettingAttribute gitSettingAttribute = settingsService.getSettingAttributeByName(accountId, gitConfigName);
+            notNullCheck(
+                "Git connector is null for the given gitConfigName:" + gitConfigName, gitSettingAttribute, USER);
+            repositorySpec.put(GIT_CONFIG_ID, gitSettingAttribute.getUuid());
+          } else {
+            repositorySpec.put(GIT_CONFIG_ID, null);
+          }
+          repositorySpec.remove(GIT_CONFIG_NAME);
+        }
+        properties.put(GCB_OPTIONS, gcbOptions);
         return;
       default:
         properties.put(name, objectValue);
