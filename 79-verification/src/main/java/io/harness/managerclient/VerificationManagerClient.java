@@ -43,7 +43,7 @@ public interface VerificationManagerClient {
   Call<RestResponse<WorkflowExecution>> getWorkflowExecution(
       @Query("appId") String appId, @Query("stateExecutionId") String stateExecutionId);
 
-  @GET("delegates/available-versions-for-verification")
+  @GET("setup/delegates/available-versions-for-verification")
   Call<RestResponse<List<String>>> getListOfPublishedVersions(@Query("accountId") String accountId);
 
   @POST("apm" + VerificationConstants.NOTIFY_VERIFICATION_STATE)
