@@ -15,7 +15,7 @@
         <module>20-delegate-tasks</module>
         <module>20-delegate-beans</module>
         <module>21-delegate-agent-beans</module>
-        <module>21-ng-core</module>
+        <module>20-ng-core-beans</module>
         <module>21-persistence</module>
         <module>21-sm-core</module>
         <module>22-delegate-service-beans</module>
@@ -60,6 +60,7 @@
         <module>106-git-sync-manager</module>
         <module>115-cd-nextgen</module>
         <module>120-ng-manager</module>
+        <module>22-ng-core</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>

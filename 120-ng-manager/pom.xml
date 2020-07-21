@@ -69,7 +69,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-ng-core</artifactId>
+            <artifactId>20-ng-core-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
