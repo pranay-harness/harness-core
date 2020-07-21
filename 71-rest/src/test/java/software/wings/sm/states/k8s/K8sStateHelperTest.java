@@ -1515,7 +1515,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     ApplicationManifest applicationManifest = ApplicationManifest.builder().storeType(Local).build();
     k8sStateHelper.storePreviousHelmDeploymentInfo(context, applicationManifest);
     verify(sweepingOutputService, never()).findSweepingOutput(any(SweepingOutputInquiry.class));
-    verify(sweepingOutputService, never()).save(any(SweepingOutputInstance.class));
+    verify(sweepingOutputService, never()).ensure(any(SweepingOutputInstance.class));
     verify(instanceService, never()).getInstancesForAppAndInframapping(anyString(), anyString());
   }
 
@@ -1528,7 +1528,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
 
     k8sStateHelper.storePreviousHelmDeploymentInfo(context, applicationManifest);
     ArgumentCaptor<SweepingOutputInstance> instanceCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
-    verify(sweepingOutputService, times(1)).save(instanceCaptor.capture());
+    verify(sweepingOutputService, times(1)).ensure(instanceCaptor.capture());
 
     SweepingOutputInstance instance = instanceCaptor.getValue();
     assertThat(instance.getValue()).isExactlyInstanceOf(K8sHelmDeploymentElement.class);
@@ -1545,6 +1545,6 @@ public class K8sStateHelperTest extends WingsBaseTest {
     k8sStateHelper.storePreviousHelmDeploymentInfo(context, applicationManifest);
     verify(sweepingOutputService, times(1)).findSweepingOutput(any(SweepingOutputInquiry.class));
     verify(instanceService, never()).getInstancesForAppAndInframapping(anyString(), anyString());
-    verify(sweepingOutputService, never()).save(any(SweepingOutputInstance.class));
+    verify(sweepingOutputService, never()).ensure(any(SweepingOutputInstance.class));
   }
 }
