@@ -2,6 +2,7 @@ package io.harness.k8s.manifest;
 
 import static io.harness.k8s.manifest.ObjectYamlUtils.encodeDot;
 import static io.harness.k8s.model.Kind.ConfigMap;
+import static io.harness.k8s.model.Kind.CronJob;
 import static io.harness.k8s.model.Kind.DaemonSet;
 import static io.harness.k8s.model.Kind.Deployment;
 import static io.harness.k8s.model.Kind.DeploymentConfig;
@@ -27,8 +28,8 @@ import java.util.function.UnaryOperator;
 public class VersionUtils {
   private static String revisionSeparator = "-";
   private static Set<String> versionedKinds = ImmutableSet.of(ConfigMap.name(), Secret.name());
-  private static Set<String> workloadKinds = ImmutableSet.of(
-      Deployment.name(), DaemonSet.name(), StatefulSet.name(), Pod.name(), Job.name(), DeploymentConfig.name());
+  private static Set<String> workloadKinds = ImmutableSet.of(Deployment.name(), DaemonSet.name(), StatefulSet.name(),
+      Pod.name(), Job.name(), DeploymentConfig.name(), CronJob.name());
 
   private static boolean shouldVersion(KubernetesResource resource) {
     if (versionedKinds.contains(resource.getResourceId().getKind())) {

@@ -1,0 +1,37 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hello
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: hello
+              image: busybox
+              command: [ "/bin/sh", "-c", "env" ]
+              env:
+                - name: config_env_var
+                  valueFrom:
+                    configMapKeyRef:
+                      name: config-key-value
+                      key: key.value
+                - name: secret_env_var
+                  valueFrom:
+                    secretKeyRef:
+                      name: secret-key-value
+                      key: secret.value
+              envFrom:
+              - configMapRef:
+                  name: envfrom-configmap
+              - secretRef:
+                  name: envfrom-secret
+          volumes:
+            - name: example-volume
+              configMap:
+                name: volume-configmap
+              secret:
+                secretName: volume-secret
+          restartPolicy: OnFailure
