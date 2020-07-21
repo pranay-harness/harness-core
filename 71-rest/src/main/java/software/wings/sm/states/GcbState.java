@@ -29,6 +29,7 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.exception.UnsupportedOperationException;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -135,6 +136,8 @@ public class GcbState extends State implements SweepingOutputStateMixin {
    */
   protected ExecutionResponse executeInternal(
       final @NotNull ExecutionContext context, final @NotNull String activityId) {
+    resolveGcbOptionExpressions(context);
+
     final Application application = context.fetchRequiredApp();
     final String appId = application.getAppId();
     Map<String, String> substitutions = null;
@@ -267,6 +270,27 @@ public class GcbState extends State implements SweepingOutputStateMixin {
   @NotNull
   protected String createActivity(ExecutionContext executionContext) {
     return activityService.save(new Activity().with(this).with(executionContext).with(CommandUnitType.GCB)).getUuid();
+  }
+
+  @VisibleForTesting
+  protected void resolveGcbOptionExpressions(ExecutionContext context) {
+    switch (gcbOptions.getSpecSource()) {
+      case TRIGGER:
+        gcbOptions.getTriggerSpec().setSourceId(context.renderExpression(gcbOptions.getTriggerSpec().getSourceId()));
+        gcbOptions.getTriggerSpec().setName(context.renderExpression(gcbOptions.getTriggerSpec().getName()));
+        break;
+      case INLINE:
+        gcbOptions.setInlineSpec(context.renderExpression(gcbOptions.getInlineSpec()));
+        break;
+      case REMOTE:
+        gcbOptions.getRepositorySpec().setSourceId(
+            context.renderExpression(gcbOptions.getRepositorySpec().getSourceId()));
+        gcbOptions.getRepositorySpec().setFilePath(
+            context.renderExpression(gcbOptions.getRepositorySpec().getFilePath()));
+        break;
+      default:
+        throw new UnsupportedOperationException("Gcb option " + gcbOptions.getSpecSource() + " not supported");
+    }
   }
 
   @Data
