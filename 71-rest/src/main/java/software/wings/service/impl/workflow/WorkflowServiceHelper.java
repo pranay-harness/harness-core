@@ -28,6 +28,7 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -384,7 +385,8 @@ public class WorkflowServiceHelper {
             .anyMatch((InfrastructureDefinition infra)
                           -> AWS_SSH.name().equals(infra.getInfrastructure().getInfrastructureType())
                     || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfrastructure().getInfrastructureType())
-                    || PCF_PCF.name().equals(infra.getInfrastructure().getInfrastructureType()));
+                    || PCF_PCF.name().equals(infra.getInfrastructure().getInfrastructureType())
+                    || AWS_AWS_LAMBDA.name().equals(infra.getInfrastructure().getInfrastructureType()));
       } else {
         List<String> infraMappingIds = workflowPhases.stream()
                                            .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
@@ -397,7 +399,8 @@ public class WorkflowServiceHelper {
               .anyMatch((InfrastructureMapping infra)
                             -> AWS_SSH.name().equals(infra.getInfraMappingType())
                       || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType())
-                      || PCF_PCF.name().equals(infra.getInfraMappingType()));
+                      || PCF_PCF.name().equals(infra.getInfraMappingType())
+                      || AWS_AWS_LAMBDA.name().equals(infra.getInfraMappingType()));
         }
       }
     }

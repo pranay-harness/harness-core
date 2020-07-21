@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 
 import java.util.List;
 import java.util.Map;
@@ -22,13 +24,16 @@ public class AwsLambdaExecuteWfRequest extends AwsLambdaRequest {
   private String roleArn;
   private List<String> evaluatedAliases;
   private Map<String, String> serviceVariables;
+  private List<ArtifactFile> artifactFiles;
+  private ArtifactStreamAttributes artifactStreamAttributes;
   private AwsLambdaVpcConfig lambdaVpcConfig;
 
   @Builder
   public AwsLambdaExecuteWfRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<AwsLambdaFunctionParams> functionParams, String roleArn, List<String> evaluatedAliases,
       Map<String, String> serviceVariables, AwsLambdaVpcConfig lambdaVpcConfig, String accountId, String appId,
-      String activityId, String commandName) {
+      String activityId, List<ArtifactFile> artifactFiles, ArtifactStreamAttributes artifactStreamAttributes,
+      String commandName) {
     super(awsConfig, encryptionDetails, EXECUTE_LAMBDA_WF, region);
     this.accountId = accountId;
     this.appId = appId;
@@ -38,6 +43,8 @@ public class AwsLambdaExecuteWfRequest extends AwsLambdaRequest {
     this.roleArn = roleArn;
     this.evaluatedAliases = evaluatedAliases;
     this.serviceVariables = serviceVariables;
+    this.artifactFiles = artifactFiles;
+    this.artifactStreamAttributes = artifactStreamAttributes;
     this.lambdaVpcConfig = lambdaVpcConfig;
   }
 }

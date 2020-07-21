@@ -1117,6 +1117,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     } else if (service.getArtifactType() == ArtifactType.AWS_LAMBDA) {
       ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
                                                          .put(AMAZON_S3.name(), AMAZON_S3.name())
+                                                         .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+                                                         .put(NEXUS.name(), NEXUS.name())
+                                                         .put(JENKINS.name(), JENKINS.name())
                                                          .put(CUSTOM.name(), CUSTOM.name());
       return builder.build();
     } else if (service.getArtifactType() == ArtifactType.AMI) {

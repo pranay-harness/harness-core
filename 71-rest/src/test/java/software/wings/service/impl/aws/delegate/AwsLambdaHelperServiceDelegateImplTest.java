@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
@@ -15,6 +16,15 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_FILE_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
+import static software.wings.utils.WingsTestConstants.BUCKET_NAME;
+import static software.wings.utils.WingsTestConstants.BUILD_NO;
+import static software.wings.utils.WingsTestConstants.S3_URL;
+import static software.wings.utils.WingsTestConstants.SECRET_KEY;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -38,6 +48,7 @@ import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -45,7 +56,12 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionParams;
@@ -53,14 +69,25 @@ import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
 import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.WingsTestConstants;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AwsCallTracker mockTracker;
+  @Mock private DelegateFileManager mockDelegateFileManager;
   @Spy @InjectMocks private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
+  private SettingAttribute awsSetting =
+      aSettingAttribute()
+          .withUuid(SETTING_ID)
+          .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY).build())
+          .build();
 
   @Test
   @Owner(developers = SATYAM)
@@ -88,7 +115,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
-  public void testExecuteWf_FxDoesNotExist() {
+  public void testExecuteWf_FxDoesNotExistS3() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
@@ -105,27 +132,91 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new CreateAliasResult().withName("aliasName").withAliasArn("aliasArn"))
         .when(mockClient)
         .createAlias(any());
+    ArtifactStreamAttributes artifactStreamAttributesForS3 =
+        ArtifactStreamAttributes.builder()
+            .artifactStreamType(ArtifactStreamType.AMAZON_S3.name())
+            .metadataOnly(true)
+            .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
+            .serverSetting(awsSetting)
+            .artifactServerEncryptedDataDetails(Collections.emptyList())
+            .build();
+
     AwsLambdaExecuteWfRequest request =
         AwsLambdaExecuteWfRequest.builder()
             .awsConfig(AwsConfig.builder().build())
             .encryptionDetails(emptyList())
             .region("use-east-1")
             .roleArn("arn")
+            .artifactStreamAttributes(artifactStreamAttributesForS3)
             .evaluatedAliases(singletonList("eval"))
             .serviceVariables(ImmutableMap.of("k1", "v1"))
             .lambdaVpcConfig(AwsLambdaVpcConfig.builder().build())
             .functionParams(singletonList(AwsLambdaFunctionParams.builder().functionName("fxName").build()))
             .build();
+
     doNothing().when(mockTracker).trackLambdaCall(anyString());
     awsLambdaHelperServiceDelegate.executeWf(request, mockCallBack);
     verify(mockClient).createFunction(any());
     verify(mockClient).createAlias(any());
   }
 
+  @SneakyThrows
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testExecuteWf_FxDoesNotExistNonS3() {
+    AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
+    doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());
+    doReturn(null).when(mockClient).getFunction(any());
+    doReturn(new CreateFunctionResult()
+                 .withCodeSha256("sha256")
+                 .withVersion("version")
+                 .withFunctionArn("arn")
+                 .withFunctionName("name"))
+        .when(mockClient)
+        .createFunction(any());
+    doReturn(new CreateAliasResult().withName("aliasName").withAliasArn("aliasArn"))
+        .when(mockClient)
+        .createAlias(any());
+    ArtifactStreamAttributes artifactStreamAttributesForS3 =
+        ArtifactStreamAttributes.builder()
+            .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+            .metadataOnly(true)
+            .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+            .serverSetting(awsSetting)
+            .artifactServerEncryptedDataDetails(Collections.emptyList())
+            .build();
+
+    AwsLambdaExecuteWfRequest request =
+        AwsLambdaExecuteWfRequest.builder()
+            .awsConfig(AwsConfig.builder().build())
+            .encryptionDetails(emptyList())
+            .region("use-east-1")
+            .roleArn("arn")
+            .artifactStreamAttributes(artifactStreamAttributesForS3)
+            .evaluatedAliases(singletonList("eval"))
+            .serviceVariables(ImmutableMap.of("k1", "v1"))
+            .lambdaVpcConfig(AwsLambdaVpcConfig.builder().build())
+            .functionParams(singletonList(AwsLambdaFunctionParams.builder().functionName("fxName").build()))
+            .build();
+    InputStream mockInputStream = new ByteArrayInputStream(new byte[0]);
+    doReturn(mockInputStream)
+        .when(mockDelegateFileManager)
+        .downloadArtifactAtRuntime(any(), any(), any(), any(), any(), any());
+    doNothing().when(mockTracker).trackLambdaCall(anyString());
+    awsLambdaHelperServiceDelegate.executeWf(request, mockCallBack);
+    verify(mockClient).createFunction(any());
+    verify(mockClient).createAlias(any());
+  }
+
+  @SneakyThrows
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
-  public void testExecuteWf_FxExists() {
+  public void testExecuteWf_FxExistsS3() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
@@ -147,16 +238,88 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new CreateAliasResult().withName("aliasName").withAliasArn("aliasArn"))
         .when(mockClient)
         .createAlias(any());
+
+    ArtifactStreamAttributes artifactStreamAttributesForS3 =
+        ArtifactStreamAttributes.builder()
+            .artifactStreamType(ArtifactStreamType.AMAZON_S3.name())
+            .metadataOnly(true)
+            .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
+            .serverSetting(awsSetting)
+            .artifactServerEncryptedDataDetails(Collections.emptyList())
+            .build();
+
     AwsLambdaExecuteWfRequest request = AwsLambdaExecuteWfRequest.builder()
                                             .awsConfig(AwsConfig.builder().build())
                                             .encryptionDetails(emptyList())
                                             .region("use-east-1")
                                             .roleArn("arn")
+                                            .artifactStreamAttributes(artifactStreamAttributesForS3)
                                             .evaluatedAliases(singletonList("eval"))
                                             .serviceVariables(ImmutableMap.of("k1", "v1"))
                                             .lambdaVpcConfig(AwsLambdaVpcConfig.builder().build())
                                             .functionParams(singletonList(AwsLambdaFunctionParams.builder().build()))
                                             .build();
+
+    doNothing().when(mockTracker).trackLambdaCall(anyString());
+    awsLambdaHelperServiceDelegate.executeWf(request, mockCallBack);
+    verify(mockClient, times(2)).updateFunctionCode(any());
+    verify(mockClient).updateFunctionConfiguration(any());
+    verify(mockClient).publishVersion(any());
+    verify(mockClient).createAlias(any());
+  }
+
+  @SneakyThrows
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testExecuteWf_FxExistsNonS3() {
+    AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
+    doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());
+    doReturn(new GetFunctionResult().withConfiguration(new FunctionConfiguration().withCodeSha256("sha256_old")))
+        .when(mockClient)
+        .getFunction(any());
+    doReturn(new UpdateFunctionCodeResult().withCodeSha256("sha256_new").withFunctionArn("new-arn"))
+        .when(mockClient)
+        .updateFunctionCode(any());
+    doReturn(new UpdateFunctionConfigurationResult().withFunctionName("name").withCodeSha256("sha256_new"))
+        .when(mockClient)
+        .updateFunctionConfiguration(any());
+    doReturn(new PublishVersionResult().withVersion("version").withFunctionArn("arn"))
+        .when(mockClient)
+        .publishVersion(any());
+    doReturn(new ListAliasesResult().withAliases(emptyList())).when(mockClient).listAliases(any());
+    doReturn(new CreateAliasResult().withName("aliasName").withAliasArn("aliasArn"))
+        .when(mockClient)
+        .createAlias(any());
+
+    ArtifactStreamAttributes artifactStreamAttributesForS3 =
+        ArtifactStreamAttributes.builder()
+            .artifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+            .metadataOnly(true)
+            .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+            .serverSetting(awsSetting)
+            .artifactServerEncryptedDataDetails(Collections.emptyList())
+            .build();
+
+    AwsLambdaExecuteWfRequest request = AwsLambdaExecuteWfRequest.builder()
+                                            .awsConfig(AwsConfig.builder().build())
+                                            .encryptionDetails(emptyList())
+                                            .region("use-east-1")
+                                            .roleArn("arn")
+                                            .artifactStreamAttributes(artifactStreamAttributesForS3)
+                                            .evaluatedAliases(singletonList("eval"))
+                                            .serviceVariables(ImmutableMap.of("k1", "v1"))
+                                            .lambdaVpcConfig(AwsLambdaVpcConfig.builder().build())
+                                            .functionParams(singletonList(AwsLambdaFunctionParams.builder().build()))
+                                            .build();
+
+    InputStream mockInputStream = new ByteArrayInputStream(new byte[0]);
+    doReturn(mockInputStream)
+        .when(mockDelegateFileManager)
+        .downloadArtifactAtRuntime(any(), any(), any(), any(), any(), any());
     doNothing().when(mockTracker).trackLambdaCall(anyString());
     awsLambdaHelperServiceDelegate.executeWf(request, mockCallBack);
     verify(mockClient, times(2)).updateFunctionCode(any());
@@ -247,5 +410,42 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     final AwsLambdaDetailsResponse functionDetails =
         awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest);
     assertThat(functionDetails.getLambdaDetails()).isNull();
+  }
+
+  private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {
+    Map<String, String> map = new HashMap<>();
+    switch (artifactStreamType) {
+      case AMAZON_S3:
+        map.put(ArtifactMetadataKeys.bucketName, BUCKET_NAME);
+        map.put(ArtifactMetadataKeys.artifactFileName, ARTIFACT_FILE_NAME);
+        map.put(ArtifactMetadataKeys.artifactPath, ARTIFACT_PATH);
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        map.put(ArtifactMetadataKeys.artifactFileSize, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
+        map.put(ArtifactMetadataKeys.key, ACCESS_KEY);
+        map.put(ArtifactMetadataKeys.url, S3_URL);
+        break;
+      case ARTIFACTORY:
+        map.put(ArtifactMetadataKeys.artifactFileName, ARTIFACT_FILE_NAME);
+        map.put(ArtifactMetadataKeys.artifactPath, ARTIFACT_PATH);
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        map.put(ArtifactMetadataKeys.artifactFileSize, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
+        break;
+      case AZURE_ARTIFACTS:
+        map.put(ArtifactMetadataKeys.version, BUILD_NO);
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        break;
+      case JENKINS:
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        break;
+      case BAMBOO:
+        map.put(ArtifactMetadataKeys.buildNo, "11");
+        break;
+      case NEXUS:
+        map.put(ArtifactMetadataKeys.buildNo, "7.0");
+        break;
+      default:
+        break;
+    }
+    return map;
   }
 }
