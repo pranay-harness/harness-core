@@ -114,29 +114,39 @@ public class AnomalyServiceImpl implements AnomalyService {
                                  .fetch())) {
       while (anomalyIterator.hasNext()) {
         Anomaly anomaly = anomalyIterator.next();
-        AnomalyDTO anomalyDTO =
-            AnomalyDTO.builder()
-                .startTimestamp(anomaly.getAnomalyStartTime().toEpochMilli())
-                .endTimestamp(anomaly.getAnomalyEndTime() == null ? null : anomaly.getAnomalyEndTime().toEpochMilli())
-                .status(anomaly.getStatus())
-                .category(anomaly.getCategory())
-                .anomalyDetails(new TreeSet<>())
-                .build();
+        AtomicDouble anomalyRisk = new AtomicDouble(0);
 
         Map<String, Set<AnomalousMetric>> anomalousMetricsByCvConfigs =
             getAnomalousMetricsByCvConfigs(anomaly.getAnomalyDetails());
 
+        SortedSet<AnomalyDetailDTO> anomalyDetailDTOS = new TreeSet<>();
         anomalousMetricsByCvConfigs.forEach((cvConfigId, anomalousMetrics) -> {
           SortedSet<AnomalyMetricDetail> anomalyMetricDetails = getAnomalyMetricDetailsWithRisk(anomalousMetrics);
           AnomalousMetric maxRiskMetric = anomalousMetrics.stream()
                                               .max(Comparator.comparing(AnomalousMetric::getRiskScore))
                                               .orElse(AnomalousMetric.builder().riskScore(0.0).build());
-          anomalyDTO.getAnomalyDetails().add(AnomalyDetailDTO.builder()
-                                                 .cvConfigId(cvConfigId)
-                                                 .riskScore(maxRiskMetric.getRiskScore())
-                                                 .metricDetails(anomalyMetricDetails)
-                                                 .build());
+          anomalyDetailDTOS.add(AnomalyDetailDTO.builder()
+                                    .cvConfigId(cvConfigId)
+                                    .riskScore(maxRiskMetric.getRiskScore())
+                                    .metricDetails(anomalyMetricDetails)
+                                    .build());
+
+          if (anomalyRisk.get() < maxRiskMetric.getRiskScore()) {
+            anomalyRisk.set(maxRiskMetric.getRiskScore());
+          }
         });
+        // TODO: replace identifier by name
+        AnomalyDTO anomalyDTO =
+            AnomalyDTO.builder()
+                .serviceName(serviceIdentifier)
+                .envName(envIdentifier)
+                .startTimestamp(anomaly.getAnomalyStartTime().toEpochMilli())
+                .endTimestamp(anomaly.getAnomalyEndTime() == null ? null : anomaly.getAnomalyEndTime().toEpochMilli())
+                .status(anomaly.getStatus())
+                .category(anomaly.getCategory())
+                .anomalyDetails(anomalyDetailDTOS)
+                .riskScore(anomalyRisk.get())
+                .build();
 
         anomalies.add(anomalyDTO);
       }

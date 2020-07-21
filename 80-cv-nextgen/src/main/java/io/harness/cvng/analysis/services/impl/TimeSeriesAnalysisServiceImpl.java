@@ -16,6 +16,8 @@ import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns.TimeSeriesA
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.TimeSeriesCumulativeSumsKeys;
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
+import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
+import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory.TimeSeriesShortTermHistoryKeys;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
@@ -25,6 +27,8 @@ import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.dashboard.entities.Anomaly;
+import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.persistence.HPersistence;
@@ -35,6 +39,7 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +55,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private TimeSeriesService timeSeriesService;
   @Inject private HeatMapService heatMapService;
   @Inject private CVConfigService cvConfigService;
+  @Inject private AnomalyService anomalyService;
 
   @Override
   public List<String> scheduleAnalysis(String cvConfigId, AnalysisInput analysisInput) {
@@ -214,9 +220,11 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       ServiceGuardMetricAnalysisDTO analysis, String cvConfigId, String taskId, Instant startTime, Instant endTime) {
     TimeSeriesShortTermHistory shortTermHistory = buildShortTermHistory(analysis);
     TimeSeriesCumulativeSums cumulativeSums = buildCumulativeSums(analysis, startTime, endTime);
+    TimeSeriesRiskSummary riskSummary = buildRiskSummary(analysis, startTime, endTime);
 
     saveShortTermHistory(shortTermHistory);
     saveAnomalousPatterns(analysis, cvConfigId);
+    hPersistence.save(riskSummary);
     hPersistence.save(cumulativeSums);
     logger.info("Saving analysis for config: {}", cvConfigId);
     learningEngineTaskService.markCompleted(taskId);
@@ -225,6 +233,30 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       double risk = analysis.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
       heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getServiceIdentifier(),
           cvConfig.getEnvIdentifier(), CVMonitoringCategory.PERFORMANCE, endTime, risk);
+
+      handleAnomalyOpenOrClose(cvConfig.getAccountId(), cvConfigId, startTime, endTime, risk, riskSummary);
+    }
+  }
+
+  private void handleAnomalyOpenOrClose(String accountId, String cvConfigId, Instant startTime, Instant endTime,
+      double overallRisk, TimeSeriesRiskSummary timeSeriesRiskSummary) {
+    if (overallRisk <= 0.25) {
+      anomalyService.closeAnomaly(accountId, cvConfigId, endTime);
+    } else {
+      if (timeSeriesRiskSummary != null) {
+        List<TransactionMetricRisk> metricRisks = timeSeriesRiskSummary.getTransactionMetricRiskList();
+        List<Anomaly.AnomalousMetric> anomalousMetrics = new ArrayList<>();
+        metricRisks.forEach(metricRisk -> {
+          if (metricRisk.getMetricRisk() > 0) {
+            anomalousMetrics.add(Anomaly.AnomalousMetric.builder()
+                                     .groupName(metricRisk.getTransactionName())
+                                     .metricName(metricRisk.getMetricName())
+                                     .riskScore(metricRisk.getMetricScore())
+                                     .build());
+          }
+        });
+        anomalyService.openAnomaly(accountId, cvConfigId, endTime, anomalousMetrics);
+      }
     }
   }
 
@@ -256,6 +288,29 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     return timeSeriesService.getTimeSeriesMetricDefinitions(cvConfigId);
   }
 
+  private TimeSeriesRiskSummary buildRiskSummary(
+      ServiceGuardMetricAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
+    List<TransactionMetricRisk> metricRiskList = new ArrayList<>();
+    analysisDTO.getTxnMetricAnalysisData().forEach((txnName, metricMap) -> {
+      metricMap.forEach((metricName, metricData) -> {
+        TransactionMetricRisk metricRisk = TransactionMetricRisk.builder()
+                                               .transactionName(txnName)
+                                               .metricName(metricName)
+                                               .metricRisk(metricData.getRisk())
+                                               .metricScore(metricData.getScore())
+                                               .lastSeenTime(metricData.getLastSeenTime())
+                                               .longTermPattern(metricData.isLongTermPattern())
+                                               .build();
+        metricRiskList.add(metricRisk);
+      });
+    });
+    return TimeSeriesRiskSummary.builder()
+        .cvConfigId(analysisDTO.getCvConfigId())
+        .analysisStartTime(startTime)
+        .analysisEndTime(endTime)
+        .transactionMetricRiskList(metricRiskList)
+        .build();
+  }
   private TimeSeriesCumulativeSums buildCumulativeSums(
       ServiceGuardMetricAnalysisDTO analysisDTO, Instant startTime, Instant endTime) {
     Map<String, Map<String, TimeSeriesCumulativeSums.MetricSum>> cumulativeSumsMap = new HashMap<>();

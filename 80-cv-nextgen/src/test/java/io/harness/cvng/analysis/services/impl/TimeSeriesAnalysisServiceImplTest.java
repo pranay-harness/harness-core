@@ -3,6 +3,9 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -21,8 +24,11 @@ import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
+import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -31,7 +37,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -52,6 +57,8 @@ import java.util.Set;
 public class TimeSeriesAnalysisServiceImplTest extends CVNextGenBaseTest {
   @Mock LearningEngineTaskService learningEngineTaskService;
   @Mock TimeSeriesService mockTimeSeriesService;
+  @Mock AnomalyService anomalyService;
+  @Mock CVConfigService cvConfigService;
   @Inject TimeSeriesService timeSeriesService;
   @Inject TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject HPersistence hPersistence;
@@ -62,6 +69,16 @@ public class TimeSeriesAnalysisServiceImplTest extends CVNextGenBaseTest {
   public void setUp() throws Exception {
     cvConfigId = generateUuid();
     FieldUtils.writeField(timeSeriesAnalysisService, "timeSeriesService", mockTimeSeriesService, true);
+    FieldUtils.writeField(timeSeriesAnalysisService, "anomalyService", anomalyService, true);
+    FieldUtils.writeField(timeSeriesAnalysisService, "cvConfigService", cvConfigService, true);
+
+    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setAccountId(generateUuid());
+    cvConfig.setServiceIdentifier(generateUuid());
+    cvConfig.setEnvIdentifier(generateUuid());
+    cvConfig.setUuid(cvConfigId);
+
+    when(cvConfigService.get(cvConfigId)).thenReturn(cvConfig);
   }
 
   @Test
@@ -97,7 +114,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CVNextGenBaseTest {
     taskIds.add("task2");
     timeSeriesAnalysisService.getTaskStatus(cvConfigId, taskIds);
 
-    Mockito.verify(learningEngineTaskService).getTaskStatus(taskIds);
+    verify(learningEngineTaskService).getTaskStatus(taskIds);
   }
 
   @Test
@@ -106,7 +123,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CVNextGenBaseTest {
   public void testGetMetricTemplate() {
     timeSeriesAnalysisService.getMetricTemplate(cvConfigId);
 
-    Mockito.verify(mockTimeSeriesService).getTimeSeriesMetricDefinitions(cvConfigId);
+    verify(mockTimeSeriesService).getTimeSeriesMetricDefinitions(cvConfigId);
   }
 
   @Test
@@ -230,6 +247,16 @@ public class TimeSeriesAnalysisServiceImplTest extends CVNextGenBaseTest {
     TimeSeriesShortTermHistory shortTermHistory =
         hPersistence.createQuery(TimeSeriesShortTermHistory.class).filter("cvConfigId", cvConfigId).get();
     assertThat(shortTermHistory).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testOpenAnomaly() {
+    timeSeriesAnalysisService.saveAnalysis(buildServiceGuardMetricAnalysisDTO(), cvConfigId, "letTaskId",
+        Instant.now().minus(10, ChronoUnit.MINUTES), Instant.now().minus(5, ChronoUnit.MINUTES));
+
+    verify(anomalyService).openAnomaly(any(), any(), any(), any());
   }
 
   private ServiceGuardMetricAnalysisDTO buildServiceGuardMetricAnalysisDTO() {

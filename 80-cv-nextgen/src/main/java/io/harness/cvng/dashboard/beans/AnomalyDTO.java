@@ -10,6 +10,9 @@ import java.util.SortedSet;
 @Value
 @Builder
 public class AnomalyDTO implements Comparable<AnomalyDTO> {
+  String serviceName;
+  String envName;
+  Double riskScore;
   Long startTimestamp;
   Long endTimestamp;
   CVMonitoringCategory category;

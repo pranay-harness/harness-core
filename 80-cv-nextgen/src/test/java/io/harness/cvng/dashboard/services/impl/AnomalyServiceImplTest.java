@@ -252,6 +252,9 @@ public class AnomalyServiceImplTest extends CVNextGenBaseTest {
     assertThat(anomaly.getEndTimestamp()).isNull();
     assertThat(anomaly.getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
     assertThat(anomaly.getStatus()).isEqualTo(AnomalyStatus.OPEN);
+    assertThat(anomaly.getRiskScore()).isEqualTo(0.1 * (numOfAnomalies * numOfAnomalousMetrics - 1));
+    assertThat(anomaly.getServiceName()).isEqualTo(serviceIdentifier);
+    assertThat(anomaly.getEnvName()).isEqualTo(envIdentifier);
     SortedSet<AnomalyDetailDTO> anomalyDetails = anomaly.getAnomalyDetails();
     assertThat(anomalyDetails.size()).isEqualTo(1);
     AnomalyDetailDTO anomalyDetail = anomalyDetails.first();
