@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
@@ -39,6 +40,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
@@ -309,7 +311,9 @@ public class PhaseSubWorkflow extends SubWorkflowState {
           saveArtifactsFromVariablesForRollback(
               context, workflowStandardParams, stateExecutionInstance, service, phaseElement, workflowExecution);
         } else {
-          phaseElement.setRollbackArtifactId(findRollbackArtifactId(service, workflowExecution));
+          if (!checkBuildPipeline(workflowStandardParams)) {
+            phaseElement.setRollbackArtifactId(findRollbackArtifactId(service, workflowExecution));
+          }
         }
       } else {
         // save current artifacts in sweeping output
@@ -322,6 +326,26 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       }
     }
     return spawningInstance;
+  }
+
+  private boolean checkBuildPipeline(WorkflowStandardParams workflowStandardParams) {
+    if (workflowStandardParams.getWorkflowElement() != null
+        && workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid() != null) {
+      WorkflowExecution pipelineExecution = workflowExecutionService.getWorkflowExecution(
+          workflowStandardParams.getAppId(), workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid());
+      if (pipelineExecution != null && pipelineExecution.getPipelineExecution().getPipelineStageExecutions() != null) {
+        for (PipelineStageExecution pse : pipelineExecution.getPipelineExecution().getPipelineStageExecutions()) {
+          if (pse.getWorkflowExecutions() != null) {
+            for (WorkflowExecution memberWorkflowExecution : pse.getWorkflowExecutions()) {
+              if (memberWorkflowExecution.getOrchestrationType() == OrchestrationWorkflowType.BUILD) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
   private void saveArtifactToSweepingOutput(
