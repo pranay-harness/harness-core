@@ -48,8 +48,6 @@ import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMEN
 import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
-import static software.wings.service.impl.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
-import static software.wings.service.impl.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
 import static software.wings.service.impl.UserServiceImpl.INVITE_EMAIL_TEMPLATE_NAME;
 import static software.wings.service.impl.UserServiceImpl.SIGNUP_EMAIL_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -175,6 +173,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -306,18 +305,10 @@ public class UserServiceTest extends WingsBaseTest {
                     .name("user_name")
                     .build();
 
-    UserInvite userInvite = anUserInvite()
-                                .withGivenName("given-name")
-                                .withName("user_name")
-                                .withAccountId(account.getUuid())
-                                .withUuid(generateUuid())
-                                .withEmail("useremail@harness.io")
-                                .build();
-
     when(emailDataNotificationService.send(any(EmailData.class))).thenReturn(true);
     when(subdomainUrlHelper.getPortalBaseUrl(account.getUuid())).thenReturn("base_url");
 
-    userService.sendUserInvitationToOnlySsoAccountMail(userInvite, account, user);
+    userService.sendUserInvitationToOnlySsoAccountMail(account, user);
     verify(emailDataNotificationService, atLeastOnce()).send(any(EmailData.class));
   }
 
@@ -1005,33 +996,6 @@ public class UserServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = MOHIT)
   @Category(UnitTests.class)
-  public void testCheckInvite() {
-    // When the auth mechanism is User_password, user should be redirected to Password_signup page.
-    when(accountService.get(anyString()))
-        .thenReturn(Account.Builder.anAccount()
-                        .withUuid("acct")
-                        .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
-                        .build());
-    when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("url");
-    UserInvite userInvite1 = anUserInvite().withAccountId("acct").withEmail("testinviteuser1@harness.io").build();
-    when(userInviteQuery.get()).thenReturn(userInvite1);
-    when(query.get()).thenReturn(new User());
-    assertThat(userService.checkInviteStatus(userInvite1)).isEqualTo(ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD);
-
-    // When the auth mechanism is User_password, user should be redirected to login page.
-    UserInvite userInvite2 = anUserInvite().withAccountId("acct").withEmail("testinviteuser2@harness.io").build();
-    when(accountService.get(anyString()))
-        .thenReturn(Account.Builder.anAccount()
-                        .withUuid("acct")
-                        .withAuthenticationMechanism(AuthenticationMechanism.LDAP)
-                        .build());
-    userService.inviteUserNew(userInvite2);
-    assertThat(userService.checkInviteStatus(userInvite2)).isEqualTo(ACCOUNT_INVITE_ACCEPTED);
-  }
-
-  @Test
-  @Owner(developers = MOHIT)
-  @Category(UnitTests.class)
   public void testResendInvitationEmail() {
     when(accountService.get(any())).thenReturn(anAccount().withUuid(UUIDGenerator.generateUuid()).build());
     when(userInviteQuery.get()).thenReturn(new UserInvite());
@@ -1064,7 +1028,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(query.get()).thenReturn(user);
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
     doNothing().when(signupService).checkIfEmailIsValid(any());
-    userService.inviteUserNew(userInvite);
+    userService.inviteUser(userInvite, true, false);
     verify(signupService, times(1)).sendEmail(any(), anyString(), any());
   }
 
@@ -1432,10 +1396,14 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = MOHIT)
   @Category(UnitTests.class)
   public void shouldNotAllowAExistingUsersToBeAddedAgain() {
-    UserInvite userInvite = anUserInvite().withEmails(Arrays.asList(USER_EMAIL)).build();
     Account account = anAccount().build();
-    realWingsPersistence.save(account);
-    User user = anUser().email(USER_EMAIL).pendingAccounts(Arrays.asList(account)).build();
+    String savedAccount = realWingsPersistence.save(account);
+    UserInvite userInvite =
+        anUserInvite().withEmails(Collections.singletonList(USER_EMAIL)).withAccountId(savedAccount).build();
+    User user = anUser()
+                    .email(USER_EMAIL)
+                    .pendingAccounts(Collections.singletonList(realWingsPersistence.get(Account.class, savedAccount)))
+                    .build();
     realWingsPersistence.save(user);
     when(wingsPersistence.createQuery(User.class)).thenReturn(userQuery);
     when(accountService.get(anyString())).thenReturn(account);

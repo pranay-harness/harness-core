@@ -3,7 +3,6 @@ package software.wings.scim;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -104,7 +103,6 @@ public class ScimUserServiceTest extends WingsBaseTest {
     userInvite.setEmail("username@harness.io");
 
     when(userService.getUserByEmail(anyString(), anyString())).thenReturn(user);
-    when(userService.inviteUserOld(any(UserInvite.class))).thenReturn(userInvite);
     Response response = scimUserService.createUser(scimUser, account.getUuid());
 
     assertThat(response).isNotNull();
@@ -131,7 +129,6 @@ public class ScimUserServiceTest extends WingsBaseTest {
     userInvite.setEmail("username@harness.io");
 
     when(userService.getUserByEmail(anyString(), anyString())).thenReturn(user);
-    when(userService.inviteUserOld(any(UserInvite.class))).thenReturn(userInvite);
     Response response = scimUserService.createUser(scimUser, account.getUuid());
 
     assertThat(response).isNotNull();
@@ -160,7 +157,6 @@ public class ScimUserServiceTest extends WingsBaseTest {
     userInvite.setUuid(generateUuid());
 
     when(userService.getUserByEmail(anyString(), anyString())).thenReturn(user);
-    when(userService.inviteUserOld(any(UserInvite.class))).thenReturn(userInvite);
     when(userService.get(account.getUuid(), user.getUuid())).thenReturn(user);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.createUser(scimUser, account.getUuid());
@@ -192,7 +188,6 @@ public class ScimUserServiceTest extends WingsBaseTest {
     userInvite.setUuid(generateUuid());
 
     when(userService.getUserByEmail(anyString(), anyString())).thenReturn(null);
-    when(userService.inviteUserOld(any(UserInvite.class))).thenReturn(userInvite);
     when(userService.get(account.getUuid(), user.getUuid())).thenReturn(user);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.createUser(scimUser, account.getUuid());
@@ -223,7 +218,6 @@ public class ScimUserServiceTest extends WingsBaseTest {
     userInvite.setUuid(generateUuid());
 
     when(userService.getUserByEmail(anyString(), anyString())).thenReturn(null);
-    when(userService.inviteUserOld(any(UserInvite.class))).thenReturn(userInvite);
     when(userService.get(account.getUuid(), user.getUuid())).thenReturn(user);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.createUser(scimUser, account.getUuid());

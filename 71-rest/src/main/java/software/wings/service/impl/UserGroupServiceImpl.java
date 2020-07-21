@@ -8,6 +8,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.validation.Validator.unEqualCheck;
+import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.function.Function.identity;
@@ -17,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.elasticsearch.common.util.set.Sets.newHashSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
+import static software.wings.scheduler.LdapGroupSyncJob.add;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
@@ -74,7 +76,6 @@ import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.RbacFeature;
 import software.wings.features.api.UsageLimitedFeature;
-import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -93,6 +94,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -209,7 +211,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     if (!ccmSettingService.isCloudCostEnabled(accountId)) {
-      res.getResponse().forEach(userGroup -> { maskCePermissions(userGroup); });
+      res.getResponse().forEach(this ::maskCePermissions);
     }
 
     return res;
@@ -409,11 +411,6 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup updateMembers(UserGroup userGroup, boolean sendNotification) {
-    return updateMembers(userGroup, sendNotification, false);
-  }
-
-  @Override
   public UserGroup updateMembers(UserGroup userGroup, boolean sendNotification, boolean toBeAudited) {
     Set<String> newMemberIds = Sets.newHashSet();
     if (isNotEmpty(userGroup.getMembers())) {
@@ -478,7 +475,8 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup removeMembers(UserGroup userGroup, Collection<User> members, boolean sendNotification) {
+  public UserGroup removeMembers(
+      UserGroup userGroup, Collection<User> members, boolean sendNotification, boolean toBeAudited) {
     if (isEmpty(members)) {
       return userGroup;
     }
@@ -489,7 +487,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     members.forEach(groupMembers::remove);
-    return updateMembers(userGroup, sendNotification);
+    return updateMembers(userGroup, sendNotification, toBeAudited);
   }
 
   @Override
@@ -747,22 +745,24 @@ public class UserGroupServiceImpl implements UserGroupService {
       throw new InvalidRequestException("Invalid ssoId");
     }
 
-    group.setSsoLinked(true);
-    group.setLinkedSsoType(ssoType);
-    group.setLinkedSsoId(ssoId);
-    group.setLinkedSsoDisplayName(ssoSettings.getDisplayName());
-    group.setSsoGroupId(ssoGroupId);
-    group.setSsoGroupName(ssoGroupName);
-    UserGroup savedGroup = save(group);
+    Map<String, Object> updatedFields = new HashMap<>();
+    updatedFields.put(UserGroupKeys.isSsoLinked, TRUE);
+    updatedFields.put(UserGroupKeys.linkedSsoType, ssoType);
+    updatedFields.put(UserGroupKeys.linkedSsoId, ssoId);
+    updatedFields.put(UserGroupKeys.linkedSsoDisplayName, ssoSettings.getDisplayName());
+    updatedFields.put(UserGroupKeys.ssoGroupId, ssoGroupId);
+    updatedFields.put(UserGroupKeys.ssoGroupName, ssoGroupName);
+
+    wingsPersistence.updateFields(UserGroup.class, group.getUuid(), updatedFields);
+    UserGroup updatedGroup = get(accountId, userGroupId, true);
+
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, group, updatedGroup, Type.LINK_SSO);
 
     if (ssoType == SSOType.LDAP) {
-      LdapGroupSyncJob.add(jobScheduler, accountId, ssoId);
+      add(jobScheduler, accountId, ssoId);
     }
 
-    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, group, Type.LINK_SSO);
-    logger.info("Auditing link to SSO Group for groupId={}", group.getUuid());
-
-    return savedGroup;
+    return updatedGroup;
   }
 
   @Override
@@ -779,7 +779,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (!retainMembers) {
       removeUserGroupFromInvites(accountId, userGroupId);
       group.setMembers(Collections.emptyList());
-      group = updateMembers(group, false);
+      group = updateMembers(group, false, false);
     }
 
     group.setSsoLinked(false);

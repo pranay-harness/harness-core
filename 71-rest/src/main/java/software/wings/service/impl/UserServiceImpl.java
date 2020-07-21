@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
@@ -31,13 +32,18 @@ import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONME
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
 import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
+import static software.wings.service.impl.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
+import static software.wings.service.impl.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+import static software.wings.service.impl.InviteOperationResponse.FAIL;
+import static software.wings.service.impl.InviteOperationResponse.USER_ALREADY_ADDED;
+import static software.wings.service.impl.InviteOperationResponse.USER_ALREADY_INVITED;
+import static software.wings.service.impl.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -92,7 +98,6 @@ import io.harness.persistence.UuidAware;
 import io.harness.serializer.KryoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.utils.URIBuilder;
@@ -199,6 +204,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.cache.Cache;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
@@ -566,7 +572,7 @@ public class UserServiceImpl implements UserService {
         String hashed = hashpw(new String(user.getPassword()), BCrypt.gensalt());
         user.setPasswordHash(hashed);
         user.setPasswordChangedAt(System.currentTimeMillis());
-        user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
+        user.setRoles(newArrayList(roleService.getAccountAdminRole(account.getUuid())));
         return save(user, accountId);
       });
 
@@ -585,6 +591,12 @@ public class UserServiceImpl implements UserService {
     if (isNotEmpty(email)) {
       user = wingsPersistence.createQuery(User.class).filter(UserKeys.email, email.trim().toLowerCase()).get();
       loadSupportAccounts(user);
+      if (user != null && isEmpty(user.getAccounts())) {
+        user.setAccounts(newArrayList());
+      }
+      if (user != null && isEmpty(user.getPendingAccounts())) {
+        user.setPendingAccounts(newArrayList());
+      }
     }
 
     return user;
@@ -625,8 +637,8 @@ public class UserServiceImpl implements UserService {
     return userInvite;
   }
 
-  private void loadUserGroups(String accountId, User user, boolean loadUsers) {
-    List<UserGroup> userGroupList = getUserGroupsOfUser(accountId, user.getUuid(), loadUsers);
+  private void loadUserGroups(String accountId, User user) {
+    List<UserGroup> userGroupList = getUserGroupsOfUser(accountId, user.getUuid(), false);
     user.setUserGroups(userGroupList);
   }
 
@@ -776,30 +788,25 @@ public class UserServiceImpl implements UserService {
     String accountId = userInvite.getAccountId();
     limitCheck(accountId, userInvite);
 
-    Account account = accountService.get(accountId);
-    List<String> alreadyInvitedUsers = new ArrayList<>();
-    List<String> alreadyAddedUsers = new ArrayList<>();
-
-    userInvite.getEmails().forEach(email -> {
-      User user = getUserByEmail(email, accountId);
-      if (user != null && user.getPendingAccounts() != null && user.getPendingAccounts().contains(account)) {
-        alreadyInvitedUsers.add(email.trim());
-      } else if (user != null) {
-        alreadyAddedUsers.add(email.trim());
-      }
-    });
-
     List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
 
     for (String email : userInvite.getEmails()) {
-      if (alreadyAddedUsers.contains(email)) {
-        inviteOperationResponses.add(InviteOperationResponse.USER_ALREADY_ADDED);
-        continue;
-      }
       UserInvite userInviteClone = KryoUtils.clone(userInvite);
       userInviteClone.setEmail(email.trim());
-      inviteOperationResponses.add(inviteUserNew(userInviteClone));
+      inviteOperationResponses.add(inviteUser(userInviteClone, true, false));
     }
+
+    List<String> alreadyAddedUsers = new ArrayList<>();
+    List<String> alreadyInvitedUsers = new ArrayList<>();
+    IntStream.range(0, inviteOperationResponses.size()).forEach(i -> {
+      InviteOperationResponse response = inviteOperationResponses.get(i);
+      if (response == USER_ALREADY_ADDED) {
+        alreadyAddedUsers.add(userInvite.getEmails().get(i));
+      }
+      if (response == USER_ALREADY_INVITED) {
+        alreadyInvitedUsers.add(userInvite.getEmails().get(i));
+      }
+    });
 
     String message = "";
     if (isNotEmpty(alreadyAddedUsers)) {
@@ -842,172 +849,98 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public UserInvite inviteUserOld(UserInvite userInvite) {
-    // HAR-6861: should validate against invalid email address on user invitation.
+  public InviteOperationResponse inviteUser(
+      UserInvite userInvite, boolean isInviteAcceptanceRequired, boolean markEmailVerified) {
     signupService.checkIfEmailIsValid(userInvite.getEmail());
 
     String accountId = userInvite.getAccountId();
     Account account = accountService.get(accountId);
-    String inviteId = wingsPersistence.save(userInvite);
-    boolean sendNotification = true;
-
-    if (CollectionUtils.isEmpty(userInvite.getRoles())) {
-      Role accountAdminRole = roleService.getAccountAdminRole(accountId);
-      if (accountAdminRole != null) {
-        List<Role> roleList = new ArrayList<>();
-        roleList.add(accountAdminRole);
-        userInvite.setRoles(roleList);
-      }
-    }
 
     User user = getUserByEmail(userInvite.getEmail());
-    AuthenticationMechanism currentAuthenticationMechanism = account.getAuthenticationMechanism();
+    boolean createNewUser = user == null;
+    if (createNewUser) {
+      user = anUser().build();
+    }
 
-    if (user == null) {
-      boolean emailVerified = currentAuthenticationMechanism != AuthenticationMechanism.USER_PASSWORD;
-      user = anUser()
-                 .accounts(Lists.newArrayList(account))
-                 .email(userInvite.getEmail().trim().toLowerCase())
-                 .name(userInvite.getName().trim())
-                 .givenName(userInvite.getGivenName())
-                 .familyName(userInvite.getFamilyName())
-                 .roles(userInvite.getRoles())
-                 .appId(GLOBAL_APP_ID)
-                 .emailVerified(emailVerified)
-                 .imported(userInvite.getImportedByScim())
-                 .build();
-      user = save(user, accountId);
-      user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
-
-      // Invitation email should sent only in case of USER_PASSWORD authentication mechanism. Because only in that case
-      // we need user to set the password.
-      if (currentAuthenticationMechanism == AuthenticationMechanism.USER_PASSWORD) {
-        sendNewInvitationMail(userInvite, account, user);
-        sendNotification = false;
-      } else if (isEmpty(userInvite.getUserGroups())) {
-        sendUserInvitationToOnlySsoAccountMail(userInvite, account, user);
-        sendNotification = false;
+    if (isUserAssignedToAccount(user, accountId)) {
+      updateUserGroupsOfUser(user.getUuid(), userGroupService.getUserGroupsFromUserInvite(userInvite), accountId, true);
+      return USER_ALREADY_ADDED;
+    } else if (isUserInvitedToAccount(user, accountId)) {
+      if (isInviteAcceptanceRequired) {
+        updateUserInvite(userInvite);
+        return USER_ALREADY_INVITED;
       }
+      user.getPendingAccounts().remove(account);
+      user.getAccounts().add(account);
     } else {
-      boolean userAlreadyAddedToAccount = user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(accountId));
-      if (userAlreadyAddedToAccount) {
-        addRoles(user, userInvite.getRoles());
+      if (isInviteAcceptanceRequired) {
+        userInvite.setUuid(wingsPersistence.save(userInvite));
+        user.getPendingAccounts().add(account);
       } else {
-        addAccountRoles(user, account, userInvite.getRoles());
-      }
-      if (!accountService.isSSOEnabled(account) && !user.isEmailVerified()) {
-        user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
-        sendNewInvitationMail(userInvite, account, user);
-        sendNotification = false;
+        user.getAccounts().add(account);
       }
     }
 
-    List<UserGroup> userGroups = userInvite.getUserGroups();
-    if (isNotEmpty(userGroups)) {
-      Set<String> userGroupIds = userGroups.stream().map(UserGroup::getUuid).collect(Collectors.toSet());
-      PageRequest<UserGroup> pageRequest = aPageRequest()
-                                               .addFilter(UserGroupKeys.accountId, EQ, accountId)
-                                               .addFilter("_id", IN, userGroupIds.toArray())
-                                               .build();
-      PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
-      userGroups = pageResponse.getResponse();
-      addUserToUserGroups(accountId, user, userGroups, sendNotification);
+    user.setEmail(userInvite.getEmail().trim().toLowerCase());
+    user.setName(userInvite.getName().trim());
+    user.setGivenName(userInvite.getGivenName());
+    user.setFamilyName(userInvite.getFamilyName());
+    user.setRoles(Collections.emptyList());
+    if (!user.isEmailVerified()) {
+      user.setEmailVerified(markEmailVerified);
+    }
+    user.setAppId(GLOBAL_APP_ID);
+    user.setImported(userInvite.getImportedByScim());
+
+    user = save(user, accountId);
+    checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
+
+    if (!isInviteAcceptanceRequired) {
+      addUserToUserGroups(accountId, user, userInvite.getUserGroups(), false, true);
     }
 
-    logger.info("Invited user {} to join existing accountName {} with accountId {}", userInvite.getEmail(),
-        userInvite.getAccountName(), userInvite.getAccountId());
+    if (createNewUser && accountService.isSSOEnabled(account)) {
+      sendUserInvitationToOnlySsoAccountMail(account, user);
+    } else {
+      sendNewInvitationMail(userInvite, account, user);
+    }
 
-    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userInvite, Type.CREATE);
-    logger.info("Auditing creation of userInvite={} for account={}", userInvite.getEmail(), account.getUuid());
-
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        accountId, null, user, createNewUser ? Type.CREATE : Type.UPDATE);
     eventPublishHelper.publishUserInviteFromAccountEvent(accountId, userInvite.getEmail());
-    UserInvite returnUserInvite = wingsPersistence.getWithAppId(UserInvite.class, userInvite.getAppId(), inviteId);
-    returnUserInvite.setUuid(StringUtils.EMPTY);
-    return returnUserInvite;
+
+    return USER_INVITED_SUCCESSFULLY;
   }
 
-  @Override
-  public InviteOperationResponse inviteUserNew(UserInvite userInvite) {
-    String userEmail = userInvite.getEmail();
-    String accountId = userInvite.getAccountId();
+  private void updateUserInvite(UserInvite updatedUserInvite) {
+    String userEmail = updatedUserInvite.getEmail();
+    String accountId = updatedUserInvite.getAccountId();
 
-    // HAR-6861: should validate against invalid email address on user invitation.
-    signupService.checkIfEmailIsValid(userEmail);
-
-    User user = getUserByEmail(userEmail);
     Account account = accountService.get(accountId);
+    User user = getUserByEmail(userEmail);
 
-    if (user == null) {
-      user = anUser()
-                 .accounts(Lists.newArrayList())
-                 .pendingAccounts(Lists.newArrayList())
-                 .email(userInvite.getEmail().trim().toLowerCase())
-                 .name(userInvite.getName().trim())
-                 .givenName(userInvite.getGivenName())
-                 .familyName(userInvite.getFamilyName())
-                 .roles(userInvite.getRoles())
-                 .appId(GLOBAL_APP_ID)
-                 .emailVerified(false)
-                 .imported(userInvite.getImportedByScim())
-                 .build();
-      user = save(user, accountId);
-      user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
+    UserInvite existingInvite = getUserInviteByEmailAndAccount(userEmail, accountId);
+    if (existingInvite != null && !areUserGroupsIdenticalForInvites(updatedUserInvite, existingInvite)) {
+      wingsPersistence.updateField(
+          UserInvite.class, existingInvite.getUuid(), "userGroups", updatedUserInvite.getUserGroups());
+      sendNewInvitationMail(existingInvite, account, user);
+      auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, updatedUserInvite, Type.UPDATE);
     }
-
-    List<Account> pendingInvitedAccounts = user.getPendingAccounts();
-    if (pendingInvitedAccounts == null) {
-      pendingInvitedAccounts = new ArrayList<>();
-    }
-    List<String> pendingInvitedAccountList =
-        pendingInvitedAccounts.stream().map(acc -> acc.getUuid()).collect(toList());
-    List<String> accountList = user.getAccounts().stream().map(acc -> acc.getUuid()).collect(toList());
-
-    if (!pendingInvitedAccountList.contains(accountId) && !accountList.contains(accountId)) {
-      logger.info("New User invited: {}, accountId: {}", user.getEmail(), accountId);
-      // user has not been invited before save invite and send mail
-      pendingInvitedAccounts.add(account);
-      user.setPendingAccounts(pendingInvitedAccounts);
-      wingsPersistence.updateField(User.class, user.getUuid(), UserKeys.pendingAccounts, pendingInvitedAccounts);
-      String inviteId = wingsPersistence.save(userInvite);
-      userInvite.setUuid(inviteId);
-      sendNewInvitationMail(userInvite, account, user);
-      eventPublishHelper.publishUserInviteFromAccountEvent(accountId, userEmail);
-      auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userInvite, Type.CREATE);
-      logger.info("Auditing creation of userInvite={} for account={}", userInvite.getEmail(), account.getUuid());
-    } else if (isNotEmpty(accountList) && accountList.contains(accountId)) {
-      // user already present in the account
-      updateUserGroupsOfUser(user.getUuid(), userGroupService.getUserGroupsFromUserInvite(userInvite), accountId, true);
-      return InviteOperationResponse.USER_ALREADY_ADDED;
-    } else {
-      // invitation not yet accepted, resend invitation email if groups are updated
-      UserInvite existingInvite = getUserInviteByEmailAndAccount(userEmail, accountId);
-      if (existingInvite != null && !areUserGroupsIdenticalForInvites(userInvite, existingInvite)) {
-        wingsPersistence.updateField(
-            UserInvite.class, existingInvite.getUuid(), "userGroups", userInvite.getUserGroups());
-        sendNewInvitationMail(existingInvite, account, user);
-        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userInvite, Type.CREATE);
-        logger.info("Auditing creation of userInvite={} for account={}", userInvite.getEmail(), account.getUuid());
-      }
-      return InviteOperationResponse.USER_ALREADY_INVITED;
-    }
-
-    logger.info("Invited user {} to join existing accountName {} with accountId {}", userInvite.getEmail(),
-        userInvite.getAccountName(), userInvite.getAccountId());
-
-    return InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
   }
 
   private boolean areUserGroupsIdenticalForInvites(UserInvite userInvite1, UserInvite userInvite2) {
     if (userInvite1.getUserGroups().size() != userInvite2.getUserGroups().size()) {
       return false;
     }
-    Set ids1 = userInvite1.getUserGroups().stream().map(userGroup -> userGroup.getUuid()).collect(Collectors.toSet());
-    Set ids2 = userInvite2.getUserGroups().stream().map(userGroup -> userGroup.getUuid()).collect(Collectors.toSet());
+    Set<String> ids1 = userInvite1.getUserGroups().stream().map(UserGroup::getUuid).collect(Collectors.toSet());
+    Set<String> ids2 = userInvite2.getUserGroups().stream().map(UserGroup::getUuid).collect(Collectors.toSet());
 
     return ids1.equals(ids2);
   }
 
-  private void addUserToUserGroups(String accountId, User user, List<UserGroup> userGroups, boolean sendNotification) {
+  @Override
+  public void addUserToUserGroups(
+      String accountId, User user, List<UserGroup> userGroups, boolean sendNotification, boolean toBeAudited) {
     if (isEmpty(userGroups)) {
       return;
     }
@@ -1021,7 +954,7 @@ public class UserServiceImpl implements UserService {
       }
       if (!userGroupMembers.contains(user)) {
         userGroupMembers.add(user);
-        userGroupService.updateMembers(userGroup, false);
+        userGroupService.updateMembers(userGroup, false, toBeAudited);
         NotificationSettings notificationSettings = userGroup.getNotificationSettings();
         if (null == notificationSettings) {
           logger.error("Notification settings not found for user group id: [{}]", userGroup.getUuid());
@@ -1041,7 +974,7 @@ public class UserServiceImpl implements UserService {
       String accountId, User user, SetView<String> userGroupIds, boolean sendNotification) {
     if (isNotEmpty(userGroupIds)) {
       List<UserGroup> userGroups = getUserGroups(accountId, userGroupIds);
-      addUserToUserGroups(accountId, user, userGroups, sendNotification);
+      addUserToUserGroups(accountId, user, userGroups, sendNotification, false);
       return userGroups;
     }
     return new ArrayList<>();
@@ -1064,7 +997,7 @@ public class UserServiceImpl implements UserService {
         List<User> userGroupMembers = userGroup.getMembers();
         if (userGroupMembers != null) {
           userGroupMembers.remove(userFinal);
-          userGroupService.updateMembers(userGroup, sendNotification);
+          userGroupService.updateMembers(userGroup, sendNotification, false);
         }
       });
     }
@@ -1294,7 +1227,7 @@ public class UserServiceImpl implements UserService {
       throw new UnauthorizedException(EXC_MSG_USER_INVITE_INVALID, USER);
     }
     if (existingInvite.isCompleted()) {
-      return InviteOperationResponse.FAIL;
+      return FAIL;
     }
     signupService.validateName(userInvite.getName());
     if (userInvite.getPassword() == null) {
@@ -1327,7 +1260,7 @@ public class UserServiceImpl implements UserService {
     }
 
     moveAccountFromPendingToConfirmed(
-        existingUser, account, userGroupService.getUserGroupsFromUserInvite(existingInvite));
+        existingUser, account, userGroupService.getUserGroupsFromUserInvite(existingInvite), true);
 
     completeUserInfo(userInvite, existingUser);
     markUserInviteComplete(userInvite);
@@ -1336,7 +1269,7 @@ public class UserServiceImpl implements UserService {
         userInvite.getAccountId(), null, userInvite, Type.ACCEPTED_INVITE);
     logger.info(
         "Auditing accepted invite for userInvite={} in account={}", userInvite.getName(), userInvite.getAccountName());
-    return InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
+    return ACCOUNT_INVITE_ACCEPTED;
   }
 
   @Override
@@ -1495,7 +1428,7 @@ public class UserServiceImpl implements UserService {
 
     save(user, account.getUuid());
 
-    addUserToUserGroups(account.getUuid(), user, accountAdminGroups, false);
+    addUserToUserGroups(account.getUuid(), user, accountAdminGroups, false, false);
   }
 
   private void validateUser(User user) {
@@ -1644,7 +1577,7 @@ public class UserServiceImpl implements UserService {
     user.setUserGroups(accountAdminGroups);
     user = save(user, account.getUuid());
 
-    addUserToUserGroups(account.getUuid(), user, accountAdminGroups, false);
+    addUserToUserGroups(account.getUuid(), user, accountAdminGroups, false, false);
 
     return user;
   }
@@ -1725,13 +1658,6 @@ public class UserServiceImpl implements UserService {
                          .withClaim("email", email)
                          .sign(algorithm);
       sendResetPasswordEmail(user, token);
-      if (isNotEmpty(user.getAccounts())) {
-        user.getAccounts().forEach(account -> {
-          auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.RESET_PASSWORD);
-          logger.info(
-              "Auditing resetting password for user={} in account={}", user.getName(), account.getAccountName());
-        });
-      }
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new GeneralException(EXC_MSG_RESET_PASS_LINK_NOT_GEN);
     }
@@ -1769,6 +1695,8 @@ public class UserServiceImpl implements UserService {
       String email = decode.getClaim("email").asString();
       User user = resetUserPassword(email, password, decode.getIssuedAt().getTime());
       sendPasswordChangeEmail(user);
+      user.getAccounts().forEach(account
+          -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.RESET_PASSWORD));
     } catch (UnsupportedEncodingException exception) {
       throw new GeneralException("Invalid reset password link");
     } catch (JWTVerificationException exception) {
@@ -1913,7 +1841,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void sendUserInvitationToOnlySsoAccountMail(UserInvite userInvite, Account account, User user) {
+  public void sendUserInvitationToOnlySsoAccountMail(Account account, User user) {
     try {
       Map<String, String> templateModel = getUserInvitationToSsoTemplateModel(account, user);
       List<String> toList = new ArrayList<>();
@@ -2109,19 +2037,16 @@ public class UserServiceImpl implements UserService {
     SetView<String> userGroupMemberDeletions = Sets.difference(oldUserGroupIds, newUserGroupIds);
     SetView<String> userGroupMemberAdditions = Sets.difference(newUserGroupIds, oldUserGroupIds);
 
-    List<UserGroup> userGroupsAdded = new ArrayList<>();
-    List<UserGroup> userGroupsDeleted = new ArrayList<>();
-    if (isNotEmpty(userGroupMemberAdditions)) {
-      userGroupsAdded = addUserToUserGroups(accountId, userFromDB, userGroupMemberAdditions, sendNotification);
+    List<UserGroup> userGroupsAdded =
+        addUserToUserGroups(accountId, userFromDB, userGroupMemberAdditions, sendNotification);
+    List<UserGroup> userGroupsDeleted =
+        removeUserFromUserGroups(accountId, userFromDB, userGroupMemberDeletions, false);
+
+    if (!userGroupsAdded.isEmpty() || !userGroupsDeleted.isEmpty()) {
+      auditUserAdditionAndRemovalFromUserGroups(accountId, userFromDB, userGroupsAdded, userGroupsDeleted);
     }
 
-    if (isNotEmpty(userGroupMemberDeletions)) {
-      userGroupsDeleted = removeUserFromUserGroups(accountId, userFromDB, userGroupMemberDeletions, false);
-    }
-
-    auditUserAdditionAndRemovalFromUserGroups(accountId, userFromDB, userGroupsAdded, userGroupsDeleted);
-
-    authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, Arrays.asList(userId));
+    authService.evictUserPermissionAndRestrictionCacheForAccount(accountId, Collections.singletonList(userId));
     return get(accountId, userId);
   }
 
@@ -2242,7 +2167,7 @@ public class UserServiceImpl implements UserService {
                 members.stream().filter(member -> member.getUuid().equals(userId)).findFirst();
             if (userOptional.isPresent()) {
               members.remove(userOptional.get());
-              userGroupService.updateMembers(userGroup, false);
+              userGroupService.updateMembers(userGroup, false, false);
             }
           }
         });
@@ -2312,7 +2237,7 @@ public class UserServiceImpl implements UserService {
     }
 
     loadSupportAccounts(user);
-    loadUserGroups(accountId, user, false);
+    loadUserGroups(accountId, user);
     return user;
   }
 
@@ -2503,7 +2428,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private void addAccountAdminRole(User existingUser, Account account) {
-    addAccountRoles(existingUser, account, Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
+    addAccountRoles(existingUser, account, newArrayList(roleService.getAccountAdminRole(account.getUuid())));
   }
 
   private void addAccountRoles(User existingUser, Account account, List<Role> roles) {
@@ -2518,17 +2443,6 @@ public class UserServiceImpl implements UserService {
                                 .filter(UserKeys.email, existingUser.getEmail())
                                 .filter("appId", existingUser.getAppId()),
         updateOperations);
-  }
-
-  private void addRoles(User user, List<Role> roles) {
-    if (isNotEmpty(roles)) {
-      UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(User.class);
-      updateOperations.addToSet(UserKeys.roles, roles);
-      wingsPersistence.update(wingsPersistence.createQuery(User.class)
-                                  .filter(UserKeys.email, user.getEmail())
-                                  .filter("appId", user.getAppId()),
-          updateOperations);
-    }
   }
 
   private Account setupTrialAccount(String accountName, String companyName) {
@@ -2662,7 +2576,14 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public boolean isUserAssignedToAccount(User user, String accountId) {
-    return user.getAccounts().stream().anyMatch(account -> account.getUuid().equals(accountId));
+    return user != null && isNotEmpty(user.getAccounts())
+        && user.getAccounts().stream().anyMatch(account -> account.getUuid().equals(accountId));
+  }
+
+  @Override
+  public boolean isUserInvitedToAccount(User user, String accountId) {
+    return user != null && isNotEmpty(user.getPendingAccounts())
+        && user.getPendingAccounts().stream().anyMatch(account -> account.getUuid().equals(accountId));
   }
 
   @Override
@@ -3054,7 +2975,7 @@ public class UserServiceImpl implements UserService {
 
     if (existingInvite.isCompleted()) {
       logger.warn("User invite {} is already completed", userInvite.getUuid());
-      return InviteOperationResponse.FAIL;
+      return FAIL;
     }
 
     eventPublishHelper.publishUserInviteVerifiedFromAccountEvent(account.getUuid(), user.getEmail());
@@ -3065,18 +2986,19 @@ public class UserServiceImpl implements UserService {
 
     if (isPasswordRequired) {
       logger.info("Redirecting invite id: {} to password signup page", existingInvite.getUuid());
-      return InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+      return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
     } else {
       // Marking the user invite complete.
-      moveAccountFromPendingToConfirmed(user, account, userGroupService.getUserGroupsFromUserInvite(existingInvite));
+      moveAccountFromPendingToConfirmed(
+          user, account, userGroupService.getUserGroupsFromUserInvite(existingInvite), true);
       markUserInviteComplete(existingInvite);
-      return InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
+      return ACCOUNT_INVITE_ACCEPTED;
     }
   }
 
   private void moveAccountFromPendingToConfirmed(
-      User existingUser, Account invitationAccount, List<UserGroup> invitationUserGroups) {
-    addUserToUserGroups(invitationAccount.getUuid(), existingUser, invitationUserGroups, false);
+      User existingUser, Account invitationAccount, List<UserGroup> userGroups, boolean markEmailVerified) {
+    addUserToUserGroups(invitationAccount.getUuid(), existingUser, userGroups, false, false);
 
     List<Account> newAccountsList = new ArrayList<>(existingUser.getAccounts());
     newAccountsList.add(invitationAccount);
@@ -3093,7 +3015,7 @@ public class UserServiceImpl implements UserService {
     Map<String, Object> map = new HashMap<>();
     map.put(UserKeys.accounts, newAccountsList);
     map.put(UserKeys.pendingAccounts, newPendingAccountsList);
-    map.put(UserKeys.emailVerified, Boolean.TRUE);
+    map.put(UserKeys.emailVerified, markEmailVerified);
     wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
   }
 

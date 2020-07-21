@@ -5,6 +5,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -31,7 +32,6 @@ import org.quartz.TriggerBuilder;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
-import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
@@ -200,28 +200,24 @@ public class LdapGroupSyncJob implements Job {
 
   private void syncUserGroupMembers(String accountId, Map<UserGroup, Set<User>> removedGroupMembers,
       Map<LdapUserResponse, Set<UserGroup>> addedGroupMembers) {
-    Map<String, String> emailToName = new HashMap<>();
-    createEmailToNameMap(emailToName, addedGroupMembers.keySet());
-    createEmailToNameMap(emailToName, removedGroupMembers.values());
-    Map<String, Set<UserGroup>> emailToUserGroups =
-        getUserGroupsByEmailMap(accountId, addedGroupMembers, removedGroupMembers);
-    emailToUserGroups.forEach((email, userGroups) -> {
-      UserInvite userInvite = UserInviteBuilder.anUserInvite()
-                                  .withAccountId(accountId)
-                                  .withEmail(email)
-                                  .withName(emailToName.get(email))
-                                  .withUserGroups(Lists.newArrayList(userGroups))
-                                  .build();
-      userService.inviteUserNew(userInvite);
-    });
-  }
+    removedGroupMembers.forEach((userGroup, users) -> userGroupService.removeMembers(userGroup, users, false, true));
+    for (Map.Entry<LdapUserResponse, Set<UserGroup>> entry : addedGroupMembers.entrySet()) {
+      LdapUserResponse ldapUserResponse = entry.getKey();
+      Set<UserGroup> userGroups = entry.getValue();
 
-  private void createEmailToNameMap(Map<String, String> emailToNameMap, Collection<Set<User>> collection) {
-    collection.forEach(users -> users.forEach(user -> emailToNameMap.put(user.getEmail(), user.getName())));
-  }
-
-  private void createEmailToNameMap(Map<String, String> emailToNameMap, Set<LdapUserResponse> collection) {
-    collection.forEach(ldapUserResponse -> emailToNameMap.put(ldapUserResponse.getEmail(), ldapUserResponse.getName()));
+      User user = userService.getUserByEmail(ldapUserResponse.getEmail());
+      if (user != null && userService.isUserAssignedToAccount(user, accountId)) {
+        userService.addUserToUserGroups(accountId, user, Lists.newArrayList(userGroups), true, true);
+      } else {
+        UserInvite userInvite = anUserInvite()
+                                    .withAccountId(accountId)
+                                    .withEmail(ldapUserResponse.getEmail())
+                                    .withName(ldapUserResponse.getName())
+                                    .withUserGroups(Lists.newArrayList(userGroups))
+                                    .build();
+        userService.inviteUser(userInvite, false, true);
+      }
+    }
   }
 
   @VisibleForTesting

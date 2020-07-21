@@ -89,15 +89,6 @@ public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
   UserGroup updateNotificationSettings(String accountId, String groupId, NotificationSettings newNotificationSettings);
 
   /**
-   * Update Overview.
-   *
-   * @param userGroup the userGroup
-   * @param sendNotification send notification flag
-   * @return the userGroup
-   */
-  UserGroup updateMembers(UserGroup userGroup, boolean sendNotification);
-
-  /**
    * Same as above, but with a boolean flag to perform or skip auditing
    */
   UserGroup updateMembers(UserGroup userGroup, boolean sendNotification, boolean toBeAudited);
@@ -107,7 +98,7 @@ public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
    *
    * @return the userGroup
    */
-  UserGroup removeMembers(UserGroup userGroup, Collection<User> members, boolean sendNotification);
+  UserGroup removeMembers(UserGroup userGroup, Collection<User> members, boolean sendNotification, boolean toBeAudited);
 
   /**
    * Update UserGroup Permissions.
