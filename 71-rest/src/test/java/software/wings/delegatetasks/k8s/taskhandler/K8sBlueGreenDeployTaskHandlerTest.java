@@ -104,7 +104,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     doReturn(executionLogCallback)
         .when(k8sTaskHelper)
         .getExecutionLogCallback(any(K8sBlueGreenDeployTaskParameters.class), anyString());
@@ -538,7 +538,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     doReturn(executionLogCallback)
         .when(k8sTaskHelper)
         .getExecutionLogCallback(any(K8sBlueGreenDeployTaskParameters.class), anyString());

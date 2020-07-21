@@ -21,6 +21,7 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
   private String activityId;
   private String workflowExecutionId;
   private boolean isBindTaskFeatureSet; // BIND_FETCH_FILES_TASK_TO_DELEGATE
+  private long timeoutInMillis;
 
   // This is to support helm v1
   private ContainerServiceParams containerServiceParams;

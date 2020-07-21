@@ -108,10 +108,11 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     releaseName = k8sBlueGreenDeployTaskParameters.getReleaseName();
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
+    final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
 
     boolean success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
         k8sBlueGreenDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
-        k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, FetchFiles));
+        k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, FetchFiles), timeoutInMillis);
     if (!success) {
       return getFailureResponse();
     }
@@ -159,9 +160,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, WrapUp));
 
-    long steadyStateTimeoutInMillis =
-        getTimeoutMillisFromMinutes(k8sBlueGreenDeployTaskParameters.getTimeoutIntervalInMin());
-    final List<K8sPod> podList = getAllPods(steadyStateTimeoutInMillis);
+    final List<K8sPod> podList = getAllPods(timeoutInMillis);
 
     currentRelease.setManagedWorkloadRevision(
         k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));

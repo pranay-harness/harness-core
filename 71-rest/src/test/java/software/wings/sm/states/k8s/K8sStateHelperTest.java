@@ -1191,7 +1191,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
         .thenReturn(helmChartConfigParams);
 
     ExecutionResponse executionResponse =
-        k8sStateHelper.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName");
+        k8sStateHelper.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
     assertThat(executionResponse.isAsync()).isTrue();
     K8sStateExecutionData responseStateExecutionData =
         (K8sStateExecutionData) executionResponse.getStateExecutionData();
@@ -1213,14 +1213,14 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(10));
 
     when(infrastructureMappingService.get(APP_ID, null)).thenReturn(null);
-    k8sStateHelper.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName");
+    k8sStateHelper.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(2)).queueTask(captor.capture());
     assertThat(captor.getValue().getInfrastructureMappingId()).isEqualTo(null);
 
     when(applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context)).thenReturn(null);
     try {
-      k8sStateHelper.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName");
+      k8sStateHelper.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
       fail("Should not reach here");
     } catch (Exception ex) {
       assertThat(ex.getMessage())
@@ -1230,7 +1230,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     appManifest.setStoreType(HelmSourceRepo);
     when(applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context)).thenReturn(appManifest);
     try {
-      k8sStateHelper.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName");
+      k8sStateHelper.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
       fail("Should not reach here");
     } catch (Exception ex) {
       assertThat(ex.getMessage())
@@ -1379,7 +1379,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
     when(activityService.save(any(Activity.class))).thenReturn(Activity.builder().uuid(ACTIVITY_ID).build());
     when(applicationManifestUtils.createGitFetchFilesTaskParams(context, application, appManifestMap))
         .thenReturn(GitFetchFilesTaskParams.builder().build());
-    ExecutionResponse executionResponse = k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context);
+    ExecutionResponse executionResponse =
+        k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context, 10 * 60 * 1000L);
     assertThat(((K8sStateExecutionData) executionResponse.getStateExecutionData()).getCurrentTaskType())
         .isEqualTo(TaskType.GIT_COMMAND);
 
@@ -1387,7 +1388,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
         .thenReturn(ApplicationManifest.builder().storeType(HelmChartRepo).kind(AppManifestKind.K8S_MANIFEST).build());
     when(applicationManifestUtils.isValuesInHelmChartRepo(context)).thenReturn(true);
     when(openShiftManagerService.isOpenShiftManifestConfig(context)).thenReturn(false);
-    executionResponse = k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context);
+    executionResponse = k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context, 10 * 60 * 1000L);
     assertThat(((K8sStateExecutionData) executionResponse.getStateExecutionData()).getCurrentTaskType())
         .isEqualTo(TaskType.HELM_VALUES_FETCH);
 
@@ -1396,7 +1397,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(appManifestMap);
     when(openShiftManagerService.isOpenShiftManifestConfig(context)).thenReturn(false);
     when(applicationManifestUtils.isValuesInHelmChartRepo(context)).thenReturn(false);
-    executionResponse = k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context);
+    executionResponse = k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context, 10 * 60 * 1000L);
     assertThat(((K8sStateExecutionData) executionResponse.getStateExecutionData()).getCurrentTaskType())
         .isEqualTo(TaskType.GIT_COMMAND);
 
@@ -1405,7 +1406,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
         .thenThrow(new UnsupportedOperationException("asd"));
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(emptyMap());
     try {
-      k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context);
+      k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context, 10 * 60 * 1000L);
     } catch (Exception ex) {
       assertThatExceptionOfType(InvalidRequestException.class);
       assertThat(ex.getMessage()).isEqualTo("App not found");
@@ -1413,7 +1414,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
 
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(emptyMap());
     try {
-      k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context);
+      k8sStateHelper.executeWrapperWithManifest(k8sStateExecutor, context, 10 * 60 * 1000L);
     } catch (Exception ex) {
       assertThatExceptionOfType(InvalidRequestException.class);
       assertThat(ex.getCause()).isInstanceOf(UnsupportedOperationException.class);

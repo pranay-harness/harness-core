@@ -3,6 +3,7 @@ package software.wings.delegatetasks.helm;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -48,17 +49,19 @@ public class HelmValuesFetchTaskTest extends WingsBaseTest {
             .helmChartConfigTaskParams(HelmChartConfigParams.builder().chartName("chart").build())
             .build();
 
-    doReturn("helmValue: value").when(helmTaskHelper).getValuesYamlFromChart(any(HelmChartConfigParams.class));
+    doReturn("helmValue: value")
+        .when(helmTaskHelper)
+        .getValuesYamlFromChart(any(HelmChartConfigParams.class), anyLong());
 
     HelmValuesFetchTaskResponse response = task.run(parameters);
-    verify(helmTaskHelper, times(1)).getValuesYamlFromChart(any(HelmChartConfigParams.class));
+    verify(helmTaskHelper, times(1)).getValuesYamlFromChart(any(HelmChartConfigParams.class), anyLong());
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(response.getValuesFileContent()).isEqualTo("helmValue: value");
 
-    doReturn(null).when(helmTaskHelper).getValuesYamlFromChart(any(HelmChartConfigParams.class));
+    doReturn(null).when(helmTaskHelper).getValuesYamlFromChart(any(HelmChartConfigParams.class), anyLong());
 
     HelmValuesFetchTaskResponse emptyResponse = task.run(parameters);
-    verify(helmTaskHelper, times(2)).getValuesYamlFromChart(any(HelmChartConfigParams.class));
+    verify(helmTaskHelper, times(2)).getValuesYamlFromChart(any(HelmChartConfigParams.class), anyLong());
     assertThat(emptyResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(emptyResponse.getValuesFileContent()).isEqualTo(null);
   }
@@ -75,10 +78,10 @@ public class HelmValuesFetchTaskTest extends WingsBaseTest {
 
     doThrow(new RuntimeException("Unable to fetch Values.yaml"))
         .when(helmTaskHelper)
-        .getValuesYamlFromChart(any(HelmChartConfigParams.class));
+        .getValuesYamlFromChart(any(HelmChartConfigParams.class), anyLong());
 
     HelmValuesFetchTaskResponse response = task.run(parameters);
-    verify(helmTaskHelper, times(1)).getValuesYamlFromChart(any(HelmChartConfigParams.class));
+    verify(helmTaskHelper, times(1)).getValuesYamlFromChart(any(HelmChartConfigParams.class), anyLong());
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(response.getErrorMessage()).isEqualTo("Execution failed with Exception: Unable to fetch Values.yaml");
   }

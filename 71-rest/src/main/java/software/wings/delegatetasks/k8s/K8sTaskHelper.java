@@ -1238,7 +1238,7 @@ public class K8sTaskHelper {
   }
 
   public boolean fetchManifestFilesAndWriteToDirectory(K8sDelegateManifestConfig delegateManifestConfig,
-      String manifestFilesDirectory, ExecutionLogCallback executionLogCallback) {
+      String manifestFilesDirectory, ExecutionLogCallback executionLogCallback, long timeoutInMillis) {
     StoreType storeType = delegateManifestConfig.getManifestStoreTypes();
     switch (storeType) {
       case Local:
@@ -1252,7 +1252,8 @@ public class K8sTaskHelper {
         return downloadManifestFilesFromGit(delegateManifestConfig, manifestFilesDirectory, executionLogCallback);
 
       case HelmChartRepo:
-        return downloadFilesFromChartRepo(delegateManifestConfig, manifestFilesDirectory, executionLogCallback);
+        return downloadFilesFromChartRepo(
+            delegateManifestConfig, manifestFilesDirectory, executionLogCallback, timeoutInMillis);
 
       default:
         unhandled(storeType);
@@ -1443,14 +1444,14 @@ public class K8sTaskHelper {
   }
 
   private boolean downloadFilesFromChartRepo(K8sDelegateManifestConfig delegateManifestConfig,
-      String destinationDirectory, ExecutionLogCallback executionLogCallback) {
+      String destinationDirectory, ExecutionLogCallback executionLogCallback, long timeoutInMillis) {
     HelmChartConfigParams helmChartConfigParams = delegateManifestConfig.getHelmChartConfigParams();
 
     try {
       executionLogCallback.saveExecutionLog(color(format("%nFetching files from helm chart repo"), White, Bold));
       helmTaskHelper.printHelmChartInfoInExecutionLogs(helmChartConfigParams, executionLogCallback);
 
-      helmTaskHelper.downloadChartFiles(helmChartConfigParams, destinationDirectory);
+      helmTaskHelper.downloadChartFiles(helmChartConfigParams, destinationDirectory, timeoutInMillis);
 
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(destinationDirectory));
