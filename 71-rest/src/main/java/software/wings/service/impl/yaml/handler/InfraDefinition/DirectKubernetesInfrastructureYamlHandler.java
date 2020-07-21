@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 
@@ -21,13 +22,20 @@ public class DirectKubernetesInfrastructureYamlHandler
   @Override
   public Yaml toYaml(DirectKubernetesInfrastructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
-    return Yaml.builder()
-        .clusterName(bean.getClusterName())
-        .namespace(bean.getNamespace())
-        .releaseName(bean.getReleaseName())
-        .cloudProviderName(cloudProvider.getName())
-        .type(InfrastructureType.DIRECT_KUBERNETES)
-        .build();
+    Yaml yaml = Yaml.builder()
+                    .clusterName(bean.getClusterName())
+                    .namespace(bean.getNamespace())
+                    .releaseName(bean.getReleaseName())
+                    .cloudProviderName(cloudProvider.getName())
+                    .type(InfrastructureType.DIRECT_KUBERNETES)
+                    .expressions(bean.getExpressions())
+                    .build();
+
+    // To prevent default release name from showing in yaml when provisioner
+    if (isNotEmpty(bean.getExpressions())) {
+      yaml.setReleaseName(null);
+    }
+    return yaml;
   }
 
   @Override
@@ -47,6 +55,7 @@ public class DirectKubernetesInfrastructureYamlHandler
     bean.setClusterName(yaml.getClusterName());
     bean.setNamespace(yaml.getNamespace());
     bean.setReleaseName(yaml.getReleaseName());
+    bean.setExpressions(yaml.getExpressions());
   }
 
   @Override

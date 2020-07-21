@@ -1,0 +1,12 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: KUBERNETES_CLUSTER
+deploymentType: KUBERNETES
+infrastructure:
+- type: DIRECT_KUBERNETES
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  clusterName: local
+  expressions:
+    namespace: default
+    releaseName: ${terraform.releaseName}
+provisioner: infraProvisioner
