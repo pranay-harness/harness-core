@@ -254,15 +254,10 @@ public interface UserService extends OwnedByAccount {
    */
   List<InviteOperationResponse> inviteUsers(UserInvite userInvite);
 
-  /**
-   * Invite single user
-   *
-   * @param userInvite the user invite
-   * @return the user invite
-   */
-  InviteOperationResponse inviteUserNew(UserInvite userInvite);
+  InviteOperationResponse inviteUser(UserInvite userInvite, boolean isInviteAcceptanceRequired, boolean emailVerified);
 
-  UserInvite inviteUserOld(UserInvite userInvite);
+  void addUserToUserGroups(
+      String accountId, User user, List<UserGroup> userGroups, boolean sendNotification, boolean toBeAudited);
 
   String getUserInviteUrl(UserInvite userInvite, Account account) throws URISyntaxException;
 
@@ -284,7 +279,7 @@ public interface UserService extends OwnedByAccount {
    * @param userInvite  user invite
    * @param account     account
    */
-  void sendUserInvitationToOnlySsoAccountMail(UserInvite userInvite, Account account, User user);
+  void sendUserInvitationToOnlySsoAccountMail(Account account, User user);
 
   /**
    * Send added new role email
@@ -459,6 +454,8 @@ public interface UserService extends OwnedByAccount {
   boolean isUserAccountAdmin(@NotNull UserPermissionInfo userPermissionInfo, @NotNull String accountId);
 
   boolean isUserAssignedToAccount(User user, String accountId);
+
+  boolean isUserInvitedToAccount(User user, String accountId);
 
   boolean isUserVerified(User user);
 

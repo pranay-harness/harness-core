@@ -294,7 +294,7 @@ public class AccountGenerator {
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
     UserGroup userGroup = pageResponse.get(0);
     userGroup.setMembers(asList(user));
-    userGroupService.updateMembers(userGroup, false);
+    userGroupService.updateMembers(userGroup, false, false);
   }
 
   private void addUsersToUserGroup(List<User> users, String accountId, String userGroupName) {
@@ -303,12 +303,7 @@ public class AccountGenerator {
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
     UserGroup userGroup = pageResponse.get(0);
     userGroup.setMembers(users);
-    userGroupService.updateMembers(userGroup, false);
-  }
-
-  private void addUserToUserGroup(User user, UserGroup userGroup) {
-    userGroup.setMembers(asList(user));
-    userGroupService.updateMembers(userGroup, false);
+    userGroupService.updateMembers(userGroup, false, false);
   }
 
   public void addUserToHarnessUserGroup(User user) {

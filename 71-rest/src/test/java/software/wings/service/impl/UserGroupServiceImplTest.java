@@ -697,7 +697,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
         // Ignoring the primary account fetch failure
       }
       userGroup1.setMembers(Arrays.asList(user1, user2));
-      userGroupService.updateMembers(userGroup1, true);
+      userGroupService.updateMembers(userGroup1, true, false);
       verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
       List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
       assertThat(2).isNotEqualTo(
