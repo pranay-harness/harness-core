@@ -14,6 +14,7 @@ import static software.wings.beans.command.GcbTaskParams.GcbTaskType.START;
 import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.REMOTE;
 import static software.wings.sm.states.gcbconfigs.GcbOptions.GcbSpecSource.TRIGGER;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -136,16 +137,6 @@ public class GcbState extends State implements SweepingOutputStateMixin {
       final @NotNull ExecutionContext context, final @NotNull String activityId) {
     final Application application = context.fetchRequiredApp();
     final String appId = application.getAppId();
-    GcpConfig gcpConfig = null;
-    if (gcbOptions.getGcpConfigId() != null) {
-      gcpConfig = context.getGlobalSettingValue(context.getAccountId(), gcbOptions.getGcpConfigId());
-    }
-
-    GitConfig gitConfig = null;
-    if (gcbOptions.getSpecSource() == REMOTE && gcbOptions.getRepositorySpec().getGitConfigId() != null) {
-      gitConfig =
-          context.getGlobalSettingValue(context.getAccountId(), gcbOptions.getRepositorySpec().getGitConfigId());
-    }
     Map<String, String> substitutions = null;
     if (gcbOptions.getSpecSource() == TRIGGER && !isEmpty(gcbOptions.getTriggerSpec().getSubstitutions())) {
       substitutions = evaluate(context, gcbOptions.getTriggerSpec().getSubstitutions());
@@ -155,43 +146,25 @@ public class GcbState extends State implements SweepingOutputStateMixin {
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "gcpConfigId");
       TemplateExpression gitConfigExp =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "gitConfigId");
-      if (gcpConfigExp != null) {
-        String resolvedExpression = templateExpressionProcessor.resolveTemplateExpression(context, gcpConfigExp);
-        gcpConfig = context.getGlobalSettingValue(context.getAccountId(), resolvedExpression);
-        if (gcpConfig != null) {
-          gcbOptions.setGcpConfigId(resolvedExpression);
-        } else {
-          SettingAttribute setting =
-              settingsService.getSettingAttributeByName(context.getAccountId(), resolvedExpression);
-          if (setting == null) {
-            return ExecutionResponse.builder()
-                .executionStatus(FAILED)
-                .errorMessage("Google Cloud Provider does not exist. Please update with an appropriate cloud provider.")
-                .build();
-          }
-          gcpConfig = (GcpConfig) setting.getValue();
-          gcbOptions.setGcpConfigId(setting.getUuid());
-        }
+      if (gcpConfigExp != null && !resolveGcpTemplateExpression(gcpConfigExp, context)) {
+        return ExecutionResponse.builder()
+            .executionStatus(FAILED)
+            .errorMessage("Google Cloud Provider does not exist. Please update with an appropriate cloud provider.")
+            .build();
       }
-      if (gitConfigExp != null) {
-        String resolvedExpression = templateExpressionProcessor.resolveTemplateExpression(context, gitConfigExp);
-        gitConfig = context.getGlobalSettingValue(context.getAccountId(), resolvedExpression);
-        if (gitConfig != null) {
-          gcbOptions.getRepositorySpec().setGitConfigId(resolvedExpression);
-        } else {
-          SettingAttribute setting =
-              settingsService.getSettingAttributeByName(context.getAccountId(), resolvedExpression);
-          if (setting == null) {
-            return ExecutionResponse.builder()
-                .executionStatus(FAILED)
-                .errorMessage("Git connector does not exist. Please update with an appropriate git connector.")
-                .build();
-          }
-          gitConfig = (GitConfig) setting.getValue();
-          gcbOptions.getRepositorySpec().setGitConfigId(setting.getUuid());
-        }
+      if (gitConfigExp != null && !resolveGitTemplateExpression(gitConfigExp, context)) {
+        return ExecutionResponse.builder()
+            .executionStatus(FAILED)
+            .errorMessage("Git connector does not exist. Please update with an appropriate git connector.")
+            .build();
       }
     }
+    GcpConfig gcpConfig = context.getGlobalSettingValue(context.getAccountId(), gcbOptions.getGcpConfigId());
+
+    GitConfig gitConfig = gcbOptions.getSpecSource() == REMOTE
+        ? context.getGlobalSettingValue(context.getAccountId(), gcbOptions.getRepositorySpec().getGitConfigId())
+        : null;
+
     GcbTaskParams gcbTaskParams = GcbTaskParams.builder()
                                       .gcpConfig(gcpConfig)
                                       .type(START)
@@ -209,17 +182,16 @@ public class GcbState extends State implements SweepingOutputStateMixin {
       gcbTaskParams.setTimeout(getTimeoutMillis());
       gcbTaskParams.setStartTs(System.currentTimeMillis());
     }
-
-    final String delegateTaskId = delegateService.queueTask(delegateTaskOf(activityId, context, gcbTaskParams));
+    DelegateTask delegateTask = delegateTaskOf(activityId, context, gcbTaskParams);
+    delegateService.queueTask(delegateTask);
 
     GcbExecutionData gcbExecutionData = GcbExecutionData.builder().activityId(activityId).build();
     gcbExecutionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
-
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(gcbExecutionData)
         .correlationIds(singletonList(activityId))
-        .delegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -271,11 +243,12 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     GcbTaskParams parameters = delegateResponse.getParams();
     parameters.setType(POLL);
     final String waitId = UUIDGenerator.generateUuid();
-    final String delegateTaskId = delegateService.queueTask(delegateTaskOf(waitId, context, parameters));
+    DelegateTask delegateTask = delegateTaskOf(waitId, context, parameters);
+    delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     final GcbExecutionData gcbExecutionData = context.getStateExecutionData();
     return ExecutionResponse.builder()
         .async(true)
-        .delegateTaskId(delegateTaskId)
         .correlationIds(singletonList(waitId))
         .stateExecutionData(gcbExecutionData)
         .executionStatus(RUNNING)
@@ -314,5 +287,43 @@ public class GcbState extends State implements SweepingOutputStateMixin {
     public boolean isWorking() {
       return build.isWorking();
     }
+  }
+
+  @VisibleForTesting
+  protected boolean resolveGcpTemplateExpression(TemplateExpression gcpConfigExp, ExecutionContext context) {
+    if (gcpConfigExp != null) {
+      String resolvedExpression = templateExpressionProcessor.resolveTemplateExpression(context, gcpConfigExp);
+      GcpConfig gcpConfig = context.getGlobalSettingValue(context.getAccountId(), resolvedExpression);
+      if (gcpConfig != null) {
+        gcbOptions.setGcpConfigId(resolvedExpression);
+      } else {
+        SettingAttribute setting =
+            settingsService.getSettingAttributeByName(context.getAccountId(), resolvedExpression);
+        if (setting == null) {
+          return false;
+        }
+        gcbOptions.setGcpConfigId(setting.getUuid());
+      }
+    }
+    return true;
+  }
+
+  @VisibleForTesting
+  protected boolean resolveGitTemplateExpression(TemplateExpression gitConfigExp, ExecutionContext context) {
+    if (gitConfigExp != null) {
+      String resolvedExpression = templateExpressionProcessor.resolveTemplateExpression(context, gitConfigExp);
+      GitConfig gitConfig = context.getGlobalSettingValue(context.getAccountId(), resolvedExpression);
+      if (gitConfig != null) {
+        gcbOptions.getRepositorySpec().setGitConfigId(resolvedExpression);
+      } else {
+        SettingAttribute setting =
+            settingsService.getSettingAttributeByName(context.getAccountId(), resolvedExpression);
+        if (setting == null) {
+          return false;
+        }
+        gcbOptions.getRepositorySpec().setGitConfigId(setting.getUuid());
+      }
+    }
+    return true;
   }
 }
