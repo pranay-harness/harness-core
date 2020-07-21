@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>21-ng-core</artifactId>
+    <artifactId>20-ng-core-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.smoketurner</groupId>
