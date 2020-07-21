@@ -60,6 +60,7 @@ import software.wings.delegatetasks.aws.AwsLambdaTask;
 import software.wings.delegatetasks.aws.AwsRoute53Task;
 import software.wings.delegatetasks.aws.AwsS3Task;
 import software.wings.delegatetasks.aws.ecs.EcsCommandTask;
+import software.wings.delegatetasks.azure.AzureVMSSTask;
 import software.wings.delegatetasks.citasks.CIBuildCommandTask;
 import software.wings.delegatetasks.citasks.CICleanupTask;
 import software.wings.delegatetasks.citasks.ExecuteCommandTask;
@@ -215,6 +216,7 @@ public enum TaskType {
       TaskGroup.AZURE_ARTIFACTS, ServiceImplDelegateTask.class, AzureArtifactsValidation.class),
   AZURE_ARTIFACTS_COLLECTION(
       TaskGroup.AZURE_ARTIFACTS, AzureArtifactsCollectionTask.class, AzureArtifactsValidation.class),
+  AZURE_VMSS_COMMAND_TASK(TaskGroup.AZURE_VMSS, AzureVMSSTask.class, AlwaysTrueValidation.class),
   LDAP_TEST_CONN_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
   LDAP_TEST_USER_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
   LDAP_TEST_GROUP_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),

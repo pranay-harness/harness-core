@@ -28,6 +28,7 @@ public enum TaskGroup {
   NEXUS,
   S3,
   AZURE_ARTIFACTS,
+  AZURE_VMSS,
   ELK,
   LOGZ,
   SUMO,

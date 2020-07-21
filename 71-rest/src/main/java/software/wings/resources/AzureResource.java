@@ -11,6 +11,7 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.NameValuePair;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AzureResourceService;
 
@@ -90,5 +91,19 @@ public class AzureResource {
       @QueryParam("cloudProviderId") String cloudProviderId,
       @PathParam(value = "subscriptionId") String subscriptionId) {
     return new RestResponse(azureResourceService.listKubernetesClusters(cloudProviderId, subscriptionId));
+  }
+
+  /**
+   * List Azure regions.
+   *
+   * @param accountId
+   * @return
+   */
+  @GET
+  @Path("regions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<NameValuePair>> listAzureRegions(@QueryParam("accountId") String accountId) {
+    return new RestResponse(azureResourceService.listAzureRegions());
   }
 }

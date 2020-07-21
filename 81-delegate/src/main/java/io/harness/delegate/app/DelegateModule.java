@@ -196,6 +196,7 @@ import software.wings.service.impl.aws.delegate.AwsLambdaHelperServiceDelegateIm
 import software.wings.service.impl.aws.delegate.AwsRoute53HelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsS3HelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsServiceDiscoveryHelperServiceDelegateImpl;
+import software.wings.service.impl.azure.delegate.AzureVMSSHelperServiceDelegateImpl;
 import software.wings.service.impl.bugsnag.BugsnagDelegateService;
 import software.wings.service.impl.bugsnag.BugsnagDelegateServiceImpl;
 import software.wings.service.impl.cloudwatch.CloudWatchDelegateServiceImpl;
@@ -254,6 +255,7 @@ import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsRoute53HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsS3HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsServiceDiscoveryHelperServiceDelegate;
+import software.wings.service.intfc.azure.delegate.AzureVMSSHelperServiceDelegate;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
@@ -655,6 +657,7 @@ public class DelegateModule extends DependencyModule {
     bind(TerraformConfigInspectService.class).toInstance(new TerraformConfigInspectServiceImpl());
     bind(DataCollectionDSLService.class).to(DataCollectionServiceImpl.class);
     bind(KubernetesConnectorDelegateService.class).to(KubernetesConnectorDelegateServiceImpl.class);
+    bind(AzureVMSSHelperServiceDelegate.class).to(AzureVMSSHelperServiceDelegateImpl.class);
     bind(GitClientNG.class).to(GitClientNGImpl.class);
   }
 

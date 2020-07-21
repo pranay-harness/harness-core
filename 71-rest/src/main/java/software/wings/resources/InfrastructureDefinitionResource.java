@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -352,5 +353,53 @@ public class InfrastructureDefinitionResource {
       @QueryParam("region") String region, @QueryParam("vpcIds") @NotNull List<String> vpcIds,
       @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureDefinitionService.listSubnets(appId, computeProviderId, region, vpcIds));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/subscriptions")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Map<String, String>> getAzureSubscriptions(@QueryParam("appId") String appId,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(
+        infrastructureDefinitionService.listSubscriptions(appId, deploymentType, computeProviderId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/resource-groups")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<String>> getAzureResourceGroupsNames(@QueryParam("appId") String appId,
+      @QueryParam("deploymentType") String deploymentType, @QueryParam("subscriptionId") String subscriptionId,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureDefinitionService.listResourceGroupsNames(
+        appId, deploymentType, computeProviderId, subscriptionId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/vm-scale-sets")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Map<String, String>> getAzureVirtualMachineScaleSets(@QueryParam("appId") String appId,
+      @QueryParam("subscriptionId") String subscriptionId, @QueryParam("resourceGroupName") String resourceGroupName,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureDefinitionService.listVirtualMachineScaleSets(
+        appId, deploymentType, computeProviderId, subscriptionId, resourceGroupName));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/vm-scale-sets/{vmssName}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<VirtualMachineScaleSetData> getAzureVirtualMachineScaleSetById(@QueryParam("appId") String appId,
+      @QueryParam("subscriptionId") String subscriptionId, @QueryParam("resourceGroupName") String resourceGroupName,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("vmssName") String vmssName,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureDefinitionService.getVirtualMachineScaleSet(
+        appId, deploymentType, computeProviderId, subscriptionId, resourceGroupName, vmssName));
   }
 }

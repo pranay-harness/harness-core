@@ -1,12 +1,14 @@
 package software.wings.service.impl;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -17,6 +19,8 @@ import software.wings.service.intfc.InfrastructureProvider;
 
 import java.util.List;
 
+@Singleton
+@Slf4j
 public class AzureInfrastructureProvider implements InfrastructureProvider {
   @Inject private HostService hostService;
 

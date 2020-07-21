@@ -44,6 +44,8 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.sumologic.client.SumoServerException;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.harness.azure.model.SubscriptionData;
+import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
@@ -127,6 +129,8 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(InstanceDetails.PHYSICAL_HOST.class, 1411);
     kryo.register(InstanceDetails.K8s.class, 1412);
     kryo.register(EncryptedDataParams.class, 1413);
+    kryo.register(SubscriptionData.class, 1414);
+    kryo.register(VirtualMachineScaleSetData.class, 1415);
 
     kryo.register(SettingVariableTypes.class, 5131);
   }

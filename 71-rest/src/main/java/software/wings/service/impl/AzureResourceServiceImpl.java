@@ -1,22 +1,31 @@
 package software.wings.service.impl;
 
+import static software.wings.service.impl.AzureUtils.AZURE_GOV_REGIONS_NAMES;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import io.harness.exception.InvalidArgumentsException;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -83,5 +92,22 @@ public class AzureResourceServiceImpl implements AzureResourceService {
     }
 
     return (AzureConfig) cloudProviderSetting.getValue();
+  }
+
+  public List<NameValuePair> listAzureRegions() {
+    return Arrays.stream(Region.values())
+        .filter(nonGovernmentAzureRegionsNamesFilter())
+        .map(toNameValuePair())
+        .collect(Collectors.toList());
+  }
+
+  @NotNull
+  private Predicate<Region> nonGovernmentAzureRegionsNamesFilter() {
+    return region -> !AZURE_GOV_REGIONS_NAMES.contains(region.name());
+  }
+
+  @NotNull
+  private Function<Region, NameValuePair> toNameValuePair() {
+    return region -> NameValuePair.builder().name(region.label()).value(region.name()).build();
   }
 }

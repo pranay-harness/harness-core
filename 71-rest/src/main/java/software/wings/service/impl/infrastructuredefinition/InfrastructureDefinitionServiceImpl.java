@@ -56,6 +56,8 @@ import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.mongodb.DuplicateKeyException;
 import io.fabric8.utils.CountingMap;
+import io.harness.azure.model.SubscriptionData;
+import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -105,6 +107,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
@@ -173,6 +176,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
+import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingVariableTypes;
@@ -232,6 +236,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private InfrastructureDefinitionHelper infrastructureDefinitionHelper;
   @Inject private EventPublishHelper eventPublishHelper;
+  @Inject private AzureVMSSHelperServiceManager azureVMSSHelperServiceManager;
 
   @Inject @Getter private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
 
@@ -1731,5 +1736,73 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   boolean containsExpression(String value) {
     return isEmpty(value) || value.startsWith("${");
+  }
+
+  @Override
+  public Map<String, String> listSubscriptions(String appId, String deploymentType, String computeProviderId) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      List<SubscriptionData> subscriptions =
+          azureVMSSHelperServiceManager.listSubscriptions(azureConfig, encryptionDetails, appId);
+      return subscriptions.stream().collect(Collectors.toMap(SubscriptionData::getId, SubscriptionData::getName));
+    } catch (Exception e) {
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public List<String> listResourceGroupsNames(
+      String appId, String deploymentType, String computeProviderId, String subscriptionId) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureVMSSHelperServiceManager.listResourceGroupsNames(
+          azureConfig, subscriptionId, encryptionDetails, appId);
+    } catch (Exception e) {
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public Map<String, String> listVirtualMachineScaleSets(
+      String appId, String deploymentType, String computeProviderId, String subscriptionId, String resourceGroupName) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      List<VirtualMachineScaleSetData> virtualMachineScaleSets =
+          azureVMSSHelperServiceManager.listVirtualMachineScaleSets(
+              azureConfig, subscriptionId, resourceGroupName, encryptionDetails, appId);
+      return virtualMachineScaleSets.stream().collect(
+          Collectors.toMap(VirtualMachineScaleSetData::getId, VirtualMachineScaleSetData::getName));
+    } catch (Exception e) {
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public VirtualMachineScaleSetData getVirtualMachineScaleSet(String appId, String deploymentType,
+      String computeProviderId, String subscriptionId, String resourceGroupName, String vmssName) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureVMSSHelperServiceManager.getVirtualMachineScaleSet(
+          azureConfig, subscriptionId, resourceGroupName, vmssName, encryptionDetails, appId);
+    } catch (Exception e) {
+      logger.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  private AzureConfig validateAndGetAzureConfig(String computeProviderSettingId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderSettingId);
+    notNullCheck("Compute Provider", computeProviderSetting);
+    if (!(computeProviderSetting.getValue() instanceof AzureConfig)) {
+      throw new InvalidRequestException("Setting Attribute not type of Azure config");
+    }
+    return (AzureConfig) computeProviderSetting.getValue();
   }
 }
