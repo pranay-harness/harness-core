@@ -23,6 +23,7 @@ import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EntityVersion.EntityVersionKeys;
 import software.wings.beans.EntityVersionCollection;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EntityVersionService;
 
 /**
@@ -32,6 +33,7 @@ import software.wings.service.intfc.EntityVersionService;
 @Slf4j
 public class EntityVersionServiceImpl implements EntityVersionService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private AppService appService;
 
   @Override
   public PageResponse<EntityVersionCollection> listEntityVersions(PageRequest<EntityVersionCollection> pageRequest) {
@@ -66,6 +68,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
   @Override
   public EntityVersion newEntityVersion(String appId, EntityType entityType, String entityUuid, String parentUuid,
       String name, ChangeType changeType, String entityData) {
+    String accountId = appService.getAccountIdByAppId(appId);
     EntityVersionCollection entityVersion = anEntityVersionCollection()
                                                 .withAppId(appId)
                                                 .withEntityType(entityType)
@@ -74,6 +77,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
                                                 .withEntityName(name)
                                                 .withChangeType(changeType)
                                                 .withEntityParentUuid(parentUuid)
+                                                .withAccountId(accountId)
                                                 .build();
     int i = 0;
     boolean done = false;

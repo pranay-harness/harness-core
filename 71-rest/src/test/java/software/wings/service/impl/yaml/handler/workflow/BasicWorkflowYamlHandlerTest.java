@@ -43,7 +43,6 @@ import java.util.Arrays;
  */
 public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
   @Mock private LimitCheckerFactory limitCheckerFactory;
-
   @InjectMocks @Inject private BasicWorkflowYamlHandler yamlHandler;
 
   @Before

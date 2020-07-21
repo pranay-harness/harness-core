@@ -118,7 +118,9 @@ import software.wings.service.impl.security.SecretManagementDelegateException;
 import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -158,6 +160,7 @@ import java.util.concurrent.TimeUnit;
 public class KmsTest extends WingsBaseTest {
   @Inject private KmsResource kmsResource;
   @Mock private AccountService accountService;
+  @Mock private AppService appService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private SettingsService settingsService;
@@ -175,6 +178,8 @@ public class KmsTest extends WingsBaseTest {
   @Mock private GlobalEncryptDecryptClient globalEncryptDecryptClient;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
+  @Inject @InjectMocks private EntityVersionService entityVersionService;
+
   private final int numOfEncryptedValsForKms = 3;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "UTKARSH";
@@ -196,7 +201,7 @@ public class KmsTest extends WingsBaseTest {
     Account account = getAccount(AccountType.PAID);
     accountId = account.getUuid();
     when(accountService.get(accountId)).thenReturn(account);
-
+    when(appService.getAccountIdByAppId(appId)).thenReturn(accountId);
     when(secretsManagementFeature.isAvailableForAccount(accountId)).thenReturn(true);
 
     appId =

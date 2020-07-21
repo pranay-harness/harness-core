@@ -66,6 +66,7 @@ import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -105,6 +106,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
   @InjectMocks @Inject private PipelineStageYamlHandler pipelineStageYamlHandler;
   @InjectMocks @Inject private SSHKeyDataProvider sshKeyDataProvider;
   @InjectMocks @Inject private WinRmConnectionAttributesDataProvider winRmConnectionAttributesDataProvider;
+  @InjectMocks @Inject private EntityVersionService entityVersionService;
 
   private final String APP_NAME = "app1";
   private final String PIPELINE_NAME = "pipeline1";

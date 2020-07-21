@@ -441,7 +441,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private UpdateOperations<Workflow> updateOperations;
   @Mock private LimitCheckerFactory limitCheckerFactory;
 
-  @Inject private EntityVersionService entityVersionService;
+  @Inject @InjectMocks private EntityVersionService entityVersionService;
 
   @InjectMocks @Inject private WorkflowService workflowService;
   @Mock private FieldEnd fieldEnd;

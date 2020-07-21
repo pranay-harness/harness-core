@@ -69,6 +69,7 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -95,6 +96,7 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @Mock private RollbackStateMachineGenerator rollbackStateMachineGenerator;
   @Mock private StateMachineExecutor stateMachineExecutor;
   @Mock private ArtifactService artifactService;
+  @InjectMocks @Inject private EntityVersionService entityVersionService;
 
   private Workflow workflow;
   @Before

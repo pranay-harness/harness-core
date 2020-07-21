@@ -105,6 +105,8 @@ import software.wings.service.impl.security.SecretText;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
 import software.wings.service.impl.security.vault.VaultAppRoleLoginResult;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManagerConfigService;
@@ -143,9 +145,12 @@ public class VaultTest extends WingsBaseTest {
   private int numOfEncRecords;
   @Parameter public boolean isKmsEnabled;
   @Mock private AccountService accountService;
+  @Mock private AppService appService;
   @Inject @InjectMocks private VaultService vaultService;
   @Inject @InjectMocks private KmsService kmsService;
   @Inject @InjectMocks private SecretManagerConfigService secretManagerConfigService;
+  @Inject @InjectMocks private EntityVersionService entityVersionService;
+
   @Inject private QueueConsumer<KmsTransitionEvent> kmsTransitionConsumer;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
@@ -226,6 +231,7 @@ public class VaultTest extends WingsBaseTest {
     accountId = account.getUuid();
     when(accountService.get(accountId)).thenReturn(account);
     when(secretsManagementFeature.isAvailableForAccount(accountId)).thenReturn(true);
+    when(appService.getAccountIdByAppId(appId)).thenReturn(accountId);
     numOfEncRecords = numOfEncryptedValsForVault;
     if (isKmsEnabled) {
       final KmsConfig kmsConfig = getKmsConfig();
