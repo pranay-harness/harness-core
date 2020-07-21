@@ -4,6 +4,7 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -146,7 +147,8 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     return commandExecutionStatus;
   }
 
-  private void decryptCredentials(CommandExecutionContext context) {
+  @VisibleForTesting
+  void decryptCredentials(CommandExecutionContext context) {
     if (context.getHostConnectionAttributes() != null) {
       encryptionService.decrypt((EncryptableSetting) context.getHostConnectionAttributes().getValue(),
           context.getHostConnectionCredentials());
