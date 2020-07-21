@@ -10,6 +10,7 @@ import static java.lang.String.format;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import io.fabric8.kubernetes.api.model.CronJob;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
@@ -48,6 +49,7 @@ import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1StatefulSet;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeProjection;
+import io.kubernetes.client.openapi.models.V1beta1CronJob;
 import io.kubernetes.client.util.Yaml;
 import lombok.Builder;
 import lombok.Data;
@@ -65,6 +67,7 @@ import java.util.function.UnaryOperator;
 public class KubernetesResource {
   private static final String MISSING_DEPLOYMENT_SPEC_MSG = "Deployment does not have spec";
   private static final String MISSING_DEPLOYMENT_CONFIG_SPEC_MSG = "DeploymentConfig does not have spec";
+  private static final String MISSING_CRON_JOB_SPEC_MSG = "CronJob does not have spec";
 
   private KubernetesResourceId resourceId;
   private Object value;
@@ -420,6 +423,9 @@ public class KubernetesResource {
       case DeploymentConfig:
         notNullCheck(MISSING_DEPLOYMENT_CONFIG_SPEC_MSG, ((DeploymentConfig) resource).getSpec());
         return ((DeploymentConfig) resource).getSpec().getTemplate().getSpec();
+      case CronJob:
+        notNullCheck(MISSING_CRON_JOB_SPEC_MSG, ((V1beta1CronJob) resource).getSpec());
+        return ((V1beta1CronJob) resource).getSpec().getJobTemplate().getSpec().getTemplate().getSpec();
       default:
         unhandled(this.resourceId.getKind());
     }
@@ -450,6 +456,8 @@ public class KubernetesResource {
         return Yaml.loadAs(this.spec, V1Pod.class);
       case DeploymentConfig:
         return Yaml.loadAs(this.spec, DeploymentConfig.class);
+      case CronJob:
+        return Yaml.loadAs(this.spec, V1beta1CronJob.class);
       default:
         unhandled(this.resourceId.getKind());
         throw new KubernetesYamlException("Unhandled Kubernetes resource " + this.resourceId.getKind());

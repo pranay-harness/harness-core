@@ -3,12 +3,14 @@ package io.harness.k8s.model;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static java.lang.String.format;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -632,5 +635,30 @@ public class KubernetesResourceTest extends CategoryTest {
     resource.transformName(appendRevision);
     assertThat(resource.getField("metadata.name")).isEqualTo(oldName + "-1");
     assertThat((List) resource.getField("spec.triggers")).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testUpdateConfigMapAndSecretRefForCronJob() throws IOException {
+    URL url = this.getClass().getResource("/cronjob-envfrom.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+
+    UnaryOperator<Object> configMapRevision = t -> t + "-1";
+    UnaryOperator<Object> secretRevision = t -> t + "-2";
+    resource = resource.transformConfigMapAndSecretRef(configMapRevision, secretRevision);
+    final String podTemplateSpec = "spec.jobTemplate.spec.template.spec.%s";
+    assertThat(resource.getField(format(podTemplateSpec, "containers[0].envFrom[0].configMapRef.name")))
+        .isEqualTo("envfrom-configmap-1");
+    assertThat(resource.getField(format(podTemplateSpec, "containers[0].env[0].valueFrom.configMapKeyRef.name")))
+        .isEqualTo("config-key-value-1");
+    assertThat(resource.getField(format(podTemplateSpec, "volumes[0].configMap.name"))).isEqualTo("volume-configmap-1");
+
+    assertThat(resource.getField(format(podTemplateSpec, "containers[0].envFrom[1].secretRef.name")))
+        .isEqualTo("envfrom-secret-2");
+    assertThat(resource.getField(format(podTemplateSpec, "containers[0].env[1].valueFrom.secretKeyRef.name")))
+        .isEqualTo("secret-key-value-2");
+    assertThat(resource.getField(format(podTemplateSpec, "volumes[0].secret.secretName"))).isEqualTo("volume-secret-2");
   }
 }
