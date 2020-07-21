@@ -71,6 +71,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.GcbState.GcbDelegateResponse;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
+import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
 
 import java.util.List;
 import java.util.Map;
@@ -348,7 +349,11 @@ public class GcbStateTest extends CategoryTest {
   public void shouldFailExecutionWhenProvidedGcpSettingDoesNotExist() {
     TemplateExpression gcpConfigExp = new TemplateExpression();
     List<TemplateExpression> templateExpressions = singletonList(gcpConfigExp);
-    state.setGcbOptions(new GcbOptions());
+    GcbOptions gcbOption = new GcbOptions();
+    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.REMOTE);
+    gcbOption.setRepositorySpec(new GcbRemoteBuildSpec());
+    state.setGcbOptions(gcbOption);
+    state.setGcbOptions(gcbOption);
     state.setTemplateExpressions(templateExpressions);
     when(templateExpressionProcessor.getTemplateExpression(templateExpressions, "gcpConfigId"))
         .thenReturn(gcpConfigExp);
@@ -368,7 +373,10 @@ public class GcbStateTest extends CategoryTest {
   public void shouldFailExecutionWhenProvidedGitSettingDoesNotExist() {
     TemplateExpression gitConfigExp = new TemplateExpression();
     List<TemplateExpression> templateExpressions = singletonList(gitConfigExp);
-    state.setGcbOptions(new GcbOptions());
+    GcbOptions gcbOption = new GcbOptions();
+    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.REMOTE);
+    gcbOption.setRepositorySpec(new GcbRemoteBuildSpec());
+    state.setGcbOptions(gcbOption);
     state.setTemplateExpressions(templateExpressions);
     when(templateExpressionProcessor.getTemplateExpression(templateExpressions, "gitConfigId"))
         .thenReturn(gitConfigExp);
@@ -380,5 +388,55 @@ public class GcbStateTest extends CategoryTest {
     assertThat(state.executeInternal(context, ACTIVITY_ID).getExecutionStatus()).isEqualTo(FAILED);
     assertThat(state.executeInternal(context, ACTIVITY_ID).getErrorMessage())
         .isEqualTo("Git connector does not exist. Please update with an appropriate git connector.");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldResolveGcbTriggerExpressions() {
+    GcbOptions gcbOption = new GcbOptions();
+    GcbTriggerBuildSpec triggerBuildSpec = new GcbTriggerBuildSpec();
+    triggerBuildSpec.setName("${name}");
+    triggerBuildSpec.setSourceId("${sourceId}");
+    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.TRIGGER);
+    gcbOption.setTriggerSpec(triggerBuildSpec);
+    state.setGcbOptions(gcbOption);
+    when(context.renderExpression(anyString())).thenReturn("resolvedExpression");
+    state.resolveGcbOptionExpressions(context);
+
+    assertThat(state.getGcbOptions().getTriggerSpec().getName()).isEqualTo("resolvedExpression");
+    assertThat(state.getGcbOptions().getTriggerSpec().getSourceId()).isEqualTo("resolvedExpression");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldResolveGcbInlineExpressions() {
+    GcbOptions gcbOption = new GcbOptions();
+    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.INLINE);
+    gcbOption.setInlineSpec("inlineSpec");
+    state.setGcbOptions(gcbOption);
+    when(context.renderExpression("inlineSpec")).thenReturn("resolvedExpression");
+    state.resolveGcbOptionExpressions(context);
+
+    assertThat(state.getGcbOptions().getInlineSpec()).isEqualTo("resolvedExpression");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldResolveGcbRemoteExpressions() {
+    GcbOptions gcbOption = new GcbOptions();
+    GcbRemoteBuildSpec repositorySpec = new GcbRemoteBuildSpec();
+    repositorySpec.setSourceId("{sourceId}");
+    repositorySpec.setFilePath("{filePath}");
+    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.REMOTE);
+    gcbOption.setRepositorySpec(repositorySpec);
+    state.setGcbOptions(gcbOption);
+    when(context.renderExpression(anyString())).thenReturn("resolvedExpression");
+    state.resolveGcbOptionExpressions(context);
+
+    assertThat(state.getGcbOptions().getRepositorySpec().getSourceId()).isEqualTo("resolvedExpression");
+    assertThat(state.getGcbOptions().getRepositorySpec().getFilePath()).isEqualTo("resolvedExpression");
   }
 }
