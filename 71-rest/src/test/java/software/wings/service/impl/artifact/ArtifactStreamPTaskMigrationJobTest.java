@@ -88,7 +88,7 @@ public class ArtifactStreamPTaskMigrationJobTest extends CategoryTest {
     setupQuery(query);
 
     when(featureFlagService.isGlobalEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION)).thenReturn(false);
-    when(featureFlagService.isGlobalEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK)).thenReturn(true);
+    when(featureFlagService.isGlobalEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK)).thenReturn(false);
     when(featureFlagService.getAccountIds(FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION))
         .thenReturn(Collections.singleton(ACCOUNT_ID));
     when(featureFlagService.getAccountIds(FeatureName.ARTIFACT_PERPETUAL_TASK)).thenReturn(null);
@@ -99,8 +99,7 @@ public class ArtifactStreamPTaskMigrationJobTest extends CategoryTest {
     verify(artifactStreamPTaskHelper, never()).createPerpetualTask(any());
 
     // ACCOUNT_ID has both feature flags on.
-    when(featureFlagService.getAccountIds(FeatureName.ARTIFACT_PERPETUAL_TASK))
-        .thenReturn(Collections.singleton(ACCOUNT_ID));
+    when(featureFlagService.isGlobalEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK)).thenReturn(true);
 
     when(query.asList(any(FindOptions.class))).thenReturn(Collections.emptyList());
     job.run();

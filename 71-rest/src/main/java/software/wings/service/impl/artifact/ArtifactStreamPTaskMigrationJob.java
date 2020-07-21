@@ -2,6 +2,7 @@ package software.wings.service.impl.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.lang.String.format;
 import static software.wings.beans.FeatureName.ARTIFACT_PERPETUAL_TASK;
 import static software.wings.beans.FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION;
 
@@ -20,6 +21,7 @@ import io.harness.lock.PersistentLocker;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.FeatureName;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.dl.WingsPersistence;
@@ -85,22 +87,37 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
   }
 
   private void runInternal() {
-    if (isGloballyEnabled()) {
+    boolean mainFFOn = featureFlagService.isGlobalEnabled(ARTIFACT_PERPETUAL_TASK);
+    boolean migrationFFOn = featureFlagService.isGlobalEnabled(ARTIFACT_PERPETUAL_TASK_MIGRATION);
+    if (mainFFOn && migrationFFOn) {
       createPerpetualTasks(null);
       return;
     }
 
-    Set<String> accountIds = getAccountIds();
+    Set<String> accountIds;
+    if (mainFFOn) {
+      accountIds = getAccountIds(ARTIFACT_PERPETUAL_TASK_MIGRATION);
+    } else if (migrationFFOn) {
+      accountIds = getAccountIds(ARTIFACT_PERPETUAL_TASK);
+    } else {
+      accountIds =
+          Sets.intersection(getAccountIds(ARTIFACT_PERPETUAL_TASK), getAccountIds(ARTIFACT_PERPETUAL_TASK_MIGRATION));
+    }
+
     if (EmptyPredicate.isNotEmpty(accountIds)) {
       createPerpetualTasks(accountIds);
+    } else {
+      logger.info("Not migrating artifact streams to perpetual task for any accounts");
     }
   }
 
   private void createPerpetualTasks(Set<String> accountIds) {
     Query<ArtifactStream> query;
     if (EmptyPredicate.isEmpty(accountIds)) {
+      logger.info("Migrating artifact streams to perpetual task for all accounts");
       query = wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority);
     } else {
+      logger.info(format("Migrating artifact streams to perpetual task for %d accounts", accountIds.size()));
       query = wingsPersistence.createQuery(ArtifactStream.class).field(ArtifactStreamKeys.accountId).in(accountIds);
     }
 
@@ -112,28 +129,16 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
                                                .project(ArtifactStreamKeys.uuid, true)
                                                .asList(new FindOptions().limit(BATCH_SIZE));
     if (EmptyPredicate.isEmpty(artifactStreams)) {
+      logger.info("No eligible artifact streams for perpetual task migration");
       return;
     }
 
+    logger.info(format("Migrating %d artifact streams to perpetual task", artifactStreams.size()));
     artifactStreams.forEach(artifactStream -> artifactStreamPTaskHelper.createPerpetualTask(artifactStream));
   }
 
-  private boolean isGloballyEnabled() {
-    return featureFlagService.isGlobalEnabled(ARTIFACT_PERPETUAL_TASK_MIGRATION)
-        && featureFlagService.isGlobalEnabled(ARTIFACT_PERPETUAL_TASK);
-  }
-
-  private Set<String> getAccountIds() {
-    Set<String> accountIdsForMigration = featureFlagService.getAccountIds(ARTIFACT_PERPETUAL_TASK_MIGRATION);
-    if (EmptyPredicate.isEmpty(accountIdsForMigration)) {
-      return Collections.emptySet();
-    }
-
-    Set<String> accountIds = featureFlagService.getAccountIds(ARTIFACT_PERPETUAL_TASK);
-    if (EmptyPredicate.isEmpty(accountIds)) {
-      return Collections.emptySet();
-    }
-
-    return Sets.intersection(accountIdsForMigration, accountIds);
+  private Set<String> getAccountIds(FeatureName featureName) {
+    Set<String> accountIds = featureFlagService.getAccountIds(featureName);
+    return EmptyPredicate.isEmpty(accountIds) ? Collections.emptySet() : accountIds;
   }
 }
