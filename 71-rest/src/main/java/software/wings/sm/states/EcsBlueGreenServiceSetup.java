@@ -255,7 +255,7 @@ public class EcsBlueGreenServiceSetup extends State {
     if (isEmpty(stageListenerArn)) {
       invalidFields.put(STAGE_LISTENER, "Stage Listener ARN must be specified");
     }
-    if (isEmpty(maxInstances)) {
+    if (isEmpty(maxInstances) && "runningInstances".equalsIgnoreCase(desiredInstanceCount)) {
       invalidFields.put("Max Instances", "Max Instances must be specified");
     }
     if (isEmpty(loadBalancerName)) {

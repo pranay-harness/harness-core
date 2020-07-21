@@ -205,8 +205,14 @@ public class EcsBlueGreenServiceSetupTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateFields() {
     EcsBlueGreenServiceSetup state = spy(new EcsBlueGreenServiceSetup("ECS Service Setup Test"));
+    state.setDesiredInstanceCount("runningInstances");
     Map<String, String> fieldsMap = state.validateFields();
     assertThat(fieldsMap).isNotNull();
     assertThat(fieldsMap.size()).isEqualTo(4);
+
+    state.setDesiredInstanceCount("fixedInstances");
+    fieldsMap = state.validateFields();
+    assertThat(fieldsMap).isNotNull();
+    assertThat(fieldsMap.size()).isEqualTo(3);
   }
 }
