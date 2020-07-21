@@ -723,6 +723,7 @@ import software.wings.service.impl.aws.model.response.AwsCloudWatchMetricDataRes
 import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
 import software.wings.service.impl.aws.model.response.AwsLambdaDetailsMetricsResponse;
 import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
+import software.wings.service.impl.azure.manager.AzureVMSSCommandRequest;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
 import software.wings.service.impl.bugsnag.BugsnagSetupTestData;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
@@ -1749,7 +1750,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EncryptedVariableWithType.class, 7454);
     kryo.register(EncryptedVariableWithType.Type.class, 7455);
     kryo.register(ContainerSecrets.class, 7456);
-
     kryo.register(StoreConfig.class, 8022);
     kryo.register(GitStore.class, 8023);
     kryo.register(GitFetchRequest.class, 8025);
@@ -1762,5 +1762,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactTaskResponse.class, 8003);
     kryo.register(TemplatizedSecretManagerStateExecutionData.class, 7457);
     kryo.register(TerraformPlanParam.class, 7458);
+    kryo.register(AzureVMSSCommandRequest.class, 8035);
   }
 }

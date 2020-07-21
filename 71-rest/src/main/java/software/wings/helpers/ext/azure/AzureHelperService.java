@@ -644,7 +644,7 @@ public class AzureHelperService {
   }
 
   @VisibleForTesting
-  Azure getAzureClient(AzureConfig azureConfig) {
+  protected Azure getAzureClient(AzureConfig azureConfig) {
     try {
       ApplicationTokenCredentials credentials =
           new ApplicationTokenCredentials(azureConfig.getClientId(), azureConfig.getTenantId(),
@@ -658,7 +658,7 @@ public class AzureHelperService {
   }
 
   @VisibleForTesting
-  Azure getAzureClient(AzureConfig azureConfig, String subscriptionId) {
+  protected Azure getAzureClient(AzureConfig azureConfig, String subscriptionId) {
     try {
       ApplicationTokenCredentials credentials =
           new ApplicationTokenCredentials(azureConfig.getClientId(), azureConfig.getTenantId(),

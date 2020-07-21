@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -126,4 +127,15 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   List<AwsSecurityGroup> listSecurityGroups(String appId, String computeProviderId, String region, List<String> vpcIds);
 
   List<AwsSubnet> listSubnets(String appId, String computeProviderId, String region, List<String> vpcIds);
+
+  Map<String, String> listSubscriptions(String appId, String deploymentType, String computeProviderId);
+
+  List<String> listResourceGroupsNames(
+      String appId, String deploymentType, String computeProviderId, String subscriptionId);
+
+  Map<String, String> listVirtualMachineScaleSets(
+      String appId, String deploymentType, String computeProviderId, String subscriptionId, String resourceGroupName);
+
+  VirtualMachineScaleSetData getVirtualMachineScaleSet(String appId, String deploymentType, String computeProviderId,
+      String subscriptionId, String resourceGroupName, String vmssName);
 }

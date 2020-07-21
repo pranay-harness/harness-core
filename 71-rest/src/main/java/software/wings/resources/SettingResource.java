@@ -550,6 +550,20 @@ public class SettingResource {
   }
 
   /**
+   * List Azure regions.
+   *
+   * @param accountId
+   * @return
+   */
+  @GET
+  @Path("azure-regions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<NameValuePair>> listAzureRegions(@QueryParam("accountId") String accountId) {
+    return new RestResponse(azureResourceService.listAzureRegions());
+  }
+
+  /**
    * List.
    *
    * @param accountId                the account id

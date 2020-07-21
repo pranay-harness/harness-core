@@ -59,6 +59,18 @@ import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.aws.LoadBalancerType;
+import io.harness.delegate.task.azure.request.AzureVMSSGetVirtualMachineScaleSetParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSListResourceGroupsNamesParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSListSubscriptionsParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSListVirtualMachineScaleSetsParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
+import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType;
+import io.harness.delegate.task.azure.response.AzureVMSSGetVirtualMachineScaleSetResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSListResourceGroupsNamesResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSListSubscriptionsResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSListVirtualMachineScaleSetsResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
+import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
@@ -173,5 +185,17 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GitCommandResult.class, 19072);
     kryo.register(GitCommandRequest.class, 19073);
     kryo.register(GitCommandStatus.class, 19074);
+    kryo.register(AzureVMSSGetVirtualMachineScaleSetParameters.class, 19075);
+    kryo.register(AzureVMSSListResourceGroupsNamesParameters.class, 19076);
+    kryo.register(AzureVMSSListSubscriptionsParameters.class, 19077);
+    kryo.register(AzureVMSSListVirtualMachineScaleSetsParameters.class, 19078);
+    kryo.register(AzureVMSSTaskParameters.class, 19079);
+    kryo.register(AzureVMSSGetVirtualMachineScaleSetResponse.class, 19080);
+    kryo.register(AzureVMSSListResourceGroupsNamesResponse.class, 19081);
+    kryo.register(AzureVMSSListSubscriptionsResponse.class, 19082);
+    kryo.register(AzureVMSSListVirtualMachineScaleSetsResponse.class, 19083);
+    kryo.register(AzureVMSSTaskExecutionResponse.class, 19084);
+    kryo.register(AzureVMSSTaskResponse.class, 19085);
+    kryo.register(AzureVMSSTaskType.class, 19086);
   }
 }
