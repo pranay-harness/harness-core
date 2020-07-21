@@ -7,6 +7,8 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -47,6 +49,7 @@ import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import io.harness.CategoryTest;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.exception.WingsException;
@@ -62,7 +65,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mockito;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -136,14 +138,15 @@ public class SecureResourceTest extends CategoryTest {
   private static HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupService.class);
   private static SecretManager secretManager = mock(SecretManager.class);
   private static GraphQLUtils graphQLUtils = mock(GraphQLUtils.class);
-  private static Cache<String, AuthToken> authTokenCache = Mockito.mock(Cache.class);
-  private static Cache<String, User> userCache = Mockito.mock(Cache.class);
-  private static Cache<String, UserPermissionInfo> cachePermissionInfo = Mockito.mock(Cache.class);
-  private static Cache<String, UserRestrictionInfo> cacheRestrictionInfo = Mockito.mock(Cache.class);
+  private static HarnessCacheManager harnessCacheManager = mock(HarnessCacheManager.class);
+  private static Cache<String, AuthToken> authTokenCache = mock(Cache.class);
+  private static Cache<String, User> userCache = mock(Cache.class);
+  private static Cache<String, UserPermissionInfo> cachePermissionInfo = mock(Cache.class);
+  private static Cache<String, UserRestrictionInfo> cacheRestrictionInfo = mock(Cache.class);
 
   private static AuthService authService = new AuthServiceImpl(genericDbCache, hPersistence, userService,
-      userGroupService, usageRestrictionsService, authTokenCache, userCache, cacheRestrictionInfo, cachePermissionInfo,
-      configuration, verificationServiceSecretManager, authHandler, harnessUserGroupService, secretManager);
+      userGroupService, usageRestrictionsService, harnessCacheManager, authTokenCache, userCache, configuration,
+      verificationServiceSecretManager, authHandler, harnessUserGroupService, secretManager);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,
       accountService, whitelistService, harnessUserGroupService, graphQLUtils);
@@ -248,8 +251,12 @@ public class SecureResourceTest extends CategoryTest {
    */
   @Before
   public void setUp() throws Exception {
+    when(harnessCacheManager.getCache(any(), eq(String.class), eq(UserPermissionInfo.class), any()))
+        .thenReturn(cachePermissionInfo);
+    when(harnessCacheManager.getCache(any(), eq(String.class), eq(UserRestrictionInfo.class), any()))
+        .thenReturn(cacheRestrictionInfo);
     when(userCache.get(USER_ID)).thenReturn(user);
-    when(cachePermissionInfo.get(ACCOUNT_ID + "~" + USER_ID)).thenReturn(userPermissionInfo);
+    when(cachePermissionInfo.get(USER_ID)).thenReturn(userPermissionInfo);
     when(authTokenCache.get(VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, TOKEN_EXPIRY_IN_MILLIS));
     when(genericDbCache.get(Account.class, ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());

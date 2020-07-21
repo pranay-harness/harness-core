@@ -2,9 +2,9 @@ package io.harness.cache;
 
 import static io.harness.cache.CacheBackend.CAFFEINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 import javax.cache.Cache;
 import javax.cache.CacheException;
 import javax.cache.CacheManager;
@@ -25,7 +25,7 @@ public class HarnessCacheManagerImpl implements HarnessCacheManager {
   @Override
   public <K, V> Cache<K, V> getCache(
       String cacheName, Class<K> keyType, Class<V> valueType, Factory<ExpiryPolicy> expiryPolicy) {
-    if (isNotEmpty(cacheConfig.getDisabledCaches()) && cacheConfig.getDisabledCaches().contains(cacheName)) {
+    if (isCacheDisabled(cacheName)) {
       return new NoOpCache<>();
     }
     String cacheNamespace = isEmpty(cacheConfig.getCacheNamespace())
@@ -53,5 +53,14 @@ public class HarnessCacheManagerImpl implements HarnessCacheManager {
   private boolean isCacheExistsError(CacheException ce, String cacheName) {
     return ce.getMessage().equalsIgnoreCase("Cache " + cacheName + " already exists")
         || ce.getMessage().equalsIgnoreCase("A cache named " + cacheName + " already exists.");
+  }
+
+  private boolean isCacheDisabled(String cacheName) {
+    if (isEmpty(cacheConfig.getDisabledCaches())) {
+      return false;
+    }
+    Optional<String> disabledCacheName =
+        Stream.of(cacheName.split(":")).filter(value -> cacheConfig.getDisabledCaches().contains(value)).findFirst();
+    return disabledCacheName.isPresent();
   }
 }

@@ -84,22 +84,6 @@ public class ManagerCacheRegistrar extends AbstractModule {
   }
 
   @Provides
-  @Named(USER_PERMISSION_CACHE)
-  @Singleton
-  public Cache<String, UserPermissionInfo> getUserPermissionInfoCache(HarnessCacheManager harnessCacheManager) {
-    return harnessCacheManager.getCache(USER_PERMISSION_CACHE, String.class, UserPermissionInfo.class,
-        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
-  }
-
-  @Provides
-  @Named(USER_RESTRICTION_CACHE)
-  @Singleton
-  public Cache<String, UserRestrictionInfo> getUserRestrictionInfoCache(HarnessCacheManager harnessCacheManager) {
-    return harnessCacheManager.getCache(USER_RESTRICTION_CACHE, String.class, UserRestrictionInfo.class,
-        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
-  }
-
-  @Provides
   @Named(APIKEY_PERMISSION_CACHE)
   @Singleton
   public Cache<String, UserPermissionInfo> getApiKeyPermissionInfoCache(HarnessCacheManager harnessCacheManager) {
@@ -144,10 +128,6 @@ public class ManagerCacheRegistrar extends AbstractModule {
     mapBinder.addBinding(NEW_RELIC_APPLICATION_CACHE)
         .to(Key.get(
             new TypeLiteral<Cache<String, NewRelicApplications>>() {}, Names.named(NEW_RELIC_APPLICATION_CACHE)));
-    mapBinder.addBinding(USER_PERMISSION_CACHE).to(Key.get(new TypeLiteral<Cache<String, UserPermissionInfo>>() {
-    }, Names.named(USER_PERMISSION_CACHE)));
-    mapBinder.addBinding(USER_RESTRICTION_CACHE).to(Key.get(new TypeLiteral<Cache<String, UserRestrictionInfo>>() {
-    }, Names.named(USER_RESTRICTION_CACHE)));
     mapBinder.addBinding(APIKEY_PERMISSION_CACHE).to(Key.get(new TypeLiteral<Cache<String, UserPermissionInfo>>() {
     }, Names.named(APIKEY_PERMISSION_CACHE)));
     mapBinder.addBinding(APIKEY_RESTRICTION_CACHE).to(Key.get(new TypeLiteral<Cache<String, UserRestrictionInfo>>() {

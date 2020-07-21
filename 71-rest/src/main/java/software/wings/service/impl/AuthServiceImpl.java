@@ -19,8 +19,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.app.ManagerCacheRegistrar.AUTH_TOKEN_CACHE;
 import static software.wings.app.ManagerCacheRegistrar.USER_CACHE;
-import static software.wings.app.ManagerCacheRegistrar.USER_PERMISSION_CACHE;
-import static software.wings.app.ManagerCacheRegistrar.USER_RESTRICTION_CACHE;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -56,6 +54,7 @@ import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.entity.ServiceSecretKey.ServiceType;
 import io.harness.eraro.ErrorCode;
@@ -130,6 +129,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import javax.cache.Cache;
+import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.Duration;
 import javax.crypto.spec.SecretKeySpec;
 
 @Singleton
@@ -139,16 +140,17 @@ public class AuthServiceImpl implements AuthService {
   private HPersistence persistence;
   private UserService userService;
   private UserGroupService userGroupService;
+  private HarnessCacheManager harnessCacheManager;
   private UsageRestrictionsService usageRestrictionsService;
   private Cache<String, AuthToken> authTokenCache;
   private Cache<String, User> userCache;
-  private Cache<String, UserRestrictionInfo> userRestrictionInfoCache;
-  private Cache<String, UserPermissionInfo> userPermissionInfoCache;
   private MainConfiguration configuration;
   private VerificationServiceSecretManager verificationServiceSecretManager;
   private AuthHandler authHandler;
   private HarnessUserGroupService harnessUserGroupService;
   private SecretManager secretManager;
+  private static final String USER_PERMISSION_CACHE_NAME = "userPermissionCache".concat(":%s");
+  private static final String USER_RESTRICTION_CACHE_NAME = "userRestrictionCache".concat(":%s");
   @Inject private ExecutorService executorService;
   @Inject private ApiKeyService apiKeyService;
   @Inject @Nullable private SegmentHandler segmentHandler;
@@ -157,21 +159,18 @@ public class AuthServiceImpl implements AuthService {
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, HPersistence persistence, UserService userService,
       UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService,
-      @Named(AUTH_TOKEN_CACHE) Cache<String, AuthToken> authTokenCache,
-      @Named(USER_CACHE) Cache<String, User> userCache,
-      @Named(USER_RESTRICTION_CACHE) Cache<String, UserRestrictionInfo> userRestrictionInfoCache,
-      @Named(USER_PERMISSION_CACHE) Cache<String, UserPermissionInfo> userPermissionInfoCache,
-      MainConfiguration configuration, VerificationServiceSecretManager verificationServiceSecretManager,
-      AuthHandler authHandler, HarnessUserGroupService harnessUserGroupService, SecretManager secretManager) {
+      HarnessCacheManager harnessCacheManager, @Named(AUTH_TOKEN_CACHE) Cache<String, AuthToken> authTokenCache,
+      @Named(USER_CACHE) Cache<String, User> userCache, MainConfiguration configuration,
+      VerificationServiceSecretManager verificationServiceSecretManager, AuthHandler authHandler,
+      HarnessUserGroupService harnessUserGroupService, SecretManager secretManager) {
     this.dbCache = dbCache;
     this.persistence = persistence;
     this.userService = userService;
     this.userGroupService = userGroupService;
     this.usageRestrictionsService = usageRestrictionsService;
+    this.harnessCacheManager = harnessCacheManager;
     this.authTokenCache = authTokenCache;
     this.userCache = userCache;
-    this.userRestrictionInfoCache = userRestrictionInfoCache;
-    this.userPermissionInfoCache = userPermissionInfoCache;
     this.configuration = configuration;
     this.verificationServiceSecretManager = verificationServiceSecretManager;
     this.authHandler = authHandler;
@@ -547,8 +546,19 @@ public class AuthServiceImpl implements AuthService {
     return false;
   }
 
+  private Cache<String, UserPermissionInfo> getUserPermissionCache(String accountId) {
+    return harnessCacheManager.getCache(String.format(USER_PERMISSION_CACHE_NAME, accountId), String.class,
+        UserPermissionInfo.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+  }
+
+  private Cache<String, UserRestrictionInfo> getUserRestrictionCache(String accountId) {
+    return harnessCacheManager.getCache(String.format(USER_RESTRICTION_CACHE_NAME, accountId), String.class,
+        UserRestrictionInfo.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+  }
+
   @Override
   public UserPermissionInfo getUserPermissionInfo(String accountId, User user, boolean cacheOnly) {
+    Cache<String, UserPermissionInfo> userPermissionInfoCache = getUserPermissionCache(accountId);
     if (userPermissionInfoCache == null) {
       if (cacheOnly) {
         return null;
@@ -556,8 +566,7 @@ public class AuthServiceImpl implements AuthService {
       logger.error("UserInfoCache is null. This should not happen. Fall back to DB");
       return getUserPermissionInfoFromDB(accountId, user);
     }
-
-    String key = getCacheKey(accountId, user.getUuid());
+    String key = user.getUuid();
     UserPermissionInfo value;
     try {
       value = userPermissionInfoCache.get(key);
@@ -581,6 +590,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public UserRestrictionInfo getUserRestrictionInfo(
       String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly) {
+    Cache<String, UserRestrictionInfo> userRestrictionInfoCache = getUserRestrictionCache(accountId);
     if (userRestrictionInfoCache == null) {
       if (cacheOnly) {
         return null;
@@ -589,7 +599,7 @@ public class AuthServiceImpl implements AuthService {
       return getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
     }
 
-    String key = getCacheKey(accountId, user.getUuid());
+    String key = user.getUuid();
     UserRestrictionInfo value;
     try {
       value = userRestrictionInfoCache.get(key);
@@ -609,87 +619,24 @@ public class AuthServiceImpl implements AuthService {
     return getUserRestrictionInfoFromDB(accountId, user, userPermissionInfo);
   }
 
-  private String getCacheKey(String accountId, String userId) {
-    return accountId + "~" + userId;
-  }
-
-  private String getUserId(String cacheKey, String accountId) {
-    if (isEmpty(cacheKey)) {
-      return null;
-    }
-    String prefix = accountId + "~";
-    return cacheKey.replace(prefix, "");
-  }
-
   @Override
   public void evictUserPermissionAndRestrictionCacheForAccount(
       String accountId, boolean rebuildUserPermissionInfo, boolean rebuildUserRestrictionInfo) {
-    evictAndRebuild(accountId, rebuildUserPermissionInfo, userPermissionInfoCache, UserPermissionInfo.class);
-    evictAndRebuild(accountId, rebuildUserRestrictionInfo, userRestrictionInfoCache, UserRestrictionInfo.class);
+    getUserPermissionCache(accountId).clear();
+    getUserRestrictionCache(accountId).clear();
     apiKeyService.evictAndRebuildPermissionsAndRestrictions(
         accountId, rebuildUserPermissionInfo || rebuildUserRestrictionInfo);
   }
 
   @Override
   public void evictUserPermissionCacheForAccount(String accountId, boolean rebuildUserPermissionInfo) {
-    evictAndRebuild(accountId, rebuildUserPermissionInfo, userPermissionInfoCache, UserPermissionInfo.class);
+    getUserPermissionCache(accountId).clear();
     apiKeyService.evictAndRebuildPermissions(accountId, rebuildUserPermissionInfo);
   }
 
-  private <T> void evictAndRebuild(String accountId, boolean rebuild, Cache<String, T> cache, Class<T> infoClass) {
-    Set<String> keys = new HashSet<>();
-    if (cache != null) {
-      cache.iterator().forEachRemaining(stringUserPermissionInfoEntry -> {
-        String key = stringUserPermissionInfoEntry.getKey();
-        if (isNotEmpty(key) && key.startsWith(accountId)) {
-          keys.add(key);
-        }
-      });
-      cache.removeAll(keys);
-
-      if (rebuild) {
-        executorService.submit(() -> keys.forEach(key -> {
-          String userId = getUserId(key, accountId);
-          if (userId == null) {
-            return;
-          }
-
-          if (userCache == null) {
-            return;
-          }
-          User user = userCache.get(userId);
-          if (user == null) {
-            return;
-          }
-
-          List<UserGroup> userGroups = getUserGroups(accountId, user);
-
-          // This call gets the userPermissionInfo from cache, if present.
-          UserPermissionInfo userPermissionInfo = getUserPermissionInfo(accountId, user, true);
-          if (userPermissionInfo == null) {
-            userPermissionInfo = authHandler.evaluateUserPermissionInfo(accountId, userGroups, user);
-            userPermissionInfoCache.put(key, userPermissionInfo);
-          }
-
-          if (infoClass.getSimpleName().equals("UserRestrictionInfo")) {
-            // This call reloads the cache from db, if some user request does that first, this simply makes sure the
-            // cache is rebuilt.
-            UserRestrictionInfo userRestrictionInfo = getUserRestrictionInfo(accountId, user, userPermissionInfo, true);
-            if (userRestrictionInfo == null) {
-              userRestrictionInfo = getUserRestrictionInfoFromDB(accountId, userPermissionInfo, userGroups);
-              if (userRestrictionInfoCache != null) {
-                userRestrictionInfoCache.put(key, userRestrictionInfo);
-              }
-            }
-          }
-        }));
-      }
-    }
-  }
-
-  private <T> void removeFromCache(Cache<String, T> cache, String accountId, List<String> memberIds) {
+  private <T> void removeFromCache(Cache<String, T> cache, List<String> memberIds) {
     if (cache != null && isNotEmpty(memberIds)) {
-      Set<String> keys = memberIds.stream().map(userId -> getCacheKey(accountId, userId)).collect(toSet());
+      Set<String> keys = new HashSet<>(memberIds);
       cache.removeAll(keys);
     }
   }
@@ -710,8 +657,8 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void evictUserPermissionAndRestrictionCacheForAccount(String accountId, List<String> memberIds) {
-    removeFromCache(userPermissionInfoCache, accountId, memberIds);
-    removeFromCache(userRestrictionInfoCache, accountId, memberIds);
+    removeFromCache(getUserPermissionCache(accountId), memberIds);
+    removeFromCache(getUserRestrictionCache(accountId), memberIds);
   }
 
   private UserPermissionInfo getUserPermissionInfoFromDB(String accountId, User user) {
