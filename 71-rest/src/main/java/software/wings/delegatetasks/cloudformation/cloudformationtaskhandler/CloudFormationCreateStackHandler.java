@@ -121,14 +121,14 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         }
         default: {
           String errorMessage = format("# Unsupported stack create type: %s", updateRequest.getCreateType());
-          executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+          executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
         }
       }
     } catch (Exception ex) {
       String errorMessage =
           format("# Exception: %s while Updating stack: %s", ExceptionUtils.getMessage(ex), stack.getStackName());
-      executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+      executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
     }
     return builder.build();
@@ -197,13 +197,13 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         }
         default: {
           String errorMessage = format("Unsupported stack create type: %s", createRequest.getCreateType());
-          executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+          executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
         }
       }
     } catch (Exception ex) {
       String errorMessage = format("Exception: %s while creating stack: %s", ExceptionUtils.getMessage(ex), stackName);
-      executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+      executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
     }
     return builder.build();
@@ -228,7 +228,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           awsHelperService.getAllStacks(createRequest.getRegion(), describeStacksRequest, createRequest.getAwsConfig());
       if (stacks.size() < 1) {
         String errorMessage = "# Error: received empty stack list from AWS";
-        executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+        executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
         builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
         return;
       }
@@ -242,7 +242,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         }
         case "CREATE_FAILED": {
           errorMsg = format("# Error: %s while creating stack: %s", stack.getStackStatusReason(), stack.getStackName());
-          executionLogCallback.saveExecutionLog(errorMsg, LogLevel.ERROR);
+          executionLogCallback.saveExecutionLog(errorMsg, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
           return;
         }
@@ -251,12 +251,15 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           break;
         }
         case "ROLLBACK_IN_PROGRESS": {
-          executionLogCallback.saveExecutionLog("Creation of stack failed, Rollback in progress");
+          errorMsg = format("Creation of stack failed, Rollback in progress. Stack Name: %s : Reason: %s",
+              stack.getStackName(), stack.getStackStatusReason());
+          executionLogCallback.saveExecutionLog(errorMsg, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           break;
         }
         case "ROLLBACK_FAILED": {
-          errorMsg = format("# Creation of stack: %s failed, Rollback failed as well.", stack.getStackName());
-          executionLogCallback.saveExecutionLog(errorMsg);
+          errorMsg = format("# Creation of stack: %s failed, Rollback failed as well. Reason: %s", stack.getStackName(),
+              stack.getStackStatusReason());
+          executionLogCallback.saveExecutionLog(errorMsg, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
           return;
         }
@@ -267,8 +270,9 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           return;
         }
         default: {
-          String errorMessage = format("# Unexpected status: %s while Creating stack ", stack.getStackStatus());
-          executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+          String errorMessage = format("# Unexpected status: %s while Creating stack, Status reason: %s",
+              stack.getStackStatus(), stack.getStackStatusReason());
+          executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
           return;
         }
@@ -276,7 +280,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       sleep(ofSeconds(10));
     }
     String errorMessage = format("# Timing out while Creating stack: %s", createStackRequest.getStackName());
-    executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+    executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
     builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
   }
 
@@ -309,7 +313,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           awsHelperService.getAllStacks(request.getRegion(), describeStacksRequest, request.getAwsConfig());
       if (stacks.size() < 1) {
         String errorMessage = "# Error: received empty stack list from AWS";
-        executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+        executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
         builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
         return;
       }
@@ -328,7 +332,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         case "UPDATE_ROLLBACK_FAILED": {
           String errorMessage = format("# Error: %s when updating stack: %s, Rolling back stack update failed",
               stack.getStackStatusReason(), stack.getStackName());
-          executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+          executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
           return;
         }
@@ -355,7 +359,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         default: {
           String errorMessage =
               format("# Unexpected status: %s while creating stack: %s ", stack.getStackStatus(), stack.getStackName());
-          executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+          executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
           return;
         }
@@ -363,7 +367,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       sleep(ofSeconds(10));
     }
     String errorMessage = format("# Timing out while Updating stack: %s", originalStack.getStackName());
-    executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+    executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
     builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
   }
 

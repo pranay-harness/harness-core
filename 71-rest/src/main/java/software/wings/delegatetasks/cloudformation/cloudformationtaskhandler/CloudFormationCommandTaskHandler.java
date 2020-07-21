@@ -61,7 +61,7 @@ public abstract class CloudFormationCommandTaskHandler {
       return executeInternal(request, details, executionLogCallback);
     } catch (Exception ex) {
       String errorMessage = format("Exception: %s while executing CF task.", ExceptionUtils.getMessage(ex));
-      executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+      executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, FAILURE);
       return CloudFormationCommandExecutionResponse.builder()
           .errorMessage(errorMessage)
           .commandExecutionStatus(FAILURE)
