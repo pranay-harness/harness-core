@@ -12,16 +12,24 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_FILE_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.BUCKET_NAME;
+import static software.wings.utils.WingsTestConstants.BUILD_NO;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.S3_URL;
+import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
@@ -51,6 +59,9 @@ import software.wings.beans.Environment;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.Command;
@@ -67,6 +78,11 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.WingsTestConstants;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AwsLambdaStateTest extends CategoryTest {
   @Mock private ServiceResourceService serviceResourceService;
@@ -81,6 +97,11 @@ public class AwsLambdaStateTest extends CategoryTest {
   @Mock private DelegateService delegateService;
 
   @Spy @InjectMocks AwsLambdaState awsLambdaState;
+  private SettingAttribute awsSetting =
+      aSettingAttribute()
+          .withUuid(SETTING_ID)
+          .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY).build())
+          .build();
 
   @Before
   public void setUp() throws Exception {
@@ -155,6 +176,15 @@ public class AwsLambdaStateTest extends CategoryTest {
     doReturn(app).when(mockParams).fetchRequiredApp();
     doReturn(env).when(mockParams).getEnv();
 
+    DockerArtifactStream mockDockerArtifactStream = mock(DockerArtifactStream.class);
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
+                                                            .artifactStreamType(ArtifactStreamType.AMAZON_S3.name())
+                                                            .metadataOnly(true)
+                                                            .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
+                                                            .serverSetting(awsSetting)
+                                                            .artifactServerEncryptedDataDetails(Collections.emptyList())
+                                                            .build();
+
     ServiceCommand serviceCommand =
         aServiceCommand().withCommand(aCommand().withCommandUnits(asList(new AwsLambdaCommandUnit())).build()).build();
     doReturn(serviceCommand)
@@ -162,7 +192,10 @@ public class AwsLambdaStateTest extends CategoryTest {
         .getCommandByName(anyString(), anyString(), anyString(), anyString());
     when(((DeploymentExecutionContext) mockContext).getDefaultArtifactForService(SERVICE_ID))
         .thenReturn(anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build());
-    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(DockerArtifactStream.builder().build());
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(mockDockerArtifactStream);
+    when(mockDockerArtifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(mockDockerArtifactStream.getArtifactStreamType()).thenReturn(ArtifactStreamType.AMAZON_S3.name());
+    when(mockDockerArtifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(serviceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, null))
         .thenReturn(asList(new AwsLambdaCommandUnit()));
     when(activityService.save(any())).thenReturn(Activity.builder().build());
@@ -180,5 +213,42 @@ public class AwsLambdaStateTest extends CategoryTest {
     assertThat(delegateTask).isNotNull();
     assertThat(delegateTask.getEnvId()).isEqualTo(ENV_ID);
     assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo(INFRA_MAPPING_ID);
+  }
+
+  private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {
+    Map<String, String> map = new HashMap<>();
+    switch (artifactStreamType) {
+      case AMAZON_S3:
+        map.put(ArtifactMetadataKeys.bucketName, BUCKET_NAME);
+        map.put(ArtifactMetadataKeys.artifactFileName, ARTIFACT_FILE_NAME);
+        map.put(ArtifactMetadataKeys.artifactPath, ARTIFACT_PATH);
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        map.put(ArtifactMetadataKeys.artifactFileSize, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
+        map.put(ArtifactMetadataKeys.key, ACCESS_KEY);
+        map.put(ArtifactMetadataKeys.url, S3_URL);
+        break;
+      case ARTIFACTORY:
+        map.put(ArtifactMetadataKeys.artifactFileName, ARTIFACT_FILE_NAME);
+        map.put(ArtifactMetadataKeys.artifactPath, ARTIFACT_PATH);
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        map.put(ArtifactMetadataKeys.artifactFileSize, String.valueOf(WingsTestConstants.ARTIFACT_FILE_SIZE));
+        break;
+      case AZURE_ARTIFACTS:
+        map.put(ArtifactMetadataKeys.version, BUILD_NO);
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        break;
+      case JENKINS:
+        map.put(ArtifactMetadataKeys.buildNo, BUILD_NO);
+        break;
+      case BAMBOO:
+        map.put(ArtifactMetadataKeys.buildNo, "11");
+        break;
+      case NEXUS:
+        map.put(ArtifactMetadataKeys.buildNo, "7.0");
+        break;
+      default:
+        break;
+    }
+    return map;
   }
 }

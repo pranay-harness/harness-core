@@ -36,6 +36,7 @@ import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.CommandStateExecutionData;
@@ -58,7 +59,9 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.service.impl.AwsHelperService;
@@ -113,6 +116,14 @@ public class AwsLambdaState extends State {
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   public static final String AWS_LAMBDA_COMMAND_NAME = "Deploy AWS Lambda Function";
+
+  public static final String URL = "url";
+  private static final String JENKINS = "JENKINS";
+  private static final String BAMBOO = "BAMBOO";
+  private static final String ARTIFACT_STRING = "artifact/";
+  private static final String ARTIFACTORY = "ARTIFACTORY";
+  private static final String NEXUS = "NEXUS";
+  private static final String S3 = "AMAZON_S3";
 
   @Attributes(title = "Command")
   @DefaultValue(AWS_LAMBDA_COMMAND_NAME)
@@ -315,6 +326,20 @@ public class AwsLambdaState extends State {
 
     nullCheckForInvalidRequest(specification, "Missing lambda function specification in service", USER);
 
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    artifactStreamAttributes.setMetadata(artifact.getMetadata());
+    artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
+    artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
+    artifactStreamAttributes.setArtifactServerEncryptedDataDetails(
+        secretManager.getEncryptionDetails((EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(),
+            context.getAppId(), context.getWorkflowExecutionId()));
+    artifactStreamAttributes.setArtifactName(artifact.getDisplayName());
+    artifactStreamAttributes.setMetadataOnly(onlyMetaForArtifactType(artifactStream));
+    artifactStreamAttributes.getMetadata().put(
+        ArtifactMetadataKeys.artifactFileName, artifactFileNameForSource(artifact, artifactStreamAttributes));
+    artifactStreamAttributes.getMetadata().put(
+        ArtifactMetadataKeys.artifactPath, artifactPathForSource(artifact, artifactStreamAttributes));
+
     if (isEmpty(specification.getFunctions())) {
       logService.batchedSave(singletonList(logBuilder.but().withLogLine("No Lambda function to deploy.").build()));
       activityService.updateStatus(activity.getUuid(), activity.getAppId(), SUCCESS);
@@ -333,7 +358,7 @@ public class AwsLambdaState extends State {
     } else {
       AwsLambdaExecuteWfRequest wfRequest = constructLambdaWfRequestParams(specification, context, context.getAppId(),
           env.getUuid(), infrastructureMapping, (AwsConfig) cloudProviderSetting.getValue(), region, artifact,
-          app.getAccountId(), activity.getUuid());
+          app.getAccountId(), artifactStreamAttributes, activity.getUuid());
       DelegateTask delegateTask =
           DelegateTask.builder()
               .accountId(app.getAccountId())
@@ -360,6 +385,65 @@ public class AwsLambdaState extends State {
     }
   }
 
+  /*
+   * returns Artifactpath for source
+   * */
+  public String artifactPathForSource(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+    switch (artifactStreamAttributes.getArtifactStreamType()) {
+      case JENKINS:
+        if (artifactStreamAttributes.getArtifactPaths().isEmpty()) {
+          throw new InvalidRequestException("ArtifactPath missing, reqired for only-meta feature!");
+        }
+        return ARTIFACT_STRING + artifactStreamAttributes.getArtifactPaths().get(0);
+      case BAMBOO:
+        if (artifact.getArtifactFileMetadata().isEmpty()) {
+          throw new InvalidRequestException("artifact url is required");
+        }
+        return artifact.getArtifactFileMetadata().get(0).getUrl();
+      case ARTIFACTORY:
+        String artifactUrl = artifactStreamAttributes.getMetadata().get(URL);
+        return "."
+            + artifactUrl.substring(artifactUrl.lastIndexOf(artifactStreamAttributes.getJobName())
+                  + artifactStreamAttributes.getJobName().length());
+      default:
+        return artifactStreamAttributes.getMetadata().get(URL);
+    }
+  }
+
+  /*
+   * returns ArtifactFileName for source
+   * */
+  public String artifactFileNameForSource(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+    switch (artifactStreamAttributes.getArtifactStreamType()) {
+      case JENKINS:
+        return artifact.getDisplayName();
+      case BAMBOO:
+        if (artifactStreamAttributes.getArtifactPaths().isEmpty()) {
+          throw new InvalidRequestException("ArtifactPath is missing!");
+        }
+        return artifactStreamAttributes.getArtifactPaths().get(0);
+      case ARTIFACTORY:
+        return artifactStreamAttributes.getMetadata().get("buildNo");
+      case NEXUS:
+        return artifact.getDisplayName().substring(artifact.getArtifactSourceName().length());
+      default:
+        return artifact.getDisplayName();
+    }
+  }
+
+  private boolean onlyMetaForArtifactType(ArtifactStream artifactStream) {
+    switch (artifactStream.getArtifactStreamType()) {
+      case JENKINS:
+      case BAMBOO:
+      case ARTIFACTORY:
+      case NEXUS:
+      case S3:
+        return artifactStream.isMetadataOnly();
+      default:
+        return false;
+    }
+  }
+
   protected List<String> getEvaluatedAliases(ExecutionContext context) {
     if (isNotEmpty(aliases)) {
       return aliases.stream().map(context::renderExpression).collect(toList());
@@ -369,7 +453,8 @@ public class AwsLambdaState extends State {
 
   private AwsLambdaExecuteWfRequest constructLambdaWfRequestParams(LambdaSpecification specification,
       ExecutionContext context, String appId, String envId, AwsLambdaInfraStructureMapping infrastructureMapping,
-      AwsConfig awsConfig, String region, Artifact artifact, String accountId, String activityId) {
+      AwsConfig awsConfig, String region, Artifact artifact, String accountId,
+      ArtifactStreamAttributes artifactStreamAttributes, String activityId) {
     AwsLambdaExecuteWfRequestBuilder wfRequestBuilder = AwsLambdaExecuteWfRequest.builder();
     wfRequestBuilder.awsConfig(awsConfig);
     List<EncryptedDataDetail> encryptionDetails =
@@ -379,7 +464,9 @@ public class AwsLambdaState extends State {
     wfRequestBuilder.accountId(accountId);
     wfRequestBuilder.appId(appId);
     wfRequestBuilder.activityId(activityId);
+    wfRequestBuilder.artifactFiles(artifact.getArtifactFiles());
     wfRequestBuilder.commandName(getCommandName());
+    wfRequestBuilder.artifactStreamAttributes(artifactStreamAttributes);
     wfRequestBuilder.roleArn(infrastructureMapping.getRole());
 
     if (isNotEmpty(aliases)) {
