@@ -3,7 +3,6 @@ package software.wings.delegatetasks;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static junit.framework.TestCase.assertEquals;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
@@ -24,13 +23,9 @@ import com.google.common.collect.Lists;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSourceAttributes;
-import io.harness.cdng.artifact.bean.connector.DockerhubConnectorConfig;
-import io.harness.cdng.artifact.delegate.task.ArtifactTaskParameters;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.rule.Owner;
-import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -70,27 +65,6 @@ public class CommandTaskTest extends WingsBaseTest {
           .host(builder.build())
           .accountId(ACCOUNT_ID)
           .build();
-
-  @Test
-  @Owner(developers = SAHIL)
-  @Category(UnitTests.class)
-  public void testRun() {
-    ArtifactTaskParameters taskParameters =
-        ArtifactTaskParameters.builder()
-            .accountId(ACCOUNT_ID)
-            .appId(APP_ID)
-            .attributes(DockerArtifactSourceAttributes.builder()
-                            .dockerhubConnector("CONNECTOR")
-                            .imagePath("imagePath")
-                            .tag("tag")
-                            .build())
-            .connectorConfig(
-                DockerhubConnectorConfig.builder().identifier("CONNECTOR").registryUrl("CONNECTOR_URL").build())
-            .build();
-    assertThatExceptionOfType(NotImplementedException.class)
-        .isThrownBy(() -> commandTask.run(taskParameters))
-        .withMessage("not implemented");
-  }
 
   @Test
   @Owner(developers = SAHIL)
