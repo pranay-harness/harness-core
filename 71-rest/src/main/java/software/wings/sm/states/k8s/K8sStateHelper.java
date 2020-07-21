@@ -21,6 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.FeatureName.DELEGATE_TAGS_EXTENDED;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
+import static software.wings.common.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -198,6 +199,11 @@ public class K8sStateHelper {
       logger.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutMinutes);
       return null;
     }
+  }
+
+  public static long getSafeTimeoutInMillis(Integer timeoutInMillis) {
+    return timeoutInMillis != null && timeoutInMillis > 0 ? (long) timeoutInMillis
+                                                          : Duration.ofMinutes(DEFAULT_STEADY_STATE_TIMEOUT).toMillis();
   }
 
   public Activity createK8sActivity(ExecutionContext executionContext, String commandName, String stateType,
@@ -657,7 +663,8 @@ public class K8sStateHelper {
     return ((K8sStateExecutionData) context.getStateExecutionData()).getActivityId();
   }
 
-  public ExecutionResponse executeWrapperWithManifest(K8sStateExecutor k8sStateExecutor, ExecutionContext context) {
+  public ExecutionResponse executeWrapperWithManifest(
+      K8sStateExecutor k8sStateExecutor, ExecutionContext context, long timeoutInMillis) {
     try {
       k8sStateExecutor.validateParameters(context);
       boolean valuesInGit = false;
@@ -688,7 +695,7 @@ public class K8sStateHelper {
                   valuesInGit || valuesInHelmChartRepo || kustomizeSource || ocTemplateSource));
 
       if (valuesInHelmChartRepo) {
-        return executeHelmValuesFetchTask(context, activity.getUuid(), k8sStateExecutor.commandName());
+        return executeHelmValuesFetchTask(context, activity.getUuid(), k8sStateExecutor.commandName(), timeoutInMillis);
       } else if (valuesInGit || remoteParams) {
         return executeGitTask(context, appManifestMap, activity.getUuid(), k8sStateExecutor.commandName());
       } else {
@@ -898,7 +905,8 @@ public class K8sStateHelper {
     return expressionEvaluator.substitute(renderedExpression, Collections.emptyMap());
   }
 
-  private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String activityId) {
+  private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(
+      ExecutionContext context, String activityId, long timeoutInMillis) {
     ApplicationManifest applicationManifest =
         applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context);
     if (applicationManifest == null || HelmChartRepo != applicationManifest.getStoreType()) {
@@ -912,6 +920,7 @@ public class K8sStateHelper {
         .activityId(activityId)
         .helmChartConfigTaskParams(
             helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest))
+        .timeoutInMillis(timeoutInMillis)
         .workflowExecutionId(context.getWorkflowExecutionId())
         .build();
   }
@@ -948,9 +957,11 @@ public class K8sStateHelper {
     }
   }
 
-  public ExecutionResponse executeHelmValuesFetchTask(ExecutionContext context, String activityId, String commandName) {
+  public ExecutionResponse executeHelmValuesFetchTask(
+      ExecutionContext context, String activityId, String commandName, long timeoutInMillis) {
     Application app = appService.get(context.getAppId());
-    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters = getHelmValuesFetchTaskParameters(context, activityId);
+    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
+        getHelmValuesFetchTaskParameters(context, activityId, timeoutInMillis);
 
     List<String> tags = new ArrayList<>();
     if (helmValuesFetchTaskParameters.isBindTaskFeatureSet()) {

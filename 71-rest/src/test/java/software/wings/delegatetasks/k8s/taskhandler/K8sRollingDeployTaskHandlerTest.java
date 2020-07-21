@@ -13,6 +13,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -213,7 +214,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     doReturn(true)
         .when(k8sTaskHelper)
         .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), any(K8sDelegateTaskParams.class),
@@ -246,7 +247,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         K8sRollingDeployTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
     verify(k8sTaskHelper, times(1))
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
   }
 
   @Test
@@ -261,7 +262,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     doReturn(mock(ExecutionLogCallback.class))
         .when(k8sTaskHelper)
         .getExecutionLogCallback(any(K8sTaskParameters.class), anyString());
@@ -282,7 +283,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
 
     verify(k8sTaskHelper, times(1))
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     verify(kubernetesContainerService, times(1))
         .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
@@ -309,7 +310,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     List<KubernetesResource> kubernetesResources = getResources();
     doReturn(kubernetesResources)
         .when(k8sTaskHelper)
@@ -335,7 +336,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
 
     verify(k8sTaskHelper, times(1))
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     verify(kubernetesContainerService, times(1))
         .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
@@ -382,7 +383,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
     doReturn(KubernetesConfig.builder().build())
         .when(containerDeploymentDelegateHelper)
         .getKubernetesConfig(any(K8sClusterConfig.class));

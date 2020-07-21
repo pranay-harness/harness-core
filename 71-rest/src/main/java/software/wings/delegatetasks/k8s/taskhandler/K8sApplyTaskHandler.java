@@ -19,6 +19,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
+import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFromMinutes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -72,12 +73,13 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
     K8sApplyTaskParameters k8sApplyTaskParameters = (K8sApplyTaskParameters) k8sTaskParameters;
     releaseName = k8sApplyTaskParameters.getReleaseName();
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
+    final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
 
     K8sApplyResponse k8sApplyResponse = K8sApplyResponse.builder().build();
 
-    boolean success =
-        k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(k8sApplyTaskParameters.getK8sDelegateManifestConfig(),
-            manifestFilesDirectory, k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, FetchFiles));
+    boolean success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
+        k8sApplyTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
+        k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, FetchFiles), timeoutInMillis);
     if (!success) {
       return getFailureResponse();
     }

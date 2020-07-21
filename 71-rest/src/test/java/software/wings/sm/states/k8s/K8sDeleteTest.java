@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -113,7 +114,7 @@ public class K8sDeleteTest extends WingsBaseTest {
     k8sDelete.execute(context);
 
     ArgumentCaptor<List> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
-    verify(k8sStateHelper, never()).executeWrapperWithManifest(any(), any());
+    verify(k8sStateHelper, never()).executeWrapperWithManifest(any(), any(), anyLong());
     verify(k8sStateHelper, times(1))
         .createK8sActivity(eq(context), eq(K8S_DELETE_COMMAND_NAME), eq("K8S_DELETE"), any(ActivityService.class),
             listArgumentCaptor.capture());
@@ -148,7 +149,7 @@ public class K8sDeleteTest extends WingsBaseTest {
     k8sDelete.execute(context);
 
     ArgumentCaptor<List> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
-    verify(k8sStateHelper, never()).executeWrapperWithManifest(any(), any());
+    verify(k8sStateHelper, never()).executeWrapperWithManifest(any(), any(), anyLong());
     verify(k8sStateHelper, times(1))
         .createK8sActivity(eq(context), eq(K8S_DELETE_COMMAND_NAME), eq("K8S_DELETE"), any(ActivityService.class),
             listArgumentCaptor.capture());
@@ -177,7 +178,7 @@ public class K8sDeleteTest extends WingsBaseTest {
   public void executeWithManifest() {
     k8sDelete.setFilePaths("templates/foo.yaml");
     k8sDelete.execute(context);
-    verify(k8sStateHelper, times(1)).executeWrapperWithManifest(k8sDelete, context);
+    verify(k8sStateHelper, times(1)).executeWrapperWithManifest(k8sDelete, context, 10 * 60 * 1000L);
   }
 
   @Test

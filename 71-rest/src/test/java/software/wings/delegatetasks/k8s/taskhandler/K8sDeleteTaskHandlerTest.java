@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -74,7 +75,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class), anyLong());
 
     K8sDeleteTaskParameters deleteAllParams = K8sDeleteTaskParameters.builder().build();
     final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteAllParams, taskParams);
@@ -150,7 +151,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class), anyLong());
 
     K8sDeleteTaskParameters deleteAllParams = K8sDeleteTaskParameters.builder().filePaths("a,b,c").build();
 
@@ -158,7 +159,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
 
     verify(k8sTaskHelper, times(1))
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class), anyLong());
     verify(deploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
     verify(k8sTaskHelper)
         .getResourcesFromManifests(any(K8sDelegateTaskParams.class), any(K8sDelegateManifestConfig.class),
@@ -174,7 +175,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
-            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class));
+            any(K8sDelegateManifestConfig.class), any(String.class), any(ExecutionLogCallback.class), anyLong());
 
     K8sDeleteTaskParameters deleteAllParams = K8sDeleteTaskParameters.builder().filePaths("").build();
     final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteAllParams, taskParams);

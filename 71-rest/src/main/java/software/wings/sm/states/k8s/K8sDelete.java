@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.sm.StateType.K8S_DELETE;
+import static software.wings.sm.states.k8s.K8sStateHelper.getSafeTimeoutInMillis;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -83,6 +84,11 @@ public class K8sDelete extends State implements K8sStateExecutor {
   @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") @Getter @Setter private Integer stateTimeoutInMinutes;
 
   @Override
+  public Integer getTimeoutMillis() {
+    return K8sStateHelper.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
+  }
+
+  @Override
   public ExecutionResponse execute(ExecutionContext context) {
     if (needsManifest()) {
       return executeWithManifest(context);
@@ -96,7 +102,7 @@ public class K8sDelete extends State implements K8sStateExecutor {
   }
 
   private ExecutionResponse executeWithManifest(ExecutionContext context) {
-    return k8sStateHelper.executeWrapperWithManifest(this, context);
+    return k8sStateHelper.executeWrapperWithManifest(this, context, getSafeTimeoutInMillis(getTimeoutMillis()));
   }
 
   private ExecutionResponse executeWithoutManifest(ExecutionContext context) {
@@ -229,11 +235,6 @@ public class K8sDelete extends State implements K8sStateExecutor {
     if (isNotBlank(filePaths)) {
       filePaths = context.renderExpression(filePaths);
     }
-  }
-
-  @Override
-  public Integer getTimeoutMillis() {
-    return K8sStateHelper.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
   }
 
   private Activity createActivity(ExecutionContext context) {

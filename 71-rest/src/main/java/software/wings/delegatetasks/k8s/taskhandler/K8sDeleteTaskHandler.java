@@ -18,6 +18,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.delegatetasks.k8s.K8sTask.MANIFEST_FILES_DIR;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.getResourcesInStringFormat;
+import static software.wings.delegatetasks.k8s.K8sTaskHelper.getTimeoutMillisFromMinutes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -88,9 +89,11 @@ public class K8sDeleteTaskHandler extends K8sTaskHandler {
 
   private K8sTaskExecutionResponse executeDeleteUsingFiles(K8sDeleteTaskParameters k8sDeleteTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
-    boolean success =
-        k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(k8sDeleteTaskParameters.getK8sDelegateManifestConfig(),
-            manifestFilesDirectory, k8sTaskHelper.getExecutionLogCallback(k8sDeleteTaskParameters, FetchFiles));
+    long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sDeleteTaskParameters.getTimeoutIntervalInMin());
+
+    boolean success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
+        k8sDeleteTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
+        k8sTaskHelper.getExecutionLogCallback(k8sDeleteTaskParameters, FetchFiles), steadyStateTimeoutInMillis);
     if (!success) {
       return k8sTaskHelper.getK8sTaskExecutionResponse(
           K8sDeleteResponse.builder().build(), CommandExecutionStatus.FAILURE);

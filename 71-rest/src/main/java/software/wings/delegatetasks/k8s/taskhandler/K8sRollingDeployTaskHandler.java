@@ -98,10 +98,11 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
     releaseName = k8sRollingDeployTaskParameters.getReleaseName();
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
+    long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
 
     boolean success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
         k8sRollingDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
-        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, FetchFiles));
+        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, FetchFiles), steadyStateTimeoutInMillis);
     if (!success) {
       return getFailureResponse();
     }
@@ -117,9 +118,6 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     if (!success) {
       return getFailureResponse();
     }
-
-    long steadyStateTimeoutInMillis =
-        getTimeoutMillisFromMinutes(k8sRollingDeployTaskParameters.getTimeoutIntervalInMin());
 
     List<K8sPod> existingPodList = getPods(steadyStateTimeoutInMillis);
 

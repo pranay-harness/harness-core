@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.sm.StateType.K8S_APPLY;
+import static software.wings.sm.states.k8s.K8sStateHelper.getSafeTimeoutInMillis;
 
 import com.google.inject.Inject;
 
@@ -99,7 +100,7 @@ public class K8sApplyState extends State implements K8sStateExecutor {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    return k8sStateHelper.executeWrapperWithManifest(this, context);
+    return k8sStateHelper.executeWrapperWithManifest(this, context, getSafeTimeoutInMillis(getTimeoutMillis()));
   }
 
   @Override

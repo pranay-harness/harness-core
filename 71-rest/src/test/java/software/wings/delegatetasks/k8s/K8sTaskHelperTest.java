@@ -959,7 +959,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
                 .gitFileConfig(
                     GitFileConfig.builder().filePath("dir/file").branch("master").connectorId("git-connector").build())
                 .build(),
-            "./dir", logCallback))
+            "./dir", logCallback, LONG_TIMEOUT_INTERVAL))
         .isTrue();
 
     verify(mockGitService, times(1))
@@ -980,7 +980,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
                 .gitFileConfig(
                     GitFileConfig.builder().filePath("dir/file").branch("master").connectorId("git-connector").build())
                 .build(),
-            "./dir", logCallback))
+            "./dir", logCallback, LONG_TIMEOUT_INTERVAL))
         .isFalse();
     reset(mockGitService);
     reset(mockEncryptionService);
@@ -994,20 +994,20 @@ public class K8sTaskHelperTest extends WingsBaseTest {
                                                                    .manifestStoreTypes(StoreType.HelmChartRepo)
                                                                    .helmChartConfigParams(helmChartConfigParams)
                                                                    .build(),
-                   "dir", logCallback))
+                   "dir", logCallback, LONG_TIMEOUT_INTERVAL))
         .isTrue();
 
     verify(mockHelmTaskHelper, times(1)).printHelmChartInfoInExecutionLogs(helmChartConfigParams, logCallback);
-    verify(mockHelmTaskHelper, times(1)).downloadChartFiles(eq(helmChartConfigParams), eq("dir"));
+    verify(mockHelmTaskHelper, times(1)).downloadChartFiles(eq(helmChartConfigParams), eq("dir"), anyLong());
 
     doThrow(new RuntimeException())
         .when(mockHelmTaskHelper)
-        .downloadChartFiles(any(HelmChartConfigParams.class), anyString());
+        .downloadChartFiles(any(HelmChartConfigParams.class), anyString(), anyLong());
     assertThat(spyHelper.fetchManifestFilesAndWriteToDirectory(K8sDelegateManifestConfig.builder()
                                                                    .manifestStoreTypes(StoreType.HelmChartRepo)
                                                                    .helmChartConfigParams(helmChartConfigParams)
                                                                    .build(),
-                   "dir", logCallback))
+                   "dir", logCallback, LONG_TIMEOUT_INTERVAL))
         .isFalse();
   }
 
@@ -1017,7 +1017,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
     manifestFiles.add(prepareValuesYamlFile());
     boolean success = helper.fetchManifestFilesAndWriteToDirectory(
         K8sDelegateManifestConfig.builder().manifestStoreTypes(Local).manifestFiles(manifestFiles).build(),
-        manifestFileDirectory, logCallback);
+        manifestFileDirectory, logCallback, LONG_TIMEOUT_INTERVAL);
     assertThat(success).isTrue();
     assertThat(Arrays.stream(new File(manifestFileDirectory).listFiles())
                    .filter(file -> file.length() > 0)
@@ -1031,7 +1031,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
                                                                 .manifestFiles(asList(prepareValuesYamlFile()))
                                                                 .manifestStoreTypes(Local)
                                                                 .build(),
-                   manifestFileDirectory, logCallback))
+                   manifestFileDirectory, logCallback, LONG_TIMEOUT_INTERVAL))
         .isTrue();
 
     // invalid manifest files directory
@@ -1039,7 +1039,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
                                                                 .manifestStoreTypes(Local)
                                                                 .manifestFiles(prepareSomeCorrectManifestFiles())
                                                                 .build(),
-                   "", logCallback))
+                   "", logCallback, LONG_TIMEOUT_INTERVAL))
         .isFalse();
   }
 

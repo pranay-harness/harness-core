@@ -8,6 +8,7 @@ import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.spy;
@@ -165,7 +166,7 @@ public class K8sApplyStateTest extends WingsBaseTest {
   public void testExec() {
     k8sApplyState.execute(context);
     verify(k8sStateHelper, times(1))
-        .executeWrapperWithManifest(any(K8sStateExecutor.class), any(ExecutionContext.class));
+        .executeWrapperWithManifest(any(K8sStateExecutor.class), any(ExecutionContext.class), anyLong());
   }
 
   @Test

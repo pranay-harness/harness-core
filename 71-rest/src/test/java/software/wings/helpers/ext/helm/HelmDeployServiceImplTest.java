@@ -706,10 +706,11 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                                   .build())
             .build();
 
-    helmDeployService.fetchChartRepo(request);
+    helmDeployService.fetchChartRepo(request, LONG_TIMEOUT_INTERVAL);
 
     verify(helmTaskHelper, times(1))
-        .downloadChartFiles(chartConfigParamsArgumentCaptor.capture(), stringArgumentCaptor.capture());
+        .downloadChartFiles(
+            chartConfigParamsArgumentCaptor.capture(), stringArgumentCaptor.capture(), eq(LONG_TIMEOUT_INTERVAL));
 
     HelmChartConfigParams helmChartConfigParams = chartConfigParamsArgumentCaptor.getValue();
     String directory = stringArgumentCaptor.getValue();
@@ -888,7 +889,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
             .sourceRepoConfig(K8sDelegateManifestConfig.builder().manifestStoreTypes(StoreType.Local).build())
             .build();
 
-    assertThatThrownBy(() -> spyHelmDeployService.fetchRepo(helmInstallCommandRequest))
+    assertThatThrownBy(() -> spyHelmDeployService.fetchRepo(helmInstallCommandRequest, LONG_TIMEOUT_INTERVAL))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Unsupported store type");
   }
@@ -900,7 +901,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
             .build();
     doNothing().when(spyHelmDeployService).fetchSourceRepo(helmInstallCommandRequest);
 
-    spyHelmDeployService.fetchRepo(helmInstallCommandRequest);
+    spyHelmDeployService.fetchRepo(helmInstallCommandRequest, LONG_TIMEOUT_INTERVAL);
 
     verify(spyHelmDeployService, times(1)).fetchSourceRepo(helmInstallCommandRequest);
   }
@@ -910,11 +911,11 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
         HelmInstallCommandRequest.builder()
             .sourceRepoConfig(K8sDelegateManifestConfig.builder().manifestStoreTypes(StoreType.HelmChartRepo).build())
             .build();
-    doNothing().when(spyHelmDeployService).fetchChartRepo(helmInstallCommandRequest);
+    doNothing().when(spyHelmDeployService).fetchChartRepo(helmInstallCommandRequest, LONG_TIMEOUT_INTERVAL);
 
-    spyHelmDeployService.fetchRepo(helmInstallCommandRequest);
+    spyHelmDeployService.fetchRepo(helmInstallCommandRequest, LONG_TIMEOUT_INTERVAL);
 
-    verify(spyHelmDeployService, times(1)).fetchChartRepo(helmInstallCommandRequest);
+    verify(spyHelmDeployService, times(1)).fetchChartRepo(helmInstallCommandRequest, LONG_TIMEOUT_INTERVAL);
   }
 
   @Test
@@ -1016,7 +1017,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
             .executionLogCallback(executionLogCallback)
             .activityId("test")
             .build();
-    helmDeployService.fetchInlineChartUrl(helmInstallCommandRequest);
+    helmDeployService.fetchInlineChartUrl(helmInstallCommandRequest, LONG_TIMEOUT_INTERVAL);
     verify(executionLogCallback, times(1)).saveExecutionLog("Helm Chart Repo checked-out locally");
 
     String workingDir = replace(WORKING_DIR, "${ACTIVITY_ID}", helmInstallCommandRequest.getActivityId());
@@ -1036,7 +1037,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
             .activityId("test")
             .build();
 
-    helmDeployService.fetchInlineChartUrl(helmInstallCommandRequest);
+    helmDeployService.fetchInlineChartUrl(helmInstallCommandRequest, LONG_TIMEOUT_INTERVAL);
     verify(executionLogCallback, times(1)).saveExecutionLog("Helm Chart Repo checked-out locally");
 
     String workingDir = replace(WORKING_DIR, "${ACTIVITY_ID}", helmInstallCommandRequest.getActivityId());
@@ -1055,7 +1056,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
             .activityId("test")
             .build();
     try {
-      helmDeployService.fetchInlineChartUrl(helmInstallCommandRequest);
+      helmDeployService.fetchInlineChartUrl(helmInstallCommandRequest, LONG_TIMEOUT_INTERVAL);
     } catch (InvalidRequestException invalidRequestException) {
       assertThat(invalidRequestException.getMessage())
           .isEqualTo("Bad chart name specified, please specify in the following format: repo/chartName");

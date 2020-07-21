@@ -94,10 +94,11 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     releaseName = k8sCanaryDeployTaskParameters.getReleaseName();
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
+    final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
 
     boolean success = k8sTaskHelper.fetchManifestFilesAndWriteToDirectory(
         k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory,
-        getLogCallBack(k8sCanaryDeployTaskParameters, FetchFiles));
+        getLogCallBack(k8sCanaryDeployTaskParameters, FetchFiles), timeoutInMillis);
     if (!success) {
       return getFailureResponse();
     }
@@ -132,9 +133,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
       return getFailureResponse();
     }
 
-    long steadyStateTimeoutInMillis =
-        getTimeoutMillisFromMinutes(k8sCanaryDeployTaskParameters.getTimeoutIntervalInMin());
-    List<K8sPod> allPods = getAllPods(steadyStateTimeoutInMillis);
+    List<K8sPod> allPods = getAllPods(timeoutInMillis);
     HelmChartInfo helmChartInfo = k8sTaskHelper.getHelmChartDetails(
         k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory);
 

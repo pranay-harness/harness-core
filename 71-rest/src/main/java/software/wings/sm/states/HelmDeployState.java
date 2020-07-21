@@ -23,6 +23,7 @@ import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACE
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.StateType.HELM_DEPLOY;
 import static software.wings.sm.StateType.HELM_ROLLBACK;
+import static software.wings.sm.states.k8s.K8sStateHelper.getSafeTimeoutInMillis;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -148,7 +149,6 @@ import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -239,12 +239,6 @@ public class HelmDeployState extends State {
     return true;
   }
 
-  protected long getSafeTimeout() {
-    return getTimeoutMillis() != null && getTimeoutMillis() > 0
-        ? getTimeoutMillis()
-        : Duration.ofMinutes(DEFAULT_STEADY_STATE_TIMEOUT).toMillis();
-  }
-
   protected ExecutionResponse executeInternal(ExecutionContext context) throws InterruptedException {
     boolean valuesInGit = false;
     boolean valuesInHelmChartRepo = false;
@@ -332,7 +326,7 @@ public class HelmDeployState extends State {
             .namespace(containerServiceParams.getNamespace())
             .containerServiceParams(containerServiceParams)
             .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
-            .timeoutInMillis(getSafeTimeout())
+            .timeoutInMillis(getSafeTimeoutInMillis(getTimeoutMillis()))
             .repoName(repoName)
             .gitConfig(gitConfig)
             .encryptedDataDetails(encryptedDataDetails)
@@ -884,7 +878,7 @@ public class HelmDeployState extends State {
                       .async(true)
                       .taskType(HELM_COMMAND_TASK.name())
                       .parameters(new Object[] {commandRequest})
-                      .timeout(getSafeTimeout())
+                      .timeout(getSafeTimeoutInMillis(getTimeoutMillis()))
                       .expressionFunctorToken(expressionFunctorToken)
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())

@@ -129,7 +129,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
 
       fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
-      prepareRepoAndCharts(commandRequest);
+      prepareRepoAndCharts(commandRequest, commandRequest.getTimeoutInMillis());
 
       printHelmChartKubernetesResources(commandRequest);
 
@@ -266,7 +266,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
   }
 
-  private void prepareRepoAndCharts(HelmCommandRequest commandRequest) throws Exception {
+  private void prepareRepoAndCharts(HelmCommandRequest commandRequest, long timeoutInMillis) throws Exception {
     K8sDelegateManifestConfig repoConfig = commandRequest.getRepoConfig();
     if (repoConfig == null) {
       addRepoForCommand(commandRequest);
@@ -284,21 +284,21 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           commandRequest.isK8SteadyStateCheckEnabled(), commandRequest.getContainerServiceParams(),
           (ExecutionLogCallback) commandRequest.getExecutionLogCallback());
       if (useK8sSteadyStateCheck) {
-        fetchInlineChartUrl(commandRequest);
+        fetchInlineChartUrl(commandRequest, timeoutInMillis);
       }
     } else {
-      fetchRepo(commandRequest);
+      fetchRepo(commandRequest, timeoutInMillis);
     }
   }
 
-  void fetchRepo(HelmCommandRequest commandRequest) throws Exception {
+  void fetchRepo(HelmCommandRequest commandRequest, long timeoutInMillis) throws Exception {
     K8sDelegateManifestConfig repoConfig = commandRequest.getRepoConfig();
     switch (repoConfig.getManifestStoreTypes()) {
       case HelmSourceRepo:
         fetchSourceRepo(commandRequest);
         break;
       case HelmChartRepo:
-        fetchChartRepo(commandRequest);
+        fetchChartRepo(commandRequest, timeoutInMillis);
         break;
       default:
         throw new InvalidRequestException("Unsupported store type: " + repoConfig.getManifestStoreTypes(), USER);
@@ -306,11 +306,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @VisibleForTesting
-  void fetchInlineChartUrl(HelmCommandRequest commandRequest) throws Exception {
+  void fetchInlineChartUrl(HelmCommandRequest commandRequest, long timeoutInMillis) throws Exception {
     HelmChartSpecification helmChartSpecification = commandRequest.getChartSpecification();
     String workingDirectory = Paths.get(getWorkingDirectory(commandRequest)).toString();
 
-    helmTaskHelper.downloadChartFiles(helmChartSpecification, workingDirectory, commandRequest);
+    helmTaskHelper.downloadChartFiles(helmChartSpecification, workingDirectory, commandRequest, timeoutInMillis);
     String chartName = isBlank(helmChartSpecification.getChartUrl())
         ? excludeRepoNameFromChartName(helmChartSpecification.getChartName())
         : helmChartSpecification.getChartName();
@@ -330,11 +330,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @VisibleForTesting
-  void fetchChartRepo(HelmCommandRequest commandRequest) throws Exception {
+  void fetchChartRepo(HelmCommandRequest commandRequest, long timeoutInMillis) throws Exception {
     HelmChartConfigParams helmChartConfigParams = commandRequest.getRepoConfig().getHelmChartConfigParams();
     String workingDirectory = Paths.get(getWorkingDirectory(commandRequest)).toString();
 
-    helmTaskHelper.downloadChartFiles(helmChartConfigParams, workingDirectory);
+    helmTaskHelper.downloadChartFiles(helmChartConfigParams, workingDirectory, timeoutInMillis);
     commandRequest.setWorkingDir(Paths.get(workingDirectory, helmChartConfigParams.getChartName()).toString());
 
     commandRequest.getExecutionLogCallback().saveExecutionLog("Helm Chart Repo checked-out locally");
@@ -458,7 +458,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
       if (useK8sSteadyStateCheck) {
         fetchValuesYamlFromGitRepo(commandRequest, executionLogCallback);
-        prepareRepoAndCharts(commandRequest);
+        prepareRepoAndCharts(commandRequest, commandRequest.getTimeoutInMillis());
       }
 
       executionLogCallback =
