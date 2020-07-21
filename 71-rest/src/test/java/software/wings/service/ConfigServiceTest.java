@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,14 +12,17 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.FILE_NAME;
+import static software.wings.utils.WingsTestConstants.PARENT;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
@@ -44,11 +48,14 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
+import software.wings.beans.EntityVersion;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.auth.ConfigFileAuthHandler;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -78,7 +85,9 @@ public class ConfigServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private ConfigFileAuthHandler configFileAuthHandler;
+  @Mock private AppService appService;
 
+  @Inject @InjectMocks private EntityVersionService entityVersionService;
   @Inject @InjectMocks private ConfigService configService;
   private InputStream inputStream;
 
@@ -93,6 +102,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
     when(query.get()).thenReturn(ConfigFile.builder().build());
+    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
   }
 
   /**
@@ -140,6 +150,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
         .thenReturn(aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build());
     when(serviceTemplateService.exist(APP_ID, TEMPLATE_ID)).thenReturn(true);
+
     ConfigFile configFile = ConfigFile.builder()
                                 .envId(ENV_ID)
                                 .entityType(EntityType.SERVICE_TEMPLATE)
@@ -398,5 +409,14 @@ public class ConfigServiceTest extends WingsBaseTest {
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> configService.validateAndResolveFilePath("/config"))
         .withMessage(INVALID_ARGUMENT.name());
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldSaveEntityVersionWithAccountId() throws Exception {
+    EntityVersion entityVersion = entityVersionService.newEntityVersion(
+        APP_ID, EntityType.ENVIRONMENT, ENTITY_ID, PARENT, EntityVersion.ChangeType.CREATED, "Data");
+    assertThat(entityVersion.getAccountId()).isEqualTo(ACCOUNT_ID);
   }
 }

@@ -34,6 +34,7 @@ public class EntityVersionCollection extends EntityVersion {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String accountId;
 
     private Builder() {}
 
@@ -106,6 +107,11 @@ public class EntityVersionCollection extends EntityVersion {
       return this;
     }
 
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     public Builder but() {
       return anEntityVersionCollection()
           .withEntityType(entityType)
@@ -120,7 +126,8 @@ public class EntityVersionCollection extends EntityVersion {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withAccountId(accountId);
     }
 
     public EntityVersionCollection build() {
@@ -138,6 +145,7 @@ public class EntityVersionCollection extends EntityVersion {
       entityVersionCollection.setCreatedAt(createdAt);
       entityVersionCollection.setLastUpdatedBy(lastUpdatedBy);
       entityVersionCollection.setLastUpdatedAt(lastUpdatedAt);
+      entityVersionCollection.setAccountId(accountId);
       return entityVersionCollection;
     }
   }

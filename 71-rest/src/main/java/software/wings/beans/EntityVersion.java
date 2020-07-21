@@ -2,8 +2,10 @@ package software.wings.beans;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import software.wings.beans.EntityVersion.EntityVersionKeys;
@@ -11,6 +13,7 @@ import software.wings.beans.EntityVersion.EntityVersionKeys;
 /**
  * Created by rishi on 10/13/16.
  */
+@Data
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "EntityVersionKeys")
 
@@ -38,6 +41,7 @@ public class EntityVersion extends Base {
   private String entityParentUuid;
   private String entityData;
   private Integer version;
+  @FdIndex private String accountId;
 
   public EntityType getEntityType() {
     return entityType;
@@ -141,6 +145,7 @@ public class EntityVersion extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String accountId;
 
     private Builder() {}
 
@@ -213,6 +218,11 @@ public class EntityVersion extends Base {
       return this;
     }
 
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     public Builder but() {
       return anEntityVersion()
           .withEntityType(entityType)
@@ -227,7 +237,8 @@ public class EntityVersion extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withAccountId(accountId);
     }
 
     public EntityVersion build() {
@@ -245,6 +256,7 @@ public class EntityVersion extends Base {
       entityVersion.setCreatedAt(createdAt);
       entityVersion.setLastUpdatedBy(lastUpdatedBy);
       entityVersion.setLastUpdatedAt(lastUpdatedAt);
+      entityVersion.setAccountId(accountId);
       return entityVersion;
     }
   }

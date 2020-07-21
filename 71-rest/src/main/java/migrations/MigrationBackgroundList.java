@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import lombok.experimental.UtilityClass;
 import migrations.all.AddAccountIdToCloudFormationRollBackConfig;
 import migrations.all.AddAccountIdToDeploymentEntities;
+import migrations.all.AddAccountIdToEntityVersion;
 import migrations.all.AddAccountIdToInfraDefinition;
 import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountIdToLogDataRecordsMigration;
@@ -230,6 +231,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(134, MigrateServiceNowCriteriaInWorkflows.class))
         .add(Pair.of(135, BaseMigration.class))
         .add(Pair.of(136, RemoveDeletedAppIdsFromUserGroups.class))
+        .add(Pair.of(137, AddAccountIdToEntityVersion.class))
         .build();
   }
 }

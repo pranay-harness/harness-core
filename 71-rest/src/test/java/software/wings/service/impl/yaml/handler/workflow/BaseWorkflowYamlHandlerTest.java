@@ -51,6 +51,7 @@ import software.wings.service.impl.yaml.handler.variable.VariableYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -103,6 +104,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   @InjectMocks @Inject protected WorkflowServiceHelper workflowServiceHelper;
   @InjectMocks @Inject private SSHKeyDataProvider sshKeyDataProvider;
   @InjectMocks @Inject private WinRmConnectionAttributesDataProvider winRmConnectionAttributesDataProvider;
+  @InjectMocks @Inject private EntityVersionService entityVersionService;
 
   protected void setup(String yamlFilePath, String workflowName) {
     when(appService.getAppByName(anyString(), anyString()))

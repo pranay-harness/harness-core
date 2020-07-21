@@ -64,6 +64,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
@@ -92,6 +93,7 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private ServiceResourceServiceImpl serviceResourceService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @InjectMocks private ServiceResourceServiceImpl mockedServiceResourceService;
+  @InjectMocks @Inject private EntityVersionService entityVersionService;
   @Mock private ResourceLookupService resourceLookupService;
   private ServiceResourceServiceImpl spyServiceResourceService = spy(new ServiceResourceServiceImpl());
 
