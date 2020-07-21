@@ -3,13 +3,16 @@ package software.wings.service;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.ARTIFACTS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.SAHIL;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.BastionConnectionAttributes.Builder.aBastionConnectionAttributes;
@@ -45,10 +48,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.FakeTimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Injector;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Before;
@@ -62,6 +68,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitHelper;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
@@ -71,6 +78,9 @@ import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Host.Builder;
+import software.wings.core.local.executors.ShellExecutorConfig;
+import software.wings.core.local.executors.ShellExecutorFactory;
+import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.core.ssh.executors.ScriptSshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
@@ -82,6 +92,7 @@ import software.wings.utils.WingsTestConstants;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 
 /**
  * Created by anubhaw on 5/31/16.
@@ -119,6 +130,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Mock private SshExecutorFactory sshExecutorFactory;
   @Mock private ScriptSshExecutor scriptSshExecutor;
+  @Mock private ScriptProcessExecutor scriptProcessExecutor;
+  @Mock private ShellExecutorFactory shellExecutorFactory;
 
   @Mock private Injector injector;
   /**
@@ -147,9 +160,6 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Before
   public void setupMocks() {
     on(sshCommandUnitExecutorService).set("timeLimiter", new FakeTimeLimiter());
-    /*when(settingsService.get(HOST_CONN_ATTR_ID)).thenReturn(HOST_CONN_ATTR_PWD);
-    when(settingsService.get(BASTION_CONN_ATTR_ID)).thenReturn(BASTION_HOST_ATTR);
-    when(settingsService.get(HOST_CONN_ATTR_KEY_ID)).thenReturn(HOST_CONN_ATTR_KEY);*/
   }
 
   /**
@@ -176,6 +186,136 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     sshCommandUnitExecutorService.execute(
         EXEC_COMMAND_UNIT, commandExecutionContextBuider.but().hostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
     verify(sshExecutorFactory).getExecutor(expectedSshConfig);
+  }
+
+  /**
+   * Should create password based ssh config and executeOnDelegate as true
+   */
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void shouldCreatePasswordBasedSshConfigAndExecuteOnDelegate() {
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
+    ShellExecutorConfig expectedSshConfig = ShellExecutorConfig.builder()
+                                                .appId(APP_ID)
+                                                .executionId(ACTIVITY_ID)
+                                                .accountId(ACCOUNT_ID)
+                                                .environment(new HashMap<>())
+                                                .build();
+
+    when(shellExecutorFactory.getExecutor(expectedSshConfig)).thenReturn(scriptProcessExecutor);
+    sshCommandUnitExecutorService.execute(EXEC_COMMAND_UNIT,
+        commandExecutionContextBuider.but()
+            .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
+            .executeOnDelegate(true)
+            .build());
+    verify(shellExecutorFactory).getExecutor(expectedSshConfig);
+  }
+
+  /**
+   * test execute when it throws TimeOutException
+   */
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testExecuteTimeoutException() {
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
+    ShellExecutorConfig expectedSshConfig = ShellExecutorConfig.builder()
+                                                .appId(APP_ID)
+                                                .executionId(ACTIVITY_ID)
+                                                .accountId(ACCOUNT_ID)
+                                                .environment(new HashMap<>())
+                                                .build();
+    CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
+                                                          .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
+                                                          .executeOnDelegate(true)
+                                                          .build();
+    CommandUnit commandUnit = mock(CommandUnit.class);
+    when(commandUnit.execute(any())).thenThrow(new UncheckedTimeoutException());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> sshCommandUnitExecutorService.execute(commandUnit, commandExecutionContext))
+        .withMessage("SOCKET_CONNECTION_TIMEOUT");
+    verify(shellExecutorFactory).getExecutor(expectedSshConfig);
+  }
+
+  /**
+   * test execute when it throws WingsException
+   */
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testExecuteWingsException() {
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
+    ShellExecutorConfig expectedSshConfig = ShellExecutorConfig.builder()
+                                                .appId(APP_ID)
+                                                .executionId(ACTIVITY_ID)
+                                                .accountId(ACCOUNT_ID)
+                                                .environment(new HashMap<>())
+                                                .build();
+    CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
+                                                          .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
+                                                          .executeOnDelegate(true)
+                                                          .build();
+    CommandUnit commandUnit = mock(CommandUnit.class);
+    when(commandUnit.execute(any()))
+        .thenThrow(new WingsException(ErrorCode.INVALID_KEY, "Test error", WingsException.USER_SRE));
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> sshCommandUnitExecutorService.execute(commandUnit, commandExecutionContext))
+        .withMessage("Test error");
+    verify(shellExecutorFactory).getExecutor(expectedSshConfig);
+  }
+
+  /**
+   * test execute when it throws WingsException
+   */
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testExecuteWingsExceptionWithoutMessageList() {
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
+    ShellExecutorConfig expectedSshConfig = ShellExecutorConfig.builder()
+                                                .appId(APP_ID)
+                                                .executionId(ACTIVITY_ID)
+                                                .accountId(ACCOUNT_ID)
+                                                .environment(new HashMap<>())
+                                                .build();
+    CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
+                                                          .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
+                                                          .executeOnDelegate(true)
+                                                          .build();
+    CommandUnit commandUnit = mock(CommandUnit.class);
+    when(commandUnit.execute(any()))
+        .thenThrow(new WingsException(ErrorCode.INVALID_KEY, "Test error", WingsException.SRE));
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> sshCommandUnitExecutorService.execute(commandUnit, commandExecutionContext))
+        .withMessage("Test error");
+    verify(shellExecutorFactory).getExecutor(expectedSshConfig);
+  }
+
+  /**
+   * test execute when it throws NullPointerException
+   */
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testExecuteWingsNullPointerException() {
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
+    ShellExecutorConfig expectedSshConfig = ShellExecutorConfig.builder()
+                                                .appId(APP_ID)
+                                                .executionId(ACTIVITY_ID)
+                                                .accountId(ACCOUNT_ID)
+                                                .environment(new HashMap<>())
+                                                .build();
+    CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
+                                                          .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
+                                                          .executeOnDelegate(true)
+                                                          .build();
+    CommandUnit commandUnit = mock(CommandUnit.class);
+    when(commandUnit.execute(any())).thenThrow(new NullPointerException());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> sshCommandUnitExecutorService.execute(commandUnit, commandExecutionContext))
+        .withMessage("UNKNOWN_ERROR");
+    verify(shellExecutorFactory).getExecutor(expectedSshConfig);
   }
 
   /**
