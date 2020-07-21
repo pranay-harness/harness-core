@@ -1134,9 +1134,12 @@ public class K8sStateHelper {
 
   private void saveK8sHelmDeploymentElement(
       ExecutionContext context, K8sHelmDeploymentElement k8SHelmDeploymentElement) {
-    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
-                                   .name(K8sHelmDeploymentElement.SWEEPING_OUTPUT_NAME)
-                                   .value(k8SHelmDeploymentElement)
-                                   .build());
+    logger.info("Storing {} in sweeping output", K8sHelmDeploymentElement.SWEEPING_OUTPUT_NAME);
+    // Just ensure that element exists in Sweeping output. The element could be already stored by another running in
+    // parallel step
+    sweepingOutputService.ensure(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+                                     .name(K8sHelmDeploymentElement.SWEEPING_OUTPUT_NAME)
+                                     .value(k8SHelmDeploymentElement)
+                                     .build());
   }
 }
