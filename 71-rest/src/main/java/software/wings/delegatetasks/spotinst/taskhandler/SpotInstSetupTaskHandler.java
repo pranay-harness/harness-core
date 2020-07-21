@@ -4,6 +4,7 @@ import static com.google.api.client.util.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.LogLevel.INFO;
 import static io.harness.spotinst.model.SpotInstConstants.COMPUTE;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_IMAGE_CONFIG;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_USER_DATA_CONFIG;
@@ -17,7 +18,6 @@ import static io.harness.spotinst.model.SpotInstConstants.elastiGroupsToKeep;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;

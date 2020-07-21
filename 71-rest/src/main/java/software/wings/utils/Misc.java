@@ -7,7 +7,7 @@ import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
-import software.wings.beans.Log.LogLevel;
+import io.harness.logging.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 

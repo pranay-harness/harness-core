@@ -3,6 +3,7 @@ package software.wings.delegatetasks.spotinst.taskhandler;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -21,7 +22,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.service.impl.aws.model.AwsConstants.FORWARD_LISTENER_ACTION;
 
 import com.google.common.util.concurrent.TimeLimiter;

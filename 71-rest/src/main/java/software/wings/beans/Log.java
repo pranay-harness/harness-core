@@ -23,6 +23,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.logging.LogLevel;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -161,8 +162,6 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
 
     return log;
   }
-
-  public enum LogLevel { DEBUG, INFO, WARN, ERROR, FATAL }
 
   static final String END_MARK = "#==#";
   static final String NO_FORMATTING = "\033[0m";

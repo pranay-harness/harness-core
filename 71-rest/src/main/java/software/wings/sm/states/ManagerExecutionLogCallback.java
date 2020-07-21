@@ -3,10 +3,10 @@ package software.wings.sm.states;
 import com.google.common.base.Objects;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Log;
 import software.wings.beans.Log.Builder;
-import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.LogCallback;
 import software.wings.service.intfc.LogService;
 

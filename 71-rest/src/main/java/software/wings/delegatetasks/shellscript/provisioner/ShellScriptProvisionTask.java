@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.shellscript.provisioner;
 
+import static io.harness.logging.LogLevel.INFO;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;

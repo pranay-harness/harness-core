@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.k8s.model.Release.Status.Succeeded;
+import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -20,7 +21,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.buildProcessResult;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.buildRelease;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.buildReleaseMultipleManagedWorkloads;

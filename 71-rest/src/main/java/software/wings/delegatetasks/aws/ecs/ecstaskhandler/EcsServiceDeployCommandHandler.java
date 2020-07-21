@@ -2,7 +2,7 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.exception.ExceptionUtils.getMessage;
-import static software.wings.beans.Log.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.ERROR;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 

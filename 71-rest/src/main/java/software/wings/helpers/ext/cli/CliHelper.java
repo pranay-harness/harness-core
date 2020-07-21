@@ -7,11 +7,11 @@ import static io.harness.delegate.command.CommandExecutionResult.CommandExecutio
 import com.google.inject.Singleton;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
-import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
 
 import java.io.File;

@@ -3,8 +3,8 @@ package software.wings.utils;
 import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.Log.Builder.aLog;
 
+import io.harness.logging.LogLevel;
 import lombok.Builder;
-import software.wings.beans.Log.LogLevel;
 import software.wings.delegatetasks.DelegateLogService;
 
 import java.io.Writer;

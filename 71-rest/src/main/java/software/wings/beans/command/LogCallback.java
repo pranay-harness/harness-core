@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.beans.Log.LogLevel;
+import io.harness.logging.LogLevel;
 
 public interface LogCallback {
   void saveExecutionLog(String line);
