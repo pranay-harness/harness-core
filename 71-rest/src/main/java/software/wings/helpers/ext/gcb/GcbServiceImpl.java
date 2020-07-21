@@ -39,6 +39,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class GcbServiceImpl implements GcbService {
   private static final String GCP_ERROR_MESSAGE = "Invalid Google Cloud Platform credentials.";
+  public static final String GCB_BASE_URL = "https://cloudbuild.googleapis.com/";
+  public static final String GCS_BASE_URL = "https://storage.googleapis.com/storage/";
   private final GcpHelperService gcpHelperService;
 
   @Inject
@@ -51,7 +53,7 @@ public class GcbServiceImpl implements GcbService {
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, GcbBuildDetails buildParams) {
     try {
       Response<BuildOperationDetails> response =
-          getRestClient(GcbRestClient.class, GcbRestClient.baseUrl)
+          getRestClient(GcbRestClient.class, GCB_BASE_URL)
               .createBuild(getBasicAuthHeader(gcpConfig, encryptionDetails), getProjectId(gcpConfig), buildParams)
               .execute();
       return response.body();
@@ -65,7 +67,7 @@ public class GcbServiceImpl implements GcbService {
   public GcbBuildDetails getBuild(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String buildId) {
     try {
       Response<GcbBuildDetails> response =
-          getRestClient(GcbRestClient.class, GcbRestClient.baseUrl)
+          getRestClient(GcbRestClient.class, GCB_BASE_URL)
               .getBuild(getBasicAuthHeader(gcpConfig, encryptionDetails), getProjectId(gcpConfig), buildId)
               .execute();
       if (!response.isSuccessful()) {
@@ -81,7 +83,7 @@ public class GcbServiceImpl implements GcbService {
   public BuildOperationDetails runTrigger(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String triggerId, RepoSource repoSource) {
     try {
-      Response<BuildOperationDetails> response = getRestClient(GcbRestClient.class, GcbRestClient.baseUrl)
+      Response<BuildOperationDetails> response = getRestClient(GcbRestClient.class, GCB_BASE_URL)
                                                      .runTrigger(getBasicAuthHeader(gcpConfig, encryptionDetails),
                                                          getProjectId(gcpConfig), triggerId, repoSource)
                                                      .execute();
@@ -100,7 +102,7 @@ public class GcbServiceImpl implements GcbService {
     try {
       final String bucket = bucketName.replace("gs://", "");
       Response<ResponseBody> response =
-          getRestClient(GcsRestClient.class, GcsRestClient.baseUrl)
+          getRestClient(GcsRestClient.class, GCS_BASE_URL)
               .fetchLogs(getBasicAuthHeader(gcpConfig, encryptionDetails), bucket, fileName)
               .execute();
       return response.body().string();
@@ -113,7 +115,7 @@ public class GcbServiceImpl implements GcbService {
   public List<GcbTrigger> getAllTriggers(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       Response<GcbBuildTriggers> response =
-          getRestClient(GcbRestClient.class, GcbRestClient.baseUrl)
+          getRestClient(GcbRestClient.class, GCB_BASE_URL)
               .getAllTriggers(getBasicAuthHeader(gcpConfig, encryptionDetails), getProjectId(gcpConfig))
               .execute();
       return response.body().getTriggers();

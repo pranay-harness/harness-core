@@ -16,8 +16,6 @@ import software.wings.helpers.ext.gcb.models.RepoSource;
 
 @OwnedBy(CDC)
 public interface GcbRestClient {
-  String baseUrl = "https://cloudbuild.googleapis.com/";
-
   @POST("v1/projects/{projectId}/triggers/{triggerId}:run")
   Call<BuildOperationDetails> runTrigger(@Header("Authorization") String bearerAuthHeader,
       @Path(value = "projectId") String projectID, @Path(value = "triggerId") String triggerID,

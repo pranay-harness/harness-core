@@ -11,9 +11,7 @@ import retrofit2.http.Path;
 
 @OwnedBy(CDC)
 public interface GcsRestClient {
-  String baseUrl = "https://storage.googleapis.com/";
-
-  @GET("storage/v1/b/{bucketName}/o/log-{fileName}.txt?alt=media")
+  @GET("v1/b/{bucketName}/o/log-{fileName}.txt?alt=media")
   Call<ResponseBody> fetchLogs(@Header("Authorization") String bearerAuthHeader,
       @Path(value = "bucketName") String bucket, @Path(value = "fileName") String buildId);
 }

@@ -1,19 +1,17 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.network.Http.connectableHttpUrl;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
-import software.wings.helpers.ext.gcb.GcbRestClient;
-import software.wings.helpers.ext.gcs.GcsRestClient;
+import software.wings.helpers.ext.gcb.GcbServiceImpl;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
-/**
- * Created by brett on 11/2/17
- */
 @OwnedBy(CDC)
 public class GcbValidation extends AbstractDelegateValidateTask {
   public GcbValidation(
@@ -23,6 +21,15 @@ public class GcbValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return Arrays.asList(GcbRestClient.baseUrl, GcsRestClient.baseUrl);
+    return Arrays.asList(GcbServiceImpl.GCB_BASE_URL, GcbServiceImpl.GCS_BASE_URL);
+  }
+
+  @Override
+  public List<DelegateConnectionResult> validate() {
+    return getCriteria()
+        .stream()
+        .map(criteria
+            -> DelegateConnectionResult.builder().criteria(criteria).validated(connectableHttpUrl(criteria)).build())
+        .collect(Collectors.toList());
   }
 }
