@@ -38,17 +38,17 @@ public class ManagerExecutor {
     if (!isHealthy()) {
       final Path config = Paths.get(Project.rootDirectory(clazz), "71-rest", "config.yml");
       FileUtils.modifyConfigFile(new File(config.toString()));
-      executeLocalManager(clazz, alpnPath, alpnJarPath);
+      executeLocalManager("server", clazz, alpnPath, alpnJarPath);
     }
   }
 
-  private static void executeLocalManager(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
+  public static void executeLocalManager(String verb, Class clazz, String alpnPath, String alpnJarPath)
+      throws IOException {
     if (failedAlready) {
       return;
     }
 
     String directoryPath = Project.rootDirectory(clazz);
-    final File directory = new File(directoryPath);
     final File lockfile = new File(directoryPath, "manager");
 
     if (FileIo.acquireLock(lockfile, ofMinutes(2))) {
@@ -56,49 +56,7 @@ public class ManagerExecutor {
         if (isHealthy()) {
           return;
         }
-        logger.info("Execute the manager from {}", directory);
-        final Path jar = Paths.get(directory.getPath(), "71-rest", "target", "rest-capsule.jar");
-        final Path config = Paths.get(directory.getPath(), "71-rest", "modified_config.yml");
-        String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
-
-        if (!new File(alpn).exists()) {
-          // if maven repo is not in the home dir, this might be a jenkins job, check in the special location.
-          alpn = alpnPath + alpnJarPath;
-          if (!new File(alpn).exists()) {
-            throw new RuntimeException("Missing alpn file");
-          }
-        }
-
-        for (int i = 0; i < 10; i++) {
-          logger.info("***");
-        }
-
-        List<String> command = new ArrayList<>();
-        command.add("java");
-        command.add("-Xms1024m");
-
-        addGCVMOptions(command);
-
-        command.add("-Dfile.encoding=UTF-8");
-        command.add("-Xbootclasspath/p:" + alpn);
-
-        addJacocoAgentVM(jar, command);
-
-        addJar(jar, command);
-        command.add("server");
-        addConfig(config, command);
-
-        logger.info(Strings.join(command, " "));
-
-        ProcessExecutor processExecutor = new ProcessExecutor();
-        processExecutor.directory(directory);
-        processExecutor.command(command);
-
-        processExecutor.redirectOutput(System.out);
-        processExecutor.redirectError(System.err);
-        //        processExecutor.redirectOutput(null);
-        //        processExecutor.redirectError(null);
-
+        ProcessExecutor processExecutor = managerProcessExecutor(clazz, verb, alpnPath, alpnJarPath);
         processExecutor.start();
 
         Poller.pollFor(ofMinutes(2), ofSeconds(2), ManagerExecutor::isHealthy);
@@ -109,6 +67,54 @@ public class ManagerExecutor {
         FileIo.releaseLock(lockfile);
       }
     }
+  }
+
+  public static ProcessExecutor managerProcessExecutor(Class clazz, String verb, String alpnPath, String alpnJarPath) {
+    String directoryPath = Project.rootDirectory(clazz);
+    final File directory = new File(directoryPath);
+
+    logger.info("Execute the manager from {}", directory);
+
+    final Path jar = Paths.get(directory.getPath(), "71-rest", "target", "rest-capsule.jar");
+    final Path config = Paths.get(directory.getPath(), "71-rest", "modified_config.yml");
+    String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
+
+    if (!new File(alpn).exists()) {
+      // if maven repo is not in the home dir, this might be a jenkins job, check in the special location.
+      alpn = alpnPath + alpnJarPath;
+      if (!new File(alpn).exists()) {
+        throw new RuntimeException("Missing alpn file");
+      }
+    }
+
+    for (int i = 0; i < 10; i++) {
+      logger.info("***");
+    }
+
+    List<String> command = new ArrayList<>();
+    command.add("java");
+    command.add("-Xms1024m");
+
+    addGCVMOptions(command);
+
+    command.add("-Dfile.encoding=UTF-8");
+    command.add("-Xbootclasspath/p:" + alpn);
+
+    addJacocoAgentVM(jar, command);
+
+    addJar(jar, command);
+    command.add(verb);
+    addConfig(config, command);
+
+    logger.info(Strings.join(command, " "));
+
+    ProcessExecutor processExecutor = new ProcessExecutor();
+    processExecutor.directory(directory);
+    processExecutor.command(command);
+
+    processExecutor.redirectOutput(System.out);
+    processExecutor.redirectError(System.err);
+    return processExecutor;
   }
 
   private static Exception previous = new Exception();
