@@ -82,6 +82,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
   private int linesCount;
   @NotNull private LogLevel logLevel;
   @NotNull private CommandExecutionStatus commandExecutionStatus;
+  @FdIndex private String accountId;
 
   @JsonIgnore
   @SchemaIgnore
@@ -132,6 +133,10 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
         logEntityBuilder.set("validUntil", validUntil.getTime());
       }
 
+      if (isNotEmpty(getAccountId())) {
+        logEntityBuilder.set("accountId", getAccountId());
+      }
+
       return logEntityBuilder.build();
     } catch (IOException e) {
       throw new WingsException(e);
@@ -148,6 +153,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
                         .withHostName(readString(entity, "hostName"))
                         .withAppId(readString(entity, "appId"))
                         .withCommandUnitName(readString(entity, "commandUnitName"))
+                        .withAccountId(readString(entity, "accountId"))
                         .build();
     try {
       byte[] compressedLogLine = readBlob(entity, "compressedLogLine");
@@ -240,6 +246,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String accountId;
 
     private Builder() {}
 
@@ -385,6 +392,17 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
     }
 
     /**
+     * With last updated at builder.
+     *
+     * @param accountId accountId
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -402,7 +420,8 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withAccountId(accountId);
     }
 
     /**
@@ -424,6 +443,7 @@ public class Log implements GoogleDataStoreAware, PersistentEntity, UuidAware, C
       log.setCreatedAt(createdAt);
       log.setLastUpdatedBy(lastUpdatedBy);
       log.setLastUpdatedAt(lastUpdatedAt);
+      log.setAccountId(accountId);
       return log;
     }
   }
