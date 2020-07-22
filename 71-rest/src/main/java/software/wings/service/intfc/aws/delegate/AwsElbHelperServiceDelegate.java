@@ -1,5 +1,8 @@
 package software.wings.service.intfc.aws.delegate;
 
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancing;
+import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
@@ -27,6 +30,8 @@ public interface AwsElbHelperServiceDelegate {
 
   List<AwsLoadBalancerDetails> listElasticLoadBalancerDetails(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
+
+  AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClientV2(Regions region, AwsConfig awsConfig);
 
   List<String> listClassicLoadBalancers(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
@@ -73,6 +78,8 @@ public interface AwsElbHelperServiceDelegate {
   void updateListenersForBGDeployment(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region,
       ExecutionLogCallback logCallback);
+  void modifyListenerRule(AmazonElasticLoadBalancing client, String listenerArn, String listenerRuleArn,
+      String targetGroupArn, ExecutionLogCallback executionLogCallback);
   void modifySpecificRule(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String ruleArn, String targetGroupArn, ExecutionLogCallback logCallback);
   TargetGroup fetchTargetGroupForSpecificRules(AwsElbListener listener, String ruleArn,

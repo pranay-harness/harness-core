@@ -20,8 +20,11 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancing;
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
+import com.amazonaws.services.elasticloadbalancingv2.model.Rule;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
@@ -184,10 +187,22 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
         prodListener, details.getProdRuleArn(), logCallback, awsConfig, region, emptyList());
     if (details.getStageTargetGroupArn().equals(currentProdTargetGroup.getTargetGroupArn())) {
       logCallback.saveExecutionLog("Routes were updated. Swapping routes in Rollback");
-      awsElbHelperServiceDelegate.modifySpecificRule(
-          awsConfig, emptyList(), region, details.getProdRuleArn(), details.getProdTargetGroupArn(), logCallback);
-      awsElbHelperServiceDelegate.modifySpecificRule(
-          awsConfig, emptyList(), region, details.getStageRuleArn(), details.getStageTargetGroupArn(), logCallback);
+
+      List<Rule> prodRules = awsElbHelperServiceDelegate.getListenerRuleFromListenerRuleArn(
+          awsConfig, emptyList(), region, details.getProdRuleArn(), logCallback);
+      List<Rule> stageRules = awsElbHelperServiceDelegate.getListenerRuleFromListenerRuleArn(
+          awsConfig, emptyList(), region, details.getStageRuleArn(), logCallback);
+
+      String prodTargetGroup = prodRules.get(0).getActions().get(0).getTargetGroupArn();
+      String stageTargetGroup = stageRules.get(0).getActions().get(0).getTargetGroupArn();
+
+      AmazonElasticLoadBalancing client =
+          awsElbHelperServiceDelegate.getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+
+      awsElbHelperServiceDelegate.modifyListenerRule(
+          client, details.getProdListenerArn(), details.getProdRuleArn(), prodTargetGroup, logCallback);
+      awsElbHelperServiceDelegate.modifyListenerRule(
+          client, details.getStageListenerArn(), details.getStageRuleArn(), stageTargetGroup, logCallback);
     }
   }
 

@@ -109,7 +109,7 @@ public class AwsElbHelperServiceDelegateImpl
   }
 
   @VisibleForTesting
-  AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClientV2(Regions region, AwsConfig awsConfig) {
+  public AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClientV2(Regions region, AwsConfig awsConfig) {
     com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder builder =
         com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder.standard().withRegion(
             region);
@@ -780,7 +780,7 @@ public class AwsElbHelperServiceDelegateImpl
     return result.getListeners().get(0);
   }
 
-  private void modifyListenerRule(AmazonElasticLoadBalancing client, String listenerArn, String listenerRuleArn,
+  public void modifyListenerRule(AmazonElasticLoadBalancing client, String listenerArn, String listenerRuleArn,
       String targetGroupArn, ExecutionLogCallback executionLogCallback) {
     boolean isDefaultRule = checkIfIsDefaultRule(client, listenerArn, listenerRuleArn);
 
@@ -889,10 +889,18 @@ public class AwsElbHelperServiceDelegateImpl
 
     lbDetailsForBGDeployments.forEach(lbDetailsForBGDeployment -> {
       if (lbDetailsForBGDeployment.isUseSpecificRules()) {
-        modifySpecificRule(client, lbDetailsForBGDeployment.getProdRuleArn(),
-            lbDetailsForBGDeployment.getStageTargetGroupArn(), logCallback);
-        modifySpecificRule(client, lbDetailsForBGDeployment.getStageRuleArn(),
-            lbDetailsForBGDeployment.getProdTargetGroupArn(), logCallback);
+        List<Rule> prodRules = getListenerRuleFromListenerRuleArn(
+            awsConfig, encryptionDetails, region, lbDetailsForBGDeployment.getProdRuleArn(), logCallback);
+        List<Rule> stageRules = getListenerRuleFromListenerRuleArn(
+            awsConfig, encryptionDetails, region, lbDetailsForBGDeployment.getStageRuleArn(), logCallback);
+
+        String prodTargetGroup = prodRules.get(0).getActions().get(0).getTargetGroupArn();
+        String stageTargetGroup = stageRules.get(0).getActions().get(0).getTargetGroupArn();
+
+        modifyListenerRule(client, lbDetailsForBGDeployment.getProdListenerArn(),
+            lbDetailsForBGDeployment.getProdRuleArn(), stageTargetGroup, logCallback);
+        modifyListenerRule(client, lbDetailsForBGDeployment.getStageListenerArn(),
+            lbDetailsForBGDeployment.getStageRuleArn(), prodTargetGroup, logCallback);
       } else {
         tracker.trackELBCall("Describe Listeners");
         DescribeListenersResult prodListenerResult = client.describeListeners(
