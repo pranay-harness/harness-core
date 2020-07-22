@@ -893,17 +893,18 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
     // We just load the yaml to see if its well formed.
     LinkedHashMap<String, Object> load = (LinkedHashMap<String, Object>) yamlObj.load(yamlString);
+    if (load.containsKey("phases")) {
+      List<String> phaseNames = ((List<LinkedHashMap<String, String>>) load.get("phases"))
+                                    .stream()
+                                    .map(map -> map.get("name"))
+                                    .collect(toList());
 
-    List<String> phaseNames = ((List<LinkedHashMap<String, String>>) load.get("phases"))
-                                  .stream()
-                                  .map(map -> map.get("name"))
-                                  .collect(toList());
-
-    phaseNames.forEach(name -> {
-      if (name.contains(".")) {
-        throw new InvalidYamlNameException("Invalid phase name [" + name + "]. Dots are not permitted");
-      }
-    });
+      phaseNames.forEach(name -> {
+        if (name.contains(".")) {
+          throw new InvalidYamlNameException("Invalid phase name [" + name + "]. Dots are not permitted");
+        }
+      });
+    }
   }
 
   /**
