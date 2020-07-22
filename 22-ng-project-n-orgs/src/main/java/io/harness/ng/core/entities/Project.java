@@ -35,8 +35,9 @@ import javax.validation.constraints.Size;
     fields =
     { @Field(ProjectKeys.accountIdentifier)
       , @Field(ProjectKeys.orgIdentifier), @Field(ProjectKeys.identifier) })
-@CdIndex(name = "accountIdentifierIndex", fields = { @Field(ProjectKeys.accountIdentifier) })
-@CdIndex(name = "modulesIndex", fields = { @Field(ProjectKeys.modules) })
+@CdIndex(name = "acctModulesOrgIdx",
+    fields = { @Field(ProjectKeys.accountIdentifier)
+               , @Field(ProjectKeys.modules), @Field(ProjectKeys.orgIdentifier) })
 @Entity(value = "projects", noClassnameStored = true)
 @Document("projects")
 @TypeAlias("projects")
