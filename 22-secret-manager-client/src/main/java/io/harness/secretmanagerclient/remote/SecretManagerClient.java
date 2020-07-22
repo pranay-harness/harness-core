@@ -1,10 +1,13 @@
 package io.harness.secretmanagerclient.remote;
 
 import io.harness.beans.PageResponse;
-import io.harness.encryption.SecretType;
 import io.harness.rest.RestResponse;
+import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.NGSecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.kryo.KryoRequest;
 import io.harness.serializer.kryo.KryoResponse;
@@ -17,58 +20,80 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.SecretManagerConfig;
 
 import java.util.List;
 
 public interface SecretManagerClient {
   String ACCOUNT_ID_KEY = "accountId";
-  String SECRET_ID_KEY = "secretId";
-  String USER_ID_KEY = "userId";
+  String ACCOUNT_IDENTIFIER_KEY = "accountIdentifier";
+  String ORG_IDENTIFIER_KEY = "orgIdentifier";
+  String PROJECT_IDENTIFIER_KEY = "projectIdentifier";
 
   String SECRETS_API = "/api/ng/secrets";
   String SECRET_MANAGERS_API = "/api/ng/secret-managers";
 
-  @GET(SECRETS_API + "/{secretId}")
-  Call<RestResponse<EncryptedDataDTO>> getSecretById(@Path(value = SECRET_ID_KEY) String secretId,
-      @Query(value = ACCOUNT_ID_KEY) String accountId, @Query(value = USER_ID_KEY) String userId);
-
+  // create secret
   @POST(SECRETS_API)
-  Call<RestResponse<String>> createSecret(@Query(value = ACCOUNT_ID_KEY) String accountId,
-      @Query(value = "local") boolean localMode, @Body SecretTextDTO secretText);
+  Call<RestResponse<String>> createSecret(@Query(value = "local") boolean localMode, @Body SecretTextDTO secretText);
 
-  @PUT(SECRETS_API)
-  Call<RestResponse<Boolean>> updateSecret(@Query(value = ACCOUNT_ID_KEY) String accountId,
-      @Query(value = "uuid") String uuId, @Body SecretTextDTO secretText);
+  // get secret
+  @GET(SECRETS_API + "/{identifier}")
+  Call<RestResponse<EncryptedDataDTO>> getSecret(@Path(value = "identifier") String identifier,
+      @Query(value = ACCOUNT_IDENTIFIER_KEY) String accountIdentifier, @Query(ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @Query(PROJECT_IDENTIFIER_KEY) String projectIdentifier);
 
-  @DELETE(SECRETS_API)
-  Call<RestResponse<Boolean>> deleteSecret(
-      @Query(value = ACCOUNT_ID_KEY) String accountId, @Query(value = "uuid") String uuId);
-
+  // list secrets
   @GET(SECRETS_API)
-  Call<RestResponse<PageResponse<EncryptedDataDTO>>> getSecretsForAccountByType(
-      @Query("accountId") String accountId, @Query("type") SecretType secretType);
+  Call<RestResponse<PageResponse<EncryptedDataDTO>>> listSecrets(
+      @Query(value = ACCOUNT_IDENTIFIER_KEY) String accountIdentifier, @Query(ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @Query(PROJECT_IDENTIFIER_KEY) String projectIdentifier, @Query("type") SecretType secretType);
 
-  @GET(SECRET_MANAGERS_API)
-  @KryoResponse
-  Call<RestResponse<List<SecretManagerConfig>>> getSecretManagersForAccount(
-      @Query(value = ACCOUNT_ID_KEY) String accountId);
+  // update secret
+  // TODO{phoenikx} take updatesecrettextdto
+  @PUT(SECRETS_API + "/{identifier}")
+  Call<RestResponse<Boolean>> updateSecret(@Path("identifier") String identifier,
+      @Query(value = ACCOUNT_IDENTIFIER_KEY) String accountIdentifier, @Query(ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @Query(PROJECT_IDENTIFIER_KEY) String projectIdentifier, @Body SecretTextUpdateDTO secretText);
 
-  @GET(SECRET_MANAGERS_API + "/{kmsId}")
-  @KryoResponse
-  Call<RestResponse<SecretManagerConfig>> getSecretManager(
-      @Path("kmsId") String kmsId, @Query("accountId") String accountId);
+  // delete secret
+  @DELETE(SECRETS_API + "/{identifier}")
+  Call<RestResponse<Boolean>> deleteSecret(@Path(value = "identifier") String identifier,
+      @Query(value = ACCOUNT_IDENTIFIER_KEY) String accountIdentifier, @Query(ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @Query(PROJECT_IDENTIFIER_KEY) String projectIdentifier);
 
-  @POST(SECRET_MANAGERS_API)
-  @KryoRequest
-  Call<RestResponse<String>> createOrUpdateSecretManager(
-      @Query("accountId") String accountId, @Body SecretManagerConfig secretManagerConfig);
-
-  @DELETE(SECRET_MANAGERS_API + "/{kmsId}")
-  Call<RestResponse<Boolean>> deleteSecretManager(@Path("kmsId") String kmsId, @Query("accountId") String accountId);
-
+  // get encryption details
   @POST(SecretManagerClient.SECRETS_API + "/encryption-details")
   @KryoRequest
   @KryoResponse
   Call<RestResponse<List<EncryptedDataDetail>>> getEncryptionDetails(@Body EncryptableSetting encryptableSetting);
+
+  // create secret manager
+  @POST(SECRET_MANAGERS_API)
+  Call<RestResponse<String>> createSecretManager(@Body NGSecretManagerConfigDTO secretManagerConfig);
+
+  // update secret manager
+  @PUT(SECRET_MANAGERS_API + "/{identifier}")
+  Call<RestResponse<String>> updateSecretManager(@Path("identifier") String identifier,
+      @Query(ACCOUNT_IDENTIFIER_KEY) String accountIdentifier, @Query(ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @Query(PROJECT_IDENTIFIER_KEY) String projectIdentifier,
+      @Body NGSecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO);
+
+  // list secret managers
+  @GET(SECRET_MANAGERS_API)
+  Call<RestResponse<List<NGSecretManagerConfigDTO>>> listSecretManagers(
+      @Query(value = ACCOUNT_IDENTIFIER_KEY) String accountIdentifier,
+      @Query(value = ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @Query(value = PROJECT_IDENTIFIER_KEY) String projectIdentifier);
+
+  // get secret manager
+  @GET(SECRET_MANAGERS_API + "/{identifier}")
+  Call<RestResponse<NGSecretManagerConfigDTO>> getSecretManager(@Path("identifier") String identifier,
+      @Query(ACCOUNT_IDENTIFIER_KEY) String accountIdentifier, @Query(ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @Query(PROJECT_IDENTIFIER_KEY) String projectIdentifier);
+
+  // delete secret manager
+  @DELETE(SECRET_MANAGERS_API + "/{identifier}")
+  Call<RestResponse<Boolean>> deleteSecretManager(@Path("identifier") String identifier,
+      @Query(ACCOUNT_IDENTIFIER_KEY) String accountIdentifier, @Query(ORG_IDENTIFIER_KEY) String orgIdentifier,
+      @Query(PROJECT_IDENTIFIER_KEY) String projectIdentifier);
 }

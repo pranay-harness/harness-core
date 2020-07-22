@@ -12,6 +12,9 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.mongo.index.FdIndex;
+import io.harness.secretmanagerclient.NGSecretMetadata;
+import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.NGVaultConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -108,5 +111,29 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
 
   public AccessType getAccessType() {
     return isNotEmpty(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;
+  }
+
+  @Override
+  public NGSecretManagerConfigDTO toDTO() {
+    NGVaultConfigDTO ngVaultConfigDTO = NGVaultConfigDTO.builder()
+                                            .uuid(getUuid())
+                                            .encryptionType(getEncryptionType())
+                                            .name(getName())
+                                            .isDefault(isDefault())
+                                            .isReadOnly(isReadOnly())
+                                            .basePath(getBasePath())
+                                            .secretEngineName(getSecretEngineName())
+                                            .renewIntervalHours(getRenewIntervalHours())
+                                            .vaultUrl(getVaultUrl())
+                                            .build();
+    NGSecretMetadata ngMetadata = getNgMetadata();
+    if (ngMetadata != null) {
+      ngVaultConfigDTO.setAccountIdentifier(ngMetadata.getAccountIdentifier());
+      ngVaultConfigDTO.setOrgIdentifier(ngMetadata.getOrgIdentifier());
+      ngVaultConfigDTO.setProjectIdentifier(ngMetadata.getProjectIdentifier());
+      ngVaultConfigDTO.setIdentifier(ngMetadata.getIdentifier());
+      ngVaultConfigDTO.setTags(ngMetadata.getTags());
+    }
+    return ngVaultConfigDTO;
   }
 }

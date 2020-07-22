@@ -7,6 +7,7 @@ import com.github.reinert.jjschema.Attributes;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
+import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptionType;
 import lombok.Builder;
@@ -80,5 +81,10 @@ public class CustomSecretsManagerConfig extends SecretManagerConfig implements E
   @Override
   public EncryptionType getEncryptionType() {
     return EncryptionType.CUSTOM;
+  }
+
+  @Override
+  public NGSecretManagerConfigDTO toDTO() {
+    throw new UnsupportedOperationException();
   }
 }

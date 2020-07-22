@@ -5,10 +5,11 @@ import static io.harness.secretmanagerclient.utils.SecretManagerClientUtils.getR
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.encryption.SecretType;
 import io.harness.ng.core.services.api.NGSecretService;
+import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,27 +23,34 @@ public class NGSecretServiceImpl implements NGSecretService {
   private final SecretManagerClient secretManagerClient;
 
   @Override
-  public EncryptedDataDTO getSecretById(String accountId, String id) {
-    return getResponse(secretManagerClient.getSecretById(id, accountId, null));
+  public EncryptedDataDTO getSecret(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return getResponse(secretManagerClient.getSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
   }
 
   @Override
-  public String createSecret(String accountId, boolean localMode, SecretTextDTO secretText) {
-    return getResponse(secretManagerClient.createSecret(accountId, localMode, secretText));
+  public List<EncryptedDataDTO> listSecrets(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, SecretType secretType) {
+    return getResponse(
+        secretManagerClient.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, secretType));
   }
 
   @Override
-  public boolean updateSecret(String accountId, String uuId, SecretTextDTO secretText) {
-    return getResponse(secretManagerClient.updateSecret(accountId, uuId, secretText));
+  public String createSecret(boolean localMode, SecretTextDTO dto) {
+    return getResponse(secretManagerClient.createSecret(localMode, dto));
   }
 
   @Override
-  public boolean deleteSecret(String accountId, String uuId) {
-    return getResponse(secretManagerClient.deleteSecret(accountId, uuId));
+  public boolean updateSecret(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier, SecretTextUpdateDTO dto) {
+    return getResponse(
+        secretManagerClient.updateSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier, dto));
   }
 
   @Override
-  public List<EncryptedDataDTO> getSecretsByType(String accountId, SecretType secretType) {
-    return getResponse(secretManagerClient.getSecretsForAccountByType(accountId, secretType));
+  public boolean deleteSecret(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return getResponse(
+        secretManagerClient.deleteSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
   }
 }

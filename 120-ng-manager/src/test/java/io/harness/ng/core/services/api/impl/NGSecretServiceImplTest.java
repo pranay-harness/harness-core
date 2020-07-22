@@ -9,8 +9,6 @@ import static org.apache.http.HttpStatus.SC_BAD_GATEWAY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -20,6 +18,7 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.secretmanagerclient.exception.SecretManagementClientException;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import okhttp3.MediaType;
@@ -36,10 +35,12 @@ import java.io.IOException;
 public class NGSecretServiceImplTest extends BaseTest {
   private SecretManagerClient secretManagerClient;
   private NGSecretServiceImpl ngSecretService;
-  private final String SECRET_ID = "SECRET_ID";
+  private final String SECRET_IDENTIFIER = "SECRET_ID";
   private final String SECRET_NAME = "SECRET_NAME";
-  private final String ACCOUNT_ID = "ACCOUNT_ID";
-  private final String UUID = "UUID";
+  private final String ACCOUNT_IDENTIFIER = "ACCOUNT";
+  private final String PROJECT_IDENTIFIER = "PROJECT";
+  private final String ORG_IDENTIFIER = "ORG";
+  private final String IDENTIFIER = "UUID";
 
   @Before
   public void doSetup() {
@@ -56,10 +57,11 @@ public class NGSecretServiceImplTest extends BaseTest {
     Response<RestResponse<EncryptedDataDTO>> response = Response.success(restResponse);
     Call<RestResponse<EncryptedDataDTO>> restResponseCall = mock(Call.class);
 
-    when(secretManagerClient.getSecretById(any(), any(), any())).thenReturn(restResponseCall);
+    when(secretManagerClient.getSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    EncryptedDataDTO returnedEncryptedData = ngSecretService.getSecretById(ACCOUNT_ID, SECRET_ID);
+    EncryptedDataDTO returnedEncryptedData =
+        ngSecretService.getSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
     assertThat(returnedEncryptedData).isNotNull();
     assertThat(returnedEncryptedData.getName()).isEqualTo(SECRET_NAME);
   }
@@ -87,12 +89,12 @@ public class NGSecretServiceImplTest extends BaseTest {
 
     Call<RestResponse<EncryptedDataDTO>> restResponseCall = mock(Call.class);
 
-    when(secretManagerClient.getSecretById(anyString(), anyString(), anyString())).thenReturn(restResponseCall);
+    when(secretManagerClient.getSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.getSecretById(ACCOUNT_ID, SECRET_ID);
+      ngSecretService.getSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
     } catch (SecretManagementClientException sme) {
       exceptionThrown = true;
       assertThat(sme.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -105,12 +107,12 @@ public class NGSecretServiceImplTest extends BaseTest {
   @Category(UnitTests.class)
   public void testGetSecretById_For_Exception() throws IOException {
     Call<RestResponse<EncryptedDataDTO>> restResponseCall = mock(Call.class);
-    when(secretManagerClient.getSecretById(any(), any(), any())).thenReturn(restResponseCall);
+    when(secretManagerClient.getSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenThrow(new IOException());
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.getSecretById(ACCOUNT_ID, SECRET_ID);
+      ngSecretService.getSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SECRET_IDENTIFIER);
     } catch (SecretManagementClientException sme) {
       exceptionThrown = true;
       assertThat(sme.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -128,11 +130,10 @@ public class NGSecretServiceImplTest extends BaseTest {
     Call<RestResponse<String>> restResponseCall = mock(Call.class);
     SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
-    when(secretManagerClient.createSecret(eq(ACCOUNT_ID), anyBoolean(), eq(randomSecretText)))
-        .thenReturn(restResponseCall);
+    when(secretManagerClient.createSecret(anyBoolean(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    String returnedSecretEncryptedId = ngSecretService.createSecret(ACCOUNT_ID, true, randomSecretText);
+    String returnedSecretEncryptedId = ngSecretService.createSecret(true, randomSecretText);
     assertThat(returnedSecretEncryptedId).isNotNull();
     assertThat(returnedSecretEncryptedId).isEqualTo(secretEncryptionId);
   }
@@ -160,13 +161,12 @@ public class NGSecretServiceImplTest extends BaseTest {
     Call<RestResponse<String>> restResponseCall = (Call<RestResponse<String>>) mock(Call.class);
     SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
-    when(secretManagerClient.createSecret(eq(ACCOUNT_ID), anyBoolean(), eq(randomSecretText)))
-        .thenReturn(restResponseCall);
+    when(secretManagerClient.createSecret(anyBoolean(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.createSecret(ACCOUNT_ID, true, randomSecretText);
+      ngSecretService.createSecret(true, randomSecretText);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -181,13 +181,12 @@ public class NGSecretServiceImplTest extends BaseTest {
     Call<RestResponse<String>> restResponseCall = (Call<RestResponse<String>>) mock(Call.class);
     SecretTextDTO randomSecretText = random(SecretTextDTO.class);
 
-    when(secretManagerClient.createSecret(eq(ACCOUNT_ID), anyBoolean(), eq(randomSecretText)))
-        .thenReturn(restResponseCall);
+    when(secretManagerClient.createSecret(anyBoolean(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenThrow(new IOException());
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.createSecret(ACCOUNT_ID, true, randomSecretText);
+      ngSecretService.createSecret(true, randomSecretText);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -202,12 +201,13 @@ public class NGSecretServiceImplTest extends BaseTest {
     RestResponse<Boolean> restResponse = new RestResponse<>(true);
     Response<RestResponse<Boolean>> response = Response.success(restResponse);
     Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
-    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
+    SecretTextUpdateDTO randomSecretText = random(SecretTextUpdateDTO.class);
 
-    when(secretManagerClient.updateSecret(ACCOUNT_ID, UUID, randomSecretText)).thenReturn(restResponseCall);
+    when(secretManagerClient.updateSecret(any(), any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    Boolean returnedResult = ngSecretService.updateSecret(ACCOUNT_ID, UUID, randomSecretText);
+    Boolean returnedResult = ngSecretService.updateSecret(
+        ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
     assertThat(returnedResult).isNotNull();
     assertThat(returnedResult).isEqualTo(true);
   }
@@ -233,14 +233,15 @@ public class NGSecretServiceImplTest extends BaseTest {
       }
     });
     Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
-    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
+    SecretTextUpdateDTO randomSecretText = random(SecretTextUpdateDTO.class);
 
-    when(secretManagerClient.updateSecret(ACCOUNT_ID, UUID, randomSecretText)).thenReturn(restResponseCall);
+    when(secretManagerClient.updateSecret(any(), any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.updateSecret(ACCOUNT_ID, UUID, randomSecretText);
+      ngSecretService.updateSecret(
+          ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -253,14 +254,15 @@ public class NGSecretServiceImplTest extends BaseTest {
   @Category(UnitTests.class)
   public void testUpdateSecret_For_Exception() throws IOException {
     Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
-    SecretTextDTO randomSecretText = random(SecretTextDTO.class);
+    SecretTextUpdateDTO randomSecretText = random(SecretTextUpdateDTO.class);
 
-    when(secretManagerClient.updateSecret(ACCOUNT_ID, UUID, randomSecretText)).thenReturn(restResponseCall);
+    when(secretManagerClient.updateSecret(any(), any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenThrow(new IOException());
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.updateSecret(ACCOUNT_ID, UUID, randomSecretText);
+      ngSecretService.updateSecret(
+          ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER, randomSecretText);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -276,10 +278,11 @@ public class NGSecretServiceImplTest extends BaseTest {
     Response<RestResponse<Boolean>> response = Response.success(restResponse);
     Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
 
-    when(secretManagerClient.deleteSecret(ACCOUNT_ID, UUID)).thenReturn(restResponseCall);
+    when(secretManagerClient.deleteSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
-    Boolean returnedResult = ngSecretService.deleteSecret(ACCOUNT_ID, UUID);
+    Boolean returnedResult =
+        ngSecretService.deleteSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
     assertThat(returnedResult).isNotNull();
     assertThat(returnedResult).isEqualTo(true);
   }
@@ -306,12 +309,12 @@ public class NGSecretServiceImplTest extends BaseTest {
     });
     Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
 
-    when(secretManagerClient.deleteSecret(ACCOUNT_ID, UUID)).thenReturn(restResponseCall);
+    when(secretManagerClient.deleteSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenReturn(response);
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.deleteSecret(ACCOUNT_ID, UUID);
+      ngSecretService.deleteSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);
@@ -325,12 +328,12 @@ public class NGSecretServiceImplTest extends BaseTest {
   public void testDeleteSecret_For_Exception() throws IOException {
     Call<RestResponse<Boolean>> restResponseCall = (Call<RestResponse<Boolean>>) mock(Call.class);
 
-    when(secretManagerClient.deleteSecret(ACCOUNT_ID, UUID)).thenReturn(restResponseCall);
+    when(secretManagerClient.deleteSecret(any(), any(), any(), any())).thenReturn(restResponseCall);
     when(restResponseCall.execute()).thenThrow(new IOException());
 
     boolean exceptionThrown = false;
     try {
-      ngSecretService.deleteSecret(ACCOUNT_ID, UUID);
+      ngSecretService.deleteSecret(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, IDENTIFIER);
     } catch (SecretManagementClientException ex) {
       exceptionThrown = true;
       assertThat(ex.getCode()).isEqualTo(SECRET_MANAGEMENT_ERROR);

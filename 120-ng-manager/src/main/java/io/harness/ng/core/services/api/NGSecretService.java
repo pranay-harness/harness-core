@@ -1,19 +1,23 @@
 package io.harness.ng.core.services.api;
 
-import io.harness.encryption.SecretType;
+import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 
 import java.util.List;
 
 public interface NGSecretService {
-  EncryptedDataDTO getSecretById(String accountId, String id);
+  EncryptedDataDTO getSecret(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
-  List<EncryptedDataDTO> getSecretsByType(String accountId, SecretType secretType);
+  List<EncryptedDataDTO> listSecrets(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, SecretType secretType);
 
-  String createSecret(String accountId, boolean localMode, SecretTextDTO secretText);
+  String createSecret(boolean localMode, SecretTextDTO dto);
 
-  boolean updateSecret(String accountId, String uuid, SecretTextDTO secretText);
+  boolean updateSecret(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+      SecretTextUpdateDTO dto);
 
-  boolean deleteSecret(String accountId, String uuId);
+  boolean deleteSecret(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }

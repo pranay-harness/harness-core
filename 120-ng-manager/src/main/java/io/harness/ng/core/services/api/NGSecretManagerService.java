@@ -1,15 +1,22 @@
 package io.harness.ng.core.services.api;
 
-import software.wings.beans.SecretManagerConfig;
+import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.NGSecretManagerConfigUpdateDTO;
 
 import java.util.List;
 
 public interface NGSecretManagerService {
-  String saveOrUpdateSecretManager(String accountId, SecretManagerConfig secretManagerConfig);
+  String createSecretManager(NGSecretManagerConfigDTO secretManagerConfigDTO);
 
-  boolean deleteSecretManager(String accountId, String kmsId);
+  String updateSecretManager(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier, NGSecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO);
 
-  List<SecretManagerConfig> listSecretManagers(String accountId);
+  boolean deleteSecretManager(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
-  SecretManagerConfig getSecretManager(String accountId, String kmsId);
+  List<NGSecretManagerConfigDTO> listSecretManagers(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
+  NGSecretManagerConfigDTO getSecretManager(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }

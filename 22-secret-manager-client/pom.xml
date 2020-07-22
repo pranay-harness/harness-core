@@ -32,7 +32,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-sm-core</artifactId>
+            <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>

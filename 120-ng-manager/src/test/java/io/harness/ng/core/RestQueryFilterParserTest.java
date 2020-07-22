@@ -15,7 +15,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class RestQueryFilterParserTest extends BaseTest {
+public class RestQueryFilterParserTest {
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
