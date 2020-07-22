@@ -268,4 +268,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   Set<String> getWorkflowExecutionsWithTag(String accountId, String key, String value);
 
   List<String> runningExecutionsForEnvironment(String appId, String environmentId);
+
+  List<String> getRunningExecutionsForInfraDef(@NotEmpty String appId, @NotEmpty String infraDefinitionId);
 }
