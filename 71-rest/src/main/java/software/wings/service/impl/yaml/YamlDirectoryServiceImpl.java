@@ -2532,7 +2532,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case GCR:
       case ACR:
       case AMAZON_S3:
-      case GIT:
       case HTTP_HELM_REPO:
       case AMAZON_S3_HELM_REPO:
       case GCS_HELM_REPO:
@@ -2558,6 +2557,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // load balancers
       case ELB:
         sb.append(LOAD_BALANCERS_FOLDER);
+        break;
+
+        // source repo providers
+      case GIT:
+        sb.append(SOURCE_REPO_PROVIDERS_FOLDER);
         break;
 
       // verification providers
