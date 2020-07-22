@@ -27,6 +27,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoConfig;
+import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -103,6 +104,9 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     configuration.getPortal().setUrl("PORTAL_URL");
     configuration.getPortal().setVerificationUrl("VERIFICATION_PATH");
     configuration.getPortal().setJwtExternalServiceSecret("JWT_EXTERNAL_SERVICE_SECRET");
+    configuration.getPortal().setJwtNextGenManagerSecret("dummy_key");
+    configuration.setOrganizationManagerClientConfig(
+        OrganizationManagerClientConfig.builder().baseUrl("http://localhost:7457/").build());
     configuration.setMongoConnectionFactory(
         MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));

@@ -36,6 +36,7 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
+import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
 import io.harness.redis.RedisConfig;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.stream.AtmosphereBroadcaster;
@@ -149,6 +150,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   private CommandLibraryServiceConfig commandLibraryServiceConfig = CommandLibraryServiceConfig.builder().build();
   @JsonProperty(value = "bugsnagApiKey") private String bugsnagApiKey;
   @JsonProperty("atmosphereBroadcaster") private AtmosphereBroadcaster atmosphereBroadcaster;
+  @JsonProperty("organizationManagerClient") private OrganizationManagerClientConfig organizationManagerClientConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

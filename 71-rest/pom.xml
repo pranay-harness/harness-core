@@ -751,6 +751,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>22-ng-project-n-orgs-client</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>23-delegate-service-driver</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

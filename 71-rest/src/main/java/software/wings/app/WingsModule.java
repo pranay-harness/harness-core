@@ -83,6 +83,7 @@ import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.notifications.AlertVisibilityCheckerImpl;
+import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -1121,6 +1122,8 @@ public class WingsModule extends DependencyModule implements ServersModule {
     install(new PerpetualTaskServiceModule());
     install(new CESetupServiceModule());
     install(new CVNextGenCommonsServiceModule());
+    install(new OrganizationManagementClientModule(
+        configuration.getOrganizationManagerClientConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
 
     // Custom Workflow Dependencies
     install(new CVNextGenCommonsServiceModule());

@@ -13,6 +13,7 @@ import static io.harness.utils.Misc.generateSecretKey;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.reflect.Modifier.isAbstract;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -62,7 +63,9 @@ import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.network.Http;
+import io.harness.ng.core.dto.CreateOrganizationDTO;
 import io.harness.observer.Subject;
+import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.PersistentEntity;
@@ -243,6 +246,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private Morphia morphia;
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private VersionInfoManager versionInfoManager;
+  @Inject private OrganizationManagerClient organizationManagerClient;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -379,6 +383,21 @@ public class AccountServiceImpl implements AccountService {
 
     enableFeatureFlags(account, fromDataGen);
     sampleDataProviderService.createK8sV2SampleApp(account);
+    createDefaultOrganization(account.getUuid());
+  }
+
+  private void createDefaultOrganization(String accountId) {
+    CreateOrganizationDTO createOrganizationDTO = new CreateOrganizationDTO();
+    createOrganizationDTO.setIdentifier("default");
+    createOrganizationDTO.setColor("blue");
+    createOrganizationDTO.setName("Default");
+    createOrganizationDTO.setTags(emptyList());
+    createOrganizationDTO.setDescription("Default Organization");
+    try {
+      organizationManagerClient.createOrganization(accountId, createOrganizationDTO).execute();
+    } catch (IOException ex) {
+      logger.info(String.format("Failed to create Default Organization for account id: [%s]", accountId), ex);
+    }
   }
 
   private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
