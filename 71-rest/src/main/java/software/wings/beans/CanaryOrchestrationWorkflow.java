@@ -24,6 +24,7 @@ import static software.wings.beans.EntityType.GIT_CONFIG;
 import static software.wings.beans.EntityType.HELM_GIT_CONFIG_ID;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.JENKINS_SERVER;
 import static software.wings.beans.EntityType.NEWRELIC_APPID;
 import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
 import static software.wings.beans.EntityType.NEWRELIC_MARKER_APPID;
@@ -623,6 +624,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         addGcpConfigVariables(reorderVariables, entityVariables);
 
         addGitConfigVariables(reorderVariables, entityVariables);
+
+        addJenkinsServerVariables(reorderVariables, entityVariables);
       }
       if (nonEntityVariables != null) {
         reorderVariables.addAll(nonEntityVariables);
@@ -670,6 +673,15 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
     }
   }
+
+  private void addJenkinsServerVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (JENKINS_SERVER == variable.obtainEntityType()) {
+        reorderVariables.add(variable);
+      }
+    }
+  }
+
   private List<Variable> getNonEntityVariables() {
     return userVariables.stream().filter(variable -> variable.obtainEntityType() == null).collect(toList());
   }

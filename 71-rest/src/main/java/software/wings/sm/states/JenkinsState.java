@@ -51,11 +51,16 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.JenkinsTaskParams;
+import software.wings.beans.template.TemplateUtils;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
@@ -102,6 +107,9 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private SecretManager secretManager;
   @Transient @Inject private SweepingOutputService sweepingOutputService;
+  @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
+  @Transient @Inject private TemplateUtils templateUtils;
+  @Transient @Inject private SettingsService settingsService;
 
   public JenkinsState(String name) {
     super(name, StateType.JENKINS.name());
@@ -219,6 +227,16 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
    * @return the execution response
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
+    String resolvedJenkinsConfigTemplate = null;
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression templateExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), JENKINS_CONFIG_ID_KEY);
+      if (templateExpression != null) {
+        resolvedJenkinsConfigTemplate =
+            templateExpressionProcessor.resolveTemplateExpression(context, templateExpression);
+        setJenkinsConfigId(resolvedJenkinsConfigTemplate);
+      }
+    }
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
@@ -229,11 +247,17 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
 
     JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId);
     if (jenkinsConfig == null) {
-      logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
-      return ExecutionResponse.builder()
-          .executionStatus(FAILED)
-          .errorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
-          .build();
+      SettingAttribute settingAttribute =
+          settingsService.getSettingAttributeByName(accountId, resolvedJenkinsConfigTemplate);
+      if (settingAttribute == null) {
+        logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
+        return ExecutionResponse.builder()
+            .executionStatus(FAILED)
+            .errorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
+            .build();
+      }
+      setJenkinsConfigId(settingAttribute.getUuid());
+      jenkinsConfig = (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId);
     }
 
     String evaluatedJobName = context.renderExpression(jobName);
@@ -316,11 +340,19 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
 
   public ExecutionResponse startJenkinsPollTask(ExecutionContext context, Map<String, ResponseData> response) {
     JenkinsExecutionResponse jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
-
+    String resolvedJenkinsConfigTemplate = null;
     if (isEmpty(jenkinsExecutionResponse.queuedBuildUrl)) {
       return ExecutionResponse.builder().async(true).executionStatus(FAILED).build();
     }
-
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression templateExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), JENKINS_CONFIG_ID_KEY);
+      if (templateExpression != null) {
+        resolvedJenkinsConfigTemplate =
+            templateExpressionProcessor.resolveTemplateExpression(context, templateExpression);
+        setJenkinsConfigId(resolvedJenkinsConfigTemplate);
+      }
+    }
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
     String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
@@ -332,11 +364,17 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
     String accountId = ((ExecutionContextImpl) context).fetchRequiredApp().getAccountId();
     JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId);
     if (jenkinsConfig == null) {
-      logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
-      return ExecutionResponse.builder()
-          .executionStatus(FAILED)
-          .errorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
-          .build();
+      SettingAttribute settingAttribute =
+          settingsService.getSettingAttributeByName(accountId, resolvedJenkinsConfigTemplate);
+      if (settingAttribute == null) {
+        logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
+        return ExecutionResponse.builder()
+            .executionStatus(FAILED)
+            .errorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
+            .build();
+      }
+      setJenkinsConfigId(settingAttribute.getUuid());
+      jenkinsConfig = (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId);
     }
     String appId = ((ExecutionContextImpl) context).fetchRequiredApp().getAppId();
     JenkinsTaskParams jenkinsTaskParams = JenkinsTaskParams.builder()

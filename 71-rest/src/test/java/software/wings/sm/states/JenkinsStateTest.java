@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -39,8 +41,13 @@ import software.wings.api.JenkinsExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
+import software.wings.beans.command.JenkinsTaskParams;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -53,6 +60,13 @@ import java.util.concurrent.TimeUnit;
 public class JenkinsStateTest extends CategoryTest {
   private static final Activity ACTIVITY_WITH_ID = Activity.builder().build();
 
+  private final JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
+                                                  .jenkinsUrl("http://jenkins")
+                                                  .username("username")
+                                                  .password("password".toCharArray())
+                                                  .accountId(ACCOUNT_ID)
+                                                  .build();
+
   static {
     ACTIVITY_WITH_ID.setUuid(ACTIVITY_ID);
   }
@@ -62,6 +76,8 @@ public class JenkinsStateTest extends CategoryTest {
   @Mock private ExecutionContextImpl executionContext;
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
+  @Mock private TemplateExpressionProcessor templateExpressionProcessor;
+  @Mock private SettingsService settingsService;
 
   @InjectMocks private JenkinsState jenkinsState = new JenkinsState("jenkins");
 
@@ -74,13 +90,7 @@ public class JenkinsStateTest extends CategoryTest {
     when(executionContext.getEnv()).thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
     when(executionContext.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).appId(APP_ID).build());
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
-    when(executionContext.getGlobalSettingValue(ACCOUNT_ID, SETTING_ID))
-        .thenReturn(JenkinsConfig.builder()
-                        .jenkinsUrl("http://jenkins")
-                        .username("username")
-                        .password("password".toCharArray())
-                        .accountId(ACCOUNT_ID)
-                        .build());
+    when(executionContext.getGlobalSettingValue(ACCOUNT_ID, SETTING_ID)).thenReturn(jenkinsConfig);
     when(executionContext.renderExpression(anyString()))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
     WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
@@ -99,6 +109,66 @@ public class JenkinsStateTest extends CategoryTest {
     assertThat(delegateTaskArgumentCaptor.getValue())
         .isNotNull()
         .hasFieldOrPropertyWithValue("data.taskType", JENKINS.name());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldExecuteWithTemplatizedJenkinsServerWhenProvidedValueIsSettingId() {
+    TemplateExpression jenkinsExp =
+        new TemplateExpression("jenkinsConfigId", "${JENKINS_SERVER}", true, null, false, null);
+    jenkinsState.setTemplateExpressions(Collections.singletonList(jenkinsExp));
+    when(templateExpressionProcessor.getTemplateExpression(jenkinsState.getTemplateExpressions(), "jenkinsConfigId"))
+        .thenReturn(jenkinsExp);
+    when(templateExpressionProcessor.resolveTemplateExpression(executionContext, jenkinsExp)).thenReturn(SETTING_ID);
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    ExecutionResponse response = jenkinsState.execute(executionContext);
+    assertThat(response).isNotNull();
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    JenkinsTaskParams params = (JenkinsTaskParams) delegateTaskArgumentCaptor.getValue().getData().getParameters()[0];
+
+    assertThat(params.getJenkinsConfig()).isEqualTo(jenkinsConfig);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldExecuteWithTemplatizedJenkinsServerWhenProvidedValueIsSettingName() {
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setUuid(SETTING_ID);
+    settingAttribute.setValue(jenkinsConfig);
+    TemplateExpression jenkinsExp =
+        new TemplateExpression("jenkinsConfigId", "${JENKINS_SERVER}", true, null, false, null);
+    jenkinsState.setTemplateExpressions(Collections.singletonList(jenkinsExp));
+    when(templateExpressionProcessor.getTemplateExpression(jenkinsState.getTemplateExpressions(), "jenkinsConfigId"))
+        .thenReturn(jenkinsExp);
+    when(templateExpressionProcessor.resolveTemplateExpression(executionContext, jenkinsExp)).thenReturn(SETTING_NAME);
+    when(settingsService.getSettingAttributeByName(ACCOUNT_ID, SETTING_NAME)).thenReturn(settingAttribute);
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    ExecutionResponse response = jenkinsState.execute(executionContext);
+    assertThat(response).isNotNull();
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    JenkinsTaskParams params = (JenkinsTaskParams) delegateTaskArgumentCaptor.getValue().getData().getParameters()[0];
+
+    assertThat(params.getJenkinsConfig()).isEqualTo(jenkinsConfig);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnExecutionResponsWithFailedStatus() {
+    TemplateExpression jenkinsExp =
+        new TemplateExpression("jenkinsConfigId", "${JENKINS_SERVER}", true, null, false, null);
+    jenkinsState.setTemplateExpressions(Collections.singletonList(jenkinsExp));
+    when(templateExpressionProcessor.getTemplateExpression(jenkinsState.getTemplateExpressions(), "jenkinsConfigId"))
+        .thenReturn(jenkinsExp);
+    when(templateExpressionProcessor.resolveTemplateExpression(executionContext, jenkinsExp)).thenReturn(SETTING_NAME);
+    when(settingsService.getSettingAttributeByName(ACCOUNT_ID, SETTING_NAME)).thenReturn(null);
+
+    ExecutionResponse response = jenkinsState.execute(executionContext);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(response.getErrorMessage())
+        .isEqualTo("Jenkins Server was deleted. Please update with an appropriate server.");
   }
 
   @Test

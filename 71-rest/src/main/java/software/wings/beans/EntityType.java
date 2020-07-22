@@ -255,5 +255,7 @@ public enum EntityType {
 
   GIT_CONFIG,
 
+  JENKINS_SERVER,
+
   SECRETS_MANAGER
 }
