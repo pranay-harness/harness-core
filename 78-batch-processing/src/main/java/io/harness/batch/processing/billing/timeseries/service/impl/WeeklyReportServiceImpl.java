@@ -34,6 +34,7 @@ import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
 import io.harness.ccm.communication.entities.CECommunications;
+import io.harness.ccm.communication.entities.CommunicationSource;
 import io.harness.ccm.communication.entities.CommunicationType;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
@@ -116,6 +117,8 @@ public class WeeklyReportServiceImpl {
   private static final String ENTITY = "ENTITY";
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String OVERVIEW_URL = "/account/%s/continuous-efficiency/overview";
+
+  public static final String COMMUNICATION_SOURCE = "COMMUNICATION_SOURCE";
 
   public void generateAndSendWeeklyReport() {
     List<Account> ceEnabledAccounts = accountShardService.getCeEnabledAccounts();
@@ -265,6 +268,8 @@ public class WeeklyReportServiceImpl {
           && costValues.get(CLUSTER_RELATED_COSTS).equals(NOT_AVAILABLE)) {
         return;
       }
+
+      costValues.put(COMMUNICATION_SOURCE, CommunicationSource.EMAIL.getName());
 
       templateHelper.populateCostDataForTemplate(templateModel, costValues);
 
