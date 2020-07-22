@@ -45,6 +45,9 @@ public class CloudProviderServiceImpl implements CloudProviderService {
 
   @Override
   public CloudProvider getK8SCloudProvider(String cloudProviderId, String providerId) {
+    if (null == providerId) {
+      return DEFAULT_CLOUD_PROVIDER;
+    }
     return cloudProviderInfoCache.get(cloudProviderId, key -> getK8SCloudProviderFromProviderId(key, providerId));
   }
 
