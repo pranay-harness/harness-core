@@ -65,6 +65,7 @@ import javax.validation.constraints.NotNull;
     fields = { @Field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId) })
 public class Trigger extends Base implements NameAccess, TagAware, ApplicationAccess {
   @NotEmpty private String name;
+  @FdIndex private String accountId;
   private String description;
   @NotNull private TriggerCondition condition;
   @Deprecated private String pipelineId;
