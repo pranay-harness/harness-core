@@ -20,8 +20,10 @@ public class GenericExceptionMapperV2 implements ExceptionMapper<Throwable> {
 
   private boolean hasExposeExceptionAnnotation() {
     return resourceInfo != null
-        && (resourceInfo.getResourceClass().isAnnotationPresent(ExposeInternalException.class)
-               || resourceInfo.getResourceMethod().isAnnotationPresent(ExposeInternalException.class));
+        && ((resourceInfo.getResourceClass() != null
+                && resourceInfo.getResourceClass().isAnnotationPresent(ExposeInternalException.class))
+               || (resourceInfo.getResourceMethod() != null
+                      && resourceInfo.getResourceMethod().isAnnotationPresent(ExposeInternalException.class)));
   }
 
   @Override

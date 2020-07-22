@@ -11,13 +11,15 @@ import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
-import io.harness.persistence.AccountAccess;
+import io.harness.ng.core.NGAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
+import io.harness.secretmanagerclient.NGSecretMetadata;
+import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTOConverter;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Update;
@@ -30,6 +32,7 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.List;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -49,7 +52,7 @@ import javax.validation.constraints.NotNull;
 @FieldNameConstants(innerTypeName = "SecretManagerConfigKeys")
 public abstract class SecretManagerConfig
     implements EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-               UpdatedByAware, PersistentRegularIterable, AccountAccess {
+               UpdatedByAware, PersistentRegularIterable, NGAccess, NGSecretManagerConfigDTOConverter {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   private EncryptionType encryptionType;
@@ -71,6 +74,8 @@ public abstract class SecretManagerConfig
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   @FdIndex private Long nextTokenRenewIteration;
+
+  private NGSecretMetadata ngMetadata;
 
   private List<String> templatizedFields;
 
@@ -101,5 +106,25 @@ public abstract class SecretManagerConfig
   @JsonIgnore
   public boolean isGlobalKms() {
     return false;
+  }
+
+  @Override
+  public String getAccountIdentifier() {
+    return Optional.of(ngMetadata).map(NGSecretMetadata::getAccountIdentifier).orElse(null);
+  }
+
+  @Override
+  public String getOrgIdentifier() {
+    return Optional.of(ngMetadata).map(NGSecretMetadata::getOrgIdentifier).orElse(null);
+  }
+
+  @Override
+  public String getProjectIdentifier() {
+    return Optional.of(ngMetadata).map(NGSecretMetadata::getProjectIdentifier).orElse(null);
+  }
+
+  @Override
+  public String getIdentifier() {
+    return Optional.of(ngMetadata).map(NGSecretMetadata::getIdentifier).orElse(null);
   }
 }

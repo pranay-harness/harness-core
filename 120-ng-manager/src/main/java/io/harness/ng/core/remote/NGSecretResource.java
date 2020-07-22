@@ -2,22 +2,19 @@ package io.harness.ng.core.remote;
 
 import com.google.inject.Inject;
 
-import io.harness.encryption.SecretType;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.entities.SampleEncryptableSettingImplementation;
 import io.harness.ng.core.services.api.NGSecretService;
+import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
-import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.AllArgsConstructor;
-import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
@@ -46,53 +43,55 @@ import javax.ws.rs.QueryParam;
     })
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class NGSecretResource {
+  private static final String ACCOUNT_IDENTIFIER = "accountIdentifier";
+  private static final String ORG_IDENTIFIER = "orgIdentifier";
+  private static final String PROJECT_IDENTIFIER = "projectIdentifier";
   private final NGSecretService ngSecretService;
-  private final SecretManagerClientService secretManagerClientService;
+
+  @POST
+  @ApiOperation(value = "Create a secret text", nickname = "createSecretText")
+  public ResponseDTO<String> create(
+      @QueryParam("local") @DefaultValue("false") boolean localMode, SecretTextDTO secretText) {
+    return ResponseDTO.newResponse(ngSecretService.createSecret(localMode, secretText));
+  }
 
   @GET
-  @ApiOperation(value = "Get secrets for an account", nickname = "listSecretsForAccount")
-  public ResponseDTO<List<EncryptedDataDTO>> getSecretsForAccount(
-      @QueryParam("accountIdentifier") @NotNull String accountIdentifier, @QueryParam("type") SecretType secretType) {
-    List<EncryptedDataDTO> secrets = ngSecretService.getSecretsByType(accountIdentifier, secretType);
+  @ApiOperation(value = "Get secrets for an account", nickname = "listSecrets")
+  public ResponseDTO<List<EncryptedDataDTO>> list(@QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier,
+      @QueryParam("type") SecretType secretType) {
+    List<EncryptedDataDTO> secrets =
+        ngSecretService.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, secretType);
     return ResponseDTO.newResponse(secrets);
   }
 
   @GET
-  @Path("{secretId}")
-  @ApiOperation(value = "Gets a secret by id", nickname = "getSecretById")
-  public ResponseDTO<EncryptedDataDTO> get(@PathParam("secretId") @NotEmpty String secretId,
-      @QueryParam("accountIdentifier") @NotNull String accountIdentifier) {
-    EncryptedDataDTO encryptedData = ngSecretService.getSecretById(accountIdentifier, secretId);
+  @Path("{identifier}")
+  @ApiOperation(value = "Gets secret", nickname = "getSecretText")
+  public ResponseDTO<EncryptedDataDTO> get(@PathParam("identifier") @NotEmpty String identifier,
+      @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier) {
+    EncryptedDataDTO encryptedData =
+        ngSecretService.getSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return ResponseDTO.newResponse(encryptedData);
-  }
-
-  @POST
-  @ApiOperation(value = "Create a secret text", nickname = "createSecretText")
-  public ResponseDTO<String> createSecret(@QueryParam("accountId") String accountId,
-      @QueryParam("local") @DefaultValue("false") boolean localMode, SecretTextDTO secretText) {
-    return ResponseDTO.newResponse(ngSecretService.createSecret(accountId, localMode, secretText));
   }
 
   @PUT
   @ApiOperation(value = "Update a secret text", nickname = "updateSecretText")
-  public ResponseDTO<Boolean> updateSecret(@QueryParam("accountId") @NotBlank final String accountId,
-      @QueryParam("uuid") @NotBlank final String uuid, @Body @Valid SecretTextDTO secretText) {
-    return ResponseDTO.newResponse(ngSecretService.updateSecret(accountId, uuid, secretText));
+  public ResponseDTO<Boolean> updateSecret(@PathParam("identifier") @NotEmpty String identifier,
+      @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier,
+      @Body @Valid SecretTextUpdateDTO dto) {
+    return ResponseDTO.newResponse(
+        ngSecretService.updateSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto));
   }
 
   @DELETE
   @ApiOperation(value = "Delete a secret text", nickname = "deleteSecretText")
-  public ResponseDTO<Boolean> deleteSecret(
-      @QueryParam("accountId") @NotBlank String accountId, @QueryParam("uuid") @NotBlank String uuId) {
-    return ResponseDTO.newResponse(ngSecretService.deleteSecret(accountId, uuId));
-  }
-
-  @GET
-  @Path("test")
-  @ApiOperation(value = "test", nickname = "test")
-  public ResponseDTO<List<EncryptedDataDetail>> testMethod() {
-    SampleEncryptableSettingImplementation test =
-        SampleEncryptableSettingImplementation.builder().encryptedSecretText("5gCyTeToQFacz8Y9bXGRyw").build();
-    return ResponseDTO.newResponse(secretManagerClientService.getEncryptionDetails(test));
+  public ResponseDTO<Boolean> deleteSecret(@PathParam("identifier") @NotEmpty String identifier,
+      @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier) {
+    return ResponseDTO.newResponse(
+        ngSecretService.deleteSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
 }

@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.Set;
 
@@ -33,4 +34,7 @@ public class EncryptedDataDTO {
   boolean base64Encoded;
   String uuid;
   String entityYamlPath;
+  String encryptedBy;
+  SettingVariableTypes type;
+  long lastUpdatedAt;
 }

@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import io.harness.secretmanagerclient.NGSecretMetadata;
+import io.harness.secretmanagerclient.dto.NGLocalConfigDTO;
+import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,4 +43,18 @@ public class LocalEncryptionConfig extends SecretManagerConfig {
 
   @Override
   public void maskSecrets() {}
+
+  @Override
+  public NGSecretManagerConfigDTO toDTO() {
+    NGSecretMetadata ngMetadata = getNgMetadata();
+    NGLocalConfigDTO ngLocalConfigDTO =
+        NGLocalConfigDTO.builder().uuid(getUuid()).encryptionType(getEncryptionType()).build();
+    if (ngMetadata != null) {
+      ngLocalConfigDTO.setAccountIdentifier(ngMetadata.getAccountIdentifier());
+      ngLocalConfigDTO.setOrgIdentifier(ngMetadata.getOrgIdentifier());
+      ngLocalConfigDTO.setProjectIdentifier(ngMetadata.getProjectIdentifier());
+      ngLocalConfigDTO.setIdentifier(ngMetadata.getIdentifier());
+    }
+    return ngLocalConfigDTO;
+  }
 }

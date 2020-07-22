@@ -1,4 +1,4 @@
-package io.harness.encryption;
+package io.harness.secretmanagerclient;
 
 public enum SecretType {
   CONFIG_FILE,

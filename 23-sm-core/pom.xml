@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>21-sm-core</artifactId>
+    <artifactId>23-sm-core</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -25,6 +25,16 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>21-persistence</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>22-ng-project-n-orgs</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>22-secret-manager-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>

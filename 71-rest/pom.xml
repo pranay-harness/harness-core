@@ -741,11 +741,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-sm-core</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>22-delegate-service-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -757,6 +752,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>23-delegate-service-driver</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>23-sm-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

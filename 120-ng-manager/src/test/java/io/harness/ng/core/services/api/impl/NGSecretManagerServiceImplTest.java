@@ -13,6 +13,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.ng.core.BaseTest;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.NGVaultConfigDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -21,16 +23,16 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
-import software.wings.beans.SecretManagerConfig;
-import software.wings.beans.VaultConfig;
 
 import java.io.IOException;
 import java.util.List;
 
 public class NGSecretManagerServiceImplTest extends BaseTest {
   @Mock SecretManagerClient secretManagerClient;
-  private final String ACCOUNT_ID = "ACCOUNT_ID";
-  private final String KMS_ID = "KMS_ID";
+  private final String ACCOUNT_IDENTIFIER = "ACCOUNT_ID";
+  private final String ORG_IDENTIFIER = "ACCOUNT_ID";
+  private final String PROJECT_IDENTIFIER = "ACCOUNT_ID";
+  private final String KMS_IDENTIFIER = "KMS_ID";
 
   private NGSecretManagerServiceImpl ngSecretManagerService;
 
@@ -46,10 +48,10 @@ public class NGSecretManagerServiceImplTest extends BaseTest {
     String kmsId = randomAlphabetic(20);
     Call<RestResponse<String>> request = mock(Call.class);
 
-    when(secretManagerClient.createOrUpdateSecretManager(any(), any())).thenReturn(request);
+    when(secretManagerClient.createSecretManager(any())).thenReturn(request);
     when(request.execute()).thenReturn(Response.success(new RestResponse<>(kmsId)));
 
-    String savedKmsId = ngSecretManagerService.saveOrUpdateSecretManager(ACCOUNT_ID, random(VaultConfig.class));
+    String savedKmsId = ngSecretManagerService.createSecretManager(random(NGVaultConfigDTO.class));
 
     Assertions.assertThat(savedKmsId).isEqualTo(kmsId);
   }
@@ -60,10 +62,11 @@ public class NGSecretManagerServiceImplTest extends BaseTest {
   public void testDeleteSecretManager() throws IOException {
     Call<RestResponse<Boolean>> request = mock(Call.class);
 
-    when(secretManagerClient.deleteSecretManager(any(), any())).thenReturn(request);
+    when(secretManagerClient.deleteSecretManager(any(), any(), any(), any())).thenReturn(request);
     when(request.execute()).thenReturn(Response.success(new RestResponse<>(true)));
 
-    boolean success = ngSecretManagerService.deleteSecretManager(ACCOUNT_ID, KMS_ID);
+    boolean success = ngSecretManagerService.deleteSecretManager(
+        KMS_IDENTIFIER, ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
 
     Assertions.assertThat(success).isTrue();
   }
@@ -72,13 +75,14 @@ public class NGSecretManagerServiceImplTest extends BaseTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testListSecretManagers() throws IOException {
-    List<SecretManagerConfig> secretManagerConfigs = Lists.newArrayList(random(VaultConfig.class));
-    Call<RestResponse<List<SecretManagerConfig>>> request = mock(Call.class);
+    List<NGSecretManagerConfigDTO> secretManagerConfigs = Lists.newArrayList(random(NGVaultConfigDTO.class));
+    Call<RestResponse<List<NGSecretManagerConfigDTO>>> request = mock(Call.class);
 
-    when(secretManagerClient.getSecretManagersForAccount(any())).thenReturn(request);
+    when(secretManagerClient.listSecretManagers(any(), any(), any())).thenReturn(request);
     when(request.execute()).thenReturn(Response.success(new RestResponse<>(secretManagerConfigs)));
 
-    List<SecretManagerConfig> secretManagerConfigList = ngSecretManagerService.listSecretManagers(ACCOUNT_ID);
+    List<NGSecretManagerConfigDTO> secretManagerConfigList =
+        ngSecretManagerService.listSecretManagers(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
 
     Assertions.assertThat(secretManagerConfigList).isNotEmpty();
     Assertions.assertThat(secretManagerConfigList).isEqualTo(secretManagerConfigs);

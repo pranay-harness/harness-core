@@ -9,6 +9,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
+import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -81,5 +82,10 @@ public class KmsConfig extends SecretManagerConfig implements ExecutionCapabilit
   @Override
   public boolean isGlobalKms() {
     return Account.GLOBAL_ACCOUNT_ID.equals(getAccountId());
+  }
+
+  @Override
+  public NGSecretManagerConfigDTO toDTO() {
+    throw new UnsupportedOperationException();
   }
 }
