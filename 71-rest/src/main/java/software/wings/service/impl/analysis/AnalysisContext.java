@@ -103,7 +103,7 @@ public class AnalysisContext extends Base implements PersistentRegularIterable, 
   @FdIndex private Long timeSeriesAnalysisIteration;
   @FdIndex private Long logAnalysisIteration;
   @FdIndex private Long logClusterIteration;
-  @FdIndex private Long cvTaskCreationIteration;
+  @FdIndex private long cvTaskCreationIteration;
   @FdIndex private Long feedbackIteration;
   private int initialDelaySeconds;
   private int dataCollectionIntervalMins;

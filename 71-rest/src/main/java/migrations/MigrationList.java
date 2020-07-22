@@ -139,6 +139,7 @@ import migrations.all.TimeSeriesMLScoresMigration;
 import migrations.all.TrimURLsForAPMVerificationSettings;
 import migrations.all.UnregisteredUserNameMigration;
 import migrations.all.UpdateBitBucketTriggers;
+import migrations.all.UpdateCVTaskIterationMigration;
 import migrations.all.UpdateGitSyncErrorMigration;
 import migrations.all.UpdatePipelineParallelIndexes;
 import migrations.all.UsageRestrictionsMigration;
@@ -353,6 +354,7 @@ public class MigrationList {
         .add(Pair.of(319, AddDisabledFieldMigration.class))
         .add(Pair.of(320, ArtifactStreamIteratorRequiredMigration.class))
         .add(Pair.of(321, BaseMigration.class))
+        .add(Pair.of(322, UpdateCVTaskIterationMigration.class))
         .build();
   }
 }
