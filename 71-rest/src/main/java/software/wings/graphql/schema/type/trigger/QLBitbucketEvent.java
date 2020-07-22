@@ -1,9 +1,7 @@
 package software.wings.graphql.schema.type.trigger;
 
 public enum QLBitbucketEvent {
-  PING,
   DIAGNOSTICS_PING,
-  PUSH_ANY,
   ANY,
   FORK,
   UPDATED,
