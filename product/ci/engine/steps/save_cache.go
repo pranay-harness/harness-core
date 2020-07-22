@@ -76,7 +76,7 @@ func (s *saveCacheStep) Run(ctx context.Context) error {
 		return err
 	}
 
-	xxhashSum, err := getFileXXHash(tmpArchivePath, s.fs)
+	xxhashSum, err := getFileXXHash(tmpArchivePath, s.fs, s.log)
 	if err != nil {
 		s.log.Warnw(
 			"failed to compute xxhash",

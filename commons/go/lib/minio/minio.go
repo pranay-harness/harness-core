@@ -70,7 +70,7 @@ func (c *minioClient) UploadWithOpts(ctx context.Context, key, filePath string, 
 // Uploads a file to MinIO.
 func (c *minioClient) Upload(ctx context.Context, key, filePath string, opts minio.PutObjectOptions) error {
 	start := time.Now()
-	_, err := c.client.FPutObjectWithContext(ctx, c.bucket, key, filePath, opts)
+	size, err := c.client.FPutObjectWithContext(ctx, c.bucket, key, filePath, opts)
 	if err != nil {
 		c.log.Warnw(
 			"failed to upload to MinIO",
@@ -88,6 +88,7 @@ func (c *minioClient) Upload(ctx context.Context, key, filePath string, opts min
 		"bucket", c.bucket,
 		"key", key,
 		"opts", opts,
+		"upload_size", size,
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
 	return nil

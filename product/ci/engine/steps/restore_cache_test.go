@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/cespare/xxhash"
@@ -21,6 +22,15 @@ import (
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
+
+type fileInfo struct{}
+
+func (fi fileInfo) Name() string       { return "hello-world" }
+func (fi fileInfo) Size() int64        { return int64(100) }
+func (fi fileInfo) Mode() os.FileMode  { return os.ModeAppend }
+func (fi fileInfo) ModTime() time.Time { return time.Now() }
+func (fi fileInfo) IsDir() bool        { return false }
+func (fi fileInfo) Sys() interface{}   { return nil }
 
 func getRestoreStep(id, key string, failIfNotExist bool) *pb.Step {
 	restoreCache := &pb.Step_RestoreCache{
@@ -392,11 +402,14 @@ func TestRestoreCacheUnarchiveErr(t *testing.T) {
 		fs:              fs,
 	}
 
+	fi := fileInfo{}
+
 	mockBackOff.EXPECT().Reset()
 	mockMinio.EXPECT().Stat(key).Return("", metadata, nil)
 	mockMinio.EXPECT().Download(ctx, key, gomock.Any()).Return(nil)
 	fs.EXPECT().Open(gomock.Any()).Return(mockFile, nil)
 	fs.EXPECT().Copy(gomock.Any(), mockFile).Return(int64(0), nil)
+	fs.EXPECT().Stat(gomock.Any()).Return(fi, nil)
 	mockFile.EXPECT().Close().Return(nil)
 	archiver.EXPECT().Unarchive(gomock.Any(), "").Return(errors.New("unarchive err"))
 	err := s.Run(ctx)
@@ -441,11 +454,14 @@ func TestRestoreCacheSuccess(t *testing.T) {
 		fs:              fs,
 	}
 
+	fi := fileInfo{}
+
 	mockBackOff.EXPECT().Reset()
 	mockMinio.EXPECT().Stat(key).Return("", metadata, nil)
 	mockMinio.EXPECT().Download(ctx, key, gomock.Any()).Return(nil)
 	fs.EXPECT().Open(gomock.Any()).Return(mockFile, nil)
 	fs.EXPECT().Copy(gomock.Any(), mockFile).Return(int64(0), nil)
+	fs.EXPECT().Stat(gomock.Any()).Return(fi, nil)
 	mockFile.EXPECT().Close().Return(nil)
 	archiver.EXPECT().Unarchive(gomock.Any(), "").Return(nil)
 	err := s.Run(ctx)
