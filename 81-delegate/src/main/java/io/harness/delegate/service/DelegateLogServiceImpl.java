@@ -98,6 +98,10 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
   @Override
   public synchronized void save(String accountId, Log log) {
+    if (isNotEmpty(accountId)) {
+      log.setAccountId(accountId);
+    }
+
     if (isBlank(log.getActivityId()) || isBlank(log.getCommandUnitName())) {
       logger.info("Logging stack while saving the execution log ", new Exception(""));
     }
