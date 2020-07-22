@@ -35,7 +35,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class SkippedAuthServerInterceptorTest extends CategoryTest {
+public class ValidateAuthServerInterceptorTest extends CategoryTest {
   private ContextRecordingInterceptor contextRecordingInterceptor;
   private Channel channel;
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
@@ -51,7 +51,7 @@ public class SkippedAuthServerInterceptorTest extends CategoryTest {
                              .addService(new HealthStatusManager().getHealthService())
                              .addService(fakeService)
                              .intercept(contextRecordingInterceptor)
-                             .intercept(new SkippedAuthServerInterceptor(ImmutableSet.of(HealthGrpc.SERVICE_NAME)))
+                             .intercept(new ValidateAuthServerInterceptor(ImmutableSet.of(HealthGrpc.SERVICE_NAME)))
                              .intercept(new ServiceAuthServerInterceptor(
                                  ImmutableMap.of("manager", "managersecret"), ImmutableSet.of("some.service")))
                              .build()
@@ -76,7 +76,7 @@ public class SkippedAuthServerInterceptorTest extends CategoryTest {
                              .directExecutor()
                              .addService(fakeService)
                              .intercept(contextRecordingInterceptor)
-                             .intercept(new SkippedAuthServerInterceptor(ImmutableSet.of()))
+                             .intercept(new ValidateAuthServerInterceptor(ImmutableSet.of()))
                              .intercept(new ServiceAuthServerInterceptor(ImmutableMap.of("manager", "managersecret"),
                                  ImmutableSet.of(EventPublisherGrpc.SERVICE_NAME)))
                              .build()

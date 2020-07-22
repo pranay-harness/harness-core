@@ -14,11 +14,8 @@ import com.google.inject.multibindings.Multibinder;
 
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
-import io.grpc.health.v1.HealthGrpc;
-import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.harness.delegate.NgDelegateTaskResponseServiceGrpc;
 import io.harness.grpc.auth.ServiceAuthServerInterceptor;
-import io.harness.grpc.auth.SkippedAuthServerInterceptor;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.ng.core.remote.server.grpc.NgDelegateTaskResponseGrpcServer;
@@ -48,10 +45,6 @@ public final class NgAsyncTaskGrpcServerModule extends AbstractModule {
         ()
             -> new ServiceAuthServerInterceptor(ImmutableMap.of(serviceName, serviceSecret),
                 ImmutableSet.of(NgDelegateTaskResponseServiceGrpc.SERVICE_NAME)));
-    serverInterceptorMultibinder.addBinding().toProvider(
-        ()
-            -> new SkippedAuthServerInterceptor(
-                ImmutableSet.of(HealthGrpc.SERVICE_NAME, ServerReflectionGrpc.SERVICE_NAME)));
 
     install(new GrpcServerModule(grpcServerConfig.getConnectors(),
         getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {})),

@@ -1,6 +1,8 @@
 package io.harness.grpc.auth;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import io.grpc.Context;
 import io.grpc.Contexts;
@@ -22,11 +24,12 @@ import java.util.Set;
 @Slf4j
 @Singleton
 @InterceptorPriority(Integer.MAX_VALUE)
-public class SkippedAuthServerInterceptor implements ServerInterceptor {
+public class ValidateAuthServerInterceptor implements ServerInterceptor {
   private static final Listener NOOP_LISTENER = new Listener() {};
   private final Set<String> excludedGrpcServices;
 
-  public SkippedAuthServerInterceptor(Set<String> excludedGrpcServices) {
+  @Inject
+  public ValidateAuthServerInterceptor(@Named("excludedGrpcAuthValidationServices") Set<String> excludedGrpcServices) {
     this.excludedGrpcServices = excludedGrpcServices;
   }
 
