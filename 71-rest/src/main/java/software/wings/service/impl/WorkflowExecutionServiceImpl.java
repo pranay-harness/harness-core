@@ -4415,7 +4415,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return DeploymentType.PCF == infrastructureDefinition.getDeploymentType()
         || DeploymentType.SSH == infrastructureDefinition.getDeploymentType()
         || DeploymentType.WINRM == infrastructureDefinition.getDeploymentType()
-        || DeploymentType.ECS == infrastructureDefinition.getDeploymentType();
+        || DeploymentType.ECS == infrastructureDefinition.getDeploymentType()
+        || DeploymentType.KUBERNETES == infrastructureDefinition.getDeploymentType();
   }
 
   @Override
