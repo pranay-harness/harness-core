@@ -32,6 +32,9 @@ import java.util.List;
 @OwnedBy(CDC)
 @Singleton
 public class WorkflowYAMLHelper {
+  private static final String ASSOCIATED_TO_GOOGLE_CLOUD_BUILD_STATE_DOES_NOT_EXIST =
+      "] associated to Google Cloud Build State does not exist";
+
   @Inject EnvironmentService environmentService;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject InfrastructureMappingService infraMappingService;
@@ -140,6 +143,7 @@ public class WorkflowYAMLHelper {
       case SS_WINRM_CONNECTION_ATTRIBUTE:
       case GCP_CONFIG:
       case GIT_CONFIG:
+      case JENKINS_SERVER:
         return settingsService.get(entryValue);
       case USER_GROUP:
         return userGroupService.get(entryValue);
@@ -203,14 +207,19 @@ public class WorkflowYAMLHelper {
         break;
       case GCP_CONFIG:
         uuidAccess = settingsService.fetchSettingAttributeByName(accountId, variableValue, SettingVariableTypes.GCP);
-        notNullCheck(
-            "Google Cloud Provider [" + variableValue + "] associated to Google Cloud Build State does not exist",
+        notNullCheck("Google Cloud Provider [" + variableValue + ASSOCIATED_TO_GOOGLE_CLOUD_BUILD_STATE_DOES_NOT_EXIST,
             uuidAccess, USER);
         break;
       case GIT_CONFIG:
         uuidAccess = settingsService.fetchSettingAttributeByName(accountId, variableValue, SettingVariableTypes.GIT);
-        notNullCheck("Git connector [" + variableValue + "] associated to Google Cloud Build State does not exist",
+        notNullCheck("Git connector [" + variableValue + ASSOCIATED_TO_GOOGLE_CLOUD_BUILD_STATE_DOES_NOT_EXIST,
             uuidAccess, USER);
+        break;
+      case JENKINS_SERVER:
+        uuidAccess =
+            settingsService.fetchSettingAttributeByName(accountId, variableValue, SettingVariableTypes.JENKINS);
+        notNullCheck(
+            "Jenkins server [" + variableValue + "] associated to the Jenkins State does not exist", uuidAccess, USER);
         break;
       default:
         return null;

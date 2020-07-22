@@ -69,6 +69,7 @@ public class WorkflowServiceTemplateHelper {
   private static final String WINRM_CONNECTION_ATTRIBUTE_DESC = "Variable for WINRM Connection Attribute entity";
   private static final String GCP_CONFIG_VAR_DESC = "Variable for Google Cloud Platform configuration entity";
   private static final String GIT_CONFIG_VAR_DESC = "Variable for Git connector configuration entity";
+  private static final String JENKINS_SERVER_VAR_DESC = "Variable for Jenkins server configuration entity";
   private static final String TIMEOUT_PROPERTY_KEY = "timeoutMillis";
 
   @Inject private TemplateService templateService;
@@ -649,6 +650,8 @@ public class WorkflowServiceTemplateHelper {
           return GCP_CONFIG_VAR_DESC + " in " + stateName;
         case GIT_CONFIG:
           return GIT_CONFIG_VAR_DESC + " in " + stateName;
+        case JENKINS_SERVER:
+          return JENKINS_SERVER_VAR_DESC + " in " + stateName;
         default:
           return "";
       }

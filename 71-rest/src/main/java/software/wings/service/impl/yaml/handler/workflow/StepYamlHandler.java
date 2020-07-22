@@ -85,6 +85,8 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   private static final String REPOSITORY_SPEC = "repositorySpec";
   private static final String GIT_CONFIG_ID = "gitConfigId";
   private static final String GIT_CONFIG_NAME = "gitConfigName";
+  private static final String JENKINS_ID = "jenkinsConfigId";
+  private static final String JENKINS_NAME = "jenkinsConfigName";
 
   private GraphNode toBean(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeContextList)
       throws HarnessException {
@@ -367,6 +369,16 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         gcbOptions.remove(GCP_CONFIG_ID);
         outputProperties.put(GCB_OPTIONS, gcbOptions);
         return;
+      case JENKINS_ID:
+        if (objectValue != null) {
+          String jenkinsConfigId = (String) objectValue;
+          SettingAttribute jenkinsConfig = settingsService.get(jenkinsConfigId);
+          notNullCheck("Jenkins is null for the given jenkinsConfigId:" + jenkinsConfigId, jenkinsConfig, USER);
+          outputProperties.put(JENKINS_NAME, jenkinsConfig.getName());
+        } else {
+          outputProperties.put(JENKINS_NAME, null);
+        }
+        return;
       default:
         outputProperties.put(name, objectValue);
         return;
@@ -444,6 +456,16 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
           repositorySpec.remove(GIT_CONFIG_NAME);
         }
         properties.put(GCB_OPTIONS, gcbOptions);
+        return;
+      case JENKINS_NAME:
+        if (objectValue != null) {
+          String jenkinsConfigName = (String) objectValue;
+          SettingAttribute jenkinsConfig = settingsService.getSettingAttributeByName(accountId, jenkinsConfigName);
+          notNullCheck("Jenkins is null for the given jenkinsConfigName:" + jenkinsConfigName, jenkinsConfig, USER);
+          properties.put(JENKINS_ID, jenkinsConfig.getUuid());
+        } else {
+          properties.put(JENKINS_ID, null);
+        }
         return;
       default:
         properties.put(name, objectValue);
