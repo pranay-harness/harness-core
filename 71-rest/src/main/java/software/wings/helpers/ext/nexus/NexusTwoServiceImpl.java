@@ -876,7 +876,12 @@ public class NexusTwoServiceImpl {
         response = getIndexBrowserTreeViewResponseResponse(
             nexusRestClient, nexusConfig, getIndexContentPathUrl(nexusConfig, repoKey, repoPath));
       }
-      if (isSuccessful(response)) {
+      // for the very first call, if the response is a 403 we want to throw exception
+      if (response.code() == 403 && repoPath.equals("")) {
+        isSuccessful(response);
+      }
+      // for all other calls, parse response only if its not a 403
+      if (response.code() != 403 && isSuccessful(response)) {
         List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
         if (treeNodes != null) {
           treeNodes.forEach(treeNode -> {
