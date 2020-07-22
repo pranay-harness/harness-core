@@ -900,3 +900,11 @@
 71-rest/src/main/java/software/wings/yaml/workflow/RollingWorkflowYaml.java
 71-rest/src/main/java/software/wings/yaml/workflow/StepYaml.java
 71-rest/src/main/java/software/wings/yaml/workflow/WorkflowYaml.java
+71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLNexusDockerProps.java
+71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLNexusMavenProps.java
+71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLNexusNpmProps.java
+71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLNexusNugetProps.java
+71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLNexusRepositoryFormat.java
+71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLArtifactoryDockerProps.java
+71-rest/src/main/java/software/wings/graphql/schema/type/artifactSource/QLArtifactoryFileProps.java
+71-rest/src/main/java/software/wings/graphql/schema/type/QLKeyValuePair.java

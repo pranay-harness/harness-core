@@ -18,4 +18,7 @@ public class QLGCRArtifactSource implements QLArtifactSource {
   String name;
   String id;
   Long createdAt;
+  String registryHostName;
+  String dockerImageName;
+  String gcpCloudProviderId;
 }

@@ -18,4 +18,6 @@ public class QLDockerArtifactSource implements QLArtifactSource {
   String name;
   String id;
   Long createdAt;
+  String imageName;
+  String dockerConnectorId;
 }

@@ -18,4 +18,7 @@ public class QLECRArtifactSource implements QLArtifactSource {
   String name;
   String id;
   Long createdAt;
+  String awsCloudProviderId;
+  String imageName;
+  String region;
 }
