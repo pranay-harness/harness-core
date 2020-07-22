@@ -18,4 +18,5 @@ public class QLNexusArtifactSource implements QLArtifactSource {
   String name;
   String id;
   Long createdAt;
+  QLNexusProps properties;
 }

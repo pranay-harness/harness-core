@@ -18,4 +18,8 @@ public class QLACRArtifactSource implements QLArtifactSource {
   String name;
   String id;
   Long createdAt;
+  String azureCloudProviderId;
+  String subscriptionId;
+  String repositoryName;
+  String registryName;
 }

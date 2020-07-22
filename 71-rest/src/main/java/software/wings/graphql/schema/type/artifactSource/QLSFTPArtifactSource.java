@@ -9,6 +9,8 @@ import lombok.experimental.FieldNameConstants;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
+import java.util.List;
+
 @OwnedBy(CDC)
 @Value
 @Builder
@@ -18,4 +20,6 @@ public class QLSFTPArtifactSource implements QLArtifactSource {
   String name;
   String id;
   Long createdAt;
+  List<String> artifactPaths;
+  String sftpConnectorId;
 }

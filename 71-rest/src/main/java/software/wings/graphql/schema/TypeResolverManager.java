@@ -21,6 +21,8 @@ import software.wings.graphql.schema.type.artifactSource.QLACRArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLAMIArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLAmazonS3ArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLArtifactoryArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLArtifactoryDockerProps;
+import software.wings.graphql.schema.type.artifactSource.QLArtifactoryFileProps;
 import software.wings.graphql.schema.type.artifactSource.QLAzureArtifactsArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLBambooArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLCustomArtifactSource;
@@ -30,6 +32,10 @@ import software.wings.graphql.schema.type.artifactSource.QLGCRArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLGCSArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLJenkinsArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLNexusArtifactSource;
+import software.wings.graphql.schema.type.artifactSource.QLNexusDockerProps;
+import software.wings.graphql.schema.type.artifactSource.QLNexusMavenProps;
+import software.wings.graphql.schema.type.artifactSource.QLNexusNpmProps;
+import software.wings.graphql.schema.type.artifactSource.QLNexusNugetProps;
 import software.wings.graphql.schema.type.artifactSource.QLSFTPArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLSMBArtifactSource;
 import software.wings.graphql.schema.type.audit.QLApiKeyChangeSet;
@@ -118,6 +124,8 @@ public class TypeResolverManager {
     public static final String Data = "Data";
     public static final String Execution = "Execution";
     public static final String ArtifactSource = "ArtifactSource";
+    public static final String ArtifactoryProps = "ArtifactoryProps";
+    public static final String NexusProps = "NexusProps";
     public static final String Instance = "Instance";
     public static final String Outcome = "Outcome";
     public static final String PhysicalInstance = "PhysicalInstance";
@@ -174,6 +182,12 @@ public class TypeResolverManager {
     public static final String NexusArtifactSource = "NexusArtifactSource";
     public static final String SFTPArtifactSource = "SFTPArtifactSource";
     public static final String SMBArtifactSource = "SMBArtifactSource";
+    public static final String ArtifactoryDockerProps = "ArtifactoryDockerProps";
+    public static final String ArtifactoryFileProps = "ArtifactoryFileProps";
+    public static final String NexusDockerProps = "NexusDockerProps";
+    public static final String NexusMavenProps = "NexusMavenProps";
+    public static final String NexusNpmProps = "NexusNpmProps";
+    public static final String NexusNugetProps = "NexusNugetProps";
 
     public static final String AmazonS3Connector = "AmazonS3Connector";
     public static final String ApmVerificationConnector = "ApmVerificationConnector";
@@ -320,8 +334,20 @@ public class TypeResolverManager {
                     .put(QLNexusArtifactSource.class, TypeResolverManagerTypes.NexusArtifactSource)
                     .put(QLSFTPArtifactSource.class, TypeResolverManagerTypes.SFTPArtifactSource)
                     .put(QLSMBArtifactSource.class, TypeResolverManagerTypes.SMBArtifactSource)
-
                     .build()))
+        .put(TypeResolverManagerUnifaces.ArtifactoryProps,
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLArtifactoryDockerProps.class, TypeResolverManagerTypes.ArtifactoryDockerProps)
+                    .put(QLArtifactoryFileProps.class, TypeResolverManagerTypes.ArtifactoryFileProps)
+                    .build()))
+        .put(TypeResolverManagerUnifaces.NexusProps,
+            getResultTypeResolver(ImmutableMap.<Class, String>builder()
+                                      .put(QLNexusDockerProps.class, TypeResolverManagerTypes.NexusDockerProps)
+                                      .put(QLNexusMavenProps.class, TypeResolverManagerTypes.NexusMavenProps)
+                                      .put(QLNexusNpmProps.class, TypeResolverManagerTypes.NexusNpmProps)
+                                      .put(QLNexusNugetProps.class, TypeResolverManagerTypes.NexusNugetProps)
+                                      .build()))
         .put(TypeResolverManagerUnifaces.Instance,
             getResultTypeResolver(
                 ImmutableMap.<Class, String>builder()
