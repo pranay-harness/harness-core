@@ -36,6 +36,7 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.security.UserThreadLocal;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetcherTest {
@@ -110,7 +111,7 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
                                                                            .build())
                                                            .numDays(7)
                                                            .build())
-                                                   .estimatedSavings(100.0)
+                                                   .estimatedSavings(BigDecimal.valueOf(100.0))
                                                    .build();
     hPersistence.save(recommendation);
     hPersistence.save(ClusterRecord.builder()
@@ -184,7 +185,7 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
                                                                     .build())
                                                     .numDays(7)
                                                     .build())
-                       .estimatedSavings(100.0)
+                       .estimatedSavings(BigDecimal.valueOf(100.0))
                        .numDays(7)
                        .build());
   }

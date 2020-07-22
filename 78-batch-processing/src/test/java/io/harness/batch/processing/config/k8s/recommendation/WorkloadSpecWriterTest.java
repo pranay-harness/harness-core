@@ -56,7 +56,7 @@ public class WorkloadSpecWriterTest extends CategoryTest {
     verify(workloadRecommendationDao).save(captor.capture());
     assertThat(captor.getAllValues()).hasSize(1);
     Map<String, ContainerRecommendation> containerRecommendations = captor.getValue().getContainerRecommendations();
-    assertThat(containerRecommendations).hasSize(3);
+    assertThat(containerRecommendations).hasSize(5);
     assertThat(containerRecommendations.get("kubedns").getCurrent())
         .isEqualTo(ResourceRequirement.builder()
                        .request("cpu", "100m")
@@ -67,6 +67,14 @@ public class WorkloadSpecWriterTest extends CategoryTest {
         .isEqualTo(ResourceRequirement.builder().request("cpu", "150m").request("memory", "20Mi").build());
     assertThat(containerRecommendations.get("sidecar").getCurrent())
         .isEqualTo(ResourceRequirement.builder().request("cpu", "10m").request("memory", "20Mi").build());
+    assertThat(containerRecommendations.get("without-requests").getCurrent())
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "10m")
+                       .request("memory", "20Mi")
+                       .limit("cpu", "10m")
+                       .limit("memory", "20Mi")
+                       .build());
+    assertThat(containerRecommendations.get("nothing").getCurrent()).isEqualTo(ResourceRequirement.builder().build());
   }
 
   private List<? extends PublishedMessage> messages() {
@@ -94,6 +102,14 @@ public class WorkloadSpecWriterTest extends CategoryTest {
                                                                     .putRequests("cpu", "10m")
                                                                     .putRequests("memory", "20Mi")
                                                                     .build())
+
+                                             .addContainerSpecs(ContainerSpec.newBuilder()
+                                                                    .setName("without-requests")
+                                                                    .putLimits("cpu", "10m")
+                                                                    .putLimits("memory", "20Mi")
+                                                                    .build())
+
+                                             .addContainerSpecs(ContainerSpec.newBuilder().setName("nothing").build())
                                              .build())
                                 .build());
   }

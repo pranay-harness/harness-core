@@ -9,14 +9,14 @@ import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.RECOMMENDE
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.newCpuHistogram;
 import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.protoToCheckpoint;
 import static io.harness.time.DurationUtils.truncate;
+import static java.math.RoundingMode.HALF_UP;
 import static java.time.Duration.between;
-import static java.util.Collections.emptyMap;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import io.harness.batch.processing.config.k8s.recommendation.WorkloadCostService.Cost;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.entities.InstanceData;
-import io.harness.batch.processing.k8s.WatchEventCostEstimator;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.ContainerStateProto;
@@ -26,6 +26,7 @@ import io.kubernetes.client.custom.Quantity;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.stereotype.Component;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
@@ -36,6 +37,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequi
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -50,17 +52,23 @@ import java.util.stream.Collectors;
 class ContainerStateWriter implements ItemWriter<PublishedMessage> {
   private static final Set<Integer> ACCEPTED_VERSIONS = Collections.singleton(RECOMMENDER_VERSION);
 
+  // How long to keep recommendation, in case of no updates
+  public static final Duration RECOMMENDATION_TTL = Duration.ofDays(30);
+
   private final InstanceDataDao instanceDataDao;
   private final WorkloadRecommendationDao workloadRecommendationDao;
+  private final WorkloadCostService workloadCostService;
 
   private final Map<ResourceId, WorkloadState> workloadToRecommendation;
   private final LoadingCache<ResourceId, ResourceId> podToWorkload;
 
-  ContainerStateWriter(InstanceDataDao instanceDataDao, WorkloadRecommendationDao workloadRecommendationDao) {
+  ContainerStateWriter(InstanceDataDao instanceDataDao, WorkloadRecommendationDao workloadRecommendationDao,
+      WorkloadCostService workloadCostService) {
     this.workloadToRecommendation = new HashMap<>();
     this.podToWorkload = Caffeine.newBuilder().maximumSize(10000).build(this ::fetchWorkloadIdForPod);
     this.instanceDataDao = instanceDataDao;
     this.workloadRecommendationDao = workloadRecommendationDao;
+    this.workloadCostService = workloadCostService;
   }
 
   @Override
@@ -76,7 +84,13 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
       String clusterId = containerStateProto.getClusterId();
       String namespace = containerStateProto.getNamespace();
       String podName = containerStateProto.getPodName();
-      ResourceId podId = ResourceId.of(accountId, clusterId, namespace, podName, "Pod");
+      ResourceId podId = ResourceId.builder()
+                             .accountId(accountId)
+                             .clusterId(clusterId)
+                             .namespace(namespace)
+                             .name(podName)
+                             .kind("Pod")
+                             .build();
       ResourceId workloadId = Objects.requireNonNull(podToWorkload.get(podId));
       // intentional reference equality
       if (workloadId == NOT_FOUND) {
@@ -150,6 +164,9 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
     return new WorkloadState(workloadRecommendationDao.fetchRecommendationForWorkload(workloadId));
   }
 
+  /**
+   *  Update the cached recommendations into DB.
+   */
   private void updateRecommendations() {
     this.workloadToRecommendation.forEach((workloadId, workloadState) -> {
       Map<String, ContainerState> containerStates = workloadState.getContainerStateMap();
@@ -157,10 +174,10 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
           Collectors.toMap(Map.Entry::getKey, cse -> cse.getValue().toContainerCheckpoint()));
       K8sWorkloadRecommendation recommendation = workloadRecommendationDao.fetchRecommendationForWorkload(workloadId);
       recommendation.setContainerCheckpoints(updatedContainerCheckpoints);
-      BigDecimal savings = BigDecimal.ZERO;
       Map<String, ContainerRecommendation> containerRecommendations =
           Optional.ofNullable(recommendation.getContainerRecommendations()).orElseGet(HashMap::new);
       recommendation.setContainerRecommendations(containerRecommendations);
+
       for (Map.Entry<String, ContainerRecommendation> entry : containerRecommendations.entrySet()) {
         String containerName = entry.getKey();
         ContainerRecommendation containerRecommendation = entry.getValue();
@@ -170,7 +187,6 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
           containerRecommendation.setBurstable(burstable);
           ResourceRequirement guaranteed = guaranteedRecommender().getEstimatedResourceRequirements(containerState);
           containerRecommendation.setGuaranteed(guaranteed);
-          savings = getEstimatedSavings(containerRecommendation);
           long days = between(containerState.getFirstSampleStart(), containerState.getLastSampleStart()).toDays();
           containerRecommendation.setNumDays((int) days);
           containerRecommendation.setTotalSamplesCount(containerState.getTotalSamplesCount());
@@ -178,35 +194,75 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
           recommendation.setPopulated(true);
         }
       }
-      recommendation.setEstimatedSavings(Math.max(0, savings.doubleValue()));
-      recommendation.setTtl(Instant.now().plus(Duration.ofDays(10)));
+      BigDecimal monthlySavings = estimateMonthlySavings(workloadId, containerRecommendations);
+      recommendation.setEstimatedSavings(monthlySavings);
+      recommendation.setTtl(Instant.now().plus(RECOMMENDATION_TTL));
       workloadRecommendationDao.save(recommendation);
     });
     workloadToRecommendation.clear();
   }
 
-  private BigDecimal getEstimatedSavings(ContainerRecommendation containerRecommendation) {
-    ResourceRequirement current = containerRecommendation.getCurrent();
-    ResourceRequirement guaranteed = containerRecommendation.getGuaranteed();
-    if (current == null || guaranteed == null) {
-      return BigDecimal.ZERO;
+  @Nullable
+  BigDecimal estimateMonthlySavings(
+      ResourceId workloadId, Map<String, ContainerRecommendation> containerRecommendations) {
+    /*
+     we have last day's cost for the workload for cpu & memory.
+     find percentage diff at workload level, and multiply by the last day's cost to get dailyDiff
+     multiply by -30 to convert dailyDiff to  monthly savings.
+    */
+    BigDecimal cpuChangePercent = resourceChangePercent(containerRecommendations, "cpu");
+    BigDecimal memoryChangePercent = resourceChangePercent(containerRecommendations, "memory");
+    BigDecimal monthlySavings = null;
+    if (cpuChangePercent != null || memoryChangePercent != null) {
+      Instant dayEnd = Instant.now().truncatedTo(ChronoUnit.DAYS);
+      Instant dayBegin = dayEnd.minus(Duration.ofDays(1));
+      Cost lastDayCost = workloadCostService.getActualCost(workloadId, dayBegin, dayEnd);
+      if (lastDayCost == null) {
+        logger.debug("Not computing savings for {} as lastDayCost is missing", workloadId);
+      } else {
+        BigDecimal costChangeForDay = BigDecimal.ZERO;
+        if (cpuChangePercent != null && lastDayCost.getCpu() != null) {
+          costChangeForDay = costChangeForDay.add(cpuChangePercent.multiply(lastDayCost.getCpu()));
+        }
+        if (memoryChangePercent != null && lastDayCost.getMemory() != null) {
+          costChangeForDay = costChangeForDay.add(memoryChangePercent.multiply(lastDayCost.getMemory()));
+        }
+        monthlySavings = costChangeForDay.multiply(BigDecimal.valueOf(-30)).setScale(2, HALF_UP);
+      }
     }
-    Map<String, String> currentRequests = Optional.ofNullable(current.getRequests()).orElse(emptyMap());
-    Map<String, String> guaranteedRequests = Optional.ofNullable(guaranteed.getRequests()).orElse(emptyMap());
-    String currentCpu = currentRequests.get("cpu");
-    String currentMemory = currentRequests.get("memory");
-    String guaranteedCpu = guaranteedRequests.get("cpu");
-    String guaranteedMemory = guaranteedRequests.get("memory");
-    if (currentCpu == null || currentMemory == null || guaranteedCpu == null || guaranteedMemory == null) {
-      return BigDecimal.ZERO;
+    return monthlySavings;
+  }
+
+  /**
+   *  Get the percentage change in a resource between current and recommended for the pod, null if un-computable.
+   */
+  BigDecimal resourceChangePercent(Map<String, ContainerRecommendation> containerRecommendations, String resource) {
+    BigDecimal resourceCurrent = BigDecimal.ZERO;
+    BigDecimal resourceChange = BigDecimal.ZERO;
+    boolean atLeastOneContainerComputable = false;
+    for (ContainerRecommendation containerRecommendation : containerRecommendations.values()) {
+      BigDecimal current = Optional.ofNullable(containerRecommendation.getCurrent())
+                               .map(ResourceRequirement::getRequests)
+                               .map(requests -> requests.get(resource))
+                               .map(Quantity::fromString)
+                               .map(Quantity::getNumber)
+                               .orElse(null);
+      BigDecimal recommended = Optional.ofNullable(containerRecommendation.getGuaranteed())
+                                   .map(ResourceRequirement::getRequests)
+                                   .map(requests -> requests.get(resource))
+                                   .map(Quantity::fromString)
+                                   .map(Quantity::getNumber)
+                                   .orElse(null);
+      if (current != null && recommended != null) {
+        resourceChange = resourceChange.add(recommended.subtract(current));
+        resourceCurrent = resourceCurrent.add(current);
+        atLeastOneContainerComputable = true;
+      }
     }
-    BigDecimal currentCpuCores = Quantity.fromString(currentCpu).getNumber();
-    BigDecimal currentMemBytes = Quantity.fromString(currentMemory).getNumber();
-    BigDecimal guaranteedCpuCores = Quantity.fromString(guaranteedCpu).getNumber();
-    BigDecimal guaranteedMemoryBytes = Quantity.fromString(guaranteedMemory).getNumber();
-    BigDecimal cpuCoreSavings = currentCpuCores.subtract(guaranteedCpuCores);
-    BigDecimal memoryByteSavings = currentMemBytes.subtract(guaranteedMemoryBytes);
-    return WatchEventCostEstimator.resourceToCost(cpuCoreSavings, memoryByteSavings);
+    if (atLeastOneContainerComputable && !(resourceCurrent.compareTo(BigDecimal.ZERO) == 0)) {
+      return resourceChange.setScale(3, HALF_UP).divide(resourceCurrent, HALF_UP);
+    }
+    return null;
   }
 
   @NonNull
@@ -220,6 +276,12 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
     }
     String workloadName = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_NAME, podInstance);
     String workloadType = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_TYPE, podInstance);
-    return ResourceId.of(pod.getAccountId(), pod.getClusterId(), pod.getNamespace(), workloadName, workloadType);
+    return ResourceId.builder()
+        .accountId(pod.getAccountId())
+        .clusterId(pod.getClusterId())
+        .namespace(pod.getNamespace())
+        .name(workloadName)
+        .kind(workloadType)
+        .build();
   }
 }

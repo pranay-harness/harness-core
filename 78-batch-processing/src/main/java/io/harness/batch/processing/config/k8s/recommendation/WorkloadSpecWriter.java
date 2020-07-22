@@ -1,5 +1,8 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Optional.ofNullable;
+
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
 import org.springframework.batch.item.ItemWriter;
@@ -30,17 +33,26 @@ class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
     for (PublishedMessage item : items) {
       String accountId = item.getAccountId();
       K8sWorkloadSpec k8sWorkloadSpec = (K8sWorkloadSpec) item.getMessage();
-      ResourceId workloadId = ResourceId.of(accountId, k8sWorkloadSpec.getClusterId(), k8sWorkloadSpec.getNamespace(),
-          k8sWorkloadSpec.getWorkloadName(), k8sWorkloadSpec.getWorkloadKind());
+      ResourceId workloadId = ResourceId.builder()
+                                  .accountId(accountId)
+                                  .clusterId(k8sWorkloadSpec.getClusterId())
+                                  .namespace(k8sWorkloadSpec.getNamespace())
+                                  .name(k8sWorkloadSpec.getWorkloadName())
+                                  .kind(k8sWorkloadSpec.getWorkloadKind())
+                                  .build();
+
       // Make sure the list of containers in the recommendation match the list of containers in the spec
       List<K8sWorkloadSpec.ContainerSpec> containerSpecs = k8sWorkloadSpec.getContainerSpecsList();
-      Map<String, ContainerRecommendation> containerRecommendations = containerSpecs.stream().collect(Collectors.toMap(
-          K8sWorkloadSpec.ContainerSpec::getName,
-          e
-          -> ContainerRecommendation.builder()
-                 .containerName(e.getName())
-                 .current(ResourceRequirement.builder().requests(e.getRequestsMap()).limits(e.getLimitsMap()).build())
-                 .build()));
+      Map<String, ContainerRecommendation> containerRecommendations =
+          containerSpecs.stream().collect(Collectors.toMap(K8sWorkloadSpec.ContainerSpec::getName, e -> {
+            Map<String, String> requestsMap = new HashMap<>(ofNullable(e.getRequestsMap()).orElse(emptyMap()));
+            Map<String, String> limitsMap = ofNullable(e.getLimitsMap()).orElse(emptyMap());
+            limitsMap.forEach(requestsMap::putIfAbsent);
+            return ContainerRecommendation.builder()
+                .containerName(e.getName())
+                .current(ResourceRequirement.builder().requests(requestsMap).limits(limitsMap).build())
+                .build();
+          }));
       workloadToRecommendation.computeIfAbsent(workloadId, workloadRecommendationDao::fetchRecommendationForWorkload)
           .setContainerRecommendations(containerRecommendations);
     }

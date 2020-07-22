@@ -6,6 +6,7 @@ import lombok.Value;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Value
@@ -18,6 +19,6 @@ public class QLK8sWorkloadRecommendation {
   String clusterId;
   String clusterName;
   @Singular List<QLContainerRecommendation> containerRecommendations;
-  Double estimatedSavings;
+  BigDecimal estimatedSavings;
   int numDays;
 }

@@ -47,7 +47,13 @@ public class WorkloadRecommendationDaoTest extends CategoryTest {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void testFetchRecommendationForWorkload() throws Exception {
-    ResourceId workloadId = ResourceId.of(ACCOUNT_ID, CLUSTER_ID, NAMESPACE, NAME, KIND);
+    ResourceId workloadId = ResourceId.builder()
+                                .accountId(ACCOUNT_ID)
+                                .clusterId(CLUSTER_ID)
+                                .namespace(NAMESPACE)
+                                .name(NAME)
+                                .kind(KIND)
+                                .build();
     when(query.get())
         .thenReturn(K8sWorkloadRecommendation.builder()
                         .accountId(ACCOUNT_ID)
@@ -76,7 +82,13 @@ public class WorkloadRecommendationDaoTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFetchRecommendationForWorkloadNotPresent() throws Exception {
     when(query.get()).thenReturn(null);
-    ResourceId workloadId = ResourceId.of(ACCOUNT_ID, CLUSTER_ID, NAMESPACE, NAME, KIND);
+    ResourceId workloadId = ResourceId.builder()
+                                .accountId(ACCOUNT_ID)
+                                .clusterId(CLUSTER_ID)
+                                .namespace(NAMESPACE)
+                                .name(NAME)
+                                .kind(KIND)
+                                .build();
     K8sWorkloadRecommendation recommendation = workloadRecommendationDao.fetchRecommendationForWorkload(workloadId);
     assertThat(recommendation)
         .isEqualTo(K8sWorkloadRecommendation.builder()

@@ -21,6 +21,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
 
@@ -49,7 +50,7 @@ public class K8sWorkloadRecommendation
   @Singular @NotEmpty Map<String, ContainerRecommendation> containerRecommendations;
   @Singular @NotEmpty Map<String, ContainerCheckpoint> containerCheckpoints;
 
-  @FdIndex Double estimatedSavings;
+  @FdIndex BigDecimal estimatedSavings;
 
   @EqualsAndHashCode.Exclude @FdTtlIndex Instant ttl;
 

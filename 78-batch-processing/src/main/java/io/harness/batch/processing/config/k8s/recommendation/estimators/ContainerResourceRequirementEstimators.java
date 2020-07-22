@@ -24,7 +24,7 @@ public class ContainerResourceRequirementEstimators {
   private static final double UPPER_BOUND_MEMORY_PERCENTILE = 0.95;
 
   private static final double SAFETY_MARGIN_FRACTION = 0.15; // bump all recommendations by 15%
-  private static final long MIN_CPU_MILLICORES = 250; // 250m
+  private static final long MIN_CPU_MILLICORES = 25; // 25m
   private static final long MIN_MEMORY_BYTES = 262144000; // 250Mi
 
   private static final Map<String, Long> MIN_RESOURCES =
