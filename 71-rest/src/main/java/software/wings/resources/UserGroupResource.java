@@ -1,6 +1,9 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -26,7 +29,6 @@ import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.beans.sso.LdapLinkGroupRequest;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlLinkGroupRequest;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -59,7 +61,7 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Scope(ResourceType.USER)
-@AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+@AuthRule(permissionType = USER_PERMISSION_MANAGEMENT)
 @Slf4j
 public class UserGroupResource {
   private UserGroupService userGroupService;
@@ -86,7 +88,7 @@ public class UserGroupResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_READ)
+  @AuthRule(permissionType = USER_PERMISSION_READ)
   public RestResponse<PageResponse<UserGroup>> list(@BeanParam PageRequest<UserGroup> pageRequest,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm,
       @QueryParam("details") @DefaultValue("true") boolean loadUsers) {
@@ -112,7 +114,7 @@ public class UserGroupResource {
   @GET
   @Path("{userGroupId}")
   @Timed
-  @AuthRule(permissionType = PermissionType.USER_PERMISSION_READ)
+  @AuthRule(permissionType = USER_PERMISSION_READ)
   @ExceptionMetered
   public RestResponse<UserGroup> get(
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId) {
@@ -319,7 +321,7 @@ public class UserGroupResource {
   @Path("approvals")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<PageResponse<UserGroup>> listForApprovals(@QueryParam("accountId") @NotEmpty String accountId) {
     PageRequest<UserGroup> pageRequest = PageRequestBuilder.aPageRequest()
                                              .addFilter("accountId", Operator.EQ, accountId)

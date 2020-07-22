@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.secrets;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
@@ -13,7 +15,6 @@ import software.wings.graphql.schema.type.secrets.QLEncryptedTextUpdate;
 import software.wings.graphql.schema.type.secrets.QLSSHCredentialUpdate;
 import software.wings.graphql.schema.type.secrets.QLSecret;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredentialUpdate;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.SecretManager;
@@ -72,7 +73,7 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
   }
 
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLUpdateSecretPayload mutateAndFetch(
       QLUpdateSecretInput updateSecretInput, MutationContext mutationContext) {
     QLSecret secret = null;

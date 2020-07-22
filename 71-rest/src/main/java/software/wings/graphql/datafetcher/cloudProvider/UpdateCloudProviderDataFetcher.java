@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.graphql.datafetcher.cloudProvider.CloudProviderController.checkIfInputIsNotPresent;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -16,7 +17,6 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProvide
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderPayload;
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateCloudProviderPayload.QLUpdateCloudProviderPayloadBuilder;
 import software.wings.graphql.schema.type.QLCloudProviderType;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
@@ -39,7 +39,7 @@ public class UpdateCloudProviderDataFetcher
   }
 
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLUpdateCloudProviderPayload mutateAndFetch(
       QLUpdateCloudProviderInput input, MutationContext mutationContext) {
     String cloudProviderId = input.getCloudProviderId();

@@ -3,6 +3,8 @@ package software.wings.graphql.datafetcher.trigger;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.graphql.utils.nameservice.NameService.application;
 import static software.wings.graphql.utils.nameservice.NameService.trigger;
+import static software.wings.security.PermissionAttribute.Action.READ;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -24,8 +26,6 @@ import software.wings.graphql.schema.type.trigger.QLTrigger;
 import software.wings.graphql.schema.type.trigger.QLTrigger.QLTriggerBuilder;
 import software.wings.graphql.schema.type.trigger.QLTriggerConnection;
 import software.wings.graphql.schema.type.trigger.QLTriggerConnection.QLTriggerConnectionBuilder;
-import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 
@@ -40,7 +40,7 @@ public class TriggerConnectionDataFetcher
   @Inject TriggerController triggerController;
 
   @Override
-  @AuthRule(permissionType = PermissionType.LOGGED_IN, action = Action.READ)
+  @AuthRule(permissionType = LOGGED_IN, action = READ)
   protected QLTriggerConnection fetchConnection(List<QLTriggerFilter> triggerFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<Trigger> query = populateFilters(wingsPersistence, triggerFilters, Trigger.class, false);

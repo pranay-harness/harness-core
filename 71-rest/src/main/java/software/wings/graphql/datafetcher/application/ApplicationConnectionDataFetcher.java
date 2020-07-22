@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.application;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import graphql.schema.DataFetchingEnvironment;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -14,7 +16,6 @@ import software.wings.graphql.schema.type.QLApplicationConnection;
 import software.wings.graphql.schema.type.QLApplicationConnection.QLApplicationConnectionBuilder;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.application.QLApplicationFilter;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.List;
@@ -23,7 +24,7 @@ import java.util.List;
 public class ApplicationConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLApplicationFilter, QLNoOpSortCriteria, QLApplicationConnection> {
   @Override
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public QLApplicationConnection fetchConnection(List<QLApplicationFilter> appFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<Application> query = populateFilters(wingsPersistence, null, Application.class, true)

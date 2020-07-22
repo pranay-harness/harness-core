@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.tag;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -10,7 +11,6 @@ import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.graphql.datafetcher.AbstractArrayDataFetcher;
 import software.wings.graphql.schema.query.QLTagsQueryParameters;
 import software.wings.graphql.schema.type.QLTag;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public class TagsDataFetcher extends AbstractArrayDataFetcher<QLTag, QLTagsQuery
   }
 
   @Override
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public List<QLTag> fetch(QLTagsQueryParameters qlQuery, String accountId) {
     List<HarnessTagLink> harnessTagLinks = new ArrayList<>();
 
