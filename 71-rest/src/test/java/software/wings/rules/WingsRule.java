@@ -44,6 +44,7 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.MongoConfig;
+import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
@@ -221,6 +222,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
     configuration.getPortal().setJwtExternalServiceSecret("JWT_EXTERNAL_SERVICE_SECRET");
     configuration.getPortal().setJwtPasswordSecret(JWT_PASSWORD_SECRET);
+    configuration.getPortal().setJwtNextGenManagerSecret("dummy_key");
     configuration.setApiUrl("http:localhost:8080");
     configuration.setMongoConnectionFactory(
         MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
@@ -248,6 +250,10 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
 
     SegmentConfig segmentConfig = SegmentConfig.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
     configuration.setSegmentConfig(segmentConfig);
+
+    OrganizationManagerClientConfig organizationManagerClientConfig =
+        OrganizationManagerClientConfig.builder().baseUrl("http://localhost:7457/").build();
+    configuration.setOrganizationManagerClientConfig(organizationManagerClientConfig);
 
     configuration.setDistributedLockImplementation(DistributedLockImplementation.NOOP);
     return configuration;

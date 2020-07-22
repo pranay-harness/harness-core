@@ -39,6 +39,7 @@ import io.harness.govern.ServersModule;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.QueryFactory;
+import io.harness.organizationmanagerclient.OrganizationManagerClientConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
@@ -291,11 +292,14 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     configuration.getPortal().setCompanyName("COMPANY_NAME");
     configuration.getPortal().setUrl("PORTAL_URL");
     configuration.getPortal().setVerificationUrl("VERIFICATION_PATH");
+    configuration.getPortal().setJwtNextGenManagerSecret("dummy_key");
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
     configuration.setElasticsearchConfig(elasticsearchConfig);
     configuration.setSearchEnabled(isSearchEnabled);
     configuration.setSegmentConfig(
         SegmentConfig.builder().enabled(false).apiKey("dummy_api_key").url("dummy_url").build());
+    configuration.setOrganizationManagerClientConfig(
+        OrganizationManagerClientConfig.builder().baseUrl("http://localhost:7457/").build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     return configuration;
   }

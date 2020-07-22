@@ -10,6 +10,7 @@ import io.harness.migration.MigrationJobInstance;
 import io.harness.mongo.MorphiaMove;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -41,6 +42,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(MigrationJobInstance.class);
     set.add(MorphiaMove.class);
     set.add(NameAccess.class);
+    set.add(NGAccountAccess.class);
     set.add(PersistentCronIterable.class);
     set.add(PersistentEntity.class);
     set.add(PersistentFibonacciIterable.class);

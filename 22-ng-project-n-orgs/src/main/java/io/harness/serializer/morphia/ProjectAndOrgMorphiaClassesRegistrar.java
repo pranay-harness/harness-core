@@ -3,7 +3,6 @@ package io.harness.serializer.morphia;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.core.NGAccess;
-import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.NGOrgAccess;
 import io.harness.ng.core.NGProjectAccess;
 import io.harness.ng.core.OrganizationAccess;
@@ -18,7 +17,6 @@ public class ProjectAndOrgMorphiaClassesRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(Project.class);
     set.add(Organization.class);
-    set.add(NGAccountAccess.class);
     set.add(NGAccess.class);
     set.add(NGProjectAccess.class);
     set.add(NGOrgAccess.class);
