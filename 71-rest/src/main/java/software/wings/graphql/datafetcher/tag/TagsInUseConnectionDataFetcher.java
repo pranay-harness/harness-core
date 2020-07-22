@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.tag;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.common.collect.Sets;
 
@@ -27,7 +28,6 @@ import software.wings.graphql.schema.type.aggregation.QLEntityTypeFilter;
 import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInUseFilter;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 public class TagsInUseConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLTagInUseFilter, QLNoOpSortCriteria, QLTagsInUseConnection> {
   @Override
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLTagsInUseConnection fetchConnection(List<QLTagInUseFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     int offset = pageQueryParameters.getOffset();

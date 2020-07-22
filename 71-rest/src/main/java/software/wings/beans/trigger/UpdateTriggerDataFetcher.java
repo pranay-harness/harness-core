@@ -1,5 +1,7 @@
 package software.wings.beans.trigger;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import com.google.inject.Inject;
 
 import io.harness.logging.AccountLogContext;
@@ -9,7 +11,6 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.trigger.TriggerController;
 import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerPayload;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.TriggerService;
 
@@ -24,7 +25,7 @@ public class UpdateTriggerDataFetcher extends BaseMutatorDataFetcher<QLCreateOrU
   }
 
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLTriggerPayload mutateAndFetch(QLCreateOrUpdateTriggerInput parameter, MutationContext mutationContext) {
     try (AutoLogContext ignore0 =
              new AccountLogContext(mutationContext.getAccountId(), AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {

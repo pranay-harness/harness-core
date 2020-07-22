@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -13,7 +14,6 @@ import software.wings.beans.FeatureName;
 import software.wings.search.SearchService;
 import software.wings.search.framework.AdvancedSearchQuery;
 import software.wings.search.framework.SearchResults;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.FeatureFlagService;
 
@@ -34,7 +34,7 @@ public class SearchResource {
   @Inject private MainConfiguration configuration;
 
   @GET
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<SearchResults> getSearchResults(
       @QueryParam("query") @NotBlank String searchQuery, @QueryParam("accountId") @NotBlank String accountId) {
     if (isSearchEnabled(accountId)) {
@@ -45,7 +45,7 @@ public class SearchResource {
 
   @Path("advanced")
   @POST
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<SearchResults> getSearchResults(
       @QueryParam("accountId") @NotBlank String accountId, AdvancedSearchQuery advancedSearchQuery) {
     if (isSearchEnabled(accountId)) {

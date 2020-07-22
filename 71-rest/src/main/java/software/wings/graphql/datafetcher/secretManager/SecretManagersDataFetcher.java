@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.secretManager;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -20,7 +21,6 @@ import software.wings.graphql.schema.type.secretManagers.QLSecretManager;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManager.QLSecretManagerBuilder;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManagerConnection;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManagerConnection.QLSecretManagerConnectionBuilder;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.List;
@@ -35,11 +35,11 @@ public class SecretManagersDataFetcher
   }
 
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLSecretManagerConnection fetchConnection(List<QLSecretManagerFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<SecretManagerConfig> query = populateFilters(wingsPersistence, filters, SecretManagerConfig.class, true);
-    query.order(Sort.descending(SecretManagerConfig.CREATED_AT_KEY));
+    query.order(Sort.descending(SecretManagerConfigKeys.createdAt));
     QLSecretManagerConnectionBuilder connectionBuilder = QLSecretManagerConnection.builder();
     connectionBuilder.pageInfo(dataFetcherUtils.populate(pageQueryParameters, query, secretManager -> {
       QLSecretManagerBuilder builder = QLSecretManager.builder();

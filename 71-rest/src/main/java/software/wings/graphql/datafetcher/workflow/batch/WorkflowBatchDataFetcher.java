@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.workflow.batch;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.AccessLevel;
@@ -10,7 +12,6 @@ import org.dataloader.DataLoader;
 import software.wings.graphql.datafetcher.AbstractBatchDataFetcher;
 import software.wings.graphql.schema.query.QLWorkflowQueryParameters;
 import software.wings.graphql.schema.type.QLWorkflow;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.concurrent.CompletionStage;
@@ -19,7 +20,7 @@ import java.util.concurrent.CompletionStage;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class WorkflowBatchDataFetcher extends AbstractBatchDataFetcher<QLWorkflow, QLWorkflowQueryParameters, String> {
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected CompletionStage<QLWorkflow> load(
       QLWorkflowQueryParameters parameters, DataLoader<String, QLWorkflow> dataLoader) {
     final String workflowId;

@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.secretManager;
-
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -15,16 +15,15 @@ import software.wings.graphql.schema.query.QLSecretManagerQueryParameters;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManager;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManager.QLSecretManagerBuilder;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManager.QLSecretManagerKeys;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 public class SecretManagerDataFetcher
     extends AbstractObjectDataFetcher<QLSecretManager, QLSecretManagerQueryParameters> {
-  @Inject HPersistence persistence;
-  public static final String SECURITY_MANAGER_DOES_NOT_EXIST_MSG = "Secret Manager does not exist";
+  @Inject private HPersistence persistence;
+  private static final String SECURITY_MANAGER_DOES_NOT_EXIST_MSG = "Secret Manager does not exist";
 
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLSecretManager fetch(QLSecretManagerQueryParameters qlQuery, String accountId) {
     SecretManagerConfig secretManager = null;
 

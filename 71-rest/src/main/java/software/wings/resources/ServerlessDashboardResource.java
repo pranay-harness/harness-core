@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -18,7 +19,6 @@ import software.wings.beans.instance.dashboard.InstanceSummaryStatsByService;
 import software.wings.resources.stats.model.ServerlessInstanceTimeline;
 import software.wings.resources.stats.model.TimeRange;
 import software.wings.resources.stats.service.TimeRangeProvider;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -93,10 +93,10 @@ public class ServerlessDashboardResource {
 
   @PUT
   @Path("manual-sync")
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = LOGGED_IN)
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<String> manualSyncServerlessInfraMapping(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("inframappingId") String infraMappingId) {
     return new RestResponse<>(instanceHelper.manualSync(appId, infraMappingId));

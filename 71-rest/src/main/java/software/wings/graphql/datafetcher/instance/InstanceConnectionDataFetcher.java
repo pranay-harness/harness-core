@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import com.google.inject.Inject;
 
@@ -21,7 +22,6 @@ import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
 import software.wings.graphql.schema.type.instance.QLInstance;
 import software.wings.graphql.utils.nameservice.NameService;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 
 import java.util.List;
@@ -33,7 +33,7 @@ public class InstanceConnectionDataFetcher
   @Inject private InstanceQueryHelper instanceMongoHelper;
 
   @Override
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   protected QLInstanceConnection fetchConnection(List<QLInstanceFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<Instance> query = populateFilters(wingsPersistence, filters, Instance.class, true)

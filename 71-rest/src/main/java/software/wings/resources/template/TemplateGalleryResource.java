@@ -1,6 +1,7 @@
 package software.wings.resources.template;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 
 import com.google.inject.Inject;
@@ -15,7 +16,6 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -37,7 +37,7 @@ import javax.ws.rs.QueryParam;
 @Path("/template-galleries")
 @Produces("application/json")
 @Scope(ResourceType.TEMPLATE)
-@AuthRule(permissionType = PermissionType.LOGGED_IN)
+@AuthRule(permissionType = LOGGED_IN)
 public class TemplateGalleryResource {
   @Inject TemplateGalleryService templateGalleryService;
   @Inject TemplateFolderService templateFolderService;

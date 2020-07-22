@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -8,7 +10,6 @@ import io.harness.rest.RestResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.security.restrictions.RestrictionsSummary;
-import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -57,7 +58,7 @@ public class UsageRestrictionsResource {
   @Path("apps")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<RestrictionsSummary> listAppsWithEnvUpdatePermissions(
       @QueryParam("accountId") @NotEmpty String accountId) {
     RestrictionsSummary restrictionsSummary = usageRestrictionsService.listAppsWithEnvUpdatePermissions(accountId);
@@ -74,7 +75,7 @@ public class UsageRestrictionsResource {
   @Path("defaultRestrictions")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<UsageRestrictions> getDefaultRestrictions(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("appId") String appId, @QueryParam("envId") String envId) {
     UsageRestrictions defaultUsageRestrictions =
@@ -92,7 +93,7 @@ public class UsageRestrictionsResource {
   @Path("editable/{entityId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Boolean> isEditable(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("entityId") @NotEmpty String entityId, @QueryParam("entityType") @NotEmpty String entityType) {
     boolean isEditable = usageRestrictionsService.isEditable(accountId, entityId, entityType);
@@ -103,7 +104,7 @@ public class UsageRestrictionsResource {
   @Path("appReferences/{appId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<UsageRestrictionsReferenceSummary> getReferenceSummaryForApp(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("appId") String appId) {
     return new RestResponse<>(usageRestrictionsService.getReferenceSummaryForApp(accountId, appId));
@@ -113,7 +114,7 @@ public class UsageRestrictionsResource {
   @Path("envReferences/{envId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<UsageRestrictionsReferenceSummary> getReferenceSummaryForEnv(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("envId") String envId) {
     return new RestResponse<>(usageRestrictionsService.getReferenceSummaryForEnv(accountId, envId));
