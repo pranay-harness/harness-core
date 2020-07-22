@@ -53,7 +53,6 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
         kubernetesSteadyStateCheckParams.getActivityId(), kubernetesSteadyStateCheckParams.getCommandName());
 
     if (containerDeploymentDelegateHelper.getControllerCountByLabels(
-            kubernetesSteadyStateCheckParams.getContainerServiceParams(),
             containerDeploymentDelegateHelper.getKubernetesConfig(
                 kubernetesSteadyStateCheckParams.getContainerServiceParams()),
             kubernetesSteadyStateCheckParams.getLabels())
@@ -101,7 +100,6 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
         kubernetesSteadyStateCheckParams.getContainerServiceParams());
 
     return containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabels(
-        kubernetesSteadyStateCheckParams.getContainerServiceParams(), kubernetesConfig, executionLogCallback,
-        kubernetesSteadyStateCheckParams.getLabels(), Collections.emptyList());
+        kubernetesConfig, executionLogCallback, kubernetesSteadyStateCheckParams.getLabels(), Collections.emptyList());
   }
 }

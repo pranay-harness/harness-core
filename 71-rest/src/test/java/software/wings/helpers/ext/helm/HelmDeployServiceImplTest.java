@@ -802,7 +802,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(ContainerServiceParams.class)))
         .thenReturn(new KubernetesConfig());
     when(containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel(
-             anyString(), anyString(), any(), any(), any(), eq(Collections.emptyList())))
+             anyString(), anyString(), any(), any(), eq(Collections.emptyList())))
         .thenReturn(asList(new ContainerInfo()));
     when(containerDeploymentDelegateHelper.getExistingPodsByLabels(
              any(ContainerServiceParams.class), any(KubernetesConfig.class), any(Map.class)))

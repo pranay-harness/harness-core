@@ -436,8 +436,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
     KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams);
 
-    return containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel("release",
-        commandRequest.getReleaseName(), containerServiceParams, kubernetesConfig, executionLogCallback, existingPods);
+    return containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel(
+        "release", commandRequest.getReleaseName(), kubernetesConfig, executionLogCallback, existingPods);
   }
 
   @Override

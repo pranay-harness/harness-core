@@ -132,6 +132,7 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 
@@ -185,6 +186,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Inject private transient TimeLimiter timeLimiter;
   @Inject private transient Clock clock;
   @Inject private transient AzureHelperService azureHelperService;
+  @Inject private EncryptionService encryptionService;
 
   private Map<String, String> harnessAnnotations;
   private Map<String, String> lookupLabels;
@@ -215,12 +217,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       lookupLabels = ImmutableMap.of(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY, setupParams.getReleaseName());
 
       KubernetesConfig kubernetesConfig;
-      List<EncryptedDataDetail> encryptedDataDetails;
+      List<EncryptedDataDetail> encryptedDataDetails = emptyList();
       if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
         kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
-        encryptedDataDetails = edd;
       } else if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
         KubernetesClusterConfig config = (KubernetesClusterConfig) cloudProviderSetting.getValue();
+        encryptionService.decrypt(config, edd);
         String delegateName = System.getenv().get("DELEGATE_NAME");
         if (config.isUseKubernetesDelegate() && !config.getDelegateName().equals(delegateName)) {
           throw new InvalidRequestException(format("Kubernetes delegate name [%s] doesn't match "
@@ -228,21 +230,17 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               delegateName, config.getDelegateName(), cloudProviderSetting.getName()));
         }
         kubernetesConfig = config.createKubernetesConfig(setupParams.getNamespace());
-        encryptedDataDetails = edd;
       } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
         AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();
         kubernetesConfig =
             azureHelperService.getKubernetesClusterConfig(azureConfig, edd, setupParams.getSubscriptionId(),
                 setupParams.getResourceGroup(), setupParams.getClusterName(), setupParams.getNamespace());
-        kubernetesConfig.setDecrypted(true);
-        encryptedDataDetails = emptyList();
       } else {
         kubernetesConfig = gkeClusterService.getCluster(
             cloudProviderSetting, edd, setupParams.getClusterName(), setupParams.getNamespace());
-        kubernetesConfig.setDecrypted(true);
-        encryptedDataDetails = emptyList();
       }
 
+      kubernetesConfig.setDecrypted(true);
       kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
 
       String internalConfigName = getInternalHarnessConfigName(setupParams.getInfraMappingId());

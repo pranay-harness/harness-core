@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -48,7 +49,9 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.delegatetasks.oidc.OidcTokenRetriever;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,6 +63,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
   @Mock private OidcTokenRetriever oidcTokenRetriever;
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock ExecutionLogCallback logCallback;
+  @Mock private EncryptionService encryptionService;
   @Spy @InjectMocks ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   @Before
@@ -179,15 +183,15 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     when(kubernetesContainerService.getPods(eq(kubernetesConfig), any(List.class), anyMap())).thenReturn(existingPods);
     doReturn(null)
         .when(containerDeploymentDelegateHelper)
-        .getContainerInfosWhenReadyByLabels(any(ContainerServiceParams.class), any(KubernetesConfig.class),
-            any(ExecutionLogCallback.class), anyMap(), anyList());
+        .getContainerInfosWhenReadyByLabels(
+            any(KubernetesConfig.class), any(ExecutionLogCallback.class), anyMap(), anyList());
 
     containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel(
-        "name", "value", containerServiceParams, kubernetesConfig, logCallback, existingPods);
+        "name", "value", kubernetesConfig, logCallback, existingPods);
 
     verify(containerDeploymentDelegateHelper, times(1))
         .getContainerInfosWhenReadyByLabels(
-            containerServiceParams, kubernetesConfig, logCallback, ImmutableMap.of("name", "value"), existingPods);
+            kubernetesConfig, logCallback, ImmutableMap.of("name", "value"), existingPods);
   }
 
   @Test
@@ -204,7 +208,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
         .thenReturn(controllers);
 
     containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabels(
-        containerServiceParams, kubernetesConfig, logCallback, ImmutableMap.of("name", "value"), existingPods);
+        kubernetesConfig, logCallback, ImmutableMap.of("name", "value"), existingPods);
 
     verify(kubernetesContainerService, times(1))
         .getContainerInfosWhenReady(kubernetesConfig, Collections.emptyList(), "deployment-name", 0, -1, 30,
@@ -328,5 +332,33 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
         false, ContainerServiceParams.builder().build(), new ExecutionLogCallback());
     assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetControllerCountByLabels() {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
+    Map<String, String> labels = new HashMap<>();
+
+    List<? extends HasMetadata> controllers = getMockedControllers();
+    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyList(), anyMap()))
+        .thenReturn(controllers);
+    assertThat(containerDeploymentDelegateHelper.getControllerCountByLabels(kubernetesConfig, labels)).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetKubernetesConfig() {
+    K8sClusterConfig k8sClusterConfig =
+        K8sClusterConfig.builder()
+            .cloudProvider(KubernetesClusterConfig.builder().masterUrl("https://example.com").build())
+            .cloudProviderEncryptionDetails(emptyList())
+            .build();
+
+    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
+    assertThat(kubernetesConfig.getMasterUrl()).isEqualTo("https://example.com");
+    assertThat(kubernetesConfig.isDecrypted()).isTrue();
   }
 }
