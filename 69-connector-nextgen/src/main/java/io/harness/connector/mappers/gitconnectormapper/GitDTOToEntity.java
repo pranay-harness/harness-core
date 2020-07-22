@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import io.harness.connector.entities.embedded.gitconnector.GitAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
-import io.harness.connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication;
+import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
@@ -85,9 +85,9 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
     }
   }
 
-  private UserNamePasswordGitAuthentication getHTTPGitAuthentication(
+  private GitUserNamePasswordAuthentication getHTTPGitAuthentication(
       GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO) {
-    return UserNamePasswordGitAuthentication.builder()
+    return GitUserNamePasswordAuthentication.builder()
         .userName(gitHTTPAuthenticationDTO.getUsername())
         .passwordReference(gitHTTPAuthenticationDTO.getEncryptedPassword())
         .build();

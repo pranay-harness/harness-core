@@ -138,6 +138,17 @@ public class DelegateSetupResource {
   }
 
   @GET
+  @Path("validateDelegateName")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> validateThatDelegateNameIsUnique(
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.validateThatDelegateNameIsUnique(accountId, delegateName));
+    }
+  }
+
+  @GET
   @Path("{delegateId}/profile-result")
   @Timed
   @ExceptionMetered

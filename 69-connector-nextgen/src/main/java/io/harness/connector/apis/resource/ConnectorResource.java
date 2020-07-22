@@ -49,6 +49,17 @@ public class ConnectorResource {
   }
 
   @GET
+  @Path("validateUniqueIdentifier")
+  @ApiOperation(value = "Validate Identifier is unique", nickname = "validateTheIdentifierIsUnique")
+  public ResponseDTO<Boolean> validateTheIdentifierIsUnique(
+      @NotEmpty @PathParam("accountIdentifier") String accountIdentifier,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("connectorIdentifier") String connectorIdentifier) {
+    return ResponseDTO.newResponse(connectorService.validateTheIdentifierIsUnique(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+  }
+
+  @GET
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorList")
   public ResponseDTO<Page<ConnectorSummaryDTO>> list(@QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") @DefaultValue("100") int size, ConnectorFilter connectorFilter,

@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -267,5 +268,22 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                   .build())
         .tags(new ArrayList<>())
         .build();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testValidateThatDelegateNameIsUnique() {
+    String delegateName = "delegateName";
+    Delegate delegate = createDelegateBuilder().build();
+    delegate.setDelegateName(delegateName);
+    wingsPersistence.save(delegate);
+    boolean validationResult = delegateService.validateThatDelegateNameIsUnique(ACCOUNT_ID, delegateName);
+    assertThat(validationResult).isFalse();
+
+    // If the delegate doesn't exists
+    boolean checkingValidationForRandomName =
+        delegateService.validateThatDelegateNameIsUnique(ACCOUNT_ID, String.valueOf(System.currentTimeMillis()));
+    assertThat(checkingValidationForRandomName).isTrue();
   }
 }

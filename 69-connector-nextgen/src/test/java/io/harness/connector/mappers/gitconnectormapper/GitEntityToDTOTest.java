@@ -10,7 +10,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
-import io.harness.connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication;
+import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
@@ -42,15 +42,15 @@ public class GitEntityToDTOTest extends CategoryTest {
                                                         .authorName("authorName")
                                                         .commitMessage("commitMessage")
                                                         .build();
-    UserNamePasswordGitAuthentication userNamePasswordGitAuthentication =
-        UserNamePasswordGitAuthentication.builder().userName(userName).passwordReference(passwordReference).build();
+    GitUserNamePasswordAuthentication gitUserNamePasswordAuthentication =
+        GitUserNamePasswordAuthentication.builder().userName(userName).passwordReference(passwordReference).build();
     GitConfig gitConfig = GitConfig.builder()
                               .supportsGitSync(true)
                               .authType(HTTP)
                               .url(url)
                               .connectionType(ACCOUNT)
                               .customCommitAttributes(customCommitAttributes)
-                              .authenticationDetails(userNamePasswordGitAuthentication)
+                              .authenticationDetails(gitUserNamePasswordAuthentication)
                               .build();
     GitConfigDTO gitConfigDTO = gitEntityToDTO.createConnectorDTO((GitConfig) gitConfig);
     assertThat(gitConfigDTO).isNotNull();

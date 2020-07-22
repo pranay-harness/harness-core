@@ -124,4 +124,15 @@ public class ConnectorResourceTest extends CategoryTest {
     Mockito.verify(connectorService, times(1)).delete(any(), any(), any(), any());
     assertThat(result.getData()).isTrue();
   }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void validateTheIdentifierIsUniqueTest() {
+    when(connectorService.validateTheIdentifierIsUnique(any(), any(), any(), any())).thenReturn(true);
+    ResponseDTO<Boolean> result = connectorResource.validateTheIdentifierIsUnique(
+        "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier");
+    Mockito.verify(connectorService, times(1)).validateTheIdentifierIsUnique(any(), any(), any(), any());
+    assertThat(result.getData()).isTrue();
+  }
 }

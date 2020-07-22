@@ -3,7 +3,7 @@ package io.harness.serializer.morphia;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
-import io.harness.connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication;
+import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sClientKeyCert;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sOpenIdConnect;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sServiceAccount;
@@ -33,7 +33,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     h.put("connector.entities.embedded.kubernetescluster.K8sServiceAccount", K8sServiceAccount.class);
     h.put("connector.entities.embedded.kubernetescluster.K8sUserNamePassword", K8sUserNamePassword.class);
     h.put("connector.entities.embedded.gitconnector.GitSSHAuthentication", GitSSHAuthentication.class);
-    h.put("connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication",
-        UserNamePasswordGitAuthentication.class);
+    h.put("connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication",
+        GitUserNamePasswordAuthentication.class);
   }
 }

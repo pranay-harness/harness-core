@@ -10,7 +10,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
-import io.harness.connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication;
+import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
@@ -60,10 +60,10 @@ public class GitDTOToEntityTest extends CategoryTest {
     assertThat(gitConfig.getConnectionType()).isEqualTo(ACCOUNT);
     assertThat(gitConfig.getAuthType()).isEqualTo(HTTP);
     assertThat(gitConfig.getCustomCommitAttributes()).isEqualTo(customCommitAttributes);
-    UserNamePasswordGitAuthentication userNamePasswordGitAuthentication =
-        (UserNamePasswordGitAuthentication) gitConfig.getAuthenticationDetails();
-    assertThat(userNamePasswordGitAuthentication.getUserName()).isEqualTo(userName);
-    assertThat(userNamePasswordGitAuthentication.getPasswordReference()).isEqualTo(passwordReference);
+    GitUserNamePasswordAuthentication gitUserNamePasswordAuthentication =
+        (GitUserNamePasswordAuthentication) gitConfig.getAuthenticationDetails();
+    assertThat(gitUserNamePasswordAuthentication.getUserName()).isEqualTo(userName);
+    assertThat(gitUserNamePasswordAuthentication.getPasswordReference()).isEqualTo(passwordReference);
   }
 
   @Test

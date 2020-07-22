@@ -23,6 +23,9 @@ public interface ConnectorService {
 
   ConnectorValidationResult validate(ConnectorRequestDTO connector, String accountIdentifier);
 
+  boolean validateTheIdentifierIsUnique(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
+
   ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 }
