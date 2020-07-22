@@ -9,6 +9,8 @@ import software.wings.api.DeploymentType;
 /**
  * Created by anubhaw on 12/20/17.
  */
+
+@JsonTypeName("AWS_AMI")
 public class AmiCommandUnit extends AbstractCommandUnit {
   public AmiCommandUnit() {
     super(CommandUnitType.AWS_AMI);

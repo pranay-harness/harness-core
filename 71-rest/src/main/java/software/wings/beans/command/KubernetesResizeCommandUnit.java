@@ -57,6 +57,7 @@ import java.util.Optional;
 /**
  * Created by brett on 3/3/17
  */
+@JsonTypeName("RESIZE_KUBERNETES")
 public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.DeploymentType;
 
+@JsonTypeName("AWS_LAMBDA")
 public class AwsLambdaCommandUnit extends AbstractCommandUnit {
   public AwsLambdaCommandUnit() {
     super(CommandUnitType.AWS_LAMBDA);
