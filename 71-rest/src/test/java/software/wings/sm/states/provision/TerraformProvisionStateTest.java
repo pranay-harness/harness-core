@@ -1,13 +1,17 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.beans.SweepingOutputInstance.Scope;
+import static io.harness.beans.SweepingOutputInstance.builder;
 import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
@@ -16,19 +20,29 @@ import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
+import static software.wings.utils.WingsTestConstants.USER_EMAIL;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -36,11 +50,14 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FileMetadata;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stream.BoundedInputStream;
@@ -52,6 +69,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
+import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformExecutionData;
@@ -61,10 +79,14 @@ import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GitConfig;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.PhaseStep;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -88,6 +110,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,6 +165,10 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                  .build())
         .when(executionContext)
         .getContextElement(any(ContextElementType.class));
+
+    doReturn(null).when(executionContext).getContextElement(ContextElementType.TERRAFORM_PROVISION);
+    doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(builder()).when(executionContext).prepareSweepingOutputBuilder(any(Scope.class));
   }
 
   @Test
@@ -169,10 +196,10 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     state.updateProvisionerWorkspaces(provisioner, "w1");
     assertThat(provisioner.getWorkspaces().size() == 1 && provisioner.getWorkspaces().contains("w1")).isTrue();
     state.updateProvisionerWorkspaces(provisioner, "w2");
-    assertThat(provisioner.getWorkspaces().size() == 2 && provisioner.getWorkspaces().equals(Arrays.asList("w1", "w2")))
+    assertThat(provisioner.getWorkspaces().size() == 2 && provisioner.getWorkspaces().equals(asList("w1", "w2")))
         .isTrue();
     state.updateProvisionerWorkspaces(provisioner, "w2");
-    assertThat(provisioner.getWorkspaces().size() == 2 && provisioner.getWorkspaces().equals(Arrays.asList("w1", "w2")))
+    assertThat(provisioner.getWorkspaces().size() == 2 && provisioner.getWorkspaces().equals(asList("w1", "w2")))
         .isTrue();
   }
 
@@ -196,12 +223,12 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     NameValuePair wf_var_2 = NameValuePair.builder().name("secret_key").valueType("TEXT").value("value-2").build();
     NameValuePair wf_var_3 = NameValuePair.builder().name("region").valueType("TEXT").value("value-3").build();
 
-    final List<NameValuePair> workflowVars = Arrays.asList(wf_var_1, wf_var_2, wf_var_3);
-    final List<NameValuePair> provVars = Arrays.asList(prov_var_1, prov_var_2);
+    final List<NameValuePair> workflowVars = asList(wf_var_1, wf_var_2, wf_var_3);
+    final List<NameValuePair> provVars = asList(prov_var_1, prov_var_2);
 
     List<NameValuePair> filteredVars_1 = TerraformProvisionState.validateAndFilterVariables(workflowVars, provVars);
 
-    final List<NameValuePair> expected_1 = Arrays.asList(wf_var_1, wf_var_2);
+    final List<NameValuePair> expected_1 = asList(wf_var_1, wf_var_2);
     assertThat(filteredVars_1).isEqualTo(expected_1);
 
     wf_var_1.setValueType("ENCRYPTED_TEXT");
@@ -209,8 +236,19 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     final List<NameValuePair> filteredVars_2 =
         TerraformProvisionState.validateAndFilterVariables(workflowVars, provVars);
 
-    final List<NameValuePair> expected_2 = Arrays.asList(wf_var_1, wf_var_2);
+    final List<NameValuePair> expected_2 = asList(wf_var_1, wf_var_2);
     assertThat(filteredVars_2).isEqualTo(expected_2);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testValidateAndFilterVariablesEmpty() {
+    final List<NameValuePair> workflowVars =
+        Collections.singletonList(NameValuePair.builder().name("key").valueType("TEXT").value("value").build());
+    final List<NameValuePair> provVars = Collections.emptyList();
+
+    assertThat(TerraformProvisionState.validateAndFilterVariables(workflowVars, provVars)).isEmpty();
   }
 
   @Test
@@ -232,6 +270,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(state.getTimeoutMillis()).isEqualTo(500);
   }
 
+  @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testExecuteTerraformDestroyStateWithConfiguration() {
@@ -319,10 +358,15 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     GitConfig gitConfig = GitConfig.builder().branch("master").build();
     FileMetadata fileMetadata =
         FileMetadata.builder()
-            .metadata(ImmutableMap.of("variables", ImmutableMap.of("region", "us-east", "vpc_id", "vpc-id"),
-                "encrypted_variables", ImmutableMap.of("access_key", "access_key", "secret_key", "secret_key"),
-                "backend_configs", ImmutableMap.of("bucket", "tf-remote-state", "key", "terraform.tfstate"),
-                "encrypted_backend_configs", ImmutableMap.of("access_token", "access_token")))
+            .metadata(
+                ImmutableMap.<String, Object>builder()
+                    .put("variables", ImmutableMap.of("region", "us-east", "vpc_id", "vpc-id"))
+                    .put("encrypted_variables", ImmutableMap.of("access_key", "access_key", "secret_key", "secret_key"))
+                    .put("backend_configs", ImmutableMap.of("bucket", "tf-remote-state", "key", "terraform.tfstate"))
+                    .put("encrypted_backend_configs", ImmutableMap.of("access_token", "access_token"))
+                    .put("targets", asList("target1", "target2"))
+                    .put("tf_var_files", asList("file1", "file2"))
+                    .build())
             .build();
 
     doReturn("fileId").when(fileService).getLatestFileId(anyString(), eq(FileBucket.TERRAFORM_STATE));
@@ -330,6 +374,9 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
     doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));
     doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    doAnswer(invocation -> invocation.getArgumentAt(0, String.class) + "-rendered")
+        .when(executionContext)
+        .renderExpression(anyString());
     ExecutionResponse response = destroyProvisionState.execute(executionContext);
 
     ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
@@ -345,6 +392,8 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(parameters.getBackendConfigs()).isNotEmpty();
     assertParametersVariables(parameters);
     assertParametersBackendConfigs(parameters);
+    assertThat(parameters.getTfVarFiles()).containsExactlyInAnyOrder("file1-rendered", "file2-rendered");
+    assertThat(parameters.getTargets()).containsExactlyInAnyOrder("target1-rendered", "target2-rendered");
   }
 
   @Test
@@ -427,6 +476,57 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(executionResponse.getCorrelationIds().get(0)).isEqualTo("uuid");
     assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
         .isEqualTo("uuid");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteInternalInheritedInvalid() {
+    state.setInheritApprovedPlan(true);
+    state.setProvisionerId(PROVISIONER_ID);
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .variables(getTerraformVariables())
+                                                         .build();
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+
+    // No previous terraform plan executed
+    doReturn(Collections.emptyList()).when(executionContext).getContextElementList(TERRAFORM_INHERIT_PLAN);
+    assertThatThrownBy(() -> state.execute(executionContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No previous Terraform plan execution found");
+
+    // No previous terraform plan executed for PROVISIONER_ID
+    doReturn(
+        Collections.singletonList(TerraformProvisionInheritPlanElement.builder().provisionerId("NOT_THIS_ID").build()))
+        .when(executionContext)
+        .getContextElementList(TERRAFORM_INHERIT_PLAN);
+    assertThatThrownBy(() -> state.execute(executionContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No Terraform provision command found with current provisioner");
+
+    // Invalid provisioner path
+    doReturn(null).when(executionContext).renderExpression("current/working/directory");
+    doReturn(
+        Collections.singletonList(TerraformProvisionInheritPlanElement.builder().provisionerId(PROVISIONER_ID).build()))
+        .when(executionContext)
+        .getContextElementList(TERRAFORM_INHERIT_PLAN);
+    assertThatThrownBy(() -> state.execute(executionContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Invalid Terraform script path");
+
+    // Empty source repo reference
+    doReturn("current/working/directory").when(executionContext).renderExpression("current/working/directory");
+    doReturn(Collections.singletonList(TerraformProvisionInheritPlanElement.builder()
+                                           .sourceRepoReference(null)
+                                           .provisionerId(PROVISIONER_ID)
+                                           .build()))
+        .when(executionContext)
+        .getContextElementList(TERRAFORM_INHERIT_PLAN);
+    assertThatThrownBy(() -> state.execute(executionContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No commit id found in context inherit tf plan element");
   }
 
   @Test
@@ -606,15 +706,191 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   private List<NameValuePair> getTerraformVariables() {
-    return Arrays.asList(NameValuePair.builder().name("region").value("us-east").valueType("TEXT").build(),
+    return asList(NameValuePair.builder().name("region").value("us-east").valueType("TEXT").build(),
         NameValuePair.builder().name("vpc_id").value("vpc-id").valueType("TEXT").build(),
         NameValuePair.builder().name("access_key").value("access_key").valueType("ENCRYPTED_TEXT").build(),
         NameValuePair.builder().name("secret_key").value("secret_key").valueType("ENCRYPTED_TEXT").build());
   }
 
   private List<NameValuePair> getTerraformBackendConfigs() {
-    return Arrays.asList(NameValuePair.builder().name("key").value("terraform.tfstate").valueType("TEXT").build(),
+    return asList(NameValuePair.builder().name("key").value("terraform.tfstate").valueType("TEXT").build(),
         NameValuePair.builder().name("bucket").value("tf-remote-state").valueType("TEXT").build(),
         NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseSaveUserInputs() {
+    List<NameValuePair> nameValuePairList =
+        asList(NameValuePair.builder().name("key").value("value").valueType("TEXT").build(),
+            NameValuePair.builder().name("password").value("password").valueType("ENCRYPTED_TEXT").build(),
+            NameValuePair.builder().name("nil").valueType("TEXT").build(),
+            NameValuePair.builder().name("noValueType").value("value").valueType(null).build());
+
+    TerraformExecutionData responseData = TerraformExecutionData.builder()
+                                              .executionStatus(ExecutionStatus.SUCCESS)
+                                              .workspace("workspace")
+                                              .targets(Collections.emptyList())
+                                              .backendConfigs(nameValuePairList)
+                                              .variables(nameValuePairList)
+                                              .tfVarFiles(asList("file-1", "file-2"))
+                                              .targets(asList("target1", "target2"))
+                                              .build();
+
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .variables(getTerraformVariables())
+                                                         .build();
+    Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID, responseData);
+    state.setRunPlanOnly(false);
+    state.setProvisionerId(PROVISIONER_ID);
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+
+    state.handleAsyncResponse(executionContext, responseMap);
+    ArgumentCaptor<Map> othersArgumentCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(wingsPersistence, times(1)).save(any(TerraformConfig.class));
+    verify(fileService, times(1))
+        .updateParentEntityIdAndVersion(eq(PhaseStep.class), isNull(String.class), isNull(Integer.class),
+            isNull(String.class), othersArgumentCaptor.capture(), eq(FileBucket.TERRAFORM_STATE));
+    Map<String, Object> storeOthersMap = (Map<String, Object>) othersArgumentCaptor.getValue();
+
+    Map<String, String> expectedEncryptedNameValuePair = ImmutableMap.of("password", "password");
+    assertThat(storeOthersMap.get("variables")).isEqualTo(ImmutableMap.of("key", "value", "noValueType", "value"));
+    assertThat(storeOthersMap.get("encrypted_variables")).isEqualTo(expectedEncryptedNameValuePair);
+    assertThat(storeOthersMap.get("backend_configs")).isEqualTo(ImmutableMap.of("key", "value"));
+    assertThat(storeOthersMap.get("encrypted_backend_configs")).isEqualTo(expectedEncryptedNameValuePair);
+    assertThat(storeOthersMap.get("targets")).isEqualTo(responseData.getTargets());
+    assertThat(storeOthersMap.get("tf_var_files")).isEqualTo(responseData.getTfVarFiles());
+    assertThat(storeOthersMap.get("tf_workspace")).isEqualTo(responseData.getWorkspace());
+
+    // Don't save terraform config if status is not SUCCESS
+    reset(wingsPersistence);
+    responseData.setExecutionStatus(ExecutionStatus.FAILED);
+    state.handleAsyncResponse(executionContext, responseMap);
+    verify(wingsPersistence, never()).save(any(TerraformConfig.class));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseSaveDestroyStepUserInputs() {
+    TerraformExecutionData responseData = TerraformExecutionData.builder()
+                                              .executionStatus(ExecutionStatus.SUCCESS)
+                                              .workspace("workspace")
+                                              .targets(asList("target1", "target2"))
+                                              .build();
+
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .variables(getTerraformVariables())
+                                                         .build();
+    Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID, responseData);
+    destroyProvisionState.setRunPlanOnly(false);
+    destroyProvisionState.setProvisionerId(PROVISIONER_ID);
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+
+    // Save terraform config if there any targets
+    destroyProvisionState.setTargets(asList("target1", "target2"));
+    destroyProvisionState.handleAsyncResponse(executionContext, responseMap);
+    verify(wingsPersistence, times(1)).save(any(TerraformConfig.class));
+    verify(wingsPersistence, never()).delete(any(Query.class));
+
+    // Delete terraform config if no any targets
+    reset(wingsPersistence);
+    doReturn(mock(Query.class)).when(wingsPersistence).createQuery(any());
+    destroyProvisionState.setTargets(Collections.emptyList());
+    destroyProvisionState.handleAsyncResponse(executionContext, responseMap);
+    verify(wingsPersistence, never()).save(any(TerraformConfig.class));
+    verify(wingsPersistence, times(1)).delete(any(Query.class));
+
+    // Don't do anything if the status is not SUCCESS
+    reset(wingsPersistence);
+    responseData.setExecutionStatus(ExecutionStatus.FAILED);
+    destroyProvisionState.handleAsyncResponse(executionContext, responseMap);
+    verify(wingsPersistence, never()).save(any(TerraformConfig.class));
+    verify(wingsPersistence, never()).delete(any(Query.class));
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetTerraformInfrastructureProvisioner() {
+    // TerraformInfrastructureProvisioner doesn't exists
+    state.setProvisionerId(PROVISIONER_ID);
+    doReturn(null).when(infrastructureProvisionerService).get(anyString(), eq(PROVISIONER_ID));
+    assertThatThrownBy(() -> state.getTerraformInfrastructureProvisioner(executionContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Infrastructure Provisioner does not exist");
+
+    // Invalid type of  InfrastructureProvisioner
+    doReturn(mock(InfrastructureProvisioner.class))
+        .when(infrastructureProvisionerService)
+        .get(anyString(), eq(PROVISIONER_ID));
+    assertThatThrownBy(() -> state.getTerraformInfrastructureProvisioner(executionContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("should be of Terraform type.");
+
+    // Valid InfrastructureProvisioner
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().build();
+    doReturn(provisioner).when(infrastructureProvisionerService).get(anyString(), eq(PROVISIONER_ID));
+    assertThat(state.getTerraformInfrastructureProvisioner(executionContext)).isEqualTo(provisioner);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testCreateActivityOnExecute() {
+    TerraformProvisionState spyState = spy(state);
+    doReturn(Activity.builder().uuid(ACTIVITY_ID).build()).when(activityService).save(any(Activity.class));
+    doReturn(null).when(spyState).executeInternal(executionContext, ACTIVITY_ID); // ignore execution
+
+    // Missing STANDARD context element
+    doReturn(null).when(executionContext).getContextElement(ContextElementType.STANDARD);
+    assertThatThrownBy(() -> spyState.execute(executionContext)).hasMessageContaining("workflowStandardParams");
+
+    // Missing current user in context
+    WorkflowStandardParams standardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
+    doReturn(standardParams).when(executionContext).getContextElement(ContextElementType.STANDARD);
+    assertThatThrownBy(() -> spyState.execute(executionContext)).hasMessageContaining("currentUser");
+
+    standardParams.setCurrentUser(EmbeddedUser.builder().name(USER_NAME).email(USER_EMAIL).build());
+    doReturn(WorkflowType.ORCHESTRATION).when(executionContext).getWorkflowType();
+    doReturn(WORKFLOW_EXECUTION_ID).when(executionContext).getWorkflowExecutionId();
+    doReturn(WORKFLOW_NAME).when(executionContext).getWorkflowExecutionName();
+    ArgumentCaptor<Activity> activityCaptor = ArgumentCaptor.forClass(Activity.class);
+
+    // Valid with BUILD orchestration type
+    doReturn(OrchestrationWorkflowType.BUILD).when(executionContext).getOrchestrationWorkflowType();
+    spyState.execute(executionContext);
+    verify(activityService, times(1)).save(activityCaptor.capture());
+    assertCreatedActivity(activityCaptor.getValue(), GLOBAL_ENV_ID, GLOBAL_ENV_ID, ALL);
+
+    // Valid with not BUILD orchestration type
+    Environment env = Environment.Builder.anEnvironment()
+                          .environmentType(EnvironmentType.NON_PROD)
+                          .uuid(ENV_ID)
+                          .name(ENV_NAME)
+                          .build();
+    doReturn(OrchestrationWorkflowType.BASIC).when(executionContext).getOrchestrationWorkflowType();
+    doReturn(env).when(executionContext).getEnv();
+    spyState.execute(executionContext);
+    // 1 time from previous invocation
+    verify(activityService, times(2)).save(activityCaptor.capture());
+    assertCreatedActivity(activityCaptor.getValue(), ENV_NAME, ENV_ID, EnvironmentType.NON_PROD);
+  }
+
+  private void assertCreatedActivity(Activity activity, String envName, String envId, EnvironmentType envType) {
+    assertThat(activity.getWorkflowType()).isEqualTo(WorkflowType.ORCHESTRATION);
+    assertThat(activity.getWorkflowExecutionId()).isEqualTo(WORKFLOW_EXECUTION_ID);
+    assertThat(activity.getWorkflowExecutionName()).isEqualTo(WORKFLOW_NAME);
+    assertThat(activity.getStatus()).isEqualTo(ExecutionStatus.RUNNING);
+    assertThat(activity.getTriggeredBy().getName()).isEqualTo(USER_NAME);
+    assertThat(activity.getTriggeredBy().getEmail()).isEqualTo(USER_EMAIL);
+    assertThat(activity.getEnvironmentName()).isEqualTo(envName);
+    assertThat(activity.getEnvironmentId()).isEqualTo(envId);
+    assertThat(activity.getEnvironmentType()).isEqualTo(envType);
   }
 }
