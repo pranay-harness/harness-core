@@ -1159,7 +1159,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     assertThat(responseStateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
     assertThat(responseStateExecutionData.getCommandName()).isEqualTo("commandName");
     verify(applicationManifestUtils, times(1)).setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
-    verify(applicationManifestUtils, times(1)).populateRemoteGitConfigFilePathList(appManifestMap);
+    verify(applicationManifestUtils, times(1)).populateRemoteGitConfigFilePathList(context, appManifestMap);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());

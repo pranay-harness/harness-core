@@ -948,7 +948,7 @@ public class HelmDeployState extends State {
   private ExecutionResponse executeGitTask(
       ExecutionContext context, String activityId, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     Application app = appService.get(context.getAppId());
-    applicationManifestUtils.populateRemoteGitConfigFilePathList(appManifestMap);
+    applicationManifestUtils.populateRemoteGitConfigFilePathList(context, appManifestMap);
 
     GitFetchFilesTaskParams fetchFilesTaskParams =
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
