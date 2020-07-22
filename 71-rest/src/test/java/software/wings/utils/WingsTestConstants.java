@@ -361,6 +361,12 @@ public interface WingsTestConstants {
 
   String COMMIT_SHA = "commitSha";
 
+  String SOURCE_REPO_SETTINGS_ID = "SOURCE_REPO_SETTINGS_ID";
+  String COMMIT_REFERENCE = "COMMIT_REFERENCE";
+  String WORKSPACE = "WORKSPACE";
+  String TERRAFORM_STATE_FILE_ID = "TERRAFORM_STATE_FILE_ID";
+  String UUID = "UUID";
+
   /**
    * The constant URL.
    */
