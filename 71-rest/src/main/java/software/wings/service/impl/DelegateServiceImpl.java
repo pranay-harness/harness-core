@@ -2371,6 +2371,18 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
+  @Override
+  public boolean validateThatDelegateNameIsUnique(String accountId, String delegateName) {
+    Delegate delegate = wingsPersistence.createQuery(Delegate.class)
+                            .filter(DelegateKeys.accountId, accountId)
+                            .filter(DelegateKeys.delegateName, delegateName)
+                            .get();
+    if (delegate == null) {
+      return true;
+    }
+    return false;
+  }
+
   @VisibleForTesting
   DelegateTaskPackage assignTask(String delegateId, String taskId, DelegateTask delegateTask) {
     // Clear pending validations. No longer need to track since we're assigning.

@@ -227,7 +227,7 @@ public class ConnectorServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
-  public void validate() {
+  public void testValidate() {
     String userName = "userName";
     String password = "password";
     String cacert = "cacert";
@@ -257,5 +257,14 @@ public class ConnectorServiceImplTest extends CategoryTest {
     when(connectionValidatorMap.get(any())).thenReturn(kubernetesConnectionValidator);
     connectorService.validate(connectorRequestDTO, "accountId");
     verify(kubernetesConnectionValidator, times(1)).validate(any(), anyString());
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testValidateTheIdentifierIsUnique() {
+    when(connectorRepository.existsByFullyQualifiedIdentifier(anyString())).thenReturn(true);
+    boolean isIdentifierUnique = connectorService.validateTheIdentifierIsUnique(null, null, null, identifier);
+    assertThat(isIdentifierUnique).isFalse();
   }
 }

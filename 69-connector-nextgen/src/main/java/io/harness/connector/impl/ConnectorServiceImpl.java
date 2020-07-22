@@ -138,6 +138,13 @@ public class ConnectorServiceImpl implements ConnectorService {
     return connectionValidator.validate(connectorDTO.getConnectorConfig(), accountId);
   }
 
+  public boolean validateTheIdentifierIsUnique(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
+    String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    return !connectorRepository.existsByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
+  }
+
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(

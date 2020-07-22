@@ -6,7 +6,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@TypeAlias("openIdConnectK8")
+@TypeAlias("io.harness.connector.entities.embedded.kubernetescluster.K8sOpenIdConnect")
 public class K8sOpenIdConnect implements KubernetesAuth {
   String oidcIssuerUrl;
   String oidcClientId;

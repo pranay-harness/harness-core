@@ -14,7 +14,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldNameConstants(innerTypeName = "KubernetesClusterConfigKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
-@TypeAlias("kubernetesClusterConfig")
+@TypeAlias("io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig")
 public class KubernetesClusterConfig extends Connector {
   KubernetesCredentialType credentialType;
   KubernetesCredential credential;

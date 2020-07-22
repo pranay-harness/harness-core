@@ -4,7 +4,7 @@ import com.google.inject.Singleton;
 
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
-import io.harness.connector.entities.embedded.gitconnector.UserNamePasswordGitAuthentication;
+import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
@@ -40,8 +40,8 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfig> {
 
   private GitHTTPAuthenticationDTO createHTTPAuthenticationDTO(GitConfig gitConfig) {
     // todo @deepak: Add the cast checks here
-    UserNamePasswordGitAuthentication userNamePasswordAuth =
-        (UserNamePasswordGitAuthentication) gitConfig.getAuthenticationDetails();
+    GitUserNamePasswordAuthentication userNamePasswordAuth =
+        (GitUserNamePasswordAuthentication) gitConfig.getAuthenticationDetails();
     return GitHTTPAuthenticationDTO.builder()
         .gitConnectionType(gitConfig.getConnectionType())
         .url(gitConfig.getUrl())

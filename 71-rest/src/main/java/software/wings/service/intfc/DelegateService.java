@@ -137,4 +137,6 @@ public interface DelegateService extends OwnedByAccount {
   List<Integer> getCountOfDelegatesForAccounts(List<String> collect);
 
   Optional<DelegateTask> fetchDelegateTask(String accountId, String taskId);
+
+  boolean validateThatDelegateNameIsUnique(String accountId, String delegateName);
 }
