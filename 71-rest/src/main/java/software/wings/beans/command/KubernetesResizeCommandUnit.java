@@ -21,7 +21,6 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogLevel;
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -45,6 +44,7 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.helpers.ext.azure.AzureHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
@@ -62,6 +62,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
   @Inject @Transient private transient AzureHelperService azureHelperService;
+  @Inject private EncryptionService encryptionService;
 
   public KubernetesResizeCommandUnit() {
     super(CommandUnitType.RESIZE_KUBERNETES);
@@ -72,11 +73,10 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   protected List<ContainerInfo> executeResize(
       ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData);
+
     String controllerName = containerServiceData.getName();
-    HasMetadata controller =
-        kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, controllerName);
+    HasMetadata controller = kubernetesContainerService.getController(kubernetesConfig, emptyList(), controllerName);
     if (controller == null) {
       throw new WingsException(GENERAL_ERROR).addParam("message", "No controller with name: " + controllerName);
     }
@@ -88,17 +88,17 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
     if (resizeParams.isUseAutoscaler() && resizeParams.isRollback()) {
       HorizontalPodAutoscaler autoscaler = kubernetesContainerService.getAutoscaler(
-          kubernetesConfig, encryptedDataDetails, controllerName, resizeParams.getApiVersion());
+          kubernetesConfig, emptyList(), controllerName, resizeParams.getApiVersion());
       if (autoscaler != null && controllerName.equals(autoscaler.getSpec().getScaleTargetRef().getName())) {
         executionLogCallback.saveExecutionLog("Deleting horizontal pod autoscaler: " + controllerName);
-        kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName);
+        kubernetesContainerService.deleteAutoscaler(kubernetesConfig, emptyList(), controllerName);
       }
     }
 
     int desiredCount = containerServiceData.getDesiredCount();
     int previousCount = containerServiceData.getPreviousCount();
-    List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(kubernetesConfig,
-        encryptedDataDetails, resizeParams.getClusterName(), controllerName, previousCount, desiredCount,
+    List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(kubernetesConfig, emptyList(),
+        resizeParams.getClusterName(), controllerName, previousCount, desiredCount,
         resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
 
     boolean allContainersSuccess = containerInfos.stream().allMatch(info -> info.getStatus() == SUCCESS);
@@ -129,14 +129,14 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   protected void postExecution(
       ContextData contextData, List<ContainerServiceData> allData, ExecutionLogCallback executionLogCallback) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData);
+
     boolean executedSomething = false;
 
     // Enable HPA
     if (!resizeParams.isRollback() && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
       HorizontalPodAutoscaler hpa = kubernetesContainerService.createOrReplaceAutoscaler(
-          kubernetesConfig, encryptedDataDetails, resizeParams.getAutoscalerYaml());
+          kubernetesConfig, emptyList(), resizeParams.getAutoscalerYaml());
       if (hpa != null) {
         String hpaName = hpa.getMetadata().getName();
         executionLogCallback.saveExecutionLog("Horizontal pod autoscaler enabled: " + hpaName + "\n");
@@ -149,8 +149,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       String controllerName = resizeParams.getContainerServiceName();
       String kubernetesServiceName = getServiceNameFromControllerName(controllerName);
       String controllerPrefix = getPrefixFromControllerName(controllerName);
-      IstioResource existingVirtualService = kubernetesContainerService.getIstioVirtualService(
-          kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+      IstioResource existingVirtualService =
+          kubernetesContainerService.getIstioVirtualService(kubernetesConfig, emptyList(), kubernetesServiceName);
 
       if (existingVirtualService == null) {
         throw new InvalidRequestException(format("Virtual Service [%s] not found", kubernetesServiceName));
@@ -163,7 +163,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
         executionLogCallback.saveExecutionLog("Setting Istio VirtualService Route destination weights:");
         printVirtualServiceRouteWeights(virtualServiceDefinition, controllerPrefix, executionLogCallback);
         kubernetesContainerService.createOrReplaceIstioResource(
-            kubernetesConfig, encryptedDataDetails, virtualServiceDefinition);
+            kubernetesConfig, emptyList(), virtualServiceDefinition);
       } else {
         executionLogCallback.saveExecutionLog("No change to Istio VirtualService Route rules :");
         printVirtualServiceRouteWeights(existingVirtualService, controllerPrefix, executionLogCallback);
@@ -209,15 +209,14 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     return true;
   }
 
-  private KubernetesConfig getKubernetesConfig(
-      ContextData contextData, List<EncryptedDataDetail> encryptedDataDetails) {
+  private KubernetesConfig getKubernetesConfig(ContextData contextData) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     KubernetesConfig kubernetesConfig;
     if (contextData.settingAttribute.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) contextData.settingAttribute.getValue();
-      encryptedDataDetails.addAll(contextData.encryptedDataDetails);
     } else if (contextData.settingAttribute.getValue() instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig config = (KubernetesClusterConfig) contextData.settingAttribute.getValue();
+      encryptionService.decrypt(config, contextData.encryptedDataDetails);
       String delegateName = System.getenv().get("DELEGATE_NAME");
       if (config.isUseKubernetesDelegate() && !config.getDelegateName().equals(delegateName)) {
         throw new InvalidRequestException(String.format("Kubernetes delegate name [%s] doesn't match "
@@ -226,51 +225,50 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       }
       kubernetesConfig = ((KubernetesClusterConfig) contextData.settingAttribute.getValue())
                              .createKubernetesConfig(resizeParams.getNamespace());
-      encryptedDataDetails.addAll(contextData.encryptedDataDetails);
     } else if (contextData.settingAttribute.getValue() instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) contextData.settingAttribute.getValue();
       kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig, contextData.encryptedDataDetails,
           resizeParams.getSubscriptionId(), resizeParams.getResourceGroup(), resizeParams.getClusterName(),
           resizeParams.getNamespace());
-      kubernetesConfig.setDecrypted(true);
     } else if (contextData.settingAttribute.getValue() instanceof GcpConfig) {
       kubernetesConfig = gkeClusterService.getCluster(contextData.settingAttribute, contextData.encryptedDataDetails,
           resizeParams.getClusterName(), resizeParams.getNamespace());
-      kubernetesConfig.setDecrypted(true);
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args",
               "Unknown kubernetes cloud provider setting value: " + contextData.settingAttribute.getValue().getType());
     }
+
+    kubernetesConfig.setDecrypted(true);
     return kubernetesConfig;
   }
 
   @Override
   protected Map<String, Integer> getActiveServiceCounts(ContextData contextData) {
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData);
+
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     return kubernetesContainerService.getActiveServiceCountsWithLabels(
-        kubernetesConfig, encryptedDataDetails, resizeParams.getLookupLabels());
+        kubernetesConfig, emptyList(), resizeParams.getLookupLabels());
   }
 
   @Override
   protected Map<String, String> getActiveServiceImages(ContextData contextData) {
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData);
+
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
     String imagePrefix = substringBefore(contextData.resizeParams.getImage(), ":");
     return kubernetesContainerService.getActiveServiceImages(
-        kubernetesConfig, encryptedDataDetails, controllerName, imagePrefix);
+        kubernetesConfig, emptyList(), controllerName, imagePrefix);
   }
 
   @Override
   protected Optional<Integer> getServiceDesiredCount(ContextData contextData) {
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData);
+
     return kubernetesContainerService.getControllerPodCount(
-        kubernetesConfig, encryptedDataDetails, contextData.resizeParams.getContainerServiceName());
+        kubernetesConfig, emptyList(), contextData.resizeParams.getContainerServiceName());
   }
 
   @Override
@@ -279,19 +277,20 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     if (!resizeParams.isUseIstioRouteRule()) {
       return new HashMap<>();
     }
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData);
+
     String controllerName = resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getTrafficWeights(kubernetesConfig, encryptedDataDetails, controllerName);
+    return kubernetesContainerService.getTrafficWeights(kubernetesConfig, emptyList(), controllerName);
   }
 
   @Override
   protected int getPreviousTrafficPercent(ContextData contextData) {
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData);
+
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getTrafficPercent(kubernetesConfig, encryptedDataDetails, controllerName);
+    return kubernetesContainerService.getTrafficPercent(kubernetesConfig, emptyList(), controllerName);
   }
 
   @Override
