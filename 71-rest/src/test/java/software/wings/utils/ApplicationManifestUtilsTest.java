@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -583,20 +584,19 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   public void testGetMultiValuesFilesFromGitFetchFilesResponse() {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
         ImmutableMap.of(Environment, createApplicationManifestWithGitFilePathList("file1"), K8sValuesLocation.Service,
-            createApplicationManifestWithGitFilePathList("file2", "file3"), EnvironmentGlobal,
+            createApplicationManifestWithGitFile("file2"), EnvironmentGlobal,
             createApplicationManifestWithGitFilePathList(), ServiceOverride,
             createApplicationManifestWithGitFilePathList("file4"));
 
-    GitCommandExecutionResponse executionResponse =
-        gitExecutionResponseWithFilesFromMultipleRepo(ImmutableMap.of("Environment",
-            ImmutableMap.of("file1", "content1"), "Service", ImmutableMap.of("file2", "content2", "file3", "content3"),
-            "EnvironmentGlobal", ImmutableMap.of(), "ServiceOverride", ImmutableMap.of("file4", "content4")));
+    GitCommandExecutionResponse executionResponse = gitExecutionResponseWithFilesFromMultipleRepo(ImmutableMap.of(
+        "Environment", ImmutableMap.of("file1", "content1"), "Service", ImmutableMap.of("file2", "content2"),
+        "EnvironmentGlobal", ImmutableMap.of(), "ServiceOverride", ImmutableMap.of("file4", "content4")));
 
     Map<K8sValuesLocation, Collection<String>> valuesFiles =
         applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
 
     assertThat(valuesFiles.get(Environment)).containsExactly("content1");
-    assertThat(valuesFiles.get(K8sValuesLocation.Service)).containsExactly("content2", "content3");
+    assertThat(valuesFiles.get(K8sValuesLocation.Service)).containsExactly("content2");
     assertThat(valuesFiles.get(EnvironmentGlobal)).isNullOrEmpty();
     assertThat(valuesFiles.get(ServiceOverride)).containsExactly("content4");
   }
@@ -691,23 +691,71 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testPopulateRemoteGitConfigFilePathList() {
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
-        ImmutableMap.of(Environment, createApplicationManifestWithGitFile("file1, file2, file3"),
-            K8sValuesLocation.Service, createApplicationManifestWithGitFile("file1,file2,"), EnvironmentGlobal,
-            createApplicationManifestWithGitFile("file1"), ServiceOverride, createApplicationManifestWithGitFile(null));
+    ApplicationManifest singleFile = createApplicationManifestWithGitFile("file");
+    ApplicationManifest multipleFiles = createApplicationManifestWithGitFile("file1, file2, file3");
+    ApplicationManifest singleFileExpression = createApplicationManifestWithGitFile("${expression}");
+    ApplicationManifest multipleFilesExpression =
+        createApplicationManifestWithGitFile("${expression1}, ${expression2}, ${expression3}");
+    ApplicationManifest multipleTrailingComma = createApplicationManifestWithGitFile(",file1,file2,file3,");
+    ApplicationManifest multipleFilesSingleExpression = createApplicationManifestWithGitFile("${multipleFilePathExpr}");
 
-    applicationManifestUtils.populateRemoteGitConfigFilePathList(appManifestMap);
+    testPopulateRemoteGitConfigFilePathListWith(Environment, singleFile, "file");
+    testPopulateRemoteGitConfigFilePathListWith(ServiceOverride, multipleFiles, "file1", "file2", "file3");
+    testPopulateRemoteGitConfigFilePathListWith(EnvironmentGlobal, singleFileExpression, "file");
+    testPopulateRemoteGitConfigFilePathListWith(Environment, multipleFilesExpression, "file1", "file2", "file3");
+    testPopulateRemoteGitConfigFilePathListWith(Environment, multipleTrailingComma, "file1", "file2", "file3");
+    testPopulateRemoteGitConfigFilePathListWith(
+        ServiceOverride, multipleFilesSingleExpression, "file1", "file2", "file3");
 
-    assertThat(appManifestMap.get(Environment).getGitFileConfig().getFilePath()).isNull();
-    assertThat(appManifestMap.get(Environment).getGitFileConfig().getFilePathList())
-        .containsExactly("file1", "file2", "file3");
-    assertThat(appManifestMap.get(K8sValuesLocation.Service).getGitFileConfig().getFilePath()).isNull();
-    assertThat(appManifestMap.get(K8sValuesLocation.Service).getGitFileConfig().getFilePathList())
-        .containsExactly("file1", "file2");
-    assertThat(appManifestMap.get(EnvironmentGlobal).getGitFileConfig().getFilePath()).isNull();
-    assertThat(appManifestMap.get(EnvironmentGlobal).getGitFileConfig().getFilePathList()).containsExactly("file1");
-    assertThat(appManifestMap.get(ServiceOverride).getGitFileConfig().getFilePath()).isNull();
-    assertThat(appManifestMap.get(ServiceOverride).getGitFileConfig().getFilePathList()).isEmpty();
+    // Should not update file config for Service manifest
+    ApplicationManifest serviceManifest = createApplicationManifestWithGitFile("file1, file2, file3");
+    Map<K8sValuesLocation, ApplicationManifest> serviceAppManifestMap =
+        ImmutableMap.of(K8sValuesLocation.Service, serviceManifest);
+    applicationManifestUtils.populateRemoteGitConfigFilePathList(context, serviceAppManifestMap);
+    assertThat(serviceAppManifestMap.get(K8sValuesLocation.Service).getGitFileConfig().getFilePath())
+        .isEqualTo("file1, file2, file3");
+  }
+
+  private void testPopulateRemoteGitConfigFilePathListWith(
+      K8sValuesLocation location, ApplicationManifest manifest, String... expectedFiles) {
+    doReturn("file").when(context).renderExpression("${expression}");
+    doReturn("file1, file2, file3").when(context).renderExpression("${expression1},${expression2},${expression3}");
+    doReturn("file3").when(context).renderExpression("${expression3}");
+    doReturn("file1, file2, file3").when(context).renderExpression("${multipleFilePathExpr}");
+    doReturn("file1, file2, file3").when(context).renderExpression("file1,file2,file3");
+    doReturn("file").when(context).renderExpression("file");
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(location, manifest);
+    applicationManifestUtils.populateRemoteGitConfigFilePathList(context, appManifestMap);
+    assertThat(appManifestMap.get(location).getGitFileConfig().getFilePathList()).containsExactly(expectedFiles);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testPopulateRemoteGitConfigFilePathListInvalidExpressions() {
+    ApplicationManifest emptyExpression = createApplicationManifestWithGitFile("${empty}");
+    ApplicationManifest withValidAndEmptyExpr = createApplicationManifestWithGitFile("${valid}, ${empty}");
+    ApplicationManifest nullExpression = createApplicationManifestWithGitFile("${null}");
+    ApplicationManifest withValidAndNullExpr = createApplicationManifestWithGitFile("${valid}, ${null}");
+
+    testPopulateRemoteGitConfigFilePathListInvalidExpressionsWith(Environment, emptyExpression);
+    testPopulateRemoteGitConfigFilePathListInvalidExpressionsWith(ServiceOverride, withValidAndEmptyExpr);
+    testPopulateRemoteGitConfigFilePathListInvalidExpressionsWith(EnvironmentGlobal, nullExpression);
+    testPopulateRemoteGitConfigFilePathListInvalidExpressionsWith(Environment, withValidAndNullExpr);
+  }
+
+  public void testPopulateRemoteGitConfigFilePathListInvalidExpressionsWith(
+      K8sValuesLocation location, ApplicationManifest manifest) {
+    doReturn("").when(context).renderExpression("${empty}");
+    doReturn("file, ").when(context).renderExpression("${valid},${empty}");
+    doReturn("null").when(context).renderExpression("${null}");
+    doReturn("file,null").when(context).renderExpression("${valid},${null}");
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(location, manifest);
+    assertThatThrownBy(() -> applicationManifestUtils.populateRemoteGitConfigFilePathList(context, appManifestMap))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Invalid file path");
   }
 
   private ApplicationManifest createApplicationManifestWithGitFile(String filePath) {
@@ -727,20 +775,18 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
             .build();
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(gitFetchFilesTaskParams);
     GitFetchFilesConfig serviceTaskParams = gitFetchFilesTaskParams.getGitFetchFilesConfigMap().get("Service");
-    assertThat(serviceTaskParams.getGitFileConfig().getFilePathList())
-        .containsExactly("file-folder/" + values_filename);
+    assertThat(serviceTaskParams.getGitFileConfig().getFilePath()).isEqualTo("file-folder/" + values_filename);
 
-    gitFetchFilesTaskParams = GitFetchFilesTaskParams.builder()
-                                  .gitFetchFilesConfigMap(ImmutableMap.of("Service",
-                                      gitFetchFileConfigWithFilePathList("file-folder/", "file"), "Environment",
-                                      gitFetchFileConfigWithFilePathList("file-folder/", "file")))
-                                  .build();
+    gitFetchFilesTaskParams =
+        GitFetchFilesTaskParams.builder()
+            .gitFetchFilesConfigMap(ImmutableMap.of("Service", gitFetchFileConfigWithFilePath("chart-directory/"),
+                "Environment", gitFetchFileConfigWithFilePathList("file1", "file2")))
+            .build();
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(gitFetchFilesTaskParams);
     serviceTaskParams = gitFetchFilesTaskParams.getGitFetchFilesConfigMap().get("Service");
     GitFetchFilesConfig environmentTaskParams = gitFetchFilesTaskParams.getGitFetchFilesConfigMap().get("Environment");
-    assertThat(serviceTaskParams.getGitFileConfig().getFilePathList())
-        .containsExactly("file-folder/" + values_filename);
-    assertThat(environmentTaskParams.getGitFileConfig().getFilePathList()).containsExactly("file-folder/", "file");
+    assertThat(serviceTaskParams.getGitFileConfig().getFilePath()).isEqualTo("chart-directory/" + values_filename);
+    assertThat(environmentTaskParams.getGitFileConfig().getFilePathList()).containsExactly("file1", "file2");
 
     gitFetchFilesTaskParams =
         GitFetchFilesTaskParams.builder()
@@ -749,7 +795,7 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
 
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(gitFetchFilesTaskParams);
     serviceTaskParams = gitFetchFilesTaskParams.getGitFetchFilesConfigMap().get("Service");
-    assertThat(serviceTaskParams.getGitFileConfig().getFilePathList()).containsExactly(values_filename);
+    assertThat(serviceTaskParams.getGitFileConfig().getFilePath()).isEqualTo(values_filename);
   }
 
   private GitFetchFilesConfig gitFetchFileConfigWithFilePath(String filePath) {

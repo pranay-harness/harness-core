@@ -300,7 +300,7 @@ public class K8sStateHelper {
   public ExecutionResponse executeGitTask(ExecutionContext context,
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId, String commandName) {
     Application app = appService.get(context.getAppId());
-    applicationManifestUtils.populateRemoteGitConfigFilePathList(appManifestMap);
+    applicationManifestUtils.populateRemoteGitConfigFilePathList(context, appManifestMap);
 
     GitFetchFilesTaskParams fetchFilesTaskParams =
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);

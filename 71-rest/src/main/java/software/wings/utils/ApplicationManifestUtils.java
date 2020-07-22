@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesExpressionKeysFromMap;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
@@ -70,6 +71,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -294,17 +296,20 @@ public class ApplicationManifestUtils {
           namedGitFiles.put(file.getFilePath(), file);
         }
       }
-      valuesFiles.putAll(k8sValuesLocation, getGitOrderedFiles(appManifest.get(k8sValuesLocation), namedGitFiles));
+
+      ApplicationManifest manifest = appManifest.get(k8sValuesLocation);
+      valuesFiles.putAll(k8sValuesLocation, getGitOrderedFiles(k8sValuesLocation, manifest, namedGitFiles));
     }
 
     return valuesFiles.asMap();
   }
 
-  private Collection<String> getGitOrderedFiles(ApplicationManifest appManifest, Map<String, GitFile> gitFiles) {
-    if (isEmpty(appManifest.getGitFileConfig().getFilePathList())) {
-      return gitFiles.entrySet().iterator().hasNext()
-          ? singletonList(gitFiles.entrySet().iterator().next().getValue().getFileContent())
-          : emptyList();
+  private Collection<String> getGitOrderedFiles(
+      K8sValuesLocation location, ApplicationManifest appManifest, Map<String, GitFile> gitFiles) {
+    // Will always expect to get only single file from application Service manifest or none if doesn't exists
+    // In other cases will get the first file from the root repo
+    if (K8sValuesLocation.Service == location || isEmpty(appManifest.getGitFileConfig().getFilePathList())) {
+      return isNotEmpty(gitFiles) ? singletonList(gitFiles.values().iterator().next().getFileContent()) : emptyList();
     }
 
     return appManifest.getGitFileConfig()
@@ -352,13 +357,9 @@ public class ApplicationManifestUtils {
 
     for (Entry<String, GitFetchFilesConfig> entry : gitFetchFileConfigMap.entrySet()) {
       if (K8sValuesLocation.Service.name().equals(entry.getKey())) {
-        GitFileConfig gitFileConfig = entry.getValue().getGitFileConfig();
-        if (isEmpty(gitFileConfig.getFilePathList())) {
-          gitFileConfig.setFilePathList(singletonList(getValuesYamlGitFilePath(gitFileConfig.getFilePath())));
-        } else {
-          gitFileConfig.setFilePathList(
-              singletonList(getValuesYamlGitFilePath(gitFileConfig.getFilePathList().iterator().next())));
-        }
+        GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
+        gitFetchFileConfig.getGitFileConfig().setFilePath(
+            getValuesYamlGitFilePath(gitFetchFileConfig.getGitFileConfig().getFilePath()));
       }
     }
   }
@@ -461,22 +462,48 @@ public class ApplicationManifestUtils {
     return appManifest != null && appManifest.getStoreType() == KustomizeSourceRepo;
   }
 
-  public void populateRemoteGitConfigFilePathList(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
-    appManifestMap.values().forEach(manifest -> {
-      if (manifest.getGitFileConfig() != null) {
-        if (manifest.getGitFileConfig().getFilePath() != null) {
-          List<String> multipleFiles =
-              Arrays.stream(manifest.getGitFileConfig().getFilePath().split(MULTIPLE_FILES_DELIMITER))
-                  .map(String::trim)
-                  .filter(StringUtils::isNotBlank)
-                  .collect(Collectors.toList());
-          manifest.getGitFileConfig().setFilePath(null);
-          manifest.getGitFileConfig().setFilePathList(multipleFiles);
-        } else {
-          manifest.getGitFileConfig().setFilePathList(emptyList());
-        }
-      }
-    });
+  public void populateRemoteGitConfigFilePathList(
+      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    appManifestMap.entrySet()
+        .stream()
+        // Should support multiple files only for Values YAML overrides and not Service manifest values.yaml file
+        .filter(entry -> K8sValuesLocation.Service != entry.getKey())
+        .map(Entry::getValue)
+        .map(ApplicationManifest::getGitFileConfig)
+        .filter(Objects::nonNull)
+        .forEach(gitFileConfig -> splitGitFileConfigFilePath(context, gitFileConfig));
+  }
+
+  private void splitGitFileConfigFilePath(ExecutionContext context, GitFileConfig gitFileConfig) {
+    String filePath = gitFileConfig.getFilePath();
+    gitFileConfig.setFilePath(null);
+    gitFileConfig.setFilePathList(emptyList());
+    if (filePath != null) {
+      String renderedFilePath = context.renderExpression(normalizeMultipleFilesFilePath(filePath));
+      List<String> multipleFiles = Arrays.stream(renderedFilePath.split(MULTIPLE_FILES_DELIMITER))
+                                       .map(String::trim)
+                                       .filter(value -> validateFilePath(value, filePath))
+                                       .collect(Collectors.toList());
+      gitFileConfig.setFilePathList(multipleFiles);
+    }
+  }
+
+  private String normalizeMultipleFilesFilePath(String filePath) {
+    // Transform from filePath <,file1,file2,file3,> to <file1,file2,file3>
+    return Arrays.stream(filePath.split(MULTIPLE_FILES_DELIMITER))
+        .map(String::trim)
+        .filter(StringUtils::isNotBlank)
+        .collect(Collectors.joining(MULTIPLE_FILES_DELIMITER));
+  }
+
+  private boolean validateFilePath(String value, String originalValue) {
+    // expressions like <${valid}, ${missingValue}> could lead to result like <value, null>
+    if (isEmpty(value) || value.equals("null")) {
+      throw new InvalidRequestException(
+          "Invalid file path '" + value + "' after resolving value '" + originalValue + "'");
+    }
+
+    return true;
   }
 
   public void renderGitConfigForApplicationManifest(

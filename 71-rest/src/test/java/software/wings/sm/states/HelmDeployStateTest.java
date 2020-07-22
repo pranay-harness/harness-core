@@ -971,7 +971,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
         .thenReturn(GitFetchFilesTaskParams.builder().isBindTaskFeatureSet(true).build());
 
     ExecutionResponse executionResponse = helmDeployState.execute(context);
-    verify(applicationManifestUtils, times(1)).populateRemoteGitConfigFilePathList(appManifestMap);
+    verify(applicationManifestUtils, times(1)).populateRemoteGitConfigFilePathList(context, appManifestMap);
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(helmDeployStateExecutionData.getCurrentTaskType()).isEqualTo(TaskType.GIT_COMMAND);
