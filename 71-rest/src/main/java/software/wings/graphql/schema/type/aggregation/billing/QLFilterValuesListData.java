@@ -17,4 +17,5 @@ import java.util.List;
 public class QLFilterValuesListData implements QLData {
   List<QLFilterValuesData> data;
   boolean isHourlyDataPresent;
+  Long total;
 }

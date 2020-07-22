@@ -2,13 +2,15 @@ package software.wings.graphql.datafetcher.billing;
 
 import com.google.inject.Inject;
 
+import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.SelectedField;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.cluster.entities.InstanceData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
+import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationListAndLimit;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.graphql.datafetcher.k8sLabel.K8sLabelConnectionDataFetcher;
 import software.wings.graphql.schema.type.QLK8sLabel;
@@ -41,22 +43,25 @@ import javax.validation.constraints.NotNull;
 
 @Slf4j
 public class BillingStatsFilterValuesDataFetcher
-    extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction, QLBillingDataFilter, QLCCMGroupBy,
-        QLBillingSortCriteria> {
+    extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCCMAggregationFunction, QLBillingDataFilter,
+        QLCCMGroupBy, QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject BillingDataHelper billingDataHelper;
   @Inject QLBillingStatsHelper statsHelper;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject K8sLabelConnectionDataFetcher k8sLabelConnectionDataFetcher;
   @Inject InstanceDataServiceImpl instanceDataService;
+  private static final String TOTAL = "total";
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
-  protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
-      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria) {
+  protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria,
+      Integer limit, Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
     try {
       if (timeScaleDBService.isValid()) {
-        return getEntityData(accountId, filters, groupBy);
+        List<String> selectedFields = getSelectedFields(dataFetchingEnvironment);
+        return getEntityData(accountId, filters, groupBy, limit, offset, selectedFields);
       } else {
         throw new InvalidRequestException("Cannot process request in BillingStatsFilterValuesDataFetcher");
       }
@@ -65,8 +70,8 @@ public class BillingStatsFilterValuesDataFetcher
     }
   }
 
-  protected QLFilterValuesListData getEntityData(
-      @NotNull String accountId, List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupByList) {
+  protected QLFilterValuesListData getEntityData(@NotNull String accountId, List<QLBillingDataFilter> filters,
+      List<QLCCMGroupBy> groupByList, Integer limit, Integer offset, List<String> selectedFields) {
     BillingDataQueryMetadata queryData;
     ResultSet resultSet = null;
     boolean successful = false;
@@ -74,6 +79,11 @@ public class BillingStatsFilterValuesDataFetcher
     List<QLCCMEntityGroupBy> groupByEntityList = billingDataQueryBuilder.getGroupByEntity(groupByList);
     List<QLCCMEntityGroupBy> groupByNodeAndPodList = new ArrayList<>();
     List<QLCCMEntityGroupBy> groupByEntityListExcludingNodeAndPod = new ArrayList<>();
+
+    Long totalCount = 0L;
+    if (selectedFields.contains(TOTAL) && groupByEntityList.size() == 1) {
+      totalCount = getTotalCount(accountId, filters, groupByEntityList);
+    }
 
     groupByEntityList.forEach(entityGroupBy -> {
       if (entityGroupBy == QLCCMEntityGroupBy.Node || entityGroupBy == QLCCMEntityGroupBy.Pod) {
@@ -86,11 +96,13 @@ public class BillingStatsFilterValuesDataFetcher
     Set<String> instanceIds = new HashSet<>();
     if (!groupByNodeAndPodList.isEmpty()) {
       instanceIds = getInstanceIdValues(accountId,
-          getFiltersForInstanceIdQuery(filters, isGroupByPodPresent(groupByNodeAndPodList)), groupByNodeAndPodList);
+          getFiltersForInstanceIdQuery(filters, isGroupByPodPresent(groupByNodeAndPodList)), groupByNodeAndPodList,
+          limit, offset);
       filters = getFiltersExcludingInstanceTypeFilter(filters);
     }
 
-    queryData = billingDataQueryBuilder.formFilterValuesQuery(accountId, filters, groupByEntityListExcludingNodeAndPod);
+    queryData = billingDataQueryBuilder.formFilterValuesQuery(
+        accountId, filters, groupByEntityListExcludingNodeAndPod, limit, offset);
     logger.info("BillingStatsFilterValuesDataFetcher query!! {}", queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
@@ -98,7 +110,7 @@ public class BillingStatsFilterValuesDataFetcher
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
-        return generateFilterValuesData(queryData, resultSet, instanceIds, accountId);
+        return generateFilterValuesData(queryData, resultSet, instanceIds, accountId, totalCount);
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -117,13 +129,13 @@ public class BillingStatsFilterValuesDataFetcher
     return null;
   }
 
-  private Set<String> getInstanceIdValues(
-      String accountId, List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupByNodeAndPodList) {
+  private Set<String> getInstanceIdValues(String accountId, List<QLBillingDataFilter> filters,
+      List<QLCCMEntityGroupBy> groupByNodeAndPodList, Integer limit, Integer offset) {
     ResultSet resultSet = null;
     boolean successful = false;
     int retryCount = 0;
     BillingDataQueryMetadata queryData =
-        billingDataQueryBuilder.formFilterValuesQuery(accountId, filters, groupByNodeAndPodList);
+        billingDataQueryBuilder.formFilterValuesQuery(accountId, filters, groupByNodeAndPodList, limit, offset);
     logger.info("BillingStatsFilterValuesDataFetcher query to get InstanceIds!! {}", queryData.getQuery());
     Set<String> instanceIds = new HashSet<>();
     while (!successful && retryCount < MAX_RETRY) {
@@ -161,8 +173,49 @@ public class BillingStatsFilterValuesDataFetcher
     return instanceIds;
   }
 
+  private long getTotalCount(String accountId, List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupBy) {
+    ResultSet resultSet = null;
+    boolean successful = false;
+    int retryCount = 0;
+    BillingDataQueryMetadata queryData = billingDataQueryBuilder.formTotalCountQuery(accountId, filters, groupBy);
+    logger.info("BillingStatsFilterValuesDataFetcher query to get total count!! {}", queryData.getQuery());
+    long totalCount = 0L;
+    while (!successful && retryCount < MAX_RETRY) {
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(queryData.getQuery());
+        successful = true;
+        while (resultSet.next()) {
+          for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
+            switch (field) {
+              case COUNT:
+                totalCount = resultSet.getLong(field.getFieldName());
+                break;
+              default:
+                break;
+            }
+          }
+        }
+      } catch (SQLException e) {
+        retryCount++;
+        if (retryCount >= MAX_RETRY) {
+          logger.error(
+              "Failed to execute query in BillingStatsFilterValuesDataFetcher to get total count!, max retry count reached, query=[{}],accountId=[{}]",
+              queryData.getQuery(), accountId, e);
+        } else {
+          logger.warn(
+              "Failed to execute query in BillingStatsFilterValuesDataFetcher to get total count!, query=[{}],accountId=[{}], retryCount=[{}]",
+              queryData.getQuery(), accountId, retryCount);
+        }
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return totalCount;
+  }
+
   private QLFilterValuesListData generateFilterValuesData(BillingDataQueryMetadata queryData, ResultSet resultSet,
-      Set<String> instanceIds, String accountId) throws SQLException {
+      Set<String> instanceIds, String accountId, Long totalCount) throws SQLException {
     QLFilterValuesDataBuilder filterValuesDataBuilder = QLFilterValuesData.builder();
     Set<String> cloudServiceNames = new HashSet<>();
     Set<String> workloadNames = new HashSet<>();
@@ -263,7 +316,11 @@ public class BillingStatsFilterValuesDataFetcher
 
     List<QLFilterValuesData> filterValuesDataList = new ArrayList<>();
     filterValuesDataList.add(filterValuesDataBuilder.build());
-    return QLFilterValuesListData.builder().data(filterValuesDataList).isHourlyDataPresent(true).build();
+    return QLFilterValuesListData.builder()
+        .data(filterValuesDataList)
+        .isHourlyDataPresent(true)
+        .total(totalCount)
+        .build();
   }
 
   private List<QLEntityData> getEntity(BillingDataMetaDataFields field, Set<String> entityIds) {
@@ -342,12 +399,27 @@ public class BillingStatsFilterValuesDataFetcher
 
   @Override
   protected QLData postFetch(String accountId, List<QLCCMGroupBy> groupByList,
-      List<QLCCMAggregationFunction> aggregationFunctions, List<QLBillingSortCriteria> sortCriteria, QLData qlData) {
+      List<QLCCMAggregationFunction> aggregationFunctions, List<QLBillingSortCriteria> sortCriteria, QLData qlData,
+      Integer limit, boolean includeOthers) {
     return null;
   }
 
   @Override
   public String getEntityType() {
     return null;
+  }
+
+  @Override
+  protected QLData fetch(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort, Integer limit,
+      Integer offset) {
+    return null;
+  }
+
+  private List<String> getSelectedFields(DataFetchingEnvironment dataFetchingEnvironment) {
+    Set<String> selectedFields = new HashSet<>();
+    List<SelectedField> selectionSet = dataFetchingEnvironment.getSelectionSet().getFields();
+    selectionSet.forEach(field -> selectedFields.add(field.getName()));
+    return new ArrayList<>(selectedFields);
   }
 }
