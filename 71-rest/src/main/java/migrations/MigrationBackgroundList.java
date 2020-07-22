@@ -233,10 +233,11 @@ public class MigrationBackgroundList {
         .add(Pair.of(134, MigrateServiceNowCriteriaInWorkflows.class))
         .add(Pair.of(135, BaseMigration.class))
         .add(Pair.of(136, RemoveDeletedAppIdsFromUserGroups.class))
-        .add(Pair.of(137, AddAccountIdToEntityVersion.class))
+        .add(Pair.of(137, BaseMigration.class))
         .add(Pair.of(138, RemoveDeletedAppIdsFromUserGroups.class))
         .add(Pair.of(139, AddAccountIdToTriggers.class))
         .add(Pair.of(140, AddAccountIdToCommandLogs.class))
+        .add(Pair.of(141, AddAccountIdToEntityVersion.class))
         .build();
   }
 }
