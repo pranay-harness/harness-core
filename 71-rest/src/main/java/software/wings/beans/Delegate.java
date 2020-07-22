@@ -47,6 +47,7 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   private transient boolean keepAlivePacket;
   private boolean polllingModeEnabled;
   private boolean proxy;
+  private boolean ceEnabled;
 
   @Deprecated private List<String> supportedTaskTypes;
 

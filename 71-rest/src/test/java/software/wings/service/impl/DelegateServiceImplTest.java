@@ -194,7 +194,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  public void shouldstartTaskValidationForWhitelistedDelegateAndFFisOn() {
+  public void shouldStartTaskValidationForWhitelistedDelegateAndFFisOn() {
     Delegate delegate = createDelegateBuilder().build();
     doReturn(delegate).when(spydelegateService).get(ACCOUNT_ID, delegate.getUuid(), false);
     doReturn(true).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());
@@ -217,7 +217,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  public void shouldstartTaskValidationNotWhitelistedAndFFisOff() {
+  public void shouldStartTaskValidationNotWhitelistedAndFFisOff() {
     Delegate delegate = createDelegateBuilder().build();
     doReturn(delegate).when(spydelegateService).get(ACCOUNT_ID, delegate.getUuid(), false);
     doReturn(true).when(featureFlagService).isEnabled(eq(REVALIDATE_WHITELISTED_DELEGATE), anyString());

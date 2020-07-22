@@ -142,4 +142,6 @@ spec:
           value: ""
         - name: HELM_PATH
           value: ""
+        - name: ENABlE_CE
+          value: ${enableCE}
       restartPolicy: Always

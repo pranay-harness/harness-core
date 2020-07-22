@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.resources.DelegateSetupResource.YAML;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_GROUP_NAME;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
@@ -473,7 +475,7 @@ public class DelegateSetupResourceTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  public void shoulddownloadKubernetes() throws Exception {
+  public void shouldDownloadKubernetes() throws Exception {
     File file = File.createTempFile("test", ".txt");
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
@@ -482,16 +484,44 @@ public class DelegateSetupResourceTest {
         .thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/setup/delegates/kubernetes?accountId=" + ACCOUNT_ID + "&delegateName="
-                                    + DELEGATE_NAME + "&delegateProfileId=" + DELEGATE_PROFILE_ID + "&token=token")
+                                    + DELEGATE_NAME + "&delegateProfileId=" + DELEGATE_PROFILE_ID + "&token=token"
+                                    + "&isCeEnabled=false")
                                 .request()
                                 .get(new GenericType<Response>() {});
 
+    verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
     verify(delegateService, atLeastOnce())
         .downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString());
-    verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
         .isEqualTo("attachment; filename=" + DelegateServiceImpl.KUBERNETES_DELEGATE + ".tar.gz");
+    assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
+        .isEqualTo("Test");
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void shouldDownloadCeKubernetesYaml() throws Exception {
+    File file = File.createTempFile("test", ".txt");
+    try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
+      IOUtils.write("Test", outputStreamWriter);
+    }
+    when(delegateService.downloadCeKubernetesYaml(anyString(), anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(file);
+    Response restResponse = RESOURCES.client()
+                                .target("/setup/delegates/kubernetes?accountId=" + ACCOUNT_ID + "&delegateName="
+                                    + DELEGATE_NAME + "&delegateProfileId=" + DELEGATE_PROFILE_ID + "&token=token"
+                                    + "&isCeEnabled=true")
+                                .request()
+                                .get(new GenericType<Response>() {});
+
+    verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
+    verify(delegateService, atLeastOnce())
+        .downloadCeKubernetesYaml(anyString(), anyString(), anyString(), anyString(), anyString());
+
+    assertThat(restResponse.getHeaderString("Content-Disposition"))
+        .isEqualTo("attachment; filename=" + DelegateServiceImpl.KUBERNETES_DELEGATE + YAML);
     assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
         .isEqualTo("Test");
   }

@@ -116,6 +116,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
 import io.harness.mongo.DelayLogContext;
 import io.harness.network.Http;
+import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -128,6 +129,7 @@ import io.harness.service.intfc.DelegateTaskService;
 import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.Getter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request.Builder;
@@ -308,6 +310,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateCallbackRegistry delegateCallbackRegistry;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
+  @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -537,6 +540,7 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, DelegateKeys.sampleDelegate, delegate.isSampleDelegate());
     setUnset(updateOperations, DelegateKeys.polllingModeEnabled, delegate.isPolllingModeEnabled());
     setUnset(updateOperations, DelegateKeys.proxy, delegate.isProxy());
+    setUnset(updateOperations, DelegateKeys.ceEnabled, delegate.isCeEnabled());
     return updateOperations;
   }
 
@@ -764,6 +768,7 @@ public class DelegateServiceImpl implements DelegateService {
     private String verificationHost;
     private String delegateName;
     private String delegateProfile;
+    private boolean ceEnabled;
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
@@ -887,6 +892,7 @@ public class DelegateServiceImpl implements DelegateService {
       params.put(JRE_DIRECTORY, jreConfig.getJreDirectory());
       params.put(JRE_MAC_DIRECTORY, jreConfig.getJreMacDirectory());
       params.put(JRE_TAR_PATH, jreConfig.getJreTarPath());
+      params.put("enableCE", String.valueOf(inquiry.isCeEnabled()));
 
       return params.build();
     }
@@ -1176,15 +1182,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
       out.closeArchiveEntry();
 
-      File readme = File.createTempFile(README, ".txt");
-      saveProcessedTemplate(emptyMap(), readme, "readme-kubernetes.txt.ftl");
-      readme = new File(readme.getAbsolutePath());
-      TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, KUBERNETES_DELEGATE + README_TXT);
-      out.putArchiveEntry(readmeTarArchiveEntry);
-      try (FileInputStream fis = new FileInputStream(readme)) {
-        IOUtils.copy(fis, out);
-      }
-      out.closeArchiveEntry();
+      addReadmeFile(out);
 
       out.flush();
       out.finish();
@@ -1194,6 +1192,47 @@ public class DelegateServiceImpl implements DelegateService {
     compressGzipFile(kubernetesDelegateFile, gzipKubernetesDelegateFile);
 
     return gzipKubernetesDelegateFile;
+  }
+
+  @Override
+  public File downloadCeKubernetesYaml(String managerHost, String verificationUrl, String accountId,
+      String delegateName, String delegateProfile) throws IOException {
+    String version;
+    if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
+      List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
+      version = delegateVersions.get(delegateVersions.size() - 1);
+    } else {
+      version = EMPTY_VERSION;
+    }
+
+    ImmutableMap<String, String> scriptParams =
+        getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
+                                           .accountId(accountId)
+                                           .version(version)
+                                           .managerHost(managerHost)
+                                           .verificationHost(verificationUrl)
+                                           .delegateName(delegateName)
+                                           .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+                                           .ceEnabled(true)
+                                           .build());
+
+    File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
+    saveProcessedTemplate(scriptParams, yaml,
+        HARNESS_DELEGATE + "-ce"
+            + ".yaml.ftl");
+    return new File(yaml.getAbsolutePath());
+  }
+
+  private void addReadmeFile(TarArchiveOutputStream out) throws IOException {
+    File readme = File.createTempFile(README, ".txt");
+    saveProcessedTemplate(emptyMap(), readme, "readme-kubernetes.txt.ftl");
+    readme = new File(readme.getAbsolutePath());
+    TarArchiveEntry readmeTarArchiveEntry = new TarArchiveEntry(readme, KUBERNETES_DELEGATE + README_TXT);
+    out.putArchiveEntry(readmeTarArchiveEntry);
+    try (FileInputStream fis = new FileInputStream(readme)) {
+      IOUtils.copy(fis, out);
+    }
+    out.closeArchiveEntry();
   }
 
   @Override
@@ -1364,6 +1403,13 @@ public class DelegateServiceImpl implements DelegateService {
 
     updateWithTokenAndSeqNumIfEcsDelegate(delegate, savedDelegate);
     eventPublishHelper.publishInstalledDelegateEvent(delegate.getAccountId(), delegate.getUuid());
+    try {
+      if (savedDelegate.isCeEnabled()) {
+        subject.fireInform(DelegateObxxxxxxxx:onAdded, savedDelegate);
+      }
+    } catch (Exception e) {
+      logger.error("Encountered exception while informing the observers of Delegate.", e);
+    }
     return savedDelegate;
   }
 
@@ -1541,6 +1587,7 @@ public class DelegateServiceImpl implements DelegateService {
                             .proxy(delegateParams.isProxy())
                             .sampleDelegate(delegateParams.isSampleDelegate())
                             .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())
+                            .ceEnabled(delegateParams.isCeEnabled())
                             .build();
     if (ECS.equals(delegateParams.getDelegateType())) {
       return registerResponseFromDelegate(handleEcsDelegateRequest(delegate));
@@ -1589,6 +1636,7 @@ public class DelegateServiceImpl implements DelegateService {
       alertService.delegateAvailabilityUpdated(registeredDelegate.getAccountId());
       alertService.delegateEligibilityUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
     }
+
     return registeredDelegate;
   }
 
