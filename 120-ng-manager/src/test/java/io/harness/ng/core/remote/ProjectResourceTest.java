@@ -3,6 +3,7 @@ package io.harness.ng.core.remote;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
@@ -15,6 +16,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.ModuleType;
 import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.dto.CreateProjectDTO;
 import io.harness.ng.core.dto.ProjectDTO;
@@ -22,7 +24,6 @@ import io.harness.ng.core.dto.UpdateProjectDTO;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +32,7 @@ import java.util.stream.IntStream;
 
 public class ProjectResourceTest extends BaseTest {
   @Inject private ProjectResource projectResource;
-  @Inject private AccountResource accountResource;
+  @Inject private AccountProjectResource accountProjectResource;
 
   @Test
   @Owner(developers = ANKIT)
@@ -80,6 +81,10 @@ public class ProjectResourceTest extends BaseTest {
     return IntStream.range(0, count)
         .mapToObj(i -> {
           CreateProjectDTO projectDTO = random(CreateProjectDTO.class);
+          projectDTO.getModules().clear();
+          if (i == 0) {
+            projectDTO.getModules().add(ModuleType.CD);
+          }
           projectDTO.setAccountIdentifier(accountIdentifier);
           return projectResource.create(orgIdentifier, projectDTO).getData();
         })
@@ -116,8 +121,8 @@ public class ProjectResourceTest extends BaseTest {
       assertTrue("Fetched DTO should be present ", isPresentInResult);
     });
 
-    final Page<ProjectDTO> allProjectDTOS =
-        accountResource.listProjectsForAccount(accountIdentifier, 0, 10, null).getData();
+    final NGPageResponse<ProjectDTO> allProjectDTOS =
+        accountProjectResource.listProjectsBasedOnFilter(accountIdentifier, null, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOS);
     assertEquals("Count of DTOs should match", firstOrgProjectDTOs.size() + secondOrgProjectDTOs.size(),
         allProjectDTOS.getTotalElements());
@@ -133,6 +138,70 @@ public class ProjectResourceTest extends BaseTest {
       boolean isPresentInResult = allProjectDTOS.getContent().stream().anyMatch(
           dto -> dto.getOrgIdentifier().equals(firstOrgIdentifier) && dto.getId().equals(createdDTO.getId()));
       assertTrue("Fetched DTO should be present ", isPresentInResult);
+    });
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testList_For_FilterQuery_With_ModuleType() {
+    String orgIdentifier = randomAlphabetic(10);
+    String accountIdentifier = randomAlphabetic(10);
+    ModuleType moduleType = ModuleType.CD;
+
+    List<ProjectDTO> allProjectDTOS = createProjects(orgIdentifier, accountIdentifier, 2);
+
+    String filterQuery = "modules=in=(" + moduleType + ")";
+    final NGPageResponse<ProjectDTO> projectDTOS =
+        accountProjectResource.listProjectsBasedOnFilter(accountIdentifier, filterQuery, 0, 10, null).getData();
+
+    assertNotNull(projectDTOS);
+    assertNotNull("Page contents should not be null", projectDTOS.getContent());
+
+    List<ProjectDTO> returnedDTOs = projectDTOS.getContent();
+
+    assertNotNull("Returned project DTOs page should not null ", returnedDTOs);
+    assertEquals(returnedDTOs.size(), 1);
+
+    allProjectDTOS.forEach(createdDTO -> {
+      if (createdDTO.getModules().contains(moduleType)) {
+        boolean isPresentInResult = projectDTOS.getContent().stream().anyMatch(
+            dto -> dto.getOrgIdentifier().equals(orgIdentifier) && dto.getId().equals(createdDTO.getId()));
+        assertTrue("Fetched DTO should be present ", isPresentInResult);
+      }
+    });
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testList_For_FilterQuery_With_ModuleType_And_Organization() {
+    String orgIdentifier = randomAlphabetic(10);
+    String accountIdentifier = randomAlphabetic(10);
+    ModuleType moduleType = ModuleType.CD;
+
+    List<ProjectDTO> allProjectDTOS = createProjects(orgIdentifier, accountIdentifier, 2);
+
+    String filterQuery = "modules=in=(" + moduleType + ")";
+    filterQuery = filterQuery + ";orgIdentifier==" + orgIdentifier;
+
+    final NGPageResponse<ProjectDTO> projectDTOS =
+        accountProjectResource.listProjectsBasedOnFilter(accountIdentifier, filterQuery, 0, 10, null).getData();
+
+    assertNotNull(projectDTOS);
+    assertNotNull("Page contents should not be null", projectDTOS.getContent());
+
+    List<ProjectDTO> returnedDTOs = projectDTOS.getContent();
+
+    assertNotNull("Returned project DTOs page should not null ", returnedDTOs);
+    assertEquals(returnedDTOs.size(), 1);
+
+    allProjectDTOS.forEach(createdDTO -> {
+      if (createdDTO.getModules().contains(moduleType)) {
+        boolean isPresentInResult = projectDTOS.getContent().stream().anyMatch(
+            dto -> dto.getOrgIdentifier().equals(orgIdentifier) && dto.getId().equals(createdDTO.getId()));
+        assertTrue("Fetched DTO should be present ", isPresentInResult);
+      }
     });
   }
 
