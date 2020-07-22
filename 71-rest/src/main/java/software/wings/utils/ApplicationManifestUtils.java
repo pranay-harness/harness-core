@@ -307,27 +307,34 @@ public class ApplicationManifestUtils {
   private Collection<String> getGitOrderedFiles(
       K8sValuesLocation location, ApplicationManifest appManifest, Map<String, GitFile> gitFiles) {
     // Will always expect to get only single file from application Service manifest or none if doesn't exists
-    // In other cases will get the first file from the root repo
-    if (K8sValuesLocation.Service == location || isEmpty(appManifest.getGitFileConfig().getFilePathList())) {
+    if (K8sValuesLocation.Service == location) {
       return isNotEmpty(gitFiles) ? singletonList(gitFiles.values().iterator().next().getFileContent()) : emptyList();
     }
 
     return appManifest.getGitFileConfig()
         .getFilePathList()
         .stream()
-        .map(filePath -> getFileOrFirstFileFromDirectory(filePath, gitFiles))
-        .filter(Optional::isPresent)
-        .map(Optional::get)
+        .map(filePath -> getFileOrThrowException(filePath, gitFiles, location))
         .map(GitFile::getFileContent)
         .collect(Collectors.toList());
   }
 
-  private Optional<GitFile> getFileOrFirstFileFromDirectory(String filePath, Map<String, GitFile> gitFiles) {
-    if (gitFiles.containsKey(filePath)) {
-      return Optional.of(gitFiles.get(filePath));
+  private GitFile getFileOrThrowException(String filePath, Map<String, GitFile> gitFiles, K8sValuesLocation location) {
+    if (!gitFiles.containsKey(filePath)) {
+      String message = new StringBuilder()
+                           .append("Unable to match any files using path '")
+                           .append(filePath)
+                           .append("' for ")
+                           .append(location)
+                           .append(" Values YAML. ")
+                           .append("Please ensure that '")
+                           .append(filePath)
+                           .append("' is an actual path to an existing file and not a directory")
+                           .toString();
+      throw new InvalidRequestException(message);
     }
 
-    return gitFiles.keySet().stream().filter(file -> file.startsWith(filePath)).map(gitFiles::get).findFirst();
+    return gitFiles.get(filePath);
   }
 
   public void populateValuesFilesFromAppManifest(Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
@@ -468,6 +475,13 @@ public class ApplicationManifestUtils {
         .stream()
         // Should support multiple files only for Values YAML overrides and not Service manifest values.yaml file
         .filter(entry -> K8sValuesLocation.Service != entry.getKey())
+        .filter(entry -> {
+          if (isEmpty(entry.getValue().getGitFileConfig().getFilePath())) {
+            throw new InvalidRequestException("Empty file path is not allowed for " + entry.getKey() + " Values YAML");
+          }
+
+          return true;
+        })
         .map(Entry::getValue)
         .map(ApplicationManifest::getGitFileConfig)
         .filter(Objects::nonNull)
@@ -476,16 +490,13 @@ public class ApplicationManifestUtils {
 
   private void splitGitFileConfigFilePath(ExecutionContext context, GitFileConfig gitFileConfig) {
     String filePath = gitFileConfig.getFilePath();
+    String renderedFilePath = context.renderExpression(normalizeMultipleFilesFilePath(filePath));
+    List<String> multipleFiles = Arrays.stream(renderedFilePath.split(MULTIPLE_FILES_DELIMITER))
+                                     .map(String::trim)
+                                     .filter(value -> validateFilePath(value, filePath))
+                                     .collect(Collectors.toList());
     gitFileConfig.setFilePath(null);
-    gitFileConfig.setFilePathList(emptyList());
-    if (filePath != null) {
-      String renderedFilePath = context.renderExpression(normalizeMultipleFilesFilePath(filePath));
-      List<String> multipleFiles = Arrays.stream(renderedFilePath.split(MULTIPLE_FILES_DELIMITER))
-                                       .map(String::trim)
-                                       .filter(value -> validateFilePath(value, filePath))
-                                       .collect(Collectors.toList());
-      gitFileConfig.setFilePathList(multipleFiles);
-    }
+    gitFileConfig.setFilePathList(multipleFiles);
   }
 
   private String normalizeMultipleFilesFilePath(String filePath) {
