@@ -133,6 +133,9 @@ public class K8sNodeInfoProcessor implements ItemProcessor<PublishedMessage, Ins
 
   @VisibleForTesting
   public String getCloudProviderInstanceId(String providerId) {
+    if (null == providerId) {
+      return "";
+    }
     return providerId.substring(providerId.lastIndexOf('/') + 1);
   }
 }
