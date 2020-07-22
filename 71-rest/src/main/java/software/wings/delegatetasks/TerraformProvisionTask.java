@@ -506,7 +506,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return workspaces.contains(workspace) ? WorkspaceCommand.SELECT : WorkspaceCommand.NEW;
   }
 
-  private List<String> getWorkspacesList(String scriptDir, long timeout)
+  public List<String> getWorkspacesList(String scriptDir, long timeout)
       throws InterruptedException, TimeoutException, IOException {
     String command = "terraform workspace list";
     ProcessExecutor processExecutor = new ProcessExecutor()
@@ -537,7 +537,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return workspaces;
   }
 
-  private int executeShellCommand(String command, String directory, TerraformProvisionParameters parameters,
+  public int executeShellCommand(String command, String directory, TerraformProvisionParameters parameters,
       LogOutputStream logOutputStream) throws RuntimeException, IOException, InterruptedException, TimeoutException {
     String joinedCommands = format("cd \"%s\" && %s", directory, command);
     ProcessExecutor processExecutor = new ProcessExecutor()
@@ -603,7 +603,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     FileUtils.copyInputStreamToFile(new ByteArrayInputStream(parameters.getTerraformPlan()), tfPlanFile);
   }
 
-  private String getLatestCommitSHAFromLocalRepo(GitOperationContext gitOperationContext) {
+  public String getLatestCommitSHAFromLocalRepo(GitOperationContext gitOperationContext) {
     File repoDir = new File(gitClientHelper.getRepoDirectory(gitOperationContext));
     if (repoDir.exists()) {
       try (Git git = Git.open(repoDir)) {
