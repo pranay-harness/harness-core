@@ -233,8 +233,8 @@ if ! `grep upgradeCheckLocation config-watcher.yml > /dev/null`; then
 else
   sed -i.bak "s|^upgradeCheckLocation:.*$|upgradeCheckLocation: http://localhost:8888/watcherci.txt|" config-watcher.yml
 fi
-if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
-  echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
+if ! `grep upgradeCheckIntervalHours config-watcher.yml > /dev/null`; then
+  echo "upgradeCheckIntervalHours: 12" >> config-watcher.yml
 fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
   echo "delegateCheckLocation: http://localhost:8888/delegateci.txt" >> config-watcher.yml
