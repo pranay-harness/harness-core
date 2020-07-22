@@ -90,7 +90,10 @@ public class AwsBillingDataPipelineTaskletTest extends CategoryTest {
         .thenReturn(Collections.singletonList(settingAttribute));
     when(billingDataPipelineService.createDataSet(any())).thenReturn(dataSetId);
     when(billingDataPipelineService.createDataTransferJobFromGCS(
-             dataSetId, settingId, accountId, accountName, curReportName))
+             dataSetId, settingId, accountId, accountName, curReportName, false))
+        .thenReturn(transferJobName);
+    when(billingDataPipelineService.createDataTransferJobFromGCS(
+             dataSetId, settingId, accountId, accountName, curReportName, true))
         .thenReturn(transferJobName);
     HashMap<String, String> scheduledQueryJobsMap = new HashMap<>();
     scheduledQueryJobsMap.put(scheduledQueryKey, scheduledQueryName);

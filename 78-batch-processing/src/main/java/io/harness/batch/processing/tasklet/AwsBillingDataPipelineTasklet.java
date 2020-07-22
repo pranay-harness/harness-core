@@ -60,7 +60,10 @@ public class AwsBillingDataPipelineTasklet implements Tasklet {
           String dataTransferJobName;
           HashMap<String, String> scheduledQueryJobsMap;
           dataTransferJobName = billingDataPipelineService.createDataTransferJobFromGCS(
-              dataSetId, settingId, accountId, accountName, awsConfig.getCurReportName());
+              dataSetId, settingId, accountId, accountName, awsConfig.getCurReportName(), false);
+          // Prev Month Transfer Job
+          billingDataPipelineService.createDataTransferJobFromGCS(
+              dataSetId, settingId, accountId, accountName, awsConfig.getCurReportName(), true);
           scheduledQueryJobsMap =
               billingDataPipelineService.createScheduledQueriesForAWS(dataSetId, accountId, accountName);
 

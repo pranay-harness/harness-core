@@ -143,7 +143,7 @@ public class BillingDataPipelineServiceImplTest {
   @Category(UnitTests.class)
   public void shouldCreateDataTransferJob() throws IOException {
     String dataTransferJob = billingDataPipelineService.createDataTransferJobFromGCS(
-        dataSetId, settingId, accountId, accountName, curReportName);
+        dataSetId, settingId, accountId, accountName, curReportName, false);
     assertThat(dataTransferJob).isEqualTo(transferJobName);
   }
 

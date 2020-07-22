@@ -69,7 +69,9 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   private static final String QUERY_CONST = "query";
   private static final String WRITE_DISPOSITION_CONST = "write_disposition";
   private static final String TEMP_DEST_TABLE_NAME_VALUE = "awsCurTable_{run_time|\"%Y_%m\"}";
+  private static final String PREV_MONTH_TEMP_DEST_TABLE_NAME_VALUE = "awsCurTable_{run_time-480h|\"%Y_%m\"}";
   private static final String DEST_TABLE_NAME_VALUE = "awscur_{run_time|\"%Y_%m\"}";
+  private static final String PREV_MONTH_DEST_TABLE_NAME_VALUE = "awscur_{run_time-480h|\"%Y_%m\"}";
   private static final String GCP_DEST_TABLE_NAME_VALUE = "gcp_billing_export";
   private static final String PRE_AGG_TABLE_NAME_VALUE = "preAggregated";
   private static final String LOCATION = "us";
@@ -79,35 +81,72 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
   protected static final String PARENT_TEMPLATE = "projects/%s";
   protected static final String PARENT_TEMPLATE_WITH_LOCATION = "projects/%s/locations/%s";
   private static final String DATA_PATH_TEMPLATE = "%s/*%s/%s/%s/*/*.csv.gz";
+  private static final String PREV_MONTH_DATA_PATH_TEMPLATE =
+      "%s/*%s/%s/%s/{run_time-480h|\"%%Y%%m01\"}-{run_time|\"%%Y%%m01\"}/*.csv.gz";
   private static final String TRANSFER_JOB_NAME_TEMPLATE = "gcsToBigQueryTransferJob_%s";
+  private static final String PREV_MONTH_TRANSFER_JOB_NAME_TEMPLATE = "prevMonthGcsToBigQueryTransferJob_%s";
   private static final String SCHEDULED_QUERY_TEMPLATE = "scheduledQuery_%s";
+  private static final String PREV_MONTH_SCHEDULED_QUERY_TEMPLATE = "prevMonthScheduledQuery_%s";
   private static final String AWS_PRE_AGG_QUERY_TEMPLATE = "awsPreAggQuery_%s";
 
   public static final String scheduledQueryKey = "scheduledQuery";
+  public static final String prevMonthScheduledQueryKey = "prevMonthScheduledQuery";
   public static final String preAggQueryKey = "preAggQueryKey";
 
   public static final String DATA_SET_NAME_TEMPLATE = "BillingReport_%s";
-  private static final String TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE = "SELECT * FROM `%s.%s.aws*`%n"
-      + "WHERE _TABLE_SUFFIX = CONCAT((SELECT * from (select (CASE (SELECT COUNT(1) %n"
-      + "FROM `%s.%s.awsCurTable_*` WHERE %n"
-      + "_TABLE_SUFFIX = CONCAT(CAST(EXTRACT(YEAR from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string)%n"
-      + ",'_' , LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),2,'0'))) > 0%n"
-      + "WHEN TRUE THEN \"CurTable_\" ELSE \"cur_\" END))),CAST(EXTRACT(YEAR from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),%n"
-      + "'_' , LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),2,'0'));";
+  private static final String PREV_MONTH_TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE =
+      "SELECT resourceid, usagestartdate, productname, productfamily, servicecode, blendedrate, blendedcost, unblendedrate, unblendedcost,"
+      + " region, availabilityzone, usageaccountid,  instancetype, usagetype, lineitemtype, effectivecost, (%n"
+      + " SELECT %n"
+      + "   ARRAY_AGG(STRUCT(%n"
+      + "     regexp_replace(REGEXP_EXTRACT(unpivotedData, '[^\"]*'), 'TAG_' , '') AS key%n"
+      + "   , regexp_replace(REGEXP_EXTRACT(unpivotedData, r':\\\"[^\"]*'), ':\"', '') AS value%n"
+      + "   ))%n"
+      + "  FROM UNNEST(( %n"
+      + "    SELECT REGEXP_EXTRACT_ALL(json, 'TAG_' || r'[^:]+:\\\"[^\"]+\\\"')%n"
+      + "    FROM (SELECT TO_JSON_STRING(table) json))) unpivotedData) AS tags FROM `%s.%s.awsCurTable_*` table WHERE _TABLE_SUFFIX = %n"
+      + "      CONCAT(CAST(EXTRACT(YEAR from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 10 DAY), DAY)) as string),'_' , %n"
+      + "  LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date ), INTERVAL 10 DAY), DAY)) as string),2,'0'));%n"
+      + "    ";
+  private static final String TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE =
+      "SELECT resourceid, usagestartdate, productname, productfamily, servicecode, blendedrate, blendedcost, unblendedrate, unblendedcost,"
+      + " region, availabilityzone, usageaccountid,  instancetype, usagetype, lineitemtype, effectivecost, (%n"
+      + " SELECT %n"
+      + "   ARRAY_AGG(STRUCT(%n"
+      + "     regexp_replace(REGEXP_EXTRACT(unpivotedData, '[^\"]*'), 'TAG_' , '') AS key%n"
+      + "   , regexp_replace(REGEXP_EXTRACT(unpivotedData, r':\\\"[^\"]*'), ':\"', '') AS value%n"
+      + "   ))%n"
+      + "  FROM UNNEST(( %n"
+      + "    SELECT REGEXP_EXTRACT_ALL(json, 'TAG_' || r'[^:]+:\\\"[^\"]+\\\"')%n"
+      + "    FROM (SELECT TO_JSON_STRING(table) json))) unpivotedData) AS tags FROM `%s.%s.awsCurTable_*` table WHERE "
+      + "_TABLE_SUFFIX = CONCAT(CAST(EXTRACT(YEAR from TIMESTAMP_TRUNC(TIMESTAMP (@run_date), DAY)) "
+      + "as string),'_' , LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP (@run_date), DAY)) "
+      + "as string),2,'0'));";
 
-  private static final String AWS_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE = "DELETE FROM `%s.preAggregated`%n"
-      + "WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"AWS\";%n"
-      + "INSERT INTO `%s.preAggregated` (startTime, awsBlendedRate,awsBlendedCost,awsUnblendedRate, awsUnblendedCost,"
-      + " cost, awsServicecode, region,awsAvailabilityzone,awsUsageaccountid,awsInstancetype,awsUsagetype,cloudProvider)%n"
-      + "SELECT TIMESTAMP_TRUNC(usagestartdate, DAY) as startTime, min(blendedrate) AS awsBlendedRate, sum(blendedcost) AS awsBlendedCost,"
-      + " min(unblendedrate) AS awsUnblendedRate, sum(unblendedcost) AS awsUnblendedCost, sum(unblendedcost) AS cost, productname AS awsServicecode,"
-      + " region, availabilityzone AS awsAvailabilityzone, usageaccountid AS awsUsageaccountid, instancetype AS awsInstancetype, usagetype AS awsUsagetype,"
-      + " \"AWS\" AS cloudProvider FROM `%s.awscur_*` WHERE lineitemtype != 'Tax' AND _TABLE_SUFFIX = CONCAT(CAST(EXTRACT(YEAR from "
-      + "TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),'_' , LPAD(CAST(EXTRACT(MONTH from "
-      + "TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY)) as string),2,'0')) AND TIMESTAMP_TRUNC(usagestartdate, DAY) "
-      + "<= TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY) AND TIMESTAMP_TRUNC(usagestartdate, DAY) >= "
-      + "TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 3 DAY), DAY)GROUP BY awsServicecode, region, awsAvailabilityzone, "
-      + "awsUsageaccountid, awsInstancetype, awsUsagetype, startTime;";
+  private static final String AWS_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE =
+      "DELETE FROM `%s.preAggregated` WHERE DATE(startTime) "
+      + ">= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"AWS\";%n"
+      + "%n"
+      + "INSERT INTO `%s.preAggregated` (startTime, awsBlendedRate,awsBlendedCost,"
+      + "awsUnblendedRate, awsUnblendedCost, cost, awsServicecode, region,awsAvailabilityzone,awsUsageaccountid,awsInstancetype,"
+      + "awsUsagetype,cloudProvider)%n"
+      + "SELECT TIMESTAMP_TRUNC(usagestartdate, DAY) as startTime, min(blendedrate) AS awsBlendedRate, sum(blendedcost) AS "
+      + "awsBlendedCost, min(unblendedrate) AS awsUnblendedRate, sum(unblendedcost) AS awsUnblendedCost, sum(unblendedcost) AS "
+      + "cost, productname AS awsServicecode, region, availabilityzone AS awsAvailabilityzone, usageaccountid AS awsUsageaccountid, "
+      + "instancetype AS awsInstancetype, usagetype AS awsUsagetype, \"AWS\" AS cloudProvider FROM "
+      + "`%s.awscur_*` WHERE lineitemtype != 'Tax' AND %n"
+      + "%n"
+      + "_TABLE_SUFFIX %n"
+      + "BETWEEN%n"
+      + "  CONCAT(CAST(EXTRACT(YEAR from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 10 DAY), DAY)) as string),'_' , %n"
+      + "  LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date ), INTERVAL 10 DAY), DAY)) as string),2,'0'))%n"
+      + "AND%n"
+      + "  CONCAT(CAST(EXTRACT(YEAR from TIMESTAMP_TRUNC(TIMESTAMP(@run_date), DAY)) as string),'_' , %n"
+      + "  LPAD(CAST(EXTRACT(MONTH from TIMESTAMP_TRUNC(TIMESTAMP(@run_date), DAY)) as string),2,'0')) %n"
+      + "AND %n"
+      + "TIMESTAMP_TRUNC(usagestartdate, DAY) <= TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 1 DAY), DAY) AND "
+      + "TIMESTAMP_TRUNC(usagestartdate, DAY) >=       TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date), INTERVAL 3 DAY), DAY) "
+      + "GROUP BY awsServicecode, region, awsAvailabilityzone, awsUsageaccountid, awsInstancetype, awsUsagetype, startTime;";
 
   private static final String GCP_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE = "DELETE FROM `%s.preAggregated`%n"
       + "WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"GCP\";%n"
@@ -238,7 +277,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     String tablePrefix = gcpProjectId + "." + dstDataSetId;
     String query = String.format(GCP_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE, tablePrefix, tablePrefix, tablePrefix);
     CreateTransferConfigRequest scheduledTransferConfigRequest =
-        getTransferConfigRequest(dstDataSetId, scheduledQueryName, true, query);
+        getTransferConfigRequest(dstDataSetId, scheduledQueryName, true, query, false);
     TransferConfig createdTransferConfig =
         executeDataTransferJobCreate(scheduledTransferConfigRequest, dataTransferServiceClient);
     return createdTransferConfig.getName();
@@ -255,10 +294,9 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
 
     // Create Scheduled query for the Fallback Temp Table
     String scheduledQueryName1 = String.format(SCHEDULED_QUERY_TEMPLATE, uniqueSuffixFromAccountId);
-    String query1 =
-        String.format(TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE, gcpProjectId, dstDataSetId, gcpProjectId, dstDataSetId);
+    String query1 = String.format(TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE, gcpProjectId, dstDataSetId);
     CreateTransferConfigRequest scheduledTransferConfigRequest =
-        getTransferConfigRequest(dstDataSetId, scheduledQueryName1, false, query1);
+        getTransferConfigRequest(dstDataSetId, scheduledQueryName1, false, query1, false);
     executeDataTransferJobCreate(scheduledTransferConfigRequest, dataTransferServiceClient);
     scheduledQueriesMap.put(scheduledQueryKey, scheduledQueryName1);
 
@@ -267,14 +305,22 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     String tablePrefix = gcpProjectId + "." + dstDataSetId;
     String query2 = String.format(AWS_PRE_AGG_TABLE_SCHEDULED_QUERY_TEMPLATE, tablePrefix, tablePrefix, tablePrefix);
     CreateTransferConfigRequest preAggTransferConfigRequest =
-        getTransferConfigRequest(dstDataSetId, scheduledQueryName2, true, query2);
+        getTransferConfigRequest(dstDataSetId, scheduledQueryName2, true, query2, false);
     executeDataTransferJobCreate(preAggTransferConfigRequest, dataTransferServiceClient);
     scheduledQueriesMap.put(preAggQueryKey, scheduledQueryName2);
+
+    // Create Scheduled query for prevMonth Fallback Temp Table
+    String scheduledQueryName3 = String.format(PREV_MONTH_SCHEDULED_QUERY_TEMPLATE, uniqueSuffixFromAccountId);
+    String query3 = String.format(PREV_MONTH_TEMP_TABLE_SCHEDULED_QUERY_TEMPLATE, gcpProjectId, dstDataSetId);
+    CreateTransferConfigRequest prevMonthScheduledTransferConfigRequest =
+        getTransferConfigRequest(dstDataSetId, scheduledQueryName3, false, query3, true);
+    executeDataTransferJobCreate(prevMonthScheduledTransferConfigRequest, dataTransferServiceClient);
+    scheduledQueriesMap.put(prevMonthScheduledQueryKey, scheduledQueryName3);
     return scheduledQueriesMap;
   }
 
-  private CreateTransferConfigRequest getTransferConfigRequest(
-      String dstDataSetId, String scheduledQueryName, boolean isPreAggregateScheduledQuery, String query) {
+  private CreateTransferConfigRequest getTransferConfigRequest(String dstDataSetId, String scheduledQueryName,
+      boolean isPreAggregateScheduledQuery, String query, boolean isPrevMonthQuery) {
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
     String parent;
     int numberOfHours;
@@ -300,7 +346,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
       parent = String.format(PARENT_TEMPLATE, gcpProjectId);
       numberOfHours = 6;
       numberOfMinutes = 15;
-      transferConfig =
+      TransferConfig.Builder transferConfigBuilder =
           TransferConfig.newBuilder()
               .setDisplayName(scheduledQueryName)
               .setParams(Struct.newBuilder()
@@ -308,14 +354,21 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
                              .putFields(WRITE_DISPOSITION_CONST,
                                  Value.newBuilder().setStringValue(WRITE_TRUNCATE_VALUE).build())
                              .putFields(DEST_TABLE_NAME_CONST,
-                                 Value.newBuilder().setStringValue(DEST_TABLE_NAME_VALUE).build())
+                                 Value.newBuilder()
+                                     .setStringValue(
+                                         isPrevMonthQuery ? PREV_MONTH_DEST_TABLE_NAME_VALUE : DEST_TABLE_NAME_VALUE)
+                                     .build())
                              .build())
               .setDestinationDatasetId(dstDataSetId)
               .setScheduleOptions(ScheduleOptions.newBuilder()
                                       .setStartTime(getJobStartTimeStamp(1, numberOfHours, numberOfMinutes))
                                       .build())
-              .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID)
-              .build();
+              .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID);
+
+      if (isPrevMonthQuery) {
+        transferConfigBuilder.setSchedule("1,2,3,4,5,6,7,8,9,10 of month 05:45");
+      }
+      transferConfig = transferConfigBuilder.build();
     }
 
     return CreateTransferConfigRequest.newBuilder().setTransferConfig(transferConfig).setParent(parent).build();
@@ -384,37 +437,54 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
 
   @Override
   public String createDataTransferJobFromGCS(String destinationDataSetId, String settingId, String accountId,
-      String accountName, String curReportName) throws IOException {
+      String accountName, String curReportName, boolean isPrevMonthTransferJob) throws IOException {
     DataTransferServiceClient dataTransferServiceClient = getDataTransferClient();
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
     String parent = String.format(PARENT_TEMPLATE, gcpProjectId);
-    String transferJobName =
-        String.format(TRANSFER_JOB_NAME_TEMPLATE, getUniqueSuffixFromAccountId(accountId, accountName));
+    String uniqueSuffixFromAccountId = getUniqueSuffixFromAccountId(accountId, accountName);
+    String transferJobName = String.format(TRANSFER_JOB_NAME_TEMPLATE, uniqueSuffixFromAccountId);
+
+    TransferConfig.Builder transferConfigBuilder =
+        TransferConfig.newBuilder()
+            .setDestinationDatasetId(destinationDataSetId)
+            .setDataSourceId(GCS_DATA_SOURCE_ID)
+            .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(1, 6, 0)).build());
+
+    Struct.Builder paramsBuilder =
+        Struct.newBuilder()
+            .putFields(FILE_FORMAT_CONST, Value.newBuilder().setStringValue("CSV").build())
+            .putFields(IGNORE_UNKNOWN_VALUES_CONST, Value.newBuilder().setBoolValue(true).build())
+            .putFields(FIELD_DELIMITER_CONST, Value.newBuilder().setStringValue(",").build())
+            .putFields(SKIP_LEADING_ROWS_CONST, Value.newBuilder().setStringValue("1").build())
+            .putFields(ALLOWS_QUOTED_NEWLINES_CONST, Value.newBuilder().setBoolValue(true).build())
+            .putFields(ALLOWS_JAGGED_ROWS_CONST, Value.newBuilder().setBoolValue(true).build())
+            .putFields(DELETE_SOURCE_FILES_CONST, Value.newBuilder().setBoolValue(true).build());
+
+    if (isPrevMonthTransferJob) {
+      paramsBuilder
+          .putFields(DATA_PATH_TEMPLATE_CONST,
+              Value.newBuilder()
+                  .setStringValue(String.format(PREV_MONTH_DATA_PATH_TEMPLATE,
+                      mainConfig.getBillingDataPipelineConfig().getGcsBasePath(), accountId, settingId, curReportName))
+                  .build())
+          .putFields(
+              DEST_TABLE_NAME_CONST, Value.newBuilder().setStringValue(PREV_MONTH_TEMP_DEST_TABLE_NAME_VALUE).build());
+      transferJobName = String.format(PREV_MONTH_TRANSFER_JOB_NAME_TEMPLATE, uniqueSuffixFromAccountId);
+
+      transferConfigBuilder.setDisplayName(transferJobName).setSchedule("1,2,3,4,5,6,7,8,9,10 of month 05:45");
+    } else {
+      paramsBuilder
+          .putFields(DATA_PATH_TEMPLATE_CONST,
+              Value.newBuilder()
+                  .setStringValue(String.format(DATA_PATH_TEMPLATE,
+                      mainConfig.getBillingDataPipelineConfig().getGcsBasePath(), accountId, settingId, curReportName))
+                  .build())
+
+          .putFields(DEST_TABLE_NAME_CONST, Value.newBuilder().setStringValue(TEMP_DEST_TABLE_NAME_VALUE).build());
+    }
 
     TransferConfig transferConfig =
-        TransferConfig.newBuilder()
-            .setDisplayName(transferJobName)
-            .setParams(Struct.newBuilder()
-                           .putFields(DATA_PATH_TEMPLATE_CONST,
-                               Value.newBuilder()
-                                   .setStringValue(String.format(DATA_PATH_TEMPLATE,
-                                       mainConfig.getBillingDataPipelineConfig().getGcsBasePath(), accountId, settingId,
-                                       curReportName))
-                                   .build())
-                           .putFields(FILE_FORMAT_CONST, Value.newBuilder().setStringValue("CSV").build())
-                           .putFields(IGNORE_UNKNOWN_VALUES_CONST, Value.newBuilder().setBoolValue(true).build())
-                           .putFields(FIELD_DELIMITER_CONST, Value.newBuilder().setStringValue(",").build())
-                           .putFields(SKIP_LEADING_ROWS_CONST, Value.newBuilder().setStringValue("1").build())
-                           .putFields(ALLOWS_QUOTED_NEWLINES_CONST, Value.newBuilder().setBoolValue(true).build())
-                           .putFields(ALLOWS_JAGGED_ROWS_CONST, Value.newBuilder().setBoolValue(true).build())
-                           .putFields(DELETE_SOURCE_FILES_CONST, Value.newBuilder().setBoolValue(true).build())
-                           .putFields(DEST_TABLE_NAME_CONST,
-                               Value.newBuilder().setStringValue(TEMP_DEST_TABLE_NAME_VALUE).build())
-                           .build())
-            .setDestinationDatasetId(destinationDataSetId)
-            .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(1, 6, 0)).build())
-            .setDataSourceId(GCS_DATA_SOURCE_ID)
-            .build();
+        transferConfigBuilder.setDisplayName(transferJobName).setParams(paramsBuilder.build()).build();
 
     CreateTransferConfigRequest createTransferConfigRequest =
         CreateTransferConfigRequest.newBuilder().setTransferConfig(transferConfig).setParent(parent).build();

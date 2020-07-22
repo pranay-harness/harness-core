@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface BillingDataPipelineService {
   String createDataTransferJobFromGCS(String destinationDataSetId, String settingId, String accountId,
-      String accountName, String curReportName) throws IOException;
+      String accountName, String curReportName, boolean isPrevMonthTransferJob) throws IOException;
   String createDataTransferJobFromBQ(String jobName, String srcProjectId, String srcDatasetId, String dstProjectId,
       String dstDatasetId, String impersonatedServiceAccount) throws IOException;
   String createScheduledQueriesForGCP(String scheduledQueryName, String dstDataSetId) throws IOException;
