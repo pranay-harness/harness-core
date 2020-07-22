@@ -236,6 +236,7 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
+import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo.OrchestrationWorkflowInfoBuilder;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
@@ -1060,18 +1061,30 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         continue;
       }
 
-      if (!ENV_STATE.name().equals(element.getType())) {
-        continue;
-      }
-      Workflow workflow =
-          workflowService.readWorkflow(pipeline.getAppId(), (String) element.getProperties().get("workflowId"));
+      if (ENV_STATE.name().equals(element.getType())) {
+        Workflow workflow =
+            workflowService.readWorkflow(pipeline.getAppId(), (String) element.getProperties().get("workflowId"));
 
-      if (workflow.getOrchestrationWorkflow() != null) {
-        orchestrationWorkflows.add(OrchestrationWorkflowInfo.builder()
-                                       .workflowId(workflow.getUuid())
-                                       .pipelineStageId(element.getUuid())
-                                       .orchestrationWorkflow(workflow.getOrchestrationWorkflow())
-                                       .build());
+        if (workflow.getOrchestrationWorkflow() != null) {
+          OrchestrationWorkflowInfoBuilder builder = OrchestrationWorkflowInfo.builder()
+                                                         .workflowId(workflow.getUuid())
+                                                         .pipelineStageId(element.getUuid())
+                                                         .orchestrationWorkflow(workflow.getOrchestrationWorkflow());
+          orchestrationWorkflows.add(builder.build());
+        }
+      } else if (ENV_LOOP_STATE.name().equals(element.getType())) {
+        Workflow workflow =
+            workflowService.readWorkflow(pipeline.getAppId(), (String) element.getProperties().get("workflowId"));
+
+        if (workflow.getOrchestrationWorkflow() != null) {
+          OrchestrationWorkflowInfoBuilder builder = OrchestrationWorkflowInfo.builder()
+                                                         .workflowId(workflow.getUuid())
+                                                         .pipelineStageId(element.getUuid())
+                                                         .orchestrationWorkflow(workflow.getOrchestrationWorkflow())
+                                                         .isLooped(true);
+          List<String> values = (List<String>) element.getProperties().get("loopedValues");
+          values.stream().map(value -> builder.build()).forEach(orchestrationWorkflows::add);
+        }
       }
     }
 

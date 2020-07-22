@@ -26,6 +26,7 @@ public interface BarrierService {
   class OrchestrationWorkflowInfo {
     private String pipelineStageId;
     private String workflowId;
+    private boolean isLooped;
     private OrchestrationWorkflow orchestrationWorkflow;
   }
 

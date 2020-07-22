@@ -121,46 +121,56 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
     // First lets try to fill up all the missing data that is available already
     final BarrierInstancePipeline pipeline = barrierInstance.getPipeline();
-    for (int index = 0; index < pipeline.getWorkflows().size(); ++index) {
-      BarrierInstanceWorkflow workflow = pipeline.getWorkflows().get(index);
-      if (workflow.getPipelineStageExecutionId() == null) {
-        try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
-                 wingsPersistence.createQuery(StateExecutionInstance.class)
-                     .filter(StateExecutionInstanceKeys.appId, barrierInstance.getAppId())
-                     .filter(StateExecutionInstanceKeys.executionUuid, pipeline.getExecutionId())
-                     .filter(StateExecutionInstanceKeys.stateType, ENV_STATE.name())
-                     .filter(StateExecutionInstanceKeys.pipelineStageElementId, workflow.getPipelineStageId())
-                     .fetchKeys())) {
+    Map<String, List<BarrierInstanceWorkflow>> barrierWorkflows =
+        pipeline.getWorkflows().stream().collect(Collectors.groupingBy(BarrierInstanceWorkflow::getUuid));
+    for (Map.Entry<String, List<BarrierInstanceWorkflow>> entry : barrierWorkflows.entrySet()) {
+      List<BarrierInstanceWorkflow> workflows = entry.getValue();
+      String pipelineStageId = workflows.get(0).getPipelineStageId();
+      if (workflows.stream().anyMatch(t -> t.getPipelineStageExecutionId() == null)) {
+        try (HKeyIterator<StateExecutionInstance> keys =
+                 new HKeyIterator(wingsPersistence.createQuery(StateExecutionInstance.class)
+                                      .filter(StateExecutionInstanceKeys.appId, barrierInstance.getAppId())
+                                      .filter(StateExecutionInstanceKeys.executionUuid, pipeline.getExecutionId())
+                                      .filter(StateExecutionInstanceKeys.stateType, ENV_STATE.name())
+                                      .filter(StateExecutionInstanceKeys.pipelineStageElementId, pipelineStageId)
+                                      .fetchKeys())) {
           if (!keys.hasNext()) {
             continue;
           }
 
-          workflow.setPipelineStageExecutionId(keys.next().getId().toString());
-
-          if (keys.hasNext()) {
-            logger.error("More than one execution instance for the same pipeline state");
+          for (BarrierInstanceWorkflow workflow : workflows) {
+            if (keys.hasNext()) {
+              workflow.setPipelineStageExecutionId(keys.next().getId().toString());
+            } else {
+              break;
+            }
           }
         }
       }
 
-      if (workflow.getWorkflowExecutionId() == null) {
+      if (workflows.stream().anyMatch(t -> t.getWorkflowExecutionId() == null)) {
         try (HKeyIterator<WorkflowExecution> keys = new HKeyIterator(
                  wingsPersistence.createQuery(WorkflowExecution.class)
                      .filter(WorkflowExecutionKeys.appId, barrierInstance.getAppId())
                      .filter(WorkflowExecutionKeys.pipelineExecutionId, pipeline.getExecutionId())
-                     .filter(WorkflowExecutionKeys.executionArgs_pipelinePhaseElementId, workflow.getPipelineStageId())
-                     .filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())
+                     .filter(WorkflowExecutionKeys.executionArgs_pipelinePhaseElementId, pipelineStageId)
+                     .filter(WorkflowExecutionKeys.workflowId, entry.getKey())
                      .fetchKeys())) {
           if (!keys.hasNext()) {
             continue;
           }
-          workflow.setWorkflowExecutionId(keys.next().getId().toString());
-          if (keys.hasNext()) {
-            logger.error("More than one workflow execution for the same pipeline execution");
+          for (BarrierInstanceWorkflow workflow : workflows) {
+            if (keys.hasNext()) {
+              workflow.setWorkflowExecutionId(keys.next().getId().toString());
+            } else {
+              break;
+            }
           }
         }
       }
-
+    }
+    for (int index = 0; index < pipeline.getWorkflows().size(); ++index) {
+      BarrierInstanceWorkflow workflow = pipeline.getWorkflows().get(index);
       if (workflow.getPhaseExecutionId() == null) {
         try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
                  wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -179,7 +189,6 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           }
         }
       }
-
       if (workflow.getStepExecutionId() == null) {
         try (HKeyIterator<StateExecutionInstance> keys = new HKeyIterator(
                  wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -332,12 +341,15 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     }
 
     final List<BarrierDetail> barrierDetails = new ArrayList<>();
+    boolean isAnyLooped = false;
     for (int i = 0; i < orchestrations.size(); ++i) {
       int concurrentTrack = i;
       final OrchestrationWorkflowInfo workflow = orchestrations.get(concurrentTrack);
       if (!(workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow)) {
         continue;
       }
+
+      isAnyLooped = isAnyLooped || workflow.isLooped();
 
       final CanaryOrchestrationWorkflow orchestrationWorkflow =
           (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
@@ -377,6 +389,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     final Map<String, List<BarrierDetail>> barriers =
         barrierDetails.stream().collect(Collectors.<BarrierDetail, String>groupingBy(BarrierDetail::getName));
 
+    boolean finalIsAnyLooped = isAnyLooped;
     return barriers.entrySet()
         .stream()
         .map(entry -> {
@@ -386,14 +399,12 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
           // All items should be in different concurrentTrack
           if (count < value.size()) {
-            throw new WingsException(BARRIERS_NOT_RUNNING_CONCURRENTLY);
+            if (!finalIsAnyLooped) {
+              throw new WingsException(BARRIERS_NOT_RUNNING_CONCURRENTLY);
+            }
           }
           return entry;
         })
-        // Only one barrier is a noop barrier - we should just ignore it. This is completely acceptable to have -
-        // if we have a pipeline scope barrier, when we execute workflow by workflow the barrier could be just one.
-        // Do not ignore pipeline level barriers either, because if we have two pipeline level barrier in the same
-        // workflow, we should respect them too.
         .filter(entry -> entry.getValue().size() > 1)
         .map(entry -> {
           BarrierInstance barrier =
