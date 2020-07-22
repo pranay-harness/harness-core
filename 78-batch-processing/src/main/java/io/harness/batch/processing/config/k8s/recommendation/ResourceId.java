@@ -1,10 +1,12 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
+import lombok.Builder;
 import lombok.Value;
 
-@Value(staticConstructor = "of")
+@Value
+@Builder
 class ResourceId {
-  static final ResourceId NOT_FOUND = of("", "", "", "", "");
+  static final ResourceId NOT_FOUND = ResourceId.builder().build();
 
   String accountId;
   String clusterId;

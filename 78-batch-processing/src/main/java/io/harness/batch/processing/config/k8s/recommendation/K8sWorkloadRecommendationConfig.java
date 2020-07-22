@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Slf4j
 public class K8sWorkloadRecommendationConfig {
-  private static final int BATCH_SIZE = 100;
+  private static final int BATCH_SIZE = 1000;
 
   private final EventReaderFactory eventReaderFactory;
   private final StepBuilderFactory stepBuilderFactory;
