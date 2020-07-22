@@ -1333,6 +1333,19 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   public void ensureSafeToDelete(@NotEmpty String appId, InfrastructureDefinition infrastructureDefinition) {
     final String infraDefinitionId = infrastructureDefinition.getUuid();
     final String infraDefinitionName = infrastructureDefinition.getName();
+
+    // check if infraDef is used by a running workflow
+    List<String> refWorkflowExecutions =
+        workflowExecutionService.getRunningExecutionsForInfraDef(appId, infraDefinitionId);
+
+    if (!refWorkflowExecutions.isEmpty()) {
+      throw new InvalidRequestException(
+          format(" Infrastructure Definition %s is referenced by %s %s [%s]", infraDefinitionName,
+              refWorkflowExecutions.size(), plural("running workflow", refWorkflowExecutions.size()),
+              HarnessStringUtils.join(", ", refWorkflowExecutions)),
+          USER);
+    }
+
     List<String> refWorkflows =
         workflowService.obtainWorkflowNamesReferencedByInfrastructureDefinition(appId, infraDefinitionId);
 

@@ -6,6 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.POOJA;
@@ -25,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -74,6 +76,7 @@ import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
+import software.wings.beans.Event;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -105,6 +108,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionContext;
@@ -131,6 +135,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Mock private Map<String, InfrastructureProvider> infrastructureProviderMap;
   @Mock private YamlPushService yamlPushService;
   @Mock private EventPublishHelper eventPublishHelper;
+  @Mock private WorkflowExecutionService workflowExecutionService;
 
   @Spy @InjectMocks private InfrastructureDefinitionServiceImpl infrastructureDefinitionService;
 
@@ -290,6 +295,54 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
         .obtainTriggerNamesReferencedByTemplatedEntityId(anyString(), anyString());
 
     infrastructureDefinitionService.ensureSafeToDelete("appid", infrastructureDefinition);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testEnsureSafeToDelete_error3() {
+    final InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder().uuid("infraid").name("infra_name").build();
+
+    doReturn(singletonList("workflowExecution1"))
+        .when(workflowExecutionService)
+        .getRunningExecutionsForInfraDef(anyString(), anyString());
+
+    infrastructureDefinitionService.ensureSafeToDelete("appid", infrastructureDefinition);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnDeleteReferencedByWorkflowExecution() {
+    mockPhysicalInfra();
+    when(workflowExecutionService.getRunningExecutionsForInfraDef(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(asList("Referenced Workflow Execution"));
+
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> infrastructureDefinitionService.delete(APP_ID, INFRA_DEFINITION_ID));
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testDelete() {
+    mockPhysicalInfra();
+    when(appService.getAccountIdByAppId(anyString())).thenReturn(ACCOUNT_ID);
+    when(workflowExecutionService.getRunningExecutionsForInfraDef(APP_ID, INFRA_DEFINITION_ID)).thenReturn(asList());
+    when(workflowService.obtainWorkflowNamesReferencedByInfrastructureDefinition(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(asList());
+    when(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(asList());
+    when(triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(APP_ID, INFRA_DEFINITION_ID))
+        .thenReturn(asList());
+
+    infrastructureDefinitionService.delete(APP_ID, INFRA_DEFINITION_ID);
+
+    verify(wingsPersistence, times(1)).delete(InfrastructureDefinition.class, APP_ID, INFRA_DEFINITION_ID);
+    verify(yamlPushService, times(1))
+        .pushYamlChangeSet(eq(ACCOUNT_ID), any(InfrastructureDefinitionService.class), eq(null), eq(Event.Type.DELETE),
+            eq(false), eq(false));
   }
 
   @Test
