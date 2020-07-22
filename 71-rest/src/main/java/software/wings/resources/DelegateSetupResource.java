@@ -17,7 +17,6 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import freemarker.template.TemplateException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.Trimmed;
@@ -52,6 +51,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -79,12 +79,13 @@ public class DelegateSetupResource {
   private static final String APPLICATION_ZIP_CHARSET_BINARY = "application/zip; charset=binary";
   private static final String CONTENT_DISPOSITION = "Content-Disposition";
   private static final String ATTACHMENT_FILENAME = "attachment; filename=";
+  public static final String YAML = ".yaml";
   private static final String TAR_GZ = ".tar.gz";
 
-  private DelegateService delegateService;
-  private DelegateScopeService delegateScopeService;
-  private DownloadTokenService downloadTokenService;
-  private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  private final DelegateService delegateService;
+  private final DelegateScopeService delegateScopeService;
+  private final DownloadTokenService downloadTokenService;
+  private final SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @Inject
   public DelegateSetupResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
@@ -365,18 +366,22 @@ public class DelegateSetupResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       String url = subdomainUrlHelper.getManagerUrl(request, accountId);
 
-      return new RestResponse<>(ImmutableMap.of(DOWNLOAD_URL,
-          url + request.getRequestURI().replace(DOWNLOAD_URL, "download") + ACCOUNT_ID + accountId + TOKEN
-              + downloadTokenService.createDownloadToken(DELEGATE + accountId),
-          "dockerUrl",
-          url + request.getRequestURI().replace(DOWNLOAD_URL, "docker") + ACCOUNT_ID + accountId + TOKEN
-              + downloadTokenService.createDownloadToken(DELEGATE + accountId),
-          "kubernetesUrl",
-          url + request.getRequestURI().replace(DOWNLOAD_URL, "kubernetes") + ACCOUNT_ID + accountId + TOKEN
-              + downloadTokenService.createDownloadToken(DELEGATE + accountId),
-          "ecsUrl",
-          url + request.getRequestURI().replace(DOWNLOAD_URL, "ecs") + ACCOUNT_ID + accountId + TOKEN
-              + downloadTokenService.createDownloadToken(DELEGATE + accountId)));
+      ImmutableMap.Builder<String, String> mapBuilder =
+          ImmutableMap.<String, String>builder()
+              .put(DOWNLOAD_URL,
+                  url + request.getRequestURI().replace(DOWNLOAD_URL, "download") + ACCOUNT_ID + accountId + TOKEN
+                      + downloadTokenService.createDownloadToken(DELEGATE + accountId))
+              .put("dockerUrl",
+                  url + request.getRequestURI().replace(DOWNLOAD_URL, "docker") + ACCOUNT_ID + accountId + TOKEN
+                      + downloadTokenService.createDownloadToken(DELEGATE + accountId))
+              .put("ecsUrl",
+                  url + request.getRequestURI().replace(DOWNLOAD_URL, "ecs") + ACCOUNT_ID + accountId + TOKEN
+                      + downloadTokenService.createDownloadToken(DELEGATE + accountId))
+              .put("kubernetesUrl",
+                  url + request.getRequestURI().replace(DOWNLOAD_URL, "kubernetes") + ACCOUNT_ID + accountId + TOKEN
+                      + downloadTokenService.createDownloadToken(DELEGATE + accountId));
+
+      return new RestResponse<>(mapBuilder.build());
     }
   }
 
@@ -388,7 +393,7 @@ public class DelegateSetupResource {
   public Response downloadScripts(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") String delegateName,
       @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
-      throws IOException, TemplateException {
+      throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
       File delegateFile = delegateService.downloadScripts(subdomainUrlHelper.getManagerUrl(request, accountId),
@@ -409,7 +414,7 @@ public class DelegateSetupResource {
   public Response downloadDocker(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") String delegateName,
       @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
-      throws IOException, TemplateException {
+      throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
       File delegateFile = delegateService.downloadDocker(subdomainUrlHelper.getManagerUrl(request, accountId),
@@ -429,17 +434,27 @@ public class DelegateSetupResource {
   @ExceptionMetered
   public Response downloadKubernetes(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName,
-      @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
-      throws IOException, TemplateException {
+      @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token,
+      @QueryParam("isCeEnabled") @DefaultValue("false") boolean isCeEnabled) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
-      File delegateFile = delegateService.downloadKubernetes(subdomainUrlHelper.getManagerUrl(request, accountId),
-          getVerificationUrl(request), accountId, delegateName, delegateProfileId);
-      return Response.ok(delegateFile)
-          .header(CONTENT_TRANSFER_ENCODING, BINARY)
-          .type(APPLICATION_ZIP_CHARSET_BINARY)
-          .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + KUBERNETES_DELEGATE + TAR_GZ)
-          .build();
+
+      if (isCeEnabled) {
+        File delegateFile =
+            delegateService.downloadCeKubernetesYaml(subdomainUrlHelper.getManagerUrl(request, accountId),
+                getVerificationUrl(request), accountId, delegateName, null);
+        return Response.ok(delegateFile)
+            .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + KUBERNETES_DELEGATE + YAML)
+            .build();
+      } else {
+        File delegateFile = delegateService.downloadKubernetes(subdomainUrlHelper.getManagerUrl(request, accountId),
+            getVerificationUrl(request), accountId, delegateName, delegateProfileId);
+        return Response.ok(delegateFile)
+            .header(CONTENT_TRANSFER_ENCODING, BINARY)
+            .type(APPLICATION_ZIP_CHARSET_BINARY)
+            .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + KUBERNETES_DELEGATE + TAR_GZ)
+            .build();
+      }
     }
   }
 
@@ -451,7 +466,7 @@ public class DelegateSetupResource {
   public Response downloadEcs(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("delegateGroupName") @NotEmpty String delegateGroupName, @QueryParam("awsVpcMode") Boolean awsVpcMode,
       @QueryParam("hostname") String hostname, @QueryParam("delegateProfileId") String delegateProfileId,
-      @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
+      @QueryParam("token") @NotEmpty String token) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
       File delegateFile = delegateService.downloadECSDelegate(subdomainUrlHelper.getManagerUrl(request, accountId),
@@ -472,7 +487,7 @@ public class DelegateSetupResource {
   public Response downloadDelegateValuesYaml(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") @NotEmpty String delegateName,
       @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
-      throws IOException, TemplateException {
+      throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       downloadTokenService.validateDownloadToken(DELEGATE + accountId, token);
       File delegateFile =
@@ -481,7 +496,7 @@ public class DelegateSetupResource {
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type("text/plain; charset=UTF-8")
-          .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + HARNESS_DELEGATE_VALUES_YAML + ".yaml")
+          .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + HARNESS_DELEGATE_VALUES_YAML + YAML)
           .build();
     }
   }

@@ -1,3 +1,32 @@
+# Be sure you have kubectl installed and credentials to access your
+# kubernetes cluster.
+#
+# Edit harness-delegate.yaml to change namespace, set proxy settings, or to
+# enter a delegate description.
+#
+# Install or replace the Harness Delegate:
+#
+#   kubectl apply -f harness-delegate.yaml
+#
+# Get pod names:
+#
+#   kubectl get pods -n harness-delegate
+#
+# See startup logs:
+#
+#   kubectl logs <pod-name> -n harness-delegate -f
+#
+# Run a shell in a pod:
+#
+#    kubectl exec <pod-name> -n harness-delegate -it -- bash
+#
+# Note: If you're installing more than one Kubernetes delegate then make sure the
+# name is unique, keeping the 6 letter account identifier as part of the name. You
+# can download again with a new name from the Harness > Setup > Installations
+# page.
+
+
+
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -5,25 +34,73 @@ metadata:
 
 ---
 
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ce-clusterrole
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - events
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  - extensions
+  resources:
+  - statefulsets
+  - deployments
+  - daemonsets
+  - replicasets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  - cronjobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: harness-delegate-cluster-admin
-subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: harness-delegate
+  name: ce-clusterrolebinding
 roleRef:
-  kind: ClusterRole
-  name: cluster-admin
   apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ce-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: harness-delegate
 
 ---
 
 apiVersion: v1
 kind: Secret
 metadata:
-  name: harness-delegate-proxy
+  name: ${delegateName}-proxy
   namespace: harness-delegate
 type: Opaque
 data:
@@ -38,28 +115,28 @@ kind: StatefulSet
 metadata:
   labels:
     harness.io/app: harness-delegate
-    harness.io/account: accoun
-    harness.io/name: harness-delegate
-  # Name must contain the six letter account identifier: accoun
-  name: harness-delegate-accoun
+    harness.io/account: ${kubernetesAccountLabel}
+    harness.io/name: ${delegateName}
+  # Name must contain the six letter account identifier: ${kubernetesAccountLabel}
+  name: ${delegateName}-${kubernetesAccountLabel}
   namespace: harness-delegate
 spec:
   replicas: 1
   selector:
     matchLabels:
       harness.io/app: harness-delegate
-      harness.io/account: accoun
-      harness.io/name: harness-delegate
+      harness.io/account: ${kubernetesAccountLabel}
+      harness.io/name: ${delegateName}
   serviceName: ""
   template:
     metadata:
       labels:
         harness.io/app: harness-delegate
-        harness.io/account: accoun
-        harness.io/name: harness-delegate
+        harness.io/account: ${kubernetesAccountLabel}
+        harness.io/name: ${delegateName}
     spec:
       containers:
-      - image: harness/delegate:latest
+      - image: ${delegateDockerImage}
         imagePullPolicy: Always
         name: harness-delegate-instance
         resources:
@@ -85,27 +162,27 @@ spec:
           failureThreshold: 2
         env:
         - name: ACCOUNT_ID
-          value: ACCOUNT_ID
+          value: ${accountId}
         - name: ACCOUNT_SECRET
-          value: ACCOUNT_KEY
+          value: ${accountSecret}
         - name: MANAGER_HOST_AND_PORT
-          value: https://localhost:9090
+          value: ${managerHostAndPort}
         - name: WATCHER_STORAGE_URL
-          value: http://localhost:8888
+          value: ${watcherStorageUrl}
         - name: WATCHER_CHECK_LOCATION
-          value: watcherci.txt
+          value: ${watcherCheckLocation}
         - name: REMOTE_WATCHER_URL_CDN
-          value: http://localhost:9500/builds
+          value: ${remoteWatcherUrlCdn}
         - name: DELEGATE_STORAGE_URL
-          value: http://localhost:8888
+          value: ${delegateStorageUrl}
         - name: DELEGATE_CHECK_LOCATION
-          value: delegateci.txt
+          value: ${delegateCheckLocation}
         - name: DEPLOY_MODE
-          value: KUBERNETES
+          value: ${deployMode}
         - name: DELEGATE_NAME
-          value: harness-delegate
+          value: ${delegateName}
         - name: DELEGATE_PROFILE
-          value: ""
+          value: "${delegateProfile}"
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT
@@ -119,12 +196,12 @@ spec:
         - name: PROXY_USER
           valueFrom:
             secretKeyRef:
-              name: harness-delegate-proxy
+              name: ${delegateName}-proxy
               key: PROXY_USER
         - name: PROXY_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: harness-delegate-proxy
+              name: ${delegateName}-proxy
               key: PROXY_PASSWORD
         - name: POLL_FOR_TASKS
           value: "false"
@@ -133,15 +210,15 @@ spec:
         - name: CF_PLUGIN_HOME
           value: ""
         - name: USE_CDN
-          value: "false"
+          value: "${useCdn}"
         - name: CDN_URL
-          value: http://localhost:9500
+          value: ${cdnUrl}
         - name: JRE_VERSION
-          value: 1.8.0_242
+          value: ${jreVersion}
         - name: HELM3_PATH
           value: ""
         - name: HELM_PATH
           value: ""
         - name: ENABlE_CE
-          value: false
+          value: "${enableCE}"
       restartPolicy: Always

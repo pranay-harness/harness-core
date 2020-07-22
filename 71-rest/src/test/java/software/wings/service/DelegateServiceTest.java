@@ -1267,7 +1267,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
-  public void shouldSignalForDelegateUpgradeWhenUpdateIsPresent() throws IOException, TemplateException {
+  public void shouldSignalForDelegateUpgradeWhenUpdateIsPresent() throws IOException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     Delegate delegate = createDelegateBuilder().build();

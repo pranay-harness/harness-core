@@ -25,5 +25,3 @@ Note: If you're installing more than one Kubernetes delegate then make sure the
 name is unique, keeping the 6 letter account identifier as part of the name. You
 can download again with a new name from the Harness > Setup > Installations
 page.
-
-

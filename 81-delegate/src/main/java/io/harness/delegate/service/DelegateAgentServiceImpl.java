@@ -417,7 +417,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateType(DELEGATE_TYPE)
                                           .proxy(delegateConfiguration.isProxy())
                                           .polllingModeEnabled(delegateConfiguration.isPollForTasks())
-                                          .sampleDelegate(isSample);
+                                          .sampleDelegate(isSample)
+                                          .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
 
       delegateId = registerDelegate(builder);
       logger.info("[New] Delegate registered in {} ms", clock.millis() - start);
@@ -850,6 +851,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                             .description(delegateConfiguration.getDescription())
                                             .proxy(delegateConfiguration.isProxy())
                                             .polllingModeEnabled(delegateConfiguration.isPollForTasks())
+                                            .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")))
                                             .build();
         restResponse = delegateExecute(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
       } catch (Exception e) {

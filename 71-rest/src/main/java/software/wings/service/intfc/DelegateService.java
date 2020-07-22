@@ -71,6 +71,9 @@ public interface DelegateService extends OwnedByAccount {
   File downloadKubernetes(String managerHost, String verificationServiceUrl, String accountId, String delegateName,
       String delegateProfile) throws IOException;
 
+  File downloadCeKubernetesYaml(String managerHost, String verificationUrl, String accountId, String delegateName,
+      String delegateProfile) throws IOException;
+
   File downloadECSDelegate(String managerHost, String verificationUrl, String accountId, boolean awsVpcMode,
       String hostname, String delegateGroupName, String delegateProfile) throws IOException;
   Delegate add(Delegate delegate);
