@@ -1,17 +1,20 @@
 package io.harness.app;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import io.dropwizard.Application;
 import io.dropwizard.cli.ConfiguredCommand;
 import io.dropwizard.setup.Bootstrap;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.IndexManager;
 import io.harness.mongo.MongoConfig;
@@ -48,7 +51,14 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
             .build());
 
     List<Module> modules = new ArrayList<>();
-    modules.add(new ProviderModule() {
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        MapBinder<Class, String> morphiaClasses =
+            MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
+        morphiaClasses.addBinding(DelegateSyncTaskResponse.class).toInstance("delegateSyncTaskResponses");
+      }
+
       @Provides
       @Singleton
       MongoConfig mongoConfig() {
