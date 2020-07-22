@@ -898,8 +898,7 @@ public class UserServiceImpl implements UserService {
     if (!isInviteAcceptanceRequired) {
       addUserToUserGroups(accountId, user, userInvite.getUserGroups(), false, true);
     }
-
-    if (createNewUser && accountService.isSSOEnabled(account)) {
+    if (!isInviteAcceptanceRequired && accountService.isSSOEnabled(account)) {
       sendUserInvitationToOnlySsoAccountMail(account, user);
     } else {
       sendNewInvitationMail(userInvite, account, user);
