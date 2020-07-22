@@ -14,12 +14,9 @@ import com.google.inject.multibindings.Multibinder;
 
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
-import io.grpc.health.v1.HealthGrpc;
-import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceAuthServerInterceptor;
-import io.harness.grpc.auth.SkippedAuthServerInterceptor;
 import io.harness.grpc.exception.GrpcExceptionMapper;
 import io.harness.grpc.exception.WingsExceptionGrpcMapper;
 import io.harness.grpc.ng.manager.DelegateTaskGrpcServer;
@@ -68,11 +65,6 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
 
     serverInterceptorMultibinder.addBinding().toProvider(
         () -> new GrpcServerExceptionHandler(grpcExceptionMappersProvider));
-
-    serverInterceptorMultibinder.addBinding().toProvider(
-        ()
-            -> new SkippedAuthServerInterceptor(
-                ImmutableSet.of(HealthGrpc.SERVICE_NAME, ServerReflectionGrpc.SERVICE_NAME)));
 
     install(new GrpcServerModule(grpcServerConfig.getConnectors(),
         getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {})),
