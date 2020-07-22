@@ -38,6 +38,7 @@ enum IdOperator {
   IN
   NOT_NULL
   NOT_IN
+  LIKE
 }
 
 enum EnumOperator {

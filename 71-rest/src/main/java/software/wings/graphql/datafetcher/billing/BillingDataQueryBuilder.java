@@ -185,12 +185,14 @@ public class BillingDataQueryBuilder {
     return queryMetaDataBuilder.build();
   }
 
-  protected BillingDataQueryMetadata formFilterValuesQuery(
-      String accountId, List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupBy) {
+  protected BillingDataQueryMetadata formFilterValuesQuery(String accountId, List<QLBillingDataFilter> filters,
+      List<QLCCMEntityGroupBy> groupBy, Integer limit, Integer offset) {
     BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
     SelectQuery selectQuery = new SelectQuery();
     ResultType resultType;
     resultType = ResultType.STACKED_TIME_SERIES;
+    selectQuery.setFetchNext(limit);
+    selectQuery.setOffset(offset);
 
     queryMetaDataBuilder.resultType(resultType);
     List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
@@ -298,6 +300,36 @@ public class BillingDataQueryBuilder {
     queryMetaDataBuilder.query(selectQuery.toString());
     queryMetaDataBuilder.groupByFields(groupByFields);
     queryMetaDataBuilder.sortCriteria(finalSortCriteria);
+    queryMetaDataBuilder.filters(filters);
+    return queryMetaDataBuilder.build();
+  }
+
+  protected BillingDataQueryMetadata formTotalCountQuery(
+      String accountId, List<QLBillingDataFilter> filters, List<QLCCMEntityGroupBy> groupBy) {
+    BillingDataQueryMetadataBuilder queryMetaDataBuilder = BillingDataQueryMetadata.builder();
+    SelectQuery selectQuery = new SelectQuery();
+
+    List<BillingDataMetaDataFields> fieldNames = new ArrayList<>();
+    selectQuery.addCustomFromTable(schema.getBillingDataTable());
+
+    if (isValidGroupByForFilterValues(groupBy)) {
+      DbColumn column = getColumnAssociatedWithGroupBy(groupBy.get(0));
+      selectQuery.addCustomColumns(
+          Converter.toColumnSqlObject(FunctionCall.count().addColumnParams(column).setIsDistinct(true),
+              BillingDataMetaDataFields.COUNT.getFieldName()));
+      fieldNames.add(BillingDataMetaDataFields.COUNT);
+    }
+
+    if (!Lists.isNullOrEmpty(filters)) {
+      filters = processFilterForTagsAndLabels(accountId, filters);
+      decorateQueryWithFilters(selectQuery, filters);
+    }
+
+    addAccountFilter(selectQuery, accountId);
+
+    selectQuery.getWhereClause().setDisableParens(true);
+    queryMetaDataBuilder.fieldNames(fieldNames);
+    queryMetaDataBuilder.query(selectQuery.toString());
     queryMetaDataBuilder.filters(filters);
     return queryMetaDataBuilder.build();
   }
@@ -534,6 +566,9 @@ public class BillingDataQueryBuilder {
         inCondition.setNegate(true);
         selectQuery.addCondition(inCondition);
         break;
+      case LIKE:
+        selectQuery.addCondition(BinaryCondition.like(key, "%" + filter.getValues()[0] + "%"));
+        break;
       default:
         throw new InvalidRequestException("String simple operator not supported" + operator);
     }
@@ -711,6 +746,10 @@ public class BillingDataQueryBuilder {
 
   private boolean isValidGroupBy(List<QLCCMEntityGroupBy> groupBy) {
     return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 5;
+  }
+
+  private boolean isValidGroupByForFilterValues(List<QLCCMEntityGroupBy> groupBy) {
+    return EmptyPredicate.isNotEmpty(groupBy) && groupBy.size() <= 1;
   }
 
   private List<QLBillingSortCriteria> validateAndAddSortCriteria(
@@ -1053,5 +1092,40 @@ public class BillingDataQueryBuilder {
   private boolean isGroupByHour(QLCCMTimeSeriesAggregation groupByTime) {
     return groupByTime != null && groupByTime.getTimeGroupType() != null
         && groupByTime.getTimeGroupType() == QLTimeGroupType.HOUR;
+  }
+
+  private DbColumn getColumnAssociatedWithGroupBy(QLCCMEntityGroupBy groupBy) {
+    switch (groupBy) {
+      case Application:
+        return schema.getAppId();
+      case Environment:
+        return schema.getEnvId();
+      case Service:
+        return schema.getServiceId();
+      case Node:
+      case Pod:
+        return schema.getInstanceName();
+      case Cluster:
+      case ClusterName:
+        return schema.getClusterName();
+      case ClusterType:
+        return schema.getClusterType();
+      case WorkloadName:
+        return schema.getWorkloadName();
+      case Namespace:
+        return schema.getNamespace();
+      case TaskId:
+        return schema.getTaskId();
+      case CloudServiceName:
+        return schema.getCloudServiceName();
+      case LaunchType:
+        return schema.getLaunchType();
+      case Region:
+        return schema.getRegion();
+      case CloudProvider:
+        return schema.getCloudProvider();
+      default:
+        throw new InvalidRequestException("Group by entity not supported in filter values");
+    }
   }
 }

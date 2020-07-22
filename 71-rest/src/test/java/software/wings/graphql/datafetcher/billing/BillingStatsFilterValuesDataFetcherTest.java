@@ -10,6 +10,11 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import graphql.execution.MergedSelectionSet;
+import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.DataFetchingFieldSelectionSet;
+import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.SelectedField;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
@@ -52,6 +57,7 @@ import java.util.Map;
 public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcherTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock private DataFetcherUtils utils;
+  @Mock private DataFetchingEnvironment environment;
   @Mock InstanceDataServiceImpl instanceDataService;
   @Inject @InjectMocks BillingStatsFilterValuesDataFetcher billingStatsFilterValuesDataFetcher;
   @Inject private K8sWorkloadDao k8sWorkloadDao;
@@ -59,8 +65,57 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   @Mock Statement statement;
   @Mock ResultSet resultSet;
 
+  private static final DataFetchingFieldSelectionSet mockSelectionSet = new DataFetchingFieldSelectionSet() {
+    public MergedSelectionSet get() {
+      return MergedSelectionSet.newMergedSelectionSet().build();
+    }
+    public Map<String, Map<String, Object>> getArguments() {
+      return Collections.emptyMap();
+    }
+    public Map<String, GraphQLFieldDefinition> getDefinitions() {
+      return Collections.emptyMap();
+    }
+    public boolean contains(String fieldGlobPattern) {
+      return false;
+    }
+    public SelectedField getField(String fieldName) {
+      return null;
+    }
+    public List<SelectedField> getFields() {
+      return Collections.singletonList(selectedField);
+    }
+    public List<SelectedField> getFields(String fieldGlobPattern) {
+      return Collections.emptyList();
+    }
+  };
+
+  private static final SelectedField selectedField = new SelectedField() {
+    @Override
+    public String getName() {
+      return "total";
+    }
+    @Override
+    public String getQualifiedName() {
+      return null;
+    }
+    @Override
+    public GraphQLFieldDefinition getFieldDefinition() {
+      return null;
+    }
+    @Override
+    public Map<String, Object> getArguments() {
+      return null;
+    }
+    @Override
+    public DataFetchingFieldSelectionSet getSelectionSet() {
+      return null;
+    }
+  };
+
   final int[] count = {0};
   final double[] doubleVal = {0};
+  private static final int LIMIT = 100;
+  private static final int OFFSET = 0;
 
   @Before
   public void setup() throws SQLException {
@@ -89,9 +144,10 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
   @Category(UnitTests.class)
   public void testGetBillingStatsFiltersWhenDbIsInvalid() {
     when(timeScaleDBService.isValid()).thenReturn(false);
-    assertThatThrownBy(()
-                           -> billingStatsFilterValuesDataFetcher.fetch(ACCOUNT1_ID, Collections.EMPTY_LIST,
-                               Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST))
+    assertThatThrownBy(
+        ()
+            -> billingStatsFilterValuesDataFetcher.fetchSelectedFields(ACCOUNT1_ID, Collections.EMPTY_LIST,
+                Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, LIMIT, OFFSET, environment))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -104,8 +160,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
         Arrays.asList(makeClusterEntityGroupBy(), makeClusterNameEntityGroupBy(), makeCloudProviderEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 
-    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
-        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
@@ -133,8 +189,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
         Arrays.asList(makeClusterEntityGroupBy(), makeClusterTypeEntityGroupBy(), makeCloudProviderEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 
-    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
-        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
@@ -162,8 +218,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
         Arrays.asList(makeApplicationEntityGroupBy(), makeServiceEntityGroupBy(), makeEnvironmentEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 
-    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
-        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
@@ -193,8 +249,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeWorkloadNameEntityGroupBy(), makeNamespaceEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 
-    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
-        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(filters.get(0).getCluster().getOperator()).isEqualTo(QLIdOperator.EQUALS);
     assertThat(filters.get(0).getCluster().getValues()).isEqualTo(clusterValues);
@@ -224,8 +280,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
         Arrays.asList(makeCloudServiceNameEntityGroupBy(), makeTaskIdEntityGroupBy(), makeLaunchTypeEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 
-    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
-        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(filters.get(0).getCluster().getOperator()).isEqualTo(QLIdOperator.EQUALS);
     assertThat(filters.get(0).getCluster().getValues()).isEqualTo(clusterValues);
@@ -258,8 +314,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     List<QLCCMGroupBy> groupBy = Arrays.asList(makeWorkloadNameEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 
-    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
-        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
@@ -295,8 +351,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
         Arrays.asList(makeNodeEntityGroupBy(), makeWorkloadNameEntityGroupBy(), makeNamespaceEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 
-    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
-        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
@@ -332,8 +388,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
         Arrays.asList(makePodEntityGroupBy(), makeWorkloadNameEntityGroupBy(), makeNamespaceEntityGroupBy());
     List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
 
-    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetch(
-        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria);
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
 
     assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
     assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
@@ -349,6 +405,34 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
     assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
     assertThat(data.getData().get(0).getCloudProviders().size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = SHUBHANSHU)
+  @Category(UnitTests.class)
+  public void testFetchMethodInBillingStatsFilterValuesDataFetcherForSearch() {
+    String[] namespaceValues = new String[] {NAMESPACE1};
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(makeNamespaceFilterForSearch(namespaceValues));
+    List<QLCCMGroupBy> groupBy = Arrays.asList(makeNamespaceEntityGroupBy());
+    List<QLBillingSortCriteria> sortCriteria = Arrays.asList(makeDescByTimeSortingCriteria());
+
+    QLFilterValuesListData data = (QLFilterValuesListData) billingStatsFilterValuesDataFetcher.fetchSelectedFields(
+        ACCOUNT1_ID, Collections.EMPTY_LIST, filters, groupBy, sortCriteria, LIMIT, OFFSET, environment);
+
+    assertThat(sortCriteria.get(0).getSortType()).isEqualTo(QLBillingSortType.Time);
+    assertThat(sortCriteria.get(0).getSortOrder()).isEqualTo(QLSortOrder.DESCENDING);
+    assertThat(data).isNotNull();
+    assertThat(data.getData().get(0).getNamespaces().get(0).getName()).isEqualTo(NAMESPACE1);
+    assertThat(data.getData().get(0).getCloudServiceNames().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getTaskIds().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getLaunchTypes().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getWorkloadNames().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getClusters().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getApplications().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getEnvironments().size()).isEqualTo(0);
+    assertThat(data.getData().get(0).getServices().size()).isEqualTo(0);
+    assertThat(data.getTotal()).isEqualTo(100L);
   }
 
   public QLBillingSortCriteria makeDescByTimeSortingCriteria() {
@@ -440,6 +524,11 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     return QLBillingDataFilter.builder().namespace(namespaceFilter).build();
   }
 
+  public QLBillingDataFilter makeNamespaceFilterForSearch(String[] values) {
+    QLIdFilter namespaceFilter = QLIdFilter.builder().operator(QLIdOperator.LIKE).values(values).build();
+    return QLBillingDataFilter.builder().namespace(namespaceFilter).build();
+  }
+
   private K8sWorkload getTestWorkload(String workloadName, Map<String, String> labels) {
     return K8sWorkload.builder()
         .accountId(ACCOUNT1_ID)
@@ -461,6 +550,7 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
     when(timeScaleDBService.getDBConnection()).thenReturn(connection);
     when(connection.createStatement()).thenReturn(statement);
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
+    when(environment.getSelectionSet()).thenReturn(mockSelectionSet);
 
     when(resultSet.getString("CLUSTERID")).thenAnswer((Answer<String>) invocation -> CLUSTER1_ID);
     when(resultSet.getString("CLUSTERNAME")).thenAnswer((Answer<String>) invocation -> CLUSTER1_NAME);
@@ -478,6 +568,8 @@ public class BillingStatsFilterValuesDataFetcherTest extends AbstractDataFetcher
         .thenAnswer((Answer<String>) invocation -> CLOUD_SERVICE_NAME_ACCOUNT1);
     when(resultSet.getString("INSTANCEID"))
         .thenAnswer((Answer<String>) invocation -> INSTANCE1_SERVICE1_ENV1_APP1_ACCOUNT1);
+    when(resultSet.getLong("COUNT")).thenAnswer((Answer<Long>) invocation -> 100L);
+
     returnResultSet(5);
   }
 

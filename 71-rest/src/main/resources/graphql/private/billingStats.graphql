@@ -45,6 +45,8 @@ extend type Query {
   ): GcpBillingEntityData @dataFetcher(name: gcpBillingEntityStats)
 
   billingStatsFilterValues(
+    limit: Int
+    offset: Int
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
@@ -246,6 +248,7 @@ type EntityData {
 type BillingFilterData {
   data: [BillingFilterDataPoint]
   isHourlyDataPresent: Boolean
+  total: Number
 }
 
 type BillingJobProcessedData {
