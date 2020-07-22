@@ -153,6 +153,7 @@ import java.util.regex.Pattern;
  * Created by brett on 3/3/17
  */
 @Slf4j
+@JsonTypeName("KUBERNETES_SETUP")
 public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   public static final String HARNESS_KUBERNETES_MANAGED_LABEL_KEY = "harness.io/managed";
   public static final String HARNESS_KUBERNETES_APP_LABEL_KEY = "harness.io/application";

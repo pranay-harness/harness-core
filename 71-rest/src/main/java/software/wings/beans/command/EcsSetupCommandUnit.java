@@ -31,6 +31,7 @@ import java.util.Map;
  * Created by brett on 11/18/17
  */
 @Slf4j
+@JsonTypeName("ECS_SETUP")
 public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   @Inject @Transient private transient EcsSetupCommandHandler ecsSetupCommandHandler;
   @Inject @Transient private transient EcsBlueGreenSetupCommandHandler ecsBlueGreenSetupCommandHandler;

@@ -36,6 +36,7 @@ import java.util.Optional;
  * Created by anubhaw on 6/23/17.
  */
 @Slf4j
+@JsonTypeName("CODE_DEPLOY")
 public class CodeDeployCommandUnit extends AbstractCommandUnit {
   @Inject @Transient private transient AwsCodeDeployService awsCodeDeployService;
   @Inject @Transient private transient DelegateLogService logService;

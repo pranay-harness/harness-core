@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@JsonTypeName("RESIZE")
 public class ResizeCommandUnit extends ContainerResizeCommandUnit {
   @Inject @Transient private transient AwsClusterService awsClusterService;
   @Inject @Transient private transient AwsHelperService awsHelperService;
