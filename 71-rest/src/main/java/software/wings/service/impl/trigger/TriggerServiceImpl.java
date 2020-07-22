@@ -215,9 +215,10 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public Trigger save(Trigger trigger) {
     validateInput(trigger, null);
+    String accountId = appService.getAccountIdByAppId(trigger.getAppId());
+    trigger.setAccountId(accountId);
     Trigger savedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
-    String accountId = appService.getAccountIdByAppId(savedTrigger.getAppId());
     if (trigger.getCondition().getConditionType() == SCHEDULED) {
       ScheduledTriggerJob.add(jobScheduler, accountId, savedTrigger.getAppId(), savedTrigger.getUuid(), trigger);
     }
@@ -239,11 +240,13 @@ public class TriggerServiceImpl implements TriggerService {
 
     validateInput(trigger, existingTrigger);
 
+    String accountId = appService.getAccountIdByAppId(existingTrigger.getAppId());
+    trigger.setAccountId(accountId);
+
     Trigger updatedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     addOrUpdateCronForScheduledJob(trigger, existingTrigger);
 
-    String accountId = appService.getAccountIdByAppId(existingTrigger.getAppId());
     boolean isRename = !existingTrigger.getName().equals(trigger.getName());
     if (!migration) {
       if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId)) {

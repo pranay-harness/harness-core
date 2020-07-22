@@ -19,6 +19,7 @@ import migrations.all.AddAccountIdToTimeSeriesMetricGroupMigration;
 import migrations.all.AddAccountIdToTimeSeriesMetricTemplatesMigration;
 import migrations.all.AddAccountIdToTimeSeriesRiskSummary;
 import migrations.all.AddAccountIdToTimeSeriesTransactionThresholdsMigration;
+import migrations.all.AddAccountIdToTriggers;
 import migrations.all.AddAccountIdToWorkflowExecutionBaselines;
 import migrations.all.AddAccountToCVFeedbackRecordMigration;
 import migrations.all.AddAccountidToTimeSeriesMLScores;
@@ -233,6 +234,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(136, RemoveDeletedAppIdsFromUserGroups.class))
         .add(Pair.of(137, AddAccountIdToEntityVersion.class))
         .add(Pair.of(138, RemoveDeletedAppIdsFromUserGroups.class))
+        .add(Pair.of(139, AddAccountIdToTriggers.class))
         .build();
   }
 }
