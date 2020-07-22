@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/cespare/xxhash"
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/archive"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/minio"
+	"github.com/wings-software/portal/commons/go/lib/utils"
 	"go.uber.org/zap"
 )
 
@@ -45,7 +47,8 @@ var newMinioClient = func(log *zap.SugaredLogger) (minio.Client, error) {
 }
 
 // Returns xxHash of the given file
-func getFileXXHash(filename string, fs filesystem.FileSystem) (string, error) {
+func getFileXXHash(filename string, fs filesystem.FileSystem, log *zap.SugaredLogger) (string, error) {
+	start := time.Now()
 	file, err := fs.Open(filename)
 	if err != nil {
 		return "", errors.Wrap(err, fmt.Sprintf("failed to open file: %s", filename))
@@ -56,5 +59,12 @@ func getFileXXHash(filename string, fs filesystem.FileSystem) (string, error) {
 	if _, err := fs.Copy(hasher, file); err != nil {
 		return "", errors.Wrap(err, fmt.Sprintf("failed to copy from file: %s", filename))
 	}
-	return strconv.FormatUint(hasher.Sum64(), 10), nil
+	hashSum := strconv.FormatUint(hasher.Sum64(), 10)
+
+	log.Infow(
+		"Calculated file xxhash",
+		"file", filename,
+		"elapsed_time_ms", utils.TimeSince(start),
+	)
+	return hashSum, nil
 }

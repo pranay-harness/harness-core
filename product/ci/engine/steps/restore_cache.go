@@ -140,6 +140,7 @@ func (s *restoreCacheStep) downloadWithRetries(ctx context.Context, tmpArchivePa
 }
 
 func (s *restoreCacheStep) download(ctx context.Context, tmpArchivePath string) error {
+	start := time.Now()
 	c, err := newMinioClient(s.log)
 	if err != nil {
 		return errors.Wrap(err, "failed to create minio client")
@@ -172,7 +173,7 @@ func (s *restoreCacheStep) download(ctx context.Context, tmpArchivePath string) 
 	// Integrity check for downloaded file from object store MinIO.
 	xxHash := metadata[xxHashSumKey]
 	if xxHash != "" {
-		downloadedFileXXHash, err := getFileXXHash(tmpArchivePath, s.fs)
+		downloadedFileXXHash, err := getFileXXHash(tmpArchivePath, s.fs, s.log)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("failed to get file xxHash %s", s.key))
 		}
@@ -183,5 +184,18 @@ func (s *restoreCacheStep) download(ctx context.Context, tmpArchivePath string) 
 		}
 	}
 
+	// Log downloaded file size
+	fi, err := s.fs.Stat(tmpArchivePath)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed to stat file: %s", tmpArchivePath))
+	}
+	s.log.Infow(
+		"Downloaded file from cache",
+		"step_id", s.id,
+		"key", s.key,
+		"size", fi.Size(),
+		"file_path", tmpArchivePath,
+		"elapsed_time_ms", utils.TimeSince(start),
+	)
 	return nil
 }
