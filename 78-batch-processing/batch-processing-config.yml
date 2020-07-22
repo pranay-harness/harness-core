@@ -24,6 +24,10 @@ timescaledb:
 batchQueryConfig:
   queryBatchSize: 2000
 
+podInfo:
+  name: batch-processing-0
+  replica: 1
+
 awsS3SyncConfig:
   awsS3BucketName: awsS3BucketNamePlaceHolder
   awsAccessKey: awsS3SyncAccessKeyPlaceHolder

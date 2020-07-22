@@ -31,6 +31,7 @@ import com.google.inject.Singleton;
 import io.harness.batch.processing.billing.timeseries.data.WeeklyReportEntityData;
 import io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper;
 import io.harness.batch.processing.mail.CEMailNotificationService;
+import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CommunicationType;
@@ -70,6 +71,7 @@ public class WeeklyReportServiceImpl {
   @Autowired private WeeklyReportTemplateHelper templateHelper;
   @Autowired private CEMailNotificationService emailNotificationService;
   @Autowired private CECommunicationsServiceImpl ceCommunicationsService;
+  @Autowired private AccountShardService accountShardService;
 
   private static final int MAX_RETRY_COUNT = 4;
   private static final long WEEK_IN_MILLISECONDS = 604800000L;
@@ -116,7 +118,7 @@ public class WeeklyReportServiceImpl {
   private static final String OVERVIEW_URL = "/account/%s/continuous-efficiency/overview";
 
   public void generateAndSendWeeklyReport() {
-    List<Account> ceEnabledAccounts = cloudToHarnessMappingService.getCeEnabledAccounts();
+    List<Account> ceEnabledAccounts = accountShardService.getCeEnabledAccounts();
     List<String> accountIds = ceEnabledAccounts.stream().map(Account::getUuid).collect(Collectors.toList());
 
     String currentWeekStartTime = getStartTime(getStartOfDayTimestamp(0)).toString();

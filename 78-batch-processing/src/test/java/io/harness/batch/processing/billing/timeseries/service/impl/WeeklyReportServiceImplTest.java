@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.helper.WeeklyReportTemplateHelper;
 import io.harness.batch.processing.mail.CEMailNotificationService;
+import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
 import io.harness.ccm.communication.entities.CECommunications;
@@ -40,6 +41,7 @@ public class WeeklyReportServiceImplTest extends CategoryTest {
   @Mock private CloudToHarnessMappingServiceImpl cloudToHarnessMappingService;
   @Mock private WeeklyReportTemplateHelper templateHelper;
   @Mock private CECommunicationsServiceImpl ceCommunicationsService;
+  @Mock private AccountShardService accountShardService;
   @InjectMocks private WeeklyReportServiceImpl weeklyReportService;
 
   @Mock Statement statement;
@@ -69,7 +71,7 @@ public class WeeklyReportServiceImplTest extends CategoryTest {
     when(mockStatement.executeQuery(anyString())).thenReturn(resetCountAndReturnResultSet());
     mockResultSet();
     when(emailNotificationService.send(any())).thenReturn(true);
-    when(cloudToHarnessMappingService.getCeEnabledAccounts())
+    when(accountShardService.getCeEnabledAccounts())
         .thenReturn(Arrays.asList(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build()));
     when(ceCommunicationsService.getEnabledEntries(any(), any()))
         .thenReturn(Arrays.asList(CECommunications.builder().emailId("mailId").build()));

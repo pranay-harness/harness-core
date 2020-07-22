@@ -94,3 +94,11 @@ fi
 if [[ "" != "$SEGMENT_APIKEY" ]]; then
   yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
 fi
+
+if [[ "" != "$POD_NAME" ]]; then
+  yq write -i $CONFIG_FILE podInfo.name "$POD_NAME"
+fi
+
+if [[ "" != "$REPLICA" ]]; then
+  yq write -i $CONFIG_FILE podInfo.replica "$REPLICA"
+fi

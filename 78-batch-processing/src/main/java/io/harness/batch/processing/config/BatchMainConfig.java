@@ -21,6 +21,7 @@ public class BatchMainConfig {
   @JsonProperty("batchQueryConfig") private BatchQueryConfig batchQueryConfig;
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
   @JsonProperty("awsS3SyncConfig") private AwsS3SyncConfig awsS3SyncConfig;
+  @JsonProperty("podInfo") private PodInfoConfig podInfoConfig;
   @JsonProperty("billingDataPipelineConfig") private BillingDataPipelineConfig billingDataPipelineConfig;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
