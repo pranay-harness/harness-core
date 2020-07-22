@@ -79,6 +79,7 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
+import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.http.HttpConnection;
 import org.eclipse.jgit.transport.http.HttpConnectionFactory;
 import org.eclipse.jgit.transport.http.apache.HttpClientConnectionFactory;
@@ -1072,6 +1073,7 @@ public class GitClientImpl implements GitClient {
         // update ref with latest commits on remote
         FetchResult fetchResult = ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig)))
                                       .setRemoveDeletedRefs(true)
+                                      .setTagOpt(TagOpt.FETCH_TAGS)
                                       .call(); // fetch all remote references
 
         logger.info(new StringBuilder()
@@ -1116,8 +1118,9 @@ public class GitClientImpl implements GitClient {
       try (Git git = Git.open(repoDir)) {
         logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo exist. do hard sync with remote branch");
 
-        FetchResult fetchResult =
-            ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig))).call(); // fetch all remote references
+        FetchResult fetchResult = ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig)))
+                                      .setTagOpt(TagOpt.FETCH_TAGS)
+                                      .call(); // fetch all remote references
         checkout(gitOperationContext);
 
         // Do not sync to the HEAD of the branch if a specific commit SHA is provided
