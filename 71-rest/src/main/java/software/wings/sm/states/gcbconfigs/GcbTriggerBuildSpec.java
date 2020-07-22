@@ -1,7 +1,7 @@
 package software.wings.sm.states.gcbconfigs;
 
 import lombok.Data;
-import software.wings.sm.states.ParameterEntry;
+import software.wings.beans.NameValuePair;
 
 import java.util.List;
 
@@ -12,5 +12,5 @@ public class GcbTriggerBuildSpec {
   private String name;
   private String sourceId;
   private GcbTriggerSource source;
-  private List<ParameterEntry> substitutions;
+  private List<NameValuePair> substitutions;
 }

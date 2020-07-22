@@ -46,6 +46,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
@@ -120,11 +121,11 @@ public class GcbState extends State implements SweepingOutputStateMixin {
   }
 
   Map<String, String> evaluate(
-      @NotNull final ExecutionContext context, @Nullable final List<ParameterEntry> parameters) {
+      @NotNull final ExecutionContext context, @Nullable final List<NameValuePair> parameters) {
     return Stream.of(parameters)
         .filter(Objects::nonNull)
         .flatMap(List::stream)
-        .collect(toMap(ParameterEntry::getKey,
+        .collect(toMap(NameValuePair::getName,
             entry -> context.renderExpression(entry.getValue()), CollectionUtils::overrideOperator, HashMap::new));
   }
 
