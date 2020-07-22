@@ -12,6 +12,7 @@ import io.harness.batch.processing.metrics.ProductMetricsService;
 import io.harness.batch.processing.service.impl.BatchJobBucketLogContext;
 import io.harness.batch.processing.service.impl.BatchJobTypeLogContext;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatusService;
+import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ import javax.annotation.PostConstruct;
 public class EventJobScheduler {
   @Autowired private List<Job> jobs;
   @Autowired private BatchJobRunner batchJobRunner;
+  @Autowired private AccountShardService accountShardService;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
   @Autowired private WeeklyReportServiceImpl weeklyReportService;
@@ -46,17 +48,17 @@ public class EventJobScheduler {
   }
 
   @Scheduled(cron = "0 0 * ? * *")
-  public void runCloudEfficiencyB1Jobs() {
+  public void runCloudEfficiencyOutOfClusterJobs() {
     runCloudEfficiencyEventJobs(BatchJobBucket.OUT_OF_CLUSTER);
   }
 
   @Scheduled(cron = "0 */20 * * * ?")
-  public void runCloudEfficiencyB2Jobs() {
+  public void runCloudEfficiencyInClusterJobs() {
     runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER);
   }
 
   private void runCloudEfficiencyEventJobs(BatchJobBucket batchJobBucket) {
-    cloudToHarnessMappingService.getCeEnabledAccounts().forEach(account
+    accountShardService.getCeEnabledAccounts().forEach(account
         -> jobs.stream()
                .filter(job -> BatchJobType.fromJob(job).getBatchJobBucket() == batchJobBucket)
                .forEach(job -> runJob(account.getUuid(), job)));
@@ -70,31 +72,37 @@ public class EventJobScheduler {
 
   @Scheduled(cron = "0 * * ? * *")
   public void runGcpScheduledQueryJobs() {
-    cloudToHarnessMappingService.getCeEnabledAccounts().forEach(
+    accountShardService.getCeEnabledAccounts().forEach(
         account -> gcpScheduledQueryTriggerAction.execute(account.getUuid()));
   }
 
   @Scheduled(cron = "0 0 8 * * ?")
   public void runTimescalePurgeJob() {
-    try {
-      k8sUtilizationGranularDataService.purgeOldKubernetesUtilData();
-    } catch (Exception ex) {
-      logger.error("Exception while running runTimescalePurgeJob", ex);
-    }
+    boolean masterPod = accountShardService.isMasterPod();
+    if (masterPod) {
+      try {
+        k8sUtilizationGranularDataService.purgeOldKubernetesUtilData();
+      } catch (Exception ex) {
+        logger.error("Exception while running runTimescalePurgeJob", ex);
+      }
 
-    try {
-      billingDataService.purgeOldHourlyBillingData();
-    } catch (Exception ex) {
-      logger.error("Exception while running purgeOldHourlyBillingData Job", ex);
+      try {
+        billingDataService.purgeOldHourlyBillingData();
+      } catch (Exception ex) {
+        logger.error("Exception while running purgeOldHourlyBillingData Job", ex);
+      }
     }
   }
 
   @Scheduled(cron = "0 0 8 * * ?")
   public void runConnectorsHealthStatusJob() {
-    try {
-      billingDataPipelineHealthStatusService.processAndUpdateHealthStatus();
-    } catch (Exception ex) {
-      logger.error("Exception while running runConnectorsHealthStatusJob {}", ex);
+    boolean masterPod = accountShardService.isMasterPod();
+    if (masterPod) {
+      try {
+        billingDataPipelineHealthStatusService.processAndUpdateHealthStatus();
+      } catch (Exception ex) {
+        logger.error("Exception while running runConnectorsHealthStatusJob {}", ex);
+      }
     }
   }
 
