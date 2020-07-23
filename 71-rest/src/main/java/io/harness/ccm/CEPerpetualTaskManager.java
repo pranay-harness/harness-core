@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
@@ -132,7 +133,13 @@ public class CEPerpetualTaskManager {
 
   // find all the related Clusters
   private List<ClusterRecord> getClusterRecords(SettingAttribute cloudProvider) {
-    return clusterRecordService.list(cloudProvider.getAccountId(), null, cloudProvider.getUuid());
+    return clusterRecordService.list(cloudProvider.getAccountId(), null, cloudProvider.getUuid())
+        .stream()
+        .filter(clusterRecord -> {
+          String clusterType = clusterRecord.getCluster().getClusterType();
+          return !clusterType.equals(GCP_KUBERNETES) && !clusterType.equals(AZURE_KUBERNETES);
+        })
+        .collect(Collectors.toList());
   }
 
   public boolean createPerpetualTasks(ClusterRecord clusterRecord) {
