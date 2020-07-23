@@ -851,7 +851,6 @@ public class SettingsServiceImpl implements SettingsService {
     }
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
     SettingAttribute prevSettingAttribute = existingSetting;
-    validateAndUpdateCEDetails(settingAttribute);
 
     notNullCheck("Setting Attribute was deleted", existingSetting, USER);
     notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
@@ -954,6 +953,10 @@ public class SettingsServiceImpl implements SettingsService {
 
     if (updatedSettingAttribute.getValue() instanceof CloudCostAware) {
       ccmSettingService.maskCCMConfig(updatedSettingAttribute);
+    }
+
+    if (settingAttribute.getValue() instanceof CEAwsConfig) {
+      validateAndUpdateCEDetails(settingAttribute);
     }
 
     try {

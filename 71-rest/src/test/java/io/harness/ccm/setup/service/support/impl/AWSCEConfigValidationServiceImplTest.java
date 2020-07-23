@@ -142,6 +142,14 @@ public class AWSCEConfigValidationServiceImplTest {
     assertThat(bucketPolicyJson.getStatement().get(0).getPrincipal().get(aws).contains(roleArnPredefined)).isTrue();
     assertThat(bucketPolicyJson.getStatement().get(0).getPrincipal().get(aws).contains(roleArnPredefined)).isTrue();
     assertThat(updateBucketPolicy).isTrue();
+
+    // Principle already exists case
+    updateBucketPolicy = awsceConfigValidationService.updateBucketPolicy(
+        CEAwsConfig.builder()
+            .awsCrossAccountAttributes(
+                AwsCrossAccountAttributes.builder().crossAccountRoleArn(roleArnPredefined).build())
+            .build());
+    assertThat(updateBucketPolicy).isTrue();
   }
 
   @Test

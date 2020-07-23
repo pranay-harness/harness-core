@@ -85,6 +85,9 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
     for (BucketPolicyStatement statement : policyJson.getStatement()) {
       Map<String, List<String>> principal = statement.getPrincipal();
       List<String> rolesList = principal.get(aws);
+      if (rolesList.contains(crossAccountRoleArn)) {
+        return true;
+      }
       rolesList.add(crossAccountRoleArn);
       principal.put(aws, rolesList);
       statement.setPrincipal(principal);
