@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
+import io.harness.ccm.budget.entities.EnvironmentType;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Environment;
@@ -166,12 +167,14 @@ public class BudgetUtils {
 
   private void addEnvironmentIdFilter(Budget budget, List<QLBillingDataFilter> filters) {
     ApplicationBudgetScope scope = (ApplicationBudgetScope) budget.getScope();
-    String[] appIds = scope.getApplicationIds();
-    List<String> envIds = getEnvIdsByAppsAndType(Arrays.asList(appIds), scope.getEnvironmentType().toString());
-    filters.add(
-        QLBillingDataFilter.builder()
-            .environment(QLIdFilter.builder().operator(QLIdOperator.IN).values(envIds.toArray(new String[0])).build())
-            .build());
+    if (scope.getEnvironmentType() != EnvironmentType.ALL) {
+      String[] appIds = scope.getApplicationIds();
+      List<String> envIds = getEnvIdsByAppsAndType(Arrays.asList(appIds), scope.getEnvironmentType().toString());
+      filters.add(
+          QLBillingDataFilter.builder()
+              .environment(QLIdFilter.builder().operator(QLIdOperator.IN).values(envIds.toArray(new String[0])).build())
+              .build());
+    }
   }
 
   public List<String> getEnvIdsByAppsAndType(List<String> appIds, String environmentType) {
