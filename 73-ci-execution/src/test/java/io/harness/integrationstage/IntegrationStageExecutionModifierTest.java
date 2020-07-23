@@ -16,12 +16,14 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.Execution;
+import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.core.StepElement;
+import io.harness.yaml.core.StepSpecType;
+import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
@@ -39,27 +41,32 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldModifyExecutionPlan() {
     IntegrationStage stage = ciExecutionPlanTestHelper.getIntegrationStage();
-    Execution modifiedExecution = stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage);
+    ExecutionElement modifiedExecution = stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage);
     assertThat(modifiedExecution).isNotNull();
     assertThat(modifiedExecution.getSteps()).isNotNull();
-    assertThat(modifiedExecution.getSteps().get(0)).isInstanceOf(BuildEnvSetupStepInfo.class);
-    assertThat(modifiedExecution.getSteps().get(modifiedExecution.getSteps().size() - 1))
-        .isInstanceOf(CleanupStepInfo.class);
+
+    ExecutionWrapper stepElementBuildEnv = modifiedExecution.getSteps().get(0);
+    assertThat(stepElementBuildEnv).isInstanceOf(StepElement.class);
+    StepSpecType stepSpecTypeBuildEnv = ((StepElement) stepElementBuildEnv).getStepSpecType();
+    assertThat(stepSpecTypeBuildEnv).isInstanceOf(BuildEnvSetupStepInfo.class);
+
+    ExecutionWrapper stepElementCleanup = modifiedExecution.getSteps().get(modifiedExecution.getSteps().size() - 1);
+    assertThat(stepElementCleanup).isInstanceOf(StepElement.class);
+    StepSpecType stepSpecTypeCleanup = ((StepElement) stepElementCleanup).getStepSpecType();
+    assertThat(stepSpecTypeCleanup).isInstanceOf(CleanupStepInfo.class);
   }
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void testExpectingGitConnector() {
     IntegrationStage stage = IntegrationStage.builder()
-                                 .ci(IntegrationStage.Integration.builder()
-                                         .execution(ciExecutionPlanTestHelper.getExecution())
-                                         .gitConnector(GitConnectorYaml.builder().type("***").build())
-                                         .container(ciExecutionPlanTestHelper.getContainer())
-                                         .build())
+                                 .execution(ciExecutionPlanTestHelper.getExecutionElement())
+                                 .gitConnector(GitConnectorYaml.builder().type("***").build())
+                                 .container(ciExecutionPlanTestHelper.getContainer())
                                  .build();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage));
+        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage));
   }
 
   @Test
@@ -68,17 +75,16 @@ public class IntegrationStageExecutionModifierTest extends CIExecutionTest {
   public void testExpectingGitConnectorWithoutGitStep() {
     IntegrationStage stage =
         IntegrationStage.builder()
-            .ci(IntegrationStage.Integration.builder()
-                    .execution(Execution.builder()
-                                   .steps(new ArrayList<>(Arrays.asList(RunStepInfo.builder().build())))
-                                   .build())
-                    .gitConnector(ciExecutionPlanTestHelper.getConnector())
-                    .container(ciExecutionPlanTestHelper.getContainer())
+            .execution(
+                ExecutionElement.builder()
+                    .steps(Arrays.asList(StepElement.builder().stepSpecType(RunStepInfo.builder().build()).build()))
                     .build())
+            .gitConnector(ciExecutionPlanTestHelper.getConnector())
+            .container(ciExecutionPlanTestHelper.getContainer())
             .build();
 
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage));
+        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage));
   }
 
   @Test

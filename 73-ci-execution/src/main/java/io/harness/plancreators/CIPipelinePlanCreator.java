@@ -21,7 +21,7 @@ import io.harness.facilitator.FacilitatorObtainment;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.plan.PlanNode;
 import io.harness.states.CIPipelineSetupStep;
-import io.harness.yaml.core.auxiliary.intfc.StageWrapper;
+import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -57,7 +57,7 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
 
     return PlanNode.builder()
         .uuid(pipelineSetupNodeId)
-        .name(pipeline.getDisplayName())
+        .name(pipeline.getName())
         .identifier(pipeline.getIdentifier())
         .stepType(CIPipelineSetupStep.STEP_TYPE)
         .stepParameters(CIPipelineSetupParameters.builder()
@@ -70,8 +70,8 @@ public class CIPipelinePlanCreator implements SupportDefinedExecutorPlanCreator<
   }
 
   private CreateExecutionPlanResponse createPlanForStages(
-      List<? extends StageWrapper> stages, CreateExecutionPlanContext context) {
-    final ExecutionPlanCreator<List<? extends StageWrapper>> stagesPlanCreator =
+      List<? extends StageElementWrapper> stages, CreateExecutionPlanContext context) {
+    final ExecutionPlanCreator<List<? extends StageElementWrapper>> stagesPlanCreator =
         executionPlanCreatorHelper.getExecutionPlanCreator(
             STAGES_PLAN_CREATOR.getName(), stages, context, "no execution plan creator found for ci pipeline stages");
 

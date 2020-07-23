@@ -10,6 +10,7 @@ import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.ArtifactConnector;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.yaml.core.StepElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +35,8 @@ public class PublishStepInfoTest extends CIBeansTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void testPublishStepConversion() throws IOException {
-    PublishStepInfo publishStepInfo = YamlPipelineUtils.read(yamlString, PublishStepInfo.class);
+    StepElement stepElement = YamlPipelineUtils.read(yamlString, StepElement.class);
+    PublishStepInfo publishStepInfo = (PublishStepInfo) stepElement.getStepSpecType();
 
     TypeInfo nonYamlInfo = publishStepInfo.getNonYamlInfo();
     assertThat(nonYamlInfo.getStepInfoType()).isEqualTo(CIStepInfoType.PUBLISH);

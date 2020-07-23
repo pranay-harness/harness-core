@@ -11,8 +11,8 @@ import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.Parallel;
-import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
-import io.harness.yaml.core.auxiliary.intfc.StepWrapper;
+import io.harness.yaml.core.StepElement;
+import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,17 +27,23 @@ public class StepInfoGraphConverterTest extends CIBeansTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void testConversion() {
-    List<ExecutionSection> executionSectionList = new ArrayList<>();
-    executionSectionList.add(GitCloneStepInfo.builder().identifier("git-before-1").build());
-    executionSectionList.add(GitCloneStepInfo.builder().identifier("git-before-2").build());
+    List<ExecutionWrapper> executionSectionList = new ArrayList<>();
+    executionSectionList.add(
+        StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-before-1").build()).build());
+    executionSectionList.add(
+        StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-before-2").build()).build());
 
-    List<StepWrapper> parallelList = new ArrayList<>();
-    parallelList.add(GitCloneStepInfo.builder().identifier("git-parallel-1").build());
-    parallelList.add(GitCloneStepInfo.builder().identifier("git-parallel-2").build());
-    parallelList.add(GitCloneStepInfo.builder().identifier("git-parallel-3").build());
+    List<StepElement> parallelList = new ArrayList<>();
+    parallelList.add(
+        StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-parallel-1").build()).build());
+    parallelList.add(
+        StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-parallel-2").build()).build());
+    parallelList.add(
+        StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-parallel-3").build()).build());
     executionSectionList.add(Parallel.builder().sections(parallelList).build());
 
-    executionSectionList.add(GitCloneStepInfo.builder().identifier("git-after-1").build());
+    executionSectionList.add(
+        StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-after-1").build()).build());
 
     final StepInfoGraph stepInfoGraph = stepInfoGraphConverter.convert(executionSectionList);
     assertThat(stepInfoGraph).isNotNull();
@@ -61,16 +67,21 @@ public class StepInfoGraphConverterTest extends CIBeansTest {
   @Category(UnitTests.class)
   @Ignore("TODO: Graph section is not yet supported")
   public void testConversion_withGraphSection() {
-    List<ExecutionSection> executionSectionList = new ArrayList<>();
-    executionSectionList.add(GitCloneStepInfo.builder().identifier("git-before-1").build());
+    List<ExecutionWrapper> executionSectionList = new ArrayList<>();
+    executionSectionList.add(
+        StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-before-1").build()).build());
 
-    List<StepWrapper> GraphList = new ArrayList<>();
-    GraphList.add(GitCloneStepInfo.builder().identifier("git-graph-1").build());
-    GraphList.add(GitCloneStepInfo.builder().identifier("git-graph-2").build());
-    GraphList.add(GitCloneStepInfo.builder().identifier("git-graph-3").build());
+    List<StepElement> GraphList = new ArrayList<>();
+    GraphList.add(
+        StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-graph-1").build()).build());
+    GraphList.add(
+        StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-graph-2").build()).build());
+    GraphList.add(
+        StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-graph-3").build()).build());
     executionSectionList.add(io.harness.yaml.core.Graph.builder().sections(GraphList).build());
 
-    executionSectionList.add(GitCloneStepInfo.builder().identifier("git-after-1").build());
+    executionSectionList.add(
+        StepElement.builder().stepSpecType(GitCloneStepInfo.builder().identifier("git-after-1").build()).build());
 
     final StepInfoGraph stepInfoGraph = stepInfoGraphConverter.convert(executionSectionList);
 

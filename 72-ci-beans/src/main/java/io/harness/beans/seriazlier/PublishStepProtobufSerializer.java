@@ -31,9 +31,9 @@ public class PublishStepProtobufSerializer implements ProtobufSerializer<Publish
     return Base64.encodeBase64String(convertRestoreCacheStepInfo(stepInfo).toByteArray());
   }
 
-  public Step convertRestoreCacheStepInfo(PublishStepInfo stepInfo) {
+  public Step convertRestoreCacheStepInfo(PublishStepInfo publishStepInfo) {
     PublishArtifactsStep.Builder publishArtifactsStepBuilder = PublishArtifactsStep.newBuilder();
-    stepInfo.getPublishArtifacts().forEach(artifact -> {
+    publishStepInfo.getPublishArtifacts().forEach(artifact -> {
       switch (artifact.getType()) {
         case FILE_PATTERN:
           publishArtifactsStepBuilder.addFiles(resolveFilePattern((FilePatternArtifact) artifact));
@@ -48,8 +48,8 @@ public class PublishStepProtobufSerializer implements ProtobufSerializer<Publish
       }
     });
     return Step.newBuilder()
-        .setId(stepInfo.getIdentifier())
-        .setDisplayName(Optional.ofNullable(stepInfo.getDisplayName()).orElse(""))
+        .setId(publishStepInfo.getIdentifier())
+        .setDisplayName(Optional.ofNullable(publishStepInfo.getDisplayName()).orElse(""))
         .setPublishArtifacts(publishArtifactsStepBuilder.build())
         .build();
   }

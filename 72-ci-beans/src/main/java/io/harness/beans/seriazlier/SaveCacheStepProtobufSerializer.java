@@ -14,10 +14,9 @@ public class SaveCacheStepProtobufSerializer implements ProtobufSerializer<SaveC
   }
 
   public Step convertSaveCacheStepInfo(SaveCacheStepInfo saveCacheStepInfo) {
-    SaveCacheStepInfo.SaveCache saveCache = saveCacheStepInfo.getSaveCache();
     SaveCacheStep.Builder saveCacheBuilder = SaveCacheStep.newBuilder();
-    saveCacheBuilder.addAllPaths(saveCache.getPaths());
-    saveCacheBuilder.setKey(saveCache.getKey());
+    saveCacheBuilder.addAllPaths(saveCacheStepInfo.getPaths());
+    saveCacheBuilder.setKey(saveCacheStepInfo.getKey());
 
     return Step.newBuilder()
         .setId(saveCacheStepInfo.getIdentifier())

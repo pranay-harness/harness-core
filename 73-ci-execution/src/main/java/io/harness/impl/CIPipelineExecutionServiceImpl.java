@@ -6,7 +6,6 @@ import io.harness.beans.CIPipeline;
 import io.harness.beans.EmbeddedUser;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
-import io.harness.executionplan.BasicExecutionPlanGenerator;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.plan.Plan;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionService {
   @Inject private OrchestrationService orchestrationService;
-  @Inject private BasicExecutionPlanGenerator planGenerator;
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
 
   public PlanExecution executePipeline(CIPipeline ciPipeline) {

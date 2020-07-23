@@ -13,11 +13,11 @@ import io.harness.cdng.pipeline.plancreators.PipelinePlanCreator;
 import io.harness.cdng.pipeline.plancreators.ServiceStepPlanCreator;
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
-import io.harness.executionplan.plancreator.CDGenericStepPlanCreator;
-import io.harness.executionplan.plancreator.CDStagesPlanCreator;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
 import io.harness.executionplan.plancreator.ParallelStepPlanCreator;
+import io.harness.executionplan.plancreator.StageElementPlanCreator;
 import io.harness.executionplan.plancreator.StagesPlanCreator;
+import io.harness.executionplan.plancreator.StepElementPlanCreator;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -26,10 +26,10 @@ public class ExecutionPlanCreatorRegistrar {
   @Inject private ExecutionPlanCreatorRegistry executionPlanCreatorRegistry;
   @Inject private PipelinePlanCreator pipelinePlanCreator;
   @Inject private StagesPlanCreator stagesPlanCreator;
-  @Inject private CDStagesPlanCreator cdStagesPlanCreator;
+  @Inject private StageElementPlanCreator stageElementPlanCreator;
   @Inject private DeploymentStagePlanCreator deploymentStagePlanCreator;
   @Inject private CDExecutionPlanCreator cdExecutionPlanCreator;
-  @Inject private CDGenericStepPlanCreator cdGenericStepPlanCreator;
+  @Inject private StepElementPlanCreator stepElementPlanCreator;
   @Inject private ParallelStepPlanCreator parallelStepPlanCreator;
   @Inject private ArtifactStepPlanCreator artifactStepPlanCreator;
   @Inject private ManifestStepPlanCreator manifestStepPlanCreator;
@@ -51,8 +51,8 @@ public class ExecutionPlanCreatorRegistrar {
     register(genericStepPlanCreator);
     register(infraPlanCreator);
     register(artifactForkPlanCreator);
-    register(cdStagesPlanCreator);
-    register(cdGenericStepPlanCreator);
+    register(stageElementPlanCreator);
+    register(stepElementPlanCreator);
     logger.info("Done: register execution plan creators");
   }
   private void register(SupportDefinedExecutorPlanCreator<?> executionPlanCreator) {

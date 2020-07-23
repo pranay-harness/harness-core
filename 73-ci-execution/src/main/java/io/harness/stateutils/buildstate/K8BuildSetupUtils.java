@@ -70,17 +70,14 @@ public class K8BuildSetupUtils {
 
       final String namespace = k8PodDetails.getNamespace();
       final String clusterName = k8PodDetails.getClusterName();
-      PodSetupInfo podSetupInfo =
-          getPodSetupInfo((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getSetupEnv().getBuildJobEnvInfo());
+      PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getBuildJobEnvInfo());
 
       Set<String> publishStepConnectorIdentifier =
-          ((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getSetupEnv().getBuildJobEnvInfo())
-              .getPublishStepConnectorIdentifier();
+          ((K8BuildJobEnvInfo) buildEnvSetupStepInfo.getBuildJobEnvInfo()).getPublishStepConnectorIdentifier();
 
       // TODO Use k8 connector from element input
       return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
-          buildEnvSetupStepInfo.getSetupEnv().getGitConnectorIdentifier(),
-          buildEnvSetupStepInfo.getSetupEnv().getBranchName(),
+          buildEnvSetupStepInfo.getGitConnectorIdentifier(), buildEnvSetupStepInfo.getBranchName(),
           getPodParams(podSetupInfo, namespace, SH_COMMAND, Collections.singletonList(SETUP_TASK_ARGS),
               publishStepConnectorIdentifier)));
 
@@ -98,19 +95,16 @@ public class K8BuildSetupUtils {
     final String clusterName = k8PodDetails.getClusterName();
 
     try {
-      PodSetupInfo podSetupInfo =
-          getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getEnvSetup().getBuildJobEnvInfo());
+      PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
 
       List<String> command = liteEngineTaskUtils.getLiteEngineCommand();
       List<String> arguments = liteEngineTaskUtils.getLiteEngineArguments(liteEngineTaskStepInfo);
       Set<String> publishStepConnectorIdentifier =
-          ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getEnvSetup().getBuildJobEnvInfo())
-              .getPublishStepConnectorIdentifier();
+          ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPublishStepConnectorIdentifier();
 
       // TODO Use k8 connector from element input
       return SafeHttpCall.execute(managerCIResource.createK8PodTask(clusterName,
-          liteEngineTaskStepInfo.getEnvSetup().getGitConnectorIdentifier(),
-          liteEngineTaskStepInfo.getEnvSetup().getBranchName(),
+          liteEngineTaskStepInfo.getGitConnectorIdentifier(), liteEngineTaskStepInfo.getBranchName(),
           getPodParams(podSetupInfo, namespace, command, arguments, publishStepConnectorIdentifier)));
     } catch (Exception e) {
       logger.error("lite engine task state execution failed", e);

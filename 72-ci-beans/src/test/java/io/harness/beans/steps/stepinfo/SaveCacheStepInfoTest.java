@@ -8,7 +8,7 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.intfc.StepInfo;
+import io.harness.yaml.core.StepElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,18 +33,17 @@ public class SaveCacheStepInfoTest extends CIBeansTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldDeserializeSaveCacheStep() throws IOException {
-    StepInfo stepInfo = YamlPipelineUtils.read(yamlString, StepInfo.class);
-    SaveCacheStepInfo saveCacheStepInfo = (SaveCacheStepInfo) stepInfo;
+    StepElement stepElement = YamlPipelineUtils.read(yamlString, StepElement.class);
+    SaveCacheStepInfo saveCacheStepInfo = (SaveCacheStepInfo) stepElement.getStepSpecType();
 
     TypeInfo nonYamlInfo = saveCacheStepInfo.getNonYamlInfo();
     assertThat(nonYamlInfo.getStepInfoType()).isEqualTo(CIStepInfoType.SAVE_CACHE);
 
-    assertThat(saveCacheStepInfo).isNotNull();
-    assertThat(saveCacheStepInfo.getIdentifier()).isEqualTo("cacheResults");
-    assertThat(saveCacheStepInfo.getDisplayName()).isEqualTo("stepName");
-    assertThat(saveCacheStepInfo.getSaveCache())
+    assertThat(saveCacheStepInfo)
         .isNotNull()
-        .isEqualTo(SaveCacheStepInfo.SaveCache.builder()
+        .isEqualTo(SaveCacheStepInfo.builder()
+                       .identifier("cacheResults")
+                       .name("stepName")
                        .key("test_results")
                        .paths(Arrays.asList("~/test_results.output", "~/test_results.error"))
                        .build());

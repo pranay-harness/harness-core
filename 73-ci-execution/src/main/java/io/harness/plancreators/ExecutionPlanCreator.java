@@ -20,8 +20,8 @@ import io.harness.node.BasicStepToExecutionNodeConverter;
 import io.harness.plan.PlanNode;
 import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
-import io.harness.yaml.core.Execution;
-import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
+import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,13 +31,13 @@ import java.util.stream.Collectors;
 
 @Singleton
 @Slf4j
-public class ExecutionPlanCreator implements SupportDefinedExecutorPlanCreator<Execution> {
+public class ExecutionPlanCreator implements SupportDefinedExecutorPlanCreator<ExecutionElement> {
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
   @Inject private StepInfoGraphConverter graphConverter;
   @Inject private BasicStepToExecutionNodeConverter basicStepToExecutionNodeConverter;
 
   @Override
-  public CreateExecutionPlanResponse createPlan(Execution execution, CreateExecutionPlanContext context) {
+  public CreateExecutionPlanResponse createPlan(ExecutionElement execution, CreateExecutionPlanContext context) {
     List<CreateExecutionPlanResponse> planForExecutionSections =
         getPlanForExecutionSections(context, execution.getSteps());
 
@@ -58,14 +58,14 @@ public class ExecutionPlanCreator implements SupportDefinedExecutorPlanCreator<E
   }
 
   private List<CreateExecutionPlanResponse> getPlanForExecutionSections(
-      CreateExecutionPlanContext context, List<ExecutionSection> executionSections) {
-    return executionSections.stream()
-        .map(executionSection -> getPlanCreatorForStep(context, executionSection).createPlan(executionSection, context))
+      CreateExecutionPlanContext context, List<ExecutionWrapper> executionWrappers) {
+    return executionWrappers.stream()
+        .map(executionWrapper -> getPlanCreatorForStep(context, executionWrapper).createPlan(executionWrapper, context))
         .collect(Collectors.toList());
   }
 
-  private io.harness.executionplan.core.ExecutionPlanCreator<ExecutionSection> getPlanCreatorForStep(
-      CreateExecutionPlanContext context, ExecutionSection step) {
+  private io.harness.executionplan.core.ExecutionPlanCreator<ExecutionWrapper> getPlanCreatorForStep(
+      CreateExecutionPlanContext context, ExecutionWrapper step) {
     return planCreatorHelper.getExecutionPlanCreator(
         STEP_PLAN_CREATOR.getName(), step, context, format("no execution plan creator found for step [%s]", step));
   }
@@ -93,7 +93,7 @@ public class ExecutionPlanCreator implements SupportDefinedExecutorPlanCreator<E
   @Override
   public boolean supports(PlanCreatorSearchContext<?> searchContext) {
     return getSupportedTypes().contains(searchContext.getType())
-        && searchContext.getObjectToPlan() instanceof Execution;
+        && searchContext.getObjectToPlan() instanceof ExecutionElement;
   }
 
   @Override

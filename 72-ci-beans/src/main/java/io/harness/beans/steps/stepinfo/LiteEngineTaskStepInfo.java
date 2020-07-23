@@ -1,17 +1,18 @@
 package io.harness.beans.steps.stepinfo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.facilitator.FacilitatorType;
 import io.harness.state.StepType;
-import io.harness.yaml.core.Execution;
+import io.harness.yaml.core.ExecutionElement;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import software.wings.jersey.JsonViews;
 
 import java.beans.ConstructorProperties;
@@ -20,8 +21,10 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-@Value
-public class LiteEngineTaskStepInfo implements CIStepInfo, GenericStepInfo {
+@Data
+@JsonTypeName("liteEngineTask")
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class LiteEngineTaskStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;
 
@@ -34,35 +37,38 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, GenericStepInfo {
           .build();
 
   @NotNull @EntityIdentifier private String identifier;
-  private String displayName;
+  private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
-  @NotNull private EnvSetupInfo envSetup;
+  @NotNull BuildJobEnvInfo buildJobEnvInfo;
+  @NotNull String gitConnectorIdentifier;
+  @NotNull String branchName;
+  @NotNull ExecutionElement steps;
 
   @Builder
-  @ConstructorProperties({"identifier", "displayName", "retry", "timeout", " envSetup"})
-  public LiteEngineTaskStepInfo(
-      String identifier, String displayName, Integer retry, Integer timeout, EnvSetupInfo envSetup) {
+  @ConstructorProperties(
+      {"identifier", "name", "retry", "timeout", "buildJobEnvInfo", "gitConnectorIdentifier", "branchName", "steps"})
+  public LiteEngineTaskStepInfo(String identifier, String name, Integer retry, Integer timeout,
+      BuildJobEnvInfo buildJobEnvInfo, String gitConnectorIdentifier, String branchName, ExecutionElement steps) {
     this.identifier = identifier;
-    this.displayName = displayName;
+    this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
-    this.envSetup = envSetup;
-  }
-
-  @Value
-  @Builder
-  public static class EnvSetupInfo {
-    @NotNull BuildJobEnvInfo buildJobEnvInfo;
-    @NotNull String gitConnectorIdentifier;
-    @NotNull String branchName;
-    @NotNull Execution steps;
+    this.buildJobEnvInfo = buildJobEnvInfo;
+    this.gitConnectorIdentifier = gitConnectorIdentifier;
+    this.branchName = branchName;
+    this.steps = steps;
   }
 
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
+  }
+
+  @Override
+  public String getDisplayName() {
+    return name;
   }
 
   @Override

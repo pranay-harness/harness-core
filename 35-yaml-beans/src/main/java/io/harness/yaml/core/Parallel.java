@@ -1,8 +1,7 @@
 package io.harness.yaml.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
-import io.harness.yaml.core.auxiliary.intfc.StepWrapper;
+import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.Builder;
 import lombok.Value;
 
@@ -14,11 +13,11 @@ import javax.validation.constraints.NotNull;
  */
 @Value
 @Builder
-public class Parallel implements ExecutionSection {
-  @NotNull List<StepWrapper> sections;
+public class Parallel implements ExecutionWrapper {
+  @NotNull List<StepElement> sections;
 
   @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-  public Parallel(List<StepWrapper> parallel) {
+  public Parallel(List<StepElement> parallel) {
     this.sections = parallel;
   }
 }

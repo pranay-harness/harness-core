@@ -17,7 +17,7 @@ import io.harness.executionplan.core.CreateExecutionPlanResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.plan.PlanNode;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.Execution;
+import io.harness.yaml.core.ExecutionElement;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,12 +31,12 @@ public class ExecutionPlanCreatorTest extends CIExecutionTest {
   @Inject private CIExecutionPlanCreatorRegistrar ciExecutionPlanCreatorRegistrar;
 
   @Mock private CreateExecutionPlanContext createExecutionPlanContext;
-  @Mock private PlanCreatorSearchContext<Execution> planCreatorSearchContext;
-  private Execution execution;
+  @Mock private PlanCreatorSearchContext<ExecutionElement> planCreatorSearchContext;
+  private ExecutionElement execution;
   @Before
   public void setUp() {
     ciExecutionPlanCreatorRegistrar.register();
-    execution = ciExecutionPlanTestHelper.getExecution();
+    execution = ciExecutionPlanTestHelper.getExecutionElement();
   }
 
   @Test

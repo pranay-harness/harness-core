@@ -22,8 +22,8 @@ public class StepInfoCreationTest extends CIBeansTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void testsClassInitialization() {
-    GitCloneStepInfo gitCloneStepInfo =
-        new GitCloneStepInfo(null, null, GitCloneStepInfo.DEFAULT_RETRY, GitCloneStepInfo.DEFAULT_TIMEOUT, null);
+    GitCloneStepInfo gitCloneStepInfo = new GitCloneStepInfo(
+        null, null, GitCloneStepInfo.DEFAULT_RETRY, GitCloneStepInfo.DEFAULT_TIMEOUT, null, null, null);
     assertThat(gitCloneStepInfo.getRetry()).isEqualTo(GitCloneStepInfo.DEFAULT_RETRY);
     assertThat(gitCloneStepInfo.getTimeout()).isEqualTo(GitCloneStepInfo.DEFAULT_TIMEOUT);
   }

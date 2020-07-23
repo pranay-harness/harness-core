@@ -14,22 +14,20 @@ public class RunStepProtobufSerializer implements ProtobufSerializer<RunStepInfo
     return Base64.encodeBase64String(convertRunStepInfo(object).toByteArray());
   }
 
-  public Step convertRunStepInfo(RunStepInfo stepInfo) {
-    RunStepInfo.Run run = stepInfo.getRun();
+  public Step convertRunStepInfo(RunStepInfo runStepInfo) {
     RunStep.Builder runStepBuilder = RunStep.newBuilder();
-    runStepBuilder.addAllCommands(run.getCommand());
-    if (run.getOutput() != null) {
-      runStepBuilder.addAllEnvVarOutputs(run.getOutput());
+    runStepBuilder.addAllCommands(runStepInfo.getCommand());
+    if (runStepInfo.getOutput() != null) {
+      runStepBuilder.addAllEnvVarOutputs(runStepInfo.getOutput());
     }
-
     runStepBuilder.setContext(StepContext.newBuilder()
-                                  .setNumRetries(stepInfo.getRetry())
-                                  .setExecutionTimeoutSecs(stepInfo.getTimeout())
+                                  .setNumRetries(runStepInfo.getRetry())
+                                  .setExecutionTimeoutSecs(runStepInfo.getTimeout())
                                   .build());
 
     return Step.newBuilder()
-        .setId(stepInfo.getIdentifier())
-        .setDisplayName(Optional.ofNullable(stepInfo.getDisplayName()).orElse(""))
+        .setId(runStepInfo.getIdentifier())
+        .setDisplayName(Optional.ofNullable(runStepInfo.getDisplayName()).orElse(""))
         .setRun(runStepBuilder.build())
         .build();
   }

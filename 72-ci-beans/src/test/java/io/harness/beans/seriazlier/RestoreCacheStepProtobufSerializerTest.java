@@ -25,12 +25,12 @@ public class RestoreCacheStepProtobufSerializerTest extends CIBeansTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldSerializeRestoreCacheStep() throws InvalidProtocolBufferException {
-    RestoreCacheStepInfo restoreCacheStepInfo =
-        RestoreCacheStepInfo.builder()
-            .displayName(RESTORE_CACHE)
-            .identifier(RESTORE_ID)
-            .restoreCache(RestoreCacheStepInfo.RestoreCache.builder().key(RESTORE_KEY).failIfNotExist(true).build())
-            .build();
+    RestoreCacheStepInfo restoreCacheStepInfo = RestoreCacheStepInfo.builder()
+                                                    .name(RESTORE_CACHE)
+                                                    .identifier(RESTORE_ID)
+                                                    .key(RESTORE_KEY)
+                                                    .failIfNotExist(true)
+                                                    .build();
     String serialize = protobufSerializer.serialize(restoreCacheStepInfo);
     Step restoreStep = Step.parseFrom(Base64.decodeBase64(serialize));
 

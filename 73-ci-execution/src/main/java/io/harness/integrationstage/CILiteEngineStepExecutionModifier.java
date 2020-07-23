@@ -10,14 +10,16 @@ import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.stages.IntegrationStage;
+import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.exception.InvalidRequestException;
-import io.harness.yaml.core.Execution;
-import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
+import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.core.StepElement;
+import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.intfc.Stage;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -54,24 +56,24 @@ public class CILiteEngineStepExecutionModifier implements StageExecutionModifier
   private String podName;
 
   @Override
-  public Execution modifyExecutionPlan(Execution execution, Stage stage) {
+  public ExecutionElement modifyExecutionPlan(ExecutionElement execution, Stage stage) {
     IntegrationStage integrationStage = (IntegrationStage) stage;
     return getCILiteEngineTaskExecution(integrationStage);
   }
 
-  private Execution getCILiteEngineTaskExecution(IntegrationStage integrationStage) {
+  private ExecutionElement getCILiteEngineTaskExecution(IntegrationStage integrationStage) {
     // TODO Only git is supported currently
-    if (integrationStage.getCi().getGitConnector().getType().equals("git")) {
-      GitConnectorYaml gitConnectorYaml = (GitConnectorYaml) integrationStage.getCi().getGitConnector();
-      return Execution.builder()
-          .steps(singletonList(LiteEngineTaskStepInfo.builder()
-                                   .identifier(LITE_ENGINE_TASK)
-                                   .envSetup(LiteEngineTaskStepInfo.EnvSetupInfo.builder()
-                                                 .gitConnectorIdentifier(gitConnectorYaml.getIdentifier())
-                                                 .branchName(getBranchName(integrationStage))
-                                                 .buildJobEnvInfo(getCIBuildJobEnvInfo(integrationStage))
-                                                 .steps(integrationStage.getCi().getExecution())
-                                                 .build())
+    if (integrationStage.getGitConnector().getType().equals("git")) {
+      GitConnectorYaml gitConnectorYaml = (GitConnectorYaml) integrationStage.getGitConnector();
+      return ExecutionElement.builder()
+          .steps(singletonList(StepElement.builder()
+                                   .stepSpecType(LiteEngineTaskStepInfo.builder()
+                                                     .identifier(LITE_ENGINE_TASK)
+                                                     .gitConnectorIdentifier(gitConnectorYaml.getIdentifier())
+                                                     .branchName(getBranchName(integrationStage))
+                                                     .buildJobEnvInfo(getCIBuildJobEnvInfo(integrationStage))
+                                                     .steps(integrationStage.getExecution())
+                                                     .build())
                                    .build()))
           .build();
     } else {
@@ -80,15 +82,17 @@ public class CILiteEngineStepExecutionModifier implements StageExecutionModifier
   }
 
   private String getBranchName(IntegrationStage integrationStage) {
-    Optional<ExecutionSection> executionSection = integrationStage.getCi()
-                                                      .getExecution()
-                                                      .getSteps()
-                                                      .stream()
-                                                      .filter(section -> section instanceof GitCloneStepInfo)
-                                                      .findFirst();
-    if (executionSection.isPresent()) {
-      GitCloneStepInfo gitCloneStepInfo = (GitCloneStepInfo) executionSection.get();
-      return gitCloneStepInfo.getGitClone().getBranch();
+    Optional<CIStepInfo> stepInfo =
+        integrationStage.getExecution()
+            .getSteps()
+            .stream()
+            .filter(executionWrapper -> executionWrapper instanceof StepElement)
+            .filter(executionWrapper -> ((StepElement) executionWrapper).getStepSpecType() instanceof GitCloneStepInfo)
+            .findFirst()
+            .map(executionWrapper -> (GitCloneStepInfo) ((StepElement) executionWrapper).getStepSpecType());
+    if (stepInfo.isPresent()) {
+      GitCloneStepInfo gitCloneStepInfo = (GitCloneStepInfo) stepInfo.get();
+      return gitCloneStepInfo.getBranch();
     } else {
       throw new InvalidRequestException("Failed to execute pipeline, Git clone section is missing");
     }
@@ -96,10 +100,10 @@ public class CILiteEngineStepExecutionModifier implements StageExecutionModifier
 
   private BuildJobEnvInfo getCIBuildJobEnvInfo(IntegrationStage integrationStage) {
     // TODO Only kubernetes is supported currently
-    if (integrationStage.getCi().getInfrastructure().getType().equals("kubernetes-direct")) {
+    if (integrationStage.getInfrastructure().getType().equals("kubernetes-direct")) {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(integrationStage))
-          .workDir(integrationStage.getCi().getWorkingDirectory())
+          .workDir(integrationStage.getWorkingDirectory())
           .publishStepConnectorIdentifier(getPublishStepConnectorIdentifier(integrationStage))
           .build();
     } else {
@@ -108,14 +112,15 @@ public class CILiteEngineStepExecutionModifier implements StageExecutionModifier
   }
 
   private Set<String> getPublishStepConnectorIdentifier(IntegrationStage integrationStage) {
-    List<ExecutionSection> executionSections = integrationStage.getCi().getExecution().getSteps();
-    if (isEmpty(executionSections)) {
+    List<ExecutionWrapper> executionWrappers = integrationStage.getExecution().getSteps();
+    if (isEmpty(executionWrappers)) {
       return Collections.emptySet();
     }
 
-    return executionSections.stream()
-        .filter(executionSection -> executionSection instanceof PublishStepInfo)
-        .map(step -> ((PublishStepInfo) step).getPublishArtifacts())
+    return executionWrappers.stream()
+        .filter(executionSection -> executionSection instanceof StepElement)
+        .filter(executionSection -> ((StepElement) executionSection).getStepSpecType() instanceof PublishStepInfo)
+        .map(step -> ((PublishStepInfo) ((StepElement) step).getStepSpecType()).getPublishArtifacts())
         .flatMap(Collection::stream)
         .map(artifact -> artifact.getConnector().getConnector())
         .collect(Collectors.toSet());
@@ -123,35 +128,34 @@ public class CILiteEngineStepExecutionModifier implements StageExecutionModifier
 
   private K8BuildJobEnvInfo.PodsSetupInfo getCIPodsSetupInfo(IntegrationStage integrationStage) {
     List<PodSetupInfo> pods = new ArrayList<>();
-    pods.add(PodSetupInfo.builder()
-                 .podSetupParams(
-                     PodSetupInfo.PodSetupParams.builder()
-                         .containerDefinitionInfos(singletonList(
-                             ContainerDefinitionInfo.builder()
-                                 .containerResourceParams(getContainerResourceParams(integrationStage))
-                                 .envVars(getEnvVariables(integrationStage))
-                                 .encryptedSecrets(getSecretVariables(integrationStage))
-                                 .containerImageDetails(
-                                     ContainerImageDetails.builder()
-                                         .imageDetails(getImageDetails(integrationStage))
-                                         .connectorIdentifier(integrationStage.getCi().getContainer().getConnector())
-                                         .build())
-                                 .containerType(CIContainerType.STEP_EXECUTOR)
-                                 .name(CONTAINER_NAME)
-                                 .build()))
-                         .build())
-                 .name(podName)
-                 .build());
+    pods.add(
+        PodSetupInfo.builder()
+            .podSetupParams(PodSetupInfo.PodSetupParams.builder()
+                                .containerDefinitionInfos(singletonList(
+                                    ContainerDefinitionInfo.builder()
+                                        .containerResourceParams(getContainerResourceParams(integrationStage))
+                                        .envVars(getEnvVariables(integrationStage))
+                                        .encryptedSecrets(getSecretVariables(integrationStage))
+                                        .containerImageDetails(
+                                            ContainerImageDetails.builder()
+                                                .imageDetails(getImageDetails(integrationStage))
+                                                .connectorIdentifier(integrationStage.getContainer().getConnector())
+                                                .build())
+                                        .containerType(CIContainerType.STEP_EXECUTOR)
+                                        .name(CONTAINER_NAME)
+                                        .build()))
+                                .build())
+            .name(podName)
+            .build());
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
 
   private Map<String, EncryptedVariableWithType> getSecretVariables(IntegrationStage integrationStage) {
-    if (isEmpty(integrationStage.getCi().getCustomVariables())) {
+    if (isEmpty(integrationStage.getCustomVariables())) {
       return Collections.emptyMap();
     }
 
-    return integrationStage.getCi()
-        .getCustomVariables()
+    return integrationStage.getCustomVariables()
         .stream()
         .filter(customVariables
             -> customVariables.getType().equals(
@@ -163,12 +167,11 @@ public class CILiteEngineStepExecutionModifier implements StageExecutionModifier
   }
 
   private Map<String, String> getEnvVariables(IntegrationStage integrationStage) {
-    if (isEmpty(integrationStage.getCi().getCustomVariables())) {
+    if (isEmpty(integrationStage.getCustomVariables())) {
       return Collections.emptyMap();
     }
 
-    return integrationStage.getCi()
-        .getCustomVariables()
+    return integrationStage.getCustomVariables()
         .stream()
         .filter(customVariables
             -> customVariables.getType().equals(
@@ -178,20 +181,20 @@ public class CILiteEngineStepExecutionModifier implements StageExecutionModifier
 
   private ContainerResourceParams getContainerResourceParams(IntegrationStage integrationStage) {
     return ContainerResourceParams.builder()
-        .resourceRequestMilliCpu(integrationStage.getCi().getContainer().getResources().getReserve().getCpu())
-        .resourceRequestMemoryMiB(integrationStage.getCi().getContainer().getResources().getReserve().getMemory())
-        .resourceLimitMilliCpu(integrationStage.getCi().getContainer().getResources().getLimit().getCpu())
-        .resourceLimitMemoryMiB(integrationStage.getCi().getContainer().getResources().getLimit().getMemory())
+        .resourceRequestMilliCpu(integrationStage.getContainer().getResources().getReserve().getCpu())
+        .resourceRequestMemoryMiB(integrationStage.getContainer().getResources().getReserve().getMemory())
+        .resourceLimitMilliCpu(integrationStage.getContainer().getResources().getLimit().getCpu())
+        .resourceLimitMemoryMiB(integrationStage.getContainer().getResources().getLimit().getMemory())
         .build();
   }
 
   private ImageDetails getImageDetails(IntegrationStage integrationStage) {
-    String imagePath = integrationStage.getCi().getContainer().getImagePath();
-    String name = integrationStage.getCi().getContainer().getImagePath();
+    String imagePath = integrationStage.getContainer().getImagePath();
+    String name = integrationStage.getContainer().getImagePath();
     String tag = "latest";
 
     if (imagePath.contains(IMAGE_PATH_SPLIT_REGEX)) {
-      String[] subTokens = integrationStage.getCi().getContainer().getImagePath().split(IMAGE_PATH_SPLIT_REGEX);
+      String[] subTokens = integrationStage.getContainer().getImagePath().split(IMAGE_PATH_SPLIT_REGEX);
       if (subTokens.length == 2) {
         name = subTokens[0];
         tag = subTokens[1];
