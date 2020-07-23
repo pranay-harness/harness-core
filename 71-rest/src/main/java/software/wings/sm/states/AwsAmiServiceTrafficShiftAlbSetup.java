@@ -21,10 +21,10 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
@@ -272,7 +272,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
   private ExecutionResponse failureResponse(
       Exception exception, String activityId, ManagerExecutionLogCallback executionLogCallback) {
     logger.error("Ami setup step failed with error ", exception);
-    Misc.logAllMessages(exception, executionLogCallback, CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);
     AwsAmiSetupExecutionData awsAmiExecutionData = AwsAmiSetupExecutionData.builder().build();
     String errorMessage = getMessage(exception);
     return createResponse(activityId, ExecutionStatus.FAILED, errorMessage, awsAmiExecutionData, null, true);

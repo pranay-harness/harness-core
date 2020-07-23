@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,9 +22,9 @@ import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsElbListenerRuleData;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -95,11 +95,10 @@ public class EcsBlueGreenSetupCommandHandlerTest extends WingsBaseTest {
     EcsServiceSetupRequest request = EcsServiceSetupRequest.builder().build();
     EcsCommandExecutionResponse response = handler.executeTaskInternal(request, null, mockCallback);
     assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(response.getEcsCommandResponse().getOutput())
         .isEqualTo("Invalid Request Type: Expected was : EcsBGServiceSetupRequest");
-    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test
@@ -116,9 +115,8 @@ public class EcsBlueGreenSetupCommandHandlerTest extends WingsBaseTest {
 
     EcsCommandExecutionResponse response = handler.executeTaskInternal(request, null, mockCallback);
     assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
-    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test
@@ -139,9 +137,8 @@ public class EcsBlueGreenSetupCommandHandlerTest extends WingsBaseTest {
     EcsCommandExecutionResponse response = handler.executeTaskInternal(request, null, mockCallback);
     assertThat(response).isNotNull();
     assertThat(request.getEcsSetupParams().isUseSpecificListenerRuleArn()).isFalse();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
-    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test
@@ -168,9 +165,8 @@ public class EcsBlueGreenSetupCommandHandlerTest extends WingsBaseTest {
     EcsCommandExecutionResponse response = handler.executeTaskInternal(request, null, mockCallback);
     assertThat(response).isNotNull();
     assertThat(request.getEcsSetupParams().isUseSpecificListenerRuleArn()).isTrue();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
-    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test
@@ -215,9 +211,8 @@ public class EcsBlueGreenSetupCommandHandlerTest extends WingsBaseTest {
     EcsCommandExecutionResponse response = handler.executeTaskInternal(request, null, mockCallback);
     assertThat(response).isNotNull();
     assertThat(request.getEcsSetupParams().isUseSpecificListenerRuleArn()).isTrue();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
-    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test
@@ -254,9 +249,8 @@ public class EcsBlueGreenSetupCommandHandlerTest extends WingsBaseTest {
 
     EcsCommandExecutionResponse response = handler.executeTaskInternal(request, null, mockCallback);
     assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
-    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test

@@ -2,7 +2,7 @@ package io.harness.delegate.task.azure.response;
 
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,5 +12,5 @@ public class AzureVMSSTaskExecutionResponse implements DelegateTaskNotifyRespons
   private DelegateMetaInfo delegateMetaInfo;
   private AzureVMSSTaskResponse azureVMSSTaskResponse;
   private String errorMessage;
-  private CommandExecutionResult.CommandExecutionStatus commandExecutionStatus;
+  private CommandExecutionStatus commandExecutionStatus;
 }

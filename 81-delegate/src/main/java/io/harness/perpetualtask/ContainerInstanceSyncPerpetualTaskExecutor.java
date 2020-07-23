@@ -1,7 +1,7 @@
 package io.harness.perpetualtask;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.perpetualtask.PerpetualTaskState.TASK_RUN_FAILED;
 import static io.harness.perpetualtask.PerpetualTaskState.TASK_RUN_SUCCEEDED;

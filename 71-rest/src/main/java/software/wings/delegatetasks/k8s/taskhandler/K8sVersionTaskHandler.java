@@ -4,9 +4,9 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.AutoLogContext;
+import io.harness.logging.CommandExecutionStatus;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.VersionApi;

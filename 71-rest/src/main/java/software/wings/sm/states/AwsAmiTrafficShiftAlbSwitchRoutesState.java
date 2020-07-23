@@ -20,10 +20,10 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
@@ -248,7 +248,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
   private ExecutionResponse taskCreationFailureResponse(
       Activity activity, ManagerExecutionLogCallback executionLogCallback, Exception exception) {
     logger.error("Aws Ami traffic shift failed with error ", exception);
-    Misc.logAllMessages(exception, executionLogCallback, CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);
     AwsAmiSetupExecutionData awsAmiExecutionData = AwsAmiSetupExecutionData.builder().build();
     String errorMessage = getMessage(exception);
     ExecutionResponseBuilder responseBuilder = ExecutionResponse.builder();

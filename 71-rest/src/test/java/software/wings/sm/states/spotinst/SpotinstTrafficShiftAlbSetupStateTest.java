@@ -29,10 +29,10 @@ import com.google.common.collect.ImmutableMap;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbSetupResponse;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
@@ -147,7 +147,7 @@ public class SpotinstTrafficShiftAlbSetupStateTest extends WingsBaseTest {
     SpotInstTaskExecutionResponse delegateResponse =
         SpotInstTaskExecutionResponse.builder()
             .delegateMetaInfo(DelegateMetaInfo.builder().build())
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .spotInstTaskResponse(
                 SpotinstTrafficShiftAlbSetupResponse.builder()
                     .newElastigroup(ElastiGroup.builder()

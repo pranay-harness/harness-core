@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 
 public class NoopExecutionCallback implements LogCallback {
@@ -11,6 +11,5 @@ public class NoopExecutionCallback implements LogCallback {
   public void saveExecutionLog(String line, LogLevel logLevel) {}
 
   @Override
-  public void saveExecutionLog(
-      String line, LogLevel logLevel, CommandExecutionResult.CommandExecutionStatus commandExecutionStatus) {}
+  public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {}
 }

@@ -56,8 +56,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -355,9 +355,9 @@ public class PcfDeployStateTest extends WingsBaseTest {
 
     response.put("1",
         PcfCommandExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .pcfCommandResponse(PcfDeployCommandResponse.builder()
-                                    .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                                    .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                                     .pcfInstanceElements(Arrays.asList(PcfInstanceElement.builder()
                                                                            .applicationId("1")
                                                                            .displayName("app1")
@@ -428,9 +428,9 @@ public class PcfDeployStateTest extends WingsBaseTest {
 
     response.put("1",
         PcfCommandExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .pcfCommandResponse(PcfDeployCommandResponse.builder()
-                                    .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                                    .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                                     .pcfInstanceElements(Arrays.asList(PcfInstanceElement.builder()
                                                                            .uuid("uuid1")
                                                                            .applicationId("1")

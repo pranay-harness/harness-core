@@ -12,8 +12,8 @@ import com.google.inject.Singleton;
 import com.esotericsoftware.kryo.NotNull;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.logging.AutoLogContext;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -60,21 +60,17 @@ public class K8ExecuteCommandTaskHandler implements ExecuteCommandTaskHandler {
         ExecCommandStatus status = k8CommandExecutor.executeCommand(kubernetesClient, k8ExecCommandParams);
         if (status == ExecCommandStatus.SUCCESS) {
           logger.info("Successfully executed commands {} on container {} of pod {}", commands, containerName, podName);
-          result = K8sTaskExecutionResponse.builder()
-                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-                       .build();
+          result = K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
         } else {
           logger.info("Failed to execute commands {} on container {} of pod {} with status {}", commands, containerName,
               podName, status);
-          result = K8sTaskExecutionResponse.builder()
-                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.FAILURE)
-                       .build();
+          result = K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
         }
 
       } catch (Exception e) {
         logger.error("Exception in processing CI execute command task: {}", commands, e);
         result = K8sTaskExecutionResponse.builder()
-                     .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.FAILURE)
+                     .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                      .errorMessage(e.getMessage())
                      .build();
       }

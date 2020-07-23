@@ -1,8 +1,8 @@
 package software.wings.core.winrm.executors;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.RUNNING;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static java.lang.String.format;
@@ -22,9 +22,9 @@ import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.eraro.ResponseMessage;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;

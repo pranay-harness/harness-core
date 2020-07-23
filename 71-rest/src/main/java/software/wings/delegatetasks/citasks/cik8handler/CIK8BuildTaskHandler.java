@@ -19,10 +19,10 @@ import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.GitFetchFilesConfig;
@@ -91,18 +91,14 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         kubeCtlHandler.createPod(kubernetesClient, pod, namespace);
         boolean isPodRunning = kubeCtlHandler.waitUntilPodIsReady(kubernetesClient, podName, namespace);
         if (isPodRunning) {
-          result = K8sTaskExecutionResponse.builder()
-                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-                       .build();
+          result = K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
         } else {
-          result = K8sTaskExecutionResponse.builder()
-                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.FAILURE)
-                       .build();
+          result = K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
         }
       } catch (Exception ex) {
         logger.error("Exception in processing CI K8 build setup task: {}", ciBuildSetupTaskParams, ex);
         result = K8sTaskExecutionResponse.builder()
-                     .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.FAILURE)
+                     .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                      .errorMessage(ex.getMessage())
                      .build();
       }

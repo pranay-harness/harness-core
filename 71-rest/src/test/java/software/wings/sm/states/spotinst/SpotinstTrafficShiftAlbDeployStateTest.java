@@ -1,7 +1,6 @@
 package software.wings.sm.states.spotinst;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -30,6 +29,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.delegate.task.spotinst.response.SpotinstTrafficShiftAlbDeployResponse;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.spotinst.model.ElastiGroup;
 import org.junit.Test;

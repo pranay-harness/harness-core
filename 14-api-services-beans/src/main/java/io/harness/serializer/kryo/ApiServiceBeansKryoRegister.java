@@ -51,6 +51,7 @@ import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.model.ManifestType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -107,6 +108,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(Exponential.class, 2014);
     kryo.register(BasicDBList.class, 2015);
     kryo.register(BasicDBObject.class, 2016);
+    kryo.register(CommandExecutionStatus.class, 5037);
     kryo.register(EncryptionConfig.class, 5305);
     kryo.register(EncryptionType.class, 5123);
     kryo.register(EncryptedDataDetail.class, 5125);

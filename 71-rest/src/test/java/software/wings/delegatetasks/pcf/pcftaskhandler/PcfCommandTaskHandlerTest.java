@@ -23,10 +23,10 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.pcf.PcfManifestFileData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.filesystem.FileIo;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.cloudfoundry.operations.applications.ApplicationDetail;

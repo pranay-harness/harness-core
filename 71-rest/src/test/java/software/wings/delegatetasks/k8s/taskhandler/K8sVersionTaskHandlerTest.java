@@ -9,7 +9,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMConfig;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.VersionInfo;
@@ -58,7 +58,7 @@ public class K8sVersionTaskHandlerTest extends WingsBaseTest {
                              .build();
 
     k8sTaskExecutionResponse = K8sTaskExecutionResponse.builder()
-                                   .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                                   .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                                    .k8sTaskResponse(k8sVersionResponse)
                                    .build();
 

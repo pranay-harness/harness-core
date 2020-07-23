@@ -6,8 +6,8 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.HashMap;

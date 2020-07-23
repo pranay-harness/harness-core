@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableList;
 
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Before;

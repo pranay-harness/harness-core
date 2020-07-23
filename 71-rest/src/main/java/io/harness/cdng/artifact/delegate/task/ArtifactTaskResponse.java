@@ -3,7 +3,7 @@ package io.harness.cdng.artifact.delegate.task;
 import io.harness.cdng.artifact.delegate.beans.ArtifactAttributes;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.aws.EcsContainerService;

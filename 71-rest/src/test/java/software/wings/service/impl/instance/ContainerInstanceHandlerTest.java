@@ -53,10 +53,10 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -1696,7 +1696,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     ContainerSyncResponse responseData;
     responseData = ContainerSyncResponse.builder()
                        .containerInfoList(Collections.emptyList())
-                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                       .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                        .build();
     ContainerInfrastructureMapping infrastructureMapping;
     infrastructureMapping = DirectKubernetesInfrastructureMapping.builder().build();
@@ -1740,7 +1740,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     responseData = ContainerSyncResponse.builder()
                        .containerInfoList(Collections.emptyList())
                        .controllerName("controllerName:0")
-                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                       .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                        .build();
     ContainerInfrastructureMapping infrastructureMapping;
     infrastructureMapping = DirectKubernetesInfrastructureMapping.builder().build();
@@ -1754,7 +1754,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     responseData = ContainerSyncResponse.builder()
                        .containerInfoList(Collections.emptyList())
                        .controllerName("controllerName:1")
-                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                       .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                        .build();
     infrastructureMapping = DirectKubernetesInfrastructureMapping.builder().build();
     doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());

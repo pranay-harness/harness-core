@@ -10,9 +10,9 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Data;

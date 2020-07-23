@@ -13,7 +13,7 @@ import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.utils.HttpClientUtils;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import okhttp3.OkHttpClient;
@@ -95,7 +95,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
         .executeCommand(any(), eq(params.getK8ExecCommandParams()));
 
     K8sTaskExecutionResponse response = k8ExecuteCommandTaskHandler.executeTaskInternal(params);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
   @Test
@@ -114,7 +114,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
     doThrow(TimeoutException.class).when(k8CommandExecutor).executeCommand(any(), eq(params.getK8ExecCommandParams()));
 
     K8sTaskExecutionResponse response = k8ExecuteCommandTaskHandler.executeTaskInternal(params);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
   @Test
@@ -135,7 +135,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
         .executeCommand(any(), eq(params.getK8ExecCommandParams()));
 
     K8sTaskExecutionResponse response = k8ExecuteCommandTaskHandler.executeTaskInternal(params);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
   @Test
@@ -154,7 +154,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
         .thenReturn(ExecCommandStatus.SUCCESS);
 
     K8sTaskExecutionResponse response = k8ExecuteCommandTaskHandler.executeTaskInternal(params);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
   @Test
@@ -173,7 +173,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
         .thenReturn(ExecCommandStatus.FAILURE);
 
     K8sTaskExecutionResponse response = k8ExecuteCommandTaskHandler.executeTaskInternal(params);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
   @Test

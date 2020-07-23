@@ -9,8 +9,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.logging.AutoLogContext;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ci.CICleanupTaskParams;
 import software.wings.beans.ci.CIK8CleanupTaskParams;
@@ -44,18 +44,14 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
         KubernetesClient kubernetesClient = createKubernetesClient(taskParams);
         Boolean isDeleted = kubeCtlHandler.deletePod(kubernetesClient, podName, namespace);
         if (isDeleted) {
-          result = K8sTaskExecutionResponse.builder()
-                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-                       .build();
+          result = K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
         } else {
-          result = K8sTaskExecutionResponse.builder()
-                       .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.FAILURE)
-                       .build();
+          result = K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
         }
       } catch (Exception ex) {
         logger.error("Exception in processing CI K8 delete setup task: {}", taskParams, ex);
         result = K8sTaskExecutionResponse.builder()
-                     .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.FAILURE)
+                     .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                      .errorMessage(ex.getMessage())
                      .build();
       }

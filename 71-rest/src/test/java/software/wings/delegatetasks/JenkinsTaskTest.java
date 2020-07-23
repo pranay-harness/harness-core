@@ -1,9 +1,9 @@
 package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
@@ -29,9 +29,9 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.rule.Owner;
 import org.apache.http.client.HttpResponseException;
@@ -349,7 +349,7 @@ public class JenkinsTaskTest extends WingsBaseTest {
   }
 
   private Log constructLog(String activityId, String stateName, String appId, LogLevel logLevel, String logLine,
-      CommandExecutionResult.CommandExecutionStatus commandExecutionStatus) {
+      CommandExecutionStatus commandExecutionStatus) {
     return aLog()
         .withActivityId(activityId)
         .withCommandUnitName(stateName)

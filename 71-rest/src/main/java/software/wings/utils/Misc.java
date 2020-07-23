@@ -5,8 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.sm.states.ManagerExecutionLogCallback;

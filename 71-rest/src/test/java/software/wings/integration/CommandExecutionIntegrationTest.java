@@ -1,8 +1,8 @@
 package software.wings.integration;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.ARTIFACTS;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,7 +27,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;

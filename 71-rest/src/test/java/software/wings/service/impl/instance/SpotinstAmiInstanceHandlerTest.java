@@ -1,6 +1,5 @@
 package software.wings.service.impl.instance;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
@@ -53,6 +52,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupInstancesResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

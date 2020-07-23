@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
 
 import com.google.inject.Singleton;

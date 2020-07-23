@@ -20,7 +20,7 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -68,7 +68,7 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
             cik8BuildTaskParams.getGitFetchFilesConfig().getEncryptedDataDetails());
 
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
   @Test
@@ -91,7 +91,7 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
         .createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
 
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
   @Test
@@ -117,7 +117,7 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
         .createPod(kubernetesClient, podBuilder.build(), namespace);
 
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
   @Test
@@ -145,7 +145,7 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
         .thenReturn(false);
 
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
   @Test
@@ -183,7 +183,7 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
         .thenReturn(true);
 
     K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
   @Test

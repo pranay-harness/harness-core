@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 
 public class HelmDummyCommandUnit extends AbstractCommandUnit {
   public static final String FetchFiles = "Fetch Files";

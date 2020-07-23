@@ -13,8 +13,8 @@ import io.harness.cdng.tasks.manifestFetch.beans.GitFetchFilesConfig;
 import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;
@@ -82,7 +82,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
 
         String msg = "Exception in processing GitFetchFilesTask. " + exceptionMsg;
         logger.error(msg, ex);
-        executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionResult.CommandExecutionStatus.FAILURE);
+        executionLogCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.FAILURE);
         return GitCommandExecutionResponse.builder()
             .errorMessage(exceptionMsg)
             .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.FAILURE)
@@ -92,7 +92,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
       filesFromMultipleRepo.put(gitFetchFilesConfig.getIdentifier(), gitFetchFilesResult);
     }
 
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionResult.CommandExecutionStatus.SUCCESS);
+    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
 
     return GitCommandExecutionResponse.builder()
         .gitCommandResult(

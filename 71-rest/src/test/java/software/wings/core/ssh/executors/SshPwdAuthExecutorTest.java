@@ -2,14 +2,14 @@ package software.wings.core.ssh.executors;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_ERROR;
 import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
 import static io.harness.eraro.ErrorCode.SSH_SESSION_TIMEOUT;
 import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.UNKNOWN;
@@ -27,9 +27,9 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 import com.google.common.io.CharStreams;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import org.apache.commons.lang3.tuple.Pair;

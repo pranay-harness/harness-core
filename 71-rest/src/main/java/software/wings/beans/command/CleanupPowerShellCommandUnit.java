@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 
 public class CleanupPowerShellCommandUnit extends AbstractCommandUnit {
   public static final String CLEANUP_POWERSHELL_UNIT_NAME = "Cleanup";

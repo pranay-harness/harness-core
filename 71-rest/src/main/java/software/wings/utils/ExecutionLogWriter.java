@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.Log.Builder.aLog;
 
 import io.harness.logging.LogLevel;

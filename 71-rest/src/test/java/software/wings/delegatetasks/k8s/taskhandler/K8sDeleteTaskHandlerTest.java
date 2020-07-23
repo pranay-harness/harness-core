@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -19,11 +19,11 @@ import static software.wings.delegatetasks.k8s.K8sTestHelper.service;
 import com.google.common.collect.ImmutableList;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -181,8 +181,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
     final K8sTaskExecutionResponse taskResponse = handler.executeTaskInternal(deleteAllParams, taskParams);
 
     verify(k8sTaskHelper)
-        .getK8sTaskExecutionResponse(
-            K8sDeleteResponse.builder().build(), CommandExecutionResult.CommandExecutionStatus.SUCCESS);
+        .getK8sTaskExecutionResponse(K8sDeleteResponse.builder().build(), CommandExecutionStatus.SUCCESS);
     verify(deploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
 
