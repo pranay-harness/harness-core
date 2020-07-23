@@ -60,7 +60,7 @@ public class NGAppStartupTest {
   }
 
   @Test
-  @Owner(developers = VIKAS)
+  @Owner(developers = VIKAS, intermittent = true)
   @Category(UnitTests.class)
   public void testAppStartup() {
     final Client client = new JerseyClientBuilder().build();

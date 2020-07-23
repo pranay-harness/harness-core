@@ -114,56 +114,14 @@ public class OrchestrationEngine {
     facilitateAndStartStep(ambiance, nodeExecution);
   }
 
-  private void facilitateAndStartStep(Ambiance ambiance, NodeExecution nodeExecution) {
-    try (AutoLogContext ignore = ambiance.autoLogContext()) {
-      logger.info("Checking Interrupts before Node Start");
-      InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(
-          ambiance.getPlanExecutionId(), ambiance.obtainCurrentRuntimeId());
-      if (!check.isProceed()) {
-        logger.info("Suspending Execution. Reason : {}", check.getReason());
-        return;
-      }
-      logger.info("Proceeding with  Execution. Reason : {}", check.getReason());
-
-      PlanNode node = nodeExecution.getNode();
-      // Facilitate and execute
-      StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(
-          ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
-      StepParameters resolvedStepParameters =
-          (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
-
-      nodeExecution = updateNodeExecution(nodeExecution, resolvedStepParameters);
-
-      facilitateExecution(ambiance, nodeExecution, inputPackage);
-    } catch (Exception exception) {
-      handleError(ambiance, exception);
-    }
-  }
-
-  private NodeExecution updateNodeExecution(NodeExecution nodeExecution, StepParameters resolvedStepParameters) {
-    return Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
-      if (resolvedStepParameters != null) {
-        setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters);
-        setUnset(
-            ops, NodeExecutionKeys.expiryTs, resolvedStepParameters.timeout().toMillis() + System.currentTimeMillis());
-      } else {
-        setUnset(
-            ops, NodeExecutionKeys.expiryTs, new StepParameters() {}.timeout().toMillis() + System.currentTimeMillis());
-      }
-    }));
-  }
-
   public void triggerExecution(Ambiance ambiance, PlanNode node) {
-    // if this node is a barrier, we want to set the same id as in the BarrierExecutionInstance
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (ambiance.obtainCurrentRuntimeId() != null) {
       previousNodeExecution = nodeExecutionService.update(
           ambiance.obtainCurrentRuntimeId(), ops -> ops.set(NodeExecutionKeys.nextId, uuid));
     }
-
     Ambiance cloned = reBuildAmbiance(ambiance, node, uuid);
-
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(uuid)
@@ -185,6 +143,33 @@ public class OrchestrationEngine {
     return cloned;
   }
 
+  // Start to Facilitators
+  private void facilitateAndStartStep(Ambiance ambiance, NodeExecution nodeExecution) {
+    try (AutoLogContext ignore = ambiance.autoLogContext()) {
+      logger.info("Checking Interrupts before Node Start");
+      InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(
+          ambiance.getPlanExecutionId(), ambiance.obtainCurrentRuntimeId());
+      if (!check.isProceed()) {
+        logger.info("Suspending Execution. Reason : {}", check.getReason());
+        return;
+      }
+      logger.info("Proceeding with  Execution. Reason : {}", check.getReason());
+
+      PlanNode node = nodeExecution.getNode();
+      // Facilitate and execute
+      StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(
+          ambiance, node.getRefObjects(), nodeExecution.getAdditionalInputs());
+      StepParameters resolvedStepParameters =
+          (StepParameters) engineExpressionService.resolve(ambiance, node.getStepParameters());
+      NodeExecution updatedNodeExecution =
+          Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
+              ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
+      facilitateExecution(ambiance, updatedNodeExecution, inputPackage);
+    } catch (Exception exception) {
+      handleError(ambiance, exception);
+    }
+  }
+
   private void facilitateExecution(Ambiance ambiance, NodeExecution nodeExecution, StepInputPackage inputPackage) {
     PlanNode node = nodeExecution.getNode();
     FacilitatorResponse facilitatorResponse = null;
@@ -203,7 +188,7 @@ public class OrchestrationEngine {
       FacilitatorResponse finalFacilitatorResponse = facilitatorResponse;
       // Update Status
       Preconditions.checkNotNull(
-          nodeExecutionService.updateStatusWithOps(ambiance.obtainCurrentRuntimeId(), Status.WAITING,
+          nodeExecutionService.updateStatusWithOps(ambiance.obtainCurrentRuntimeId(), Status.TIMED_WAITING,
               ops -> ops.set(NodeExecutionKeys.initialWaitDuration, finalFacilitatorResponse.getInitialWait())));
       String resumeId =
           delayEventHelper.delay(finalFacilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
@@ -216,13 +201,12 @@ public class OrchestrationEngine {
           resumeId);
       return;
     }
-    invokeState(ambiance, facilitatorResponse, inputPackage);
+    invokeExecutable(ambiance, facilitatorResponse, inputPackage);
   }
 
-  public void invokeState(Ambiance ambiance, FacilitatorResponse facilitatorResponse, StepInputPackage inputPackage) {
-    NodeExecution nodeExecution =
-        Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(ambiance.obtainCurrentRuntimeId(),
-            Status.RUNNING, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode())));
+  public void invokeExecutable(
+      Ambiance ambiance, FacilitatorResponse facilitatorResponse, StepInputPackage inputPackage) {
+    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance, facilitatorResponse);
     PlanNode node = nodeExecution.getNode();
     Step currentStep = stepRegistry.obtain(node.getStepType());
     ExecutableInvoker invoker = executableInvokerFactory.obtainInvoker(facilitatorResponse.getExecutionMode());
@@ -234,6 +218,22 @@ public class OrchestrationEngine {
                                  .passThroughData(facilitatorResponse.getPassThroughData())
                                  .start(true)
                                  .build());
+  }
+
+  private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
+    NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
+    return Preconditions.checkNotNull(
+        nodeExecutionService.updateStatusWithOps(ambiance.obtainCurrentRuntimeId(), Status.RUNNING, ops -> {
+          ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode());
+          StepParameters resolvedStepParameters = nodeExecution.getResolvedStepParameters();
+          if (resolvedStepParameters != null) {
+            setUnset(ops, NodeExecutionKeys.expiryTs,
+                resolvedStepParameters.timeout().toMillis() + System.currentTimeMillis());
+          } else {
+            setUnset(ops, NodeExecutionKeys.expiryTs,
+                new StepParameters() {}.timeout().toMillis() + System.currentTimeMillis());
+          }
+        }));
   }
 
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponse stepResponse) {

@@ -35,7 +35,7 @@ public class EngineWaitResumeCallback implements NotifyCallback {
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    orchestrationEngine.invokeState(ambiance, facilitatorResponse, inputPackage);
+    orchestrationEngine.invokeExecutable(ambiance, facilitatorResponse, inputPackage);
   }
 
   @Override
