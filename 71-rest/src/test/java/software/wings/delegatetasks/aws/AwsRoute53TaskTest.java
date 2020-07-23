@@ -1,16 +1,20 @@
 package software.wings.delegatetasks.aws;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,6 +52,34 @@ public class AwsRoute53TaskTest extends WingsBaseTest {
   public void testRun() {
     AwsRoute53Request request = AwsRoute53ListHostedZonesRequest.builder().build();
     task.run(new Object[] {request});
+    verify(mockAwsRoute53HelperServiceDelegate).listHostedZones(any(), anyList(), anyString());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testRunWithInvalidRequestException() {
+    doThrow(new RuntimeException("Error msg"))
+        .when(mockAwsRoute53HelperServiceDelegate)
+        .listHostedZones(any(), anyList(), anyString());
+
+    AwsRoute53ListHostedZonesRequest request = AwsRoute53ListHostedZonesRequest.builder().build();
+    task.run(new Object[] {request});
+
+    verify(mockAwsRoute53HelperServiceDelegate).listHostedZones(any(), anyList(), anyString());
+  }
+
+  @Test(expected = WingsException.class)
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testRunWithWingsException() {
+    doThrow(new WingsException("Error msg"))
+        .when(mockAwsRoute53HelperServiceDelegate)
+        .listHostedZones(any(), anyList(), anyString());
+
+    AwsRoute53ListHostedZonesRequest request = AwsRoute53ListHostedZonesRequest.builder().build();
+    task.run(new Object[] {request});
+
     verify(mockAwsRoute53HelperServiceDelegate).listHostedZones(any(), anyList(), anyString());
   }
 }
