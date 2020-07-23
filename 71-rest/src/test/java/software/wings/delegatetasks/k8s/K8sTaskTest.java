@@ -18,9 +18,9 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.k8s.model.K8sDelegateTaskParams;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -81,8 +81,7 @@ public class K8sTaskTest extends WingsBaseTest {
   public void testRunInstanceSyncException() {
     when(k8sCommandTaskTypeToTaskHandlerMap.get(K8sTaskType.INSTANCE_SYNC.name())).thenReturn(null);
     K8sTaskExecutionResponse k8sTaskExecutionResponse = k8sTask.run(k8sTaskParameters);
-    assertThat(k8sTaskExecutionResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(k8sTaskExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test
@@ -108,6 +107,6 @@ public class K8sTaskTest extends WingsBaseTest {
     k8sGlobalConfigService = null;
     K8sTaskExecutionResponse response = k8sTask.run(k8sTaskParameters);
     verify(containerDeploymentDelegateHelper, times(1)).getKubeconfigFileContent(k8sClusterConfig);
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 }

@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
@@ -18,10 +18,10 @@ import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.filesystem.FileIo;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

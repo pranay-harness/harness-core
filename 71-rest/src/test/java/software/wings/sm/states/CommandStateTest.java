@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -74,7 +74,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;

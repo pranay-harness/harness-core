@@ -28,7 +28,6 @@ import io.harness.cdng.tasks.manifestFetch.beans.GitFetchRequest;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
@@ -39,6 +38,7 @@ import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.chain.task.TaskChainExecutable;
 import io.harness.facilitator.modes.chain.task.TaskChainResponse;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.state.Step;
 import io.harness.state.StepType;
@@ -355,7 +355,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
     K8sTaskExecutionResponse k8sTaskExecutionResponse =
         (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();
 
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionResult.CommandExecutionStatus.SUCCESS) {
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       Infrastructure infrastructure = (Infrastructure) passThroughData;
       K8sRollingDeployResponse k8sTaskResponse =
           (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sTaskResponse();

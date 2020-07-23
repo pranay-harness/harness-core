@@ -16,7 +16,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.cache.StringTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -87,11 +87,11 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
   }
 
   @Override
-  protected CommandExecutionResult.CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
+  protected CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
     activityId = context.getActivityId();
     executionStagingDir = "/tmp/" + activityId;
     preInitCommand = "mkdir -p " + executionStagingDir;
-    CommandExecutionResult.CommandExecutionStatus commandExecutionStatus = context.executeCommandString(preInitCommand);
+    CommandExecutionStatus commandExecutionStatus = context.executeCommandString(preInitCommand);
 
     notNullCheck("Service Variables", context.getServiceVariables());
     for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
@@ -108,7 +108,7 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
       safeDisplayEnvVariables.put(entry.getKey(), escapifyString(entry.getValue()));
     }
     StringBuffer envVariablesFromHost = new StringBuffer();
-    commandExecutionStatus = commandExecutionStatus == CommandExecutionResult.CommandExecutionStatus.SUCCESS
+    commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
         ? context.executeCommandString("printenv", envVariablesFromHost)
         : commandExecutionStatus;
     Properties properties = new Properties();
@@ -118,7 +118,7 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
           properties.entrySet().stream().collect(toMap(o -> o.getKey().toString(), o -> o.getValue().toString())));
     } catch (IOException e) {
       logger.error("Error in InitCommandUnit", e);
-      commandExecutionStatus = CommandExecutionResult.CommandExecutionStatus.FAILURE;
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
     }
     try {
       createPreparedCommands(command);

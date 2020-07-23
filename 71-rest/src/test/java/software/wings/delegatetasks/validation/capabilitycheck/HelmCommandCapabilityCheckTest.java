@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -35,8 +35,7 @@ public class HelmCommandCapabilityCheckTest extends WingsBaseTest {
   public void performCapabilityCheck() {
     HelmCommandRequest commandRequest =
         HelmInstallCommandRequest.builder().helmVersion(HelmConstants.HelmVersion.V3).build();
-    HelmCommandResponse helmCommandResponse =
-        new HelmCommandResponse(CommandExecutionResult.CommandExecutionStatus.SUCCESS, "");
+    HelmCommandResponse helmCommandResponse = new HelmCommandResponse(CommandExecutionStatus.SUCCESS, "");
     when(containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(any())).thenReturn("kubeConfig");
     when(helmDeployService.ensureHelmInstalled(commandRequest)).thenReturn(helmCommandResponse);
     CapabilityResponse response = helmCommandCapabilityCheck.performCapabilityCheck(

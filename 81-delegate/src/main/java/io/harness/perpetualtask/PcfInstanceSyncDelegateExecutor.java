@@ -6,8 +6,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.grpc.utils.AnyUtils;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -73,17 +73,16 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
           "Failed to publish the instance collection result to manager for application name {} and PerpetualTaskId {}",
           applicationName, taskId.getId(), ex);
     }
-    CommandExecutionResult.CommandExecutionStatus commandExecutionStatus =
-        pcfCommandExecutionResponse.getCommandExecutionStatus();
+    CommandExecutionStatus commandExecutionStatus = pcfCommandExecutionResponse.getCommandExecutionStatus();
     logger.info("Published instanceSync successfully for perp task: {}, state: {}", taskId, commandExecutionStatus);
     return getPerpetualTaskResponse(pcfCommandExecutionResponse, commandExecutionStatus);
   }
 
-  private PerpetualTaskResponse getPerpetualTaskResponse(PcfCommandExecutionResponse pcfCommandExecutionResponse,
-      CommandExecutionResult.CommandExecutionStatus commandExecutionStatus) {
+  private PerpetualTaskResponse getPerpetualTaskResponse(
+      PcfCommandExecutionResponse pcfCommandExecutionResponse, CommandExecutionStatus commandExecutionStatus) {
     PerpetualTaskState taskState;
     String message;
-    if (CommandExecutionResult.CommandExecutionStatus.FAILURE.equals(commandExecutionStatus)) {
+    if (CommandExecutionStatus.FAILURE == commandExecutionStatus) {
       taskState = PerpetualTaskState.TASK_RUN_FAILED;
       message = pcfCommandExecutionResponse.getErrorMessage();
     } else {

@@ -3,8 +3,8 @@ package software.wings.beans.command;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;

@@ -52,9 +52,9 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Injector;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Before;

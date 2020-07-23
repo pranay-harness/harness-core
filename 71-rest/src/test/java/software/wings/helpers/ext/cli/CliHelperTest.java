@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.cli;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

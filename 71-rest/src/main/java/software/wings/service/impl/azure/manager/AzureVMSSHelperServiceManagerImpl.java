@@ -2,9 +2,9 @@ package software.wings.service.impl.azure.manager;
 
 import static io.harness.azure.model.AzureConstants.defaultSyncAzureVMSSTimeoutMin;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static java.lang.String.format;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 

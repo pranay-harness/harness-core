@@ -1,9 +1,9 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -79,7 +79,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -87,6 +86,7 @@ import io.harness.exception.K8sPodSyncException;
 import io.harness.exception.WingsException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.k8s.model.K8sPod;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoUtils;
 import org.jetbrains.annotations.NotNull;
@@ -615,11 +615,10 @@ public class K8sStateHelperTest extends WingsBaseTest {
         DirectKubernetesInfrastructureMapping.builder().accountId(ACCOUNT_ID).build();
     infrastructureMapping.setComputeProviderSettingId(SETTING_ID);
 
-    K8sTaskExecutionResponse response =
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-            .k8sTaskResponse(K8sInstanceSyncResponse.builder().build())
-            .build();
+    K8sTaskExecutionResponse response = K8sTaskExecutionResponse.builder()
+                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                            .k8sTaskResponse(K8sInstanceSyncResponse.builder().build())
+                                            .build();
     when(delegateService.executeTask(any())).thenReturn(response);
 
     SettingAttribute settingAttribute = aSettingAttribute()
@@ -762,11 +761,10 @@ public class K8sStateHelperTest extends WingsBaseTest {
         DirectKubernetesInfrastructureMapping.builder().namespace("env").accountId(ACCOUNT_ID).build();
     infrastructureMapping.setComputeProviderSettingId(SETTING_ID);
 
-    K8sTaskExecutionResponse response =
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-            .k8sTaskResponse(K8sInstanceSyncResponse.builder().build())
-            .build();
+    K8sTaskExecutionResponse response = K8sTaskExecutionResponse.builder()
+                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                            .k8sTaskResponse(K8sInstanceSyncResponse.builder().build())
+                                            .build();
     when(delegateService.executeTask(any())).thenReturn(response);
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SETTING_ID);
     when(infrastructureMappingService.get(anyString(), anyString())).thenReturn(infrastructureMapping);

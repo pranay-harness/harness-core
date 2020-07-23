@@ -21,12 +21,12 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.spotinst.request.SpotinstTrafficShiftAlbSwapRoutesParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -174,8 +174,7 @@ public class SpotinstTrafficShiftAlbSwitchRoutesState extends State {
     String activityId = response.keySet().iterator().next();
     SpotInstTaskExecutionResponse executionResponse =
         (SpotInstTaskExecutionResponse) response.values().iterator().next();
-    ExecutionStatus executionStatus =
-        executionResponse.getCommandExecutionStatus() == CommandExecutionResult.CommandExecutionStatus.SUCCESS
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);

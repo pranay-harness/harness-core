@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -16,7 +16,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,11 +50,10 @@ public class EcsBlueGreenRoute53SetupCommandHandlerTest extends WingsBaseTest {
     EcsServiceSetupRequest request = EcsServiceSetupRequest.builder().build();
     EcsCommandExecutionResponse response = handler.executeTaskInternal(request, null, mockCallback);
     assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(response.getEcsCommandResponse().getOutput())
         .isEqualTo("Invalid Request Type: Expected was : [EcsBGRoute53ServiceSetupRequest]");
-    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test

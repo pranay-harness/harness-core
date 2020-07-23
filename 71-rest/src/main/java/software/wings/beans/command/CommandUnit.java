@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import software.wings.beans.Variable;
 
 import java.util.List;

@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import org.junit.Test;
@@ -56,7 +56,7 @@ public class CIK8CleanupTaskHandlerTest extends WingsBaseTest {
     when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.TRUE);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
   @Test
@@ -72,7 +72,7 @@ public class CIK8CleanupTaskHandlerTest extends WingsBaseTest {
     when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.FALSE);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
   @Test
@@ -88,7 +88,7 @@ public class CIK8CleanupTaskHandlerTest extends WingsBaseTest {
     when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenThrow(KubernetesClientException.class);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
-    assertEquals(CommandExecutionResult.CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
   @Test

@@ -1,7 +1,7 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.delegate.task.k8s.K8sTaskType.DEPLOYMENT_ROLLING;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;

@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
@@ -19,14 +19,13 @@ import com.google.common.collect.ImmutableList;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sExpressions;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.rule.Owner;
 import me.snowdrop.istio.api.IstioResource;
@@ -141,8 +140,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
     verify(kubernetesContainerService, times(1))
         .createOrReplaceIstioResource(any(KubernetesConfig.class), anyList(), any(IstioResource.class));
     verify(k8sTaskHelper, times(1))
-        .getK8sTaskExecutionResponse(
-            any(K8sTaskResponse.class), any(CommandExecutionResult.CommandExecutionStatus.class));
+        .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
   }
 
   @Test
@@ -165,8 +163,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
     verify(kubernetesContainerService, times(1))
         .createOrReplaceIstioResource(any(KubernetesConfig.class), anyList(), any(IstioResource.class));
     verify(k8sTaskHelper, times(1))
-        .getK8sTaskExecutionResponse(
-            any(K8sTaskResponse.class), any(CommandExecutionResult.CommandExecutionStatus.class));
+        .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
   }
 
   @Test

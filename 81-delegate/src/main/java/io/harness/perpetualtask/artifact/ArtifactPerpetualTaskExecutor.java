@@ -9,9 +9,8 @@ import com.google.inject.Singleton;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.grpc.utils.AnyUtils;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.ManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
@@ -144,7 +143,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
         BuildSourceExecutionResponse.builder()
             .buildSourceResponse(
                 BuildSourceResponse.builder().toBeDeletedKeys(toBeDeletedArtifactKeys).cleanup(true).build())
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .artifactStreamId(artifactStreamId)
             .build();
 
@@ -176,7 +175,7 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
     BuildSourceExecutionResponse buildSourceExecutionResponse =
         BuildSourceExecutionResponse.builder()
             .buildSourceResponse(BuildSourceResponse.builder().buildDetails(builds).stable(!hasMoreToPublish).build())
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .artifactStreamId(artifactStreamId)
             .build();
 

@@ -51,6 +51,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -163,7 +164,7 @@ public class ShellScriptStateTest extends CategoryTest {
     ExecutionResponse executionResponse = shellScriptState.handleAsyncResponse(executionContext,
         ImmutableMap.of(ACTIVITY_ID,
             CommandExecutionResult.builder()
-                .status(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+                .status(CommandExecutionStatus.SUCCESS)
                 .commandExecutionData(ShellExecutionData.builder().sweepingOutputEnvVariables(map).build())
                 .build()));
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
@@ -188,7 +189,7 @@ public class ShellScriptStateTest extends CategoryTest {
     ExecutionResponse executionResponse = shellScriptState.handleAsyncResponse(executionContext,
         ImmutableMap.of(ACTIVITY_ID,
             CommandExecutionResult.builder()
-                .status(CommandExecutionResult.CommandExecutionStatus.FAILURE)
+                .status(CommandExecutionStatus.FAILURE)
                 .commandExecutionData(ShellExecutionData.builder().sweepingOutputEnvVariables(map).build())
                 .build()));
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);

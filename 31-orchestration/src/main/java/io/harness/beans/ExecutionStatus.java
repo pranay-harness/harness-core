@@ -3,7 +3,7 @@ package io.harness.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 
 import java.util.EnumSet;
 import java.util.Set;

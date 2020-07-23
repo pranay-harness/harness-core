@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.helm;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
@@ -14,8 +14,8 @@ import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;

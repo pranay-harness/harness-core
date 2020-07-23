@@ -32,10 +32,10 @@ import com.google.inject.Inject;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.GeneralException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
@@ -1135,11 +1135,11 @@ public class InstanceHelperTest extends WingsBaseTest {
     when(settingAttribute.getValue()).thenReturn(pcfConfig);
 
     instanceHelper.processInstanceSyncResponseFromPerpetualTask(
-        perpetualTaskId, getPcfCommandExecutionResponse(CommandExecutionResult.CommandExecutionStatus.SUCCESS));
+        perpetualTaskId, getPcfCommandExecutionResponse(CommandExecutionStatus.SUCCESS));
     Mockito.verifyZeroInteractions(instanceSyncPerpetualTaskService);
 
     instanceHelper.processInstanceSyncResponseFromPerpetualTask(
-        perpetualTaskId, getPcfCommandExecutionResponse(CommandExecutionResult.CommandExecutionStatus.FAILURE));
+        perpetualTaskId, getPcfCommandExecutionResponse(CommandExecutionStatus.FAILURE));
     verify(instanceSyncPerpetualTaskService, times(1)).resetPerpetualTask(ACCOUNT_ID, perpetualTaskId);
   }
 
@@ -1161,7 +1161,7 @@ public class InstanceHelperTest extends WingsBaseTest {
         .thenReturn(true);
 
     instanceHelper.processInstanceSyncResponseFromPerpetualTask(
-        perpetualTaskId, getPcfCommandExecutionResponse(CommandExecutionResult.CommandExecutionStatus.SUCCESS));
+        perpetualTaskId, getPcfCommandExecutionResponse(CommandExecutionStatus.SUCCESS));
     verify(instanceSyncPerpetualTaskService, times(1)).deletePerpetualTasks(infrastructureMapping);
   }
 
@@ -1188,8 +1188,7 @@ public class InstanceHelperTest extends WingsBaseTest {
         .build();
   }
 
-  private PcfCommandExecutionResponse getPcfCommandExecutionResponse(
-      CommandExecutionResult.CommandExecutionStatus commandExecutionStatus) {
+  private PcfCommandExecutionResponse getPcfCommandExecutionResponse(CommandExecutionStatus commandExecutionStatus) {
     PcfInstanceSyncResponse pcfInstanceSyncResponse = PcfInstanceSyncResponse.builder()
                                                           .commandExecutionStatus(commandExecutionStatus)
                                                           .instanceIndicesx(Arrays.asList("Idx1", "Idx2"))
@@ -1200,7 +1199,7 @@ public class InstanceHelperTest extends WingsBaseTest {
                                                .commandExecutionStatus(commandExecutionStatus)
                                                .build();
 
-    if (commandExecutionStatus == CommandExecutionResult.CommandExecutionStatus.FAILURE) {
+    if (commandExecutionStatus == CommandExecutionStatus.FAILURE) {
       response.setErrorMessage("error msg");
     }
     return response;

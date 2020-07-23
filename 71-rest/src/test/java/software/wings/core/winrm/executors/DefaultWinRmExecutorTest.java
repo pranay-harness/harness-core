@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

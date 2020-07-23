@@ -2,7 +2,7 @@ package io.harness.perpetualtask.internal;
 
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

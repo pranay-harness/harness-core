@@ -16,8 +16,8 @@ import com.google.protobuf.ByteString;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.k8s.model.K8sPod;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.ContainerServicePerpetualTaskParams;
@@ -108,8 +108,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
   private void verifyK8sCallSuccess(
       K8sPod pod, PerpetualTaskResponse perpetualTaskResponse, K8sTaskExecutionResponse k8sTaskExecutionResponse) {
     assertThat(k8sTaskExecutionResponse.getErrorMessage()).isNull();
-    assertThat(k8sTaskExecutionResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.SUCCESS);
+    assertThat(k8sTaskExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(k8sTaskExecutionResponse.getK8sTaskResponse()).isNotNull();
     K8sInstanceSyncResponse taskResp = (K8sInstanceSyncResponse) k8sTaskExecutionResponse.getK8sTaskResponse();
     assertThat(taskResp.getK8sPodInfoList()).containsExactly(pod);
@@ -156,8 +155,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
   private void verifyK8sCallFailure(
       PerpetualTaskResponse perpetualTaskResponse, K8sTaskExecutionResponse k8sTaskExecutionResponse) {
     assertThat(k8sTaskExecutionResponse.getErrorMessage()).isEqualTo("Failed to retrieve pod list");
-    assertThat(k8sTaskExecutionResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(k8sTaskExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(k8sTaskExecutionResponse.getK8sTaskResponse()).isNull();
 
     assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("Failed to retrieve pod list");
@@ -198,8 +196,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
   private void verifyContainerServicesCallSuccess(ContainerInfo containerInfo,
       PerpetualTaskResponse perpetualTaskResponse, ContainerSyncResponse containerSyncResponse) {
     assertThat(containerSyncResponse.getErrorMessage()).isNull();
-    assertThat(containerSyncResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.SUCCESS);
+    assertThat(containerSyncResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(containerSyncResponse.getContainerInfoList()).isNotNull();
     assertThat(containerSyncResponse.getContainerInfoList()).containsExactly(containerInfo);
     assertThat(containerSyncResponse.getControllerName()).isEqualTo("service");
@@ -242,8 +239,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
   private void verifyContainerServicesCallFailure(
       PerpetualTaskResponse perpetualTaskResponse, ContainerSyncResponse containerSyncResponse) {
     assertThat(containerSyncResponse.getErrorMessage()).isEqualTo("Failed to retrieve container info");
-    assertThat(containerSyncResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(containerSyncResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(containerSyncResponse.getContainerInfoList()).isNull();
 
     assertThat(perpetualTaskResponse.getResponseMessage()).isEqualTo("Failed to retrieve container info");

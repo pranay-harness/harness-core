@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;

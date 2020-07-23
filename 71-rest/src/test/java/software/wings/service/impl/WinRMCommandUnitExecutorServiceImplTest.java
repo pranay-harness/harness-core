@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.SAHIL;

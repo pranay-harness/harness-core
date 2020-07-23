@@ -7,9 +7,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 import software.wings.beans.appmanifest.ManifestFile;

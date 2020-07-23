@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.DeploymentType;

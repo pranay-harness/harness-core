@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
@@ -9,8 +9,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;

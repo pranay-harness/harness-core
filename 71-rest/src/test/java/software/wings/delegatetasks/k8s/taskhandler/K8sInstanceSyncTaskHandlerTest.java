@@ -10,10 +10,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -61,8 +61,7 @@ public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
         K8sInstanceSyncTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
     verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
     verify(k8sTaskHelper, times(1))
-        .getK8sTaskExecutionResponse(
-            any(K8sTaskResponse.class), any(CommandExecutionResult.CommandExecutionStatus.class));
+        .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
     verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
   }
 
@@ -78,8 +77,7 @@ public class K8sInstanceSyncTaskHandlerTest extends WingsBaseTest {
         K8sInstanceSyncTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
     verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
     verify(k8sTaskHelper, times(1))
-        .getK8sTaskExecutionResponse(
-            any(K8sTaskResponse.class), any(CommandExecutionResult.CommandExecutionStatus.class));
+        .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
     verify(k8sTaskHelper, times(1)).getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), anyLong());
   }
 }

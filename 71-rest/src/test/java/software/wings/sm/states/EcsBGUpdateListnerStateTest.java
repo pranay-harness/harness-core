@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;

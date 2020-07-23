@@ -12,7 +12,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Test;

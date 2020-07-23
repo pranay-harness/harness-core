@@ -1,7 +1,7 @@
 package io.harness.perpetualtask.artifact;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType.GET_BUILDS;
 
 import com.google.inject.Inject;

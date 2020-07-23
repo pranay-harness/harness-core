@@ -1,7 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.function.Function.identity;
 import static software.wings.beans.FeatureName.MOVE_PCF_INSTANCE_SYNC_TO_PERPETUAL_TASK;

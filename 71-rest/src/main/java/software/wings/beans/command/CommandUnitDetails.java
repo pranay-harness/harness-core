@@ -24,7 +24,7 @@ import static software.wings.sm.states.spotinst.SpotInstDeployState.SPOTINST_DEP
 import static software.wings.sm.states.spotinst.SpotInstListenerUpdateState.SPOTINST_LISTENER_UPDATE_COMMAND;
 import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

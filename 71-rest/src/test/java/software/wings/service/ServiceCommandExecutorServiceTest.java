@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +26,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;

@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.RUNNING;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
 import static software.wings.beans.Log.Builder.aLog;
 
@@ -14,9 +14,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
+import io.harness.logging.CommandExecutionStatus;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.ShellScriptApprovalExecutionData;

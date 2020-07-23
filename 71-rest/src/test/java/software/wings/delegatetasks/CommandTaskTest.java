@@ -25,6 +25,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -73,12 +74,12 @@ public class CommandTaskTest extends WingsBaseTest {
     Command command = aCommand().withName("Ami-Command").withCommandType(ENABLE).build();
     CommandExecutionResult expectedCommandExecutionResult =
         CommandExecutionResult.builder()
-            .status(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
+            .status(CommandExecutionStatus.SUCCESS)
             .errorMessage(null)
             .commandExecutionData(commandExecutionContextBuider.getCommandExecutionData())
             .build();
     when(serviceCommandExecutorService.execute(command, commandExecutionContextBuider))
-        .thenReturn(CommandExecutionResult.CommandExecutionStatus.SUCCESS);
+        .thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionResult commandExecutionResult =
         commandTask.run(new Object[] {command, commandExecutionContextBuider});
     assertEquals(expectedCommandExecutionResult, commandExecutionResult);
@@ -91,7 +92,7 @@ public class CommandTaskTest extends WingsBaseTest {
     Command command = aCommand().withName("Ami-Command").withCommandType(ENABLE).build();
     CommandExecutionResult expectedCommandExecutionResult =
         CommandExecutionResult.builder()
-            .status(CommandExecutionResult.CommandExecutionStatus.FAILURE)
+            .status(CommandExecutionStatus.FAILURE)
             .errorMessage("NullPointerException")
             .commandExecutionData(commandExecutionContextBuider.getCommandExecutionData())
             .build();

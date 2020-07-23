@@ -6,8 +6,8 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Stack;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.NoArgsConstructor;

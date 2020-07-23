@@ -2,8 +2,8 @@ package io.harness.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import com.google.common.annotations.VisibleForTesting;

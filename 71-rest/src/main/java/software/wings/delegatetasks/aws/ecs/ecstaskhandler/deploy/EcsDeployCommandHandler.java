@@ -11,9 +11,9 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.TimeoutException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ContainerServiceData;

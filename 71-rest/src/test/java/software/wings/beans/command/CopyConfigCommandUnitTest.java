@@ -9,8 +9,8 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -3,10 +3,10 @@ package software.wings.delegatetasks.aws.ecs;
 import com.google.inject.Inject;
 
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;

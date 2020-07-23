@@ -1,9 +1,9 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationUtils.OUTPUT_VARIABLE;
 import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationUtils.buildShellScriptParameters;
 

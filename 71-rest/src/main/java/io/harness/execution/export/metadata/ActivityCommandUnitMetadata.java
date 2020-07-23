@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

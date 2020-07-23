@@ -14,7 +14,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -92,9 +92,7 @@ public class K8sTrafficSplitStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     K8sTaskExecutionResponse k8sTaskExecutionResponse =
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-            .build();
+        K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
     Map<String, ResponseData> response = new HashMap<>();
     response.put("k8sTaskExecutionResponse", k8sTaskExecutionResponse);
 

@@ -13,7 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.After;
 import org.junit.Before;
@@ -49,8 +49,7 @@ public class HelmClientImplTest extends WingsBaseTest {
 
   @Before
   public void setup() throws InterruptedException, TimeoutException, IOException {
-    doReturn(
-        HelmCliResponse.builder().commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS).build())
+    doReturn(HelmCliResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build())
         .when(helmClient)
         .executeHelmCLICommand(anyString(), anyLong());
     buildHelmInstallCommandRequest();

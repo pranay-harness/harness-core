@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.cloudformation.response;
 
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.Builder;
 import lombok.Data;
 

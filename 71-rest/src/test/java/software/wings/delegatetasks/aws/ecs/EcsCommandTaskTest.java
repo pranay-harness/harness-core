@@ -14,9 +14,9 @@ import static software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsComman
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
@@ -88,6 +88,6 @@ public class EcsCommandTaskTest extends WingsBaseTest {
     inputParams[1] = new ArrayList<>();
 
     EcsCommandExecutionResponse response = task.run(inputParams);
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 }

@@ -67,7 +67,6 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.AbstractExecutable;
@@ -89,6 +88,7 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import me.snowdrop.istio.api.networking.v1alpha3.Subset;
 import org.junit.Before;
@@ -1352,11 +1352,10 @@ public class K8sTaskHelperTest extends WingsBaseTest {
   public void testK8sTaskExecutionResponse() throws Exception {
     final K8sTaskResponse k8sTaskResponse = K8sApplyResponse.builder().build();
     final K8sTaskExecutionResponse executionResponse =
-        spyHelper.getK8sTaskExecutionResponse(k8sTaskResponse, CommandExecutionResult.CommandExecutionStatus.FAILURE);
+        spyHelper.getK8sTaskExecutionResponse(k8sTaskResponse, CommandExecutionStatus.FAILURE);
 
     assertThat(executionResponse.getK8sTaskResponse()).isEqualTo(k8sTaskResponse);
-    assertThat(executionResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(executionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test

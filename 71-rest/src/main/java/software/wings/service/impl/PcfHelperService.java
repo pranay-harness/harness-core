@@ -10,11 +10,11 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;

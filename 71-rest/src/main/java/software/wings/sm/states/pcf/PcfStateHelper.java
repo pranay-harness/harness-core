@@ -42,12 +42,12 @@ import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.PcfFileTypeChecker;
 import io.harness.pcf.model.ManifestType;
 import io.harness.pcf.model.PcfConstants;
@@ -794,12 +794,12 @@ public class PcfStateHelper {
                                  .withActivityId(activityId)
                                  .withCommandUnitName(commandUnitName)
                                  .withLogLevel(INFO)
-                                 .withExecutionResult(CommandExecutionResult.CommandExecutionStatus.SKIPPED);
+                                 .withExecutionResult(CommandExecutionStatus.SKIPPED);
     ManagerExecutionLogCallback executionLogCallback =
         new ManagerExecutionLogCallback(logService, logBuilder, activityId);
 
-    executionLogCallback.saveExecutionLog(logMessage, CommandExecutionResult.CommandExecutionStatus.SKIPPED);
-    Misc.logAllMessages(null, executionLogCallback, CommandExecutionResult.CommandExecutionStatus.SKIPPED);
+    executionLogCallback.saveExecutionLog(logMessage, CommandExecutionStatus.SKIPPED);
+    Misc.logAllMessages(null, executionLogCallback, CommandExecutionStatus.SKIPPED);
 
     return ExecutionResponse.builder()
         .executionStatus(ExecutionStatus.SKIPPED)

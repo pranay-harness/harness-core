@@ -19,7 +19,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -56,19 +56,17 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
 
-    EcsServiceDeployResponse ecsServiceDeployResponse =
-        EcsServiceDeployResponse.builder()
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-            .output(StringUtils.EMPTY)
-            .build();
+    EcsServiceDeployResponse ecsServiceDeployResponse = EcsServiceDeployResponse.builder()
+                                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                            .output(StringUtils.EMPTY)
+                                                            .build();
     doReturn(ecsServiceDeployResponse).when(mockEcsDeployCommandTaskHelper).getEmptyEcsServiceDeployResponse();
 
     EcsCommandRequest ecsCommandRequest = new EcsCommandRequest(null, null, null, null, null, null, null, null);
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
     assertThat(response).isNotNull();
     assertThat(response.getErrorMessage()).isEqualTo("Invalid request Type, expected EcsServiceDeployRequest");
-    assertThat(ecsServiceDeployResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(ecsServiceDeployResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(ecsServiceDeployResponse.getOutput())
         .isEqualTo("Invalid request Type, expected EcsServiceDeployRequest");
   }
@@ -80,11 +78,10 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
 
-    EcsServiceDeployResponse ecsServiceDeployResponse =
-        EcsServiceDeployResponse.builder()
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-            .output(StringUtils.EMPTY)
-            .build();
+    EcsServiceDeployResponse ecsServiceDeployResponse = EcsServiceDeployResponse.builder()
+                                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                            .output(StringUtils.EMPTY)
+                                                            .build();
     doReturn(ecsServiceDeployResponse).when(mockEcsDeployCommandTaskHelper).getEmptyEcsServiceDeployResponse();
 
     EcsCommandRequest ecsCommandRequest =
@@ -128,11 +125,10 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
 
-    EcsServiceDeployResponse ecsServiceDeployResponse =
-        EcsServiceDeployResponse.builder()
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-            .output(StringUtils.EMPTY)
-            .build();
+    EcsServiceDeployResponse ecsServiceDeployResponse = EcsServiceDeployResponse.builder()
+                                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                            .output(StringUtils.EMPTY)
+                                                            .build();
     doReturn(ecsServiceDeployResponse).when(mockEcsDeployCommandTaskHelper).getEmptyEcsServiceDeployResponse();
 
     EcsCommandRequest ecsCommandRequest =
@@ -168,11 +164,10 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
 
-    EcsServiceDeployResponse ecsServiceDeployResponse =
-        EcsServiceDeployResponse.builder()
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-            .output(StringUtils.EMPTY)
-            .build();
+    EcsServiceDeployResponse ecsServiceDeployResponse = EcsServiceDeployResponse.builder()
+                                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                            .output(StringUtils.EMPTY)
+                                                            .build();
     doReturn(ecsServiceDeployResponse).when(mockEcsDeployCommandTaskHelper).getEmptyEcsServiceDeployResponse();
 
     EcsCommandRequest ecsCommandRequest = EcsServiceDeployRequest.builder()

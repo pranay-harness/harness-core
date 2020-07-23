@@ -2,13 +2,13 @@ package software.wings.core.ssh.executors;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.RUNNING;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static java.lang.String.format;
@@ -19,8 +19,8 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.NullOutputStream;

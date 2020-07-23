@@ -1,13 +1,13 @@
 package software.wings.core.ssh.executors;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.eraro.ErrorCode.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static io.harness.eraro.ErrorCode.INVALID_EXECUTION_ID;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.ErrorCode.UNKNOWN_EXECUTOR_TYPE_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -31,11 +31,11 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.stream.BoundedInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;

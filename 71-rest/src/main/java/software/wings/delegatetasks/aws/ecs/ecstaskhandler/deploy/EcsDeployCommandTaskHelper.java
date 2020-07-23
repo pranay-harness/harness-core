@@ -15,8 +15,8 @@ import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTarge
 import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
 import com.amazonaws.services.applicationautoscaling.model.ServiceNamespace;
 import com.amazonaws.services.ecs.model.Service;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.ContainerServiceData;

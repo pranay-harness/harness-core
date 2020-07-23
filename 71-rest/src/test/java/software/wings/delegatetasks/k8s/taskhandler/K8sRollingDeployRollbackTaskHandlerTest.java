@@ -29,7 +29,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutUndoCommand;
@@ -39,6 +38,7 @@ import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -106,8 +106,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     verify(taskHelper, never()).doStatusCheck(any(), any(), any(), any());
     verify(kubernetesContainerService, never()).saveReleaseHistory(any(), any(), any(), any());
     final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    verify(logCallback, times(1))
-        .saveExecutionLog(captor.capture(), eq(INFO), eq(CommandExecutionResult.CommandExecutionStatus.SUCCESS));
+    verify(logCallback, times(1)).saveExecutionLog(captor.capture(), eq(INFO), eq(CommandExecutionStatus.SUCCESS));
     assertThat(captor.getValue())
         .isEqualTo("Skipping Status Check since there is no previous eligible Managed Workload.");
   }

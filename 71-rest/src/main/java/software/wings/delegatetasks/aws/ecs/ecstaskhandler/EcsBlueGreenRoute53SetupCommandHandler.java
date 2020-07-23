@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.TaskDefinition;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;

@@ -1,8 +1,8 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static java.util.Arrays.asList;
@@ -46,7 +46,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -442,8 +442,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     assertFalse(status.isRetryable());
   }
 
-  private PcfCommandExecutionResponse getPcfCommandExecutionResponse(
-      CommandExecutionResult.CommandExecutionStatus commandExecutionStatus) {
+  private PcfCommandExecutionResponse getPcfCommandExecutionResponse(CommandExecutionStatus commandExecutionStatus) {
     PcfInstanceSyncResponse pcfInstanceSyncResponse =
         PcfInstanceSyncResponse.builder().commandExecutionStatus(commandExecutionStatus).build();
 

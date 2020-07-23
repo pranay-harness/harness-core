@@ -18,12 +18,12 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -159,8 +159,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     k8sScaleTaskParameters.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
     k8sScaleTaskHandler.executeTaskInternal(k8sScaleTaskParameters, k8sDelegateTaskParams);
     verify(k8sTaskHelper, times(1))
-        .getK8sTaskExecutionResponse(
-            any(K8sTaskResponse.class), any(CommandExecutionResult.CommandExecutionStatus.class));
+        .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
     verify(k8sTaskHelper, times(1))
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
             any(ExecutionLogCallback.class));
@@ -187,8 +186,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
         .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class));
     verify(k8sTaskHelper, times(1))
-        .getK8sTaskExecutionResponse(
-            any(K8sTaskResponse.class), any(CommandExecutionResult.CommandExecutionStatus.class));
+        .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
   }
 
   @Test
@@ -213,8 +211,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
             any(ExecutionLogCallback.class));
 
     verify(k8sTaskHelper, times(1))
-        .getK8sTaskExecutionResponse(
-            any(K8sTaskResponse.class), any(CommandExecutionResult.CommandExecutionStatus.class));
+        .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
   }
 
   private K8sPod podWithName(String name) {

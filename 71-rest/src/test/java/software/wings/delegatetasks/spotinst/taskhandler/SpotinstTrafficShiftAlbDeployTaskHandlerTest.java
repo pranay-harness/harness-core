@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;

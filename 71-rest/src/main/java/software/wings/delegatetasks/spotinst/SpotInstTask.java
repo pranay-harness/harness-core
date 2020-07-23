@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.spotinst;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;

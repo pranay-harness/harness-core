@@ -50,7 +50,6 @@ import io.harness.delegate.beans.git.GitCommandRequest;
 import io.harness.delegate.beans.git.GitCommandResult;
 import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.exception.ArtifactServerException;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -108,7 +107,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsElbListener.class, 5600);
     kryo.register(CommandExecutionData.class, 5035);
     kryo.register(CommandExecutionResult.class, 5036);
-    kryo.register(CommandExecutionStatus.class, 5037);
     kryo.register(SecretDetail.class, 19001);
     kryo.register(TaskData.class, 19002);
     kryo.register(HttpConnectionExecutionCapability.class, 19003);

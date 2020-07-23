@@ -1,7 +1,7 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;

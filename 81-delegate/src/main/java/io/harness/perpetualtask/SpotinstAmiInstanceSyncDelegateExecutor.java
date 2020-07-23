@@ -4,10 +4,10 @@ import static io.harness.network.SafeHttpCall.execute;
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.grpc.utils.AnyUtils;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;

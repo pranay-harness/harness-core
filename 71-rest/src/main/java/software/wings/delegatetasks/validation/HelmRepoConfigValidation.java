@@ -14,8 +14,8 @@ import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -265,7 +265,7 @@ public class HelmRepoConfigValidation extends AbstractDelegateValidateTask {
       commandRequest.setKubeConfigLocation(configLocation);
 
       HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmInstalled(commandRequest);
-      if (helmCommandResponse.getCommandExecutionStatus() == CommandExecutionResult.CommandExecutionStatus.SUCCESS) {
+      if (helmCommandResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
         validated = validateContainerParams();
         logger.info("Helm containerServiceParams validation result. Validated: " + validated);
       }

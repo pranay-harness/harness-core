@@ -13,6 +13,7 @@ import io.harness.govern.ServersModule;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.kryo.ApiServiceBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateTasksBeansKryoRegister;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -44,7 +45,7 @@ public class ManagerDelegateServiceDriverRule implements MethodRule, InjectorRul
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
-        return ImmutableSet.of(DelegateTasksBeansKryoRegister.class);
+        return ImmutableSet.of(DelegateTasksBeansKryoRegister.class, ApiServiceBeansKryoRegister.class);
       }
     });
     return modules;

@@ -1,9 +1,9 @@
 package software.wings.service.impl.spotinst;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.spotinst.model.SpotInstConstants.defaultSyncSpotinstTimeoutMin;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;

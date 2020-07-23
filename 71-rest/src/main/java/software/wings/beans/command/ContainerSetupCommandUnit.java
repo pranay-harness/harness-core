@@ -4,7 +4,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Inject;
 
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

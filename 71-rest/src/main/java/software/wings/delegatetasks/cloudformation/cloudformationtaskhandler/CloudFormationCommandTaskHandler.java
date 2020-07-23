@@ -2,7 +2,7 @@ package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;

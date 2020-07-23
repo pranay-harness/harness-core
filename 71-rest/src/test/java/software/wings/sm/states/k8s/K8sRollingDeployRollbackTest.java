@@ -1,7 +1,7 @@
 package software.wings.sm.states.k8s;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
-import static io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -24,8 +24,8 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -122,9 +122,7 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     K8sTaskExecutionResponse k8sTaskExecutionResponse =
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-            .build();
+        K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
     Map<String, ResponseData> response = new HashMap<>();
     response.put("k8sTaskExecutionResponse", k8sTaskExecutionResponse);
 
@@ -146,9 +144,7 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponseInvalidRequestException() {
     K8sTaskExecutionResponse k8sTaskExecutionResponse =
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionResult.CommandExecutionStatus.SUCCESS)
-            .build();
+        K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
     Map<String, ResponseData> response = new HashMap<>();
     response.put("k8sTaskExecutionResponse", k8sTaskExecutionResponse);
     WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();

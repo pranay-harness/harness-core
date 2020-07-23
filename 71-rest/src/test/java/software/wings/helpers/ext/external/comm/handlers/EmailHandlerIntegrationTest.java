@@ -11,9 +11,9 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import org.junit.Ignore;
