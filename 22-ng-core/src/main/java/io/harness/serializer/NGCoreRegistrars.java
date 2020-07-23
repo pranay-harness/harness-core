@@ -9,7 +9,7 @@ import lombok.experimental.UtilityClass;
 public class NGCoreRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(NGCoreBeansRegistrar.kryoRegistrars)
+          .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .add(NGCoreKryoRegistrar.class)
           .build();
 }
