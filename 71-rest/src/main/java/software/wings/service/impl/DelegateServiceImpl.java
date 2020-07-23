@@ -605,6 +605,11 @@ public class DelegateServiceImpl implements DelegateService {
 
     Delegate existingDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);
 
+    if (existingDelegate == null) {
+      register(delegate);
+      existingDelegate = get(delegate.getAccountId(), delegate.getUuid(), true);
+    }
+
     if (licenseService.isAccountDeleted(existingDelegate.getAccountId())) {
       existingDelegate.setStatus(Status.DELETED);
     }
