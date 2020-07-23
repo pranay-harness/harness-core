@@ -550,6 +550,18 @@ if [[ "" != "$REDIS_ENV_NAMESPACE" ]]; then
     yq write -i $CONFIG_FILE redisAtmosphereConfig.envNamespace "$REDIS_ENV_NAMESPACE"
 fi
 
+if [[ "" != "$REDIS_NETTY_THREADS" ]]; then
+  yq write -i $CONFIG_FILE redisLockConfig.nettyThreads "$REDIS_NETTY_THREADS"
+  yq write -i $CONFIG_FILE redisAtmosphereConfig.nettyThreads "$REDIS_NETTY_THREADS"
+  yq write -i $REDISSON_CACHE_FILE nettyThreads "$REDIS_NETTY_THREADS"
+fi
+
+if [[ "$REDIS_SCRIPT_CACHE" == "false" ]]; then
+  yq write -i $CONFIG_FILE redisLockConfig.useScriptCache false
+  yq write -i $CONFIG_FILE redisAtmosphereConfig.useScriptCache false
+  yq write -i $REDISSON_CACHE_FILE useScriptCache false
+fi
+
 if [[ "" != "$CACHE_NAMESPACE" ]]; then
     yq write -i $CONFIG_FILE cacheConfig.cacheNamespace "$CACHE_NAMESPACE"
 fi
