@@ -56,6 +56,7 @@ import com.google.common.collect.Maps;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ecs.model.LaunchType;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -80,6 +81,7 @@ import software.wings.beans.Event;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
@@ -113,6 +115,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionContext;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -304,7 +307,7 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     final InfrastructureDefinition infrastructureDefinition =
         InfrastructureDefinition.builder().uuid("infraid").name("infra_name").build();
 
-    doReturn(singletonList("workflowExecution1"))
+    doReturn(singletonList(WorkflowExecution.builder().status(ExecutionStatus.RUNNING).name("Test Workflow").build()))
         .when(workflowExecutionService)
         .getRunningExecutionsForInfraDef(anyString(), anyString());
 
@@ -314,10 +317,38 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
+  public void testEnsureSafeToDelete_error4() {
+    final InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder().uuid("infraid").name("infra_name").build();
+
+    List<WorkflowExecution> retrievedWorkflowExecutions = new ArrayList<>();
+    retrievedWorkflowExecutions.add(
+        WorkflowExecution.builder().status(ExecutionStatus.RUNNING).name("Test Workflow 1").build());
+    retrievedWorkflowExecutions.add(
+        WorkflowExecution.builder().status(ExecutionStatus.PAUSED).name("Test Workflow 2").build());
+    retrievedWorkflowExecutions.add(
+        WorkflowExecution.builder().status(ExecutionStatus.RUNNING).name("Test Workflow 3").build());
+
+    doReturn(retrievedWorkflowExecutions)
+        .when(workflowExecutionService)
+        .getRunningExecutionsForInfraDef(anyString(), anyString());
+
+    try {
+      infrastructureDefinitionService.ensureSafeToDelete("appid", infrastructureDefinition);
+    } catch (InvalidRequestException e) {
+      assertThat(e.getMessage()).containsOnlyOnce("infra_name");
+      assertThat(e.getMessage()).containsOnlyOnce("2 running workflows [Test Workflow 1, Test Workflow 3]");
+      assertThat(e.getMessage()).containsOnlyOnce("1 paused workflow [Test Workflow 2]");
+    }
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
   public void shouldThrowExceptionOnDeleteReferencedByWorkflowExecution() {
     mockPhysicalInfra();
     when(workflowExecutionService.getRunningExecutionsForInfraDef(APP_ID, INFRA_DEFINITION_ID))
-        .thenReturn(asList("Referenced Workflow Execution"));
+        .thenReturn(asList(WorkflowExecution.builder().status(ExecutionStatus.RUNNING).name("Test Workflow").build()));
 
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> infrastructureDefinitionService.delete(APP_ID, INFRA_DEFINITION_ID));
