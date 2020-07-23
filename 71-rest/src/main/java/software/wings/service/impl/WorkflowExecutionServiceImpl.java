@@ -2680,20 +2680,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public List<String> getRunningExecutionsForInfraDef(String appId, String infraDefinitionId) {
-    List<WorkflowExecution> executions = wingsPersistence.createQuery(WorkflowExecution.class)
-                                             .filter(WorkflowExecutionKeys.appId, appId)
-                                             .field(WorkflowExecutionKeys.infraDefinitionIds)
-                                             .equal(infraDefinitionId)
-                                             .field(WorkflowExecutionKeys.status)
-                                             .in(ExecutionStatus.activeStatuses())
-                                             .project(WorkflowExecutionKeys.uuid, true)
-                                             .project(WorkflowExecutionKeys.name, true)
-                                             .asList();
-    if (isEmpty(executions)) {
-      return Collections.emptyList();
-    }
-    return executions.stream().map(WorkflowExecution::getName).collect(Collectors.toList());
+  public List<WorkflowExecution> getRunningExecutionsForInfraDef(String appId, String infraDefinitionId) {
+    return wingsPersistence.createQuery(WorkflowExecution.class)
+        .filter(WorkflowExecutionKeys.appId, appId)
+        .field(WorkflowExecutionKeys.infraDefinitionIds)
+        .equal(infraDefinitionId)
+        .field(WorkflowExecutionKeys.status)
+        .in(ExecutionStatus.activeStatuses())
+        .project(WorkflowExecutionKeys.uuid, true)
+        .project(WorkflowExecutionKeys.name, true)
+        .project(WorkflowExecutionKeys.status, true)
+        .asList();
   }
 
   @Override

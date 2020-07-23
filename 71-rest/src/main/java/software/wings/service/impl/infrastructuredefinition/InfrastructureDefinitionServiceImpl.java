@@ -16,6 +16,8 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -58,6 +60,7 @@ import com.mongodb.DuplicateKeyException;
 import io.fabric8.utils.CountingMap;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -1335,14 +1338,13 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     final String infraDefinitionName = infrastructureDefinition.getName();
 
     // check if infraDef is used by a running workflow
-    List<String> refWorkflowExecutions =
+    List<WorkflowExecution> refWorkflowExecutions =
         workflowExecutionService.getRunningExecutionsForInfraDef(appId, infraDefinitionId);
 
     if (!refWorkflowExecutions.isEmpty()) {
       throw new InvalidRequestException(
-          format(" Infrastructure Definition %s is referenced by %s %s [%s]", infraDefinitionName,
-              refWorkflowExecutions.size(), plural("running workflow", refWorkflowExecutions.size()),
-              HarnessStringUtils.join(", ", refWorkflowExecutions)),
+          format(" Infrastructure Definition %s is referenced by %s", infraDefinitionName,
+              HarnessStringUtils.join(", ", getWorkflowExecutionsList(refWorkflowExecutions))),
           USER);
     }
 
@@ -1817,5 +1819,18 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       throw new InvalidRequestException("Setting Attribute not type of Azure config");
     }
     return (AzureConfig) computeProviderSetting.getValue();
+  }
+
+  private List<String> getWorkflowExecutionsList(List<WorkflowExecution> workflowExecutions) {
+    Map<ExecutionStatus, List<String>> workflowExecutionsMap = workflowExecutions.stream().collect(
+        groupingBy(WorkflowExecution::getStatus, mapping(WorkflowExecution::getName, Collectors.toList())));
+
+    return workflowExecutionsMap.entrySet()
+        .stream()
+        .map(keyValue
+            -> format("%s %s [%s]", keyValue.getValue().size(),
+                plural(format("%s workflow", keyValue.getKey().name().toLowerCase()), keyValue.getValue().size()),
+                HarnessStringUtils.join(", ", keyValue.getValue())))
+        .collect(Collectors.toList());
   }
 }
