@@ -74,7 +74,8 @@ public class AmiServiceImplTest extends WingsBaseTest {
             .withCreationDate("2")
             .withOwnerId("2")
             .withImageType("AMI")
-            .withTags(new Tag().withKey("abc1").withValue("efg1")));
+            .withTags(new Tag().withKey("abc1").withValue("efg1"),
+                new Tag().withKey("k8s.io/cluster/test-cluster").withValue("owned")));
 
     when(awsHelperService.desribeEc2Images(any(), any(), any(), any()))
         .thenReturn(new DescribeImagesResult().withImages(images));
@@ -83,12 +84,11 @@ public class AmiServiceImplTest extends WingsBaseTest {
                               .secretKey("nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray())
                               .build();
 
-    List<String> builds = amiServiceImpl.getBuilds(awsConfig, null, "US-east", null, null, 50)
-                              .stream()
-                              .map(BuildDetails::getNumber)
-
-                              .collect(Collectors.toList());
+    List<BuildDetails> buildDetails = amiServiceImpl.getBuilds(awsConfig, null, "US-east", null, null, 50);
+    List<String> builds = buildDetails.stream().map(BuildDetails::getNumber).collect(Collectors.toList());
     assertThat(builds).isEqualTo(asList("Image1", "Image2"));
+    assertThat(buildDetails.get(1).getMetadata()).hasSize(3);
+    assertThat(buildDetails.get(1).getMetadata().containsKey("k8s.io/cluster/test-cluster")).isFalse();
   }
 
   @Test
