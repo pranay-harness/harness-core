@@ -51,7 +51,6 @@ import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.cache.CacheModule;
 import io.harness.ccm.CEPerpetualTaskHandler;
 import io.harness.ccm.KubernetesClusterHandler;
-import io.harness.ccm.budget.BudgetHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
@@ -796,7 +795,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators();
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
     injector.getInstance(DisconnectedDelegateHandler.class).registerIterators();
-    injector.getInstance(BudgetHandler.class).registerIterators();
     injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
     injector.getInstance(EncryptedDataAwsToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();

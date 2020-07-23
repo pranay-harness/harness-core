@@ -21,13 +21,9 @@ import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
-import software.wings.graphql.datafetcher.billing.BillingTrendStatsDataFetcher;
-import software.wings.graphql.datafetcher.billing.QLBillingAmountData;
 import software.wings.graphql.datafetcher.billing.QLBillingStatsHelper;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
 import software.wings.graphql.datafetcher.budget.BudgetDefaultKeys;
-import software.wings.graphql.schema.type.aggregation.QLIdFilter;
-import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
@@ -35,18 +31,12 @@ import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAgg
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetData;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
-import software.wings.service.impl.EnvironmentServiceImpl;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -59,21 +49,18 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class BudgetServiceImpl implements BudgetService {
   @Inject private DataFetcherUtils dataFetcherUtils;
-  @Inject private BillingTrendStatsDataFetcher billingTrendStatsDataFetcher;
   @Inject private BudgetDao budgetDao;
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject private BillingDataHelper billingDataHelper;
   @Inject QLBillingStatsHelper statsHelper;
-  @Inject EnvironmentServiceImpl environmentService;
+  @Inject BudgetUtils budgetUtils;
   private String NOTIFICATION_TEMPLATE = "%s | %s exceed %s ($%s)";
   private String DATE_TEMPLATE = "MM-dd-yyyy";
   private double BUDGET_AMOUNT_UPPER_LIMIT = 100000000;
   private String NO_BUDGET_AMOUNT_EXCEPTION = "Error in creating budget. No budget amount specified.";
   private String BUDGET_AMOUNT_NOT_WITHIN_BOUNDS_EXCEPTION =
       "Error in creating budget. The budget amount should be positive and less than 100 million dollars.";
-  private String DEFAULT_TIMEZONE = "GMT";
-  private static final long ONE_DAY_MILLIS = 86400000;
 
   private static final long CACHE_SIZE = 10000;
   private static final int MAX_RETRY = 3;
@@ -159,25 +146,7 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public double getForecastCost(Budget budget) {
-    List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(budget.getScope().getBudgetScopeFilter());
-    addAdditionalFiltersBasedOnScope(budget, filters);
-    filters.add(getStartTimeFilterForCurrentBillingCycle());
-    filters.add(getEndOfMonthFilterForCurrentBillingCycle());
-    List<QLCCMAggregationFunction> aggregationFunction = new ArrayList<>();
-    aggregationFunction.add(BudgetUtils.makeBillingAmtAggregation());
-    QLBillingAmountData billingAmountData =
-        billingTrendStatsDataFetcher.getBillingAmountData(budget.getAccountId(), aggregationFunction, filters)
-            .getTotalCostData();
-    Instant endInstant = billingDataHelper.getEndInstant(filters);
-    BigDecimal forecastCost = null;
-    if (billingAmountData != null) {
-      forecastCost = billingDataHelper.getNewForecastCost(billingAmountData, endInstant);
-    }
-    if (forecastCost == null) {
-      return 0L;
-    }
-    return forecastCost.doubleValue();
+    return budgetUtils.getForecastCost(budget);
   }
 
   @Override
@@ -185,10 +154,10 @@ public class BudgetServiceImpl implements BudgetService {
     Preconditions.checkNotNull(budget.getAccountId());
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
-    addAdditionalFiltersBasedOnScope(budget, filters);
+    budgetUtils.addAdditionalFiltersBasedOnScope(budget, filters);
     filters.add(getFilterForCurrentBillingCycle());
-    QLCCMAggregationFunction aggregationFunction = BudgetUtils.makeBillingAmtAggregation();
-    QLCCMTimeSeriesAggregation groupBy = BudgetUtils.makeStartTimeEntityGroupBy();
+    QLCCMAggregationFunction aggregationFunction = budgetUtils.makeBillingAmtAggregation();
+    QLCCMTimeSeriesAggregation groupBy = budgetUtils.makeStartTimeEntityGroupBy();
 
     BillingDataQueryMetadata queryData = billingDataQueryBuilder.formBudgetInsightQuery(
         budget.getAccountId(), filters, aggregationFunction, groupBy, Collections.emptyList());
@@ -327,25 +296,6 @@ public class BudgetServiceImpl implements BudgetService {
         .build();
   }
 
-  private QLBillingDataFilter getEndOfMonthFilterForCurrentBillingCycle() {
-    ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
-    LocalDate today = LocalDate.now(zoneId);
-    Calendar cal = Calendar.getInstance();
-    int daysInMonth = cal.getActualMaximum(Calendar.DATE);
-    ZonedDateTime zdtStart = today.withDayOfMonth(daysInMonth).atStartOfDay(zoneId);
-    long endTime = zdtStart.toEpochSecond() * 1000 + ONE_DAY_MILLIS - 1000;
-    return QLBillingDataFilter.builder()
-        .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(endTime).build())
-        .build();
-  }
-
-  private QLBillingDataFilter getStartTimeFilterForCurrentBillingCycle() {
-    long startTime = billingDataHelper.getStartOfCurrentDay() - 30 * ONE_DAY_MILLIS;
-    return QLBillingDataFilter.builder()
-        .startTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(startTime).build())
-        .build();
-  }
-
   private String getScopeType(BudgetScope scope) {
     String scopeType = "-";
     if (scope != null) {
@@ -389,17 +339,6 @@ public class BudgetServiceImpl implements BudgetService {
     return entityIds;
   }
 
-  private void addEnvironmentIdFilter(Budget budget, List<QLBillingDataFilter> filters) {
-    ApplicationBudgetScope scope = (ApplicationBudgetScope) budget.getScope();
-    String[] appIds = scope.getApplicationIds();
-    List<String> envIds =
-        environmentService.getEnvIdsByAppsAndType(Arrays.asList(appIds), scope.getEnvironmentType().toString());
-    filters.add(
-        QLBillingDataFilter.builder()
-            .environment(QLIdFilter.builder().operator(QLIdOperator.IN).values(envIds.toArray(new String[0])).build())
-            .build());
-  }
-
   private void validateBudget(Budget budget) {
     if (budget.getBudgetAmount() == null) {
       throw new InvalidRequestException(NO_BUDGET_AMOUNT_EXCEPTION);
@@ -415,28 +354,6 @@ public class BudgetServiceImpl implements BudgetService {
     budget.setEmailAddresses(uniqueEmailAddresses);
   }
 
-  private boolean isApplicationScopePresent(Budget budget) {
-    if (budget != null && budget.getScope().getBudgetScopeFilter().getApplication() != null) {
-      return true;
-    }
-    return false;
-  }
-
-  private void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {
-    String[] instanceTypeValues = {"ECS_TASK_FARGATE", "ECS_CONTAINER_INSTANCE", "K8S_NODE"};
-    filters.add(QLBillingDataFilter.builder()
-                    .instanceType(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(instanceTypeValues).build())
-                    .build());
-  }
-
-  private void addAdditionalFiltersBasedOnScope(Budget budget, List<QLBillingDataFilter> filters) {
-    if (isApplicationScopePresent(budget)) {
-      addEnvironmentIdFilter(budget, filters);
-    } else {
-      addInstanceTypeFilter(filters);
-    }
-  }
-
   private double computeActualCost(Budget budget) {
     QLBudgetDataList data = getBudgetData(budget);
     if (data == null || data.getData().isEmpty()) {
@@ -447,21 +364,11 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public boolean isStartOfMonth() {
-    long startOfDay = billingDataHelper.getStartOfCurrentDay();
-    ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
-    LocalDate today = LocalDate.now(zoneId);
-    ZonedDateTime zdtStart = today.withDayOfMonth(1).atStartOfDay(zoneId);
-    long startOfMonth = zdtStart.toEpochSecond() * 1000;
-    return startOfMonth == startOfDay;
+    return budgetUtils.isStartOfMonth();
   }
 
   @Override
   public boolean isAlertSentInCurrentMonth(long crossedAt) {
-    ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
-    LocalDate today = LocalDate.now(zoneId);
-    ZonedDateTime zdtStart = today.withDayOfMonth(1).atStartOfDay(zoneId);
-    long startOfMonth = zdtStart.toEpochSecond() * 1000;
-    crossedAt -= ONE_DAY_MILLIS;
-    return startOfMonth <= crossedAt;
+    return budgetUtils.isAlertSentInCurrentMonth(crossedAt);
   }
 }

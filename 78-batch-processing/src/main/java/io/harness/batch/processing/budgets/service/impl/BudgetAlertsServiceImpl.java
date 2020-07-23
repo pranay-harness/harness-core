@@ -1,12 +1,9 @@
-package io.harness.ccm.budget;
+package io.harness.batch.processing.budgets.service.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.harness.ccm.budget.entities.AlertThresholdBase.ACTUAL_COST;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.lang.String.format;
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.stripToEmpty;
@@ -15,35 +12,32 @@ import static software.wings.common.Constants.HARNESS_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
+import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.mail.CEMailNotificationService;
+import io.harness.batch.processing.slackNotification.CESlackNotificationService;
+import io.harness.ccm.budget.BudgetUtils;
 import io.harness.ccm.budget.entities.AlertThreshold;
 import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.Budget.BudgetKeys;
+import io.harness.ccm.budget.entities.BudgetAlertsData;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.entities.CESlackWebhook;
-import io.harness.iterator.PersistenceIteratorFactory;
-import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
-import io.harness.mongo.iterator.MongoPersistenceIterator;
-import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
-import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
-import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.timescaledb.TimeScaleDBService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.UserGroup;
+import software.wings.graphql.datafetcher.budget.BudgetTimescaleQueryHelper;
 import software.wings.helpers.ext.mail.EmailData;
-import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
-import software.wings.service.impl.UserServiceImpl;
-import software.wings.service.impl.notifications.UserGroupBasedDispatcher;
-import software.wings.service.intfc.EmailNotificationService;
-import software.wings.service.intfc.SlackNotificationService;
-import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import java.net.URISyntaxException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,48 +47,34 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Service
+@Singleton
 @Slf4j
-public class BudgetHandler implements Handler<Budget> {
-  private static final int THRESHOLD_CHECK_INTERVAL_MINUTE = 60;
-
-  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject UserGroupService userGroupService;
-  @Inject UserGroupBasedDispatcher userGroupBasedDispatcher;
-  @Inject BudgetService budgetService;
-  @Inject private EmailNotificationService emailNotificationService;
-  @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
-  @Inject private UserServiceImpl userService;
-  @Inject private SlackNotificationService slackNotificationService;
-  @Inject private CESlackWebhookService ceSlackWebhookService;
-  @Inject private MorphiaPersistenceProvider<Budget> persistenceProvider;
+public class BudgetAlertsServiceImpl {
+  @Autowired private TimeScaleDBService timeScaleDBService;
+  @Autowired private CEMailNotificationService emailNotificationService;
+  @Autowired private CESlackNotificationService slackNotificationService;
+  @Autowired private BudgetTimescaleQueryHelper budgetTimescaleQueryHelper;
+  @Autowired private BudgetUtils budgetUtils;
+  @Autowired private CESlackWebhookService ceSlackWebhookService;
+  @Autowired private BatchMainConfig mainConfiguration;
+  @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
 
   private static final String BUDGET_MAIL_ERROR = "Budget alert email couldn't be sent";
   private static final String BUDGET_DETAILS_URL_FORMAT = "/account/%s/continuous-efficiency/budget/%s";
   private static final String ACTUAL_COST_BUDGET = "cost";
   private static final String FORECASTED_COST_BUDGET = "forecasted cost";
 
-  public void registerIterators() {
-    persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-        PumpExecutorOptions.builder()
-            .name("BudgetProcessor")
-            .poolSize(3)
-            .interval(ofMinutes(THRESHOLD_CHECK_INTERVAL_MINUTE))
-            .build(),
-        BudgetHandler.class,
-        MongoPersistenceIterator.<Budget, MorphiaFilterExpander<Budget>>builder()
-            .clazz(Budget.class)
-            .fieldName(BudgetKeys.alertIteration)
-            .targetInterval(ofMinutes(THRESHOLD_CHECK_INTERVAL_MINUTE))
-            .acceptableNoAlertDelay(ofSeconds(60))
-            .handler(this)
-            .filterExpander(q -> q.field(BudgetKeys.alertThresholds).exists())
-            .schedulingType(REGULAR)
-            .persistenceProvider(persistenceProvider)
-            .redistribute(true));
+  public void sendBudgetAlerts() {
+    List<Account> ceEnabledAccounts = cloudToHarnessMappingService.getCeEnabledAccounts();
+    List<String> accountIds = ceEnabledAccounts.stream().map(Account::getUuid).collect(Collectors.toList());
+    accountIds.forEach(accountId -> {
+      List<Budget> budgets = budgetUtils.listBudgetsForAccount(accountId);
+      budgets.forEach(this ::checkAndSendAlerts);
+    });
   }
 
-  @Override
-  public void handle(Budget budget) {
+  private void checkAndSendAlerts(Budget budget) {
     checkNotNull(budget.getAlertThresholds());
     checkNotNull(budget.getAccountId());
 
@@ -103,24 +83,34 @@ public class BudgetHandler implements Handler<Budget> {
     List<String> userGroupIds = Arrays.asList(Optional.ofNullable(budget.getUserGroupIds()).orElse(new String[0]));
     emailAddresses.addAll(getEmailsForUserGroup(budget.getAccountId(), userGroupIds));
     CESlackWebhook slackWebhook = ceSlackWebhookService.getByAccountId(budget.getAccountId());
-    if (slackWebhook != null && isEmpty(emailAddresses) && isEmpty(userGroupIds)) {
+    if (slackWebhook == null && isEmpty(emailAddresses) && isEmpty(userGroupIds)) {
       logger.warn("The budget with id={} has no associated communication channels.", budget.getUuid());
       return;
     }
 
     AlertThreshold[] alertThresholds = budget.getAlertThresholds();
     for (int i = 0; i < alertThresholds.length; i++) {
-      if (alertThresholds[i].getAlertsSent() > 0
-          && budgetService.isAlertSentInCurrentMonth(alertThresholds[i].getCrossedAt())) {
+      double actualCost = budgetUtils.getActualCost(budget);
+      BudgetAlertsData data = BudgetAlertsData.builder()
+                                  .accountId(budget.getAccountId())
+                                  .actualCost(actualCost)
+                                  .budgetedCost(budget.getBudgetAmount())
+                                  .budgetId(budget.getUuid())
+                                  .alertThreshold(alertThresholds[i].getPercentage())
+                                  .time(System.currentTimeMillis())
+                                  .build();
+
+      if (budgetUtils.isAlertSentInCurrentMonth(
+              budgetTimescaleQueryHelper.getLastAlertTimestamp(data, budget.getAccountId()))) {
         continue;
       }
       String costType = ACTUAL_COST_BUDGET;
       double currentCost;
       try {
         if (alertThresholds[i].getBasedOn() == ACTUAL_COST) {
-          currentCost = budgetService.getActualCost(budget);
+          currentCost = actualCost;
         } else {
-          currentCost = budgetService.getForecastCost(budget);
+          currentCost = budgetUtils.getForecastCost(budget);
           costType = FORECASTED_COST_BUDGET;
         }
         logger.info("{} has been spent under the budget with id={} ", currentCost, budget.getUuid());
@@ -133,8 +123,8 @@ public class BudgetHandler implements Handler<Budget> {
         sendBudgetAlertViaSlack(budget, alertThresholds[i], slackWebhook);
         sendBudgetAlertMail(budget.getAccountId(), emailAddresses, budget.getUuid(), budget.getName(),
             alertThresholds[i], currentCost, costType);
-        budgetService.incAlertCount(budget, i);
-        budgetService.setThresholdCrossedTimestamp(budget, i, Instant.now().toEpochMilli());
+        // insert in timescale table
+        budgetTimescaleQueryHelper.insertAlertEntryInTable(data, budget.getAccountId());
       }
     }
   }
@@ -159,11 +149,11 @@ public class BudgetHandler implements Handler<Budget> {
   private List<String> getEmailsForUserGroup(String accountId, List<String> userGroupIds) {
     List<String> emailAddresses = new ArrayList<>();
     for (String userGroupId : userGroupIds) {
-      UserGroup userGroup = userGroupService.get(accountId, userGroupId, true);
+      UserGroup userGroup = cloudToHarnessMappingService.getUserGroup(accountId, userGroupId, true);
       emailAddresses.addAll(userGroup.getMemberIds()
                                 .stream()
                                 .map(memberId -> {
-                                  User user = userService.get(memberId);
+                                  User user = cloudToHarnessMappingService.getUser(memberId);
                                   return user.getEmail();
                                 })
                                 .collect(Collectors.toList()));
@@ -176,7 +166,7 @@ public class BudgetHandler implements Handler<Budget> {
     List<String> uniqueEmailAddresses = new ArrayList<>(new HashSet<>(emailAddresses));
 
     try {
-      String budgetUrl = buildAbsoluteUrl(format(BUDGET_DETAILS_URL_FORMAT, accountId, budgetId), accountId);
+      String budgetUrl = buildAbsoluteUrl(format(BUDGET_DETAILS_URL_FORMAT, accountId, budgetId));
 
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("url", budgetUrl);
@@ -202,8 +192,8 @@ public class BudgetHandler implements Handler<Budget> {
     }
   }
 
-  private String buildAbsoluteUrl(String fragment, String accountId) throws URISyntaxException {
-    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
+  private String buildAbsoluteUrl(String fragment) throws URISyntaxException {
+    String baseUrl = mainConfiguration.getBaseUrl();
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
@@ -218,7 +208,7 @@ public class BudgetHandler implements Handler<Budget> {
       case ACTUAL_COST:
         return budget.getBudgetAmount() * alertThreshold.getPercentage() / 100;
       case FORECASTED_COST:
-        return budgetService.getForecastCost(budget) * alertThreshold.getPercentage() / 100;
+        return budgetUtils.getForecastCost(budget) * alertThreshold.getPercentage() / 100;
       default:
         return 0;
     }

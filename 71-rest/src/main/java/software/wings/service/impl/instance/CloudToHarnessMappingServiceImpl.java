@@ -1,13 +1,20 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeValidate;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
@@ -16,9 +23,12 @@ import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.security.EncryptionUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -30,6 +40,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMapping.InfrastructureMappingKeys;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.ResourceLookup;
 import software.wings.beans.ResourceLookup.ResourceLookupKeys;
 import software.wings.beans.Service;
@@ -37,10 +48,16 @@ import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.User;
+import software.wings.beans.User.UserKeys;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.instance.HarnessServiceInfo;
+import software.wings.beans.security.UserGroup;
+import software.wings.beans.security.UserGroup.UserGroupKeys;
+import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
+import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.settings.SettingVariableTypes;
@@ -56,11 +73,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingService {
   private final HPersistence persistence;
+  private final WingsPersistence wingsPersistence;
   private final DeploymentService deploymentService;
 
+  private static final String EXC_MSG_USER_DOESNT_EXIST = "User does not exist";
+
   @Inject
-  public CloudToHarnessMappingServiceImpl(HPersistence persistence, DeploymentService deploymentService) {
+  public CloudToHarnessMappingServiceImpl(
+      HPersistence persistence, WingsPersistence wingsPersistence, DeploymentService deploymentService) {
     this.persistence = persistence;
+    this.wingsPersistence = wingsPersistence;
     this.deploymentService = deploymentService;
   }
 
@@ -366,5 +388,72 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
 
   private SettingAttribute getSettingAttributeForCluster(String varId) {
     return persistence.get(SettingAttribute.class, varId);
+  }
+
+  @Override
+  public UserGroup getUserGroup(String accountId, String userGroupId, boolean loadUsers) {
+    UserGroup userGroup = persistence.createQuery(UserGroup.class)
+                              .filter(UserGroupKeys.accountId, accountId)
+                              .filter(UserGroup.ID_KEY, userGroupId)
+                              .get();
+    if (userGroup == null) {
+      return null;
+    }
+
+    if (loadUsers) {
+      Account account = getAccountInfoFromId(accountId);
+      loadUsers(userGroup, account);
+    }
+    return userGroup;
+  }
+
+  private void loadUsers(UserGroup userGroup, Account account) {
+    if (userGroup.getMemberIds() != null) {
+      PageRequest<User> req = aPageRequest()
+                                  .addFilter(ID_KEY, SearchFilter.Operator.IN, userGroup.getMemberIds().toArray())
+                                  .addFilter(UserKeys.accounts, SearchFilter.Operator.IN, account)
+                                  .build();
+
+      PageResponse<User> res = wingsPersistence.query(User.class, req);
+      List<User> userList = res.getResponse();
+      userList.sort((u1, u2) -> StringUtils.compareIgnoreCase(u1.getName(), u2.getName()));
+      userGroup.setMembers(userList);
+    } else {
+      userGroup.setMembers(new ArrayList<>());
+    }
+  }
+
+  @Override
+  public User getUser(String userId) {
+    User user = wingsPersistence.get(User.class, userId);
+    if (user == null) {
+      throw new UnauthorizedException(EXC_MSG_USER_DOESNT_EXIST, USER);
+    }
+
+    List<Account> accounts = user.getAccounts();
+    if (isNotEmpty(accounts)) {
+      accounts.forEach(account -> decryptLicenseInfo(account, false));
+    }
+
+    return user;
+  }
+
+  public Account decryptLicenseInfo(Account account, boolean setExpiry) {
+    if (account == null) {
+      return null;
+    }
+
+    byte[] encryptedLicenseInfo = account.getEncryptedLicenseInfo();
+    if (isNotEmpty(encryptedLicenseInfo)) {
+      byte[] decryptedBytes = EncryptionUtils.decrypt(encryptedLicenseInfo, null);
+      if (isNotEmpty(decryptedBytes)) {
+        LicenseInfo licenseInfo = LicenseUtils.convertToObject(decryptedBytes, setExpiry);
+        account.setLicenseInfo(licenseInfo);
+      } else {
+        logger.error("Error while decrypting license info. Deserialized object is not instance of LicenseInfo");
+      }
+    }
+
+    return account;
   }
 }
