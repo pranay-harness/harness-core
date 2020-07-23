@@ -6,6 +6,8 @@ import com.google.inject.Singleton;
 
 import io.harness.batch.processing.metrics.ProductMetricsService;
 import io.harness.batch.processing.metrics.ProductMetricsServiceImpl;
+import io.harness.ccm.communication.CESlackWebhookService;
+import io.harness.ccm.communication.CESlackWebhookServiceImpl;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class BatchProcessingModule extends AbstractModule {
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(CloudToHarnessMappingService.class).to(CloudToHarnessMappingServiceImpl.class);
     bind(ProductMetricsService.class).to(ProductMetricsServiceImpl.class);
+    bind(CESlackWebhookService.class).to(CESlackWebhookServiceImpl.class);
   }
 
   @Provides

@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.SHUBHANSHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -39,15 +38,11 @@ import software.wings.graphql.datafetcher.billing.BillingDataHelper;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
-import software.wings.graphql.datafetcher.billing.BillingTrendStatsDataFetcher;
 import software.wings.graphql.datafetcher.billing.QLBillingStatsHelper;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
-import software.wings.graphql.datafetcher.billing.QLTrendStatsCostData;
-import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMTimeSeriesAggregation;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
-import software.wings.service.impl.EnvironmentServiceImpl;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -55,17 +50,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.Arrays;
 
 public class BudgetServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private BudgetDao budgetDao;
   @Mock private BillingDataQueryBuilder billingDataQueryBuilder;
   @Mock private DataFetcherUtils utils;
-  @Mock private BillingTrendStatsDataFetcher billingTrendStatsDataFetcher;
   @Mock private QLBillingStatsHelper statsHelper;
   @Mock private BillingDataHelper billingDataHelper;
-  @Mock EnvironmentServiceImpl environmentService;
+  @Mock private BudgetUtils budgetUtils;
   @InjectMocks BudgetServiceImpl budgetService;
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -117,7 +110,6 @@ public class BudgetServiceImplTest extends CategoryTest {
     when(billingDataQueryBuilder.formBudgetInsightQuery(anyString(), anyList(), any(QLCCMAggregationFunction.class),
              any(QLCCMTimeSeriesAggregation.class), anyList()))
         .thenReturn(queryData);
-    when(environmentService.getEnvIdsByAppsAndType(anyList(), anyString())).thenReturn(Arrays.asList(environmentIds));
     when(timeScaleDBService.getDBConnection()).thenReturn(connection);
     when(connection.createStatement()).thenReturn(statement);
     when(statement.executeQuery(anyString())).thenReturn(resultSet);
@@ -225,14 +217,8 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldGetForecastCost() {
-    when(billingTrendStatsDataFetcher.getBillingAmountData(
-             eq(accountId), anyListOf(QLCCMAggregationFunction.class), anyListOf(QLBillingDataFilter.class)))
-        .thenReturn(QLTrendStatsCostData.builder().build());
-    when(billingDataHelper.getEndInstant(anyListOf(QLBillingDataFilter.class))).thenReturn(Instant.now());
     budgetService.getForecastCost(budget);
-    verify(billingTrendStatsDataFetcher)
-        .getBillingAmountData(
-            eq(accountId), anyListOf(QLCCMAggregationFunction.class), anyListOf(QLBillingDataFilter.class));
+    verify(budgetUtils).getForecastCost(eq(budget));
   }
 
   @Test

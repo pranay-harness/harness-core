@@ -23,6 +23,10 @@ public class BudgetDao {
     return query.get();
   }
 
+  public List<Budget> list(String accountId) {
+    return list(accountId, Integer.MAX_VALUE - 1, 0);
+  }
+
   public List<Budget> list(String accountId, Integer count, Integer startIndex) {
     Query<Budget> query = persistence.createQuery(Budget.class).field(BudgetKeys.accountId).equal(accountId);
     return query.asList(new FindOptions().skip(startIndex).limit(count));

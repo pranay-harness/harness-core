@@ -6,7 +6,9 @@ import software.wings.beans.Account;
 import software.wings.beans.ResourceLookup;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.User;
 import software.wings.beans.instance.HarnessServiceInfo;
+import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.settings.SettingVariableTypes;
 
@@ -48,4 +50,8 @@ public interface CloudToHarnessMappingService {
   List<GcpBillingAccount> listGcpBillingAccountUpdatedInDuration(String accountId, long startTime, long endTime);
 
   String getEntityName(BillingDataQueryMetadata.BillingDataMetaDataFields field, String entityId);
+
+  UserGroup getUserGroup(String accountId, String userGroupId, boolean loadUsers);
+
+  User getUser(String userId);
 }
