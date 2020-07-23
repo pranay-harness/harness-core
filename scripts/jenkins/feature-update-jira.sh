@@ -3,7 +3,7 @@ PROJECTS="CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|OPS|PL|SEC|SWAT"
 KEY=`git log --pretty=oneline --abbrev-commit -1 |\
   grep -o -iE "\[(${PROJECTS})-[0-9]+]:" | grep -o -iE "(${PROJECTS})-[0-9]+"`
 
-if [ ! -z "$KEY" ]; then
+if [ -z "$KEY" ]; then
   KEY=`git rev-parse --abbrev-ref HEAD | grep -o -iE "(${PROJECTS})-[0-9]+"`
 fi
 
