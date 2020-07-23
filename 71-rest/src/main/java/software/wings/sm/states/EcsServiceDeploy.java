@@ -13,7 +13,6 @@ import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aSt
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -48,15 +47,15 @@ public class EcsServiceDeploy extends State {
   @Getter @Setter private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
   @Getter @Setter private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
 
-  @Inject private transient SecretManager secretManager;
-  @Inject private transient EcsStateHelper ecsStateHelper;
-  @Inject private transient SettingsService settingsService;
-  @Inject private transient DelegateService delegateService;
-  @Inject private transient ActivityService activityService;
-  @Inject private transient ServiceResourceService serviceResourceService;
-  @Inject private transient ServiceTemplateService serviceTemplateService;
-  @Inject private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Inject private SecretManager secretManager;
+  @Inject private EcsStateHelper ecsStateHelper;
+  @Inject private SettingsService settingsService;
+  @Inject private DelegateService delegateService;
+  @Inject private ActivityService activityService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private ContainerDeploymentManagerHelper containerDeploymentHelper;
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
@@ -169,69 +168,5 @@ public class EcsServiceDeploy extends State {
       invalidFields.put("instanceCount", "Instance count must not be blank");
     }
     return invalidFields;
-  }
-
-  public static final class EcsServiceDeployBuilder {
-    private String id;
-    private String name;
-    private ContextElementType requiredContextElementType;
-    private String stateType;
-    private String commandName;
-    private String instanceCount;
-    private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
-
-    private EcsServiceDeployBuilder(String name) {
-      this.name = name;
-    }
-
-    public static EcsServiceDeployBuilder anEcsServiceDeploy(String name) {
-      return new EcsServiceDeployBuilder(name);
-    }
-
-    public EcsServiceDeployBuilder withId(String id) {
-      this.id = id;
-      return this;
-    }
-
-    public EcsServiceDeployBuilder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public EcsServiceDeployBuilder withRequiredContextElementType(ContextElementType requiredContextElementType) {
-      this.requiredContextElementType = requiredContextElementType;
-      return this;
-    }
-
-    public EcsServiceDeployBuilder withStateType(String stateType) {
-      this.stateType = stateType;
-      return this;
-    }
-
-    public EcsServiceDeployBuilder withCommandName(String commandName) {
-      this.commandName = commandName;
-      return this;
-    }
-
-    public EcsServiceDeployBuilder withInstanceCount(String instanceCount) {
-      this.instanceCount = instanceCount;
-      return this;
-    }
-
-    public EcsServiceDeployBuilder withInstanceUnitType(InstanceUnitType instanceUnitType) {
-      this.instanceUnitType = instanceUnitType;
-      return this;
-    }
-
-    public EcsServiceDeploy build() {
-      EcsServiceDeploy ecsServiceDeploy = new EcsServiceDeploy(name);
-      ecsServiceDeploy.setId(id);
-      ecsServiceDeploy.setRequiredContextElementType(requiredContextElementType);
-      ecsServiceDeploy.setStateType(stateType);
-      ecsServiceDeploy.setRollback(false);
-      ecsServiceDeploy.setInstanceCount(instanceCount);
-      ecsServiceDeploy.setInstanceUnitType(instanceUnitType);
-      return ecsServiceDeploy;
-    }
   }
 }
