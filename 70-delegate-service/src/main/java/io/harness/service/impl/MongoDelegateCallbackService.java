@@ -4,14 +4,14 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import io.harness.callback.MongoDatabase;
-import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.DelegateCallbackService;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 
 public class MongoDelegateCallbackService implements DelegateCallbackService {
-  private static final String COLLECTION_NAME = "_delegate_task_response_event";
-  private static final String TASK_ID_PROPERTY = "taskId";
+  private static final String SYNC_TASK_COLLECTION_NAME_SUFFIX = "delegateSyncTaskResponses";
+  private static final String ID_PROPERTY = "_id";
+  private static final String RESPONSE_DATA_PROPERTY = "responseData";
   private final MongoClient mongoClient;
   private final com.mongodb.client.MongoDatabase database;
   private final MongoCollection<Document> collection;
@@ -20,13 +20,17 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
     String connectionString = mongoDatabase.getConnection();
     mongoClient = new MongoClient(new MongoClientURI(connectionString));
     database = mongoClient.getDatabase(connectionString.substring(connectionString.lastIndexOf('/') + 1));
-    collection = database.getCollection(mongoDatabase.getCollectionNamePrefix() + COLLECTION_NAME);
+    String collectionName = StringUtils.isBlank(mongoDatabase.getCollectionNamePrefix())
+        ? SYNC_TASK_COLLECTION_NAME_SUFFIX
+        : mongoDatabase.getCollectionNamePrefix() + "_" + SYNC_TASK_COLLECTION_NAME_SUFFIX;
+    collection = database.getCollection(collectionName);
   }
 
   @Override
-  public void publishTaskResponse(String delegateTaskId, DelegateTaskResponse response) {
-    Document document = Document.parse(JsonUtils.asJson(response));
-    document.put(TASK_ID_PROPERTY, delegateTaskId);
+  public void publishTaskResponse(String delegateTaskId, byte[] responseData) {
+    Document document = new Document();
+    document.put(ID_PROPERTY, delegateTaskId);
+    document.put(RESPONSE_DATA_PROPERTY, responseData);
     collection.insertOne(document);
   }
 

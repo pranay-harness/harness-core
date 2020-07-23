@@ -36,6 +36,11 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.grpc.DelegateServiceGrpcClientModule;
+import io.harness.grpc.GrpcServiceConfigurationModule;
+import io.harness.grpc.client.ManagerGrpcClientModule;
+import io.harness.grpc.server.Connector;
+import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.QueryFactory;
@@ -94,6 +99,7 @@ import software.wings.service.impl.EventEmitter;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -283,6 +289,13 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new GcpMarketplaceIntegrationModule());
     modules.add(new AuthModule());
     modules.add(new ManagerQueueModule());
+    modules.add(new ManagerGrpcClientModule(
+        ManagerGrpcClientModule.Config.builder().target("localhost:9880").authority("localhost").build()));
+
+    modules.add(new GrpcServiceConfigurationModule(((MainConfiguration) configuration).getGrpcServerConfig(),
+        ((MainConfiguration) configuration).getPortal().getJwtNextGenManagerSecret()));
+    modules.add(new DelegateServiceGrpcClientModule(
+        ((MainConfiguration) configuration).getPortal().getJwtNextGenManagerSecret()));
     return modules;
   }
 
@@ -292,7 +305,12 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     configuration.getPortal().setCompanyName("COMPANY_NAME");
     configuration.getPortal().setUrl("PORTAL_URL");
     configuration.getPortal().setVerificationUrl("VERIFICATION_PATH");
-    configuration.getPortal().setJwtNextGenManagerSecret("dummy_key");
+    configuration.getPortal().setJwtNextGenManagerSecret(
+        "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM");
+    GrpcServerConfig grpcServerConfig = new GrpcServerConfig();
+    grpcServerConfig.setConnectors(Arrays.asList(
+        Connector.builder().port(9880).secure(true).keyFilePath("key.pem").certFilePath("cert.pem").build()));
+    configuration.setGrpcServerConfig(grpcServerConfig);
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
     configuration.setElasticsearchConfig(elasticsearchConfig);
     configuration.setSearchEnabled(isSearchEnabled);
