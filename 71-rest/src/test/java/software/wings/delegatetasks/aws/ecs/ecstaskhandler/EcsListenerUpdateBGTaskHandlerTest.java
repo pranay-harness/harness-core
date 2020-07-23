@@ -14,7 +14,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -48,12 +48,11 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
 
     assertThat(ecsCommandExecutionResponse).isNotNull();
     assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isNotNull();
-    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(ecsCommandExecutionResponse.getEcsCommandResponse().getOutput())
         .isEqualTo("Invalid Request Type: Expected was : EcsBGListenerUpdateRequest");
     assertThat(ecsCommandExecutionResponse.getEcsCommandResponse().getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+        .isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test
@@ -83,8 +82,7 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
 
     assertThat(ecsCommandExecutionResponse).isNotNull();
     assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isNotNull();
-    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.SUCCESS);
+    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 
   @Test
@@ -113,8 +111,7 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
 
     assertThat(ecsCommandExecutionResponse).isNotNull();
     assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isNotNull();
-    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.SUCCESS);
+    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 
   @Test
@@ -143,8 +140,7 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
 
     assertThat(ecsCommandExecutionResponse).isNotNull();
     assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isNotNull();
-    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.SUCCESS);
+    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 
   @Test
@@ -180,7 +176,6 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
 
     assertThat(ecsCommandExecutionResponse).isNotNull();
     assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isNotNull();
-    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.SUCCESS);
+    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
   }
 }

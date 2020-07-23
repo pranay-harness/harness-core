@@ -475,8 +475,10 @@ public class ApplicationManifestUtils {
         .stream()
         // Should support multiple files only for Values YAML overrides and not Service manifest values.yaml file
         .filter(entry -> K8sValuesLocation.Service != entry.getKey())
+        .filter(entry -> StoreType.Remote == entry.getValue().getStoreType())
         .filter(entry -> {
-          if (isEmpty(entry.getValue().getGitFileConfig().getFilePath())) {
+          GitFileConfig gitFileConfig = entry.getValue().getGitFileConfig();
+          if (gitFileConfig != null && isEmpty(gitFileConfig.getFilePath())) {
             throw new InvalidRequestException("Empty file path is not allowed for " + entry.getKey() + " Values YAML");
           }
 
