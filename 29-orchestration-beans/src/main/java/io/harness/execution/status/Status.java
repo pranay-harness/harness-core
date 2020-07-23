@@ -12,8 +12,7 @@ import java.util.EnumSet;
 public enum Status {
   // In Progress statuses : All the in progress statuses named with ing in the end
   RUNNING,
-  WAITING,
-
+  TIMED_WAITING,
   ASYNC_WAITING,
   TASK_WAITING,
 
@@ -32,17 +31,17 @@ public enum Status {
 
   // Status Groups
   private static final EnumSet<Status> FINALIZABLE_STATUSES =
-      EnumSet.of(QUEUED, RUNNING, PAUSED, PAUSING, ASYNC_WAITING, TASK_WAITING, WAITING, DISCONTINUING);
+      EnumSet.of(QUEUED, RUNNING, PAUSED, PAUSING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
 
   private static final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED);
 
   private static final EnumSet<Status> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED);
 
   private static final EnumSet<Status> RESUMABLE_STATUSES =
-      EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, WAITING);
+      EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING);
 
   private static final EnumSet<Status> FLOWING_STATUSES =
-      EnumSet.of(RUNNING, ASYNC_WAITING, TASK_WAITING, WAITING, DISCONTINUING);
+      EnumSet.of(RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
 
   private static final EnumSet<Status> RETRYABLE_STATUSES = EnumSet.of(FAILED, ERRORED, EXPIRED);
 
@@ -73,14 +72,14 @@ public enum Status {
   public static EnumSet<Status> obtainAllowedStartSet(Status status) {
     switch (status) {
       case RUNNING:
-        return EnumSet.of(QUEUED, ASYNC_WAITING, TASK_WAITING, WAITING, PAUSED);
+        return EnumSet.of(QUEUED, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, PAUSED);
       case ASYNC_WAITING:
       case TASK_WAITING:
-      case WAITING:
+      case TIMED_WAITING:
       case PAUSED:
         return EnumSet.of(QUEUED, RUNNING);
       case DISCONTINUING:
-        return EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, WAITING, PAUSED);
+        return EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, PAUSED);
       case SKIPPED:
         return EnumSet.of(QUEUED);
       case QUEUED:
