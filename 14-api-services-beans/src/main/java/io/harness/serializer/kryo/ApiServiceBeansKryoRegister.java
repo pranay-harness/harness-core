@@ -53,6 +53,7 @@ import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.model.ManifestType;
+import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -135,5 +136,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(VirtualMachineScaleSetData.class, 1415);
 
     kryo.register(SettingVariableTypes.class, 5131);
+    kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);
   }
 }

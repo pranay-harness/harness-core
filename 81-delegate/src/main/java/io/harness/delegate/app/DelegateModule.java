@@ -33,6 +33,7 @@ import io.harness.delegate.service.MetricDataStoreServiceImpl;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.govern.DependencyModule;
 import io.harness.security.encryption.DelegateDecryptionService;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
@@ -529,6 +530,7 @@ public class DelegateModule extends DependencyModule {
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(KmsEncryptDecryptClient.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
+    bind(SecretDecryptionService.class).to(EncryptionServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
     bind(HelmClient.class).to(HelmClientImpl.class);
     bind(KustomizeClient.class).to(KustomizeClientImpl.class);
