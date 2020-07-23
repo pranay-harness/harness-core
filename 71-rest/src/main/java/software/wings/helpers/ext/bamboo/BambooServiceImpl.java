@@ -293,13 +293,15 @@ public class BambooServiceImpl implements BambooService {
                         bambooConfig, encryptionDetails, planKey, jsonNode.get("buildNumber").asText(), artifactPath));
                   }
                 }
-                buildDetailsList.add(aBuildDetails()
-                                         .withNumber(jsonNode.get("buildNumber").asText())
-                                         .withRevision(jsonNode.get("vcsRevisionKey").asText())
-                                         .withBuildUrl(jsonNode.get("link").get("href").asText())
-                                         .withUiDisplayName("Build# " + jsonNode.get("buildNumber").asText())
-                                         .withArtifactDownloadMetadata(artifactFileMetadata)
-                                         .build());
+                buildDetailsList.add(
+                    aBuildDetails()
+                        .withNumber(jsonNode.get("buildNumber").asText())
+                        .withRevision(
+                            jsonNode.get("vcsRevisionKey") != null ? jsonNode.get("vcsRevisionKey").asText() : null)
+                        .withBuildUrl(jsonNode.get("link").get("href").asText())
+                        .withUiDisplayName("Build# " + jsonNode.get("buildNumber").asText())
+                        .withArtifactDownloadMetadata(artifactFileMetadata)
+                        .build());
               });
             }
           }
