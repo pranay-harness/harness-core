@@ -28,6 +28,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.deployment.InstanceDetails;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.exception.ExceptionUtils;
@@ -101,6 +102,7 @@ import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.service.intfc.verification.CV24x7DashboardService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.ContextElement;
@@ -128,6 +130,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -161,6 +164,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   @Override
   public void cleanUpForLogRetry(String stateExecutionId) {
@@ -1275,16 +1279,28 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public Map<String, Map<String, InstanceElement>> getLastExecutionNodes(String appId, String workflowId) {
+  public Map<String, Map<String, ?>> getLastExecutionNodes(String appId, String workflowId) {
     WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
                                               .filter(WorkflowExecutionKeys.appId, appId)
                                               .filter(WorkflowExecutionKeys.workflowId, workflowId)
                                               .filter(WorkflowExecutionKeys.status, SUCCESS)
                                               .order(Sort.descending(WorkflowExecutionKeys.createdAt))
                                               .get();
+
     if (workflowExecution == null) {
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER)
           .addParam("reason", "No successful execution exists for the workflow.");
+    }
+    if (featureFlagService.isEnabled(FeatureName.CV_EXPOSE_INSTANCE_DETAILS, workflowExecution.getAccountId())) {
+      List<InstanceDetails> instanceDetails =
+          sweepingOutputService.findInstanceDetailsForWorkflowExecution(appId, workflowExecution.getUuid());
+      if (!instanceDetails.isEmpty()) {
+        // CDP started populating instance details around may 2020 so for the execution before that. This can be empty.
+        // We are fallbacking on instanceElement if this is not present. We can remove the instanceElement code after
+        // aug end.
+        return instanceDetails.stream().collect(Collectors.toMap(InstanceDetails::getHostName,
+            instanceDetail -> Collections.singletonMap("instanceDetails", instanceDetail)));
+      }
     }
 
     Map<String, InstanceElement> hosts = new HashMap<>();
@@ -1314,11 +1330,10 @@ public class AnalysisServiceImpl implements AnalysisService {
     return wrapInstanceElementWithInstanceKey(hosts);
   }
 
-  private Map<String, Map<String, InstanceElement>> wrapInstanceElementWithInstanceKey(
-      Map<String, InstanceElement> hosts) {
+  private Map<String, Map<String, ?>> wrapInstanceElementWithInstanceKey(Map<String, InstanceElement> hosts) {
     // renderExpression works with instance.
     // example: ${instance.ecsContainerDetails.completeDockerId}
-    Map<String, Map<String, InstanceElement>> result = new HashMap<>();
+    Map<String, Map<String, ?>> result = new HashMap<>();
     for (Entry<String, InstanceElement> entry : hosts.entrySet()) {
       result.put(entry.getKey(), Collections.singletonMap("instance", entry.getValue()));
     }

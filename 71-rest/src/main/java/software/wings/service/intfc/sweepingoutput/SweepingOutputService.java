@@ -45,6 +45,8 @@ public interface SweepingOutputService {
 
   List<InstanceDetails> fetchInstanceDetailsFromSweepingOutput(SweepingOutputInquiry inquiry, boolean newInstancesOnly);
 
+  List<InstanceDetails> findInstanceDetailsForWorkflowExecution(String appId, String workflowExecutionId);
+
   List<InstanceElement> fetchInstanceElementsFromSweepingOutput(
       SweepingOutputInquiry inquiry, boolean newInstancesOnly);
 }

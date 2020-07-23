@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -30,7 +31,9 @@ import software.wings.sm.StateExecutionInstance;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -148,6 +151,32 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
       }
     }
 
+    return instanceDetails;
+  }
+
+  @Override
+  public List<InstanceDetails> findInstanceDetailsForWorkflowExecution(String appId, String workflowExecutionId) {
+    List<SweepingOutput> sweepingOutputs =
+        findSweepingOutputsWithNamePrefix(SweepingOutputInquiry.builder()
+                                              .workflowExecutionId(workflowExecutionId)
+                                              .appId(appId)
+                                              .name(InstanceInfoVariables.SWEEPING_OUTPUT_NAME)
+                                              .build(),
+            SweepingOutputInstance.Scope.WORKFLOW);
+
+    Set<String> hosts = new HashSet<>();
+    List<InstanceDetails> instanceDetails = new ArrayList<>();
+    sweepingOutputs.forEach(sweepingOutput -> {
+      Preconditions.checkState(sweepingOutput instanceof InstanceInfoVariables,
+          "sweepingOutput should be an instanceOf InstanceInfoVariables");
+      InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) sweepingOutput;
+      instanceInfoVariables.getInstanceDetails().forEach(instanceDetail -> {
+        if (!hosts.contains(instanceDetail.getHostName())) {
+          instanceDetails.add(instanceDetail);
+          hosts.add(instanceDetail.getHostName());
+        }
+      });
+    });
     return instanceDetails;
   }
 
