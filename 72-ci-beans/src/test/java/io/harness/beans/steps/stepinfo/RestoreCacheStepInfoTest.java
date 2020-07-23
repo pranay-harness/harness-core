@@ -8,7 +8,7 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.intfc.StepInfo;
+import io.harness.yaml.core.StepElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,17 +31,18 @@ public class RestoreCacheStepInfoTest extends CIBeansTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldDeserializeRestoreCacheStep() throws IOException {
-    StepInfo stepInfo = YamlPipelineUtils.read(yamlString, StepInfo.class);
-    RestoreCacheStepInfo saveCacheStepInfo = (RestoreCacheStepInfo) stepInfo;
+    StepElement stepElement = YamlPipelineUtils.read(yamlString, StepElement.class);
+    RestoreCacheStepInfo restoreCacheStepInfo = (RestoreCacheStepInfo) stepElement.getStepSpecType();
 
-    TypeInfo nonYamlInfo = saveCacheStepInfo.getNonYamlInfo();
+    TypeInfo nonYamlInfo = restoreCacheStepInfo.getNonYamlInfo();
     assertThat(nonYamlInfo.getStepInfoType()).isEqualTo(CIStepInfoType.RESTORE_CACHE);
 
-    assertThat(saveCacheStepInfo).isNotNull();
-    assertThat(saveCacheStepInfo.getIdentifier()).isEqualTo("restoreCacheResults");
-    assertThat(saveCacheStepInfo.getDisplayName()).isEqualTo("restore-cache-step-name");
-    assertThat(saveCacheStepInfo.getRestoreCache())
+    assertThat(restoreCacheStepInfo)
         .isNotNull()
-        .isEqualTo(RestoreCacheStepInfo.RestoreCache.builder().key("test_results").failIfNotExist(false).build());
+        .isEqualTo(RestoreCacheStepInfo.builder()
+                       .identifier("restoreCacheResults")
+                       .name("restore-cache-step-name")
+                       .key("test_results")
+                       .build());
   }
 }

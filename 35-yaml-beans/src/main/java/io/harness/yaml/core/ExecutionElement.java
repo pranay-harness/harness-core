@@ -4,9 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.Builder;
 import lombok.Value;
+import org.hibernate.validator.constraints.NotEmpty;
 
+import java.beans.ConstructorProperties;
+import java.util.ArrayList;
 import java.util.List;
-import javax.validation.constraints.NotNull;
+import java.util.Optional;
 
 /**
  * Execution represents list of steps that can be used within stage
@@ -17,7 +20,13 @@ import javax.validation.constraints.NotNull;
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ExecutionElement {
-  @NotNull List<ExecutionWrapper> steps;
-  List<ExecutionWrapper> rollbackSteps;
+public final class ExecutionElement {
+  @NotEmpty private final List<ExecutionWrapper> steps;
+  private final List<ExecutionWrapper> rollbackSteps;
+
+  @ConstructorProperties({"steps", "rollbackSteps"})
+  public ExecutionElement(List<ExecutionWrapper> steps, List<ExecutionWrapper> rollbackSteps) {
+    this.steps = Optional.ofNullable(steps).orElse(new ArrayList<>());
+    this.rollbackSteps = Optional.ofNullable(rollbackSteps).orElse(new ArrayList<>());
+  }
 }

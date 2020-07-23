@@ -1,8 +1,7 @@
 package io.harness.yaml.core;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
-import io.harness.yaml.core.auxiliary.intfc.StepWrapper;
+import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import lombok.Builder;
 import lombok.Value;
 
@@ -15,11 +14,11 @@ import javax.validation.constraints.NotNull;
  */
 @Value
 @Builder
-public class Graph implements ExecutionSection {
-  @NotNull List<StepWrapper> sections;
+public class Graph implements ExecutionWrapper {
+  @NotNull List<StepElement> sections;
 
   @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-  public Graph(List<StepWrapper> graph) {
+  public Graph(List<StepElement> graph) {
     this.sections = graph;
   }
 }

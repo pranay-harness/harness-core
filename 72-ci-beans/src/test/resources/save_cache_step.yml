@@ -1,7 +1,9 @@
-identifier: cacheResults
-displayName: stepName
-saveCache:
-  key: test_results
-  paths:
-    - ~/test_results.output
-    - ~/test_results.error
+step:
+  identifier: cacheResults
+  name: stepName
+  type: saveCache
+  spec:
+    key: test_results
+    paths:
+      - ~/test_results.output
+      - ~/test_results.error

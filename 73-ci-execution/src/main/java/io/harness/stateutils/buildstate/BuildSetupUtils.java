@@ -19,22 +19,22 @@ public class BuildSetupUtils {
 
   public RestResponse<K8sTaskExecutionResponse> executeCISetupTask(
       BuildEnvSetupStepInfo buildEnvSetupStepInfo, Ambiance ambiance) {
-    switch (buildEnvSetupStepInfo.getSetupEnv().getBuildJobEnvInfo().getType()) {
+    switch (buildEnvSetupStepInfo.getBuildJobEnvInfo().getType()) {
       case K8:
         return k8BuildSetupUtils.executeCISetupTask(buildEnvSetupStepInfo, ambiance);
       default:
-        unhandled(buildEnvSetupStepInfo.getSetupEnv().getBuildJobEnvInfo().getType());
+        unhandled(buildEnvSetupStepInfo.getBuildJobEnvInfo().getType());
     }
     return null;
   }
 
   public RestResponse<K8sTaskExecutionResponse> executeCILiteEngineTask(
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {
-    switch (liteEngineTaskStepInfo.getEnvSetup().getBuildJobEnvInfo().getType()) {
+    switch (liteEngineTaskStepInfo.getBuildJobEnvInfo().getType()) {
       case K8:
         return k8BuildSetupUtils.executeK8sCILiteEngineTask(liteEngineTaskStepInfo, ambiance);
       default:
-        unhandled(liteEngineTaskStepInfo.getEnvSetup().getBuildJobEnvInfo().getType());
+        unhandled(liteEngineTaskStepInfo.getBuildJobEnvInfo().getType());
     }
     return null;
   }

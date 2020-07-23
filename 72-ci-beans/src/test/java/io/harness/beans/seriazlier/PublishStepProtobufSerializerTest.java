@@ -63,7 +63,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
                                                   .build();
 
     PublishStepInfo publishStepInfo = PublishStepInfo.builder()
-                                          .displayName(PUBLISH_NAME)
+                                          .name(PUBLISH_NAME)
                                           .identifier(PUBLISH_ID)
                                           .publishArtifacts(singletonList(filePatternArtifact))
                                           .build();
@@ -95,7 +95,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
             .build();
 
     PublishStepInfo publishStepInfo = PublishStepInfo.builder()
-                                          .displayName(PUBLISH_NAME)
+                                          .name(PUBLISH_NAME)
                                           .identifier(PUBLISH_ID)
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();
@@ -128,7 +128,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
             .build();
 
     PublishStepInfo publishStepInfo = PublishStepInfo.builder()
-                                          .displayName(PUBLISH_NAME)
+                                          .name(PUBLISH_NAME)
                                           .identifier(PUBLISH_ID)
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();
@@ -162,7 +162,7 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
             .build();
 
     PublishStepInfo publishStepInfo = PublishStepInfo.builder()
-                                          .displayName(PUBLISH_NAME)
+                                          .name(PUBLISH_NAME)
                                           .identifier(PUBLISH_ID)
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();

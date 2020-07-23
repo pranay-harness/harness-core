@@ -14,10 +14,9 @@ public class RestoreCacheStepProtobufSerializer implements ProtobufSerializer<Re
   }
 
   public Step convertRestoreCacheStepInfo(RestoreCacheStepInfo restoreCacheStepInfo) {
-    RestoreCacheStepInfo.RestoreCache restoreCache = restoreCacheStepInfo.getRestoreCache();
     RestoreCacheStep.Builder restoreCacheBuilder = RestoreCacheStep.newBuilder();
-    restoreCacheBuilder.setKey(restoreCache.getKey());
-    restoreCacheBuilder.setFailIfNotExist(restoreCache.isFailIfNotExist());
+    restoreCacheBuilder.setKey(restoreCacheStepInfo.getKey());
+    restoreCacheBuilder.setFailIfNotExist(restoreCacheStepInfo.isFailIfNotExist());
 
     return Step.newBuilder()
         .setId(restoreCacheStepInfo.getIdentifier())

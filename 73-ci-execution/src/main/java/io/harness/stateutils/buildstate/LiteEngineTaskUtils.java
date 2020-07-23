@@ -13,14 +13,14 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.seriazlier.ProtobufSerializer;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
-import io.harness.yaml.core.Execution;
+import io.harness.yaml.core.ExecutionElement;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
 public class LiteEngineTaskUtils {
-  @Inject ProtobufSerializer<Execution> protobufSerializer;
+  @Inject ProtobufSerializer<ExecutionElement> protobufSerializer;
 
   public List<String> getLiteEngineCommand() {
     List<String> command = new ArrayList<>();
@@ -32,7 +32,7 @@ public class LiteEngineTaskUtils {
     List<String> args = new ArrayList<>();
     args.add(STAGE_ARG_COMMAND);
     args.add(INPUT_ARG_PREFIX);
-    args.add(protobufSerializer.serialize(liteEngineTaskStepInfo.getEnvSetup().getSteps()));
+    args.add(protobufSerializer.serialize(liteEngineTaskStepInfo.getSteps()));
     args.add(LOG_PATH_ARG_PREFIX);
     args.add(LOG_PATH);
     args.add(TMP_PATH_ARG_PREFIX);

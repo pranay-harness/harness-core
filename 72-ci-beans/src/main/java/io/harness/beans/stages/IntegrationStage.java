@@ -1,14 +1,17 @@
 package io.harness.beans.stages;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.beans.yaml.extended.CustomVariables;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.yaml.core.Execution;
+import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.intfc.Infrastructure;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -22,32 +25,26 @@ import javax.validation.constraints.NotNull;
 @Data
 @Builder
 @JsonTypeName("ci")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class IntegrationStage implements CIStage {
-  private static final CIStageType type = CIStageType.INTEGRATION;
+  @JsonIgnore private static final CIStageType type = CIStageType.INTEGRATION;
+  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore @NotNull @EntityIdentifier private String identifier;
+  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore private String name;
 
-  @NotNull @EntityIdentifier private String identifier;
-  private String displayName;
-  private Integration ci;
+  private boolean runParallel;
+  private String skipCondition;
+
+  private Infrastructure infrastructure;
+  private Connector gitConnector;
+  private Container container;
+  private String workingDirectory;
+
+  private List<CustomVariables> customVariables;
+
+  @NotNull private ExecutionElement execution;
 
   @Override
   public CIStageType getType() {
     return type;
-  }
-
-  @Data
-  @Builder
-  public static class Integration {
-    private boolean runParallel;
-    private String skipCondition;
-    private String description;
-
-    private Infrastructure infrastructure;
-    private Connector gitConnector;
-    private Container container;
-    private String workingDirectory;
-
-    private List<CustomVariables> customVariables;
-
-    @NotNull private Execution execution;
   }
 }

@@ -20,7 +20,7 @@ import io.harness.state.StepType;
 import io.harness.state.core.fork.ForkStep;
 import io.harness.state.core.fork.ForkStepParameters;
 import io.harness.yaml.core.Parallel;
-import io.harness.yaml.core.auxiliary.intfc.StepWrapper;
+import io.harness.yaml.core.StepElement;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
@@ -52,8 +52,8 @@ public class ParallelStepPlanCreator implements SupportDefinedExecutorPlanCreato
         .collect(Collectors.toList());
   }
 
-  private ExecutionPlanCreator<StepWrapper> getPlanCreatorForStep(
-      CreateExecutionPlanContext context, StepWrapper step) {
+  private ExecutionPlanCreator<StepElement> getPlanCreatorForStep(
+      CreateExecutionPlanContext context, StepElement step) {
     return planCreatorHelper.getExecutionPlanCreator(
         STEP_PLAN_CREATOR.getName(), step, context, format("no execution plan creator found for step [%s]", step));
   }

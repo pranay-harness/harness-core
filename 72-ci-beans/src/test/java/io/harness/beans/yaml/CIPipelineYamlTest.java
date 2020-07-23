@@ -1,13 +1,28 @@
 package io.harness.beans.yaml;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.CIBeansTest;
 import io.harness.beans.CIPipeline;
 import io.harness.beans.stages.IntegrationStage;
+import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
+import io.harness.beans.steps.stepinfo.PublishStepInfo;
+import io.harness.beans.steps.stepinfo.RunStepInfo;
+import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
+import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
+import io.harness.beans.yaml.extended.CustomVariables;
+import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
+import io.harness.beans.yaml.extended.container.Container;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.core.Parallel;
+import io.harness.yaml.core.StageElement;
+import io.harness.yaml.core.StepElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -23,10 +38,135 @@ public class CIPipelineYamlTest extends CIBeansTest {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("ci.yml");
 
-    CIPipeline ciPipeline = YamlPipelineUtils.read(testFile, CIPipeline.class);
-    assertThat(ciPipeline.getStages()).hasSize(1);
-    assertThat(ciPipeline.getStages().get(0)).isInstanceOf(IntegrationStage.class);
-  }
+    CIPipeline ciPipelineActual = YamlPipelineUtils.read(testFile, CIPipeline.class);
+    CIPipeline ciPipelineExpected =
+        CIPipeline.builder()
+            .identifier("cipipeline")
+            .name("Integration Pipeline")
+            .description("sample pipeline used for testing")
+            .stages(singletonList(
+                StageElement.builder()
+                    .identifier("masterBuildUpload")
+                    .type("ci")
+                    .stageType(
+                        IntegrationStage.builder()
+                            .identifier("masterBuildUpload")
+                            .infrastructure(K8sDirectInfraYaml.builder()
+                                                .type("kubernetes-direct")
+                                                .spec(K8sDirectInfraYaml.Spec.builder()
+                                                          .kubernetesCluster("MyKubeCluster1")
+                                                          .namespace("ShoppingCart")
+                                                          .build())
+                                                .build())
+                            .gitConnector(GitConnectorYaml.builder()
+                                              .identifier("gitRepo")
+                                              .type("git")
+                                              .spec(GitConnectorYaml.Spec.builder()
+                                                        .authScheme(GitConnectorYaml.Spec.AuthScheme.builder()
+                                                                        .type("ssh")
+                                                                        .sshKey("gitSsh")
+                                                                        .build())
+                                                        .repo("master")
+                                                        .build())
+                                              .build())
+                            .container(Container.builder()
+                                           .identifier("jenkinsSlaveImage")
+                                           .connector("npquotecenter")
+                                           .imagePath("us.gcr.io/platform-205701/jenkins-slave-portal-oracle-8u191:12")
+                                           .build())
+                            .customVariables(
+                                asList(CustomVariables.builder().name("internalPath").value("{input}").build(),
+                                    CustomVariables.builder().name("runTimeVal").type("secret").build()))
+                            .execution(
+                                ExecutionElement.builder()
+                                    .steps(asList(StepElement.builder()
+                                                      .identifier("gitClone")
+                                                      .type("gitClone")
+                                                      .stepSpecType(GitCloneStepInfo.builder()
+                                                                        .identifier("gitClone")
+                                                                        .gitConnector("gitGlobal")
+                                                                        .path("portal")
+                                                                        .branch("master")
+                                                                        .build())
+                                                      .build(),
+                                        Parallel.builder()
+                                            .sections(asList(StepElement.builder()
+                                                                 .identifier("runLint")
+                                                                 .type("run")
+                                                                 .stepSpecType(RunStepInfo.builder()
+                                                                                   .identifier("runLint")
+                                                                                   .retry(2)
+                                                                                   .timeout(30)
+                                                                                   .command(singletonList("./run lint"))
+                                                                                   .build())
+                                                                 .build(),
+                                                StepElement.builder()
+                                                    .identifier("runUnitTests")
+                                                    .type("run")
+                                                    .stepSpecType(
+                                                        RunStepInfo.builder()
+                                                            .identifier("runUnitTests")
+                                                            .retry(2)
+                                                            .timeout(30)
+                                                            .command(singletonList(
+                                                                "mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine=\"-Xmx2048m\""))
+                                                            .build())
+                                                    .build()
 
-  // TODO: add more UTs
+                                                    ))
+                                            .build(),
+                                        StepElement.builder()
+                                            .identifier("generateReport")
+                                            .type("run")
+                                            .stepSpecType(RunStepInfo.builder()
+                                                              .identifier("generateReport")
+                                                              .retry(2)
+                                                              .timeout(30)
+                                                              .command(singletonList("./ci/generate_report.sh"))
+                                                              .build())
+                                            .build(),
+                                        StepElement.builder()
+                                            .identifier("buildMaster")
+                                            .type("run")
+                                            .stepSpecType(RunStepInfo.builder()
+                                                              .identifier("buildMaster")
+                                                              .retry(2)
+                                                              .timeout(75)
+                                                              .command(singletonList("mvn clean install"))
+                                                              .build())
+                                            .build(),
+                                        StepElement.builder()
+                                            .identifier("uploadArtifact")
+                                            .type("publishArtifacts")
+                                            .stepSpecType(
+                                                PublishStepInfo.builder()
+                                                    .identifier("uploadArtifact")
+                                                    .publishArtifacts(singletonList(
+                                                        DockerFileArtifact.builder()
+                                                            .dockerFile("Dockerfile")
+                                                            .context("workspace")
+                                                            .image("ui")
+                                                            .tag("1.0.0")
+                                                            .buildArguments(
+                                                                asList(DockerFileArtifact.BuildArgument.builder()
+                                                                           .key("key1")
+                                                                           .value("value1")
+                                                                           .build(),
+                                                                    DockerFileArtifact.BuildArgument.builder()
+                                                                        .key("key2")
+                                                                        .value("value2")
+                                                                        .build()))
+                                                            .connector(GcrConnector.builder()
+                                                                           .connector("myDockerRepoConnector")
+                                                                           .location("eu.gcr.io/harness/ui:latest")
+                                                                           .build())
+                                                            .build()))
+                                                    .build())
+                                            .build()))
+                                    .build())
+                            .build())
+                    .build()))
+            .build();
+    assertThat(ciPipelineActual).isEqualTo(ciPipelineExpected);
+  }
 }

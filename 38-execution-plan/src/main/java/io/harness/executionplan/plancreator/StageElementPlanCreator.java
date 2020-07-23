@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
-public class CDStagesPlanCreator extends AbstractPlanCreatorWithChildren<List<StageElement>>
+public class StageElementPlanCreator extends AbstractPlanCreatorWithChildren<List<StageElement>>
     implements SupportDefinedExecutorPlanCreator<List<StageElement>> {
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
 

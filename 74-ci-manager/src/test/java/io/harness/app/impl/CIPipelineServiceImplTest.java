@@ -14,7 +14,8 @@ import io.harness.beans.CIPipeline;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.Execution;
+import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.core.StageElement;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -61,15 +62,17 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
     assertThat(ciPipeline.getIdentifier()).isEqualTo("cipipeline");
 
     assertThat(ciPipeline.getStages()).hasSize(1);
-    assertThat(ciPipeline.getStages().get(0)).isInstanceOf(IntegrationStage.class);
-    IntegrationStage integrationStage = (IntegrationStage) ciPipeline.getStages().get(0);
-    assertThat(integrationStage.getIdentifier()).isEqualTo("masterBuildUpload");
-    assertThat(integrationStage.getCi().getGitConnector()).isNotNull();
-    assertThat(integrationStage.getCi().getInfrastructure()).isNotNull();
-    assertThat(integrationStage.getCi().getContainer()).isNotNull();
-    assertThat(integrationStage.getCi().getCustomVariables()).isNotNull();
+    assertThat(ciPipeline.getStages().get(0)).isInstanceOf(StageElement.class);
+    StageElement stageElement = ciPipeline.getStages().get(0);
 
-    Execution execution = integrationStage.getCi().getExecution();
+    IntegrationStage integrationStage = (IntegrationStage) stageElement.getStageType();
+    assertThat(integrationStage.getIdentifier()).isEqualTo("masterBuildUpload");
+    assertThat(integrationStage.getGitConnector()).isNotNull();
+    assertThat(integrationStage.getInfrastructure()).isNotNull();
+    assertThat(integrationStage.getContainer()).isNotNull();
+    assertThat(integrationStage.getCustomVariables()).isNotNull();
+
+    ExecutionElement execution = integrationStage.getExecution();
     assertThat(execution).isNotNull();
     assertThat(execution.getSteps()).hasSize(5);
   }

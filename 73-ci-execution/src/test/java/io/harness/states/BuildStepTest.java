@@ -57,10 +57,7 @@ public class BuildStepTest extends CIExecutionTest {
         .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
 
     buildStep.executeSync(ambiance,
-        BuildStepInfo.builder()
-            .build(BuildStepInfo.Build.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build())
-            .build(),
-        null, null);
+        BuildStepInfo.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build(), null, null);
 
     verify(managerCIResource, times(1)).podCommandExecutionTask(any(), any());
   }
@@ -78,10 +75,7 @@ public class BuildStepTest extends CIExecutionTest {
         .thenReturn(K8PodDetails.builder().podName("abc").clusterName("cluster").namespace("namespace").build());
 
     buildStep.executeSync(ambiance,
-        BuildStepInfo.builder()
-            .build(BuildStepInfo.Build.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build())
-            .build(),
-        null, null);
+        BuildStepInfo.builder().scriptInfos(ciExecutionPlanTestHelper.getBuildCommandSteps()).build(), null, null);
 
     verify(managerCIResource, times(1)).podCommandExecutionTask(any(), any());
   }

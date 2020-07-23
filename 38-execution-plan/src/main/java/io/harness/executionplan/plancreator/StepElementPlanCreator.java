@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class CDGenericStepPlanCreator implements SupportDefinedExecutorPlanCreator<StepElement> {
+public class StepElementPlanCreator implements SupportDefinedExecutorPlanCreator<StepElement> {
   @Inject private StepDependencyService stepDependencyService;
 
   @Override

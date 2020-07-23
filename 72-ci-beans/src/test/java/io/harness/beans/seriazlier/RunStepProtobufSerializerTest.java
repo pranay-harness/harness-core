@@ -30,14 +30,13 @@ public class RunStepProtobufSerializerTest extends CIBeansTest {
   @Category(UnitTests.class)
   public void shouldSerializeRunStep() throws InvalidProtocolBufferException {
     RunStepInfo runStepInfo = RunStepInfo.builder()
-                                  .displayName(RUN_STEP)
+                                  .name(RUN_STEP)
                                   .identifier(RUN_STEP_ID)
                                   .retry(RETRY)
                                   .timeout(TIMEOUT)
-                                  .run(RunStepInfo.Run.builder()
-                                           .output(Arrays.asList(OUTPUT))
-                                           .command(Arrays.asList(MVN_CLEAN_INSTALL))
-                                           .build())
+                                  .command(Arrays.asList(MVN_CLEAN_INSTALL))
+                                  .output(Arrays.asList(OUTPUT))
+
                                   .build();
     String serialize = protobufSerializer.serialize(runStepInfo);
     Step runStep = Step.parseFrom(Base64.decodeBase64(serialize));

@@ -1,63 +1,66 @@
-identifier: publishArtifacts
-displayName: publish artifacts step test
-publishArtifacts:
-- filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
-  nexus:
-    connector: myNexusConnector
-    path: path/to/myfile/on/server
+step:
+  identifier: publishArtifacts
+  name: publish artifacts step test
+  type: publishArtifacts
+  spec:
+    publishArtifacts:
+    - filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
+      nexus:
+        connector: myNexusConnector
+        path: path/to/myfile/on/server
 
-- filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
-  artifactory:
-    connector: myArtifactoryConnector
-    repository: myRepo
-    artifactPath: path/to/myfile/on/server
+    - filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
+      artifactory:
+        connector: myArtifactoryConnector
+        repository: myRepo
+        artifactPath: path/to/myfile/on/server
 
-- filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
-  s3:
-    connector: myS3Connector
-    location: s3://snapshot-watcher-jars/artifacts/
+    - filePattern: ~/.m2/*-${BUILD_NUMBER}.jar
+      s3:
+        connector: myS3Connector
+        location: s3://snapshot-watcher-jars/artifacts/
 
-- dockerFile: ~/Dockerfile
-  context: ~/workspace
-  image: ui
-  tag: 1.0.0
-  buildArguments:
-    - key: key1
-      value: value1
-    - key: key2
-      value: value2
-  ecr:
-    connector: myDockerRepoConnector
-    location: eu.gcr.io/harness/ui:latest
-    region: US-West
+    - dockerFile: ~/Dockerfile
+      context: ~/workspace
+      image: ui
+      tag: 1.0.0
+      buildArguments:
+        - key: key1
+          value: value1
+        - key: key2
+          value: value2
+      ecr:
+        connector: myDockerRepoConnector
+        location: eu.gcr.io/harness/ui:latest
+        region: US-West
 
-- dockerFile: ~/Dockerfile
-  context: ~/workspace
-  image: ui
-  tag: 1.0.0
-  buildArguments:
-    - key: key1
-      value: value1
-    - key: key2
-      value: value2
-  dockerhub:
-    connector: myDockerHubConnector # credentials are always needed to push
+    - dockerFile: ~/Dockerfile
+      context: ~/workspace
+      image: ui
+      tag: 1.0.0
+      buildArguments:
+        - key: key1
+          value: value1
+        - key: key2
+          value: value2
+      dockerhub:
+        connector: myDockerHubConnector # credentials are always needed to push
 
-- dockerFile: ~/Dockerfile
-  context: ~/workspace
-  image: ui
-  tag: 1.0.0
-  buildArguments:
-    - key: key1
-      value: value1
-    - key: key2
-      value: value2
-  gcr:
-    connector: myDockerRepoConnector
-    location: eu.gcr.io/harness/ui:latest
+    - dockerFile: ~/Dockerfile
+      context: ~/workspace
+      image: ui
+      tag: 1.0.0
+      buildArguments:
+        - key: key1
+          value: value1
+        - key: key2
+          value: value2
+      gcr:
+        connector: myDockerRepoConnector
+        location: eu.gcr.io/harness/ui:latest
 
-- dockerImage: build-based-image
-  tag: 1.0.0
-  gcr:
-    connector: myDockerRepoConnector
-    location: eu.gcr.io/harness/ui:latest
+    - dockerImage: build-based-image
+      tag: 1.0.0
+      gcr:
+        connector: myDockerRepoConnector
+        location: eu.gcr.io/harness/ui:latest

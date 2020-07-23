@@ -26,9 +26,10 @@ import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.yaml.core.Artifact;
-import io.harness.yaml.core.Execution;
-import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
-import io.harness.yaml.core.auxiliary.intfc.StageWrapper;
+import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.core.StageElement;
+import io.harness.yaml.core.StepElement;
+import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.intfc.Infrastructure;
 import org.jetbrains.annotations.NotNull;
@@ -90,19 +91,13 @@ public class CIExecutionPlanTestHelper {
   }
 
   public BuildEnvSetupStepInfo getBuildEnvSetupStepInfo() {
-    return BuildEnvSetupStepInfo.builder()
-        .identifier(ENV_SETUP_NAME)
-        .setupEnv(BuildEnvSetupStepInfo.BuildEnvSetup.builder().buildJobEnvInfo(getCIBuildJobEnvInfo()).build())
-        .build();
+    return BuildEnvSetupStepInfo.builder().identifier(ENV_SETUP_NAME).buildJobEnvInfo(getCIBuildJobEnvInfo()).build();
   }
 
   public StepInfoGraph getStepsGraph() {
     return StepInfoGraph.builder()
         .steps(asList(getBuildEnvSetupStepInfo(),
-            TestStepInfo.builder()
-                .identifier(BUILD_STAGE_NAME)
-                .test(TestStepInfo.Test.builder().scriptInfos(getBuildCommandSteps()).build())
-                .build()))
+            TestStepInfo.builder().identifier(BUILD_STAGE_NAME).scriptInfos(getBuildCommandSteps()).build()))
         .build();
   }
 
@@ -110,34 +105,38 @@ public class CIExecutionPlanTestHelper {
     return K8BuildJobEnvInfo.builder().podsSetupInfo(getCIPodsSetupInfo()).build();
   }
 
-  public Execution getExecution() {
-    List<ExecutionSection> executionSectionList = getExecutionSections();
-    return Execution.builder().steps(executionSectionList).build();
+  public ExecutionElement getExecutionElement() {
+    List<ExecutionWrapper> executionSectionList = getExecutionSections();
+    return ExecutionElement.builder().steps(executionSectionList).build();
   }
 
   @NotNull
-  public List<ExecutionSection> getExecutionSections() {
-    return new ArrayList<>(Arrays.asList(GitCloneStepInfo.builder()
-                                             .gitClone(GitCloneStepInfo.GitClone.builder().branch("master").build())
-                                             .identifier("git-1")
-                                             .build(),
-        GitCloneStepInfo.builder()
-            .gitClone(GitCloneStepInfo.GitClone.builder().branch("feature/f1").build())
-            .identifier("git-2")
-            .build(),
-        PublishStepInfo.builder()
-            .publishArtifacts(asList(DockerFileArtifact.builder()
-                                         .connector(GcrConnector.builder()
-                                                        .connector("gcr-connector")
-                                                        .location("us.gcr.io/ci-play/portal:v01")
-                                                        .build())
-                                         .tag("v01")
-                                         .image("ci-play/portal")
-                                         .context("~/")
-                                         .dockerFile("~/Dockerfile")
-                                         .build()))
-            .identifier("publish-1")
-            .build()));
+  public List<ExecutionWrapper> getExecutionSections() {
+    return new ArrayList<>(
+        Arrays.asList(StepElement.builder()
+                          .identifier("git-1")
+                          .stepSpecType(GitCloneStepInfo.builder().branch("master").identifier("git-1").build())
+                          .build(),
+            StepElement.builder()
+                .identifier("git-2")
+                .stepSpecType(GitCloneStepInfo.builder().branch("feature/f1").identifier("git-2").build())
+                .build(),
+            StepElement.builder()
+                .identifier("publish-1")
+                .stepSpecType(PublishStepInfo.builder()
+                                  .publishArtifacts(asList(DockerFileArtifact.builder()
+                                                               .connector(GcrConnector.builder()
+                                                                              .connector("gcr-connector")
+                                                                              .location("us.gcr.io/ci-play/portal:v01")
+                                                                              .build())
+                                                               .tag("v01")
+                                                               .image("ci-play/portal")
+                                                               .context("~/")
+                                                               .dockerFile("~/Dockerfile")
+                                                               .build()))
+                                  .identifier("publish-1")
+                                  .build())
+                .build()));
   }
 
   public Set<String> getPublishArtifactConnectorIds() {
@@ -150,8 +149,8 @@ public class CIExecutionPlanTestHelper {
     return CIPipeline.builder().identifier("testPipelineIdentifier").stages(getStages()).build();
   }
 
-  private List<StageWrapper> getStages() {
-    return new ArrayList<>(Collections.singletonList(getIntegrationStage()));
+  private List<StageElement> getStages() {
+    return new ArrayList<>(Collections.singletonList(getIntegrationStageElement()));
   }
 
   public Connector getConnector() {
@@ -199,17 +198,18 @@ public class CIExecutionPlanTestHelper {
                   .build())
         .build();
   }
+  public StageElement getIntegrationStageElement() {
+    return StageElement.builder().identifier("intStageIdentifier").stageType(getIntegrationStage()).build();
+  }
+
   public IntegrationStage getIntegrationStage() {
     return IntegrationStage.builder()
         .identifier("intStageIdentifier")
-        .ci(IntegrationStage.Integration.builder()
-                .execution(getExecution())
-                .gitConnector(getConnector())
-                .container(getContainer())
-                .infrastructure(getInfrastructure())
-                .customVariables(getCustomVariables())
-                .build())
-
+        .execution(getExecutionElement())
+        .gitConnector(getConnector())
+        .container(getContainer())
+        .infrastructure(getInfrastructure())
+        .customVariables(getCustomVariables())
         .build();
   }
 

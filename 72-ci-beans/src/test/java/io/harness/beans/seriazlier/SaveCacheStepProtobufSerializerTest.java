@@ -28,13 +28,12 @@ public class SaveCacheStepProtobufSerializerTest extends CIBeansTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldSerializeSaveCache() throws InvalidProtocolBufferException {
-    SaveCacheStepInfo saveCacheStepInfo =
-        SaveCacheStepInfo.builder()
-            .displayName(SAVE_CACHE)
-            .identifier(SAVE_CACHE_ID)
-            .saveCache(
-                SaveCacheStepInfo.SaveCache.builder().key(SAVE_CACHE_KEY).paths(Arrays.asList(PATH_1, PATH_2)).build())
-            .build();
+    SaveCacheStepInfo saveCacheStepInfo = SaveCacheStepInfo.builder()
+                                              .name(SAVE_CACHE)
+                                              .identifier(SAVE_CACHE_ID)
+                                              .key(SAVE_CACHE_KEY)
+                                              .paths(Arrays.asList(PATH_1, PATH_2))
+                                              .build();
     String serialize = protobufSerializer.serialize(saveCacheStepInfo);
     Step saveCacheStep = Step.parseFrom(Base64.decodeBase64(serialize));
 

@@ -17,12 +17,12 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.Execution;
+import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.core.StepElement;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
@@ -40,17 +40,19 @@ public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldModifyExecutionPlan() {
     IntegrationStage stage = ciExecutionPlanTestHelper.getIntegrationStage();
-    Execution modifiedExecution = stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage);
+    ExecutionElement modifiedExecution = stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage);
     assertThat(modifiedExecution).isNotNull();
     assertThat(modifiedExecution.getSteps()).isNotNull();
-    LiteEngineTaskStepInfo liteEngineTask = (LiteEngineTaskStepInfo) modifiedExecution.getSteps().get(0);
+    StepElement step = (StepElement) modifiedExecution.getSteps().get(0);
+    assertThat(step.getStepSpecType()).isInstanceOf(LiteEngineTaskStepInfo.class);
+    LiteEngineTaskStepInfo liteEngineTask = (LiteEngineTaskStepInfo) step.getStepSpecType();
     assertThat(liteEngineTask).isInstanceOf(LiteEngineTaskStepInfo.class);
-    assertThat(liteEngineTask.getEnvSetup().getBranchName()).isEqualTo("master");
-    assertThat(liteEngineTask.getEnvSetup().getGitConnectorIdentifier()).isEqualTo("testGitConnector");
-    assertThat(liteEngineTask.getEnvSetup().getSteps()).isEqualTo(ciExecutionPlanTestHelper.getExecution());
-    K8BuildJobEnvInfo envInfo = (K8BuildJobEnvInfo) liteEngineTask.getEnvSetup().getBuildJobEnvInfo();
+    assertThat(liteEngineTask.getBranchName()).isEqualTo("master");
+    assertThat(liteEngineTask.getGitConnectorIdentifier()).isEqualTo("testGitConnector");
+    assertThat(liteEngineTask.getSteps()).isEqualTo(ciExecutionPlanTestHelper.getExecutionElement());
+    K8BuildJobEnvInfo envInfo = (K8BuildJobEnvInfo) liteEngineTask.getBuildJobEnvInfo();
     assertThat(envInfo.getType()).isEqualTo(K8);
-    assertThat(envInfo.getWorkDir()).isEqualTo(stage.getCi().getWorkingDirectory());
+    assertThat(envInfo.getWorkDir()).isEqualTo(stage.getWorkingDirectory());
     assertThat(envInfo.getPublishStepConnectorIdentifier())
         .isEqualTo(ciExecutionPlanTestHelper.getPublishArtifactConnectorIds());
     assertThat(envInfo.getPodsSetupInfo()).isEqualTo(ciExecutionPlanTestHelper.getCIPodsSetupInfo());
@@ -61,15 +63,13 @@ public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void testExpectingGitConnector() {
     IntegrationStage stage = IntegrationStage.builder()
-                                 .ci(IntegrationStage.Integration.builder()
-                                         .execution(ciExecutionPlanTestHelper.getExecution())
-                                         .gitConnector(GitConnectorYaml.builder().type("***").build())
-                                         .container(ciExecutionPlanTestHelper.getContainer())
-                                         .build())
+                                 .execution(ciExecutionPlanTestHelper.getExecutionElement())
+                                 .gitConnector(GitConnectorYaml.builder().type("***").build())
+                                 .container(ciExecutionPlanTestHelper.getContainer())
                                  .build();
 
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage));
+        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage));
   }
 
   @Test
@@ -78,17 +78,16 @@ public class CILiteEngineStepExecutionModifierTest extends CIExecutionTest {
   public void testExpectingGitConnectorWithoutGitStep() {
     IntegrationStage stage =
         IntegrationStage.builder()
-            .ci(IntegrationStage.Integration.builder()
-                    .execution(Execution.builder()
-                                   .steps(new ArrayList<>(Arrays.asList(RunStepInfo.builder().build())))
-                                   .build())
-                    .gitConnector(ciExecutionPlanTestHelper.getConnector())
-                    .container(ciExecutionPlanTestHelper.getContainer())
+            .execution(
+                ExecutionElement.builder()
+                    .steps(Arrays.asList(StepElement.builder().stepSpecType(RunStepInfo.builder().build()).build()))
                     .build())
+            .gitConnector(ciExecutionPlanTestHelper.getConnector())
+            .container(ciExecutionPlanTestHelper.getContainer())
             .build();
 
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getCi().getExecution(), stage));
+        .isThrownBy(() -> stageExecutionModifier.modifyExecutionPlan(stage.getExecution(), stage));
   }
 
   @Test

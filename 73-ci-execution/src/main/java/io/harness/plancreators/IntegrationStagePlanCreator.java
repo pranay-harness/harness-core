@@ -23,7 +23,7 @@ import io.harness.integrationstage.CILiteEngineStepExecutionModifier;
 import io.harness.integrationstage.StageExecutionModifier;
 import io.harness.plan.PlanNode;
 import io.harness.states.IntegrationStageStep;
-import io.harness.yaml.core.Execution;
+import io.harness.yaml.core.ExecutionElement;
 
 import java.security.SecureRandom;
 import java.util.Collections;
@@ -38,8 +38,8 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
     StageExecutionModifier stageExecutionModifier =
         CILiteEngineStepExecutionModifier.builder().podName(podName).build();
 
-    Execution execution = integrationStage.getCi().getExecution();
-    Execution modifiedExecutionPlan = stageExecutionModifier.modifyExecutionPlan(execution, integrationStage);
+    ExecutionElement execution = integrationStage.getExecution();
+    ExecutionElement modifiedExecutionPlan = stageExecutionModifier.modifyExecutionPlan(execution, integrationStage);
 
     final CreateExecutionPlanResponse planForExecution = createPlanForExecution(modifiedExecutionPlan, context);
 
@@ -52,9 +52,11 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
         .build();
   }
 
-  private CreateExecutionPlanResponse createPlanForExecution(Execution execution, CreateExecutionPlanContext context) {
-    final ExecutionPlanCreator<Execution> executionPlanCreator = executionPlanCreatorHelper.getExecutionPlanCreator(
-        EXECUTION_PLAN_CREATOR.getName(), execution, context, "no execution plan creator found for execution");
+  private CreateExecutionPlanResponse createPlanForExecution(
+      ExecutionElement execution, CreateExecutionPlanContext context) {
+    final ExecutionPlanCreator<ExecutionElement> executionPlanCreator =
+        executionPlanCreatorHelper.getExecutionPlanCreator(
+            EXECUTION_PLAN_CREATOR.getName(), execution, context, "no execution plan creator found for execution");
 
     return executionPlanCreator.createPlan(execution, context);
   }

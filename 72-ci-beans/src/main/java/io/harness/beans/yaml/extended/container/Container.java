@@ -6,13 +6,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.beans.ConstructorProperties;
+import java.util.Optional;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class Container implements WithIdentifier {
   public static final int MEM_RESERVE_DEFAULT = 9000;
   public static final int MEM_LIMIT_DEFAULT = 9000;
@@ -22,7 +21,16 @@ public class Container implements WithIdentifier {
   @NotNull private String identifier;
   @NotNull private String connector;
   @NotNull private String imagePath;
-  @NotNull @Builder.Default Resources resources = Resources.builder().build();
+  @NotNull Resources resources;
+
+  @Builder
+  @ConstructorProperties({"identifier", "connector", "imagePath", "resources"})
+  public Container(String identifier, String connector, String imagePath, Resources resources) {
+    this.identifier = identifier;
+    this.connector = connector;
+    this.imagePath = imagePath;
+    this.resources = Optional.ofNullable(resources).orElse(Resources.builder().build());
+  }
 
   @Data
   @Builder

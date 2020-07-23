@@ -9,7 +9,8 @@ import io.harness.beans.CIBeansTest;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.Execution;
+import io.harness.yaml.core.ExecutionElement;
+import io.harness.yaml.core.StepElement;
 import lombok.SneakyThrows;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
@@ -18,24 +19,30 @@ import org.junit.experimental.categories.Category;
 import java.util.Arrays;
 
 public class ExecutionProtobufSerializerTest extends CIBeansTest {
-  @Inject ProtobufSerializer<Execution> executionProtobufSerializer;
+  @Inject ProtobufSerializer<ExecutionElement> executionProtobufSerializer;
 
   @SneakyThrows
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void serialize() {
-    RunStepInfo run1 = RunStepInfo.builder()
-                           .displayName("run1")
+    StepElement run1 = StepElement.builder()
+                           .name("run1")
                            .identifier("runId1")
-                           .run(RunStepInfo.Run.builder().command(Arrays.asList("run1c1", "run1c2")).build())
+                           .stepSpecType(RunStepInfo.builder()
+                                             .name("run1")
+                                             .identifier("runId1")
+                                             .command(Arrays.asList("run1c1", "run1c2"))
+                                             .build())
                            .build();
-    RunStepInfo run2 = RunStepInfo.builder()
-                           .displayName("run2")
-                           .identifier("runId2")
-                           .run(RunStepInfo.Run.builder().command(Arrays.asList("run2c1", "run2c2")).build())
+    StepElement run2 = StepElement.builder()
+                           .stepSpecType(RunStepInfo.builder()
+                                             .name("run2")
+                                             .identifier("runId2")
+                                             .command(Arrays.asList("run2c1", "run2c2"))
+                                             .build())
                            .build();
-    Execution execution = Execution.builder().steps(Arrays.asList(run1, run2)).build();
+    ExecutionElement execution = ExecutionElement.builder().steps(Arrays.asList(run1, run2)).build();
 
     String steps = executionProtobufSerializer.serialize(execution);
     byte[] bytes = Base64.decodeBase64(steps);

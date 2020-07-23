@@ -16,7 +16,7 @@ import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.govern.DependencyModule;
-import io.harness.yaml.core.Execution;
+import io.harness.yaml.core.ExecutionElement;
 
 import java.util.Set;
 
@@ -33,7 +33,7 @@ public class CIBeansModule extends DependencyModule {
   @Override
   protected void configure() {
     bind(new TypeLiteral<GraphOperations<CIStepInfo>>() {}).toInstance(new GraphOperations<>());
-    bind(new TypeLiteral<ProtobufSerializer<Execution>>() {}).toInstance(new ExecutionProtobufSerializer());
+    bind(new TypeLiteral<ProtobufSerializer<ExecutionElement>>() {}).toInstance(new ExecutionProtobufSerializer());
     bind(new TypeLiteral<ProtobufSerializer<RunStepInfo>>() {}).toInstance(new RunStepProtobufSerializer());
     bind(new TypeLiteral<ProtobufSerializer<SaveCacheStepInfo>>() {}).toInstance(new SaveCacheStepProtobufSerializer());
     bind(new TypeLiteral<ProtobufSerializer<RestoreCacheStepInfo>>() {})

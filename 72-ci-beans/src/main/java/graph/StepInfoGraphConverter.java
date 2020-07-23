@@ -9,8 +9,9 @@ import com.google.inject.Singleton;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.yaml.core.Graph;
 import io.harness.yaml.core.Parallel;
-import io.harness.yaml.core.auxiliary.intfc.ExecutionSection;
-import io.harness.yaml.core.auxiliary.intfc.StepWrapper;
+import io.harness.yaml.core.StepElement;
+import io.harness.yaml.core.StepSpecType;
+import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,21 +24,22 @@ public class StepInfoGraphConverter {
   @Inject private GraphOperations<CIStepInfo> operations;
 
   /**
-   * Converts list of {@link ExecutionSection} to StepInfoGraph
+   * Converts list of {@link ExecutionWrapper} to StepInfoGraph
    * @param sections list of section coming from yaml conversion
    * @return Graph containing steps
    */
-  public StepInfoGraph convert(List<ExecutionSection> sections) {
+  public StepInfoGraph convert(List<ExecutionWrapper> sections) {
     final StepInfoGraph graph = StepInfoGraph.builder().build();
     StepInfoGraph currentSectionGraph;
     if (isEmpty(sections)) {
       // return empty graph.
       return graph;
     }
-    for (ExecutionSection section : sections) {
-      if (section instanceof CIStepInfo) {
+    for (ExecutionWrapper section : sections) {
+      if (section instanceof StepElement) {
         // process single step
-        currentSectionGraph = handleStepSection((CIStepInfo) section);
+        StepSpecType spec = ((StepElement) section).getStepSpecType();
+        currentSectionGraph = handleStepSection((CIStepInfo) spec);
       } else if (section instanceof Parallel) {
         // process parallel section
         currentSectionGraph = handleParallelSection((Parallel) section);
@@ -91,14 +93,14 @@ public class StepInfoGraphConverter {
   private StepInfoGraph handleParallelSection(Parallel parallel) {
     StepInfoGraph stepInfoGraph = StepInfoGraph.builder().build();
 
-    List<StepWrapper> parallelSections = parallel.getSections();
+    List<StepElement> parallelSections = parallel.getSections();
     // skip if null
     if (isEmpty(parallelSections)) {
       return stepInfoGraph;
     }
 
     // add each node
-    parallelSections.stream().map(step -> (CIStepInfo) step).forEach(stepInfoGraph::addNode);
+    parallelSections.stream().map(step -> (CIStepInfo) step.getStepSpecType()).forEach(stepInfoGraph::addNode);
 
     // return all parallel steps as previous steps
     return stepInfoGraph;
@@ -124,7 +126,7 @@ public class StepInfoGraphConverter {
       return stepInfoGraph;
     }
 
-    graph.getSections().stream().map(step -> (CIStepInfo) step).forEach(stepInfoGraph::addNode);
+    graph.getSections().stream().map(step -> (CIStepInfo) step.getStepSpecType()).forEach(stepInfoGraph::addNode);
 
     // add dependencies
     stepInfoGraph.getAllNodes().forEach(step

@@ -1,11 +1,12 @@
 pipeline:
   identifier: cipipeline
-  displayName: Integration Pipeline
+  name: Integration Pipeline
   description: sample pipeline used for testing
   stages:
     - stage:
         identifier: masterBuildUpload
-        ci:
+        type: ci
+        spec:
           description: This stage is run hourly to build binaries from master and upload
           infrastructure:
             type: kubernetes-direct
@@ -13,8 +14,8 @@ pipeline:
               kubernetesCluster: MyKubeCluster1
               namespace: ShoppingCart
           gitConnector:
-            type: git
             identifier: gitRepo
+            type: git
             spec:
               authScheme:
                 type: ssh
@@ -35,50 +36,58 @@ pipeline:
             steps:
               - step:
                   identifier: gitClone
-                  gitClone:
+                  type: gitClone
+                  spec:
                     gitConnector: gitGlobal
                     path: portal
                     branch: master
               - parallel:
                   - step:
                       identifier: runLint
-                      retryCount: 2
-                      timeout: 30
-                      run:
+                      type: run
+                      spec:
+                        retry: 2
+                        timeout: 30
                         command:
                           - ./run lint
                   - step:
                       identifier: runUnitTests
-                      retryCount: 2
-                      timeout: 30
-                      run:
+                      type: run
+                      spec:
+                        retry: 2
+                        timeout: 30
                         command:
                           - mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine="-Xmx2048m"
               - step:
                   identifier: generateReport
-                  timeout: 30
-                  retryCount: 2
-                  run:
+                  type: run
+                  spec:
+                    timeout: 30
+                    retry: 2
                     command:
                       - ./ci/generate_report.sh
               - step:
                   identifier: buildMaster
-                  retryCount: 2
-                  timeout: 75
-                  run:
+                  type: run
+                  spec:
+                    retry: 2
+                    timeout: 75
                     command:
                       - mvn clean install
               - step:
                   identifier: uploadArtifact
-                  publishArtifacts:
-                    - dockerFile: ~/Dockerfile
-                      image: ui
-                      tag: 1.0.0
-                      buildArguments:
-                        - key : key1
-                          value: value1
-                        - key: key2
-                          value: value2
-                      gcr:
-                        location: eu.gcr.io/harness/ui:latest
-                        connector: myDockerRepoConnector
+                  type: publishArtifacts
+                  spec:
+                    publishArtifacts:
+                      - dockerFile: Dockerfile
+                        context: workspace
+                        image: ui
+                        tag: 1.0.0
+                        buildArguments:
+                          - key : key1
+                            value: value1
+                          - key: key2
+                            value: value2
+                        gcr:
+                          location: eu.gcr.io/harness/ui:latest
+                          connector: myDockerRepoConnector
