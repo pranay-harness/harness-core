@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.NextGenBaseTest;
+import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.cdng.pipeline.CDPipeline;
 import io.harness.executionplan.service.ExecutionPlanCreatorService;
@@ -24,7 +24,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PipelinePlanTest extends NextGenBaseTest {
+public class PipelinePlanTest extends CDNGBaseTest {
   @Inject ExecutionPlanCreatorRegistrar executionPlanCreatorRegistrar;
   @Inject private ExecutionPlanCreatorService executionPlanCreatorService;
 

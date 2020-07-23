@@ -10,6 +10,7 @@ public class NGRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(ManagerRegistrars.kryoRegistrars)
+          .addAll(NGCoreRegistrars.kryoRegistrars)
           .add(NGKryoRegistrar.class)
           .build();
 }

@@ -4,13 +4,13 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.cdng.common.AmbianceHelper;
-import io.harness.cdng.environment.EnvironmentService;
-import io.harness.cdng.environment.beans.Environment;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.execution.status.Status;
 import io.harness.executionplan.plancreator.beans.StepGroup;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.sync.SyncExecutable;
+import io.harness.ng.core.environment.beans.Environment;
+import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
@@ -47,12 +47,12 @@ public class EnvironmentStep implements Step, SyncExecutable {
     String orgId = AmbianceHelper.getOrgIdentifier(ambiance);
 
     return Environment.builder()
-        .displayName(environmentYaml.getName())
+        .name(environmentYaml.getName())
         .accountId(accountId)
-        .environmentType(environmentYaml.getType())
+        .type(environmentYaml.getType())
         .identifier(environmentYaml.getIdentifier())
-        .orgId(orgId)
-        .projectId(projectId)
+        .orgIdentifier(orgId)
+        .projectIdentifier(projectId)
         .tags(environmentYaml.getTags())
         .build();
   }

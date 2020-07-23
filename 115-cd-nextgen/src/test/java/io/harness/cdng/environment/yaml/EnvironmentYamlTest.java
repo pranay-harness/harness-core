@@ -4,8 +4,8 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.common.beans.Tag;
-import io.harness.cdng.environment.beans.EnvironmentType;
+import io.harness.ng.core.common.beans.Tag;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

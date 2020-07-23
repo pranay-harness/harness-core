@@ -83,6 +83,7 @@ public class NextGenModule extends DependencyModule {
     install(new CoreModule());
     install(new ConnectorModule());
     install(new GitSyncModule());
+    install(NGModule.getInstance());
     install(new SecretManagementModule());
     install(new SecretManagementClientModule(
         this.appConfig.getSecretManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
@@ -138,6 +139,6 @@ public class NextGenModule extends DependencyModule {
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
                                             .build()),
-        ExecutionPlanModule.getInstance(), NGModule.getInstance());
+        ExecutionPlanModule.getInstance());
   }
 }

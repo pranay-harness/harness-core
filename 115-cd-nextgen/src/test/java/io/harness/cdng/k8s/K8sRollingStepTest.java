@@ -7,7 +7,7 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.NextGenBaseTest;
+import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class K8sRollingStepTest extends NextGenBaseTest {
+public class K8sRollingStepTest extends CDNGBaseTest {
   @Mock StepDependencyService stepDependencyService;
   @InjectMocks private K8sRollingStep k8sRollingStep;
 

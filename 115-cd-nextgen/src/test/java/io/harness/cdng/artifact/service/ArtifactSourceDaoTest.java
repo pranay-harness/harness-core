@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.NextGenBaseTest;
+import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.repository.ArtifactSourceDao;
@@ -16,7 +16,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import software.wings.utils.WingsTestConstants;
 
-public class ArtifactSourceDaoTest extends NextGenBaseTest {
+public class ArtifactSourceDaoTest extends CDNGBaseTest {
   @Inject @InjectMocks ArtifactSourceDao artifactSourceDao;
 
   DockerArtifactSource dockerArtifactSource = DockerArtifactSource.builder()

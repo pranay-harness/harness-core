@@ -7,21 +7,23 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.NextGenBaseTest;
+import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
-import io.harness.cdng.environment.EnvironmentService;
-import io.harness.cdng.environment.beans.Environment;
-import io.harness.cdng.environment.beans.EnvironmentType;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
+import io.harness.ng.core.environment.beans.Environment;
+import io.harness.ng.core.environment.beans.EnvironmentType;
+import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepResponse;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
-public class EnvironmentStepTest extends NextGenBaseTest {
+public class EnvironmentStepTest extends CDNGBaseTest {
   @Inject EnvironmentService environmentService;
   @Inject EnvironmentStep environmentStep;
 
@@ -35,8 +37,11 @@ public class EnvironmentStepTest extends NextGenBaseTest {
     setupAbstractions.put(SetupAbstractionKeys.orgIdentifier, "orgId");
     Ambiance ambiance = Ambiance.builder().setupAbstractions(setupAbstractions).build();
 
-    EnvironmentYaml environmentYaml =
-        EnvironmentYaml.builder().identifier("test-id").type(EnvironmentType.PreProduction).build();
+    EnvironmentYaml environmentYaml = EnvironmentYaml.builder()
+                                          .identifier("test-id")
+                                          .type(EnvironmentType.PreProduction)
+                                          .tags(Collections.emptyList())
+                                          .build();
     EnvironmentStepParameters stepParameters =
         EnvironmentStepParameters.builder().environment(environmentYaml).environmentOverrides(null).build();
 
@@ -45,7 +50,7 @@ public class EnvironmentStepTest extends NextGenBaseTest {
     assertThat(((List<StepResponse.StepOutcome>) stepResponse.getStepOutcomes()).get(0).getOutcome())
         .isEqualTo(environmentYaml);
 
-    Environment savedEnvironment = environmentService.getEnvironment("accountId", "orgId", "projectId", "test-id");
-    assertThat(savedEnvironment).isNotNull();
+    Optional<Environment> savedEnvironment = environmentService.get("accountId", "orgId", "projectId", "test-id");
+    assertThat(savedEnvironment).isPresent();
   }
 }
