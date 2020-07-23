@@ -18,7 +18,7 @@ public class ManagerRegistrars {
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(ManagerKryoRegistrar.class)
           .add(ProjectAndOrgKryoRegistrar.class)
-          .addAll(NGCoreBeansRegistrar.kryoRegistrars)
+          .addAll(NGCoreRegistrars.kryoRegistrars)
           .add(SecretManagerClientKryoRegistrar.class)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
           // temporary:
