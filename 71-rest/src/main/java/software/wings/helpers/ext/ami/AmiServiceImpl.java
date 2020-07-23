@@ -76,7 +76,11 @@ public class AmiServiceImpl implements AmiService {
   }
 
   private void constructBuildDetails(List<BuildDetails> buildDetails, Image image) {
-    Map<String, String> metadata = image.getTags().stream().collect(Collectors.toMap(Tag::getKey, Tag::getValue));
+    // filtering out tags with "." in the keys as these lead to an exception when saving to mongo
+    Map<String, String> metadata = image.getTags()
+                                       .stream()
+                                       .filter(tag -> !tag.getKey().contains("."))
+                                       .collect(Collectors.toMap(Tag::getKey, Tag::getValue));
     metadata.put("ownerId", image.getOwnerId());
     metadata.put("imageType", image.getImageType());
     buildDetails.add(aBuildDetails()
