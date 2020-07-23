@@ -1,9 +1,9 @@
 package io.harness.cdng.environment.yaml;
 
-import io.harness.cdng.common.beans.Tag;
-import io.harness.cdng.environment.beans.EnvironmentType;
 import io.harness.data.Outcome;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.ng.core.common.beans.Tag;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.yaml.core.intfc.OverridesApplier;
 import lombok.Builder;
 import lombok.Value;
