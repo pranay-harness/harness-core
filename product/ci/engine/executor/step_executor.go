@@ -62,7 +62,7 @@ func (e *stepExecutor) Run(ctx context.Context, step *pb.Step) error {
 	switch x := step.GetStep().(type) {
 	case *pb.Step_Run:
 		e.log.Infow("Run step info", "step", x.Run.String())
-		if err := steps.NewRunStep(step, e.stepLogPath, fs, e.log).Run(ctx); err != nil {
+		if err := steps.NewRunStep(step, e.stepLogPath, e.tmpFilePath, fs, e.log).Run(ctx); err != nil {
 			return err
 		}
 	case *pb.Step_SaveCache:

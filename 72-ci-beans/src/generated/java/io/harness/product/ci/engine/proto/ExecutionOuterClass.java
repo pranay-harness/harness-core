@@ -56,24 +56,25 @@ public final class ExecutionOuterClass {
         + "t.ci.addon.proto.BuildPublishImageR\006imag"
         + "es\"d\n\013StepContext\022\037\n\013num_retries\030\001 \001(\005R\n"
         + "numRetries\0224\n\026execution_timeout_secs\030\002 \001"
-        + "(\003R\024executionTimeoutSecs\"p\n\007RunStep\022\032\n\010c"
-        + "ommands\030\001 \003(\tR\010commands\022I\n\007context\030\002 \001(\013"
-        + "2/.io.harness.product.ci.engine.proto.St"
-        + "epContextR\007context\"7\n\rSaveCacheStep\022\020\n\003k"
-        + "ey\030\001 \001(\tR\003key\022\024\n\005paths\030\002 \003(\tR\005paths\"O\n\020R"
-        + "estoreCacheStep\022\020\n\003key\030\001 \001(\tR\003key\022)\n\021fai"
-        + "l_if_not_exist\030\002 \001(\010R\016failIfNotExist\"\234\003\n"
-        + "\004Step\022\016\n\002id\030\001 \001(\tR\002id\022!\n\014display_name\030\002 "
-        + "\001(\tR\013displayName\022?\n\003run\030\003 \001(\0132+.io.harne"
-        + "ss.product.ci.engine.proto.RunStepH\000R\003ru"
-        + "n\022R\n\nsave_cache\030\004 \001(\01321.io.harness.produ"
-        + "ct.ci.engine.proto.SaveCacheStepH\000R\tsave"
-        + "Cache\022[\n\rrestore_cache\030\005 \001(\01324.io.harnes"
-        + "s.product.ci.engine.proto.RestoreCacheSt"
-        + "epH\000R\014restoreCache\022g\n\021publish_artifacts\030"
-        + "\006 \001(\01328.io.harness.product.ci.engine.pro"
-        + "to.PublishArtifactsStepH\000R\020publishArtifa"
-        + "ctsB\006\n\004stepB\016P\001Z\ncienginepbb\006proto3"};
+        + "(\003R\024executionTimeoutSecs\"\226\001\n\007RunStep\022\032\n\010"
+        + "commands\030\001 \003(\tR\010commands\022I\n\007context\030\002 \001("
+        + "\0132/.io.harness.product.ci.engine.proto.S"
+        + "tepContextR\007context\022$\n\renvVarOutputs\030\003 \003"
+        + "(\tR\renvVarOutputs\"7\n\rSaveCacheStep\022\020\n\003ke"
+        + "y\030\001 \001(\tR\003key\022\024\n\005paths\030\002 \003(\tR\005paths\"O\n\020Re"
+        + "storeCacheStep\022\020\n\003key\030\001 \001(\tR\003key\022)\n\021fail"
+        + "_if_not_exist\030\002 \001(\010R\016failIfNotExist\"\234\003\n\004"
+        + "Step\022\016\n\002id\030\001 \001(\tR\002id\022!\n\014display_name\030\002 \001"
+        + "(\tR\013displayName\022?\n\003run\030\003 \001(\0132+.io.harnes"
+        + "s.product.ci.engine.proto.RunStepH\000R\003run"
+        + "\022R\n\nsave_cache\030\004 \001(\01321.io.harness.produc"
+        + "t.ci.engine.proto.SaveCacheStepH\000R\tsaveC"
+        + "ache\022[\n\rrestore_cache\030\005 \001(\01324.io.harness"
+        + ".product.ci.engine.proto.RestoreCacheSte"
+        + "pH\000R\014restoreCache\022g\n\021publish_artifacts\030\006"
+        + " \001(\01328.io.harness.product.ci.engine.prot"
+        + "o.PublishArtifactsStepH\000R\020publishArtifac"
+        + "tsB\006\n\004stepB\016P\001Z\ncienginepbb\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             io.harness.product.ci.addon.proto.Addon.getDescriptor(),
@@ -110,6 +111,7 @@ public final class ExecutionOuterClass {
             new java.lang.String[] {
                 "Commands",
                 "Context",
+                "EnvVarOutputs",
             });
     internal_static_io_harness_product_ci_engine_proto_SaveCacheStep_descriptor =
         getDescriptor().getMessageTypes().get(4);

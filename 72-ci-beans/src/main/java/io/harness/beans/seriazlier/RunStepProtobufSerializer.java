@@ -18,6 +18,10 @@ public class RunStepProtobufSerializer implements ProtobufSerializer<RunStepInfo
     RunStepInfo.Run run = stepInfo.getRun();
     RunStep.Builder runStepBuilder = RunStep.newBuilder();
     runStepBuilder.addAllCommands(run.getCommand());
+    if (run.getOutput() != null) {
+      runStepBuilder.addAllEnvVarOutputs(run.getOutput());
+    }
+
     runStepBuilder.setContext(StepContext.newBuilder()
                                   .setNumRetries(stepInfo.getRetry())
                                   .setExecutionTimeoutSecs(stepInfo.getTimeout())

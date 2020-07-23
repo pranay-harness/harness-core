@@ -2,12 +2,14 @@ package steps
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
@@ -145,8 +147,10 @@ func TestExecuteSuccess(t *testing.T) {
 	logFile := filesystem.NewMockFile(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	e := runStep{
+		id:          "id",
 		log:         log.Sugar(),
 		commands:    []string{"l"},
+		tmpFilePath: "/tmp",
 		fs:          fs,
 		timeoutSecs: 5,
 	}
@@ -158,15 +162,125 @@ func TestExecuteSuccess(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestExecuteErrorWithOutput(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	originalExecCmdCtx := execCmdCtx
+	defer func() { execCmdCtx = originalExecCmdCtx }()
+	execCmdCtx = fakeExecCommandWithContext
+	mockedExitStatus = 0
+
+	var retryCount int32 = 1
+	fs := filesystem.NewMockFileSystem(ctrl)
+	logFile := filesystem.NewMockFile(ctrl)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	e := runStep{
+		id:            "id",
+		log:           log.Sugar(),
+		commands:      []string{"l"},
+		tmpFilePath:   "/tmp",
+		envVarOutputs: []string{"abc", "abc1"},
+		fs:            fs,
+		timeoutSecs:   5,
+	}
+
+	fs.EXPECT().Create(gomock.Any()).Return(logFile, nil)
+	fs.EXPECT().Open(gomock.Any()).Return(nil, errors.New(
+		fmt.Sprintf("Error while opening file")))
+	logFile.EXPECT().Close().Return(nil)
+
+	err := e.execute(ctx, retryCount)
+	assert.NotNil(t, err)
+}
+
+func TestExecuteSuccessWithOutput(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	filePath := "/tmp/idoutput.txt"
+	defer ctrl.Finish()
+
+	originalExecCmdCtx := execCmdCtx
+	defer func() { execCmdCtx = originalExecCmdCtx }()
+	execCmdCtx = fakeExecCommandWithContext
+	mockedExitStatus = 0
+
+	var retryCount int32 = 1
+	fs := filesystem.NewMockFileSystem(ctrl)
+	logFile := filesystem.NewMockFile(ctrl)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	f, err := os.Create(filePath)
+	if err != nil {
+		panic(err)
+	}
+	f.WriteString("abc xyz\n")
+	f.WriteString("abc1")
+	f.Close()
+
+	f1, err := os.Open(filePath)
+	e := runStep{
+		id:            "id",
+		log:           log.Sugar(),
+		commands:      []string{"export abc=xyz"},
+		tmpFilePath:   "/tmp",
+		envVarOutputs: []string{"abc", "abc1"},
+		fs:            fs,
+		timeoutSecs:   5,
+	}
+
+	fs.EXPECT().Open(gomock.Any()).Return(f1, nil)
+	fs.EXPECT().Create(gomock.Any()).Return(logFile, nil)
+	logFile.EXPECT().Close().Return(nil)
+
+	errExec := e.execute(ctx, retryCount)
+	assert.Nil(t, errExec)
+}
+
+func TestFetchOutputVariables(t *testing.T) {
+	ctrl, _ := gomock.WithContext(context.Background(), t)
+	filePath := "/tmp/idoutput.txt"
+	defer ctrl.Finish()
+
+	originalExecCmdCtx := execCmdCtx
+	defer func() { execCmdCtx = originalExecCmdCtx }()
+	execCmdCtx = fakeExecCommandWithContext
+	mockedExitStatus = 0
+	fs := filesystem.NewMockFileSystem(ctrl)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	f, err := os.Create(filePath)
+	if err != nil {
+		panic(err)
+	}
+	f.WriteString("abc xyz")
+	f.Close()
+
+	f1, err := os.Open(filePath)
+	e := runStep{
+		id:          "id",
+		log:         log.Sugar(),
+		commands:    []string{"l"},
+		tmpFilePath: "tmp",
+		fs:          fs,
+		timeoutSecs: 5,
+	}
+	fs.EXPECT().Open(gomock.Any()).Return(f1, nil)
+	expectedEnvVarMap := make(map[string]string)
+	expectedEnvVarMap["abc"] = "xyz"
+	envVarMap, err := e.fetchOutputVariables(filePath)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedEnvVarMap, envVarMap)
+	os.Remove(filePath)
+}
+
 func TestRunValidateErr(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
 	logFilePath := "/a/"
+	tmpPath := "/tmp/"
 	fs := filesystem.NewMockFileSystem(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
-	executor := NewRunStep(nil, logFilePath, fs, log.Sugar())
+	executor := NewRunStep(nil, logFilePath, tmpPath, fs, log.Sugar())
 	err := executor.Run(ctx)
 	assert.NotNil(t, err)
 }
@@ -174,7 +288,7 @@ func TestRunValidateErr(t *testing.T) {
 func TestRunExecuteErr(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
-
+	tmpPath := "/tmp/"
 	logFilePath := "/a/"
 	fs := filesystem.NewMockFileSystem(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
@@ -189,7 +303,7 @@ func TestRunExecuteErr(t *testing.T) {
 
 	fs.EXPECT().Create(gomock.Any()).Return(nil, os.ErrPermission)
 
-	executor := NewRunStep(step, logFilePath, fs, log.Sugar())
+	executor := NewRunStep(step, logFilePath, tmpPath, fs, log.Sugar())
 	err := executor.Run(ctx)
 	assert.NotNil(t, err)
 }

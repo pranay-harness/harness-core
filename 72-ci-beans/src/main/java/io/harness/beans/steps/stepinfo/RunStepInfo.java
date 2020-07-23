@@ -54,6 +54,7 @@ public class RunStepInfo implements CIStepInfo, GenericStepInfo {
   @Builder
   public static class Run {
     private List<String> envVariables;
+    private List<String> output;
     @NotNull private List<String> command;
     private String envVarsOutput;
   }
