@@ -1,6 +1,7 @@
 package steps
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os/exec"
@@ -14,8 +15,9 @@ import (
 )
 
 const (
-	defaultTimeoutSecs int64 = 300 // 5 minutes
-	defaultNumRetries  int32 = 1
+	defaultTimeoutSecs int64  = 300 // 5 minutes
+	defaultNumRetries  int32  = 1
+	outputEnvSuffix    string = "output"
 )
 
 var execCmdCtx = exec.CommandContext
@@ -26,18 +28,20 @@ type RunStep interface {
 }
 
 type runStep struct {
-	id          string
-	displayName string
-	commands    []string
-	timeoutSecs int64
-	numRetries  int32
-	relLogPath  string
-	log         *zap.SugaredLogger
-	fs          filesystem.FileSystem
+	id            string
+	displayName   string
+	tmpFilePath   string
+	commands      []string
+	envVarOutputs []string
+	timeoutSecs   int64
+	numRetries    int32
+	relLogPath    string
+	log           *zap.SugaredLogger
+	fs            filesystem.FileSystem
 }
 
 // NewRunStep creates a run step executor
-func NewRunStep(step *pb.Step, relLogPath string, fs filesystem.FileSystem, log *zap.SugaredLogger) RunStep {
+func NewRunStep(step *pb.Step, relLogPath string, tmpFilePath string, fs filesystem.FileSystem, log *zap.SugaredLogger) RunStep {
 	r := step.GetRun()
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
 	if timeoutSecs == 0 {
@@ -49,14 +53,16 @@ func NewRunStep(step *pb.Step, relLogPath string, fs filesystem.FileSystem, log 
 		numRetries = defaultNumRetries
 	}
 	return &runStep{
-		id:          step.GetId(),
-		displayName: step.GetDisplayName(),
-		commands:    r.GetCommands(),
-		timeoutSecs: timeoutSecs,
-		numRetries:  numRetries,
-		relLogPath:  relLogPath,
-		log:         log,
-		fs:          fs,
+		id:            step.GetId(),
+		displayName:   step.GetDisplayName(),
+		commands:      r.GetCommands(),
+		tmpFilePath:   tmpFilePath,
+		envVarOutputs: r.GetEnvVarOutputs(),
+		timeoutSecs:   timeoutSecs,
+		numRetries:    numRetries,
+		relLogPath:    relLogPath,
+		log:           log,
+		fs:            fs,
 	}
 }
 
@@ -87,12 +93,48 @@ func (e *runStep) validate() error {
 	return nil
 }
 
+// Fetches map of env variable and value from OutputFile. OutputFile stores all env variable and value
+func (e *runStep) fetchOutputVariables(outputFile string) (map[string]string, error) {
+	envVarMap := make(map[string]string)
+	f, err := e.fs.Open(outputFile)
+	if err != nil {
+		e.log.Errorw("Failed to open output file", "error_msg", zap.Error(err))
+		return nil, err
+	}
+	defer f.Close()
+
+	s := bufio.NewScanner(f)
+	for s.Scan() {
+		line := s.Text()
+		sa := strings.Split(line, " ")
+		if len(sa) != 2 {
+			e.log.Warnw(
+				"output variable does not exist",
+				"variable", sa[0],
+			)
+		} else {
+			envVarMap[sa[0]] = sa[1]
+		}
+	}
+	if err := s.Err(); err != nil {
+		e.log.Errorw("Failed to create scanner from output file", "error_msg", zap.Error(err))
+		return nil, err
+	}
+	return envVarMap, nil
+}
+
 func (e *runStep) execute(ctx context.Context, retryCount int32) error {
 	start := time.Now()
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(e.timeoutSecs))
 	defer cancel()
 
-	commands := fmt.Sprintf("set -e; %s", strings.Join(e.commands[:], ";"))
+	outputFile := fmt.Sprintf("%s/%s%s", e.tmpFilePath, e.id, outputEnvSuffix)
+	inputCommands := e.commands
+	for _, o := range e.envVarOutputs {
+		inputCommands = append(inputCommands, fmt.Sprintf("echo %s $%s >> %s", o, o, outputFile))
+	}
+
+	commands := fmt.Sprintf("set -e; %s", strings.Join(inputCommands[:], ";"))
 	cmdArgs := []string{"-c", commands}
 	logFilePath := fmt.Sprintf("%s/%s-%d.log", e.relLogPath, e.id, retryCount)
 	logFile, err := e.fs.Create(logFilePath)
@@ -116,10 +158,21 @@ func (e *runStep) execute(ctx context.Context, retryCount int32) error {
 		return err
 	}
 
+	outputVars := make(map[string]string)
+	if e.envVarOutputs != nil {
+		var err error
+		outputVars, err = e.fetchOutputVariables(outputFile)
+		if err != nil {
+			logCommandExecWarning(e.log, "error encountered while fetching output of run step", e.id, commands, retryCount, start, err)
+			return err
+		}
+	}
+
 	e.log.Infow(
 		"Successfully executed step",
 		"step_id", e.id,
 		"arguments", commands,
+		"output", outputVars,
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
 	return nil

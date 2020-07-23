@@ -44,4 +44,27 @@ public interface RunStepOrBuilder extends
    * <code>.io.harness.product.ci.engine.proto.StepContext context = 2[json_name = "context"];</code>
    */
   io.harness.product.ci.engine.proto.StepContextOrBuilder getContextOrBuilder();
+
+  /**
+   * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+   * @return A list containing the envVarOutputs.
+   */
+  java.util.List<java.lang.String> getEnvVarOutputsList();
+  /**
+   * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+   * @return The count of envVarOutputs.
+   */
+  int getEnvVarOutputsCount();
+  /**
+   * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+   * @param index The index of the element to return.
+   * @return The envVarOutputs at the given index.
+   */
+  java.lang.String getEnvVarOutputs(int index);
+  /**
+   * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the envVarOutputs at the given index.
+   */
+  com.google.protobuf.ByteString getEnvVarOutputsBytes(int index);
 }

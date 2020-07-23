@@ -17,6 +17,7 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
   }
   private RunStep() {
     commands_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    envVarOutputs_ = com.google.protobuf.LazyStringArrayList.EMPTY;
   }
 
   @java.
@@ -70,6 +71,15 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
 
             break;
           }
+          case 26: {
+            java.lang.String s = input.readStringRequireUtf8();
+            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
+              envVarOutputs_ = new com.google.protobuf.LazyStringArrayList();
+              mutable_bitField0_ |= 0x00000002;
+            }
+            envVarOutputs_.add(s);
+            break;
+          }
           default: {
             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
               done = true;
@@ -85,6 +95,9 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
     } finally {
       if (((mutable_bitField0_ & 0x00000001) != 0)) {
         commands_ = commands_.getUnmodifiableView();
+      }
+      if (((mutable_bitField0_ & 0x00000002) != 0)) {
+        envVarOutputs_ = envVarOutputs_.getUnmodifiableView();
       }
       this.unknownFields = unknownFields.build();
       makeExtensionsImmutable();
@@ -159,6 +172,39 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
     return getContext();
   }
 
+  public static final int ENVVAROUTPUTS_FIELD_NUMBER = 3;
+  private com.google.protobuf.LazyStringList envVarOutputs_;
+  /**
+   * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+   * @return A list containing the envVarOutputs.
+   */
+  public com.google.protobuf.ProtocolStringList getEnvVarOutputsList() {
+    return envVarOutputs_;
+  }
+  /**
+   * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+   * @return The count of envVarOutputs.
+   */
+  public int getEnvVarOutputsCount() {
+    return envVarOutputs_.size();
+  }
+  /**
+   * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+   * @param index The index of the element to return.
+   * @return The envVarOutputs at the given index.
+   */
+  public java.lang.String getEnvVarOutputs(int index) {
+    return envVarOutputs_.get(index);
+  }
+  /**
+   * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the envVarOutputs at the given index.
+   */
+  public com.google.protobuf.ByteString getEnvVarOutputsBytes(int index) {
+    return envVarOutputs_.getByteString(index);
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -180,6 +226,9 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
     if (context_ != null) {
       output.writeMessage(2, getContext());
     }
+    for (int i = 0; i < envVarOutputs_.size(); i++) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, envVarOutputs_.getRaw(i));
+    }
     unknownFields.writeTo(output);
   }
 
@@ -200,6 +249,14 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
     }
     if (context_ != null) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getContext());
+    }
+    {
+      int dataSize = 0;
+      for (int i = 0; i < envVarOutputs_.size(); i++) {
+        dataSize += computeStringSizeNoTag(envVarOutputs_.getRaw(i));
+      }
+      size += dataSize;
+      size += 1 * getEnvVarOutputsList().size();
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -224,6 +281,8 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
       if (!getContext().equals(other.getContext()))
         return false;
     }
+    if (!getEnvVarOutputsList().equals(other.getEnvVarOutputsList()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -243,6 +302,10 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
     if (hasContext()) {
       hash = (37 * hash) + CONTEXT_FIELD_NUMBER;
       hash = (53 * hash) + getContext().hashCode();
+    }
+    if (getEnvVarOutputsCount() > 0) {
+      hash = (37 * hash) + ENVVAROUTPUTS_FIELD_NUMBER;
+      hash = (53 * hash) + getEnvVarOutputsList().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -365,6 +428,8 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
         context_ = null;
         contextBuilder_ = null;
       }
+      envVarOutputs_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00000002);
       return this;
     }
 
@@ -406,6 +471,11 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
       } else {
         result.context_ = contextBuilder_.build();
       }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        envVarOutputs_ = envVarOutputs_.getUnmodifiableView();
+        bitField0_ = (bitField0_ & ~0x00000002);
+      }
+      result.envVarOutputs_ = envVarOutputs_;
       onBuilt();
       return result;
     }
@@ -460,6 +530,16 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
       }
       if (other.hasContext()) {
         mergeContext(other.getContext());
+      }
+      if (!other.envVarOutputs_.isEmpty()) {
+        if (envVarOutputs_.isEmpty()) {
+          envVarOutputs_ = other.envVarOutputs_;
+          bitField0_ = (bitField0_ & ~0x00000002);
+        } else {
+          ensureEnvVarOutputsIsMutable();
+          envVarOutputs_.addAll(other.envVarOutputs_);
+        }
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -705,6 +785,109 @@ public final class RunStep extends com.google.protobuf.GeneratedMessageV3 implem
         context_ = null;
       }
       return contextBuilder_;
+    }
+
+    private com.google.protobuf.LazyStringList envVarOutputs_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    private void ensureEnvVarOutputsIsMutable() {
+      if (!((bitField0_ & 0x00000002) != 0)) {
+        envVarOutputs_ = new com.google.protobuf.LazyStringArrayList(envVarOutputs_);
+        bitField0_ |= 0x00000002;
+      }
+    }
+    /**
+     * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+     * @return A list containing the envVarOutputs.
+     */
+    public com.google.protobuf.ProtocolStringList getEnvVarOutputsList() {
+      return envVarOutputs_.getUnmodifiableView();
+    }
+    /**
+     * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+     * @return The count of envVarOutputs.
+     */
+    public int getEnvVarOutputsCount() {
+      return envVarOutputs_.size();
+    }
+    /**
+     * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+     * @param index The index of the element to return.
+     * @return The envVarOutputs at the given index.
+     */
+    public java.lang.String getEnvVarOutputs(int index) {
+      return envVarOutputs_.get(index);
+    }
+    /**
+     * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the envVarOutputs at the given index.
+     */
+    public com.google.protobuf.ByteString getEnvVarOutputsBytes(int index) {
+      return envVarOutputs_.getByteString(index);
+    }
+    /**
+     * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+     * @param index The index to set the value at.
+     * @param value The envVarOutputs to set.
+     * @return This builder for chaining.
+     */
+    public Builder setEnvVarOutputs(int index, java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      ensureEnvVarOutputsIsMutable();
+      envVarOutputs_.set(index, value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+     * @param value The envVarOutputs to add.
+     * @return This builder for chaining.
+     */
+    public Builder addEnvVarOutputs(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      ensureEnvVarOutputsIsMutable();
+      envVarOutputs_.add(value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+     * @param values The envVarOutputs to add.
+     * @return This builder for chaining.
+     */
+    public Builder addAllEnvVarOutputs(java.lang.Iterable<java.lang.String> values) {
+      ensureEnvVarOutputsIsMutable();
+      com.google.protobuf.AbstractMessageLite.Builder.addAll(values, envVarOutputs_);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearEnvVarOutputs() {
+      envVarOutputs_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00000002);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string envVarOutputs = 3[json_name = "envVarOutputs"];</code>
+     * @param value The bytes of the envVarOutputs to add.
+     * @return This builder for chaining.
+     */
+    public Builder addEnvVarOutputsBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+      ensureEnvVarOutputsIsMutable();
+      envVarOutputs_.add(value);
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

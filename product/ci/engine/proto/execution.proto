@@ -26,6 +26,7 @@ message StepContext {
 message RunStep {
   repeated string commands = 1;
   StepContext context = 2;
+  repeated string envVarOutputs = 3;  // produced output variables
 }
 
 message SaveCacheStep {
