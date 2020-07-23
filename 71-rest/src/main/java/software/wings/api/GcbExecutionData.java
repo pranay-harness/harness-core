@@ -2,7 +2,6 @@ package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.valueOf;
 import static software.wings.api.ExecutionDataValue.executionDataValue;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -13,6 +12,8 @@ import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import software.wings.beans.command.GcbTaskParams;
+import software.wings.helpers.ext.gcb.models.GcbArtifactObjects;
+import software.wings.helpers.ext.gcb.models.GcbArtifacts;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildStatus;
 import software.wings.sm.StateExecutionData;
@@ -32,7 +33,6 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
   public static final String GCB_URL = "https://console.cloud.google.com/cloud-build/builds/";
   @NotNull private String activityId;
   @Nullable private String buildUrl;
-  @Nullable private Map<String, String> metadata;
   @Nullable private String buildId;
   @Nullable private List<String> tags;
   @Nullable private GcbBuildStatus buildStatus;
@@ -40,6 +40,7 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
   @Nullable private String createTime;
   @Nullable private Map<String, String> substitutions;
   @Nullable private String logUrl;
+  @Nullable private GcbArtifacts artifacts;
 
   @NotNull
   public GcbExecutionData withDelegateResponse(@NotNull final GcbState.GcbDelegateResponse delegateResponse) {
@@ -53,6 +54,7 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
     createTime = buildDetails.getCreateTime();
     substitutions = buildDetails.getSubstitutions();
     logUrl = buildDetails.getLogUrl();
+    artifacts = buildDetails.getArtifacts();
     return this;
   }
 
@@ -99,12 +101,24 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
       executionDetails.put("build", executionDataValue("Build Url", buildUrl));
     }
 
-    if (isNotEmpty(metadata)) {
-      executionDetails.put("metadata", executionDataValue("Meta-Data", valueOf(removeNullValues(metadata))));
-    }
-
     if (isNotEmpty(activityId)) {
       putNotNull(executionDetails, "activityId", executionDataValue("Activity Id", activityId));
+    }
+
+    if (artifacts != null) {
+      if (isNotEmpty(artifacts.getImages())) {
+        putNotNull(executionDetails, "images", executionDataValue("Images", artifacts.getImages()));
+      }
+      if (artifacts.getArtifactObjects() != null) {
+        final GcbArtifactObjects objects = artifacts.getArtifactObjects();
+        if (isNotEmpty(objects.getLocation())) {
+          putNotNull(
+              executionDetails, "artifactLocation", executionDataValue("Artifact Location", objects.getLocation()));
+        }
+        if (isNotEmpty(objects.getPaths())) {
+          putNotNull(executionDetails, "artifactPaths", executionDataValue("Artifact Paths", objects.getPaths()));
+        }
+      }
     }
 
     return executionDetails;
