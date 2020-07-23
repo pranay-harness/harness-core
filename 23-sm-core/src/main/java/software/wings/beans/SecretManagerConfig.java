@@ -109,22 +109,26 @@ public abstract class SecretManagerConfig
   }
 
   @Override
+  @JsonIgnore
   public String getAccountIdentifier() {
-    return Optional.of(ngMetadata).map(NGSecretMetadata::getAccountIdentifier).orElse(null);
+    return Optional.ofNullable(ngMetadata).map(NGSecretMetadata::getAccountIdentifier).orElse(null);
   }
 
   @Override
+  @JsonIgnore
   public String getOrgIdentifier() {
-    return Optional.of(ngMetadata).map(NGSecretMetadata::getOrgIdentifier).orElse(null);
+    return Optional.ofNullable(ngMetadata).map(NGSecretMetadata::getOrgIdentifier).orElse(null);
   }
 
   @Override
+  @JsonIgnore
   public String getProjectIdentifier() {
-    return Optional.of(ngMetadata).map(NGSecretMetadata::getProjectIdentifier).orElse(null);
+    return Optional.ofNullable(ngMetadata).map(NGSecretMetadata::getProjectIdentifier).orElse(null);
   }
 
   @Override
+  @JsonIgnore
   public String getIdentifier() {
-    return Optional.of(ngMetadata).map(NGSecretMetadata::getIdentifier).orElse(null);
+    return Optional.ofNullable(ngMetadata).map(NGSecretMetadata::getIdentifier).orElse(null);
   }
 }
