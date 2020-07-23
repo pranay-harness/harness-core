@@ -12,7 +12,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 import com.google.inject.Injector;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -53,8 +53,7 @@ public class EcsServiceDeployCommandHandlerTest extends WingsBaseTest {
 
     assertThat(ecsCommandExecutionResponse).isNotNull();
     assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isNotNull();
-    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus())
-        .isEqualTo(CommandExecutionResult.CommandExecutionStatus.FAILURE);
+    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(ecsCommandExecutionResponse.getErrorMessage()).isEqualTo("RuntimeException: Error msg");
   }
 }

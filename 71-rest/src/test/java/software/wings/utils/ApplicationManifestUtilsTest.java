@@ -778,6 +778,26 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
+  public void testPopulateRemoteGitConfigWithNonGitConfig() {
+    ApplicationManifest inlineManifest =
+        ApplicationManifest.builder().storeType(Local).serviceId(SERVICE_ID).envId(ENV_ID).build();
+    ApplicationManifest manifestWithGitConfig = createApplicationManifestWithGitFile("file");
+    Map<K8sValuesLocation, ApplicationManifest> appManifestOnlyInline = ImmutableMap.of(Environment, inlineManifest);
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMixed =
+        ImmutableMap.of(Environment, inlineManifest, EnvironmentGlobal, manifestWithGitConfig);
+
+    applicationManifestUtils.populateRemoteGitConfigFilePathList(context, appManifestOnlyInline);
+    assertThat(inlineManifest.getGitFileConfig()).isNull();
+
+    doReturn("file").when(context).renderExpression("file");
+    applicationManifestUtils.populateRemoteGitConfigFilePathList(context, appManifestMixed);
+    assertThat(inlineManifest.getGitFileConfig()).isNull();
+    assertThat(manifestWithGitConfig.getGitFileConfig().getFilePathList()).containsExactly("file");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
   public void testSetValuesPathInGitFetchFilesTaskParams() {
     GitFetchFilesTaskParams gitFetchFilesTaskParams =
         GitFetchFilesTaskParams.builder()
