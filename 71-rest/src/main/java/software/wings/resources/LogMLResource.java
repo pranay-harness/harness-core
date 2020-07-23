@@ -11,7 +11,6 @@ import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
-import software.wings.api.InstanceElement;
 import software.wings.beans.FeatureName;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
@@ -109,9 +108,8 @@ public class LogMLResource {
   @Path(LogAnalysisResource.LAST_EXECUTION_NODES)
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<String, Map<String, InstanceElement>>> getLastExecutionNodes(
-      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
-      @QueryParam("workflowId") String workflowId) {
+  public RestResponse<Map<String, Map<String, ?>>> getLastExecutionNodes(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
     return new RestResponse<>(analysisService.getLastExecutionNodes(appId, workflowId));
   }
 

@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -344,6 +345,52 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
 
     assertThat(context.renderExpressionsForInstanceDetails("${pcfinstance.applicationId}", true).getInstances())
         .containsExactly("id1", "id1");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFindInstanceDetailsForWorkflowExecution() {
+    sweepingOutputService.cleanForStateExecutionInstance(stateExecutionInstance);
+
+    List<PcfInstanceElement> pcfInstanceElements = Arrays.asList(PcfInstanceElement.builder()
+                                                                     .isUpsize(false)
+                                                                     .displayName("pcf_0")
+                                                                     .instanceIndex("0")
+                                                                     .applicationId("id0")
+                                                                     .build(),
+        PcfInstanceElement.builder()
+            .isUpsize(true)
+            .displayName("pcf_1")
+            .instanceIndex("1")
+            .applicationId("id1")
+            .build());
+
+    VariableProcessor variableProcessor = mock(VariableProcessor.class);
+    doReturn(Collections.emptyMap()).when(variableProcessor).getVariables(any(), anyString());
+    ExecutionContext context = generateExecutionContext();
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", new ManagerExpressionEvaluator());
+    on(context).set("sweepingOutputService", sweepingOutputService);
+
+    saveSweepingOutput(InstanceInfoVariables.builder()
+                           .instanceDetails(pcfStateHelper.generateInstanceDetails(pcfInstanceElements))
+                           .build());
+    saveSweepingOutput(InstanceInfoVariables.builder()
+                           .instanceDetails(pcfStateHelper.generateInstanceDetails(pcfInstanceElements))
+                           .newInstanceTrafficPercent(10)
+                           .build());
+
+    List<InstanceDetails> instanceDetails =
+        sweepingOutputService.findInstanceDetailsForWorkflowExecution(appId, workflowExecutionUuid);
+
+    assertThat(instanceDetails.size()).isEqualTo(2);
+    for (int i = 0; i < pcfInstanceElements.size(); i++) {
+      PcfInstanceElement pcfInstanceElement = pcfInstanceElements.get(i);
+      assertThat(instanceDetails.get(i).getHostName())
+          .isEqualTo(pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex());
+      assertThat(instanceDetails.get(i).getInstanceType()).isEqualTo(InstanceDetails.InstanceType.PCF);
+    }
   }
 
   private void saveSweepingOutput(InstanceInfoVariables instanceInfoVariables) {

@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
@@ -19,6 +20,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.deployment.InstanceDetails;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -34,6 +36,7 @@ import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.jira.JiraExecutionData;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.jira.JiraTaskParameters;
@@ -43,6 +46,7 @@ import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.analysis.AnalysisServiceImpl.CLUSTER_TYPE;
 import software.wings.service.impl.analysis.CVFeedbackRecord.CVFeedbackRecordKeys;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
@@ -245,8 +249,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
                               .contextElements(new LinkedList<>(Lists.newArrayList(instanceElementListParam)))
                               .build());
 
-    final Map<String, Map<String, InstanceElement>> lastExecutionNodes =
-        analysisService.getLastExecutionNodes(appId, workflowId);
+    final Map<String, Map<String, ?>> lastExecutionNodes = analysisService.getLastExecutionNodes(appId, workflowId);
     Map<String, Map<String, InstanceElement>> expected = new HashMap<>();
     pcfInstanceElements.forEach(pcfInstanceElement -> {
       Map<String, InstanceElement> instanceElementMap = new HashMap<>();
@@ -257,6 +260,93 @@ public class AnalysisServiceTest extends WingsBaseTest {
               .build());
       expected.put(
           pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex(), instanceElementMap);
+    });
+
+    assertThat(lastExecutionNodes).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetLastExecutionNodes_forPcfWithInstanceDetailsReturningEmpty() {
+    featureFlagService.enableAccount(FeatureName.CV_EXPOSE_INSTANCE_DETAILS, accountId);
+    final String workflowId =
+        wingsPersistence.save(aWorkflow().appId(appId).accountId(accountId).name(generateUuid()).build());
+    final String serviceId = wingsPersistence.save(
+        Service.builder().appId(appId).deploymentType(DeploymentType.PCF).name(generateUuid()).build());
+    final String workflowExecutionId =
+        wingsPersistence.save(WorkflowExecution.builder()
+                                  .appId(appId)
+                                  .accountId(accountId)
+                                  .workflowId(workflowId)
+                                  .status(ExecutionStatus.SUCCESS)
+                                  .serviceExecutionSummaries(Lists.newArrayList(anElementExecutionSummary().build()))
+                                  .serviceIds(Lists.newArrayList(serviceId))
+                                  .build());
+    List<PcfInstanceElement> pcfInstanceElements = Lists.newArrayList(PcfInstanceElement.builder()
+                                                                          .applicationId(generateUuid())
+                                                                          .displayName(generateUuid())
+                                                                          .instanceIndex(generateUuid())
+                                                                          .build(),
+        PcfInstanceElement.builder()
+            .applicationId(generateUuid())
+            .displayName(generateUuid())
+            .instanceIndex(generateUuid())
+            .build());
+    final InstanceElementListParam instanceElementListParam =
+        InstanceElementListParam.builder().pcfInstanceElements(pcfInstanceElements).build();
+    wingsPersistence.save(aStateExecutionInstance()
+                              .executionUuid(workflowExecutionId)
+                              .contextElements(new LinkedList<>(Lists.newArrayList(instanceElementListParam)))
+                              .build());
+
+    final Map<String, Map<String, ?>> lastExecutionNodes = analysisService.getLastExecutionNodes(appId, workflowId);
+    Map<String, Map<String, InstanceElement>> expected = new HashMap<>();
+    pcfInstanceElements.forEach(pcfInstanceElement -> {
+      Map<String, InstanceElement> instanceElementMap = new HashMap<>();
+      instanceElementMap.put("instance",
+          anInstanceElement()
+              .hostName(pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex())
+              .host(HostElement.builder().pcfElement(pcfInstanceElement).build())
+              .build());
+      expected.put(
+          pcfInstanceElement.getDisplayName() + ":" + pcfInstanceElement.getInstanceIndex(), instanceElementMap);
+    });
+
+    assertThat(lastExecutionNodes).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetLastExecutionNodes_forPcfWithInstanceDetails() throws IllegalAccessException {
+    featureFlagService.enableAccount(FeatureName.CV_EXPOSE_INSTANCE_DETAILS, accountId);
+    final String workflowId =
+        wingsPersistence.save(aWorkflow().appId(appId).accountId(accountId).name(generateUuid()).build());
+    final String serviceId = wingsPersistence.save(
+        Service.builder().appId(appId).deploymentType(DeploymentType.PCF).name(generateUuid()).build());
+    final String workflowExecutionId =
+        wingsPersistence.save(WorkflowExecution.builder()
+                                  .appId(appId)
+                                  .accountId(accountId)
+                                  .workflowId(workflowId)
+                                  .status(ExecutionStatus.SUCCESS)
+                                  .serviceExecutionSummaries(Lists.newArrayList(anElementExecutionSummary().build()))
+                                  .serviceIds(Lists.newArrayList(serviceId))
+                                  .build());
+
+    List<InstanceDetails> instanceDetails = Lists.newArrayList(
+        InstanceDetails.builder().hostName("host1").build(), InstanceDetails.builder().hostName("host2").build());
+    SweepingOutputService sweepingOutputService = mock(SweepingOutputService.class);
+    FieldUtils.writeField(analysisService, "sweepingOutputService", sweepingOutputService, true);
+    when(sweepingOutputService.findInstanceDetailsForWorkflowExecution(appId, workflowExecutionId))
+        .thenReturn(instanceDetails);
+    final Map<String, Map<String, ?>> lastExecutionNodes = analysisService.getLastExecutionNodes(appId, workflowId);
+    Map<String, Map<String, InstanceDetails>> expected = new HashMap<>();
+    instanceDetails.forEach(instanceDetail -> {
+      Map<String, InstanceDetails> instanceDetailMap = new HashMap<>();
+      instanceDetailMap.put("instanceDetails", instanceDetail);
+      expected.put(instanceDetail.getHostName(), instanceDetailMap);
     });
 
     assertThat(lastExecutionNodes).isEqualTo(expected);
@@ -283,8 +373,7 @@ public class AnalysisServiceTest extends WingsBaseTest {
                     .build()))
             .build();
     wingsPersistence.save(workflowExecution);
-    final Map<String, Map<String, InstanceElement>> lastExecutionNodes =
-        analysisService.getLastExecutionNodes(appId, workflowId);
+    final Map<String, Map<String, ?>> lastExecutionNodes = analysisService.getLastExecutionNodes(appId, workflowId);
     assertThat(lastExecutionNodes)
         .isEqualTo(Collections.singletonMap("host1",
             Collections.singletonMap(

@@ -675,10 +675,32 @@ public abstract class AbstractAnalysisState extends State {
   }
 
   protected NodePair getControlAndTestNodes(ExecutionContext context) {
+    String hostNameTemplate = isEmpty(getHostnameTemplate()) ? DEFAULT_HOSTNAME_TEMPLATE : getHostnameTemplate();
+    NodePair nodePair = getNodePair(context, hostNameTemplate);
+    if (hostNameTemplate == DEFAULT_HOSTNAME_TEMPLATE) {
+      try {
+        NodePair nodePairWithNewDefaultHostnameTemplate = getNodePair(context, "${instanceDetails.hostName}");
+        if (!nodePair.equals(nodePairWithNewDefaultHostnameTemplate)) {
+          getLogger().info("[NewInstanceAPI][Error] NodePair values returned from default template are different {} {}",
+              nodePair, nodePairWithNewDefaultHostnameTemplate);
+        } else {
+          getLogger().info("[NewInstanceAPI] NodePair values are same for default template");
+        }
+      } catch (Exception e) {
+        getLogger().info(
+            "[NewInstanceAPI][Error] Exception when calling getNodePair with default hostname template (instanceDetails.hostName) {}",
+            e);
+      }
+    } else {
+      getLogger().info("[NewInstanceAPI] hostNameTemplate is not default {}", hostNameTemplate);
+    }
+    return nodePair;
+  }
+
+  private NodePair getNodePair(ExecutionContext context, String hostNameTemplate) {
     Set<String> controlNodes, testNodes;
     InstanceApiResponse instanceApiResponse;
     Optional<Integer> newNodesTrafficShift;
-    String hostNameTemplate = isEmpty(getHostnameTemplate()) ? DEFAULT_HOSTNAME_TEMPLATE : getHostnameTemplate();
 
     if (getComparisonStrategy() == COMPARE_WITH_PREVIOUS) {
       instanceApiResponse = context.renderExpressionsForInstanceDetails(hostNameTemplate, true);
