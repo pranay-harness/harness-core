@@ -132,14 +132,16 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
                                       .setExpressionFunctorToken(200)
                                       .putAllExpressions(expressions);
 
-    TaskId taskId1 = delegateServiceGrpcClient.submitTask(AccountId.newBuilder().setId(generateUuid()).build(),
+    TaskId taskId1 = delegateServiceGrpcClient.submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
+        AccountId.newBuilder().setId(generateUuid()).build(),
         TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
         builder.setMode(TaskMode.SYNC).build(), asList(SystemEnvCheckerCapability.builder().build()));
     assertThat(taskId1).isNotNull();
     assertThat(taskId1.getId()).isNotBlank();
     verify(delegateService).scheduleSyncTask(any(DelegateTask.class));
 
-    TaskId taskId2 = delegateServiceGrpcClient.submitTask(AccountId.newBuilder().setId(generateUuid()).build(),
+    TaskId taskId2 = delegateServiceGrpcClient.submitTask(DelegateCallbackToken.newBuilder().setToken("token").build(),
+        AccountId.newBuilder().setId(generateUuid()).build(),
         TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build(),
         builder.setMode(TaskMode.ASYNC).build(), asList(SystemEnvCheckerCapability.builder().build()));
     assertThat(taskId2).isNotNull();

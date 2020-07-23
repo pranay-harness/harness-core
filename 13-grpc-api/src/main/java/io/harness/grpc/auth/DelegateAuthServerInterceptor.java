@@ -29,9 +29,8 @@ import java.util.Set;
 public class DelegateAuthServerInterceptor implements ServerInterceptor {
   public static final Context.Key<String> ACCOUNT_ID_CTX_KEY = Context.key("accountId");
   private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
-  private static final Set<String> INCLUDED_SERVICES =
-      ImmutableSet.of("io.harness.delegate.DelegateService", "io.harness.perpetualtask.PerpetualTaskService",
-          "io.harness.event.PingPongService", "io.harness.event.EventPublisher");
+  private static final Set<String> INCLUDED_SERVICES = ImmutableSet.of("io.harness.perpetualtask.PerpetualTaskService",
+      "io.harness.event.PingPongService", "io.harness.event.EventPublisher");
 
   private final TokenAuthenticator tokenAuthenticator;
 

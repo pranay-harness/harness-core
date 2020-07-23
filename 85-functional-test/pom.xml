@@ -62,6 +62,16 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>13-grpc-api</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>23-delegate-service-driver</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

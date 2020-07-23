@@ -55,11 +55,12 @@ public class DelegateServiceGrpcClient {
     this.kryoSerializer = kryoSerializer;
   }
 
-  public TaskId submitTask(AccountId accountId, TaskSetupAbstractions taskSetupAbstractions, TaskDetails taskDetails,
-      List<ExecutionCapability> capabilities) {
+  public TaskId submitTask(DelegateCallbackToken delegateCallbackToken, AccountId accountId,
+      TaskSetupAbstractions taskSetupAbstractions, TaskDetails taskDetails, List<ExecutionCapability> capabilities) {
     SubmitTaskResponse response =
-        delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+        delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
             .submitTask(SubmitTaskRequest.newBuilder()
+                            .setCallbackToken(delegateCallbackToken)
                             .setAccountId(accountId)
                             .setSetupAbstractions(taskSetupAbstractions)
                             .setDetails(taskDetails)
@@ -77,7 +78,7 @@ public class DelegateServiceGrpcClient {
 
   public TaskExecutionStage cancelTask(AccountId accountId, TaskId taskId) {
     CancelTaskResponse response =
-        delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+        delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
             .cancelTask(CancelTaskRequest.newBuilder().setAccountId(accountId).setTaskId(taskId).build());
 
     return response.getCanceledAtStage();
@@ -85,7 +86,7 @@ public class DelegateServiceGrpcClient {
 
   public TaskExecutionStage taskProgress(AccountId accountId, TaskId taskId) {
     TaskProgressResponse response =
-        delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+        delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
             .taskProgress(TaskProgressRequest.newBuilder().setAccountId(accountId).setTaskId(taskId).build());
 
     return response.getCurrentlyAtStage();
@@ -103,7 +104,7 @@ public class DelegateServiceGrpcClient {
 
   public PerpetualTaskId createPerpetualTask(AccountId accountId, String type, PerpetualTaskSchedule schedule,
       PerpetualTaskClientContextDetails context, boolean allowDuplicate) {
-    CreatePerpetualTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+    CreatePerpetualTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
                                                .createPerpetualTask(CreatePerpetualTaskRequest.newBuilder()
                                                                         .setAccountId(accountId)
                                                                         .setType(type)
@@ -116,7 +117,7 @@ public class DelegateServiceGrpcClient {
   }
 
   public void deletePerpetualTask(AccountId accountId, PerpetualTaskId perpetualTaskId) {
-    delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+    delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
         .deletePerpetualTask(DeletePerpetualTaskRequest.newBuilder()
                                  .setAccountId(accountId)
                                  .setPerpetualTaskId(perpetualTaskId)
@@ -125,7 +126,7 @@ public class DelegateServiceGrpcClient {
 
   public void resetPerpetualTask(
       AccountId accountId, PerpetualTaskId perpetualTaskId, PerpetualTaskExecutionBundle taskExecutionBundle) {
-    delegateServiceBlockingStub.withDeadlineAfter(5, TimeUnit.SECONDS)
+    delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
         .resetPerpetualTask(ResetPerpetualTaskRequest.newBuilder()
                                 .setAccountId(accountId)
                                 .setPerpetualTaskId(perpetualTaskId)

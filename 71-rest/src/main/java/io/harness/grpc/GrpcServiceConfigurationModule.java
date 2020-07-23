@@ -54,7 +54,9 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
     serverInterceptorMultibinder.addBinding().toProvider(
         ()
             -> new ServiceAuthServerInterceptor(
-                ImmutableMap.of("ng-manager", serviceSecret), ImmutableSet.of(NgDelegateTaskServiceGrpc.SERVICE_NAME)));
+                ImmutableMap.of("ng-manager", serviceSecret, "delegate-service", serviceSecret),
+                ImmutableSet.of(
+                    NgDelegateTaskServiceGrpc.SERVICE_NAME, io.harness.delegate.DelegateServiceGrpc.SERVICE_NAME)));
 
     Multibinder<GrpcExceptionMapper> expectionMapperMultibinder =
         Multibinder.newSetBinder(binder(), GrpcExceptionMapper.class);
