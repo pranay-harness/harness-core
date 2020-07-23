@@ -40,25 +40,22 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>19-delegate-tasks-beans</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>20-ng-core-beans</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>21-persistence</artifactId>
+            <artifactId>22-ng-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>22-ng-project-n-orgs</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
@@ -68,8 +65,7 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>25-manager-delegate-service-driver</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>de.bwaldvogel</groupId>
