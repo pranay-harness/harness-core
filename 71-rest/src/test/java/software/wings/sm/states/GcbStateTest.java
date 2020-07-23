@@ -254,6 +254,56 @@ public class GcbStateTest extends CategoryTest {
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
+  public void shouldResolveGcbTriggerExpressions() {
+    GcbOptions gcbOption = new GcbOptions();
+    GcbTriggerBuildSpec triggerBuildSpec = new GcbTriggerBuildSpec();
+    triggerBuildSpec.setName("${name}");
+    triggerBuildSpec.setSourceId("${sourceId}");
+    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.TRIGGER);
+    gcbOption.setTriggerSpec(triggerBuildSpec);
+    state.setGcbOptions(gcbOption);
+    when(context.renderExpression(anyString())).thenReturn("resolvedExpression");
+    state.resolveGcbOptionExpressions(context);
+
+    assertThat(state.getGcbOptions().getTriggerSpec().getName()).isEqualTo("resolvedExpression");
+    assertThat(state.getGcbOptions().getTriggerSpec().getSourceId()).isEqualTo("resolvedExpression");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldResolveGcbInlineExpressions() {
+    GcbOptions gcbOption = new GcbOptions();
+    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.INLINE);
+    gcbOption.setInlineSpec("inlineSpec");
+    state.setGcbOptions(gcbOption);
+    when(context.renderExpression("inlineSpec")).thenReturn("resolvedExpression");
+    state.resolveGcbOptionExpressions(context);
+
+    assertThat(state.getGcbOptions().getInlineSpec()).isEqualTo("resolvedExpression");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldResolveGcbRemoteExpressions() {
+    GcbOptions gcbOption = new GcbOptions();
+    GcbRemoteBuildSpec repositorySpec = new GcbRemoteBuildSpec();
+    repositorySpec.setSourceId("{sourceId}");
+    repositorySpec.setFilePath("{filePath}");
+    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.REMOTE);
+    gcbOption.setRepositorySpec(repositorySpec);
+    state.setGcbOptions(gcbOption);
+    when(context.renderExpression(anyString())).thenReturn("resolvedExpression");
+    state.resolveGcbOptionExpressions(context);
+
+    assertThat(state.getGcbOptions().getRepositorySpec().getSourceId()).isEqualTo("resolvedExpression");
+    assertThat(state.getGcbOptions().getRepositorySpec().getFilePath()).isEqualTo("resolvedExpression");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
   public void shouldReturnFalseIfGcpSettingIsNotFound() {
     TemplateExpression gcpConfigExp = new TemplateExpression();
     when(templateExpressionProcessor.resolveTemplateExpression(context, gcpConfigExp)).thenReturn("resolvedExpression");
@@ -388,55 +438,5 @@ public class GcbStateTest extends CategoryTest {
     assertThat(state.executeInternal(context, ACTIVITY_ID).getExecutionStatus()).isEqualTo(FAILED);
     assertThat(state.executeInternal(context, ACTIVITY_ID).getErrorMessage())
         .isEqualTo("Git connector does not exist. Please update with an appropriate git connector.");
-  }
-
-  @Test
-  @Owner(developers = AGORODETKI)
-  @Category(UnitTests.class)
-  public void shouldResolveGcbTriggerExpressions() {
-    GcbOptions gcbOption = new GcbOptions();
-    GcbTriggerBuildSpec triggerBuildSpec = new GcbTriggerBuildSpec();
-    triggerBuildSpec.setName("${name}");
-    triggerBuildSpec.setSourceId("${sourceId}");
-    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.TRIGGER);
-    gcbOption.setTriggerSpec(triggerBuildSpec);
-    state.setGcbOptions(gcbOption);
-    when(context.renderExpression(anyString())).thenReturn("resolvedExpression");
-    state.resolveGcbOptionExpressions(context);
-
-    assertThat(state.getGcbOptions().getTriggerSpec().getName()).isEqualTo("resolvedExpression");
-    assertThat(state.getGcbOptions().getTriggerSpec().getSourceId()).isEqualTo("resolvedExpression");
-  }
-
-  @Test
-  @Owner(developers = AGORODETKI)
-  @Category(UnitTests.class)
-  public void shouldResolveGcbInlineExpressions() {
-    GcbOptions gcbOption = new GcbOptions();
-    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.INLINE);
-    gcbOption.setInlineSpec("inlineSpec");
-    state.setGcbOptions(gcbOption);
-    when(context.renderExpression("inlineSpec")).thenReturn("resolvedExpression");
-    state.resolveGcbOptionExpressions(context);
-
-    assertThat(state.getGcbOptions().getInlineSpec()).isEqualTo("resolvedExpression");
-  }
-
-  @Test
-  @Owner(developers = AGORODETKI)
-  @Category(UnitTests.class)
-  public void shouldResolveGcbRemoteExpressions() {
-    GcbOptions gcbOption = new GcbOptions();
-    GcbRemoteBuildSpec repositorySpec = new GcbRemoteBuildSpec();
-    repositorySpec.setSourceId("{sourceId}");
-    repositorySpec.setFilePath("{filePath}");
-    gcbOption.setSpecSource(GcbOptions.GcbSpecSource.REMOTE);
-    gcbOption.setRepositorySpec(repositorySpec);
-    state.setGcbOptions(gcbOption);
-    when(context.renderExpression(anyString())).thenReturn("resolvedExpression");
-    state.resolveGcbOptionExpressions(context);
-
-    assertThat(state.getGcbOptions().getRepositorySpec().getSourceId()).isEqualTo("resolvedExpression");
-    assertThat(state.getGcbOptions().getRepositorySpec().getFilePath()).isEqualTo("resolvedExpression");
   }
 }
