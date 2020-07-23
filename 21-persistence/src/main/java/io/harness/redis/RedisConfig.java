@@ -21,4 +21,6 @@ public class RedisConfig {
   private List<String> sentinelUrls;
   private String envNamespace;
   private RedisReadMode readMode;
+  private int nettyThreads;
+  private boolean useScriptCache;
 }

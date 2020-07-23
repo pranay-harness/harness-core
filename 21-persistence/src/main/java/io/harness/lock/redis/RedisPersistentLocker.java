@@ -49,6 +49,8 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
       }
       config.useSentinelServers().setReadMode(ReadMode.valueOf(redisLockConfig.getReadMode().name()));
     }
+    config.setNettyThreads(redisLockConfig.getNettyThreads());
+    config.setUseScriptCache(redisLockConfig.isUseScriptCache());
     logger.info("Starting redis client");
     this.client = Redisson.create(config);
     logger.info("Started redis client");

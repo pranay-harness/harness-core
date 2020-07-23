@@ -40,6 +40,8 @@ public class RedissonFactory {
   private static final String REDIS_SENTINEL_MASTER_NAME = RedissonBroadcaster.class.getName() + ".master.name";
   static final String REDIS_ENV_NAMESPACE = RedissonBroadcaster.class.getName() + ".env.namespace";
   private static final String REDIS_READ_MODE = RedissonBroadcaster.class.getName() + ".read.mode";
+  private static final String REDIS_NETTY_THREADS = RedissonBroadcaster.class.getName() + ".netty.threads";
+  private static final String USE_SCRIPT_CACHE = RedissonBroadcaster.class.getName() + ".script.cache";
   private enum RedisType { SINGLE, SENTINEL }
 
   static RedissonClient getRedissonClient(AtmosphereConfig config) {
@@ -61,6 +63,8 @@ public class RedissonFactory {
       redissonConfig.useSentinelServers().setReadMode(readMode);
     }
     redissonConfig.setCodec(new RedissonKryoCodec());
+    redissonConfig.setNettyThreads(Integer.valueOf(config.getServletConfig().getInitParameter(REDIS_NETTY_THREADS)));
+    redissonConfig.setUseScriptCache(Boolean.valueOf(config.getServletConfig().getInitParameter(USE_SCRIPT_CACHE)));
 
     try {
       return Redisson.create(redissonConfig);
@@ -81,6 +85,9 @@ public class RedissonFactory {
           .addInitParameter(REDIS_SENTINELS, String.join(",", redisConfig.getSentinelUrls()))
           .addInitParameter(REDIS_READ_MODE, redisConfig.getReadMode().name());
     }
-    atmosphereServlet.framework().addInitParameter(REDIS_ENV_NAMESPACE, redisConfig.getEnvNamespace());
+    atmosphereServlet.framework()
+        .addInitParameter(REDIS_ENV_NAMESPACE, redisConfig.getEnvNamespace())
+        .addInitParameter(REDIS_NETTY_THREADS, String.valueOf(redisConfig.getNettyThreads()))
+        .addInitParameter(USE_SCRIPT_CACHE, String.valueOf(redisConfig.isUseScriptCache()));
   }
 }
