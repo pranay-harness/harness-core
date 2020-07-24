@@ -13,7 +13,6 @@ import io.harness.category.speed.SlowTests;
 import io.harness.exception.CategoryConfigException;
 import io.harness.exception.ImpossibleException;
 import org.junit.experimental.categories.Category;
-import org.junit.internal.runners.statements.FailOnTimeout;
 import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -112,9 +111,11 @@ public class CategoryTimeoutRule extends Timeout {
       }
     }
 
-    return FailOnTimeout.builder()
-        .withTimeout(timeoutMS, TimeUnit.MILLISECONDS)
-        .withLookingForStuckThread(getLookingForStuckThread())
-        .build(statement);
+    return HFailOnTimeout.builder()
+        .testName(description.getMethodName())
+        .timeoutMs(timeoutMS)
+        .lookForStuckThread(getLookingForStuckThread())
+        .originalStatement(statement)
+        .build();
   }
 }
