@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
@@ -17,8 +16,8 @@ import io.harness.utils.PageUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -28,9 +27,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class EnvironmentResourceTest extends BaseTest {
+public class EnvironmentResourceTest {
   @Mock EnvironmentServiceImpl environmentService;
-  @InjectMocks EnvironmentResource environmentResource;
+  EnvironmentResource environmentResource;
 
   EnvironmentRequestDTO environmentRequestDTO;
   EnvironmentResponseDTO environmentResponseDTO;
@@ -38,6 +37,8 @@ public class EnvironmentResourceTest extends BaseTest {
 
   @Before
   public void setUp() {
+    MockitoAnnotations.initMocks(this);
+    environmentResource = new EnvironmentResource(environmentService);
     environmentRequestDTO = EnvironmentRequestDTO.builder()
                                 .identifier("IDENTIFIER")
                                 .orgIdentifier("ORG_ID")

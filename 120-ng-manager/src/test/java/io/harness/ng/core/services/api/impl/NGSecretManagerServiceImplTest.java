@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.Lists;
 
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.BaseTest;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
@@ -21,13 +20,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
 import java.util.List;
 
-public class NGSecretManagerServiceImplTest extends BaseTest {
+public class NGSecretManagerServiceImplTest {
   @Mock SecretManagerClient secretManagerClient;
   private final String ACCOUNT_IDENTIFIER = "ACCOUNT_ID";
   private final String ORG_IDENTIFIER = "ACCOUNT_ID";
@@ -38,6 +38,7 @@ public class NGSecretManagerServiceImplTest extends BaseTest {
 
   @Before
   public void doSetup() {
+    MockitoAnnotations.initMocks(this);
     ngSecretManagerService = new NGSecretManagerServiceImpl(secretManagerClient);
   }
 
