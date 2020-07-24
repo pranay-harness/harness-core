@@ -37,9 +37,13 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
         SettingAttribute ceConnector = cloudToHarnessMappingService.getFirstSettingAttributeByCategory(
             accountId, SettingAttribute.SettingCategory.CE_CONNECTOR);
         if (null != ceConnector) {
-          return Instant.ofEpochMilli(ceConnector.getCreatedAt())
-              .truncatedTo(ChronoUnit.DAYS)
-              .minus(2, ChronoUnit.DAYS);
+          Instant connectorCreationTime =
+              Instant.ofEpochMilli(ceConnector.getCreatedAt()).truncatedTo(ChronoUnit.DAYS).minus(2, ChronoUnit.DAYS);
+          if (batchJobType == BatchJobType.AWS_ECS_CLUSTER_SYNC) {
+            Instant startInstant = Instant.now().minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+            connectorCreationTime = startInstant.isAfter(connectorCreationTime) ? startInstant : connectorCreationTime;
+          }
+          return connectorCreationTime;
         }
       } else {
         instant = lastReceivedPublishedMessageDao.getFirstEventReceivedTime(accountId);

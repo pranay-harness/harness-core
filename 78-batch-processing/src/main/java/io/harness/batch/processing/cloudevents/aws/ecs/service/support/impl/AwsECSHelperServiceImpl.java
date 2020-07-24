@@ -25,7 +25,7 @@ import java.util.UUID;
 @Service
 public class AwsECSHelperServiceImpl implements AwsECSHelperService {
   @Autowired private AwsCredentialHelper awsCredentialHelper;
-  private static final String exceptionMessage = "Error while calling cluster {} {} ";
+  private static final String exceptionMessage = "Error while calling cluster  {} {} {} ";
 
   @Override
   public List<String> listECSClusters(String region, AwsCrossAccountAttributes awsCrossAccountAttributes) {
@@ -33,7 +33,7 @@ public class AwsECSHelperServiceImpl implements AwsECSHelperService {
       AmazonECSClient amazonECSClient = getAmazonECSClient(region, awsCrossAccountAttributes);
       return listECSClusters(amazonECSClient);
     } catch (Exception ex) {
-      logger.info(exceptionMessage, region, ex);
+      logger.info(exceptionMessage, awsCrossAccountAttributes, region, ex.getMessage());
       return Collections.emptyList();
     }
   }
