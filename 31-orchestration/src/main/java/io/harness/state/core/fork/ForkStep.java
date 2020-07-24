@@ -14,7 +14,6 @@ import io.harness.facilitator.modes.children.ChildrenExecutableResponse.Children
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;
@@ -23,15 +22,14 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-public class ForkStep implements Step, ChildrenExecutable {
+public class ForkStep implements Step, ChildrenExecutable<ForkStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("FORK").build();
 
   @Override
   public ChildrenExecutableResponse obtainChildren(
-      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    ForkStepParameters parameters = (ForkStepParameters) stepParameters;
+      Ambiance ambiance, ForkStepParameters forkStepParameters, StepInputPackage inputPackage) {
     ChildrenExecutableResponseBuilder responseBuilder = ChildrenExecutableResponse.builder();
-    for (String nodeId : parameters.getParallelNodeIds()) {
+    for (String nodeId : forkStepParameters.getParallelNodeIds()) {
       responseBuilder.child(Child.builder().childNodeId(nodeId).build());
     }
     return responseBuilder.build();
@@ -39,7 +37,7 @@ public class ForkStep implements Step, ChildrenExecutable {
 
   @Override
   public StepResponse handleChildrenResponse(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, ForkStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
     for (ResponseData responseData : responseDataMap.values()) {
       Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
