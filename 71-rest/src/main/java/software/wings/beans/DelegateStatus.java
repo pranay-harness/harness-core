@@ -33,6 +33,9 @@ public class DelegateStatus {
     private long lastHeartBeat;
     private String delegateProfileId;
     private String delegateType;
+    private boolean polllingModeEnabled;
+    private boolean proxy;
+    private boolean ceEnabled;
     private List<DelegateScope> includeScopes;
     private List<DelegateScope> excludeScopes;
     private List<String> tags;
