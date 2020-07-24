@@ -9,6 +9,18 @@
     <artifactId>115-cd-nextgen</artifactId>
     <dependencies>
         <dependency>
+            <groupId>com.openpojo</groupId>
+            <artifactId>openpojo</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-inmemory</artifactId>
+        </dependency>
+        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
