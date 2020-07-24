@@ -173,6 +173,9 @@ export DELEGATE_NAME=${delegateName}
 <#if delegateProfile??>
 export DELEGATE_PROFILE=${delegateProfile}
 </#if>
+<#if delegateType??>
+export DELEGATE_TYPE=${delegateType}
+</#if>
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

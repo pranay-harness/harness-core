@@ -25,6 +25,8 @@ delegateName: ${delegateName}
 # coming up
 delegateProfile: "${delegateProfile}"
 
+delegateType: "${delegateType}"
+
 delegateDockerImage: ${delegateDockerImage}
 
 managerHostAndPort: ${managerHostAndPort}

@@ -13,6 +13,7 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e DELEGATE_CHECK_LOCATION=delegateci.txt \
 -e DELEGATE_NAME= \
 -e DELEGATE_PROFILE=QFWin33JRlKWKBzpzE5A9A \
+-e DELEGATE_TYPE=DOCKER \
 -e DEPLOY_MODE=KUBERNETES \
 -e PROXY_HOST= \
 -e PROXY_PORT= \

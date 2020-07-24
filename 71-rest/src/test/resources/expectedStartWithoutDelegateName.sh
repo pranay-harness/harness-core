@@ -254,6 +254,7 @@ fi
 rm -f -- *.bak
 
 export DELEGATE_PROFILE=QFWin33JRlKWKBzpzE5A9A
+export DELEGATE_TYPE=SHELL_SCRIPT
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

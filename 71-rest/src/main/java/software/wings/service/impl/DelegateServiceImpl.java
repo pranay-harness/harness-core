@@ -12,6 +12,12 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.SizeFunction.size;
 import static io.harness.delegate.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
+import static io.harness.delegate.beans.DelegateType.CE_KUBERNETES;
+import static io.harness.delegate.beans.DelegateType.DOCKER;
+import static io.harness.delegate.beans.DelegateType.ECS;
+import static io.harness.delegate.beans.DelegateType.HELM_DELEGATE;
+import static io.harness.delegate.beans.DelegateType.KUBERNETES;
+import static io.harness.delegate.beans.DelegateType.SHELL_SCRIPT;
 import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
@@ -248,7 +254,6 @@ public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
   private static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
   private static final String DELIMITER = "_";
-  public static final String ECS = "ECS";
 
   public static final String HARNESS_DELEGATE_VALUES_YAML = HARNESS_DELEGATE + "-values";
   private static final String YAML = ".yaml";
@@ -776,6 +781,7 @@ public class DelegateServiceImpl implements DelegateService {
     private String verificationHost;
     private String delegateName;
     private String delegateProfile;
+    private String delegateType;
     private boolean ceEnabled;
   }
 
@@ -889,6 +895,10 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateProfile", inquiry.getDelegateProfile());
       }
 
+      if (inquiry.getDelegateType() != null) {
+        params.put("delegateType", inquiry.getDelegateType());
+      }
+
       params.put("useCdn", String.valueOf(useCDN));
       params.put("cdnUrl", cdnConfig.getUrl());
 
@@ -989,6 +999,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                                                      .verificationHost(verificationUrl)
                                                                                      .delegateName(delegateName)
                                                                                      .delegateProfile(delegateProfile)
+                                                                                     .delegateType(SHELL_SCRIPT)
                                                                                      .build());
 
       if (isEmpty(scriptParams)) {
@@ -1107,6 +1118,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                                                      .verificationHost(verificationUrl)
                                                                                      .delegateName(delegateName)
                                                                                      .delegateProfile(delegateProfile)
+                                                                                     .delegateType(DOCKER)
                                                                                      .build());
 
       if (isEmpty(scriptParams)) {
@@ -1177,6 +1189,7 @@ public class DelegateServiceImpl implements DelegateService {
                                              .verificationHost(verificationUrl)
                                              .delegateName(delegateName)
                                              .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+                                             .delegateType(KUBERNETES)
                                              .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
@@ -1221,6 +1234,7 @@ public class DelegateServiceImpl implements DelegateService {
                                            .verificationHost(verificationUrl)
                                            .delegateName(delegateName)
                                            .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+                                           .delegateType(CE_KUBERNETES)
                                            .ceEnabled(true)
                                            .build());
 
@@ -1263,6 +1277,7 @@ public class DelegateServiceImpl implements DelegateService {
                                            .verificationHost(verificationUrl)
                                            .delegateName(delegateName)
                                            .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+                                           .delegateType(HELM_DELEGATE)
                                            .build());
 
     File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, YAML);
@@ -1296,6 +1311,7 @@ public class DelegateServiceImpl implements DelegateService {
                                              .verificationHost(verificationUrl)
                                              .delegateName(StringUtils.EMPTY)
                                              .delegateProfile(delegateProfile == null ? "" : delegateProfile)
+                                             .delegateType(ECS)
                                              .build());
       scriptParams = updateMapForEcsDelegate(awsVpcMode, hostname, delegateGroupName, scriptParams);
 

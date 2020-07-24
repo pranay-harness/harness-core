@@ -106,6 +106,8 @@ spec:
           value: harness-delegate
         - name: DELEGATE_PROFILE
           value: ""
+        - name: DELEGATE_TYPE
+          value: "KUBERNETES"
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT
