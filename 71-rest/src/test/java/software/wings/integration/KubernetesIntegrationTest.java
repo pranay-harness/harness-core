@@ -62,7 +62,7 @@ public abstract class KubernetesIntegrationTest extends CategoryTest {
 
     //    kubernetesService.cleanup(config);
 
-    kubernetesService.createOrReplaceController(config, Collections.emptyList(),
+    kubernetesService.createOrReplaceController(config,
         new ReplicationControllerBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
@@ -95,7 +95,7 @@ public abstract class KubernetesIntegrationTest extends CategoryTest {
             .endSpec()
             .build());
 
-    kubernetesService.createOrReplaceService(config, Collections.emptyList(),
+    kubernetesService.createOrReplaceService(config,
         new ServiceBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
@@ -115,7 +115,7 @@ public abstract class KubernetesIntegrationTest extends CategoryTest {
             .endSpec()
             .build());
 
-    kubernetesService.createOrReplaceController(config, Collections.emptyList(),
+    kubernetesService.createOrReplaceController(config,
         new ReplicationControllerBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
@@ -150,7 +150,7 @@ public abstract class KubernetesIntegrationTest extends CategoryTest {
             .endSpec()
             .build());
 
-    kubernetesService.createOrReplaceService(config, Collections.emptyList(),
+    kubernetesService.createOrReplaceService(config,
         new ServiceBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
@@ -172,26 +172,24 @@ public abstract class KubernetesIntegrationTest extends CategoryTest {
             .build());
 
     kubernetesService.setControllerPodCount(
-        config, Collections.emptyList(), ZONE_CLUSTER, "frontend-ctrl", 0, 2, 10, new ExecutionLogCallback());
+        config, ZONE_CLUSTER, "frontend-ctrl", 0, 2, 10, new ExecutionLogCallback());
 
-    Optional<Integer> backendCount =
-        kubernetesService.getControllerPodCount(config, Collections.emptyList(), "backend-ctrl");
-    Optional<Integer> frontendCount =
-        kubernetesService.getControllerPodCount(config, Collections.emptyList(), "frontend-ctrl");
+    Optional<Integer> backendCount = kubernetesService.getControllerPodCount(config, "backend-ctrl");
+    Optional<Integer> frontendCount = kubernetesService.getControllerPodCount(config, "frontend-ctrl");
     logger.info("Controller backend-ctrl has {} instances", backendCount.get());
     logger.info("Controller frontend-ctrl has {} instances", frontendCount.get());
 
-    kubernetesService.checkStatus(config, Collections.emptyList(), "backend-ctrl", "backend-service");
-    kubernetesService.checkStatus(config, Collections.emptyList(), "frontend-ctrl", "frontend-service");
+    kubernetesService.checkStatus(config, "backend-ctrl", "backend-service");
+    kubernetesService.checkStatus(config, "frontend-ctrl", "frontend-service");
 
-    kubernetesService.deleteService(config, Collections.emptyList(), "frontend-service");
-    kubernetesService.deleteService(config, Collections.emptyList(), "backend-service");
+    kubernetesService.deleteService(config, "frontend-service");
+    kubernetesService.deleteService(config, "backend-service");
 
-    kubernetesService.deleteController(config, Collections.emptyList(), "frontend-ctrl");
-    kubernetesService.deleteController(config, Collections.emptyList(), "backend-ctrl");
+    kubernetesService.deleteController(config, "frontend-ctrl");
+    kubernetesService.deleteController(config, "backend-ctrl");
 
-    kubernetesService.checkStatus(config, Collections.emptyList(), "backend-ctrl", "backend-service");
-    kubernetesService.checkStatus(config, Collections.emptyList(), "frontend-ctrl", "frontend-service");
+    kubernetesService.checkStatus(config, "backend-ctrl", "backend-service");
+    kubernetesService.checkStatus(config, "frontend-ctrl", "frontend-service");
 
     //    gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
   }

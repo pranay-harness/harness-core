@@ -50,7 +50,6 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -112,7 +111,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
 
     if (!isNoopRollBack) {
       kubernetesContainerService.saveReleaseHistory(
-          kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
+          kubernetesConfig, request.getReleaseName(), releaseHistory.getAsYaml());
     }
 
     return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
@@ -128,7 +127,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
     String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-        kubernetesConfig, Collections.emptyList(), k8sRollingDeployRollbackTaskParameters.getReleaseName());
+        kubernetesConfig, k8sRollingDeployRollbackTaskParameters.getReleaseName());
 
     if (StringUtils.isEmpty(releaseHistoryData)) {
       isNoopRollBack = true;

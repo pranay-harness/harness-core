@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.KubernetesSetupCommandUnit.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
@@ -75,7 +74,7 @@ public class ContainerServiceImpl implements ContainerService {
     String controllerName = containerServiceParams.getContainerServiceName();
     if (isKubernetesClusterConfig(value)) {
       return kubernetesContainerService.getActiveServiceCounts(
-          getKubernetesConfig(containerServiceParams), emptyList(), controllerName);
+          getKubernetesConfig(containerServiceParams), controllerName);
     } else if (value instanceof AwsConfig) {
       return awsClusterService.getActiveServiceCounts(containerServiceParams.getRegion(),
           containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails(),
@@ -124,8 +123,7 @@ public class ContainerServiceImpl implements ContainerService {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       notNullCheck("KubernetesConfig", kubernetesConfig);
       if (isNotEmpty(containerServiceName)) {
-        HasMetadata controller =
-            kubernetesContainerService.getController(kubernetesConfig, emptyList(), containerServiceName);
+        HasMetadata controller = kubernetesContainerService.getController(kubernetesConfig, containerServiceName);
         if (controller != null) {
           logger.info("Got controller {} for account {}", controller.getMetadata().getName(), accountId);
           Map<String, String> labels =
@@ -133,10 +131,10 @@ public class ContainerServiceImpl implements ContainerService {
           Map<String, String> serviceLabels = new HashMap<>(labels);
           serviceLabels.remove(HARNESS_KUBERNETES_REVISION_LABEL_KEY);
           List<io.fabric8.kubernetes.api.model.Service> services =
-              kubernetesContainerService.getServices(kubernetesConfig, emptyList(), serviceLabels);
+              kubernetesContainerService.getServices(kubernetesConfig, serviceLabels);
           String serviceName = services.isEmpty() ? "None" : services.get(0).getMetadata().getName();
           logger.info("Got Service {} for controller {} for account {}", serviceName, containerServiceName, accountId);
-          List<Pod> pods = kubernetesContainerService.getPods(kubernetesConfig, emptyList(), labels);
+          List<Pod> pods = kubernetesContainerService.getPods(kubernetesConfig, labels);
           logger.info("Got {} pods for controller {} for account {}", pods != null ? pods.size() : 0,
               containerServiceName, accountId);
           if (isEmpty(pods)) {
@@ -163,9 +161,9 @@ public class ContainerServiceImpl implements ContainerService {
           logger.info("Could not get controller {} for account {}", containerServiceName, accountId);
         }
       } else {
-        final List<Pod> pods = kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, emptyList(),
-            containerServiceParams.getNamespace(),
-            ImmutableMap.of(HelmConstants.HELM_RELEASE_LABEL, containerServiceParams.getReleaseName()));
+        final List<Pod> pods =
+            kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, containerServiceParams.getNamespace(),
+                ImmutableMap.of(HelmConstants.HELM_RELEASE_LABEL, containerServiceParams.getReleaseName()));
         return pods.stream()
             .map(pod
                 -> KubernetesContainerInfo.builder()
@@ -245,7 +243,7 @@ public class ContainerServiceImpl implements ContainerService {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       notNullCheck("KubernetesConfig", kubernetesConfig);
       List<? extends HasMetadata> controllers =
-          kubernetesContainerService.getControllers(kubernetesConfig, emptyList(), labels)
+          kubernetesContainerService.getControllers(kubernetesConfig, labels)
               .stream()
               .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
               .collect(toList());
@@ -275,7 +273,7 @@ public class ContainerServiceImpl implements ContainerService {
             containerServiceParams.getEncryptionDetails(), containerServiceParams.getSubscriptionId(),
             containerServiceParams.getResourceGroup(), containerServiceParams.getClusterName(), namespace);
         kubernetesConfig.setDecrypted(true);
-        kubernetesContainerService.validate(kubernetesConfig, containerServiceParams.getEncryptionDetails());
+        kubernetesContainerService.validate(kubernetesConfig);
         return true;
       } else {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Invalid Argument: Not a valid AKS cluster");
@@ -286,11 +284,11 @@ public class ContainerServiceImpl implements ContainerService {
 
       KubernetesConfig kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
       kubernetesConfig.setDecrypted(true);
-      kubernetesContainerService.validate(kubernetesConfig, emptyList(), kubernetesClusterConfig.cloudCostEnabled());
+      kubernetesContainerService.validate(kubernetesConfig, kubernetesClusterConfig.cloudCostEnabled());
       return true;
     } else if (isKubernetesClusterConfig(value)) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-      kubernetesContainerService.validate(kubernetesConfig, emptyList());
+      kubernetesContainerService.validate(kubernetesConfig);
       return true;
     }
     throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)

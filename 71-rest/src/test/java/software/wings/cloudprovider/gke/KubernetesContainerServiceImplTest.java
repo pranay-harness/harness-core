@@ -172,7 +172,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDeleteController() {
-    kubernetesContainerService.deleteController(KUBERNETES_CONFIG, Collections.emptyList(), "ctrl");
+    kubernetesContainerService.deleteController(KUBERNETES_CONFIG, "ctrl");
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedControllers).withName(args.capture());
@@ -184,7 +184,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDeleteService() {
-    kubernetesContainerService.deleteService(KUBERNETES_CONFIG, Collections.emptyList(), "service");
+    kubernetesContainerService.deleteService(KUBERNETES_CONFIG, "service");
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedServices).withName(args.capture());
@@ -198,7 +198,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldSetControllerPodCount() {
     List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(
-        KUBERNETES_CONFIG, Collections.emptyList(), "foo", "bar", 0, 3, 10, new ExecutionLogCallback());
+        KUBERNETES_CONFIG, "foo", "bar", 0, 3, 10, new ExecutionLogCallback());
 
     ArgumentCaptor<Integer> args = ArgumentCaptor.forClass(Integer.class);
     verify(scalableReplicationController).scale(args.capture());
@@ -211,8 +211,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetControllerPodCount() throws Exception {
-    Optional<Integer> count =
-        kubernetesContainerService.getControllerPodCount(KUBERNETES_CONFIG, Collections.emptyList(), "foo");
+    Optional<Integer> count = kubernetesContainerService.getControllerPodCount(KUBERNETES_CONFIG, "foo");
 
     assertThat(count.isPresent()).isTrue();
     assertThat(count.get()).isEqualTo(8);
@@ -239,7 +238,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
 
     try {
       kubernetesContainerService.getContainerInfosWhenReady(
-          KUBERNETES_CONFIG, null, "controllerName", 0, 0, 0, asList(), false, null, false, 0L, "default");
+          KUBERNETES_CONFIG, "controllerName", 0, 0, 0, asList(), false, null, false, 0L, "default");
       fail("Should not reach here.");
     } catch (InvalidRequestException ex) {
       assertThat(ex.getMessage()).isEqualTo("Could not find a controller named controllerName");
@@ -250,7 +249,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean()))
         .thenReturn(replicationController);
     kubernetesContainerService.getContainerInfosWhenReady(
-        KUBERNETES_CONFIG, null, "controllerName", 0, 0, 0, asList(), false, null, false, 0L, "default");
+        KUBERNETES_CONFIG, "controllerName", 0, 0, 0, asList(), false, null, false, 0L, "default");
   }
 
   @Test
@@ -282,7 +281,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     when(openShiftClient.deploymentConfigs()).thenReturn(deploymentConfigsOperation);
     when(deploymentConfigsOperation.inNamespace("default")).thenReturn(deploymentConfigs);
 
-    kubernetesContainerService.getControllers(KUBERNETES_CONFIG, Collections.emptyList(), labels);
+    kubernetesContainerService.getControllers(KUBERNETES_CONFIG, labels);
 
     verify(deploymentConfigs, times(1)).withLabels(labels);
   }

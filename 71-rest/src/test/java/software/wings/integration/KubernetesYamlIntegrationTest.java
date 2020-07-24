@@ -124,7 +124,7 @@ public abstract class KubernetesYamlIntegrationTest extends CategoryTest {
     String rcDefinition = yaml.replace("${DOCKER_IMAGE_NAME}", "gcr.io/exploration-161417/todolist:latest");
     try {
       kubernetesService.createOrReplaceController(
-          config, Collections.emptyList(), KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
+          config, KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
     } catch (IOException e) {
       logger.error("", e);
     }
@@ -151,8 +151,7 @@ public abstract class KubernetesYamlIntegrationTest extends CategoryTest {
         + "    app: \"testApp\"\n"
         + "    tier: \"backend\"\n";
     try {
-      kubernetesService.createOrReplaceService(
-          config, Collections.emptyList(), KubernetesHelper.loadYaml(yaml, Service.class));
+      kubernetesService.createOrReplaceService(config, KubernetesHelper.loadYaml(yaml, Service.class));
     } catch (IOException e) {
       logger.error("", e);
     }
@@ -202,7 +201,7 @@ public abstract class KubernetesYamlIntegrationTest extends CategoryTest {
     rcDefinition = yaml.replace("${DOCKER_IMAGE_NAME}", "gcr.io/exploration-161417/todolist:latest");
     try {
       kubernetesService.createOrReplaceController(
-          config, Collections.emptyList(), KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
+          config, KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
     } catch (IOException e) {
       logger.error("", e);
     }
@@ -230,33 +229,30 @@ public abstract class KubernetesYamlIntegrationTest extends CategoryTest {
         + "    tier: \"backend\"\n"
         + "  type: \"LoadBalancer\"";
     try {
-      kubernetesService.createOrReplaceService(
-          config, Collections.emptyList(), KubernetesHelper.loadYaml(yaml, Service.class));
+      kubernetesService.createOrReplaceService(config, KubernetesHelper.loadYaml(yaml, Service.class));
     } catch (IOException e) {
       logger.error("", e);
     }
 
     kubernetesService.setControllerPodCount(
-        config, Collections.emptyList(), ZONE_CLUSTER, "frontend-ctrl", 0, 2, 10, new ExecutionLogCallback());
+        config, ZONE_CLUSTER, "frontend-ctrl", 0, 2, 10, new ExecutionLogCallback());
 
-    Optional<Integer> backendCount =
-        kubernetesService.getControllerPodCount(config, Collections.emptyList(), "backend-ctrl");
-    Optional<Integer> frontendCount =
-        kubernetesService.getControllerPodCount(config, Collections.emptyList(), "frontend-ctrl");
+    Optional<Integer> backendCount = kubernetesService.getControllerPodCount(config, "backend-ctrl");
+    Optional<Integer> frontendCount = kubernetesService.getControllerPodCount(config, "frontend-ctrl");
     logger.info("Controller backend-ctrl has {} instances", backendCount.get());
     logger.info("Controller frontend-ctrl has {} instances", frontendCount.get());
 
-    kubernetesService.checkStatus(config, Collections.emptyList(), "backend-ctrl", "backend-service");
-    kubernetesService.checkStatus(config, Collections.emptyList(), "frontend-ctrl", "frontend-service");
+    kubernetesService.checkStatus(config, "backend-ctrl", "backend-service");
+    kubernetesService.checkStatus(config, "frontend-ctrl", "frontend-service");
 
-    kubernetesService.deleteService(config, Collections.emptyList(), "frontend-service");
-    kubernetesService.deleteService(config, Collections.emptyList(), "backend-service");
+    kubernetesService.deleteService(config, "frontend-service");
+    kubernetesService.deleteService(config, "backend-service");
 
-    kubernetesService.deleteController(config, Collections.emptyList(), "frontend-ctrl");
-    kubernetesService.deleteController(config, Collections.emptyList(), "backend-ctrl");
+    kubernetesService.deleteController(config, "frontend-ctrl");
+    kubernetesService.deleteController(config, "backend-ctrl");
 
-    kubernetesService.checkStatus(config, Collections.emptyList(), "backend-ctrl", "backend-service");
-    kubernetesService.checkStatus(config, Collections.emptyList(), "frontend-ctrl", "frontend-service");
+    kubernetesService.checkStatus(config, "backend-ctrl", "backend-service");
+    kubernetesService.checkStatus(config, "frontend-ctrl", "frontend-service");
 
     //    gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
   }

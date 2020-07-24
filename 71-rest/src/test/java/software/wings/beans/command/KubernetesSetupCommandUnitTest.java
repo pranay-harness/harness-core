@@ -179,15 +179,13 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
 
     when(gkeClusterService.getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString()))
         .thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.createOrReplaceController(
-             eq(kubernetesConfig), eq(emptyList()), any(ReplicationController.class)))
+    when(kubernetesContainerService.createOrReplaceController(eq(kubernetesConfig), any(ReplicationController.class)))
         .thenReturn(replicationController);
-    when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList())).thenReturn(null);
+    when(kubernetesContainerService.listControllers(kubernetesConfig)).thenReturn(null);
     when(kubernetesContainerService.createOrReplaceService(
-             eq(kubernetesConfig), eq(emptyList()), any(io.fabric8.kubernetes.api.model.Service.class)))
+             eq(kubernetesConfig), any(io.fabric8.kubernetes.api.model.Service.class)))
         .thenReturn(kubernetesService);
-    when(kubernetesContainerService.createOrReplaceSecret(eq(kubernetesConfig), eq(emptyList()), any(Secret.class)))
-        .thenReturn(secret);
+    when(kubernetesContainerService.createOrReplaceSecret(eq(kubernetesConfig), any(Secret.class))).thenReturn(secret);
   }
 
   @Test
@@ -203,14 +201,14 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
             .endMetadata()
             .build();
 
-    when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList()))
+    when(kubernetesContainerService.listControllers(kubernetesConfig))
         .thenReturn((List) singletonList(kubernetesReplicationController));
 
     CommandExecutionStatus status = kubernetesSetupCommandUnit.execute(context);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
     verify(gkeClusterService).getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString());
     verify(kubernetesContainerService)
-        .createOrReplaceController(eq(kubernetesConfig), any(), any(ReplicationController.class));
+        .createOrReplaceController(eq(kubernetesConfig), any(ReplicationController.class));
   }
 
   @Test
@@ -458,25 +456,23 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     active.put(controllerName0, 2);
     active.put(controllerName1, 4);
 
-    when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList()))
+    when(kubernetesContainerService.listControllers(kubernetesConfig))
         .thenReturn((List) Arrays.asList(controller0, controller1));
-    when(kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, emptyList(), controllerName2))
-        .thenReturn(active);
-    when(kubernetesContainerService.getRunningPods(kubernetesConfig, emptyList(), controllerName0))
-        .thenReturn(emptyList());
+    when(kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, controllerName2)).thenReturn(active);
+    when(kubernetesContainerService.getRunningPods(kubernetesConfig, controllerName0)).thenReturn(emptyList());
 
     CommandExecutionStatus status = kubernetesSetupCommandUnit.execute(context);
 
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
     verify(gkeClusterService).getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString());
     verify(kubernetesContainerService)
-        .createOrReplaceController(eq(kubernetesConfig), any(), any(ReplicationController.class));
+        .createOrReplaceController(eq(kubernetesConfig), any(ReplicationController.class));
 
     verify(kubernetesContainerService)
-        .setControllerPodCount(eq(kubernetesConfig), eq(emptyList()), eq(setupParams.getClusterName()),
-            eq(controllerName0), eq(2), eq(0), eq(setupParams.getServiceSteadyStateTimeout()), any());
+        .setControllerPodCount(eq(kubernetesConfig), eq(setupParams.getClusterName()), eq(controllerName0), eq(2),
+            eq(0), eq(setupParams.getServiceSteadyStateTimeout()), any());
     verify(kubernetesContainerService)
-        .setControllerPodCount(eq(kubernetesConfig), eq(emptyList()), eq(setupParams.getClusterName()),
-            eq(controllerName1), eq(4), eq(3), eq(setupParams.getServiceSteadyStateTimeout()), any());
+        .setControllerPodCount(eq(kubernetesConfig), eq(setupParams.getClusterName()), eq(controllerName1), eq(4),
+            eq(3), eq(setupParams.getServiceSteadyStateTimeout()), any());
   }
 }

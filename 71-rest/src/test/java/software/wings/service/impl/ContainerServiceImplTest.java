@@ -6,7 +6,6 @@ import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -56,7 +55,7 @@ public class ContainerServiceImplTest extends WingsBaseTest {
     doReturn(asList(buildPod("p-1", "i-1"), buildPod("p-2", "i-2")))
         .when(kubernetesContainerService)
         .getRunningPodsWithLabels(
-            any(KubernetesConfig.class), anyList(), eq("default"), eq(ImmutableMap.of("release", "release-name")));
+            any(KubernetesConfig.class), eq("default"), eq(ImmutableMap.of("release", "release-name")));
 
     final List<ContainerInfo> containerInfos = containerService.getContainerInfos(containerServiceParams);
 
@@ -107,12 +106,12 @@ public class ContainerServiceImplTest extends WingsBaseTest {
                                   .build())
             .build();
 
-    doNothing().when(kubernetesContainerService).validate(any(KubernetesConfig.class), anyList(), anyBoolean());
+    doNothing().when(kubernetesContainerService).validate(any(KubernetesConfig.class), anyBoolean());
     assertThat(containerService.validate(containerServiceParams)).isTrue();
 
     containerServiceParams.setSettingAttribute(
         SettingAttribute.Builder.aSettingAttribute().withValue(KubernetesConfig.builder().build()).build());
-    doNothing().when(kubernetesContainerService).validate(any(KubernetesConfig.class), anyList());
+    doNothing().when(kubernetesContainerService).validate(any(KubernetesConfig.class));
     assertThat(containerService.validate(containerServiceParams)).isTrue();
   }
 
@@ -126,8 +125,7 @@ public class ContainerServiceImplTest extends WingsBaseTest {
     when(controller_1.getMetadata()).thenReturn(metaData_1);
     when(metaData_1.getName()).thenReturn("deployment-name");
     List<? extends HasMetadata> controllers = asList(controller_1);
-    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyList(), anyMap()))
-        .thenReturn(controllers);
+    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyMap())).thenReturn(controllers);
 
     ContainerServiceParams containerServiceParams =
         ContainerServiceParams.builder()

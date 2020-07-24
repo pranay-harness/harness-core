@@ -1346,7 +1346,7 @@ public class K8sTaskHelper {
   public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       Map<String, String> labels, long timeoutInMillis) throws Exception {
     return timeLimiter.callWithTimeout(() -> {
-      return kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, emptyList(), namespace, labels)
+      return kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, namespace, labels)
           .stream()
           .map(pod
               -> K8sPod.builder()
@@ -1422,8 +1422,7 @@ public class K8sTaskHelper {
     try {
       return timeLimiter.callWithTimeout(() -> {
         while (true) {
-          Service service =
-              kubernetesContainerService.getService(kubernetesConfig, emptyList(), serviceName, namespace);
+          Service service = kubernetesContainerService.getService(kubernetesConfig, serviceName, namespace);
 
           LoadBalancerStatus loadBalancerStatus = service.getStatus().getLoadBalancer();
           if (!loadBalancerStatus.getIngress().isEmpty()) {
@@ -1838,7 +1837,7 @@ public class K8sTaskHelper {
     String releaseName = k8sDeleteTaskParameters.getReleaseName();
     executionLogCallback.saveExecutionLog("Fetching all resources created for release: " + releaseName);
 
-    ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, emptyList(), releaseName);
+    ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
 
     if (configMap == null || isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
       executionLogCallback.saveExecutionLog("No resource history was available");

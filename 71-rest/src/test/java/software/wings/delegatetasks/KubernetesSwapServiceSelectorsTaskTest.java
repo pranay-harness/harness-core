@@ -33,7 +33,6 @@ import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
 
-import java.util.Collections;
 import java.util.Map;
 
 public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
@@ -66,12 +65,10 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
     Service service2 = createService("service2", ImmutableMap.of("label", "B"));
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(ContainerServiceParams.class))).thenReturn(null);
-    when(kubernetesContainerService.getService(any(), any(), eq(service1.getMetadata().getName())))
-        .thenReturn(service1);
-    when(kubernetesContainerService.getService(any(), any(), eq(service2.getMetadata().getName())))
-        .thenReturn(service2);
-    when(kubernetesContainerService.createOrReplaceService(any(), any(), any()))
-        .thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[2]);
+    when(kubernetesContainerService.getService(any(), eq(service1.getMetadata().getName()))).thenReturn(service1);
+    when(kubernetesContainerService.getService(any(), eq(service2.getMetadata().getName()))).thenReturn(service2);
+    when(kubernetesContainerService.createOrReplaceService(any(), any()))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[1]);
 
     KubernetesSwapServiceSelectorsParams params = KubernetesSwapServiceSelectorsParams.builder()
                                                       .service1(service1.getMetadata().getName())
@@ -84,10 +81,9 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
 
     ArgumentCaptor<Service> serviceArgumentCaptor = ArgumentCaptor.forClass(Service.class);
 
-    verify(kubernetesContainerService, times(2)).getService(any(), any(), any());
+    verify(kubernetesContainerService, times(2)).getService(any(), any());
 
-    verify(kubernetesContainerService, times(2))
-        .createOrReplaceService(eq(null), eq(Collections.emptyList()), serviceArgumentCaptor.capture());
+    verify(kubernetesContainerService, times(2)).createOrReplaceService(eq(null), serviceArgumentCaptor.capture());
 
     Service updatedService1 = serviceArgumentCaptor.getAllValues().get(0);
     assertThat(updatedService1.getMetadata().getName()).isEqualTo("service1");

@@ -49,7 +49,6 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
-import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
@@ -88,7 +87,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogLevel;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.openapi.models.V1ResourceAttributes;
 import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatus;
@@ -149,60 +147,48 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Inject private K8sResourcePermissionImpl k8sResourcePermission;
 
   @Override
-  public List<Namespace> listNamespaces(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
-        .namespaces()
-        .list()
-        .getItems();
-  }
-
-  @Override
-  public HasMetadata createOrReplaceController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, HasMetadata definition) {
+  public HasMetadata createOrReplaceController(KubernetesConfig kubernetesConfig, HasMetadata definition) {
     String name = definition.getMetadata().getName();
     logger.info("Creating {} {}", definition.getKind(), name);
 
     // TODO - Use definition.getKind()
     HasMetadata controller = null;
     if (definition instanceof ReplicationController) {
-      controller = rcOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+      controller = rcOperations(kubernetesConfig, kubernetesConfig.getNamespace())
                        .createOrReplace((ReplicationController) definition);
     } else if (definition instanceof Deployment) {
-      controller = deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+      controller = deploymentOperations(kubernetesConfig, kubernetesConfig.getNamespace())
                        .createOrReplace((Deployment) definition);
     } else if (definition instanceof ReplicaSet) {
-      controller = replicaOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-                       .createOrReplace((ReplicaSet) definition);
+      controller =
+          replicaOperations(kubernetesConfig, kubernetesConfig.getNamespace()).createOrReplace((ReplicaSet) definition);
     } else if (definition instanceof StatefulSet) {
-      HasMetadata existing = getController(kubernetesConfig, encryptedDataDetails, name);
+      HasMetadata existing = getController(kubernetesConfig, name);
       if (existing != null && existing.getKind().equals("StatefulSet")) {
-        controller = statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+        controller = statefulOperations(kubernetesConfig, kubernetesConfig.getNamespace())
                          .withName(name)
                          .patch((StatefulSet) definition);
       } else {
-        controller = statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-                         .create((StatefulSet) definition);
+        controller =
+            statefulOperations(kubernetesConfig, kubernetesConfig.getNamespace()).create((StatefulSet) definition);
       }
     } else if (definition instanceof DaemonSet) {
-      controller = daemonOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-                       .createOrReplace((DaemonSet) definition);
+      controller =
+          daemonOperations(kubernetesConfig, kubernetesConfig.getNamespace()).createOrReplace((DaemonSet) definition);
     }
     return controller;
   }
 
   @Override
-  public HasMetadata getController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    return getController(kubernetesConfig, encryptedDataDetails, name, kubernetesConfig.getNamespace());
+  public HasMetadata getController(KubernetesConfig kubernetesConfig, String name) {
+    return getController(kubernetesConfig, name, kubernetesConfig.getNamespace());
   }
 
   @Override
-  public HasMetadata getController(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String name, String namespace) {
+  public HasMetadata getController(KubernetesConfig kubernetesConfig, String name, String namespace) {
     try {
       return timeLimiter.callWithTimeout(
-          getControllerInternal(kubernetesConfig, encryptedDataDetails, name, namespace), 2, TimeUnit.MINUTES, true);
+          getControllerInternal(kubernetesConfig, name, namespace), 2, TimeUnit.MINUTES, true);
     } catch (WingsException e) {
       throw e;
     } catch (UncheckedTimeoutException e) {
@@ -212,8 +198,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
   }
 
-  private Callable<HasMetadata> getControllerInternal(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String name, String namespace) {
+  @SuppressWarnings("squid:S3776")
+  private Callable<HasMetadata> getControllerInternal(
+      KubernetesConfig kubernetesConfig, String name, String namespace) {
     return () -> {
       HasMetadata controller = null;
       logger.info("Trying to get controller for name {}", name);
@@ -223,15 +210,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         while (!success) {
           try {
             try {
-              controller = rcOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
+              controller = rcOperations(kubernetesConfig, namespace).withName(name).get();
               allFailed = false;
             } catch (Exception e) {
               // Ignore
             }
             if (controller == null) {
               try {
-                controller =
-                    deploymentOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
+                controller = deploymentOperations(kubernetesConfig, namespace).withName(name).get();
                 allFailed = false;
               } catch (Exception e) {
                 // Ignore
@@ -239,7 +225,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
             if (controller == null) {
               try {
-                controller = replicaOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
+                controller = replicaOperations(kubernetesConfig, namespace).withName(name).get();
                 allFailed = false;
               } catch (Exception e) {
                 // Ignore
@@ -247,7 +233,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
             if (controller == null) {
               try {
-                controller = statefulOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
+                controller = statefulOperations(kubernetesConfig, namespace).withName(name).get();
                 allFailed = false;
               } catch (Exception e) {
                 // Ignore
@@ -255,7 +241,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
             if (controller == null) {
               try {
-                controller = daemonOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
+                controller = daemonOperations(kubernetesConfig, namespace).withName(name).get();
                 allFailed = false;
               } catch (Exception e) {
                 // Ignore
@@ -263,15 +249,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
             if (controller == null) {
               try {
-                controller =
-                    deploymentConfigOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
+                controller = deploymentConfigOperations(kubernetesConfig, namespace).withName(name).get();
                 allFailed = false;
               } catch (Exception e) {
                 // Ignore
               }
             }
             if (allFailed) {
-              controller = deploymentOperations(kubernetesConfig, encryptedDataDetails, namespace).withName(name).get();
+              controller = deploymentOperations(kubernetesConfig, namespace).withName(name).get();
             } else {
               success = true;
             }
@@ -310,12 +295,18 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   @SuppressWarnings("unchecked")
-  public List<? extends HasMetadata> getControllers(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
+  public List<? extends HasMetadata> getControllers(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
     List<? extends HasMetadata> controllers = new ArrayList<>();
     boolean allFailed = true;
     try {
-      controllers.addAll((List) rcOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+      controllers.addAll(
+          (List) rcOperations(kubernetesConfig, kubernetesConfig.getNamespace()).withLabels(labels).list().getItems());
+      allFailed = false;
+    } catch (RuntimeException e) {
+      // Ignore
+    }
+    try {
+      controllers.addAll((List) deploymentOperations(kubernetesConfig, kubernetesConfig.getNamespace())
                              .withLabels(labels)
                              .list()
                              .getItems());
@@ -324,69 +315,53 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       // Ignore
     }
     try {
-      controllers.addAll(
-          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-              .withLabels(labels)
-              .list()
-              .getItems());
+      controllers.addAll((List) replicaOperations(kubernetesConfig, kubernetesConfig.getNamespace())
+                             .withLabels(labels)
+                             .list()
+                             .getItems());
       allFailed = false;
     } catch (RuntimeException e) {
       // Ignore
     }
     try {
-      controllers.addAll(
-          (List) replicaOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-              .withLabels(labels)
-              .list()
-              .getItems());
+      controllers.addAll((List) statefulOperations(kubernetesConfig, kubernetesConfig.getNamespace())
+                             .withLabels(labels)
+                             .list()
+                             .getItems());
       allFailed = false;
     } catch (RuntimeException e) {
       // Ignore
     }
     try {
-      controllers.addAll(
-          (List) statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-              .withLabels(labels)
-              .list()
-              .getItems());
+      controllers.addAll((List) daemonOperations(kubernetesConfig, kubernetesConfig.getNamespace())
+                             .withLabels(labels)
+                             .list()
+                             .getItems());
       allFailed = false;
     } catch (RuntimeException e) {
       // Ignore
     }
     try {
-      controllers.addAll(
-          (List) daemonOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-              .withLabels(labels)
-              .list()
-              .getItems());
-      allFailed = false;
-    } catch (RuntimeException e) {
-      // Ignore
-    }
-    try {
-      controllers.addAll(
-          (List) deploymentConfigOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-              .withLabels(labels)
-              .list()
-              .getItems());
+      controllers.addAll((List) deploymentConfigOperations(kubernetesConfig, kubernetesConfig.getNamespace())
+                             .withLabels(labels)
+                             .list()
+                             .getItems());
       allFailed = false;
     } catch (RuntimeException e) {
       // Ignore
     }
     if (allFailed) {
-      controllers.addAll(
-          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-              .withLabels(labels)
-              .list()
-              .getItems());
+      controllers.addAll((List) deploymentOperations(kubernetesConfig, kubernetesConfig.getNamespace())
+                             .withLabels(labels)
+                             .list()
+                             .getItems());
     }
     return controllers;
   }
 
   @Override
-  public void validate(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptionDetails, boolean cloudCostEnabled) {
-    listControllers(kubernetesConfig, encryptionDetails);
+  public void validate(KubernetesConfig kubernetesConfig, boolean cloudCostEnabled) {
+    listControllers(kubernetesConfig);
 
     if (cloudCostEnabled) {
       validateCEPermissions(kubernetesConfig);
@@ -417,100 +392,75 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void validate(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptionDetails) {
-    validate(kubernetesConfig, encryptionDetails, false);
+  public void validate(KubernetesConfig kubernetesConfig) {
+    validate(kubernetesConfig, false);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public List<? extends HasMetadata> listControllers(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  public List<? extends HasMetadata> listControllers(KubernetesConfig kubernetesConfig) {
     List<? extends HasMetadata> controllers = new ArrayList<>();
     boolean allFailed = true;
     try {
-      controllers.addAll((List) rcOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-                             .list()
-                             .getItems());
+      controllers.addAll((List) rcOperations(kubernetesConfig, kubernetesConfig.getNamespace()).list().getItems());
       allFailed = false;
     } catch (RuntimeException e) {
       // Ignore
     }
     try {
       controllers.addAll(
-          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-              .list()
-              .getItems());
+          (List) deploymentOperations(kubernetesConfig, kubernetesConfig.getNamespace()).list().getItems());
+      allFailed = false;
+    } catch (RuntimeException e) {
+      // Ignore
+    }
+    try {
+      controllers.addAll((List) replicaOperations(kubernetesConfig, kubernetesConfig.getNamespace()).list().getItems());
       allFailed = false;
     } catch (RuntimeException e) {
       // Ignore
     }
     try {
       controllers.addAll(
-          (List) replicaOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-              .list()
-              .getItems());
+          (List) statefulOperations(kubernetesConfig, kubernetesConfig.getNamespace()).list().getItems());
       allFailed = false;
     } catch (RuntimeException e) {
       // Ignore
     }
     try {
-      controllers.addAll(
-          (List) statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-              .list()
-              .getItems());
-      allFailed = false;
-    } catch (RuntimeException e) {
-      // Ignore
-    }
-    try {
-      controllers.addAll(
-          (List) daemonOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-              .list()
-              .getItems());
+      controllers.addAll((List) daemonOperations(kubernetesConfig, kubernetesConfig.getNamespace()).list().getItems());
       allFailed = false;
     } catch (RuntimeException e) {
       // Ignore
     }
     if (allFailed) {
       controllers.addAll(
-          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-              .list()
-              .getItems());
+          (List) deploymentOperations(kubernetesConfig, kubernetesConfig.getNamespace()).list().getItems());
     }
     return controllers;
   }
 
   @Override
-  public void deleteController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+  public void deleteController(KubernetesConfig kubernetesConfig, String name) {
     logger.info("Deleting controller {}", name);
     if (isNotBlank(name)) {
-      HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, name);
+      HasMetadata controller = getController(kubernetesConfig, name);
       if (controller instanceof ReplicationController) {
-        rcOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace()).withName(name).delete();
+        rcOperations(kubernetesConfig, kubernetesConfig.getNamespace()).withName(name).delete();
       } else if (controller instanceof Deployment) {
-        deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-            .withName(name)
-            .delete();
+        deploymentOperations(kubernetesConfig, kubernetesConfig.getNamespace()).withName(name).delete();
       } else if (controller instanceof ReplicaSet) {
-        replicaOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-            .withName(name)
-            .delete();
+        replicaOperations(kubernetesConfig, kubernetesConfig.getNamespace()).withName(name).delete();
       } else if (controller instanceof StatefulSet) {
-        statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-            .withName(name)
-            .delete();
+        statefulOperations(kubernetesConfig, kubernetesConfig.getNamespace()).withName(name).delete();
       } else if (controller instanceof DaemonSet) {
-        daemonOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-            .withName(name)
-            .delete();
+        daemonOperations(kubernetesConfig, kubernetesConfig.getNamespace()).withName(name).delete();
       }
     }
   }
 
   @Override
-  public HorizontalPodAutoscaler createOrReplaceAutoscaler(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String autoscalerYaml) {
+  public HorizontalPodAutoscaler createOrReplaceAutoscaler(KubernetesConfig kubernetesConfig, String autoscalerYaml) {
     if (isNotBlank(autoscalerYaml)) {
       HorizontalPodAutoscaler hpa;
       try {
@@ -523,63 +473,56 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       String api = kubernetesHelperService.trimVersion(hpa.getApiVersion());
 
       if (KUBERNETES_V1.getVersionName().equals(api)) {
-        return kubernetesHelperService.hpaOperations(kubernetesConfig, encryptedDataDetails).createOrReplace(hpa);
+        return kubernetesHelperService.hpaOperations(kubernetesConfig).createOrReplace(hpa);
       } else {
-        return kubernetesHelperService.hpaOperationsForCustomMetricHPA(kubernetesConfig, encryptedDataDetails, api)
-            .createOrReplace(hpa);
+        return kubernetesHelperService.hpaOperationsForCustomMetricHPA(kubernetesConfig, api).createOrReplace(hpa);
       }
     }
     return null;
   }
 
   @Override
-  public HorizontalPodAutoscaler getAutoscaler(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String name, String apiVersion) {
+  public HorizontalPodAutoscaler getAutoscaler(KubernetesConfig kubernetesConfig, String name, String apiVersion) {
     if (KUBERNETES_V1.getVersionName().equals(apiVersion) || isEmpty(apiVersion)) {
-      return kubernetesHelperService.hpaOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+      return kubernetesHelperService.hpaOperations(kubernetesConfig).withName(name).get();
     } else {
-      return kubernetesHelperService.hpaOperationsForCustomMetricHPA(kubernetesConfig, encryptedDataDetails, apiVersion)
-          .withName(name)
-          .get();
+      return kubernetesHelperService.hpaOperationsForCustomMetricHPA(kubernetesConfig, apiVersion).withName(name).get();
     }
   }
 
   @Override
-  public void deleteAutoscaler(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    kubernetesHelperService.hpaOperations(kubernetesConfig, encryptedDataDetails).withName(name).delete();
+  public void deleteAutoscaler(KubernetesConfig kubernetesConfig, String name) {
+    kubernetesHelperService.hpaOperations(kubernetesConfig).withName(name).delete();
   }
 
   @Override
-  public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, int previousCount,
-      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+  public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String clusterName,
+      String controllerName, int previousCount, int desiredCount, int serviceSteadyStateTimeout,
+      ExecutionLogCallback executionLogCallback) {
     boolean sizeChanged = previousCount != desiredCount;
     long startTime = clock.millis();
-    List<Pod> originalPods = getRunningPods(kubernetesConfig, encryptedDataDetails, controllerName);
+    List<Pod> originalPods = getRunningPods(kubernetesConfig, controllerName);
     if (sizeChanged) {
       executionLogCallback.saveExecutionLog(format("Resizing controller [%s] in cluster [%s] from %s to %s instances",
           controllerName, clusterName, previousCount, desiredCount));
-      HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+      HasMetadata controller = getController(kubernetesConfig, controllerName);
 
       if (controller == null) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)
             .addParam("args", "Could not find a controller named " + controllerName);
       }
       if (controller instanceof ReplicationController) {
-        rcOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
-            .withName(controllerName)
-            .scale(desiredCount);
+        rcOperations(kubernetesConfig, kubernetesConfig.getNamespace()).withName(controllerName).scale(desiredCount);
       } else if (controller instanceof Deployment) {
-        deploymentOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+        deploymentOperations(kubernetesConfig, kubernetesConfig.getNamespace())
             .withName(controllerName)
             .scale(desiredCount);
       } else if (controller instanceof ReplicaSet) {
-        replicaOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+        replicaOperations(kubernetesConfig, kubernetesConfig.getNamespace())
             .withName(controllerName)
             .scale(desiredCount);
       } else if (controller instanceof StatefulSet) {
-        statefulOperations(kubernetesConfig, encryptedDataDetails, kubernetesConfig.getNamespace())
+        statefulOperations(kubernetesConfig, kubernetesConfig.getNamespace())
             .withName(controllerName)
             .scale(desiredCount);
       } else if (controller instanceof DaemonSet) {
@@ -593,22 +536,23 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       executionLogCallback.saveExecutionLog(
           format("Controller [%s] in cluster [%s] stays at %s instances", controllerName, clusterName, previousCount));
     }
-    return getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
-        desiredCount, serviceSteadyStateTimeout, originalPods, false, executionLogCallback, sizeChanged, startTime,
+    return getContainerInfosWhenReady(kubernetesConfig, controllerName, previousCount, desiredCount,
+        serviceSteadyStateTimeout, originalPods, false, executionLogCallback, sizeChanged, startTime,
         kubernetesConfig.getNamespace());
   }
 
   @Override
-  public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned,
-      ExecutionLogCallback executionLogCallback, boolean wait, long startTime, String namespace) {
+  @SuppressWarnings("squid:S3776")
+  public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig, String controllerName,
+      int previousCount, int desiredCount, int serviceSteadyStateTimeout, List<Pod> originalPods,
+      boolean isNotVersioned, ExecutionLogCallback executionLogCallback, boolean wait, long startTime,
+      String namespace) {
     List<Pod> pods = wait
-        ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount,
+        ? waitForPodsToBeRunning(kubernetesConfig, controllerName, previousCount, desiredCount,
               serviceSteadyStateTimeout, originalPods, isNotVersioned, startTime, namespace, executionLogCallback)
         : originalPods;
 
-    HasMetadata controllerInfo = getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace);
+    HasMetadata controllerInfo = getController(kubernetesConfig, controllerName, namespace);
     if (controllerInfo == null) {
       throw new InvalidRequestException(format("Could not find a controller named %s", controllerName));
     }
@@ -647,7 +591,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                                       .podName(podName)
                                                       .newContainer(!originalPodNames.contains(podName));
 
-      HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace);
+      HasMetadata controller = getController(kubernetesConfig, controllerName, namespace);
       PodTemplateSpec podTemplateSpec = null;
       if (null != controller) {
         podTemplateSpec = getPodTemplateSpec(controller);
@@ -719,10 +663,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public LinkedHashMap<String, Integer> getActiveServiceCounts(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+      KubernetesConfig kubernetesConfig, String containerServiceName) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
     String controllerNamePrefix = getPrefixFromControllerName(containerServiceName);
-    listControllers(kubernetesConfig, encryptedDataDetails)
+    listControllers(kubernetesConfig)
         .stream()
         .filter(ctrl -> controllerNamePrefix.equals(getPrefixFromControllerName(ctrl.getMetadata().getName())))
         .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
@@ -734,9 +678,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public LinkedHashMap<String, Integer> getActiveServiceCountsWithLabels(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
+      KubernetesConfig kubernetesConfig, Map<String, String> labels) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
-    getControllers(kubernetesConfig, encryptedDataDetails, labels)
+    getControllers(kubernetesConfig, labels)
         .stream()
         .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
         .filter(ctrl -> getControllerPodCount(ctrl) > 0)
@@ -747,11 +691,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, String imagePrefix) {
+  public Map<String, String> getActiveServiceImages(
+      KubernetesConfig kubernetesConfig, String containerServiceName, String imagePrefix) {
     Map<String, String> result = new HashMap<>();
     String controllerNamePrefix = getPrefixFromControllerName(containerServiceName);
-    listControllers(kubernetesConfig, encryptedDataDetails)
+    listControllers(kubernetesConfig)
         .stream()
         .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
@@ -811,9 +755,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Optional<Integer> getControllerPodCount(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, name);
+  public Optional<Integer> getControllerPodCount(KubernetesConfig kubernetesConfig, String name) {
+    HasMetadata controller = getController(kubernetesConfig, name);
     if (controller != null) {
       Integer count = getControllerPodCount(controller);
       return count == null ? Optional.empty() : Optional.of(count);
@@ -862,19 +805,18 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private NonNamespaceOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
       RollableScalableResource<ReplicationController, DoneableReplicationController>>
-  rcOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+  rcOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .replicationControllers()
         .inNamespace(namespace);
   }
 
   private NonNamespaceOperation<Deployment, DeploymentList, DoneableDeployment,
       ScalableResource<Deployment, DoneableDeployment>>
-  deploymentOperations(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+  deploymentOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .extensions()
         .deployments()
         .inNamespace(namespace);
@@ -882,20 +824,18 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private NonNamespaceOperation<ReplicaSet, ReplicaSetList, DoneableReplicaSet,
       RollableScalableResource<ReplicaSet, DoneableReplicaSet>>
-  replicaOperations(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+  replicaOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .extensions()
         .replicaSets()
         .inNamespace(namespace);
   }
 
   private NonNamespaceOperation<DaemonSet, DaemonSetList, DoneableDaemonSet, Resource<DaemonSet, DoneableDaemonSet>>
-  daemonOperations(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+  daemonOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .extensions()
         .daemonSets()
         .inNamespace(namespace);
@@ -903,10 +843,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private NonNamespaceOperation<StatefulSet, StatefulSetList, DoneableStatefulSet,
       RollableScalableResource<StatefulSet, DoneableStatefulSet>>
-  statefulOperations(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+  statefulOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .apps()
         .statefulSets()
         .inNamespace(namespace);
@@ -914,27 +853,24 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private NonNamespaceOperation<DeploymentConfig, DeploymentConfigList, DoneableDeploymentConfig,
       DeployableScalableResource<DeploymentConfig, DoneableDeploymentConfig>>
-  deploymentConfigOperations(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String namespace) {
+  deploymentConfigOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getOpenShiftClient(kubernetesConfig, encryptedDataDetails)
+    return kubernetesHelperService.getOpenShiftClient(kubernetesConfig, emptyList())
         .deploymentConfigs()
         .inNamespace(namespace);
   }
 
   @Override
-  public Service createOrReplaceService(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Service definition) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  public Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .services()
         .inNamespace(kubernetesConfig.getNamespace())
         .createOrReplace(definition);
   }
 
   @Override
-  public Service getService(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String name, String namespace) {
-    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  public Service getService(KubernetesConfig kubernetesConfig, String name, String namespace) {
+    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
                                   .services()
                                   .inNamespace(isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace())
                                   .withName(name)
@@ -943,9 +879,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Service getService(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  public Service getService(KubernetesConfig kubernetesConfig, String name) {
+    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
                                   .services()
                                   .inNamespace(kubernetesConfig.getNamespace())
                                   .withName(name)
@@ -954,9 +889,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public List<Service> getServices(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  public List<Service> getServices(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .services()
         .inNamespace(kubernetesConfig.getNamespace())
         .withLabels(labels)
@@ -965,19 +899,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public List<Service> listServices(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
-        .services()
-        .inNamespace(kubernetesConfig.getNamespace())
-        .list()
-        .getItems();
-  }
-
-  @Override
-  public void deleteService(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+  public void deleteService(KubernetesConfig kubernetesConfig, String name) {
     logger.info("Deleting service {}", name);
-    kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .services()
         .inNamespace(kubernetesConfig.getNamespace())
         .withName(name)
@@ -985,17 +909,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Ingress createOrReplaceIngress(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Ingress definition) {
+  public Ingress createOrReplaceIngress(KubernetesConfig kubernetesConfig, Ingress definition) {
     String name = definition.getMetadata().getName();
-    Ingress ingress = kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    Ingress ingress = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
                           .extensions()
                           .ingresses()
                           .inNamespace(kubernetesConfig.getNamespace())
                           .withName(name)
                           .get();
     logger.info("{} ingress [{}]", ingress == null ? "Creating" : "Replacing", name);
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .extensions()
         .ingresses()
         .inNamespace(kubernetesConfig.getNamespace())
@@ -1003,9 +926,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Ingress getIngress(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  public Ingress getIngress(KubernetesConfig kubernetesConfig, String name) {
+    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
                                   .extensions()
                                   .ingresses()
                                   .inNamespace(kubernetesConfig.getNamespace())
@@ -1015,10 +937,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void deleteIngress(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+  public void deleteIngress(KubernetesConfig kubernetesConfig, String name) {
     logger.info("Deleting service {}", name);
-    kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .extensions()
         .ingresses()
         .inNamespace(kubernetesConfig.getNamespace())
@@ -1027,26 +948,24 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public ConfigMap createOrReplaceConfigMap(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, ConfigMap definition) {
+  public ConfigMap createOrReplaceConfigMap(KubernetesConfig kubernetesConfig, ConfigMap definition) {
     String name = definition.getMetadata().getName();
-    ConfigMap configMap = kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    ConfigMap configMap = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
                               .configMaps()
                               .inNamespace(kubernetesConfig.getNamespace())
                               .withName(name)
                               .get();
     logger.info("{} config map [{}]", configMap == null ? "Creating" : "Replacing", name);
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .configMaps()
         .inNamespace(kubernetesConfig.getNamespace())
         .createOrReplace(definition);
   }
 
   @Override
-  public ConfigMap getConfigMap(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+  public ConfigMap getConfigMap(KubernetesConfig kubernetesConfig, String name) {
     try {
-      return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+      return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
           .configMaps()
           .inNamespace(kubernetesConfig.getNamespace())
           .withName(name)
@@ -1057,9 +976,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void deleteConfigMap(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  public void deleteConfigMap(KubernetesConfig kubernetesConfig, String name) {
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .configMaps()
         .inNamespace(kubernetesConfig.getNamespace())
         .withName(name)
@@ -1067,20 +985,17 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public IstioResource createOrReplaceIstioResource(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition) {
+  public IstioResource createOrReplaceIstioResource(KubernetesConfig kubernetesConfig, IstioResource definition) {
     String name = definition.getMetadata().getName();
     String kind = definition.getKind();
     logger.info("Registering {} [{}]", kind, name);
-    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
+    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, emptyList());
     return istioClient.registerOrUpdateCustomResource(definition);
   }
 
   @Override
-  public VirtualService getIstioVirtualService(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    KubernetesClient kubernetesClient =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+  public VirtualService getIstioVirtualService(KubernetesConfig kubernetesConfig, String name) {
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
     try {
       VirtualService virtualService = new VirtualServiceBuilder().build();
 
@@ -1096,10 +1011,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public DestinationRule getIstioDestinationRule(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    KubernetesClient kubernetesClient =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+  public DestinationRule getIstioDestinationRule(KubernetesConfig kubernetesConfig, String name) {
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
     try {
       DestinationRule destinationRule = new DestinationRuleBuilder().build();
 
@@ -1127,9 +1040,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void deleteIstioDestinationRule(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
+  public void deleteIstioDestinationRule(KubernetesConfig kubernetesConfig, String name) {
+    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, emptyList());
     try {
       istioClient.unregisterCustomResource(new DestinationRuleBuilder()
                                                .withNewMetadata()
@@ -1143,9 +1055,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void deleteIstioVirtualService(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
+  public void deleteIstioVirtualService(KubernetesConfig kubernetesConfig, String name) {
+    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, emptyList());
     try {
       istioClient.unregisterCustomResource(new VirtualServiceBuilder()
                                                .withNewMetadata()
@@ -1159,10 +1070,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public int getTrafficPercent(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
+  public int getTrafficPercent(KubernetesConfig kubernetesConfig, String controllerName) {
     String serviceName = getServiceNameFromControllerName(controllerName);
-    IstioResource virtualService = getIstioVirtualService(kubernetesConfig, encryptedDataDetails, serviceName);
+    IstioResource virtualService = getIstioVirtualService(kubernetesConfig, serviceName);
     Optional<Integer> revision = getRevisionFromControllerName(controllerName);
     if (virtualService == null || !revision.isPresent()) {
       return 0;
@@ -1183,11 +1093,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Map<String, Integer> getTrafficWeights(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
+  public Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig, String controllerName) {
     String serviceName = getServiceNameFromControllerName(controllerName);
     String controllerNamePrefix = getPrefixFromControllerName(controllerName);
-    IstioResource virtualService = getIstioVirtualService(kubernetesConfig, encryptedDataDetails, serviceName);
+    IstioResource virtualService = getIstioVirtualService(kubernetesConfig, serviceName);
     if (virtualService == null) {
       return new HashMap<>();
     }
@@ -1202,16 +1111,15 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void createNamespaceIfNotExist(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  public void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig) {
     try {
-      Namespace namespace = kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+      Namespace namespace = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
                                 .namespaces()
                                 .withName(kubernetesConfig.getNamespace())
                                 .get();
       if (namespace == null) {
         logger.info("Creating namespace [{}]", kubernetesConfig.getNamespace());
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
             .namespaces()
             .create(new NamespaceBuilder()
                         .withNewMetadata()
@@ -1225,9 +1133,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Secret getSecret(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String secretName) {
-    return isNotBlank(secretName) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  public Secret getSecret(KubernetesConfig kubernetesConfig, String secretName) {
+    return isNotBlank(secretName) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
                                         .secrets()
                                         .inNamespace(kubernetesConfig.getNamespace())
                                         .withName(secretName)
@@ -1236,9 +1143,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void deleteSecret(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String secretName) {
-    kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  public void deleteSecret(KubernetesConfig kubernetesConfig, String secretName) {
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .secrets()
         .inNamespace(kubernetesConfig.getNamespace())
         .withName(secretName)
@@ -1246,28 +1152,21 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Secret createOrReplaceSecret(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Secret secret) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  public Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, Secret secret) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .secrets()
         .inNamespace(kubernetesConfig.getNamespace())
         .createOrReplace(secret);
   }
 
   @Override
-  public List<Pod> getPods(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  public List<Pod> getPods(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .pods()
         .inNamespace(kubernetesConfig.getNamespace())
         .withLabels(labels)
         .list()
         .getItems();
-  }
-
-  @Override
-  public NodeList getNodes(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails).nodes().list();
   }
 
   private List<Pod> prunePodsInFinalState(List<Pod> pods) {
@@ -1279,11 +1178,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void waitForPodsToStop(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      Map<String, String> labels, int serviceSteadyStateTimeout, List<Pod> originalPods, long startTime,
+  public void waitForPodsToStop(KubernetesConfig kubernetesConfig, Map<String, String> labels,
+      int serviceSteadyStateTimeout, List<Pod> originalPods, long startTime,
       ExecutionLogCallback executionLogCallback) {
-    KubernetesClient kubernetesClient =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
     List<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList());
     String namespace = kubernetesConfig.getNamespace();
     String waitingMsg = "Waiting for pods to stop...";
@@ -1317,11 +1215,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
   }
 
-  private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned, long startTime, String namespace,
-      ExecutionLogCallback executionLogCallback) {
-    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace);
+  @SuppressWarnings({"squid:S00107", "squid:S3776"})
+  private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig, String controllerName, int previousCount,
+      int desiredCount, int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned, long startTime,
+      String namespace, ExecutionLogCallback executionLogCallback) {
+    HasMetadata controller = getController(kubernetesConfig, controllerName, namespace);
     if (controller == null) {
       throw new InvalidArgumentsException(Pair.of(controllerName, "is null"));
     }
@@ -1332,8 +1230,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     Set<String> images = getControllerImages(podTemplateSpec);
     Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
     List<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList());
-    KubernetesClient kubernetesClient =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
     logger.info("Waiting for pods to be ready...");
     AtomicBoolean countReached = new AtomicBoolean(false);
     AtomicBoolean haveImagesCountReached = new AtomicBoolean(false);
@@ -1348,8 +1245,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         while (true) {
           try {
             int absoluteDesiredCount = desiredCount;
-            HasMetadata currentController =
-                getController(kubernetesConfig, encryptedDataDetails, controllerName, namespace);
+            HasMetadata currentController = getController(kubernetesConfig, controllerName, namespace);
             if (currentController != null) {
               int controllerDesiredCount = getControllerPodCount(currentController);
               absoluteDesiredCount = (desiredCount == -1) ? controllerDesiredCount : desiredCount;
@@ -1515,15 +1411,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public List<Pod> getRunningPods(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
-    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+  public List<Pod> getRunningPods(KubernetesConfig kubernetesConfig, String controllerName) {
+    HasMetadata controller = getController(kubernetesConfig, controllerName);
     PodTemplateSpec podTemplateSpec = getPodTemplateSpec(controller);
     if (podTemplateSpec == null) {
       return emptyList();
     }
     Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .pods()
         .inNamespace(kubernetesConfig.getNamespace())
         .withLabels(labels)
@@ -1535,9 +1430,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return template.getSpec().getContainers().stream().map(Container::getImage).collect(toSet());
   }
 
-  public void checkStatus(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String rcName, String serviceName) {
-    KubernetesClient client = kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+  public void checkStatus(KubernetesConfig kubernetesConfig, String rcName, String serviceName) {
+    KubernetesClient client = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
     String masterUrl = client.getMasterUrl().toString();
     ReplicationController rc =
         client.replicationControllers().inNamespace(kubernetesConfig.getNamespace()).withName(rcName).get();
@@ -1557,10 +1451,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public String fetchReleaseHistory(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String releaseName) {
+  public String fetchReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName) {
     String releaseHistory = "";
-    ConfigMap configMap = getConfigMap(kubernetesConfig, encryptedDataDetails, releaseName);
+    ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
     if (configMap != null && configMap.getData() != null && configMap.getData().containsKey(ReleaseHistoryKeyName)) {
       releaseHistory = configMap.getData().get(ReleaseHistoryKeyName);
     }
@@ -1569,10 +1462,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void saveReleaseHistory(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String releaseName, String releaseHistory) {
+  public void saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
     try {
-      ConfigMap configMap = getConfigMap(kubernetesConfig, encryptedDataDetails, releaseName);
+      ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
       if (configMap == null) {
         configMap = new ConfigMapBuilder()
                         .withNewMetadata()
@@ -1586,7 +1478,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         data.put(ReleaseHistoryKeyName, releaseHistory);
         configMap.setData(data);
       }
-      createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
+      createOrReplaceConfigMap(kubernetesConfig, configMap);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.GENERAL_ERROR, e)
           .addParam("message", "Failed to save release History. " + ExceptionUtils.getMessage(e));
@@ -1594,9 +1486,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public List<Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String namespace, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  public List<Pod> getRunningPodsWithLabels(
+      KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
         .pods()
         .inNamespace(namespace)
         .withLabels(labels)
@@ -1610,7 +1502,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public VersionInfo getVersion(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails).getVersion();
+  public VersionInfo getVersion(KubernetesConfig kubernetesConfig) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList()).getVersion();
   }
 }

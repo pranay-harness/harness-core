@@ -64,7 +64,6 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -133,8 +132,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     } else {
       setManagedWorkloadsInRelease(k8sDelegateTaskParams);
 
-      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-          k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      kubernetesContainerService.saveReleaseHistory(
+          kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
       List<KubernetesResourceId> managedWorkloadKubernetesResourceIds =
           managedWorkloads.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
@@ -149,8 +148,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       if (!success) {
         releaseHistory.setReleaseStatus(Status.Failed);
-        kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-            k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+        kubernetesContainerService.saveReleaseHistory(
+            kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
         return getFailureResponse();
       }
     }
@@ -161,8 +160,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     wrapUp(k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WrapUp));
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-        k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    kubernetesContainerService.saveReleaseHistory(
+        kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()
@@ -226,8 +225,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
     try {
-      String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-          kubernetesConfig, Collections.emptyList(), request.getReleaseName());
+      String releaseHistoryData =
+          kubernetesContainerService.fetchReleaseHistory(kubernetesConfig, request.getReleaseName());
 
       releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                  : ReleaseHistory.createFromData(releaseHistoryData);

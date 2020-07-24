@@ -53,7 +53,6 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -180,7 +179,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     KubernetesConfig kubernetesConfig = mock(KubernetesConfig.class);
     List<Pod> existingPods = asList(new Pod());
 
-    when(kubernetesContainerService.getPods(eq(kubernetesConfig), any(List.class), anyMap())).thenReturn(existingPods);
+    when(kubernetesContainerService.getPods(eq(kubernetesConfig), anyMap())).thenReturn(existingPods);
     doReturn(null)
         .when(containerDeploymentDelegateHelper)
         .getContainerInfosWhenReadyByLabels(
@@ -204,18 +203,17 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     List<Pod> existingPods = asList(new Pod());
     List<? extends HasMetadata> controllers = getMockedControllers();
 
-    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyList(), anyMap()))
-        .thenReturn(controllers);
+    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyMap())).thenReturn(controllers);
 
     containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabels(
         kubernetesConfig, logCallback, ImmutableMap.of("name", "value"), existingPods);
 
     verify(kubernetesContainerService, times(1))
-        .getContainerInfosWhenReady(kubernetesConfig, Collections.emptyList(), "deployment-name", 0, -1, 30,
-            existingPods, false, logCallback, true, 0, "default");
+        .getContainerInfosWhenReady(
+            kubernetesConfig, "deployment-name", 0, -1, 30, existingPods, false, logCallback, true, 0, "default");
     verify(kubernetesContainerService, times(1))
-        .getContainerInfosWhenReady(kubernetesConfig, Collections.emptyList(), "daemonSet-name", 0, -1, 30,
-            existingPods, true, logCallback, true, 0, "default");
+        .getContainerInfosWhenReady(
+            kubernetesConfig, "daemonSet-name", 0, -1, 30, existingPods, true, logCallback, true, 0, "default");
   }
 
   private List<? extends HasMetadata> getMockedControllers() {
@@ -241,13 +239,12 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
     Map<String, String> labels = new HashMap<>();
 
-    when(kubernetesContainerService.getPods(kubernetesConfig, Collections.emptyList(), labels))
-        .thenReturn(asList(new Pod()));
+    when(kubernetesContainerService.getPods(kubernetesConfig, labels)).thenReturn(asList(new Pod()));
 
     final List<Pod> pods =
         containerDeploymentDelegateHelper.getExistingPodsByLabels(containerServiceParams, kubernetesConfig, labels);
     assertThat(pods).hasSize(1);
-    verify(kubernetesContainerService, times(1)).getPods(kubernetesConfig, Collections.emptyList(), labels);
+    verify(kubernetesContainerService, times(1)).getPods(kubernetesConfig, labels);
   }
 
   @Test
@@ -268,7 +265,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     VersionInfo version = new VersionInfo(jsonData);
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.getVersion(kubernetesConfig, new ArrayList<>())).thenReturn(version);
+    when(kubernetesContainerService.getVersion(kubernetesConfig)).thenReturn(version);
 
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
         true, containerServiceParams, new ExecutionLogCallback());
@@ -293,7 +290,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     VersionInfo version = new VersionInfo(jsonData);
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.getVersion(kubernetesConfig, new ArrayList<>())).thenReturn(version);
+    when(kubernetesContainerService.getVersion(kubernetesConfig)).thenReturn(version);
 
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
         true, containerServiceParams, new ExecutionLogCallback());
@@ -318,7 +315,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     VersionInfo version = new VersionInfo(jsonData);
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.getVersion(kubernetesConfig, new ArrayList<>())).thenReturn(version);
+    when(kubernetesContainerService.getVersion(kubernetesConfig)).thenReturn(version);
 
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
         true, containerServiceParams, new ExecutionLogCallback());
@@ -342,8 +339,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     Map<String, String> labels = new HashMap<>();
 
     List<? extends HasMetadata> controllers = getMockedControllers();
-    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyList(), anyMap()))
-        .thenReturn(controllers);
+    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyMap())).thenReturn(controllers);
     assertThat(containerDeploymentDelegateHelper.getControllerCountByLabels(kubernetesConfig, labels)).isEqualTo(2);
   }
 

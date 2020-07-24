@@ -15,6 +15,7 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.network.Http.joinHostPort;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -438,10 +439,9 @@ public class KubernetesHelperService {
 
   public NonNamespaceOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
       Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>>
-  hpaOperationsForCustomMetricHPA(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String apiName) {
+  hpaOperationsForCustomMetricHPA(KubernetesConfig kubernetesConfig, String apiName) {
     DefaultKubernetesClient kubernetesClient =
-        (DefaultKubernetesClient) getKubernetesClient(kubernetesConfig, encryptedDataDetails, apiName);
+        (DefaultKubernetesClient) getKubernetesClient(kubernetesConfig, emptyList(), apiName);
 
     /*
      * Following constructor invocation content is copied from HorizontalPodAutoscalerOperationsImpl(OkHttpClient
@@ -466,8 +466,8 @@ public class KubernetesHelperService {
 
   public NonNamespaceOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
       Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>>
-  hpaOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    return getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+  hpaOperations(KubernetesConfig kubernetesConfig) {
+    return getKubernetesClient(kubernetesConfig, emptyList())
         .autoscaling()
         .horizontalPodAutoscalers()
         .inNamespace(kubernetesConfig.getNamespace());

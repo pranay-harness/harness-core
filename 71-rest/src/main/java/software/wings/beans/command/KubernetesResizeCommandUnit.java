@@ -76,7 +76,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData);
 
     String controllerName = containerServiceData.getName();
-    HasMetadata controller = kubernetesContainerService.getController(kubernetesConfig, emptyList(), controllerName);
+    HasMetadata controller = kubernetesContainerService.getController(kubernetesConfig, controllerName);
     if (controller == null) {
       throw new WingsException(GENERAL_ERROR).addParam("message", "No controller with name: " + controllerName);
     }
@@ -87,17 +87,17 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     }
 
     if (resizeParams.isUseAutoscaler() && resizeParams.isRollback()) {
-      HorizontalPodAutoscaler autoscaler = kubernetesContainerService.getAutoscaler(
-          kubernetesConfig, emptyList(), controllerName, resizeParams.getApiVersion());
+      HorizontalPodAutoscaler autoscaler =
+          kubernetesContainerService.getAutoscaler(kubernetesConfig, controllerName, resizeParams.getApiVersion());
       if (autoscaler != null && controllerName.equals(autoscaler.getSpec().getScaleTargetRef().getName())) {
         executionLogCallback.saveExecutionLog("Deleting horizontal pod autoscaler: " + controllerName);
-        kubernetesContainerService.deleteAutoscaler(kubernetesConfig, emptyList(), controllerName);
+        kubernetesContainerService.deleteAutoscaler(kubernetesConfig, controllerName);
       }
     }
 
     int desiredCount = containerServiceData.getDesiredCount();
     int previousCount = containerServiceData.getPreviousCount();
-    List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(kubernetesConfig, emptyList(),
+    List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(kubernetesConfig,
         resizeParams.getClusterName(), controllerName, previousCount, desiredCount,
         resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
 
@@ -135,8 +135,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
     // Enable HPA
     if (!resizeParams.isRollback() && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
-      HorizontalPodAutoscaler hpa = kubernetesContainerService.createOrReplaceAutoscaler(
-          kubernetesConfig, emptyList(), resizeParams.getAutoscalerYaml());
+      HorizontalPodAutoscaler hpa =
+          kubernetesContainerService.createOrReplaceAutoscaler(kubernetesConfig, resizeParams.getAutoscalerYaml());
       if (hpa != null) {
         String hpaName = hpa.getMetadata().getName();
         executionLogCallback.saveExecutionLog("Horizontal pod autoscaler enabled: " + hpaName + "\n");
@@ -150,7 +150,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       String kubernetesServiceName = getServiceNameFromControllerName(controllerName);
       String controllerPrefix = getPrefixFromControllerName(controllerName);
       IstioResource existingVirtualService =
-          kubernetesContainerService.getIstioVirtualService(kubernetesConfig, emptyList(), kubernetesServiceName);
+          kubernetesContainerService.getIstioVirtualService(kubernetesConfig, kubernetesServiceName);
 
       if (existingVirtualService == null) {
         throw new InvalidRequestException(format("Virtual Service [%s] not found", kubernetesServiceName));
@@ -162,8 +162,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       if (!virtualServiceHttpRouteMatchesExisting(existingVirtualService, virtualServiceDefinition)) {
         executionLogCallback.saveExecutionLog("Setting Istio VirtualService Route destination weights:");
         printVirtualServiceRouteWeights(virtualServiceDefinition, controllerPrefix, executionLogCallback);
-        kubernetesContainerService.createOrReplaceIstioResource(
-            kubernetesConfig, emptyList(), virtualServiceDefinition);
+        kubernetesContainerService.createOrReplaceIstioResource(kubernetesConfig, virtualServiceDefinition);
       } else {
         executionLogCallback.saveExecutionLog("No change to Istio VirtualService Route rules :");
         printVirtualServiceRouteWeights(existingVirtualService, controllerPrefix, executionLogCallback);
@@ -249,7 +248,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     return kubernetesContainerService.getActiveServiceCountsWithLabels(
-        kubernetesConfig, emptyList(), resizeParams.getLookupLabels());
+        kubernetesConfig, resizeParams.getLookupLabels());
   }
 
   @Override
@@ -259,8 +258,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
     String imagePrefix = substringBefore(contextData.resizeParams.getImage(), ":");
-    return kubernetesContainerService.getActiveServiceImages(
-        kubernetesConfig, emptyList(), controllerName, imagePrefix);
+    return kubernetesContainerService.getActiveServiceImages(kubernetesConfig, controllerName, imagePrefix);
   }
 
   @Override
@@ -268,7 +266,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData);
 
     return kubernetesContainerService.getControllerPodCount(
-        kubernetesConfig, emptyList(), contextData.resizeParams.getContainerServiceName());
+        kubernetesConfig, contextData.resizeParams.getContainerServiceName());
   }
 
   @Override
@@ -281,7 +279,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData);
 
     String controllerName = resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getTrafficWeights(kubernetesConfig, emptyList(), controllerName);
+    return kubernetesContainerService.getTrafficWeights(kubernetesConfig, controllerName);
   }
 
   @Override
@@ -290,7 +288,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     String controllerName = resizeParams.getContainerServiceName();
-    return kubernetesContainerService.getTrafficPercent(kubernetesConfig, emptyList(), controllerName);
+    return kubernetesContainerService.getTrafficPercent(kubernetesConfig, controllerName);
   }
 
   @Override
