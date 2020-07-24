@@ -30,7 +30,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Slf4j
-public class BarrierStep implements Step, SyncExecutable, AsyncExecutable {
+public class BarrierStep implements Step, SyncExecutable<BarrierStepParameters>, AsyncExecutable {
   public static final StepType STEP_TYPE = StepType.builder().type("BARRIER").build();
 
   private static final String BARRIER = "barrier";
@@ -38,9 +38,9 @@ public class BarrierStep implements Step, SyncExecutable, AsyncExecutable {
   @Inject private BarrierService barrierService;
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData) {
-    final String identifier = ((BarrierStepParameters) stepParameters).getIdentifier();
+  public StepResponse executeSync(Ambiance ambiance, BarrierStepParameters barrierStepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
+    final String identifier = barrierStepParameters.getIdentifier();
     logger.warn("There is only one barrier present for planExecution [{}] with [{}] identifier, passing through it...",
         ambiance.getPlanExecutionId(), identifier);
     BarrierExecutionInstance barrierExecutionInstance =

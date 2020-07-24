@@ -11,11 +11,10 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 
-public class InfrastructureStep implements Step, SyncExecutable {
+public class InfrastructureStep implements Step, SyncExecutable<InfraStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("INFRASTRUCTURE").build();
 
   InfraMapping createInfraMappingObject(String serviceIdentifier, Infrastructure infrastructureSpec) {
@@ -25,12 +24,11 @@ public class InfrastructureStep implements Step, SyncExecutable {
   }
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData) {
-    InfraStepParameters parameters = (InfraStepParameters) stepParameters;
-    Infrastructure infrastructure = parameters.getInfrastructureOverrides() != null
-        ? parameters.getInfrastructure().applyOverrides(parameters.getInfrastructureOverrides())
-        : parameters.getInfrastructure();
+  public StepResponse executeSync(Ambiance ambiance, InfraStepParameters infraStepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
+    Infrastructure infrastructure = infraStepParameters.getInfrastructureOverrides() != null
+        ? infraStepParameters.getInfrastructure().applyOverrides(infraStepParameters.getInfrastructureOverrides())
+        : infraStepParameters.getInfrastructure();
     // TODO: render variables later
     return StepResponse.builder()
         .status(Status.SUCCEEDED)

@@ -14,18 +14,16 @@ import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 
-public class EnvironmentStep implements Step, SyncExecutable {
+public class EnvironmentStep implements Step, SyncExecutable<EnvironmentStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("ENVIRONMENT").build();
 
   @Inject private EnvironmentService environmentService;
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData) {
-    EnvironmentStepParameters environmentStepParameters = (EnvironmentStepParameters) stepParameters;
+  public StepResponse executeSync(Ambiance ambiance, EnvironmentStepParameters environmentStepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     EnvironmentYaml environmentYaml = environmentStepParameters.getEnvironmentOverrides() != null
         ? environmentStepParameters.getEnvironment().applyOverrides(environmentStepParameters.getEnvironmentOverrides())
         : environmentStepParameters.getEnvironment();

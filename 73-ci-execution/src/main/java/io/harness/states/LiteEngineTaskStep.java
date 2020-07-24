@@ -11,7 +11,6 @@ import io.harness.managerclient.ManagerCIResource;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j
-public class LiteEngineTaskStep implements Step, SyncExecutable {
+public class LiteEngineTaskStep implements Step, SyncExecutable<LiteEngineTaskStepInfo> {
   @Inject private ManagerCIResource managerCIResource;
   @Inject private BuildSetupUtils buildSetupUtils;
   public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.typeInfo.getStepType();
@@ -30,12 +29,11 @@ public class LiteEngineTaskStep implements Step, SyncExecutable {
   //     Async will be supported once we will have delegate microservice ready.
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData) {
+  public StepResponse executeSync(Ambiance ambiance, LiteEngineTaskStepInfo liteEngineTaskStepInfo,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     try {
-      LiteEngineTaskStepInfo envSetupStepInfo = (LiteEngineTaskStepInfo) stepParameters;
       // TODO Handle response and fetch cluster from input element
-      buildSetupUtils.executeCILiteEngineTask(envSetupStepInfo, ambiance);
+      buildSetupUtils.executeCILiteEngineTask(liteEngineTaskStepInfo, ambiance);
       return StepResponse.builder().status(Status.SUCCEEDED).build();
     } catch (Exception e) {
       logger.error("state execution failed", e);

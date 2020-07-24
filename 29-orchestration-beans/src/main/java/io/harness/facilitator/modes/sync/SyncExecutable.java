@@ -19,7 +19,7 @@ import io.harness.state.io.StepResponse;
  */
 @OwnedBy(CDC)
 @Redesign
-public interface SyncExecutable {
+public interface SyncExecutable<T extends StepParameters> {
   StepResponse executeSync(
-      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage, PassThroughData passThroughData);
+      Ambiance ambiance, T stepParameters, StepInputPackage inputPackage, PassThroughData passThroughData);
 }

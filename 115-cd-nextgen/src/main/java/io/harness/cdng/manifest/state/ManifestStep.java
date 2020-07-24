@@ -14,7 +14,6 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.yaml.core.intfc.WithIdentifier;
 import lombok.extern.slf4j.Slf4j;
@@ -26,26 +25,25 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ManifestStep implements Step, SyncExecutable {
+public class ManifestStep implements Step, SyncExecutable<ManifestStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type(MANIFEST_STEP).build();
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData) {
-    ManifestStepParameters parameters = (ManifestStepParameters) stepParameters;
+  public StepResponse executeSync(Ambiance ambiance, ManifestStepParameters manifestStepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     Map<String, ManifestAttributes> identifierToManifestMap = new HashMap<>();
 
     // 1. Get Manifests belonging to KubernetesServiceSpec
-    if (EmptyPredicate.isNotEmpty(parameters.getServiceSpecManifests())) {
-      identifierToManifestMap = parameters.getServiceSpecManifests().stream().collect(
+    if (EmptyPredicate.isNotEmpty(manifestStepParameters.getServiceSpecManifests())) {
+      identifierToManifestMap = manifestStepParameters.getServiceSpecManifests().stream().collect(
           Collectors.toMap(WithIdentifier::getIdentifier, ManifestConfigWrapper::getManifestAttributes, (a, b) -> b));
     }
 
     // 2. Apply Override Sets
-    applyManifestOverlay(identifierToManifestMap, parameters.getManifestOverrideSets());
+    applyManifestOverlay(identifierToManifestMap, manifestStepParameters.getManifestOverrideSets());
 
     // 3. Get Manifests belonging to Stage Overrides
-    applyManifestOverlay(identifierToManifestMap, parameters.getStageOverrideManifests());
+    applyManifestOverlay(identifierToManifestMap, manifestStepParameters.getStageOverrideManifests());
 
     return StepResponse.builder()
         .status(Status.SUCCEEDED)

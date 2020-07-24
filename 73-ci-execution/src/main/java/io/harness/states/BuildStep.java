@@ -24,7 +24,6 @@ import io.harness.references.SweepingOutputRefObject;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ci.K8ExecCommandParams;
@@ -38,7 +37,7 @@ import java.util.List;
  */
 
 @Slf4j
-public class BuildStep implements Step, SyncExecutable {
+public class BuildStep implements Step, SyncExecutable<BuildStepInfo> {
   @Inject private ManagerCIResource managerCIResource;
   @Inject EngineExpressionService engineExpressionService;
   public static final StepType STEP_TYPE = BuildStepInfo.typeInfo.getStepType();
@@ -48,16 +47,14 @@ public class BuildStep implements Step, SyncExecutable {
   //     Async will be supported once we will have delegate microservice ready.
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData) {
+  public StepResponse executeSync(
+      Ambiance ambiance, BuildStepInfo buildStepInfo, StepInputPackage inputPackage, PassThroughData passThroughData) {
     try {
       K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
           ambiance, SweepingOutputRefObject.builder().name(ContextElement.podDetails).build());
       final String namespace = k8PodDetails.getNamespace();
       final String clusterName = k8PodDetails.getClusterName();
       final String podName = k8PodDetails.getPodName();
-
-      BuildStepInfo buildStepInfo = (BuildStepInfo) stepParameters;
 
       List<String> commandList =
           buildStepInfo.getScriptInfos().stream().map(ScriptInfo::getScriptString).collect(toList());

@@ -17,7 +17,6 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +30,7 @@ import java.util.List;
 @OwnedBy(CDC)
 @Redesign
 @Slf4j
-public class EmailStep implements Step, SyncExecutable {
+public class EmailStep implements Step, SyncExecutable<EmailStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("EMAIL").build();
 
   private static final Splitter COMMA_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
@@ -40,17 +39,17 @@ public class EmailStep implements Step, SyncExecutable {
   @Transient @Inject private EmailNotificationService emailNotificationService;
 
   @Override
-  public StepResponse executeSync(
-      Ambiance ambiance, StepParameters parameters, StepInputPackage inputPackage, PassThroughData passThroughData) {
-    EmailStepParameters stepParameters = (EmailStepParameters) parameters;
+  public StepResponse executeSync(Ambiance ambiance, EmailStepParameters emailStepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     try {
-      logger.debug("Email Notification - subject:{}, body:{}", stepParameters.getSubject(), stepParameters.getBody());
+      logger.debug(
+          "Email Notification - subject:{}, body:{}", emailStepParameters.getSubject(), emailStepParameters.getBody());
       emailNotificationService.send(EmailData.builder()
-                                        .to(getEmailAddressList(stepParameters.getToAddress()))
-                                        .cc(getEmailAddressList(stepParameters.getCcAddress()))
-                                        .subject(stepParameters.getSubject())
-                                        .body(stepParameters.getBody())
+                                        .to(getEmailAddressList(emailStepParameters.getToAddress()))
+                                        .cc(getEmailAddressList(emailStepParameters.getCcAddress()))
+                                        .subject(emailStepParameters.getSubject())
+                                        .body(emailStepParameters.getBody())
                                         .accountId(ambiance.getSetupAbstractions().get(ACCOUNT_ID))
                                         .build());
       stepResponseBuilder.status(Status.SUCCEEDED);
@@ -60,7 +59,7 @@ public class EmailStep implements Step, SyncExecutable {
                            .errorMessage(e.getCause() == null ? ExceptionUtils.getMessage(e)
                                                               : ExceptionUtils.getMessage(e.getCause()))
                            .build())
-          .status(stepParameters.isIgnoreDeliveryFailure() ? Status.SUCCEEDED : Status.FAILED);
+          .status(emailStepParameters.isIgnoreDeliveryFailure() ? Status.SUCCEEDED : Status.FAILED);
       logger.error("Exception while sending email", e);
     }
     return stepResponseBuilder.build();
