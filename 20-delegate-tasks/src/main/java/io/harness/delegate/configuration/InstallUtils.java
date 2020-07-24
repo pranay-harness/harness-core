@@ -33,7 +33,7 @@ public class InstallUtils {
   private static final String defaultKubectlVersion = "v1.13.2";
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
 
-  private static final String goTemplateClientVersion = "v0.3";
+  private static final String goTemplateClientVersion = "v0.4";
   private static final String goTemplateClientBaseDir = "./client-tools/go-template/";
 
   static final String helm3Version = "v3.1.2";

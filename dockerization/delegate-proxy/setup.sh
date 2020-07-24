@@ -93,7 +93,7 @@ mv "${JRE_MACOSX_2}" "${IMAGES_DIR}/"
 mv "${JRE_LINUX_2}" "${IMAGES_DIR}/"
 
 
-for goversion in v0.2 v0.3; do
+for goversion in v0.2 v0.3 v0.4; do
     echo "Adding goversion $goversion"
     GOTEMPLATE_LINUX_DIR="${IMAGES_DIR}/go-template/linux/$goversion/"
     GOTEMPLATE_MAC_DIR="${IMAGES_DIR}/go-template/darwin/$goversion/"
