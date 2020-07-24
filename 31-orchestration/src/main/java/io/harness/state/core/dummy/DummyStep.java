@@ -11,19 +11,18 @@ import io.harness.facilitator.modes.sync.SyncExecutable;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
 @Redesign
-public class DummyStep implements Step, SyncExecutable {
+public class DummyStep implements Step, SyncExecutable<DummyStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("DUMMY").build();
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData) {
+  public StepResponse executeSync(Ambiance ambiance, DummyStepParameters dummyStepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     logger.info("Dummy Step getting executed. Identifier: {}", ambiance.obtainCurrentLevel().getIdentifier());
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }

@@ -11,7 +11,6 @@ import io.harness.managerclient.ManagerCIResource;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j
-public class BuildEnvSetupStep implements Step, SyncExecutable {
+public class BuildEnvSetupStep implements Step, SyncExecutable<BuildEnvSetupStepInfo> {
   @Inject private ManagerCIResource managerCIResource;
   @Inject private BuildSetupUtils buildSetupUtils;
   public static final StepType STEP_TYPE = BuildEnvSetupStepInfo.typeInfo.getStepType();
@@ -30,12 +29,11 @@ public class BuildEnvSetupStep implements Step, SyncExecutable {
   //     Async will be supported once we will have delegate microservice ready.
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData) {
+  public StepResponse executeSync(Ambiance ambiance, BuildEnvSetupStepInfo buildEnvSetupStepInfo,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     try {
-      BuildEnvSetupStepInfo envSetupStepInfo = (BuildEnvSetupStepInfo) stepParameters;
       // TODO Handle response and fetch cluster from input element
-      buildSetupUtils.executeCISetupTask(envSetupStepInfo, ambiance);
+      buildSetupUtils.executeCISetupTask(buildEnvSetupStepInfo, ambiance);
       return StepResponse.builder().status(Status.SUCCEEDED).build();
     } catch (Exception e) {
       logger.error("state execution failed", e);

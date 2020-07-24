@@ -13,7 +13,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.execution.status.Status;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -59,13 +58,13 @@ public class EmailStepTest extends WingsBaseTest {
 
   private void testEmailState(boolean ignoreDeliveryFailure, Status expectedStatus) {
     Ambiance ambiance = Ambiance.builder().setupAbstractions(ImmutableMap.of("accountId", "accountIdValue")).build();
-    StepParameters emailStepParameters = EmailStepParameters.builder()
-                                             .body("body")
-                                             .toAddress("toAddress1, toAddress2")
-                                             .ccAddress("ccAddress1, ccAddress2")
-                                             .subject("subject")
-                                             .ignoreDeliveryFailure(ignoreDeliveryFailure)
-                                             .build();
+    EmailStepParameters emailStepParameters = EmailStepParameters.builder()
+                                                  .body("body")
+                                                  .toAddress("toAddress1, toAddress2")
+                                                  .ccAddress("ccAddress1, ccAddress2")
+                                                  .subject("subject")
+                                                  .ignoreDeliveryFailure(ignoreDeliveryFailure)
+                                                  .build();
 
     StepResponse stepResponse =
         emailStep.executeSync(ambiance, emailStepParameters, StepInputPackage.builder().build(), null);
