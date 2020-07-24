@@ -1,38 +1,35 @@
-package software.wings.delegatetasks.oidc;
+package io.harness.k8s.oidc;
 
-import static io.harness.rule.OwnerRule.ADWAIT;
-import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.k8s.K8sConstants.OPEN_ID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static software.wings.delegatetasks.k8s.K8sConstants.OPEN_ID;
-
-import com.google.inject.Inject;
 
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.oauth.OAuth20Service;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.model.OidcGrantType;
 import io.harness.oidc.model.OidcTokenRequestData;
 import io.harness.rule.Owner;
+import io.harness.rule.OwnerRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
 import org.mockito.Spy;
-import software.wings.WingsBaseTest;
-import software.wings.beans.OidcGrantType;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
-public class OidcTokenRetrieverTest extends WingsBaseTest {
-  @Inject OidcTokenRetriever oidcTokenRetriever;
+public class OidcTokenRetrieverTest extends CategoryTest {
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+  @InjectMocks OidcTokenRetriever oidcTokenRetriever;
 
   @Spy OidcTokenRetriever spyOidcTokenRetriever;
 
   @Test
-  @Owner(developers = ADWAIT)
+  @Owner(developers = OwnerRule.ADWAIT)
   @Category(UnitTests.class)
   public void testAddNeededOidcScopesIfNotPresent() {
     String scope = oidcTokenRetriever.addNeededOidcScopesIfNotPresent(null);
@@ -56,25 +53,25 @@ public class OidcTokenRetrieverTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ADWAIT)
+  @Owner(developers = OwnerRule.ADWAIT)
   @Category(UnitTests.class)
   public void testFetchAccessTokenUsingGrantType() throws Exception {
-    OAuth20Service service = mock(OAuth20Service.class);
-    OAuth2AccessToken token = mock(OAuth2AccessToken.class);
+    OAuth20Service service = Mockito.mock(OAuth20Service.class);
+    OAuth2AccessToken token = Mockito.mock(OAuth2AccessToken.class);
 
-    doReturn(token).when(service).getAccessTokenPasswordGrant(anyString(), anyString());
+    Mockito.doReturn(token).when(service).getAccessTokenPasswordGrant(Matchers.anyString(), Matchers.anyString());
 
     oidcTokenRetriever.fetchAccessTokenUsingGrantType(
         service, OidcTokenRequestData.builder().grantType(OidcGrantType.password.name()).build());
-    verify(service, times(1)).getAccessTokenPasswordGrant(anyString(), anyString());
-    verify(service, never()).getAccessTokenClientCredentialsGrant();
+    Mockito.verify(service, Mockito.times(1)).getAccessTokenPasswordGrant(Matchers.anyString(), Matchers.anyString());
+    Mockito.verify(service, Mockito.never()).getAccessTokenClientCredentialsGrant();
   }
 
   @Test
-  @Owner(developers = ANSHUL)
+  @Owner(developers = OwnerRule.ANSHUL)
   @Category(UnitTests.class)
   public void testGetAccessToken() throws Exception {
-    doReturn(null).when(spyOidcTokenRetriever).fetchAccessTokenUsingGrantType(any(), any());
+    Mockito.doReturn(null).when(spyOidcTokenRetriever).fetchAccessTokenUsingGrantType(Matchers.any(), Matchers.any());
 
     spyOidcTokenRetriever.getAccessToken(OidcTokenRequestData.builder()
                                              .clientId("clientId")
@@ -86,7 +83,8 @@ public class OidcTokenRetrieverTest extends WingsBaseTest {
                                              .build());
 
     ArgumentCaptor<OidcTokenRequestData> captor = ArgumentCaptor.forClass(OidcTokenRequestData.class);
-    verify(spyOidcTokenRetriever, times(1)).fetchAccessTokenUsingGrantType(any(), captor.capture());
+    Mockito.verify(spyOidcTokenRetriever, Mockito.times(1))
+        .fetchAccessTokenUsingGrantType(Matchers.any(), captor.capture());
     OidcTokenRequestData tokenRequestData = captor.getValue();
 
     assertThat(tokenRequestData.getClientId()).isEqualTo("clientId");
@@ -97,17 +95,17 @@ public class OidcTokenRetrieverTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = ADWAIT)
+  @Owner(developers = OwnerRule.ADWAIT)
   @Category(UnitTests.class)
   public void testFetchAccessTokenUsingGrantTypeForClientCredentials() throws Exception {
-    OAuth20Service service = mock(OAuth20Service.class);
-    OAuth2AccessToken token = mock(OAuth2AccessToken.class);
+    OAuth20Service service = Mockito.mock(OAuth20Service.class);
+    OAuth2AccessToken token = Mockito.mock(OAuth2AccessToken.class);
 
-    doReturn(token).when(service).getAccessTokenClientCredentialsGrant();
+    Mockito.doReturn(token).when(service).getAccessTokenClientCredentialsGrant();
 
     oidcTokenRetriever.fetchAccessTokenUsingGrantType(
         service, OidcTokenRequestData.builder().grantType(OidcGrantType.client_credentials.name()).build());
-    verify(service, times(1)).getAccessTokenClientCredentialsGrant();
-    verify(service, never()).getAccessTokenPasswordGrant(any(), any());
+    Mockito.verify(service, Mockito.times(1)).getAccessTokenClientCredentialsGrant();
+    Mockito.verify(service, Mockito.never()).getAccessTokenPasswordGrant(Matchers.any(), Matchers.any());
   }
 }

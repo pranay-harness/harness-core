@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.oidc;
+package io.harness.k8s.oidc;
 
 import com.github.scribejava.apis.openid.OpenIdJsonTokenExtractor;
 import com.github.scribejava.core.builder.api.DefaultApi20;

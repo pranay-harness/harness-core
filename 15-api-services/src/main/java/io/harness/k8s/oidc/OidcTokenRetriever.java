@@ -1,9 +1,8 @@
-package software.wings.delegatetasks.oidc;
+package io.harness.k8s.oidc;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.delegatetasks.k8s.K8sConstants.OPEN_ID;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
@@ -12,8 +11,9 @@ import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import com.github.scribejava.core.builder.ServiceBuilder;
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.oauth.OAuth20Service;
+import io.harness.k8s.K8sConstants;
+import io.harness.k8s.model.OidcGrantType;
 import io.harness.oidc.model.OidcTokenRequestData;
-import software.wings.beans.OidcGrantType;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -55,7 +55,7 @@ public class OidcTokenRetriever {
   String addNeededOidcScopesIfNotPresent(String scope) {
     StringBuilder stringBuilder = new StringBuilder();
     // These 2 scopes are needed for access retrieval
-    stringBuilder.append(OPEN_ID);
+    stringBuilder.append(K8sConstants.OPEN_ID);
 
     if (isBlank(scope)) {
       return stringBuilder.toString();
@@ -80,7 +80,7 @@ public class OidcTokenRetriever {
       return false;
     }
 
-    return !OPEN_ID.equals(individualScopeStr);
+    return !K8sConstants.OPEN_ID.equals(individualScopeStr);
   }
 
   @VisibleForTesting
