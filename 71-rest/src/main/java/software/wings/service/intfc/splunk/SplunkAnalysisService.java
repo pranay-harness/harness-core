@@ -20,9 +20,9 @@ public interface SplunkAnalysisService {
    * @return
    */
   VerificationNodeDataSetupResponse getLogDataByHost(String accountId, SplunkSetupTestNodeData elkSetupTestNodeData);
-  List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId);
+  List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId, String requestGuid);
 
-  CVHistogram getHistogram(String accountId, String connectorId, String query);
+  CVHistogram getHistogram(String accountId, String connectorId, String query, String requestGuid);
 
-  SplunkSampleResponse getSamples(String accountId, String connectorId, String query);
+  SplunkSampleResponse getSamples(String accountId, String connectorId, String query, String requestGuid);
 }

@@ -96,30 +96,30 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
   }
 
   @Override
-  public List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId) {
+  public List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId, String requestGuid) {
     final SettingAttribute settingAttribute = getSettingAttribute(connectorId);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
     SyncTaskContext taskContext = getSyncTaskContext(accountId);
     return delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
-        .getSavedSearches((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails);
+        .getSavedSearches((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails, requestGuid);
   }
 
   @Override
-  public CVHistogram getHistogram(String accountId, String connectorId, String query) {
+  public CVHistogram getHistogram(String accountId, String connectorId, String query, String requestGuid) {
     final SettingAttribute settingAttribute = getSettingAttribute(connectorId);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
     SyncTaskContext taskContext = getSyncTaskContext(accountId);
     return delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
-        .getHistogram((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails, query);
+        .getHistogram((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails, query, requestGuid);
   }
 
   @Override
-  public SplunkSampleResponse getSamples(String accountId, String connectorId, String query) {
+  public SplunkSampleResponse getSamples(String accountId, String connectorId, String query, String requestGuid) {
     final SettingAttribute settingAttribute = getSettingAttribute(connectorId);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptionDetails(settingAttribute);
     SyncTaskContext taskContext = getSyncTaskContext(accountId);
     return delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
-        .getSamples((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails, query);
+        .getSamples((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails, query, requestGuid);
   }
 
   private List<EncryptedDataDetail> getEncryptionDetails(SettingAttribute settingAttribute) {

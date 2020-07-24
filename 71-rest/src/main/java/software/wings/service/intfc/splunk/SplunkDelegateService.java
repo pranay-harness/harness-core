@@ -54,10 +54,12 @@ public interface SplunkDelegateService {
       String basicQuery, String hostNameField, String host, long startTime, long endTime,
       ThirdPartyApiCallLog apiCallLog, int logCollectionMinute, boolean isAdvancedQuery);
   @DelegateTaskType(TaskType.SPLUNK_GET_SAVED_SEARCHES)
-  List<SplunkSavedSearch> getSavedSearches(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  List<SplunkSavedSearch> getSavedSearches(
+      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String requestGuid);
   @DelegateTaskType(TaskType.SPLUNK_GET_HISTOGRAM)
-  CVHistogram getHistogram(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query);
+  CVHistogram getHistogram(
+      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid);
   @DelegateTaskType(TaskType.SPLUNK_GET_SAMPLE)
   SplunkSampleResponse getSamples(
-      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query);
+      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid);
 }
