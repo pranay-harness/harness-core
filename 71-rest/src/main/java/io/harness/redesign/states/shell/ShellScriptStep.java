@@ -40,7 +40,6 @@ import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.ResolvedRefInput;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.Cd1SetupFields;
@@ -77,7 +76,8 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 @Slf4j
-public class ShellScriptStep implements Step, TaskExecutable, TaskV2Executable {
+public class ShellScriptStep
+    implements Step, TaskExecutable<ShellScriptStepParameters>, TaskV2Executable<ShellScriptStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type(SHELL_SCRIPT.name()).build();
 
   @Inject private ActivityService activityService;
@@ -89,8 +89,7 @@ public class ShellScriptStep implements Step, TaskExecutable, TaskV2Executable {
   @Inject private FeatureFlagService featureFlagService;
 
   @Override
-  public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    ShellScriptStepParameters shellScriptStepParameters = (ShellScriptStepParameters) stepParameters;
+  public Task obtainTask(Ambiance ambiance, ShellScriptStepParameters stepParameters, StepInputPackage inputPackage) {
     String activityId = createActivity(ambiance);
     List<ResolvedRefInput> inputs = inputPackage.getInputs();
     ResolvedRefInput envRefInput =
@@ -118,20 +117,19 @@ public class ShellScriptStep implements Step, TaskExecutable, TaskV2Executable {
 
     HostConnectionAttributes hostConnectionAttributes = null;
 
-    software.wings.sm.states.ShellScriptState.ConnectionType connectionType =
-        shellScriptStepParameters.getConnectionType();
+    software.wings.sm.states.ShellScriptState.ConnectionType connectionType = stepParameters.getConnectionType();
     if (connectionType == null) {
       connectionType = software.wings.sm.states.ShellScriptState.ConnectionType.SSH;
     }
 
-    ScriptType scriptType = shellScriptStepParameters.getScriptType();
+    ScriptType scriptType = stepParameters.getScriptType();
     if (scriptType == null) {
       scriptType = ScriptType.BASH;
     }
 
-    if (!shellScriptStepParameters.isExecuteOnDelegate()) {
+    if (!stepParameters.isExecuteOnDelegate()) {
       if (connectionType == software.wings.sm.states.ShellScriptState.ConnectionType.SSH) {
-        String sshKeyRef = shellScriptStepParameters.getSshKeyRef();
+        String sshKeyRef = stepParameters.getSshKeyRef();
         if (isEmpty(sshKeyRef)) {
           throw new ShellScriptException("Valid SSH Connection Attribute not provided in Shell Script Step",
               ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
@@ -163,26 +161,26 @@ public class ShellScriptStep implements Step, TaskExecutable, TaskV2Executable {
 
       } else if (connectionType == software.wings.sm.states.ShellScriptState.ConnectionType.WINRM) {
         winRmConnectionAttributes =
-            setupWinrmCredentials(ambiance, shellScriptStepParameters.getConnectionAttributes());
+            setupWinrmCredentials(ambiance, ((ShellScriptStepParameters) stepParameters).getConnectionAttributes());
         username = winRmConnectionAttributes.getUsername();
         winrmEdd = secretManager.getEncryptionDetails(
             winRmConnectionAttributes, getAppId(ambiance), ambiance.getPlanExecutionId());
       }
     }
 
-    String commandPath = shellScriptStepParameters.getCommandPath();
+    String commandPath = stepParameters.getCommandPath();
     if (StringUtils.isEmpty(commandPath)) {
       if (scriptType == ScriptType.BASH) {
         commandPath = "/tmp";
       } else if (scriptType == ScriptType.POWERSHELL) {
         commandPath = "%TEMP%";
-        if (shellScriptStepParameters.isExecuteOnDelegate()) {
+        if (stepParameters.isExecuteOnDelegate()) {
           commandPath = "/tmp";
         }
       }
     }
 
-    List<String> tags = shellScriptStepParameters.getTags();
+    List<String> tags = stepParameters.getTags();
     List<String> allTags = newArrayList();
     List<String> renderedTags = newArrayList();
     if (isNotEmpty(tags)) {
@@ -197,7 +195,7 @@ public class ShellScriptStep implements Step, TaskExecutable, TaskV2Executable {
             .accountId(getAccountId(ambiance))
             .appId(getAppId(ambiance))
             .activityId(activityId)
-            .host(shellScriptStepParameters.getHost())
+            .host(stepParameters.getHost())
             .connectionType(connectionType)
             .winrmConnectionAttributes(winRmConnectionAttributes)
             .winrmConnectionEncryptedDataDetails(winrmEdd)
@@ -205,9 +203,9 @@ public class ShellScriptStep implements Step, TaskExecutable, TaskV2Executable {
             .keyEncryptedDataDetails(keyEncryptionDetails)
             .workingDirectory(commandPath)
             .scriptType(scriptType)
-            .script(shellScriptStepParameters.getScriptString())
-            .executeOnDelegate(shellScriptStepParameters.isExecuteOnDelegate())
-            .outputVars(shellScriptStepParameters.getOutputVars())
+            .script(stepParameters.getScriptString())
+            .executeOnDelegate(stepParameters.isExecuteOnDelegate())
+            .outputVars(stepParameters.getOutputVars())
             .hostConnectionAttributes(hostConnectionAttributes)
             .keyless(keyless)
             .keyPath(keyPath)
@@ -240,8 +238,7 @@ public class ShellScriptStep implements Step, TaskExecutable, TaskV2Executable {
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> response) {
-    ShellScriptStepParameters shellScriptStateParameters = (ShellScriptStepParameters) stepParameters;
+      Ambiance ambiance, ShellScriptStepParameters stepParameters, Map<String, ResponseData> response) {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     String activityId = response.keySet().iterator().next();
     ResponseData data = response.values().iterator().next();
@@ -291,7 +288,7 @@ public class ShellScriptStep implements Step, TaskExecutable, TaskV2Executable {
       stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
                                           .name("shellOutcome")
                                           .outcome(scriptStateExecutionData)
-                                          .group(shellScriptStateParameters.getSweepingOutputScope())
+                                          .group(stepParameters.getSweepingOutputScope())
                                           .build());
     } else if (data instanceof ErrorNotifyResponseData) {
       stepResponseBuilder.status(Status.FAILED);
@@ -306,15 +303,14 @@ public class ShellScriptStep implements Step, TaskExecutable, TaskV2Executable {
 
     updateActivityStatus(activityId, getAppId(ambiance), executionStatus);
 
-    if (saveSweepingOutputToContext && shellScriptStateParameters.getSweepingOutputName() != null) {
-      executionSweepingOutputService.consume(ambiance, shellScriptStateParameters.getSweepingOutputName(),
+    if (saveSweepingOutputToContext && stepParameters.getSweepingOutputName() != null) {
+      executionSweepingOutputService.consume(ambiance, stepParameters.getSweepingOutputName(),
           ShellScriptVariablesSweepingOutput.builder()
               .variables(((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
                              .getSweepingOutputEnvVariables())
               .build(),
-          shellScriptStateParameters.getSweepingOutputScope() == null
-              ? ResolverUtils.GLOBAL_GROUP_SCOPE
-              : shellScriptStateParameters.getSweepingOutputScope());
+          stepParameters.getSweepingOutputScope() == null ? ResolverUtils.GLOBAL_GROUP_SCOPE
+                                                          : stepParameters.getSweepingOutputScope());
     }
 
     return stepResponse;

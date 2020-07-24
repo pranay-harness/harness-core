@@ -19,7 +19,6 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -34,18 +33,19 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Redesign
 @Slf4j
-public class BasicHttpStep implements Step, TaskExecutable, TaskV2Executable {
+public class BasicHttpStep
+    implements Step, TaskExecutable<BasicHttpStepParameters>, TaskV2Executable<BasicHttpStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
   private static final int socketTimeoutMillis = 10000;
 
   @Override
-  public DelegateTask obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    BasicHttpStepParameters parameters = (BasicHttpStepParameters) stepParameters;
+  public DelegateTask obtainTask(
+      Ambiance ambiance, BasicHttpStepParameters stepParameters, StepInputPackage inputPackage) {
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
-                                                .url(parameters.getUrl())
-                                                .body(parameters.getBody())
-                                                .header(parameters.getHeader())
-                                                .method(parameters.getMethod())
+                                                .url(stepParameters.getUrl())
+                                                .body(stepParameters.getBody())
+                                                .header(stepParameters.getHeader())
+                                                .method(stepParameters.getMethod())
                                                 .socketTimeoutMillis(socketTimeoutMillis)
                                                 .build();
 
@@ -65,8 +65,7 @@ public class BasicHttpStep implements Step, TaskExecutable, TaskV2Executable {
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    BasicHttpStepParameters parameters = (BasicHttpStepParameters) stepParameters;
+      Ambiance ambiance, BasicHttpStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder();
     ResponseData notifyResponseData = responseDataMap.values().iterator().next();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
@@ -81,8 +80,8 @@ public class BasicHttpStep implements Step, TaskExecutable, TaskV2Executable {
     } else {
       HttpStateExecutionResponse httpStateExecutionResponse = (HttpStateExecutionResponse) notifyResponseData;
       HttpStateExecutionData executionData = HttpStateExecutionData.builder()
-                                                 .httpUrl(parameters.getUrl())
-                                                 .httpMethod(parameters.getMethod())
+                                                 .httpUrl(stepParameters.getUrl())
+                                                 .httpMethod(stepParameters.getMethod())
                                                  .httpResponseCode(httpStateExecutionResponse.getHttpResponseCode())
                                                  .httpResponseBody(httpStateExecutionResponse.getHttpResponseBody())
                                                  .status(httpStateExecutionResponse.getExecutionStatus())

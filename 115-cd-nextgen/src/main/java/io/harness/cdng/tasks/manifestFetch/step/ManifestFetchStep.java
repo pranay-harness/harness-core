@@ -27,7 +27,6 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -43,7 +42,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class ManifestFetchStep implements Step, TaskExecutable, TaskV2Executable {
+public class ManifestFetchStep
+    implements Step, TaskExecutable<ManifestFetchParameters>, TaskV2Executable<ManifestFetchParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("MANIFEST_FETCH").build();
   @Inject ManifestFetchHelper manifestFetchHelper;
 
@@ -51,11 +51,9 @@ public class ManifestFetchStep implements Step, TaskExecutable, TaskV2Executable
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
 
   @Override
-  public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    ManifestFetchParameters manifestFetchStepParameters = (ManifestFetchParameters) stepParameters;
-
+  public Task obtainTask(Ambiance ambiance, ManifestFetchParameters stepParameters, StepInputPackage inputPackage) {
     List<GitFetchFilesConfig> gitFetchFilesConfigs =
-        manifestFetchHelper.generateFetchFilesConfigForManifests(manifestFetchStepParameters);
+        manifestFetchHelper.generateFetchFilesConfigForManifests(stepParameters);
     final String activityId = generateUuid();
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     GitFetchRequest gitFetchRequest = GitFetchRequest.builder()
@@ -75,9 +73,7 @@ public class ManifestFetchStep implements Step, TaskExecutable, TaskV2Executable
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    ManifestFetchParameters manifestFetchStepParameters = (ManifestFetchParameters) stepParameters;
-
+      Ambiance ambiance, ManifestFetchParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     GitCommandExecutionResponse executionResponse =
         (GitCommandExecutionResponse) responseDataMap.values().iterator().next();
     ExecutionStatus executionStatus =
@@ -92,9 +88,9 @@ public class ManifestFetchStep implements Step, TaskExecutable, TaskV2Executable
 
       Map<String, GitFetchFilesResult> filesFromMultipleRepo = gitCommandResult.getFilesFromMultipleRepo();
 
-      if (isNotEmpty(manifestFetchStepParameters.getServiceSpecManifestAttributes())) {
+      if (isNotEmpty(stepParameters.getServiceSpecManifestAttributes())) {
         List<ManifestFetchOutcome.ManifestDataDetails> manifestDataDetailsForSpec =
-            manifestFetchStepParameters.getServiceSpecManifestAttributes()
+            stepParameters.getServiceSpecManifestAttributes()
                 .stream()
                 .map(manifestAttributes
                     -> ManifestFetchOutcome.ManifestDataDetails.builder()
@@ -106,9 +102,9 @@ public class ManifestFetchStep implements Step, TaskExecutable, TaskV2Executable
         manifestFetchOutcomeBuilder.manifestDataDetailsForSpec(manifestDataDetailsForSpec);
       }
 
-      if (isNotEmpty(manifestFetchStepParameters.getOverridesManifestAttributes())) {
+      if (isNotEmpty(stepParameters.getOverridesManifestAttributes())) {
         List<ManifestFetchOutcome.ManifestDataDetails> manifestDataDetailsForOverrides =
-            manifestFetchStepParameters.getOverridesManifestAttributes()
+            stepParameters.getOverridesManifestAttributes()
                 .stream()
                 .map(manifestAttributes
                     -> ManifestFetchOutcome.ManifestDataDetails.builder()

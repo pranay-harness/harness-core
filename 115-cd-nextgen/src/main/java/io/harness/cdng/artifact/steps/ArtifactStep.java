@@ -25,7 +25,6 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
@@ -40,17 +39,17 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class ArtifactStep implements Step, TaskExecutable, TaskV2Executable {
+public class ArtifactStep
+    implements Step, TaskExecutable<ArtifactStepParameters>, TaskV2Executable<ArtifactStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("ARTIFACT_STEP").build();
 
   // Default timeout of 1 minute.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
 
   @Override
-  public Task obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    ArtifactStepParameters parameters = (ArtifactStepParameters) stepParameters;
-    logger.info("Executing deployment stage with params [{}]", parameters);
-    ArtifactConfig finalArtifact = applyArtifactsOverlay(parameters);
+  public Task obtainTask(Ambiance ambiance, ArtifactStepParameters stepParameters, StepInputPackage inputPackage) {
+    logger.info("Executing deployment stage with params [{}]", stepParameters);
+    ArtifactConfig finalArtifact = applyArtifactsOverlay(stepParameters);
     ArtifactSource artifactSource = getArtifactSource(finalArtifact, AmbianceHelper.getAccountId(ambiance));
 
     final ArtifactTaskParameters taskParameters =
@@ -68,7 +67,7 @@ public class ArtifactStep implements Step, TaskExecutable, TaskV2Executable {
 
   @Override
   public StepResponse handleTaskResult(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, ArtifactStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     ResponseData notifyResponseData = responseDataMap.values().iterator().next();
 
@@ -77,7 +76,7 @@ public class ArtifactStep implements Step, TaskExecutable, TaskV2Executable {
       switch (taskResponse.getCommandExecutionStatus()) {
         case SUCCESS:
           stepResponseBuilder.status(Status.SUCCEEDED);
-          stepResponseBuilder.stepOutcome(getStepOutcome(taskResponse, (ArtifactStepParameters) stepParameters));
+          stepResponseBuilder.stepOutcome(getStepOutcome(taskResponse, stepParameters));
           break;
         case FAILURE:
           stepResponseBuilder.status(Status.FAILED);
