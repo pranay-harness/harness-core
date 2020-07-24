@@ -5,10 +5,10 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
+import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.beans.command.LogCallback;
 import software.wings.cloudprovider.ClusterConfiguration;
 import software.wings.cloudprovider.ContainerInfo;
 

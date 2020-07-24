@@ -38,6 +38,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
 import io.harness.exception.WingsException;
+import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
@@ -48,7 +49,6 @@ import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.command.LogCallback;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
