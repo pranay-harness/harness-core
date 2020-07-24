@@ -19,7 +19,6 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StatusNotifyResponseData;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepOutcome;
 import io.harness.waiter.WaitNotifyEngine;
@@ -32,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 @OwnedBy(CDC)
 @Redesign
-public class WaitStep implements Step, AsyncExecutable {
+public class WaitStep implements Step, AsyncExecutable<WaitStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("WAIT_STATE").build();
 
   @Inject @Named("waitStateResumer") @Transient private ScheduledExecutorService executorService;
@@ -40,21 +39,19 @@ public class WaitStep implements Step, AsyncExecutable {
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    WaitStepParameters parameters = (WaitStepParameters) stepParameters;
+      Ambiance ambiance, WaitStepParameters waitStepParameters, StepInputPackage inputPackage) {
     String resumeId = generateUuid();
     executorService.schedule(new SimpleNotifier(waitNotifyEngine, resumeId,
                                  StatusNotifyResponseData.builder().status(Status.SUCCEEDED).build()),
-        parameters.getWaitDurationSeconds(), TimeUnit.SECONDS);
+        waitStepParameters.getWaitDurationSeconds(), TimeUnit.SECONDS);
     return AsyncExecutableResponse.builder().callbackId(resumeId).build();
   }
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    WaitStepParameters parameters = (WaitStepParameters) stepParameters;
+      Ambiance ambiance, WaitStepParameters waitStepParameters, Map<String, ResponseData> responseDataMap) {
     WaitStateExecutionData waitStateExecutionData = new WaitStateExecutionData();
-    waitStateExecutionData.setDuration(parameters.getWaitDurationSeconds());
+    waitStateExecutionData.setDuration(waitStepParameters.getWaitDurationSeconds());
     waitStateExecutionData.setWakeupTs(System.currentTimeMillis());
     waitStateExecutionData.setStatus(ExecutionStatus.SUCCESS);
     return StepResponse.builder()
@@ -65,7 +62,7 @@ public class WaitStep implements Step, AsyncExecutable {
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, StepParameters stateParameters, AsyncExecutableResponse executableResponse) {
+      Ambiance ambiance, WaitStepParameters stateParameters, AsyncExecutableResponse executableResponse) {
     // TODO : Handle Abort
   }
 }

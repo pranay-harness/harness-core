@@ -29,9 +29,8 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 @Redesign
-public interface AsyncExecutable extends Abortable<AsyncExecutableResponse> {
-  AsyncExecutableResponse executeAsync(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage);
+public interface AsyncExecutable<T extends StepParameters> extends Abortable<T, AsyncExecutableResponse> {
+  AsyncExecutableResponse executeAsync(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
-  StepResponse handleAsyncResponse(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap);
+  StepResponse handleAsyncResponse(Ambiance ambiance, T stepParameters, Map<String, ResponseData> responseDataMap);
 }
