@@ -12,7 +12,7 @@ public class WatcherConfiguration {
   private String managerUrl;
   private boolean doUpgrade;
   private String upgradeCheckLocation;
-  private long upgradeCheckIntervalHours;
+  private long upgradeCheckIntervalSeconds;
   private String delegateCheckLocation;
   private String queueFilePath;
   private String publishTarget;
