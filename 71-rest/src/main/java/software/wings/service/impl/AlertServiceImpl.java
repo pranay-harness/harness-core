@@ -69,6 +69,7 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.alert.NotificationRulesStatusService;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -185,6 +186,7 @@ public class AlertServiceImpl implements AlertService {
                                     .category(alertType.getCategory())
                                     .severity(alertType.getSeverity())
                                     .triggerCount(0)
+                                    .lastTriggeredAt(Instant.now().toEpochMilli())
                                     .alertReconciliation(alertType.getAlertReconciliation());
     if (validUntil != null) {
       alertBuilder.validUntil(validUntil);
@@ -207,9 +209,12 @@ public class AlertServiceImpl implements AlertService {
 
   private void postProcessAlertAfterCreating(String accountId, Alert alert, AlertType alertType) {
     AlertStatus status = alert.getTriggerCount() >= alertType.getPendingCount() ? Open : Pending;
+
+    UpdateOperations<Alert> updateOperations = wingsPersistence.createUpdateOperations(Alert.class);
+    updateOperations.inc(AlertKeys.triggerCount);
+    updateOperations.set(AlertKeys.lastTriggeredAt, Instant.now().toEpochMilli());
+
     boolean alertOpened = false;
-    UpdateOperations<Alert> updateOperations =
-        wingsPersistence.createUpdateOperations(Alert.class).inc(AlertKeys.triggerCount);
     if (status == Open && alert.getStatus() == Pending) {
       updateOperations.set(AlertKeys.status, Open);
       alertOpened = true;

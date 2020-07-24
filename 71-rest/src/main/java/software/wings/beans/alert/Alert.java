@@ -69,6 +69,7 @@ public class Alert
   private AlertReconciliation alertReconciliation;
   private long closedAt;
   private int triggerCount;
+  private long lastTriggeredAt;
 
   @JsonIgnore
   @SchemaIgnore
