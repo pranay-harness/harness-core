@@ -10,6 +10,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
@@ -22,7 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class NGDelegateClientResourceTest {
+public class NGDelegateClientResourceTest extends CategoryTest {
   @Mock ManagerDelegateServiceDriver managerDelegateServiceDriver;
   private NGDelegateClientResource ngDelegateClientResource;
 

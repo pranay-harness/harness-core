@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -27,7 +28,7 @@ import retrofit2.Response;
 import java.io.IOException;
 import java.util.List;
 
-public class NGSecretManagerServiceImplTest {
+public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Mock SecretManagerClient secretManagerClient;
   private final String ACCOUNT_IDENTIFIER = "ACCOUNT_ID";
   private final String ORG_IDENTIFIER = "ACCOUNT_ID";

@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import cz.jirutka.rsql.parser.RSQLParserException;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedException;
 import io.harness.ng.ModuleType;
@@ -18,7 +19,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class RestQueryFilterParserTest {
+public class RestQueryFilterParserTest extends CategoryTest {
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)

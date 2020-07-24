@@ -13,27 +13,27 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.dto.CreateOrganizationDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.UpdateOrganizationDTO;
 import io.harness.ng.core.entities.Organization;
+import io.harness.ng.core.io.harness.ng.utils.PageTestUtils;
 import io.harness.ng.core.services.api.OrganizationService;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class OrganizationResourceTest {
+public class OrganizationResourceTest extends CategoryTest {
   private OrganizationService organizationService;
   private OrganizationResource organizationResource;
 
@@ -143,17 +143,24 @@ public class OrganizationResourceTest {
   public void testListOrganizations() {
     String accountIdentifier = randomAlphabetic(10);
     List<Organization> orgList = new ArrayList<>();
-    mockOrgList(orgList, 0);
+
+    when(organizationService.list(any(Criteria.class), any(Pageable.class)))
+        .thenReturn(PageTestUtils.getPage(orgList, 0));
     assertTrue(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData().isEmpty());
 
     orgList.add(createOrganization(accountIdentifier));
-    mockOrgList(orgList, 1);
+
+    when(organizationService.list(any(Criteria.class), any(Pageable.class)))
+        .thenReturn(PageTestUtils.getPage(orgList, 1));
+
     assertFalse(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData().isEmpty());
     assertThat(organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData().getTotalElements())
         .isEqualTo(1);
 
     orgList.add(createOrganization(accountIdentifier));
-    mockOrgList(orgList, 2);
+
+    when(organizationService.list(any(Criteria.class), any(Pageable.class)))
+        .thenReturn(PageTestUtils.getPage(orgList, 2));
 
     NGPageResponse<OrganizationDTO> organizationList =
         organizationResource.list(accountIdentifier, 0, 10, new ArrayList<>()).getData();
@@ -178,50 +185,5 @@ public class OrganizationResourceTest {
     when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.empty());
 
     assertThat(organizationResource.get(accountIdentifier, orgIdentifier).getData().isPresent()).isFalse();
-  }
-
-  private void mockOrgList(List<Organization> orgList, int total) {
-    when(organizationService.list(any(Criteria.class), any(Pageable.class)))
-        .thenReturn(new PageImpl(orgList, new Pageable() {
-          @Override
-          public int getPageNumber() {
-            return 0;
-          }
-
-          @Override
-          public int getPageSize() {
-            return 0;
-          }
-
-          @Override
-          public long getOffset() {
-            return 0;
-          }
-
-          @Override
-          public Sort getSort() {
-            return null;
-          }
-
-          @Override
-          public Pageable next() {
-            return null;
-          }
-
-          @Override
-          public Pageable previousOrFirst() {
-            return null;
-          }
-
-          @Override
-          public Pageable first() {
-            return null;
-          }
-
-          @Override
-          public boolean hasPrevious() {
-            return false;
-          }
-        }, total));
   }
 }
