@@ -37,12 +37,12 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-public interface TaskChainExecutable {
-  TaskChainResponse startChainLink(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage);
+public interface TaskChainExecutable<T extends StepParameters> {
+  TaskChainResponse startChainLink(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
-  TaskChainResponse executeNextLink(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
+  TaskChainResponse executeNextLink(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
 
-  StepResponse finalizeExecution(Ambiance ambiance, StepParameters stepParameters, PassThroughData passThroughData,
-      Map<String, ResponseData> responseDataMap);
+  StepResponse finalizeExecution(
+      Ambiance ambiance, T stepParameters, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
 }
