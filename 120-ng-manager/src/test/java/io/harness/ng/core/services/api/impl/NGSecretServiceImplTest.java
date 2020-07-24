@@ -13,7 +13,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.BaseTest;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
@@ -32,7 +31,7 @@ import retrofit2.Response;
 
 import java.io.IOException;
 
-public class NGSecretServiceImplTest extends BaseTest {
+public class NGSecretServiceImplTest {
   private SecretManagerClient secretManagerClient;
   private NGSecretServiceImpl ngSecretService;
   private final String SECRET_IDENTIFIER = "SECRET_ID";

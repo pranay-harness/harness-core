@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 import io.harness.ManagerDelegateServiceDriver;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.ng.core.BaseTest;
 import io.harness.ng.core.perpetualtask.sample.SampleRemotePTaskManager;
 import io.harness.ng.core.remote.NGDelegateClientResource;
 import io.harness.rule.Owner;
@@ -23,7 +22,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class NGDelegateClientResourceTest extends BaseTest {
+public class NGDelegateClientResourceTest {
   @Mock ManagerDelegateServiceDriver managerDelegateServiceDriver;
   private NGDelegateClientResource ngDelegateClientResource;
 
