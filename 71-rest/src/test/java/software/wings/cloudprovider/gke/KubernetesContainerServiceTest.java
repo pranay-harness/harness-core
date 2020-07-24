@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -112,5 +113,12 @@ public class KubernetesContainerServiceTest extends CategoryTest {
 
     assertThatThrownBy(() -> kubernetesContainerService.validateCEPermissions(KUBERNETES_CONFIG))
         .hasMessageContaining(REASON);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void shouldValidate() {
+    assertThatCode(() -> kubernetesContainerService.validate(KUBERNETES_CONFIG)).doesNotThrowAnyException();
   }
 }
