@@ -9,6 +9,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.govern.ProviderModule;
 import io.harness.ng.core.services.api.NGSecretManagerService;
@@ -29,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class SecretManagementModuleTest {
+public class SecretManagementModuleTest extends CategoryTest {
   private SecretManagementModule secretManagementModule;
   private SecretManagementClientModule secretManagementClientModule;
 

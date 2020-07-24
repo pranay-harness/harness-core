@@ -2,9 +2,10 @@ package io.harness.ng.core.remote.client.rest.factory;
 
 import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.BaseTest;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretManagerClientConfig;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
@@ -15,7 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class SecretManagerHttpClientFactoryTest extends BaseTest {
+public class SecretManagerHttpClientFactoryTest extends CategoryTest {
   private static final String SERVICE_SECRET = "TEST_SECRET";
   private static final String BASE_URL = "http://localhost:8080/";
   private static final long CONNECTION_TIME_OUT_IN_SECONDS = 15;
@@ -28,6 +29,7 @@ public class SecretManagerHttpClientFactoryTest extends BaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGet() {
+    initMocks(this);
     SecretManagerClientConfig secretManagerConfig = SecretManagerClientConfig.builder()
                                                         .baseUrl(BASE_URL)
                                                         .connectTimeOutSeconds(CONNECTION_TIME_OUT_IN_SECONDS)

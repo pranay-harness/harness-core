@@ -23,7 +23,7 @@ import java.net.InetSocketAddress;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
 
-public class NGAppStartupTest {
+public class NGAppStartupTest extends CategoryTest {
   public static MongoServer MONGO_SERVER;
   public static DropwizardTestSupport<NextGenConfiguration> SUPPORT;
 
@@ -55,8 +55,8 @@ public class NGAppStartupTest {
 
   @AfterClass
   public static void afterClass() {
-    stopMongoServer();
     SUPPORT.after();
+    stopMongoServer();
   }
 
   @Test

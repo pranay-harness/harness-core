@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.PHOENIKX;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.ng.core.Status;
@@ -18,7 +19,7 @@ import org.junit.experimental.categories.Category;
 import java.util.HashSet;
 import javax.ws.rs.core.Response;
 
-public class JerseyViolationExceptionMapperV2Test {
+public class JerseyViolationExceptionMapperV2Test extends CategoryTest {
   private JerseyViolationExceptionMapperV2 jerseyViolationExceptionMapperV2;
 
   @Before

@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -27,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class EnvironmentResourceTest {
+public class EnvironmentResourceTest extends CategoryTest {
   @Mock EnvironmentServiceImpl environmentService;
   EnvironmentResource environmentResource;
 

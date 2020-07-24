@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.UnauthorizedException;
@@ -20,7 +21,7 @@ import java.util.EnumSet;
 import java.util.Set;
 import javax.ws.rs.core.Response;
 
-public class WingsExceptionMapperV2Test {
+public class WingsExceptionMapperV2Test extends CategoryTest {
   private WingsExceptionMapperV2 wingsExceptionMapperV2;
 
   @Before
