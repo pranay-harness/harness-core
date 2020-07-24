@@ -22,6 +22,7 @@ import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
@@ -34,6 +35,8 @@ import io.harness.cvng.core.entities.DeletedCVConfig.DeletedCVConfigKeys;
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
+import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
+import io.harness.cvng.exception.GenericExceptionMapper;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
@@ -114,7 +117,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
-
     List<Module> modules = new ArrayList<>();
     modules.add(MetricsInstrumentationModule.builder()
                     .withMetricRegistry(metricRegistry)
@@ -146,6 +148,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerAuthFilters(environment, injector);
     registerManagedBeans(environment, injector);
     registerResources(environment, injector);
+    registerExceptionMappers(environment.jersey());
     ScheduledThreadPoolExecutor serviceGuardExecutor =
         new ScheduledThreadPoolExecutor(15, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
     registerOrchestrationIterator(injector, serviceGuardExecutor, ofMinutes(1), 7, new AnalysisOrchestrationJob(),
@@ -269,5 +272,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
       }
     });
     logger.info("Registered all the resources. Time taken(ms): {}", System.currentTimeMillis() - startTimeMs);
+  }
+
+  private void registerExceptionMappers(JerseyEnvironment jersey) {
+    jersey.register(GenericExceptionMapper.class);
+    jersey.register(ConstraintViolationExceptionMapper.class);
   }
 }

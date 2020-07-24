@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.rest.RestResponse;
@@ -24,6 +25,7 @@ import javax.ws.rs.QueryParam;
 @Api("cv-config")
 @Path("cv-config")
 @Produces("application/json")
+@ExposeInternalException
 public class CVConfigResource {
   @Inject private CVConfigService cvConfigService;
   @GET
@@ -80,16 +82,6 @@ public class CVConfigResource {
   public RestResponse<Void> deleteCVConfig(
       @PathParam("cvConfigId") String cvConfigId, @QueryParam("accountId") @Valid final String accountId) {
     cvConfigService.delete(cvConfigId);
-    return null;
-  }
-
-  @DELETE
-  @Path("batch")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Void> deleteCVConfig(
-      @QueryParam("accountId") @Valid final String accountId, @Body List<String> cvConfigIds) {
-    cvConfigService.delete(cvConfigIds);
     return null;
   }
 

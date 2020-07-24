@@ -39,7 +39,6 @@ public abstract class CVConfig
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   @Id private String uuid;
   @FdIndex private Long dataCollectionTaskIteration;
-  @NotNull private String name;
   private long createdAt;
   private long lastUpdatedAt;
   @NotNull private VerificationType verificationType;

@@ -222,7 +222,6 @@ public class TimeSeriesServiceImplTest extends CVNextGenBaseTest {
   public void testGetTimeSeriesMetricDefinitions() {
     metricPackService.getMetricPacks(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS);
     AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
-    appDynamicsCVConfig.setName("appDynamics-config");
     appDynamicsCVConfig.setVerificationType(VerificationType.TIME_SERIES);
     appDynamicsCVConfig.setProjectIdentifier(projectIdentifier);
     appDynamicsCVConfig.setAccountId(accountId);

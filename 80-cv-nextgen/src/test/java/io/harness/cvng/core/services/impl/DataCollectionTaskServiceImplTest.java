@@ -422,7 +422,6 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
 
   private AppDynamicsCVConfig getCVConfig() {
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
-    cvConfig.setName("name");
     cvConfig.setProjectIdentifier("projectIdentifier");
     cvConfig.setUuid(cvConfigId);
     cvConfig.setAccountId(accountId);
@@ -443,7 +442,6 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
   private SplunkCVConfig getSplunkCVConfig() {
     SplunkCVConfig cvConfig = new SplunkCVConfig();
     cvConfig.setCreatedAt(clock.millis());
-    cvConfig.setName("name");
     cvConfig.setProjectIdentifier("projectIdentifier");
     cvConfig.setUuid(cvConfigId);
     cvConfig.setAccountId(accountId);
