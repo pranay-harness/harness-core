@@ -144,6 +144,7 @@ import migrations.all.UpdateGitSyncErrorMigration;
 import migrations.all.UpdatePipelineParallelIndexes;
 import migrations.all.UsageRestrictionsMigration;
 import migrations.all.UserPermissionReadMigration;
+import migrations.all.VaultAppRoleRenewalMigration;
 import migrations.all.VaultConfigRenewalIntervalMigration;
 import migrations.all.VerificationMetricJobMigration;
 import migrations.all.YamlGitConfigAppMigration;
@@ -355,6 +356,7 @@ public class MigrationList {
         .add(Pair.of(320, ArtifactStreamIteratorRequiredMigration.class))
         .add(Pair.of(321, BaseMigration.class))
         .add(Pair.of(322, UpdateCVTaskIterationMigration.class))
+        .add(Pair.of(323, VaultAppRoleRenewalMigration.class))
         .build();
   }
 }

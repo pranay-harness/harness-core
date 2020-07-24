@@ -1,6 +1,7 @@
 package software.wings.service.intfc.security;
 
 import software.wings.beans.VaultConfig;
+import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.security.vault.SecretEngineSummary;
@@ -55,4 +56,6 @@ public interface VaultService {
   void deleteSecret(String accountId, String path, VaultConfig vaultConfig);
 
   List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedData encryptedData, VaultConfig vaultConfig);
+
+  KmsSetupAlert getRenewalAlert(VaultConfig vaultConfig);
 }
