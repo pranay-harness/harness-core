@@ -21,6 +21,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
+import software.wings.beans.FeatureName;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
@@ -29,6 +30,7 @@ import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.EmailHelperUtils;
 
 import java.security.SecureRandom;
@@ -55,6 +57,7 @@ public class AlertCheckJob implements Job {
   @Inject private EmailHelperUtils emailHelperUtils;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private DelegateConnectionDao delegateConnectionDao;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private Clock clock;
 
@@ -148,7 +151,10 @@ public class AlertCheckJob implements Job {
       if (primaryConnections.contains(delegate.getUuid())) {
         alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertData);
       } else {
-        alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertData);
+        if (!featureFlagService.isEnabled(FeatureName.DELEGATE_SCALING_GROUP, accountId)
+            || isEmpty(delegate.getDelegateGroupName())) {
+          alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertData);
+        }
       }
     }
   }
