@@ -143,5 +143,5 @@ spec:
         - name: HELM_PATH
           value: ""
         - name: ENABlE_CE
-          value: false
+          value: "false"
       restartPolicy: Always
