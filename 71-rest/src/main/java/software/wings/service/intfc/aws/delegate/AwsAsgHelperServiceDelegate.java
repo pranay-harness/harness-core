@@ -7,10 +7,10 @@ import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.beans.command.LogCallback;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 
 import java.util.List;
