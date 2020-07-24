@@ -38,12 +38,12 @@ import java.util.Map;
  *
  */
 @OwnedBy(CDC)
-public interface ChildChainExecutable {
-  ChildChainResponse executeFirstChild(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage);
+public interface ChildChainExecutable<T extends StepParameters> {
+  ChildChainResponse executeFirstChild(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
-  ChildChainResponse executeNextChild(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage,
+  ChildChainResponse executeNextChild(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
 
-  StepResponse finalizeExecution(Ambiance ambiance, StepParameters stepParameters, PassThroughData passThroughData,
-      Map<String, ResponseData> responseDataMap);
+  StepResponse finalizeExecution(
+      Ambiance ambiance, T stepParameters, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
 }
