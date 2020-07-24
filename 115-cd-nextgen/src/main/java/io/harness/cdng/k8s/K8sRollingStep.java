@@ -44,7 +44,6 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.Task;
 import io.harness.validation.Validator;
@@ -73,7 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class K8sRollingStep implements Step, TaskChainExecutable {
+public class K8sRollingStep implements Step, TaskChainExecutable<K8sRollingStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("K8S_ROLLING").build();
 
   @Inject private EngineExpressionService engineExpressionService;
@@ -82,19 +81,17 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
 
   @Override
   public TaskChainResponse startChainLink(
-      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    K8sRollingStepParameters k8sRollingStepParameters = (K8sRollingStepParameters) stepParameters;
-
+      Ambiance ambiance, K8sRollingStepParameters k8sRollingStepParameters, StepInputPackage inputPackage) {
     StepDependencySpec serviceSpec =
         k8sRollingStepParameters.getStepDependencySpecs().get(CDStepDependencyKey.SERVICE.name());
-    ServiceOutcome serviceOutcome =
-        CDStepDependencyUtils.getService(stepDependencyService, serviceSpec, inputPackage, stepParameters, ambiance);
+    ServiceOutcome serviceOutcome = CDStepDependencyUtils.getService(
+        stepDependencyService, serviceSpec, inputPackage, k8sRollingStepParameters, ambiance);
 
     StepDependencySpec infraSpec =
         k8sRollingStepParameters.getStepDependencySpecs().get(CDStepDependencyKey.INFRASTRUCTURE.name());
 
     Infrastructure infrastructure = CDStepDependencyUtils.getInfrastructure(
-        stepDependencyService, infraSpec, inputPackage, stepParameters, ambiance);
+        stepDependencyService, infraSpec, inputPackage, k8sRollingStepParameters, ambiance);
 
     List<ManifestAttributes> manifests = serviceOutcome.getManifests();
     Validator.notEmptyCheck("Manifests can't be empty", manifests);
@@ -310,7 +307,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
   }
 
   @Override
-  public TaskChainResponse executeNextLink(Ambiance ambiance, StepParameters stepParameters,
+  public TaskChainResponse executeNextLink(Ambiance ambiance, K8sRollingStepParameters k8sRollingStepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     GitCommandExecutionResponse gitTaskResponse =
         (GitCommandExecutionResponse) responseDataMap.values().iterator().next();
@@ -328,7 +325,6 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
 
     List<String> valuesFileContents = getFileContents(gitFetchFilesResultMap, valuesManifests);
 
-    K8sRollingStepParameters k8sRollingStepParameters = (K8sRollingStepParameters) stepParameters;
     return executeK8sTask(k8sManifest, ambiance, k8sRollingStepParameters, valuesFileContents,
         k8sRollingPassThroughData.getInfrastructure());
   }
@@ -350,7 +346,7 @@ public class K8sRollingStep implements Step, TaskChainExecutable {
   }
 
   @Override
-  public StepResponse finalizeExecution(Ambiance ambiance, StepParameters stepParameters,
+  public StepResponse finalizeExecution(Ambiance ambiance, K8sRollingStepParameters k8sRollingStepParameters,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     K8sTaskExecutionResponse k8sTaskExecutionResponse =
         (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();

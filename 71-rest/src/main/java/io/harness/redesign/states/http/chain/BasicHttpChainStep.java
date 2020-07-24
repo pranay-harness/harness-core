@@ -22,7 +22,6 @@ import io.harness.redesign.states.http.BasicHttpStepParameters;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.tasks.Cd1SetupFields;
 import org.jetbrains.annotations.NotNull;
@@ -33,32 +32,30 @@ import java.util.Map;
 @Redesign
 @ExcludeRedesign
 @OwnedBy(HarnessTeam.CDC)
-public class BasicHttpChainStep implements Step, TaskChainExecutable {
+public class BasicHttpChainStep implements Step, TaskChainExecutable<BasicHttpChainStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("HTTP_CHAIN").build();
   private static final int socketTimeoutMillis = 10000;
 
   @Override
   public TaskChainResponse startChainLink(
-      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    BasicHttpChainStepParameters parameters =
-        obtainBasicHttpChainStepParameters((BasicHttpChainStepParameters) stepParameters);
+      Ambiance ambiance, BasicHttpChainStepParameters stepParameters, StepInputPackage inputPackage) {
+    BasicHttpChainStepParameters parameters = obtainBasicHttpChainStepParameters(stepParameters);
     BasicHttpStepParameters linkParam = parameters.getLinkParameters().get(0);
     DelegateTask task = buildTask(ambiance, linkParam);
     return TaskChainResponse.builder().chainEnd(false).task(task).build();
   }
 
   @Override
-  public TaskChainResponse executeNextLink(Ambiance ambiance, StepParameters stepParameters,
+  public TaskChainResponse executeNextLink(Ambiance ambiance, BasicHttpChainStepParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    BasicHttpChainStepParameters parameters =
-        obtainBasicHttpChainStepParameters((BasicHttpChainStepParameters) stepParameters);
+    BasicHttpChainStepParameters parameters = obtainBasicHttpChainStepParameters(stepParameters);
     BasicHttpStepParameters linkParam = parameters.getLinkParameters().get(1);
     DelegateTask task = buildTask(ambiance, linkParam);
     return TaskChainResponse.builder().chainEnd(true).task(task).build();
   }
 
   @Override
-  public StepResponse finalizeExecution(Ambiance ambiance, StepParameters stepParameters,
+  public StepResponse finalizeExecution(Ambiance ambiance, BasicHttpChainStepParameters stepParameters,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
@@ -76,7 +73,7 @@ public class BasicHttpChainStep implements Step, TaskChainExecutable {
     return DelegateTask.builder()
         .accountId(ambiance.getSetupAbstractions().get("accountId"))
         .waitId(waitId)
-        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, (String) ambiance.getSetupAbstractions().get("appId"))
+        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ambiance.getSetupAbstractions().get("appId"))
         .data(TaskData.builder()
                   .taskType(TaskType.HTTP.name())
                   .parameters(new Object[] {httpTaskParameters})
