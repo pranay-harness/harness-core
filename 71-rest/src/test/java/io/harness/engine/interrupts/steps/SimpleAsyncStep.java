@@ -15,7 +15,6 @@ import io.harness.facilitator.modes.async.AsyncExecutableResponse.AsyncExecutabl
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.waiter.StringNotifyResponseData;
@@ -28,32 +27,31 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class SimpleAsyncStep implements Step, AsyncExecutable {
+public class SimpleAsyncStep implements Step, AsyncExecutable<SimpleStepAsyncParams> {
   public static final StepType STEP_TYPE = StepType.builder().type("SIMPLE_ASYNC").build();
   @Inject @Named("waitStateResumer") @Transient private ScheduledExecutorService executorService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    SimpleStepAsyncParams params = (SimpleStepAsyncParams) stepParameters;
+      Ambiance ambiance, SimpleStepAsyncParams simpleStepAsyncParams, StepInputPackage inputPackage) {
     String uuid = generateUuid();
-    logger.info(
-        "Executing ..." + SimpleAsyncStep.class.getName() + "..duration=" + params.getDuration() + ", uuid=" + uuid);
+    logger.info("Executing ..." + SimpleAsyncStep.class.getName() + "..duration=" + simpleStepAsyncParams.getDuration()
+        + ", uuid=" + uuid);
     AsyncExecutableResponseBuilder executionResponseBuilder = AsyncExecutableResponse.builder();
     executionResponseBuilder.callbackId(uuid);
-    if (params.isShouldThrowException()) {
+    if (simpleStepAsyncParams.isShouldThrowException()) {
       throw new RuntimeException("Exception for test");
     }
     executorService.schedule(
         new SimpleNotifier(waitNotifyEngine, uuid, StringNotifyResponseData.builder().data("SUCCESS").build()),
-        params.getDuration(), TimeUnit.SECONDS);
+        simpleStepAsyncParams.getDuration(), TimeUnit.SECONDS);
     return executionResponseBuilder.build();
   }
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, SimpleStepAsyncParams stepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
     for (Object response : responseDataMap.values()) {
       if (!"SUCCESS".equals(((StringNotifyResponseData) response).getData())) {
@@ -65,5 +63,5 @@ public class SimpleAsyncStep implements Step, AsyncExecutable {
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, StepParameters stateParameters, AsyncExecutableResponse executableResponse) {}
+      Ambiance ambiance, SimpleStepAsyncParams stateParameters, AsyncExecutableResponse executableResponse) {}
 }

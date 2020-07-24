@@ -12,21 +12,20 @@ import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
 import java.util.Map;
 
-public class TestAsyncStep implements Step, AsyncExecutable {
+public class TestAsyncStep implements Step, AsyncExecutable<TestStepParameters> {
   public static final StepType ASYNC_STEP_TYPE = StepType.builder().type("TEST_STATE_PLAN_ASYNC").build();
 
   @Inject private transient WaitNotifyEngine waitNotifyEngine;
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
+      Ambiance ambiance, TestStepParameters stepParameters, StepInputPackage inputPackage) {
     String resumeId = generateUuid();
     waitNotifyEngine.doneWith(resumeId, StringNotifyResponseData.builder().data("SUCCESS").build());
     return AsyncExecutableResponse.builder().callbackId(resumeId).build();
@@ -34,13 +33,13 @@ public class TestAsyncStep implements Step, AsyncExecutable {
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, TestStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, StepParameters stateParameters, AsyncExecutableResponse executableResponse) {
+      Ambiance ambiance, TestStepParameters stateParameters, AsyncExecutableResponse executableResponse) {
     // Do Nothing
   }
 }

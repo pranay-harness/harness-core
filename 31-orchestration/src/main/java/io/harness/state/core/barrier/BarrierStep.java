@@ -21,7 +21,6 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,8 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Slf4j
-public class BarrierStep implements Step, SyncExecutable<BarrierStepParameters>, AsyncExecutable {
+public class BarrierStep
+    implements Step, SyncExecutable<BarrierStepParameters>, AsyncExecutable<BarrierStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("BARRIER").build();
 
   private static final String BARRIER = "barrier";
@@ -62,15 +62,14 @@ public class BarrierStep implements Step, SyncExecutable<BarrierStepParameters>,
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    BarrierStepParameters parameters = (BarrierStepParameters) stepParameters;
+      Ambiance ambiance, BarrierStepParameters barrierStepParameters, StepInputPackage inputPackage) {
     BarrierExecutionInstance barrierExecutionInstance =
         barrierService.findByPlanNodeId(ambiance.obtainCurrentLevel().getSetupId());
 
     logger.info(
         "Barrier Step getting executed. RuntimeId: [{}], barrierUuid [{}], barrierIdentifier [{}], barrierGroupId [{}]",
-        ambiance.obtainCurrentLevel().getRuntimeId(), barrierExecutionInstance.getUuid(), parameters.getIdentifier(),
-        barrierExecutionInstance.getBarrierGroupId());
+        ambiance.obtainCurrentLevel().getRuntimeId(), barrierExecutionInstance.getUuid(),
+        barrierStepParameters.getIdentifier(), barrierExecutionInstance.getBarrierGroupId());
 
     barrierService.update(barrierExecutionInstance);
 
@@ -79,7 +78,7 @@ public class BarrierStep implements Step, SyncExecutable<BarrierStepParameters>,
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, BarrierStepParameters barrierStepParameters, Map<String, ResponseData> responseDataMap) {
     // if barrier is still in STANDING => update barrier state
     BarrierExecutionInstance barrierExecutionInstance =
         updateBarrierExecutionInstance(ambiance.obtainCurrentLevel().getSetupId());
@@ -104,7 +103,7 @@ public class BarrierStep implements Step, SyncExecutable<BarrierStepParameters>,
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, StepParameters stateParameters, AsyncExecutableResponse executableResponse) {
+      Ambiance ambiance, BarrierStepParameters stateParameters, AsyncExecutableResponse executableResponse) {
     updateBarrierExecutionInstance(ambiance.obtainCurrentLevel().getSetupId());
   }
 

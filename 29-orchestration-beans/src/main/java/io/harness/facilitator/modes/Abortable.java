@@ -9,6 +9,6 @@ import io.harness.state.io.StepParameters;
 
 @OwnedBy(CDC)
 @Redesign
-public interface Abortable<T extends ExecutableResponse> {
-  void handleAbort(Ambiance ambiance, StepParameters stateParameters, T executableResponse);
+public interface Abortable<T extends StepParameters, V extends ExecutableResponse> {
+  void handleAbort(Ambiance ambiance, T stateParameters, V executableResponse);
 }
