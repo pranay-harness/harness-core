@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 
 @Slf4j
-public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable {
+public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable<CDPipelineSetupParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("PIPELINE_SETUP").build();
 
   @Override
@@ -31,21 +31,18 @@ public class PipelineSetupStep implements Step, SyncExecutable, ChildExecutable 
 
   @Override
   public ChildExecutableResponse obtainChild(
-      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    CDPipelineSetupParameters parameters = (CDPipelineSetupParameters) stepParameters;
-    logger.info("starting execution for pipeline [{}]", parameters);
+      Ambiance ambiance, CDPipelineSetupParameters cdPipelineSetupParameters, StepInputPackage inputPackage) {
+    logger.info("starting execution for pipeline [{}]", cdPipelineSetupParameters);
 
-    final Map<String, String> fieldToExecutionNodeIdMap = parameters.getFieldToExecutionNodeIdMap();
+    final Map<String, String> fieldToExecutionNodeIdMap = cdPipelineSetupParameters.getFieldToExecutionNodeIdMap();
     final String stagesNodeId = fieldToExecutionNodeIdMap.get("stages");
     return ChildExecutableResponse.builder().childNodeId(stagesNodeId).build();
   }
 
   @Override
-  public StepResponse handleChildResponse(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    final CDPipelineSetupParameters parameters = (CDPipelineSetupParameters) stepParameters;
-
-    logger.info("executed pipeline =[{}]", parameters);
+  public StepResponse handleChildResponse(Ambiance ambiance, CDPipelineSetupParameters cdPipelineSetupParameters,
+      Map<String, ResponseData> responseDataMap) {
+    logger.info("executed pipeline =[{}]", cdPipelineSetupParameters);
 
     return createStepResponseFromChildResponse(responseDataMap);
   }

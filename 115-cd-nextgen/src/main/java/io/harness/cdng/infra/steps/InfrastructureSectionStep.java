@@ -9,24 +9,22 @@ import io.harness.state.Step;
 import io.harness.state.StepType;
 import io.harness.state.core.section.SectionStepParameters;
 import io.harness.state.io.StepInputPackage;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 
 import java.util.Map;
 
-public class InfrastructureSectionStep implements Step, ChildExecutable {
+public class InfrastructureSectionStep implements Step, ChildExecutable<SectionStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("INFRASTRUCTURE_SECTION").build();
 
   @Override
   public ChildExecutableResponse obtainChild(
-      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    SectionStepParameters sectionStepParameters = (SectionStepParameters) stepParameters;
+      Ambiance ambiance, SectionStepParameters sectionStepParameters, StepInputPackage inputPackage) {
     return ChildExecutableResponse.builder().childNodeId(sectionStepParameters.getChildNodeId()).build();
   }
 
   @Override
   public StepResponse handleChildResponse(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, SectionStepParameters sectionStepParameters, Map<String, ResponseData> responseDataMap) {
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }
