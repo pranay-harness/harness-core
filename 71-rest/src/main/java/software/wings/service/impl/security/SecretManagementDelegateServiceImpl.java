@@ -563,7 +563,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       JsonElement element = JSON_PARSER.parse(secretValue);
       if (element.getAsJsonObject().has(refKeyName)) {
         JsonElement refKeyedElement = element.getAsJsonObject().get(refKeyName);
-        decryptedValue = refKeyedElement.toString().toCharArray();
+        decryptedValue = refKeyedElement.getAsString().toCharArray();
       }
     } else {
       decryptedValue = secretValue.toCharArray();
