@@ -87,7 +87,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
-    when(kubernetesContainerService.fetchReleaseHistory(any(), any(), any())).thenReturn(null);
+    when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
     doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     doNothing().when(k8sTaskHelper).setNamespaceToKubernetesResourcesIfRequired(any(), any());
@@ -101,7 +101,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
-    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any(), any());
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
 
@@ -116,7 +116,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
-    when(kubernetesContainerService.fetchReleaseHistory(any(), any(), any())).thenReturn(null);
+    when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
     doNothing().when(k8sTaskHelper).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
@@ -130,7 +130,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1)).readManifestAndOverrideLocalSecrets(any(), any(), anyBoolean());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
-    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any(), any());
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
 
@@ -284,8 +284,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1))
         .fetchManifestFilesAndWriteToDirectory(
             any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
-    verify(kubernetesContainerService, times(1))
-        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(KubernetesConfig.class), anyString());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
     verify(k8sTaskHelper, times(1))
         .dryRunManifests(
@@ -306,7 +305,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         + "  managedWorkloads: []\n";
     doReturn(releaseHistory)
         .when(kubernetesContainerService)
-        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
+        .fetchReleaseHistory(any(KubernetesConfig.class), anyString());
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
@@ -337,8 +336,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1))
         .fetchManifestFilesAndWriteToDirectory(
             any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
-    verify(kubernetesContainerService, times(1))
-        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(KubernetesConfig.class), anyString());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
     verify(k8sTaskHelper, times(1))
         .dryRunManifests(

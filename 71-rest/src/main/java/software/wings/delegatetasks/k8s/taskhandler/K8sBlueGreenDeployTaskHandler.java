@@ -71,7 +71,6 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -135,13 +134,13 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, Apply));
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-          k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      kubernetesContainerService.saveReleaseHistory(
+          kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
       return getFailureResponse();
     }
 
-    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-        k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    kubernetesContainerService.saveReleaseHistory(
+        kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     currentRelease.setManagedWorkloadRevision(
         k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
@@ -150,8 +149,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, WaitForSteadyState));
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-          k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      kubernetesContainerService.saveReleaseHistory(
+          kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
       return getFailureResponse();
     }
 
@@ -165,8 +164,8 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     currentRelease.setManagedWorkloadRevision(
         k8sTaskHelper.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-        k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    kubernetesContainerService.saveReleaseHistory(
+        kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     return k8sTaskHelper.getK8sTaskExecutionResponse(K8sBlueGreenDeployResponse.builder()
                                                          .releaseNumber(currentRelease.getNumber())
@@ -202,7 +201,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
     String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-        kubernetesConfig, Collections.emptyList(), k8sBlueGreenDeployTaskParameters.getReleaseName());
+        kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName());
 
     releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
@@ -296,15 +295,15 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       Service stageServiceInCluster;
 
       try {
-        primaryServiceInCluster = kubernetesContainerService.getService(
-            kubernetesConfig, Collections.emptyList(), primaryService.getResourceId().getName());
+        primaryServiceInCluster =
+            kubernetesContainerService.getService(kubernetesConfig, primaryService.getResourceId().getName());
         if (primaryServiceInCluster == null) {
           executionLogCallback.saveExecutionLog(
               "Primary Service [" + primaryService.getResourceId().getName() + "] not found in cluster.");
         }
 
-        stageServiceInCluster = kubernetesContainerService.getService(
-            kubernetesConfig, Collections.emptyList(), stageService.getResourceId().getName());
+        stageServiceInCluster =
+            kubernetesContainerService.getService(kubernetesConfig, stageService.getResourceId().getName());
         if (stageServiceInCluster == null) {
           executionLogCallback.saveExecutionLog(
               "Stage Service [" + stageService.getResourceId().getName() + "] not found in cluster.");

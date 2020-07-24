@@ -207,7 +207,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder =
         ContainerSetupCommandUnitExecutionData.builder();
 
-    StringBuffer summaryOutput = new StringBuffer();
+    StringBuilder summaryOutput = new StringBuilder();
 
     try {
       KubernetesSetupParams setupParams = (KubernetesSetupParams) containerSetupParams;
@@ -217,7 +217,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       lookupLabels = ImmutableMap.of(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY, setupParams.getReleaseName());
 
       KubernetesConfig kubernetesConfig;
-      List<EncryptedDataDetail> encryptedDataDetails = emptyList();
       if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
         kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
       } else if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
@@ -241,12 +240,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
 
       kubernetesConfig.setDecrypted(true);
-      kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
+      kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig);
 
       String internalConfigName = getInternalHarnessConfigName(setupParams.getInfraMappingId());
 
       if (!setupParams.isRollback()) {
-        kubernetesContainerService.deleteSecret(kubernetesConfig, encryptedDataDetails, internalConfigName);
+        kubernetesContainerService.deleteSecret(kubernetesConfig, internalConfigName);
       }
 
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) setupParams.getContainerTask();
@@ -263,11 +262,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       String lastCtrlName;
       if (setupParams.isUseNewLabelMechanism()) {
-        HasMetadata lastDeployment = getLastDeployment(kubernetesConfig, encryptedDataDetails, setupParams);
+        HasMetadata lastDeployment = getLastDeployment(kubernetesConfig);
         currentRevision = isNotVersioned ? 0 : getRevisionNumber(lastDeployment) + 1;
         lastCtrlName = lastDeployment != null ? lastDeployment.getMetadata().getName() : null;
       } else {
-        lastCtrlName = lastController(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix());
+        lastCtrlName = lastController(kubernetesConfig, setupParams.getControllerNamePrefix());
         currentRevision = getRevisionFromControllerName(lastCtrlName).orElse(-1) + 1;
       }
 
@@ -289,17 +288,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       if (setupParams.isRollback()) {
         executionLogCallback.saveExecutionLog("Rolling back setup");
-        Secret previousConfig =
-            kubernetesContainerService.getSecret(kubernetesConfig, encryptedDataDetails, internalConfigName);
+        Secret previousConfig = kubernetesContainerService.getSecret(kubernetesConfig, internalConfigName);
         if (isNotVersioned) {
-          performYamlRollback(encryptedDataDetails, executionLogCallback, previousConfig, kubernetesConfig,
-              containerServiceName, setupParams.getServiceSteadyStateTimeout());
+          performYamlRollback(executionLogCallback, previousConfig, kubernetesConfig, containerServiceName,
+              setupParams.getServiceSteadyStateTimeout());
         } else {
           performResize(kubernetesConfig, setupParams.getClusterName(), lastCtrlName, setupParams.getServiceCounts(),
               setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
 
           if (previousConfig != null && isNotBlank(previousConfig.getData().get(AUTOSCALER_YAML))) {
-            rollbackAutoscaler(encryptedDataDetails, executionLogCallback, kubernetesConfig,
+            rollbackAutoscaler(executionLogCallback, kubernetesConfig,
                 decodeBase64ToString(previousConfig.getData().get(AUTOSCALER_YAML)));
           }
         }
@@ -317,7 +315,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
         validateBlueGreenConfig(setupParams);
 
-        cleanupStageDeployment(kubernetesConfig, encryptedDataDetails, setupParams, executionLogCallback);
+        cleanupStageDeployment(kubernetesConfig, setupParams, executionLogCallback);
       }
 
       String registrySecretName = "none";
@@ -327,7 +325,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
         Secret registrySecret = createRegistrySecret(registrySecretName, setupParams.getNamespace(),
             setupParams.getImageDetails(), controllerLabels, executionLogCallback);
-        kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, registrySecret);
+        kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, registrySecret);
       }
 
       Map<String, String> previousYamlConfig = new HashMap<>();
@@ -338,30 +336,25 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       String lastAutoscaler = null;
 
       if (isNotVersioned) {
-        previousYamlConfig.put(
-            CONTROLLER_YAML, getControllerYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
-        originalPods =
-            kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, containerServiceName);
-        previousYamlConfig.put(
-            CONFIG_MAP_YAML, getConfigMapYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
-        previousYamlConfig.put(
-            SECRET_MAP_YAML, getSecretMapYaml(kubernetesConfig, encryptedDataDetails, containerServiceName));
-        previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, containerServiceName);
+        previousYamlConfig.put(CONTROLLER_YAML, getControllerYaml(kubernetesConfig, containerServiceName));
+        originalPods = kubernetesContainerService.getRunningPods(kubernetesConfig, containerServiceName);
+        previousYamlConfig.put(CONFIG_MAP_YAML, getConfigMapYaml(kubernetesConfig, containerServiceName));
+        previousYamlConfig.put(SECRET_MAP_YAML, getSecretMapYaml(kubernetesConfig, containerServiceName));
+        previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, containerServiceName);
         if (isNotBlank(previousAutoscalerYaml)) {
           lastAutoscaler = containerServiceName;
         }
       } else {
         if (setupParams.isUseNewLabelMechanism()) {
-          activeServiceCounts = kubernetesContainerService.getActiveServiceCountsWithLabels(
-              kubernetesConfig, encryptedDataDetails, lookupLabels);
+          activeServiceCounts =
+              kubernetesContainerService.getActiveServiceCountsWithLabels(kubernetesConfig, lookupLabels);
         } else {
-          activeServiceCounts = kubernetesContainerService.getActiveServiceCounts(
-              kubernetesConfig, encryptedDataDetails, containerServiceName);
+          activeServiceCounts =
+              kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, containerServiceName);
         }
 
         if (setupParams.isUseIstioRouteRule()) {
-          trafficWeights = kubernetesContainerService.getTrafficWeights(
-              kubernetesConfig, encryptedDataDetails, containerServiceName);
+          trafficWeights = kubernetesContainerService.getTrafficWeights(kubernetesConfig, containerServiceName);
         }
 
         List<String> activeControllers = new ArrayList<>(activeServiceCounts.keySet());
@@ -369,8 +362,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         reverse(activeControllers);
         for (String runningControllerName : activeControllers) {
           if (activeServiceCounts.get(runningControllerName) > 0
-              && isNotBlank(getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, runningControllerName))) {
-            previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, runningControllerName);
+              && isNotBlank(getAutoscalerYaml(kubernetesConfig, runningControllerName))) {
+            previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, runningControllerName);
             lastAutoscaler = runningControllerName;
             break;
           }
@@ -391,7 +384,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                 .endMetadata()
                                 .withStringData(previousYamlConfig)
                                 .build();
-        kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, yamlConfig);
+        kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, yamlConfig);
       }
 
       List<Label> labelArray = new ArrayList<>();
@@ -405,12 +398,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           .lookupLabels(labelArray);
 
       // Setup config map
-      ConfigMap configMap = prepareConfigMap(kubernetesConfig, encryptedDataDetails, setupParams, containerServiceName,
-          controllerLabels, safeDisplayServiceVariables, executionLogCallback);
+      ConfigMap configMap = prepareConfigMap(kubernetesConfig, setupParams, containerServiceName, controllerLabels,
+          safeDisplayServiceVariables, executionLogCallback);
 
       // Setup secret map
-      Secret secretMap = prepareSecretMap(kubernetesConfig, encryptedDataDetails, setupParams, containerServiceName,
-          controllerLabels, safeDisplayServiceVariables, serviceVariables, executionLogCallback);
+      Secret secretMap = prepareSecretMap(kubernetesConfig, setupParams, containerServiceName, controllerLabels,
+          safeDisplayServiceVariables, serviceVariables, executionLogCallback);
 
       long replaceControllerStartTime = clock.millis();
 
@@ -418,8 +411,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           controllerLabels, setupParams, registrySecretName, configMap, secretMap, originalPods, executionLogCallback);
 
       if (definition instanceof StatefulSet) {
-        HasMetadata existing = kubernetesContainerService.getController(
-            kubernetesConfig, encryptedDataDetails, definition.getMetadata().getName());
+        HasMetadata existing =
+            kubernetesContainerService.getController(kubernetesConfig, definition.getMetadata().getName());
         if (existing != null && existing.getKind().equals("StatefulSet")) {
           StatefulSet newDefinition = (StatefulSet) definition;
           StatefulSet mergedDefinition = (StatefulSet) existing;
@@ -434,13 +427,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       executionLogCallback.saveExecutionLog("Creating controller:\n\n" + toDisplayYaml(definition));
       // Setup controller
-      HasMetadata controller =
-          kubernetesContainerService.createOrReplaceController(kubernetesConfig, encryptedDataDetails, definition);
+      HasMetadata controller = kubernetesContainerService.createOrReplaceController(kubernetesConfig, definition);
 
       // Delete old autoscaler
       if (isNotBlank(lastAutoscaler)) {
         executionLogCallback.saveExecutionLog("Removing previous autoscaler: " + lastAutoscaler);
-        kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, lastAutoscaler);
+        kubernetesContainerService.deleteAutoscaler(kubernetesConfig, lastAutoscaler);
       }
 
       // Create new autoscaler
@@ -459,21 +451,19 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         summaryOutput.append(format("%nHorizontal Pod Autoscaler: %s", hpa.getMetadata().getName()));
       }
 
-      Service service = setupServiceAndIngress(setupParams, kubernetesConfig, encryptedDataDetails,
-          containerServiceName, executionLogCallback, summaryOutput, commandExecutionDataBuilder);
+      Service service = setupServiceAndIngress(setupParams, kubernetesConfig, containerServiceName,
+          executionLogCallback, summaryOutput, commandExecutionDataBuilder);
 
-      setupServiceAndIngressForBlueGreen(setupParams, kubernetesConfig, encryptedDataDetails, containerServiceName,
+      setupServiceAndIngressForBlueGreen(setupParams, kubernetesConfig, containerServiceName,
           Integer.toString(currentRevision), executionLogCallback, summaryOutput, commandExecutionDataBuilder);
 
       if (isNotVersioned) {
-        listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
-            executionLogCallback, kubernetesConfig, containerServiceName, originalPods, replaceControllerStartTime,
-            false);
+        listContainerInfosWhenReady(setupParams.getServiceSteadyStateTimeout(), executionLogCallback, kubernetesConfig,
+            containerServiceName, originalPods, replaceControllerStartTime, false);
         if (isStatefulSet) {
           if (hpa != null) {
             executionLogCallback.saveExecutionLog("Enabling autoscaler " + containerServiceName, LogLevel.INFO);
-            hpa = kubernetesContainerService.createOrReplaceAutoscaler(
-                kubernetesConfig, encryptedDataDetails, toYaml(hpa));
+            hpa = kubernetesContainerService.createOrReplaceAutoscaler(kubernetesConfig, toYaml(hpa));
             if (hpa != null) {
               String hpaName = hpa.getMetadata().getName();
               executionLogCallback.saveExecutionLog(
@@ -484,16 +474,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       } else {
         try {
           // This should not halt workflow execution.
-          downsizeOldOrUnhealthy(
-              kubernetesConfig, encryptedDataDetails, containerServiceName, setupParams, executionLogCallback);
+          downsizeOldOrUnhealthy(kubernetesConfig, containerServiceName, setupParams, executionLogCallback);
         } catch (Exception e) {
           logger.warn("Cleaning up of old or unhealthy instances failed while setting up Kubernetes service: ", e);
         }
         if (setupParams.isUseNewLabelMechanism()) {
-          cleanupWithLabels(kubernetesConfig, encryptedDataDetails, executionLogCallback);
+          cleanupWithLabels(kubernetesConfig, executionLogCallback);
 
         } else {
-          cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
+          cleanup(kubernetesConfig, containerServiceName, executionLogCallback);
         }
       }
 
@@ -501,16 +490,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       if (!isNotVersioned) {
         if (setupParams.isUseNewLabelMechanism()) {
-          newActiveCounts = kubernetesContainerService.getActiveServiceCountsWithLabels(
-              kubernetesConfig, encryptedDataDetails, lookupLabels);
+          newActiveCounts = kubernetesContainerService.getActiveServiceCountsWithLabels(kubernetesConfig, lookupLabels);
         } else {
-          newActiveCounts = kubernetesContainerService.getActiveServiceCounts(
-              kubernetesConfig, encryptedDataDetails, containerServiceName);
+          newActiveCounts = kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, containerServiceName);
         }
       }
 
       // Setup Istio routes
-      prepareVirtualService(encryptedDataDetails, kubernetesConfig, setupParams,
+      prepareVirtualService(kubernetesConfig, setupParams,
           getKubernetesServiceName(setupParams.getControllerNamePrefix()), service, newActiveCounts,
           containerServiceName, executionLogCallback, summaryOutput);
 
@@ -549,8 +536,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private Service setupServiceAndIngress(KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName,
-      ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput,
+      String containerServiceName, ExecutionLogCallback executionLogCallback, StringBuilder summaryOutput,
       ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
     String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
     Map<String, String> labels = getLabels(setupParams);
@@ -575,9 +561,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     Map<String, String> selectors = getNewLabelSelectors(setupParams);
 
-    Service service = prepareService(spec, kubernetesConfig, encryptedDataDetails, kubernetesServiceName,
-        setupParams.getNamespace(), false, selectors, labels, setupParams.getServiceSteadyStateTimeout(),
-        executionLogCallback, summaryOutput, commandExecutionDataBuilder);
+    Service service = prepareService(spec, kubernetesConfig, kubernetesServiceName, setupParams.getNamespace(), false,
+        selectors, labels, setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput,
+        commandExecutionDataBuilder);
 
     String ingressYaml = "";
 
@@ -592,16 +578,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                         .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, containerServiceName);
     }
 
-    prepareIngress(kubernetesConfig, encryptedDataDetails, setupParams.isUseIngress(), ingressYaml,
-        kubernetesServiceName, labels, executionLogCallback, summaryOutput);
+    prepareIngress(kubernetesConfig, setupParams.isUseIngress(), ingressYaml, kubernetesServiceName, labels,
+        executionLogCallback, summaryOutput);
 
     return service;
   }
 
   private void setupServiceAndIngressForBlueGreen(KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, String revision,
-      ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput,
-      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
+      String containerServiceName, String revision, ExecutionLogCallback executionLogCallback,
+      StringBuilder summaryOutput, ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
     String primaryServiceName = getPrimaryServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
     String stageServiceName = getStageServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
     String ingressName = getBlueGreenIngressName(setupParams.getControllerNamePrefix());
@@ -618,9 +603,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           format("Setting Primary Service with name %s", primaryServiceName), LogLevel.INFO);
     }
 
-    Service primaryService = prepareService(primaryServiceSpecification, kubernetesConfig, encryptedDataDetails,
-        primaryServiceName, setupParams.getNamespace(), true, selectors, labels,
-        setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput, commandExecutionDataBuilder);
+    Service primaryService = prepareService(primaryServiceSpecification, kubernetesConfig, primaryServiceName,
+        setupParams.getNamespace(), true, selectors, labels, setupParams.getServiceSteadyStateTimeout(),
+        executionLogCallback, summaryOutput, commandExecutionDataBuilder);
 
     KubernetesServiceSpecification stageServiceSpecification =
         (setupParams.isBlueGreen() && setupParams.getBlueGreenConfig() != null)
@@ -632,9 +617,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           format("Setting Stage Service with name %s", stageServiceName), LogLevel.INFO);
     }
 
-    Service stageService = prepareService(stageServiceSpecification, kubernetesConfig, encryptedDataDetails,
-        stageServiceName, setupParams.getNamespace(), false, selectors, labels,
-        setupParams.getServiceSteadyStateTimeout(), executionLogCallback, summaryOutput, commandExecutionDataBuilder);
+    Service stageService = prepareService(stageServiceSpecification, kubernetesConfig, stageServiceName,
+        setupParams.getNamespace(), false, selectors, labels, setupParams.getServiceSteadyStateTimeout(),
+        executionLogCallback, summaryOutput, commandExecutionDataBuilder);
 
     boolean useIngress = setupParams.isBlueGreen() && setupParams.getBlueGreenConfig() != null
         && setupParams.getBlueGreenConfig().isUseIngress();
@@ -658,8 +643,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                         .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, containerServiceName);
     }
 
-    prepareIngress(kubernetesConfig, encryptedDataDetails, useIngress, ingressYaml, ingressName, labels,
-        executionLogCallback, summaryOutput);
+    prepareIngress(kubernetesConfig, useIngress, ingressYaml, ingressName, labels, executionLogCallback, summaryOutput);
 
     if (primaryService != null && stageService != null && setupParams.isBlueGreen()) {
       String primaryRevision = getRevisionFromService(primaryService);
@@ -712,9 +696,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private Service prepareService(KubernetesServiceSpecification serviceSpecification, KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String kubernetesServiceName, String namespace,
-      boolean keepExistingSelectors, Map<String, String> labelSelectors, Map<String, String> labels, int timeout,
-      ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput,
+      String kubernetesServiceName, String namespace, boolean keepExistingSelectors, Map<String, String> labelSelectors,
+      Map<String, String> labels, int timeout, ExecutionLogCallback executionLogCallback, StringBuilder summaryOutput,
       ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
     Service service = null;
     String serviceClusterIP;
@@ -722,7 +705,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String nodePort = null;
 
     try {
-      service = kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+      service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
     } catch (Exception e) {
       Misc.logAllMessages(e, executionLogCallback);
     }
@@ -733,7 +716,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         try {
           if (service.getSpec().getSelector().containsKey(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY)) {
             executionLogCallback.saveExecutionLog("Deleting existing service " + kubernetesServiceName);
-            kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+            kubernetesContainerService.deleteService(kubernetesConfig, kubernetesServiceName);
           }
         } catch (Exception e) {
           logger.error("Couldn't delete service {}", kubernetesServiceName, e);
@@ -775,16 +758,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
     }
 
-    service = kubernetesContainerService.getService(
-        kubernetesConfig, encryptedDataDetails, serviceToCreate.getMetadata().getName());
+    service = kubernetesContainerService.getService(kubernetesConfig, serviceToCreate.getMetadata().getName());
     logger.info("{} service [{}]", service == null ? "Creating" : "Replacing", serviceToCreate.getMetadata().getName());
-    service =
-        kubernetesContainerService.createOrReplaceService(kubernetesConfig, encryptedDataDetails, serviceToCreate);
+    service = kubernetesContainerService.createOrReplaceService(kubernetesConfig, serviceToCreate);
     serviceClusterIP = service.getSpec().getClusterIP();
 
     if (service.getSpec().getType().equals(LOAD_BALANCER)) {
-      serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(kubernetesConfig, encryptedDataDetails, service,
-          serviceSpecification.getLoadBalancerIP(), timeout, executionLogCallback);
+      serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(
+          kubernetesConfig, service, serviceSpecification.getLoadBalancerIP(), timeout, executionLogCallback);
     } else if (service.getSpec().getType().equals(NODE_PORT)) {
       nodePort =
           Joiner.on(',').join(service.getSpec().getPorts().stream().map(ServicePort::getNodePort).collect(toList()));
@@ -840,15 +821,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
-  private void prepareVirtualService(List<EncryptedDataDetail> encryptedDataDetails, KubernetesConfig kubernetesConfig,
-      KubernetesSetupParams setupParams, String virtualServiceName, Service service,
-      Map<String, Integer> activeControllers, String containerServiceName, ExecutionLogCallback executionLogCallback,
-      StringBuffer summaryOutput) {
+  @SuppressWarnings("squid:S00107")
+  private void prepareVirtualService(KubernetesConfig kubernetesConfig, KubernetesSetupParams setupParams,
+      String virtualServiceName, Service service, Map<String, Integer> activeControllers, String containerServiceName,
+      ExecutionLogCallback executionLogCallback, StringBuilder summaryOutput) {
     if (setupParams.isUseIstioRouteRule() && service != null) {
       List<IstioResource> istioResourcesDefinition = createVirtualServiceAndDestinationRuleDefinition(
           setupParams, virtualServiceName, service.getMetadata().getLabels(), activeControllers, executionLogCallback);
       for (IstioResource r : istioResourcesDefinition) {
-        kubernetesContainerService.createOrReplaceIstioResource(kubernetesConfig, encryptedDataDetails, r);
+        kubernetesContainerService.createOrReplaceIstioResource(kubernetesConfig, r);
         summaryOutput.append(format("%nIstio %s: %s", r.getKind(), r.getMetadata().getName()));
         if (StringUtils.equals(r.getKind(), "VirtualService")) {
           printVirtualServiceRouteWeights(r, getPrefixFromControllerName(containerServiceName), executionLogCallback);
@@ -856,22 +837,20 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
     } else {
       try {
-        VirtualService virtualService = kubernetesContainerService.getIstioVirtualService(
-            kubernetesConfig, encryptedDataDetails, virtualServiceName);
+        VirtualService virtualService =
+            kubernetesContainerService.getIstioVirtualService(kubernetesConfig, virtualServiceName);
         if (virtualService != null
             && virtualService.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
           executionLogCallback.saveExecutionLog("Deleting Istio VirtualService" + virtualServiceName);
-          kubernetesContainerService.deleteIstioVirtualService(
-              kubernetesConfig, encryptedDataDetails, virtualServiceName);
+          kubernetesContainerService.deleteIstioVirtualService(kubernetesConfig, virtualServiceName);
         }
 
-        DestinationRule destinationRule = kubernetesContainerService.getIstioDestinationRule(
-            kubernetesConfig, encryptedDataDetails, virtualServiceName);
+        DestinationRule destinationRule =
+            kubernetesContainerService.getIstioDestinationRule(kubernetesConfig, virtualServiceName);
         if (destinationRule != null
             && destinationRule.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
           executionLogCallback.saveExecutionLog("Deleting Istio DestinationRule" + virtualServiceName);
-          kubernetesContainerService.deleteIstioDestinationRule(
-              kubernetesConfig, encryptedDataDetails, virtualServiceName);
+          kubernetesContainerService.deleteIstioDestinationRule(kubernetesConfig, virtualServiceName);
         }
       } catch (Exception e) {
         logger.error("Error checking for previous istio route", e);
@@ -880,20 +859,20 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private Ingress prepareIngress(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      boolean useIngress, String ingressYaml, String ingressName, Map<String, String> labels,
-      ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput) {
+  private Ingress prepareIngress(KubernetesConfig kubernetesConfig, boolean useIngress, String ingressYaml,
+      String ingressName, Map<String, String> labels, ExecutionLogCallback executionLogCallback,
+      StringBuilder summaryOutput) {
     Ingress ingress;
     if (useIngress) {
-      ingress = kubernetesContainerService.createOrReplaceIngress(kubernetesConfig, encryptedDataDetails,
+      ingress = kubernetesContainerService.createOrReplaceIngress(kubernetesConfig,
           createIngressDefinition(
               ingressYaml, ingressName, kubernetesConfig.getNamespace(), labels, executionLogCallback));
     } else {
       try {
-        ingress = kubernetesContainerService.getIngress(kubernetesConfig, encryptedDataDetails, ingressName);
+        ingress = kubernetesContainerService.getIngress(kubernetesConfig, ingressName);
         if (ingress != null
             && ingress.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY)) {
-          kubernetesContainerService.deleteIngress(kubernetesConfig, encryptedDataDetails, ingressName);
+          kubernetesContainerService.deleteIngress(kubernetesConfig, ingressName);
         }
       } catch (Exception e) {
         Misc.logAllMessages(e, executionLogCallback);
@@ -909,10 +888,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return ingress;
   }
 
-  private Secret prepareSecretMap(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      KubernetesSetupParams setupParams, String secretMapName, Map<String, String> controllerLabels,
-      Map<String, String> safeDisplayServiceVariables, Map<String, String> serviceVariables,
-      ExecutionLogCallback executionLogCallback) {
+  private Secret prepareSecretMap(KubernetesConfig kubernetesConfig, KubernetesSetupParams setupParams,
+      String secretMapName, Map<String, String> controllerLabels, Map<String, String> safeDisplayServiceVariables,
+      Map<String, String> serviceVariables, ExecutionLogCallback executionLogCallback) {
     Secret secretMap = new SecretBuilder()
                            .withNewMetadata()
                            .withAnnotations(harnessAnnotations)
@@ -951,14 +929,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                         .build()),
           LogLevel.INFO);
       secretMap.setData(secretData);
-      secretMap = kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secretMap);
+      secretMap = kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, secretMap);
     }
     return secretMap;
   }
 
-  private ConfigMap prepareConfigMap(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      KubernetesSetupParams setupParams, String configMapName, Map<String, String> controllerLabels,
-      Map<String, String> safeDisplayServiceVariables, ExecutionLogCallback executionLogCallback) {
+  private ConfigMap prepareConfigMap(KubernetesConfig kubernetesConfig, KubernetesSetupParams setupParams,
+      String configMapName, Map<String, String> controllerLabels, Map<String, String> safeDisplayServiceVariables,
+      ExecutionLogCallback executionLogCallback) {
     ConfigMap configMap;
     if (isNotBlank(setupParams.getConfigMapYaml())) {
       try {
@@ -1008,16 +986,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
     if (configMap != null) {
       executionLogCallback.saveExecutionLog("Creating config map:\n\n" + toDisplayYaml(configMap));
-      configMap =
-          kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
+      configMap = kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, configMap);
     }
     return configMap;
   }
 
-  private String getControllerYaml(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
-    HasMetadata controller =
-        kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, containerServiceName);
+  private String getControllerYaml(KubernetesConfig kubernetesConfig, String containerServiceName) {
+    HasMetadata controller = kubernetesContainerService.getController(kubernetesConfig, containerServiceName);
     if (controller != null) {
       try {
         return toYaml(controller);
@@ -1028,10 +1003,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
-  private String getConfigMapYaml(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
-    ConfigMap configMap =
-        kubernetesContainerService.getConfigMap(kubernetesConfig, encryptedDataDetails, containerServiceName);
+  private String getConfigMapYaml(KubernetesConfig kubernetesConfig, String containerServiceName) {
+    ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, containerServiceName);
     if (configMap != null) {
       try {
         return toYaml(configMap);
@@ -1042,10 +1015,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
-  private String getSecretMapYaml(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
-    Secret secretMap =
-        kubernetesContainerService.getSecret(kubernetesConfig, encryptedDataDetails, containerServiceName);
+  private String getSecretMapYaml(KubernetesConfig kubernetesConfig, String containerServiceName) {
+    Secret secretMap = kubernetesContainerService.getSecret(kubernetesConfig, containerServiceName);
     if (secretMap != null) {
       try {
         return toYaml(secretMap);
@@ -1056,9 +1027,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
-  private String getAutoscalerYaml(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
-    HorizontalPodAutoscaler hpa = getAutoscaler(kubernetesConfig, encryptedDataDetails, containerServiceName);
+  private String getAutoscalerYaml(KubernetesConfig kubernetesConfig, String containerServiceName) {
+    HorizontalPodAutoscaler hpa = getAutoscaler(kubernetesConfig, containerServiceName);
     if (hpa != null) {
       try {
         return toYaml(hpa);
@@ -1251,19 +1221,17 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return asList(virtualService, destinationRule);
   }
 
-  private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
-      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig,
-      String containerServiceName, List<Pod> originalPods, long startTime, boolean isRollback) {
+  private void listContainerInfosWhenReady(int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback,
+      KubernetesConfig kubernetesConfig, String containerServiceName, List<Pod> originalPods, long startTime,
+      boolean isRollback) {
     Optional<Integer> controllerPodCount =
-        kubernetesContainerService.getControllerPodCount(kubernetesConfig, encryptedDataDetails, containerServiceName);
+        kubernetesContainerService.getControllerPodCount(kubernetesConfig, containerServiceName);
     int desiredCount = controllerPodCount.isPresent() ? controllerPodCount.get() : 0;
     int previousCount =
-        kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, containerServiceName) != null
-        ? desiredCount
-        : 0;
+        kubernetesContainerService.getController(kubernetesConfig, containerServiceName) != null ? desiredCount : 0;
     List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
-        encryptedDataDetails, containerServiceName, previousCount, desiredCount, serviceSteadyStateTimeout,
-        originalPods, true, executionLogCallback, true, startTime, kubernetesConfig.getNamespace());
+        containerServiceName, previousCount, desiredCount, serviceSteadyStateTimeout, originalPods, true,
+        executionLogCallback, true, startTime, kubernetesConfig.getNamespace());
 
     boolean allContainersSuccess =
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
@@ -1294,9 +1262,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private void performYamlRollback(List<EncryptedDataDetail> encryptedDataDetails,
-      ExecutionLogCallback executionLogCallback, Secret previousConfig, KubernetesConfig kubernetesConfig,
-      String controllerName, int steadyStateTimeout) {
+  private void performYamlRollback(ExecutionLogCallback executionLogCallback, Secret previousConfig,
+      KubernetesConfig kubernetesConfig, String controllerName, int steadyStateTimeout) {
     String controllerYaml = null;
     String configMapYaml = null;
     String secretMapYaml = null;
@@ -1330,15 +1297,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         throw new InvalidArgumentsException("Couldn't parse configMap YAML: " + configMapYaml, e, USER);
       }
       executionLogCallback.saveExecutionLog("Setting configMap:\n\n" + toDisplayYaml(configMap));
-      kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
+      kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, configMap);
     } else {
-      ConfigMap configMap =
-          kubernetesContainerService.getConfigMap(kubernetesConfig, encryptedDataDetails, controllerName);
+      ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, controllerName);
       if (configMap != null) {
         executionLogCallback.saveExecutionLog(
             "ConfigMap " + controllerName + " did not exist previously. Deleting on rollback");
         try {
-          kubernetesContainerService.deleteConfigMap(kubernetesConfig, encryptedDataDetails, controllerName);
+          kubernetesContainerService.deleteConfigMap(kubernetesConfig, controllerName);
         } catch (Exception e) {
           executionLogCallback.saveExecutionLog("Error deleting configMap: " + controllerName, LogLevel.ERROR);
           Misc.logAllMessages(e, executionLogCallback);
@@ -1360,14 +1326,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                               .withData(secretMap.getData().entrySet().stream().collect(
                                   toMap(Entry::getKey, entry -> SECRET_MASK)))
                               .build()));
-      kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secretMap);
+      kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, secretMap);
     } else {
-      Secret secretMap = kubernetesContainerService.getSecret(kubernetesConfig, encryptedDataDetails, controllerName);
+      Secret secretMap = kubernetesContainerService.getSecret(kubernetesConfig, controllerName);
       if (secretMap != null) {
         executionLogCallback.saveExecutionLog(
             "SecretMap " + controllerName + " did not exist previously. Deleting on rollback");
         try {
-          kubernetesContainerService.deleteSecret(kubernetesConfig, encryptedDataDetails, controllerName);
+          kubernetesContainerService.deleteSecret(kubernetesConfig, controllerName);
         } catch (Exception e) {
           executionLogCallback.saveExecutionLog("Error deleting secretMap: " + controllerName, LogLevel.ERROR);
           Misc.logAllMessages(e, executionLogCallback);
@@ -1376,8 +1342,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     long startTime = clock.millis();
-    List<Pod> originalPods =
-        kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, controllerName);
+    List<Pod> originalPods = kubernetesContainerService.getRunningPods(kubernetesConfig, controllerName);
     if (isNotBlank(controllerYaml)) {
       HasMetadata controller;
       try {
@@ -1387,36 +1352,35 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
       executionLogCallback.saveExecutionLog("Rolling back controller " + controllerName);
       executionLogCallback.saveExecutionLog("Setting controller:\n\n" + toDisplayYaml(controller));
-      kubernetesContainerService.createOrReplaceController(kubernetesConfig, encryptedDataDetails, controller);
+      kubernetesContainerService.createOrReplaceController(kubernetesConfig, controller);
       PodTemplateSpec podTemplateSpec = kubernetesContainerService.getPodTemplateSpec(controller);
       executionLogCallback.saveExecutionLog("Rolled back to controller with image: "
               + podTemplateSpec.getSpec().getContainers().stream().map(Container::getImage).collect(toList()),
           LogLevel.INFO);
-      listContainerInfosWhenReady(encryptedDataDetails, steadyStateTimeout, executionLogCallback, kubernetesConfig,
-          controllerName, originalPods, startTime, true);
+      listContainerInfosWhenReady(
+          steadyStateTimeout, executionLogCallback, kubernetesConfig, controllerName, originalPods, startTime, true);
     } else {
       executionLogCallback.saveExecutionLog(
           "Controller " + controllerName + " did not exist previously. Deleting on rollback");
       try {
-        HasMetadata controller =
-            kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, controllerName);
+        HasMetadata controller = kubernetesContainerService.getController(kubernetesConfig, controllerName);
         Map<String, String> labels = controller.getMetadata().getLabels();
-        kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, controllerName);
-        kubernetesContainerService.waitForPodsToStop(kubernetesConfig, encryptedDataDetails, labels, steadyStateTimeout,
-            originalPods, startTime, executionLogCallback);
+        kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
+        kubernetesContainerService.waitForPodsToStop(
+            kubernetesConfig, labels, steadyStateTimeout, originalPods, startTime, executionLogCallback);
       } catch (Exception e) {
         executionLogCallback.saveExecutionLog("Error deleting controller: " + controllerName, LogLevel.ERROR);
         Misc.logAllMessages(e, executionLogCallback);
       }
     }
 
-    rollbackAutoscaler(encryptedDataDetails, executionLogCallback, kubernetesConfig, autoscalerYaml);
+    rollbackAutoscaler(executionLogCallback, kubernetesConfig, autoscalerYaml);
   }
 
-  private void rollbackAutoscaler(List<EncryptedDataDetail> encryptedDataDetails,
+  private void rollbackAutoscaler(
       ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig, String autoscalerYaml) {
     HorizontalPodAutoscaler hpa =
-        kubernetesContainerService.createOrReplaceAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerYaml);
+        kubernetesContainerService.createOrReplaceAutoscaler(kubernetesConfig, autoscalerYaml);
     if (hpa != null) {
       String hpaName = hpa.getMetadata().getName();
       executionLogCallback.saveExecutionLog("Rolled back horizontal pod autoscaler " + hpaName);
@@ -1446,9 +1410,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .build();
   }
 
-  private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, Service service, String loadBalancerIP, int timeoutInMinutes,
-      ExecutionLogCallback executionLogCallback) {
+  private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig, Service service, String loadBalancerIP,
+      int timeoutInMinutes, ExecutionLogCallback executionLogCallback) {
     String serviceName = service.getMetadata().getName();
     LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
     if (loadBalancer != null
@@ -1459,9 +1422,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         return timeLimiter.callWithTimeout(() -> {
           while (true) {
             LoadBalancerStatus loadBalancerStatus =
-                kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, serviceName)
-                    .getStatus()
-                    .getLoadBalancer();
+                kubernetesContainerService.getService(kubernetesConfig, serviceName).getStatus().getLoadBalancer();
             if (!loadBalancerStatus.getIngress().isEmpty()
                 && (isEmpty(loadBalancerIP) || loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp()))) {
               return getLoadBalancerEndpoint(executionLogCallback, serviceName, loadBalancerStatus);
@@ -1492,11 +1453,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return loadBalancerEndpoint;
   }
 
-  private String lastController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerNamePrefix) {
+  private String lastController(KubernetesConfig kubernetesConfig, String controllerNamePrefix) {
     final AtomicReference<HasMetadata> lastController = new AtomicReference<>();
     final AtomicInteger lastRevision = new AtomicInteger();
-    kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
+    kubernetesContainerService.listControllers(kubernetesConfig)
         .stream()
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
         .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
@@ -1510,18 +1470,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return lastController.get() != null ? lastController.get().getMetadata().getName() : null;
   }
 
-  private HasMetadata getLastDeployment(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, KubernetesSetupParams setupParams) {
+  private HasMetadata getLastDeployment(KubernetesConfig kubernetesConfig) {
     final AtomicReference<HasMetadata> lastDeployment = new AtomicReference<>();
     final AtomicInteger lastRevision = new AtomicInteger(-1);
-    kubernetesContainerService.getControllers(kubernetesConfig, encryptedDataDetails, lookupLabels)
-        .forEach(deployment -> {
-          int revision = getRevisionNumber(deployment);
-          if (revision > lastRevision.get()) {
-            lastDeployment.set(deployment);
-            lastRevision.set(revision);
-          }
-        });
+    kubernetesContainerService.getControllers(kubernetesConfig, lookupLabels).forEach(deployment -> {
+      int revision = getRevisionNumber(deployment);
+      if (revision > lastRevision.get()) {
+        lastDeployment.set(deployment);
+        lastRevision.set(revision);
+      }
+    });
     return lastDeployment.get();
   }
 
@@ -1531,10 +1489,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         : Integer.parseInt(kubernetesResource.getMetadata().getLabels().get(HARNESS_KUBERNETES_REVISION_LABEL_KEY));
   }
 
-  private HorizontalPodAutoscaler getAutoscaler(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
-    return kubernetesContainerService.getAutoscaler(
-        kubernetesConfig, encryptedDataDetails, name, KUBERNETES_V1.getVersionName());
+  private HorizontalPodAutoscaler getAutoscaler(KubernetesConfig kubernetesConfig, String name) {
+    return kubernetesContainerService.getAutoscaler(kubernetesConfig, name, KUBERNETES_V1.getVersionName());
   }
 
   private HasMetadata createKubernetesControllerDefinition(KubernetesContainerTask kubernetesContainerTask,
@@ -1775,28 +1731,25 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private void downsizeOldOrUnhealthy(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String containerServiceName, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
+  private void downsizeOldOrUnhealthy(KubernetesConfig kubernetesConfig, String containerServiceName,
+      KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     Map<String, Integer> activeCounts;
 
     if (setupParams.isUseNewLabelMechanism()) {
-      activeCounts = kubernetesContainerService.getActiveServiceCountsWithLabels(
-          kubernetesConfig, encryptedDataDetails, lookupLabels);
+      activeCounts = kubernetesContainerService.getActiveServiceCountsWithLabels(kubernetesConfig, lookupLabels);
     } else {
-      activeCounts = kubernetesContainerService.getActiveServiceCounts(
-          kubernetesConfig, encryptedDataDetails, containerServiceName);
+      activeCounts = kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, containerServiceName);
     }
 
     if (activeCounts.size() > 1) {
       List<String> unhealthyControllers = new ArrayList<>();
       executionLogCallback.saveExecutionLog("\nActive pods:");
       for (String activeControllerName : activeCounts.keySet()) {
-        List<Pod> pods =
-            kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, activeControllerName);
+        List<Pod> pods = kubernetesContainerService.getRunningPods(kubernetesConfig, activeControllerName);
         // Pass previous count of zero so that steady state check is performed
         List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
-            encryptedDataDetails, activeControllerName, 0, pods.size(), 1, pods, false, executionLogCallback, false,
-            clock.millis(), kubernetesConfig.getNamespace());
+            activeControllerName, 0, pods.size(), 1, pods, false, executionLogCallback, false, clock.millis(),
+            kubernetesConfig.getNamespace());
         boolean allContainersSuccess =
             containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
         if (!allContainersSuccess) {
@@ -1811,9 +1764,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       // Downsize all unhealthy
       for (String controllerName : unhealthyControllers) {
         executionLogCallback.saveExecutionLog("");
-        kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
-            setupParams.getClusterName(), controllerName, activeCounts.remove(controllerName), 0,
-            setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+        kubernetesContainerService.setControllerPodCount(kubernetesConfig, setupParams.getClusterName(), controllerName,
+            activeCounts.remove(controllerName), 0, setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
       }
 
       int maxAllowed = setupParams.isUseFixedInstances() ? setupParams.getFixedInstances() : maxInstances;
@@ -1827,9 +1779,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           int desiredCount = Math.max(previousCount - downsizeCount, 0);
 
           if (desiredCount < previousCount) {
-            kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
-                setupParams.getClusterName(), entry.getKey(), previousCount, desiredCount,
-                setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+            kubernetesContainerService.setControllerPodCount(kubernetesConfig, setupParams.getClusterName(),
+                entry.getKey(), previousCount, desiredCount, setupParams.getServiceSteadyStateTimeout(),
+                executionLogCallback);
           }
 
           downsizeCount -= previousCount - desiredCount;
@@ -1838,13 +1790,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private void cleanup(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String containerServiceName, ExecutionLogCallback executionLogCallback) {
+  private void cleanup(
+      KubernetesConfig kubernetesConfig, String containerServiceName, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("\nRemoving versions with no pods");
     Optional<Integer> revision = getRevisionFromControllerName(containerServiceName);
     if (revision.isPresent()) {
       String controllerNamePrefix = getPrefixFromControllerName(containerServiceName);
-      kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
+      kubernetesContainerService.listControllers(kubernetesConfig)
           .stream()
           .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
           .filter(ctrl -> !ctrl.getMetadata().getName().equals(containerServiceName))
@@ -1857,10 +1809,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               logger.info("Deleting old version: " + controllerName);
               executionLogCallback.saveExecutionLog("Deleting old version: " + controllerName);
               try {
-                kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, controllerName);
-                kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName);
-                kubernetesContainerService.deleteConfigMap(kubernetesConfig, encryptedDataDetails, controllerName);
-                kubernetesContainerService.deleteSecret(kubernetesConfig, encryptedDataDetails, controllerName);
+                kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
+                kubernetesContainerService.deleteAutoscaler(kubernetesConfig, controllerName);
+                kubernetesContainerService.deleteConfigMap(kubernetesConfig, controllerName);
+                kubernetesContainerService.deleteSecret(kubernetesConfig, controllerName);
               } catch (Exception e) {
                 Misc.logAllMessages(e, executionLogCallback);
               }
@@ -1869,14 +1821,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private void cleanupWithLabels(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      ExecutionLogCallback executionLogCallback) {
+  private void cleanupWithLabels(KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback) {
     if (isNotVersioned) {
       return;
     }
     executionLogCallback.saveExecutionLog("\nRemoving versions with no pods");
 
-    kubernetesContainerService.getControllers(kubernetesConfig, encryptedDataDetails, lookupLabels)
+    kubernetesContainerService.getControllers(kubernetesConfig, lookupLabels)
         .stream()
         .filter(ctrl
             -> kubernetesContainerService.getControllerPodCount(ctrl) == 0
@@ -1887,16 +1838,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           logger.info("Deleting old version: " + controllerName);
           executionLogCallback.saveExecutionLog("Deleting old version: " + controllerName);
           try {
-            kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, controllerName);
-            kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName);
-            kubernetesContainerService.deleteConfigMap(kubernetesConfig, encryptedDataDetails, controllerName);
-            kubernetesContainerService.deleteSecret(kubernetesConfig, encryptedDataDetails, controllerName);
+            kubernetesContainerService.deleteController(kubernetesConfig, controllerName);
+            kubernetesContainerService.deleteAutoscaler(kubernetesConfig, controllerName);
+            kubernetesContainerService.deleteConfigMap(kubernetesConfig, controllerName);
+            kubernetesContainerService.deleteSecret(kubernetesConfig, controllerName);
           } catch (Exception e) {
             Misc.logAllMessages(e, executionLogCallback);
           }
         });
 
-    kubernetesContainerService.getServices(kubernetesConfig, encryptedDataDetails, lookupLabels)
+    kubernetesContainerService.getServices(kubernetesConfig, lookupLabels)
         .stream()
         .filter(service -> !(service.getMetadata().getName().equals(getKubernetesServiceName(currentNamePrefix))))
         .filter(service
@@ -1905,26 +1856,23 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .filter(service
             -> !(service.getMetadata().getName().equals(
                 getKubernetesServiceName(getStageServiceName(currentNamePrefix)))))
-        .filter(service
-            -> kubernetesContainerService
-                    .getPods(kubernetesConfig, encryptedDataDetails, service.getSpec().getSelector())
-                    .size()
-                == 0)
+        .filter(
+            service -> isEmpty(kubernetesContainerService.getPods(kubernetesConfig, service.getSpec().getSelector())))
         .forEach(service -> {
           String serviceName = service.getMetadata().getName();
           logger.info("Deleting old service: " + serviceName);
           executionLogCallback.saveExecutionLog("Deleting old service: " + serviceName);
           try {
-            kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, serviceName);
-            kubernetesContainerService.deleteIngress(kubernetesConfig, encryptedDataDetails, serviceName);
+            kubernetesContainerService.deleteService(kubernetesConfig, serviceName);
+            kubernetesContainerService.deleteIngress(kubernetesConfig, serviceName);
           } catch (Exception e) {
             Misc.logAllMessages(e, executionLogCallback);
           }
         });
   }
 
-  private void cleanupStageDeployment(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
+  private void cleanupStageDeployment(
+      KubernetesConfig kubernetesConfig, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     String primaryServiceName = getPrimaryServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
     String stageServiceName = getStageServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
 
@@ -1932,9 +1880,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     Service stageService;
 
     try {
-      primaryService =
-          kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, primaryServiceName);
-      stageService = kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, stageServiceName);
+      primaryService = kubernetesContainerService.getService(kubernetesConfig, primaryServiceName);
+      stageService = kubernetesContainerService.getService(kubernetesConfig, stageServiceName);
     } catch (Exception e) {
       Misc.logAllMessages(e, executionLogCallback);
       return;
@@ -1961,13 +1908,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       String controllerName = KubernetesConvention.getControllerName(
           setupParams.getControllerNamePrefix(), Integer.parseInt(stageRevision));
 
-      Optional<Integer> podCount =
-          kubernetesContainerService.getControllerPodCount(kubernetesConfig, encryptedDataDetails, controllerName);
+      Optional<Integer> podCount = kubernetesContainerService.getControllerPodCount(kubernetesConfig, controllerName);
 
       if (podCount.isPresent() && podCount.get() > 0) {
-        kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
-            setupParams.getClusterName(), controllerName, podCount.orElse(1), 0,
-            setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+        kubernetesContainerService.setControllerPodCount(kubernetesConfig, setupParams.getClusterName(), controllerName,
+            podCount.orElse(1), 0, setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
       } else {
         executionLogCallback.saveExecutionLog("No Pods found for Stage Deployment. Continue..");
       }
@@ -1977,7 +1922,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private void printIngressRules(
-      Ingress ingress, ExecutionLogCallback executionLogCallback, StringBuffer summaryOutput) {
+      Ingress ingress, ExecutionLogCallback executionLogCallback, StringBuilder summaryOutput) {
     String path;
     String port;
     String serviceName;
@@ -2004,10 +1949,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (isNotEmpty(serviceCounts)) {
       for (String[] serviceCount : serviceCounts) {
         Optional<Integer> controllerPodCount =
-            kubernetesContainerService.getControllerPodCount(kubernetesConfig, null, serviceCount[0]);
+            kubernetesContainerService.getControllerPodCount(kubernetesConfig, serviceCount[0]);
         if (controllerPodCount.isPresent()) {
-          kubernetesContainerService.setControllerPodCount(kubernetesConfig, new ArrayList<>(), clusterName,
-              serviceCount[0], controllerPodCount.get(), Integer.parseInt(serviceCount[1]), serviceSteadyStateTimeout,
+          kubernetesContainerService.setControllerPodCount(kubernetesConfig, clusterName, serviceCount[0],
+              controllerPodCount.get(), Integer.parseInt(serviceCount[1]), serviceSteadyStateTimeout,
               executionLogCallback);
         }
       }
@@ -2015,10 +1960,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     if (isNotBlank(newControllerName)) {
       Optional<Integer> controllerPodCount =
-          kubernetesContainerService.getControllerPodCount(kubernetesConfig, null, newControllerName);
+          kubernetesContainerService.getControllerPodCount(kubernetesConfig, newControllerName);
       if (controllerPodCount.isPresent()) {
-        kubernetesContainerService.setControllerPodCount(kubernetesConfig, new ArrayList<>(), clusterName,
-            newControllerName, controllerPodCount.get(), 0, serviceSteadyStateTimeout, executionLogCallback);
+        kubernetesContainerService.setControllerPodCount(kubernetesConfig, clusterName, newControllerName,
+            controllerPodCount.get(), 0, serviceSteadyStateTimeout, executionLogCallback);
       }
     }
   }

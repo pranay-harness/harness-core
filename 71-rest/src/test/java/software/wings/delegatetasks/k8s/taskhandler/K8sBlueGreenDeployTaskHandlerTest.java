@@ -150,6 +150,29 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     assertThat(k8sTaskResponse.getStageServiceName()).isEqualTo(stageService().getResourceId().getName());
     assertThat(k8sTaskResponse.getReleaseNumber()).isEqualTo(0);
     assertThat(((Release) on(spyHandler).get("currentRelease")).getManagedWorkloadRevision()).isEqualTo("latest-rev");
+
+    K8sBlueGreenDeployTaskParameters deployTaskParams =
+        K8sBlueGreenDeployTaskParameters.builder().releaseName("releaseName-statusCheck").build();
+    K8sDelegateTaskParams taskParams = K8sDelegateTaskParams.builder().build();
+
+    doReturn(false)
+        .when(k8sTaskHelper)
+        .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+    K8sTaskExecutionResponse response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    verify(kubernetesContainerService, times(2))
+        .saveReleaseHistory(any(KubernetesConfig.class), eq("releaseName-statusCheck"), anyString());
+
+    deployTaskParams.setReleaseName("releaseName-apply");
+    doReturn(false)
+        .when(k8sTaskHelper)
+        .applyManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    verify(kubernetesContainerService)
+        .saveReleaseHistory(any(KubernetesConfig.class), eq("releaseName-apply"), anyString());
   }
 
   @InjectMocks private K8sBlueGreenDeployTaskHandler k8sBlueGreenDeployTaskHandler;
@@ -166,7 +189,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
     doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
-    when(kubernetesContainerService.fetchReleaseHistory(any(), any(), any())).thenReturn(null);
+    when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     doNothing().when(k8sTaskHelper).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(emptyList());
@@ -177,7 +200,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
-    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any(), any());
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
 
@@ -193,7 +216,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
     doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
-    when(kubernetesContainerService.fetchReleaseHistory(any(), any(), any())).thenReturn(null);
+    when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
     doNothing().when(k8sTaskHelper).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(emptyList());
@@ -204,7 +227,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
-    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any(), any());
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
 
@@ -237,13 +260,13 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     on(k8sBlueGreenDeployTaskHandler).set("resources", kubernetesResources);
     on(k8sBlueGreenDeployTaskHandler).set("releaseHistory", releaseHistory);
 
-    when(kubernetesContainerService.getService(null, emptyList(), "servicename")).thenReturn(service);
+    when(kubernetesContainerService.getService(null, "servicename")).thenReturn(service);
 
     boolean result = k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(
         K8sBlueGreenDeployTaskParameters.builder().build(), delegateTaskParams, executionLogCallback);
     assertThat(result).isFalse();
 
-    verify(kubernetesContainerService, times(2)).getService(any(), any(), any());
+    verify(kubernetesContainerService, times(2)).getService(any(), any());
     verify(releaseHistory, times(0)).createNewRelease(any());
     verify(executionLogCallback, times(1))
         .saveExecutionLog(
@@ -373,7 +396,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     clusterPrimary.setSpec(spec);
     doReturn(clusterPrimary)
         .when(kubernetesContainerService)
-        .getService(any(KubernetesConfig.class), anyList(), eq(primaryService().getResourceId().getName()));
+        .getService(any(KubernetesConfig.class), eq(primaryService().getResourceId().getName()));
     on(k8sBlueGreenDeployTaskHandler)
         .set("resources", new ArrayList<>(asList(primaryService(), stageService(), deployment())));
     on(k8sBlueGreenDeployTaskHandler).set("releaseHistory", ReleaseHistory.createNew());

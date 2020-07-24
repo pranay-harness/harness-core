@@ -3,8 +3,6 @@ package software.wings.cloudprovider.gke;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -13,7 +11,6 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.VersionInfo;
-import io.harness.security.encryption.EncryptedDataDetail;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
@@ -30,145 +27,110 @@ import java.util.Optional;
  * Created by brett on 2/10/17.
  */
 public interface KubernetesContainerService {
-  List<Namespace> listNamespaces(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  HasMetadata createOrReplaceController(KubernetesConfig kubernetesConfig, HasMetadata definition);
 
-  HasMetadata createOrReplaceController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, HasMetadata definition);
+  HasMetadata getController(KubernetesConfig kubernetesConfig, String name);
 
-  HasMetadata getController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  @SuppressWarnings("squid:S1452")
+  List<? extends HasMetadata> getControllers(KubernetesConfig kubernetesConfig, Map<String, String> labels);
 
-  List<? extends HasMetadata> getControllers(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
+  void validate(KubernetesConfig kubernetesConfig);
+  void validate(KubernetesConfig kubernetesConfig, boolean cloudCostEnabled);
 
-  void validate(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptionDetails);
-  void validate(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptionDetails, boolean cloudCostEnabled);
+  @SuppressWarnings("squid:S1452") List<? extends HasMetadata> listControllers(KubernetesConfig kubernetesConfig);
 
-  List<? extends HasMetadata> listControllers(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  void deleteController(KubernetesConfig kubernetesConfig, String name);
 
-  void deleteController(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  HorizontalPodAutoscaler createOrReplaceAutoscaler(KubernetesConfig kubernetesConfig, String autoscalerYaml);
 
-  HorizontalPodAutoscaler createOrReplaceAutoscaler(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String autoscalerYaml);
+  HorizontalPodAutoscaler getAutoscaler(KubernetesConfig kubernetesConfig, String name, String apiVersion);
 
-  HorizontalPodAutoscaler getAutoscaler(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String name, String apiVersion);
+  void deleteAutoscaler(KubernetesConfig kubernetesConfig, String name);
 
-  void deleteAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String clusterName,
+      String controllerName, int previousCount, int count, int serviceSteadyStateTimeout,
+      ExecutionLogCallback executionLogCallback);
 
-  List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, int previousCount,
-      int count, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
+  @SuppressWarnings("squid:S00107")
+  List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig, String controllerName,
+      int previousCount, int desiredCount, int serviceSteadyStateTimeout, List<Pod> originalPods,
+      boolean isNotVersioned, ExecutionLogCallback executionLogCallback, boolean wait, long startTime,
+      String namespace);
 
-  List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned,
-      ExecutionLogCallback executionLogCallback, boolean wait, long startTime, String namespace);
-
-  Optional<Integer> getControllerPodCount(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  Optional<Integer> getControllerPodCount(KubernetesConfig kubernetesConfig, String name);
 
   Integer getControllerPodCount(HasMetadata controller);
 
   PodTemplateSpec getPodTemplateSpec(HasMetadata controller);
 
-  LinkedHashMap<String, Integer> getActiveServiceCounts(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName);
+  LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig, String containerServiceName);
 
   LinkedHashMap<String, Integer> getActiveServiceCountsWithLabels(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
+      KubernetesConfig kubernetesConfig, Map<String, String> labels);
 
-  Map<String, String> getActiveServiceImages(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, String imagePrefix);
+  Map<String, String> getActiveServiceImages(
+      KubernetesConfig kubernetesConfig, String containerServiceName, String imagePrefix);
 
-  Service createOrReplaceService(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Service definition);
+  Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition);
 
-  Service getService(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String namespace);
+  Service getService(KubernetesConfig kubernetesConfig, String name, String namespace);
 
-  Service getService(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  Service getService(KubernetesConfig kubernetesConfig, String name);
 
-  List<Service> getServices(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
+  List<Service> getServices(KubernetesConfig kubernetesConfig, Map<String, String> labels);
 
-  List<Service> listServices(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  void deleteService(KubernetesConfig kubernetesConfig, String name);
 
-  void deleteService(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  Ingress createOrReplaceIngress(KubernetesConfig kubernetesConfig, Ingress definition);
 
-  Ingress createOrReplaceIngress(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Ingress definition);
+  Ingress getIngress(KubernetesConfig kubernetesConfig, String name);
 
-  Ingress getIngress(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  void deleteIngress(KubernetesConfig kubernetesConfig, String name);
 
-  void deleteIngress(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  ConfigMap createOrReplaceConfigMap(KubernetesConfig kubernetesConfig, ConfigMap definition);
 
-  ConfigMap createOrReplaceConfigMap(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, ConfigMap definition);
+  ConfigMap getConfigMap(KubernetesConfig kubernetesConfig, String name);
 
-  ConfigMap getConfigMap(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  void deleteConfigMap(KubernetesConfig kubernetesConfig, String name);
 
-  void deleteConfigMap(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  DestinationRule getIstioDestinationRule(KubernetesConfig kubernetesConfig, String name);
 
-  DestinationRule getIstioDestinationRule(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  IstioResource createOrReplaceIstioResource(KubernetesConfig kubernetesConfig, IstioResource definition);
 
-  IstioResource createOrReplaceIstioResource(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition);
+  void deleteIstioDestinationRule(KubernetesConfig kubernetesConfig, String name);
 
-  void deleteIstioDestinationRule(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  int getTrafficPercent(KubernetesConfig kubernetesConfig, String controllerName);
 
-  int getTrafficPercent(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName);
+  Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig, String containerServiceName);
 
-  Map<String, Integer> getTrafficWeights(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName);
+  void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig);
 
-  void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  Secret getSecret(KubernetesConfig kubernetesConfig, String secretName);
 
-  Secret getSecret(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String secretName);
+  void deleteSecret(KubernetesConfig kubernetesConfig, String name);
 
-  void deleteSecret(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, Secret secret);
 
-  Secret createOrReplaceSecret(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Secret secret);
+  List<Pod> getPods(KubernetesConfig kubernetesConfig, Map<String, String> labels);
 
-  List<Pod> getPods(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels);
+  List<Pod> getRunningPods(KubernetesConfig kubernetesConfig, String controllerName);
 
-  List<Pod> getRunningPods(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName);
+  void waitForPodsToStop(KubernetesConfig kubernetesConfig, Map<String, String> labels, int serviceSteadyStateTimeout,
+      List<Pod> originalPods, long startTime, ExecutionLogCallback executionLogCallback);
 
-  NodeList getNodes(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  String fetchReleaseHistory(KubernetesConfig kubernetesConfig, String infraMappingId);
 
-  void waitForPodsToStop(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      Map<String, String> labels, int serviceSteadyStateTimeout, List<Pod> originalPods, long startTime,
-      ExecutionLogCallback executionLogCallback);
+  void saveReleaseHistory(KubernetesConfig kubernetesConfig, String infraMappingxId, String releaseHistory);
 
-  String fetchReleaseHistory(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String infraMappingId);
+  List<Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);
 
-  void saveReleaseHistory(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String infraMappingId, String releaseHistory);
+  HasMetadata getController(KubernetesConfig kubernetesConfig, String name, String namespace);
 
-  List<Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String namespace, Map<String, String> labels);
+  void deleteIstioVirtualService(KubernetesConfig kubernetesConfig, String name);
 
-  HasMetadata getController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name, String namespace);
-
-  void deleteIstioVirtualService(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
-
-  VirtualService getIstioVirtualService(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+  VirtualService getIstioVirtualService(KubernetesConfig kubernetesConfig, String name);
 
   CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource);
 
-  VersionInfo getVersion(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
+  VersionInfo getVersion(KubernetesConfig kubernetesConfig);
 }

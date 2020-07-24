@@ -10,6 +10,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
@@ -18,6 +19,11 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
 import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
@@ -40,15 +46,20 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.service.intfc.WorkflowService;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   @Mock private GkeClusterService gkeClusterService;
   @Mock private KubernetesContainerService kubernetesContainerService;
+  @Mock private ExecutionLogCallback executionLogCallback;
+  @InjectMocks @Inject private WorkflowService workflowService;
 
   @InjectMocks private KubernetesResizeCommandUnit kubernetesResizeCommandUnit = new KubernetesResizeCommandUnit();
 
@@ -58,6 +69,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
                                                   .password("password".toCharArray())
                                                   .namespace("default")
                                                   .build();
+
   private KubernetesResizeParamsBuilder resizeParamsBuilder = aKubernetesResizeParams()
                                                                   .withClusterName(CLUSTER_NAME)
                                                                   .withNamespace("default")
@@ -77,10 +89,9 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
     when(gkeClusterService.getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString()))
         .thenReturn(kubernetesConfig);
     when(kubernetesContainerService.setControllerPodCount(
-             eq(kubernetesConfig), any(), eq(CLUSTER_NAME), anyString(), anyInt(), anyInt(), anyInt(), any()))
-        .thenAnswer(i -> buildContainerInfos((Integer) i.getArguments()[5], (Integer) i.getArguments()[4]));
-    when(kubernetesContainerService.getController(any(), any(), any()))
-        .thenReturn(new ReplicationControllerBuilder().build());
+             eq(kubernetesConfig), eq(CLUSTER_NAME), anyString(), anyInt(), anyInt(), anyInt(), any()))
+        .thenAnswer(i -> buildContainerInfos((Integer) i.getArguments()[4], (Integer) i.getArguments()[3]));
+    when(kubernetesContainerService.getController(any(), any())).thenReturn(new ReplicationControllerBuilder().build());
   }
 
   private List<ContainerInfo> buildContainerInfos(int count, int previousCount) {
@@ -100,7 +111,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldExecuteFail() {
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
+    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), anyString()))
         .thenReturn(Optional.empty());
     KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
                                               .withContainerServiceName("rc-name-0")
@@ -279,9 +290,9 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   private ResizeCommandUnitExecutionData execute(LinkedHashMap<String, Integer> activeServiceCounts,
       int controllerPodCount, String controllerName, boolean useFixedInstances, int maxInstances, int fixedInstances,
       int instanceCount, InstanceUnitType instanceUnitType) {
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
+    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), anyString()))
         .thenReturn(Optional.of(controllerPodCount));
-    when(kubernetesContainerService.getActiveServiceCountsWithLabels(eq(kubernetesConfig), any(), anyMap()))
+    when(kubernetesContainerService.getActiveServiceCountsWithLabels(eq(kubernetesConfig), anyMap()))
         .thenReturn(activeServiceCounts);
     KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
                                               .withContainerServiceName(controllerName)
@@ -308,7 +319,9 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
                                               .withContainerServiceName("rc-name-0")
                                               .withUseFixedInstances(true)
                                               .withUseIstioRouteRule(true)
-                                              .withInstanceCount(1)
+                                              .withInstanceUnitType(PERCENTAGE)
+                                              .withInstanceCount(100)
+                                              .withUseAutoscaler(true)
                                               .build();
 
     CommandExecutionContext context = contextBuilder.but().containerResizeParams(resizeParams).build();
@@ -318,6 +331,46 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
       fail("Should not reach here.");
     } catch (Exception e) {
       assertThat(e.getMessage()).isEqualTo("Virtual Service [rc-name] not found");
+      verify(kubernetesContainerService).createOrReplaceAutoscaler(any(KubernetesConfig.class), anyString());
     }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetTrafficWeights() {
+    KubernetesResizeParams resizeParams =
+        resizeParamsBuilder.but().withContainerServiceName("containerServiceName").withInstanceCount(100).build();
+    CommandExecutionContext context = contextBuilder.but().containerResizeParams(resizeParams).build();
+    ContextData contextData = new ContextData(context);
+
+    Map<String, Integer> trafficWeights = kubernetesResizeCommandUnit.getTrafficWeights(contextData);
+    assertThat(trafficWeights).isEmpty();
+
+    when(kubernetesContainerService.getTrafficWeights(any(KubernetesConfig.class), eq("containerServiceName")))
+        .thenReturn(ImmutableMap.of("containerServiceName", 30));
+    resizeParams.setUseIstioRouteRule(true);
+    trafficWeights = kubernetesResizeCommandUnit.getTrafficWeights(contextData);
+    assertThat(trafficWeights).containsKey("containerServiceName");
+    assertThat(trafficWeights.get("containerServiceName")).isEqualTo(30);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testDeleteAutoScalarIsCalled() throws IOException {
+    String yamlHPA = workflowService.getHPAYamlStringWithCustomMetric(2, 10, 60);
+    HorizontalPodAutoscaler horizontalPodAutoscaler = KubernetesHelper.loadYaml(yamlHPA);
+    when(kubernetesContainerService.getAutoscaler(any(KubernetesConfig.class), anyString(), anyString()))
+        .thenReturn(horizontalPodAutoscaler);
+
+    resizeParamsBuilder.withUseAutoscaler(true);
+    resizeParamsBuilder.withRollback(true);
+
+    CommandExecutionContext context = contextBuilder.but().containerResizeParams(resizeParamsBuilder.build()).build();
+    ContextData contextData = new ContextData(context);
+    kubernetesResizeCommandUnit.executeResize(
+        contextData, ContainerServiceData.builder().name("target-name").build(), executionLogCallback);
+    verify(kubernetesContainerService).deleteAutoscaler(any(KubernetesConfig.class), eq("target-name"));
   }
 }

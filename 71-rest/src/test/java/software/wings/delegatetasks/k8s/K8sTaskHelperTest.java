@@ -224,7 +224,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     Map<String, String> data = new HashMap<>();
     configMap.setData(data);
-    doReturn(configMap).when(mockKubernetesContainerService).getConfigMap(any(), anyList(), anyString());
+    doReturn(configMap).when(mockKubernetesContainerService).getConfigMap(any(), anyString());
 
     // Empty release history
     List<KubernetesResourceId> kubernetesResourceIds = helper.fetchAllResourcesForRelease(
@@ -275,7 +275,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
         K8sDeleteTaskParameters.builder().releaseName("releaseName").build();
     KubernetesConfig config = KubernetesConfig.builder().build();
 
-    doReturn(null).when(mockKubernetesContainerService).getConfigMap(config, emptyList(), "releaseName");
+    doReturn(null).when(mockKubernetesContainerService).getConfigMap(config, "releaseName");
     List<KubernetesResourceId> kubernetesResourceIds =
         helper.fetchAllResourcesForRelease(k8sDeleteTaskParameters, config, logCallback);
     assertThat(kubernetesResourceIds).isEmpty();
@@ -293,7 +293,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     ConfigMap configMap = new ConfigMap();
     configMap.setKind(ConfigMap.name());
-    doReturn(configMap).when(mockKubernetesContainerService).getConfigMap(any(), anyList(), anyString());
+    doReturn(configMap).when(mockKubernetesContainerService).getConfigMap(any(), anyString());
     List<KubernetesResourceId> kubernetesResourceIdList = getKubernetesResourceIdList();
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.setReleases(
@@ -1593,7 +1593,7 @@ public class K8sTaskHelperTest extends WingsBaseTest {
 
     doReturn(existingPods)
         .when(mockKubernetesContainerService)
-        .getRunningPodsWithLabels(config, emptyList(), "default", labelsQuery);
+        .getRunningPodsWithLabels(config, "default", labelsQuery);
     doAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call())
         .when(mockTimeLimiter)
         .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());

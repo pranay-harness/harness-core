@@ -1,6 +1,5 @@
 package software.wings.delegatetasks;
 
-import static java.util.Collections.emptyList;
 import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
 import static software.wings.sm.states.KubernetesSwapServiceSelectors.KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME;
 
@@ -13,7 +12,6 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTaskPackage;
@@ -25,7 +23,6 @@ import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
 import software.wings.utils.Misc;
 
-import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -60,14 +57,13 @@ public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnable
     try {
       KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(
           kubernetesSwapServiceSelectorsParams.getContainerServiceParams());
-      List<EncryptedDataDetail> encryptedDataDetails = emptyList();
 
       Service service1 = null;
       Service service2 = null;
-      service1 = kubernetesContainerService.getService(
-          kubernetesConfig, encryptedDataDetails, kubernetesSwapServiceSelectorsParams.getService1());
-      service2 = kubernetesContainerService.getService(
-          kubernetesConfig, encryptedDataDetails, kubernetesSwapServiceSelectorsParams.getService2());
+      service1 =
+          kubernetesContainerService.getService(kubernetesConfig, kubernetesSwapServiceSelectorsParams.getService1());
+      service2 =
+          kubernetesContainerService.getService(kubernetesConfig, kubernetesSwapServiceSelectorsParams.getService2());
 
       if (service1 == null) {
         executionLogCallback.saveExecutionLog(
@@ -101,11 +97,9 @@ public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnable
       service1.getSpec().setSelector(serviceTwoSelectors);
       service2.getSpec().setSelector(serviceOneSelectors);
 
-      Service serviceOneUpdated =
-          kubernetesContainerService.createOrReplaceService(kubernetesConfig, encryptedDataDetails, service1);
+      Service serviceOneUpdated = kubernetesContainerService.createOrReplaceService(kubernetesConfig, service1);
 
-      Service serviceTwoUpdated =
-          kubernetesContainerService.createOrReplaceService(kubernetesConfig, encryptedDataDetails, service2);
+      Service serviceTwoUpdated = kubernetesContainerService.createOrReplaceService(kubernetesConfig, service2);
 
       executionLogCallback.saveExecutionLog(
           String.format("%nUpdated Selectors for Service One : [name:%s]%n%s",

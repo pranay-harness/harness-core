@@ -59,7 +59,6 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -119,8 +118,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
         client, resources, k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, Apply));
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-          k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      kubernetesContainerService.saveReleaseHistory(
+          kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
       return getFailureResponse();
     }
 
@@ -128,8 +127,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
         k8sTaskHelper.getExecutionLogCallback(k8sCanaryDeployTaskParameters, WaitForSteadyState));
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-          k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+      kubernetesContainerService.saveReleaseHistory(
+          kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
       return getFailureResponse();
     }
 
@@ -139,8 +138,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     wrapUp(k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, WrapUp));
 
-    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, Collections.emptyList(),
-        k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
+    kubernetesContainerService.saveReleaseHistory(
+        kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     K8sCanaryDeployResponse k8sCanaryDeployResponse =
         K8sCanaryDeployResponse.builder()
@@ -199,7 +198,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
     String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-        kubernetesConfig, Collections.emptyList(), k8sCanaryDeployTaskParameters.getReleaseName());
+        kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName());
 
     releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                : ReleaseHistory.createFromData(releaseHistoryData);

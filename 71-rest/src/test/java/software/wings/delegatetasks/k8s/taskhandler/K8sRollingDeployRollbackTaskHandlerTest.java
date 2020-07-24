@@ -12,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -95,16 +94,14 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFirstDeploymentFailsRollBack() throws Exception {
     on(k8sRollingDeployRollbackTaskHandler).set("releaseHistory", null);
-    doReturn("")
-        .when(kubernetesContainerService)
-        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
+    doReturn("").when(kubernetesContainerService).fetchReleaseHistory(any(KubernetesConfig.class), anyString());
     k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
         K8sRollingDeployRollbackTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
 
     assertThat((String) on(k8sRollingDeployRollbackTaskHandler).get("release")).isNull();
     assertThat((String) on(k8sRollingDeployRollbackTaskHandler).get("releaseHistory")).isNull();
     verify(taskHelper, never()).doStatusCheck(any(), any(), any(), any());
-    verify(kubernetesContainerService, never()).saveReleaseHistory(any(), any(), any(), any());
+    verify(kubernetesContainerService, never()).saveReleaseHistory(any(), any(), any());
     final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     verify(logCallback, times(1)).saveExecutionLog(captor.capture(), eq(INFO), eq(CommandExecutionStatus.SUCCESS));
     assertThat(captor.getValue())
@@ -196,8 +193,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
         K8sRollingDeployRollbackTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
-    verify(kubernetesContainerService, times(1))
-        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(KubernetesConfig.class), anyString());
   }
 
   private void testRollBackToSpecificRelease() throws Exception {

@@ -127,7 +127,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
-    when(kubernetesContainerService.fetchReleaseHistory(any(), any(), any())).thenReturn(null);
+    when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
     doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(Collections.emptyList());
@@ -142,7 +142,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1)).readManifests(any(), any());
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
-    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any(), any());
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
 
@@ -160,7 +160,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
     when(k8sTaskHelper.readManifests(any(), any())).thenReturn(Collections.emptyList());
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
-    when(kubernetesContainerService.fetchReleaseHistory(any(), any(), any())).thenReturn(null);
+    when(kubernetesContainerService.fetchReleaseHistory(any(), any())).thenReturn(null);
     doNothing().when(k8sTaskHelper).deleteSkippedManifestFiles(any(), any());
     when(k8sTaskHelper.updateDestinationRuleManifestFilesWithSubsets(any(), any(), any(), any())).thenReturn(null);
     when(k8sTaskHelper.updateVirtualServiceManifestFilesWithRoutesForCanary(any(), any(), any())).thenReturn(null);
@@ -172,7 +172,7 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).updateDestinationRuleManifestFilesWithSubsets(any(), any(), any(), any());
     verify(k8sTaskHelper, times(1)).deleteSkippedManifestFiles(any(), any());
-    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any(), any());
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
   }
 
@@ -417,7 +417,18 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
     assertThat(failureResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
 
     verify(kubernetesContainerService, times(2))
-        .saveReleaseHistory(any(KubernetesConfig.class), anyList(), anyString(), anyString());
+        .saveReleaseHistory(any(KubernetesConfig.class), anyString(), anyString());
+
+    doReturn(false)
+        .when(k8sTaskHelper)
+        .applyManifests(
+            any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+
+    K8sTaskExecutionResponse taskExecutionResponse =
+        handler.executeTask(K8sCanaryDeployTaskParameters.builder().releaseName("release-Name").build(),
+            K8sDelegateTaskParams.builder().build());
+    assertThat(taskExecutionResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    verify(kubernetesContainerService).saveReleaseHistory(any(KubernetesConfig.class), eq("release-Name"), anyString());
   }
 
   @Test

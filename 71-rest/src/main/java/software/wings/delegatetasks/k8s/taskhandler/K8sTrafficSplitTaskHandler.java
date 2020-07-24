@@ -8,7 +8,6 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
-import static java.util.Collections.emptyList;
 import static software.wings.beans.Log.LogColor.White;
 import static software.wings.beans.Log.LogWeight.Bold;
 import static software.wings.beans.Log.color;
@@ -137,7 +136,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
         color("\nRelease name: " + k8sTrafficSplitTaskParameters.getReleaseName(), White, Bold));
 
     String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-        kubernetesConfig, emptyList(), k8sTrafficSplitTaskParameters.getReleaseName());
+        kubernetesConfig, k8sTrafficSplitTaskParameters.getReleaseName());
 
     if (StringUtils.isEmpty(releaseHistoryData)) {
       executionLogCallback.saveExecutionLog("\nNo release history found for release ");
@@ -190,8 +189,8 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
       updateVirtualServiceWithDestinationWeights(k8sTrafficSplitTaskParameters, executionLogCallback);
       executionLogCallback.saveExecutionLog("\n" + KubernetesHelper.toYaml(virtualService));
 
-      virtualService = (VirtualService) kubernetesContainerService.createOrReplaceIstioResource(
-          kubernetesConfig, emptyList(), virtualService);
+      virtualService =
+          (VirtualService) kubernetesContainerService.createOrReplaceIstioResource(kubernetesConfig, virtualService);
 
       executionLogCallback.saveExecutionLog("\nDone.", INFO, SUCCESS);
       return true;
@@ -204,8 +203,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
   }
 
   private boolean findVirtualServiceByName(String virtualServiceName, ExecutionLogCallback executionLogCallback) {
-    virtualService =
-        kubernetesContainerService.getIstioVirtualService(kubernetesConfig, emptyList(), virtualServiceName);
+    virtualService = kubernetesContainerService.getIstioVirtualService(kubernetesConfig, virtualServiceName);
     if (virtualService == null) {
       executionLogCallback.saveExecutionLog(
           "\nNo VirtualService found with name " + virtualServiceName, ERROR, FAILURE);
@@ -244,7 +242,7 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
     for (KubernetesResourceId resourceId : resourceIds) {
       if (Kind.VirtualService.name().equals(resourceId.getKind())) {
         VirtualService istioVirtualService =
-            kubernetesContainerService.getIstioVirtualService(kubernetesConfig, emptyList(), resourceId.getName());
+            kubernetesContainerService.getIstioVirtualService(kubernetesConfig, resourceId.getName());
 
         if (istioVirtualService != null && istioVirtualService.getMetadata() != null
             && isNotEmpty(istioVirtualService.getMetadata().getAnnotations())) {

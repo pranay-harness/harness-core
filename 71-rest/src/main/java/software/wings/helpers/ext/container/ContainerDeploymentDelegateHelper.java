@@ -313,21 +313,18 @@ public class ContainerDeploymentDelegateHelper {
   @NotNull
   public List<Pod> getExistingPodsByLabels(
       ContainerServiceParams containerServiceParams, KubernetesConfig kubernetesConfig, Map<String, String> labels) {
-    return emptyIfNull(
-        kubernetesContainerService.getPods(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels));
+    return emptyIfNull(kubernetesContainerService.getPods(kubernetesConfig, labels));
   }
 
   public int getControllerCountByLabels(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
-    List<? extends HasMetadata> controllers =
-        kubernetesContainerService.getControllers(kubernetesConfig, emptyList(), labels);
+    List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(kubernetesConfig, labels);
 
     return controllers.size();
   }
 
   public List<ContainerInfo> getContainerInfosWhenReadyByLabels(KubernetesConfig kubernetesConfig,
       ExecutionLogCallback executionLogCallback, Map<String, String> labels, List<Pod> existingPods) {
-    List<? extends HasMetadata> controllers =
-        kubernetesContainerService.getControllers(kubernetesConfig, emptyList(), labels);
+    List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(kubernetesConfig, labels);
 
     executionLogCallback.saveExecutionLog(format("Deployed Controllers [%s]:", controllers.size()));
     controllers.forEach(controller
@@ -344,7 +341,7 @@ public class ContainerDeploymentDelegateHelper {
     }
 
     KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-    VersionInfo versionInfo = kubernetesContainerService.getVersion(kubernetesConfig, emptyList());
+    VersionInfo versionInfo = kubernetesContainerService.getVersion(kubernetesConfig);
     executionLogCallback.saveExecutionLog(
         format("Kubernetess version [%s.%s]", versionInfo.getMajor(), versionInfo.getMinor()));
     int versionMajorMin = Integer.parseInt(escapeNonDigitsAndTruncate(versionInfo.getMajor() + versionInfo.getMinor()));
@@ -367,7 +364,7 @@ public class ContainerDeploymentDelegateHelper {
             boolean isNotVersioned =
                 controller.getKind().equals("DaemonSet") || controller.getKind().equals("StatefulSet");
             return kubernetesContainerService
-                .getContainerInfosWhenReady(kubernetesConfig, emptyList(), controller.getMetadata().getName(), 0, -1,
+                .getContainerInfosWhenReady(kubernetesConfig, controller.getMetadata().getName(), 0, -1,
                     (int) TimeUnit.MINUTES.toMinutes(30), existingPods, isNotVersioned, executionLogCallback, true, 0,
                     kubernetesConfig.getNamespace())
                 .stream();

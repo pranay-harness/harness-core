@@ -143,17 +143,15 @@ public class ContainerServiceTest extends WingsBaseTest {
                                           .build();
     when(gkeClusterService.getCluster(gcpParams.getSettingAttribute(), emptyList(), CLUSTER_NAME, "default"))
         .thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList()))
+    when(kubernetesContainerService.listControllers(kubernetesConfig))
         .thenReturn((List) singletonList(replicationController));
-    when(kubernetesContainerService.getController(eq(kubernetesConfig), anyObject(), anyString()))
-        .thenReturn(replicationController);
-    when(kubernetesContainerService.getServices(eq(kubernetesConfig), anyObject(), anyObject()))
+    when(kubernetesContainerService.getController(eq(kubernetesConfig), anyString())).thenReturn(replicationController);
+    when(kubernetesContainerService.getServices(eq(kubernetesConfig), anyObject()))
         .thenReturn(singletonList(kubernetesService));
-    when(kubernetesContainerService.getPods(eq(kubernetesConfig), anyObject(), anyObject()))
-        .thenReturn(singletonList(pod));
-    when(kubernetesContainerService.getControllers(eq(kubernetesConfig), anyObject(), anyObject()))
+    when(kubernetesContainerService.getPods(eq(kubernetesConfig), anyObject())).thenReturn(singletonList(pod));
+    when(kubernetesContainerService.getControllers(eq(kubernetesConfig), anyObject()))
         .thenReturn((List) singletonList(replicationController));
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), anyObject(), anyString()))
+    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), anyString()))
         .thenReturn(Optional.of(2));
     when(kubernetesContainerService.getControllerPodCount(any(ReplicationController.class))).thenReturn(2);
     when(kubernetesContainerService.getPodTemplateSpec(replicationController)).thenReturn(podTemplateSpec);

@@ -75,12 +75,10 @@ public class KubernetesContainerServiceTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldValidateWithAndWithoutCE() {
-    assertThatCode(() -> kubernetesContainerService.validate(KUBERNETES_CONFIG, Collections.emptyList(), false))
-        .doesNotThrowAnyException();
+    assertThatCode(() -> kubernetesContainerService.validate(KUBERNETES_CONFIG, false)).doesNotThrowAnyException();
 
     doNothing().when(kubernetesContainerService).validateCEPermissions(any());
-    assertThatCode(() -> kubernetesContainerService.validate(KUBERNETES_CONFIG, Collections.emptyList(), true))
-        .doesNotThrowAnyException();
+    assertThatCode(() -> kubernetesContainerService.validate(KUBERNETES_CONFIG, true)).doesNotThrowAnyException();
   }
 
   @Test

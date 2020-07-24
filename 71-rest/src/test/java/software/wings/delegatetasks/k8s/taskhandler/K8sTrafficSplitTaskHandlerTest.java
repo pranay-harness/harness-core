@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -82,10 +81,9 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
         .thenReturn(KubernetesConfig.builder().build());
-    when(kubernetesContainerService.fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString()))
+    when(kubernetesContainerService.fetchReleaseHistory(any(KubernetesConfig.class), anyString()))
         .thenReturn(releaseHistory.getAsYaml());
-    when(kubernetesContainerService.getIstioVirtualService(any(KubernetesConfig.class), anyList(), anyString()))
-        .thenReturn(null);
+    when(kubernetesContainerService.getIstioVirtualService(any(KubernetesConfig.class), anyString())).thenReturn(null);
 
     boolean status = k8sTrafficSplitTaskHandler.init(k8sTrafficSplitTaskParams, executionLogCallback);
     ArgumentCaptor<String> msgCaptor = ArgumentCaptor.forClass(String.class);
@@ -121,8 +119,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
 
     boolean status = k8sTrafficSplitTaskHandler.init(k8sTrafficSplitTaskParams, executionLogCallback);
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
-    verify(kubernetesContainerService, times(1))
-        .getIstioVirtualService(any(KubernetesConfig.class), anyList(), anyString());
+    verify(kubernetesContainerService, times(1)).getIstioVirtualService(any(KubernetesConfig.class), anyString());
     assertThat(status).isFalse();
   }
 
@@ -138,7 +135,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
     verify(handler, times(1)).init(any(K8sTrafficSplitTaskParameters.class), any(ExecutionLogCallback.class));
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
     verify(kubernetesContainerService, times(1))
-        .createOrReplaceIstioResource(any(KubernetesConfig.class), anyList(), any(IstioResource.class));
+        .createOrReplaceIstioResource(any(KubernetesConfig.class), any(IstioResource.class));
     verify(k8sTaskHelper, times(1))
         .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
   }
@@ -152,16 +149,13 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
             .virtualServiceName(K8sExpressions.virtualServiceNameExpression)
             .istioDestinationWeights(Arrays.asList(new IstioDestinationWeight()))
             .build();
-    when(kubernetesContainerService.fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString()))
-        .thenReturn(null);
+    when(kubernetesContainerService.fetchReleaseHistory(any(KubernetesConfig.class), anyString())).thenReturn(null);
     k8sTrafficSplitTaskHandler.executeTaskInternal(k8sTrafficSplitTaskParams, K8sDelegateTaskParams.builder().build());
     verify(containerDeploymentDelegateHelper, times(2)).getKubernetesConfig(any(K8sClusterConfig.class));
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(KubernetesConfig.class), anyString());
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(KubernetesConfig.class), anyString());
     verify(kubernetesContainerService, times(1))
-        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
-    verify(kubernetesContainerService, times(1))
-        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
-    verify(kubernetesContainerService, times(1))
-        .createOrReplaceIstioResource(any(KubernetesConfig.class), anyList(), any(IstioResource.class));
+        .createOrReplaceIstioResource(any(KubernetesConfig.class), any(IstioResource.class));
     verify(k8sTaskHelper, times(1))
         .getK8sTaskExecutionResponse(any(K8sTaskResponse.class), any(CommandExecutionStatus.class));
   }
@@ -175,7 +169,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.createNewRelease(ImmutableList.of(
         KubernetesResourceId.builder().kind("VirtualService").name(VIRTUAL_SERVICE).namespace("default").build()));
-    when(kubernetesContainerService.fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString()))
+    when(kubernetesContainerService.fetchReleaseHistory(any(KubernetesConfig.class), anyString()))
         .thenReturn(releaseHistory.getAsYaml());
     VirtualService istioVirtualService = Mockito.mock(VirtualService.class);
     ObjectMeta metadata = Mockito.mock(ObjectMeta.class);
@@ -183,14 +177,12 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
     annotations.put(HarnessAnnotations.managed, "true");
     when(istioVirtualService.getMetadata()).thenReturn(metadata);
     when(metadata.getAnnotations()).thenReturn(annotations);
-    when(kubernetesContainerService.getIstioVirtualService(any(KubernetesConfig.class), anyList(), anyString()))
+    when(kubernetesContainerService.getIstioVirtualService(any(KubernetesConfig.class), anyString()))
         .thenReturn(istioVirtualService);
     boolean status = k8sTrafficSplitTaskHandler.init(k8sTrafficSplitTaskParams, executionLogCallback);
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class));
-    verify(kubernetesContainerService, times(1))
-        .fetchReleaseHistory(any(KubernetesConfig.class), anyList(), anyString());
-    verify(kubernetesContainerService, times(2))
-        .getIstioVirtualService(any(KubernetesConfig.class), anyList(), anyString());
+    verify(kubernetesContainerService, times(1)).fetchReleaseHistory(any(KubernetesConfig.class), anyString());
+    verify(kubernetesContainerService, times(2)).getIstioVirtualService(any(KubernetesConfig.class), anyString());
     assertThat(status).isTrue();
   }
 }
