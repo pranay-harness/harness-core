@@ -398,7 +398,7 @@ public class WatcherServiceImpl implements WatcherService {
   private void startUpgradeCheck() {
     upgradeExecutor.scheduleWithFixedDelay(
         new Schedulable("Error while checking for upgrades", this ::syncCheckForWatcherUpgrade), 0,
-        watcherConfiguration.getUpgradeCheckIntervalHours(), TimeUnit.HOURS);
+        watcherConfiguration.getUpgradeCheckIntervalSeconds(), TimeUnit.SECONDS);
   }
 
   private void syncCheckForWatcherUpgrade() {
