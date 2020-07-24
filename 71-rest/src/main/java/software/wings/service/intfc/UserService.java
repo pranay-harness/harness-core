@@ -529,4 +529,6 @@ public interface UserService extends OwnedByAccount {
   InviteOperationResponse checkInviteStatus(UserInvite userInvite);
 
   void loadUserGroupsForUsers(List<User> users, String accountId);
+
+  void setNewDefaultAccountId(User user);
 }

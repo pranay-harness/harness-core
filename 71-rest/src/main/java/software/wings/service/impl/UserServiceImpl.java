@@ -193,6 +193,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2147,6 +2148,10 @@ public class UserServiceImpl implements UserService {
         return;
       }
 
+      if (user.getDefaultAccountId().equals(accountId)) {
+        setNewDefaultAccountId(user);
+      }
+
       List<Role> accountRoles = roleService.getAccountRoles(accountId);
       if (accountRoles != null) {
         for (Role role : accountRoles) {
@@ -2158,34 +2163,37 @@ public class UserServiceImpl implements UserService {
         PageResponse<UserGroup> pageResponse = userGroupService.list(
             accountId, aPageRequest().addFilter(UserGroupKeys.memberIds, HAS, user.getUuid()).build(), true);
         List<UserGroup> userGroupList = pageResponse.getResponse();
-        userGroupList.forEach(userGroup -> {
-          List<User> members = userGroup.getMembers();
-          if (isNotEmpty(members)) {
-            // Find the user to be removed, then remove from the member list and update the user group.
-            Optional<User> userOptional =
-                members.stream().filter(member -> member.getUuid().equals(userId)).findFirst();
-            if (userOptional.isPresent()) {
-              members.remove(userOptional.get());
-              userGroupService.updateMembers(userGroup, false, false);
-            }
-          }
-        });
+        removeUserFromUserGroups(user, userGroupList, false);
       }
 
       UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
                                             .set(UserKeys.roles, user.getRoles())
                                             .set(UserKeys.accounts, user.getAccounts())
-                                            .set(UserKeys.pendingAccounts, user.getPendingAccounts());
+                                            .set(UserKeys.pendingAccounts, user.getPendingAccounts())
+                                            .set(UserKeys.defaultAccountId, user.getDefaultAccountId());
 
       Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
       wingsPersistence.update(updateQuery, updateOp);
-
-      removeUserFromUserGroups(user, user.getUserGroups(), false);
 
       evictUserFromCache(userId);
     });
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, user);
     logger.info("Auditing deletion of user={} in account={}", user.getName(), accountId);
+  }
+
+  public void setNewDefaultAccountId(User user) {
+    final List<String> accountStatusOrder =
+        Arrays.asList(AccountStatus.ACTIVE, AccountStatus.EXPIRED, AccountStatus.INACTIVE, AccountStatus.DELETED);
+
+    Optional<String> newDefaultAccountId =
+        user.getAccounts()
+            .stream()
+            .map(Account::getUuid)
+            .sorted(
+                Comparator.comparingInt(accId -> accountStatusOrder.indexOf(accountService.getAccountStatus(accId))))
+            .findFirst();
+
+    user.setDefaultAccountId(newDefaultAccountId.orElse(null));
   }
 
   /* (non-Javadoc)
