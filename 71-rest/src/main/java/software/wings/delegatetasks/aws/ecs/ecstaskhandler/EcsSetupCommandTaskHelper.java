@@ -119,6 +119,7 @@ public class EcsSetupCommandTaskHelper {
     String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
     String containerName = EcsConvention.getContainerName(dockerImageName);
     String domainName = setupParams.getImageDetails().getDomainName();
+    setupParams.setGeneratedContainerName(containerName);
 
     EcsContainerTask ecsContainerTask = (EcsContainerTask) setupParams.getContainerTask();
     ecsContainerTask = createEcsContainerTaskIfNull(ecsContainerTask);
@@ -617,6 +618,11 @@ public class EcsSetupCommandTaskHelper {
       ExecutionLogCallback executionLogCallback) {
     Integer containerPort = null;
     String containerName = null;
+
+    if (isNotBlank(setupParams.getTargetContainerName())) {
+      setupParams.setTargetContainerName(setupParams.getTargetContainerName().replaceAll(
+          CONTAINER_NAME_PLACEHOLDER_REGEX, setupParams.getGeneratedContainerName()));
+    }
 
     String targetContainerName = setupParams.getTargetContainerName();
     String targetPort = setupParams.getTargetPort();

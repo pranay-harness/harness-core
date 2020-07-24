@@ -31,6 +31,7 @@ public class EcsSetupParams extends ContainerSetupParams {
   private String executionRoleArn;
   private String launchType;
   private String targetContainerName;
+  private String generatedContainerName;
   private String targetPort;
   private boolean rollback;
   private String previousEcsServiceSnapshotJson;
@@ -71,6 +72,7 @@ public class EcsSetupParams extends ContainerSetupParams {
     private String executionRoleArn;
     private String launchType;
     private String targetContainerName;
+    private String generatedContainerName;
     private String targetPort;
     private boolean rollback;
     private String previousEcsServiceSnapshotJson;
@@ -206,6 +208,11 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public EcsSetupParamsBuilder withGeneratedContainerName(String generatedContainerName) {
+      this.generatedContainerName = generatedContainerName;
+      return this;
+    }
+
     public EcsSetupParamsBuilder withTargetPort(String targetPort) {
       this.targetPort = targetPort;
       return this;
@@ -335,6 +342,7 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setExecutionRoleArn(executionRoleArn);
       ecsSetupParams.setLaunchType(launchType);
       ecsSetupParams.setTargetContainerName(targetContainerName);
+      ecsSetupParams.setGeneratedContainerName(generatedContainerName);
       ecsSetupParams.setTargetPort(targetPort);
       ecsSetupParams.setRollback(rollback);
       ecsSetupParams.setPreviousEcsServiceSnapshotJson(previousEcsServiceSnapshotJson);
