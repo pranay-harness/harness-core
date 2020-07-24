@@ -28,7 +28,6 @@ import io.harness.state.StepType;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepOutcomeRef;
-import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;
@@ -42,19 +41,18 @@ import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
-public class ServiceStep implements Step, ChildrenExecutable {
+public class ServiceStep implements Step, ChildrenExecutable<ServiceStepParameters> {
   public static final StepType STEP_TYPE = StepType.builder().type("SERVICE_STEP").build();
   @Inject private OutcomeService outcomeService;
 
   @Override
   public ChildrenExecutableResponse obtainChildren(
-      Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage) {
-    ServiceStepParameters parameters = (ServiceStepParameters) stepParameters;
-    logger.info("Executing deployment stage with params [{}]", parameters);
+      Ambiance ambiance, ServiceStepParameters serviceStepParameters, StepInputPackage inputPackage) {
+    logger.info("Executing deployment stage with params [{}]", serviceStepParameters);
     // TODO(archit): save service entity.
 
     ChildrenExecutableResponseBuilder responseBuilder = ChildrenExecutableResponse.builder();
-    for (String nodeId : parameters.getParallelNodeIds()) {
+    for (String nodeId : serviceStepParameters.getParallelNodeIds()) {
       responseBuilder.child(ChildrenExecutableResponse.Child.builder().childNodeId(nodeId).build());
     }
     return responseBuilder.build();
@@ -62,9 +60,8 @@ public class ServiceStep implements Step, ChildrenExecutable {
 
   @Override
   public StepResponse handleChildrenResponse(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, ServiceStepParameters serviceStepParameters, Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
-    ServiceStepParameters parameters = (ServiceStepParameters) stepParameters;
     boolean allChildrenSuccess = true;
     EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
     List<String> errorMessages = new ArrayList<>();
@@ -84,9 +81,9 @@ public class ServiceStep implements Step, ChildrenExecutable {
       responseBuilder.failureInfo(
           FailureInfo.builder().errorMessage(String.join(",", errorMessages)).failureTypes(failureTypes).build());
     } else {
-      ServiceConfig serviceConfig = parameters.getServiceOverrides() != null
-          ? parameters.getService().applyOverrides(parameters.getServiceOverrides())
-          : parameters.getService();
+      ServiceConfig serviceConfig = serviceStepParameters.getServiceOverrides() != null
+          ? serviceStepParameters.getService().applyOverrides(serviceStepParameters.getServiceOverrides())
+          : serviceStepParameters.getService();
       responseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
                                       .name(OutcomeExpressionConstants.SERVICE.getName())
                                       .outcome(createServiceOutcome(serviceConfig, responseNotifyDataList))
