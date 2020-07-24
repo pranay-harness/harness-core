@@ -2,6 +2,9 @@ package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
+import static software.wings.graphql.schema.type.trigger.QLGitHubAction.packageActions;
+import static software.wings.graphql.schema.type.trigger.QLGitHubAction.pullRequestActions;
+import static software.wings.graphql.schema.type.trigger.QLGitHubAction.releaseActions;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,6 +33,7 @@ import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLGitHubAction;
+import software.wings.graphql.schema.type.trigger.QLGitHubEvent;
 import software.wings.graphql.schema.type.trigger.QLOnNewArtifact;
 import software.wings.graphql.schema.type.trigger.QLOnPipelineCompletion;
 import software.wings.graphql.schema.type.trigger.QLOnSchedule;
@@ -45,6 +49,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @OwnedBy(CDC)
@@ -325,55 +330,38 @@ public class TriggerConditionController {
 
   private void resolveGitHubEvent(
       QLTriggerConditionInput qlTriggerConditionInput, WebHookTriggerConditionBuilder builder) {
-    List<GithubAction> githubActions = null;
-    List<ReleaseAction> releaseActions = null;
-
-    if (qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent() == null
-        || qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getEvent() == null) {
+    QLGitHubEvent githubEvent = qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent();
+    if (githubEvent == null || githubEvent.getEvent() == null) {
       throw new InvalidRequestException("Github event must not be null", USER);
     }
 
-    List<WebhookEventType> eventTypes = Arrays.asList(WebhookEventType.find(
-        qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getEvent().name().toLowerCase()));
+    List<WebhookEventType> eventTypes =
+        Collections.singletonList(WebhookEventType.find(githubEvent.getEvent().name().toLowerCase()));
+    builder.eventTypes(eventTypes);
 
-    GithubAction gitHubAction = null;
-    switch (qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getEvent()) {
+    QLGitHubAction action = githubEvent.getAction();
+    switch (githubEvent.getEvent()) {
       case PULL_REQUEST:
-        gitHubAction = GithubAction.valueOf(
-            qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getAction().name());
-
-        if (gitHubAction == GithubAction.PACKAGE_PUBLISHED) {
+        if (!pullRequestActions.contains(action)) {
           throw new InvalidRequestException("Unsupported GitHub Action", USER);
         }
-        githubActions = Arrays.asList(gitHubAction);
+        builder.actions(Collections.singletonList(GithubAction.valueOf(action.name())));
         break;
       case RELEASE:
-        QLGitHubAction qlGitHubAction = qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getAction();
-        List<QLGitHubAction> supportedActions =
-            Arrays.asList(QLGitHubAction.CREATED, QLGitHubAction.PUBLISHED, QLGitHubAction.RELEASED,
-                QLGitHubAction.UNPUBLISHED, QLGitHubAction.EDITED, QLGitHubAction.PRE_RELEASED, QLGitHubAction.DELETED);
-
-        if (!supportedActions.contains(qlGitHubAction)) {
+        if (!releaseActions.contains(action)) {
           throw new InvalidRequestException("Unsupported GitHub Release Action", USER);
         }
-        ReleaseAction releaseAction = ReleaseAction.valueOf(
-            qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getAction().name());
-        releaseActions = Arrays.asList(releaseAction);
+        builder.releaseActions(Collections.singletonList(ReleaseAction.valueOf(action.name())));
         break;
       case PACKAGE:
-        gitHubAction = GithubAction.valueOf(
-            qlTriggerConditionInput.getWebhookConditionInput().getGithubEvent().getAction().name());
-
-        if (gitHubAction != GithubAction.PACKAGE_PUBLISHED) {
-          throw new InvalidRequestException("Unsupported GitHub Action", USER);
+        if (!packageActions.contains(action)) {
+          throw new InvalidRequestException("Unsupported GitHub Package Action", USER);
         }
-        githubActions = Arrays.asList(gitHubAction);
+        builder.actions(Collections.singletonList(GithubAction.valueOf(action.name())));
         break;
       default:
+        // no actions for other event types.
     }
-    builder.eventTypes(eventTypes);
-    builder.actions(githubActions);
-    builder.releaseActions(releaseActions);
   }
 
   private void resolveGitLabEvent(

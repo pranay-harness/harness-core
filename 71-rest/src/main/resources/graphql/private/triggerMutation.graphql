@@ -1,7 +1,7 @@
 extend type Mutation {
   createTrigger(input: CreateTriggerInput!): TriggerPayload @dataFetcher(name: createTrigger)
-  updateTrigger(input: UpdateTriggerInput!): TriggerPayload @dataFetcher(name: updateTrigger)
-  deleteTrigger(input: DeleteTriggerInput!): TriggerPayload @dataFetcher(name: deleteTrigger)
+  updateTrigger(input: UpdateTriggerInput!): UpdateTriggerPayload @dataFetcher(name: updateTrigger)
+  deleteTrigger(input: DeleteTriggerInput!): DeleteTriggerPayload @dataFetcher(name: deleteTrigger)
 }
 
 input CreateTriggerInput {
@@ -170,6 +170,15 @@ enum ArtifactSelectionType {
 }
 
 type TriggerPayload {
+  clientMutationId: String
+  trigger: Trigger
+}
+
+type DeleteTriggerPayload {
+  clientMutationId: String
+}
+
+type UpdateTriggerPayload {
   clientMutationId: String
   trigger: Trigger
 }

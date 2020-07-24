@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.rule.OwnerRule.MILAN;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -58,12 +59,12 @@ public class DeleteTriggerDataFetcherTest extends CategoryTest {
                                                     .clientMutationId("mutationId")
                                                     .build();
 
-    Mockito.when(appService.getAccountIdByAppId(qlDeleteTriggerInput.getApplicationId())).thenReturn("accountId");
+    when(appService.getAccountIdByAppId(qlDeleteTriggerInput.getApplicationId())).thenReturn("accountId");
 
     deleteTriggerDataFetcher.mutateAndFetch(qlDeleteTriggerInput, mutationContext);
   }
 
-  @Test()
+  @Test(expected = InvalidRequestException.class)
   @Owner(developers = MILAN)
   @Category(UnitTests.class)
   public void mutateAndFetchShouldNotDeleteTrigger() {
@@ -74,18 +75,12 @@ public class DeleteTriggerDataFetcherTest extends CategoryTest {
                                                     .clientMutationId("mutationId")
                                                     .build();
 
-    Mockito.when(appService.getAccountIdByAppId(qlDeleteTriggerInput.getApplicationId())).thenReturn("accountId");
-    Mockito.when(triggerService.get(qlDeleteTriggerInput.getApplicationId(), qlDeleteTriggerInput.getTriggerId()))
-        .thenReturn(null);
+    when(appService.getAccountIdByAppId(qlDeleteTriggerInput.getApplicationId())).thenReturn("accountId");
+    when(triggerService.get(qlDeleteTriggerInput.getApplicationId(), qlDeleteTriggerInput.getTriggerId()))
+        .thenReturn(Trigger.builder().build());
 
     QLDeleteTriggerPayload qlDeleteTriggerPayload =
         deleteTriggerDataFetcher.mutateAndFetch(qlDeleteTriggerInput, mutationContext);
-
-    Mockito.verify(triggerService, Mockito.times(1)).get(Matchers.anyString(), Matchers.anyString());
-    Mockito.verify(appService, Mockito.times(1)).getAccountIdByAppId(Matchers.anyString());
-
-    assertThat(qlDeleteTriggerPayload).isNotNull();
-    assertThat(qlDeleteTriggerPayload.getClientMutationId()).isEqualTo(qlDeleteTriggerInput.getClientMutationId());
   }
 
   @Test()
@@ -101,12 +96,12 @@ public class DeleteTriggerDataFetcherTest extends CategoryTest {
 
     Trigger trigger = Mockito.mock(Trigger.class);
 
-    Mockito.when(appService.getAccountIdByAppId(qlDeleteTriggerInput.getApplicationId())).thenReturn("accountId");
-    Mockito.when(triggerService.get(qlDeleteTriggerInput.getApplicationId(), qlDeleteTriggerInput.getTriggerId()))
+    when(appService.getAccountIdByAppId(qlDeleteTriggerInput.getApplicationId())).thenReturn("accountId");
+    when(triggerService.get(qlDeleteTriggerInput.getApplicationId(), qlDeleteTriggerInput.getTriggerId()))
         .thenReturn(trigger, null);
-    Mockito.when(triggerService.triggerActionExists(trigger)).thenReturn(true);
+    when(triggerService.triggerActionExists(trigger)).thenReturn(true);
     Mockito.doNothing().when(triggerService).authorize(trigger, true);
-    Mockito.when(triggerService.delete(qlDeleteTriggerInput.getApplicationId(), qlDeleteTriggerInput.getTriggerId()))
+    when(triggerService.delete(qlDeleteTriggerInput.getApplicationId(), qlDeleteTriggerInput.getTriggerId()))
         .thenReturn(true);
 
     QLDeleteTriggerPayload qlDeleteTriggerPayload =
@@ -135,12 +130,12 @@ public class DeleteTriggerDataFetcherTest extends CategoryTest {
 
     Trigger trigger = Mockito.mock(Trigger.class);
 
-    Mockito.when(appService.getAccountIdByAppId(qlDeleteTriggerInput.getApplicationId())).thenReturn("accountId");
-    Mockito.when(triggerService.get(qlDeleteTriggerInput.getApplicationId(), qlDeleteTriggerInput.getTriggerId()))
+    when(appService.getAccountIdByAppId(qlDeleteTriggerInput.getApplicationId())).thenReturn("accountId");
+    when(triggerService.get(qlDeleteTriggerInput.getApplicationId(), qlDeleteTriggerInput.getTriggerId()))
         .thenReturn(trigger, trigger);
-    Mockito.when(triggerService.triggerActionExists(trigger)).thenReturn(true);
+    when(triggerService.triggerActionExists(trigger)).thenReturn(true);
     Mockito.doNothing().when(triggerService).authorize(trigger, true);
-    Mockito.when(triggerService.delete(qlDeleteTriggerInput.getApplicationId(), qlDeleteTriggerInput.getTriggerId()))
+    when(triggerService.delete(qlDeleteTriggerInput.getApplicationId(), qlDeleteTriggerInput.getTriggerId()))
         .thenReturn(true);
 
     deleteTriggerDataFetcher.mutateAndFetch(qlDeleteTriggerInput, mutationContext);

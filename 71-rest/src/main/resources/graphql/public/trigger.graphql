@@ -2,8 +2,11 @@ extend type Query {
   # Get details about a Trigger.
   trigger(triggerId: String!): Trigger @dataFetcher(name: trigger)
 
-  # Get a list of Harness Services, by applicationId. This returns paginated data.
+  # Get a list of Harness Triggers, This returns paginated data.
   triggers(filters: [TriggerFilter], limit: Int!, offset: Int): TriggerConnection @dataFetcher(name: triggerConnection)
+
+  # Get details about a Trigger  by it's name
+  triggerByName(triggerName: String!, applicationId: String!): Trigger @dataFetcher(name: trigger)
 }
 
 type Trigger {
