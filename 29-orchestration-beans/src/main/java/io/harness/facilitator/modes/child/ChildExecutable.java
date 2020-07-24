@@ -22,9 +22,8 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @Redesign
-public interface ChildExecutable {
-  ChildExecutableResponse obtainChild(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage);
+public interface ChildExecutable<T extends StepParameters> {
+  ChildExecutableResponse obtainChild(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
-  StepResponse handleChildResponse(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap);
+  StepResponse handleChildResponse(Ambiance ambiance, T stepParameters, Map<String, ResponseData> responseDataMap);
 }
