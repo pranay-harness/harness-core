@@ -68,11 +68,11 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTestMixin {
+public class DelegateServiceGrpcImplTest extends WingsBaseTest implements MockableTestMixin {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   private DelegateServiceGrpcClient delegateServiceGrpcClient;
-  private io.harness.grpc.DelegateServiceGrpc delegateServiceGrpc;
+  private DelegateServiceGrpcImpl delegateServiceGrpcImpl;
 
   private PerpetualTaskService perpetualTaskService;
   private DelegateService delegateService;
@@ -99,11 +99,11 @@ public class DelegateServiceGrpcTest extends WingsBaseTest implements MockableTe
 
     perpetualTaskService = mock(PerpetualTaskService.class);
     delegateService = mock(DelegateService.class);
-    delegateServiceGrpc = new io.harness.grpc.DelegateServiceGrpc(
-        delegateCallbackRegistry, perpetualTaskService, delegateService, kryoSerializer);
+    delegateServiceGrpcImpl =
+        new DelegateServiceGrpcImpl(delegateCallbackRegistry, perpetualTaskService, delegateService, kryoSerializer);
 
     server =
-        InProcessServerBuilder.forName(serverName).directExecutor().addService(delegateServiceGrpc).build().start();
+        InProcessServerBuilder.forName(serverName).directExecutor().addService(delegateServiceGrpcImpl).build().start();
     grpcCleanup.register(server);
   }
 

@@ -46,16 +46,19 @@ public class ValidateAuthServerInterceptorTest extends CategoryTest {
     fakeService = new FakeService();
     contextRecordingInterceptor = new ContextRecordingInterceptor();
     String serverName = InProcessServerBuilder.generateName();
-    grpcCleanup.register(InProcessServerBuilder.forName(serverName)
-                             .directExecutor()
-                             .addService(new HealthStatusManager().getHealthService())
-                             .addService(fakeService)
-                             .intercept(contextRecordingInterceptor)
-                             .intercept(new ValidateAuthServerInterceptor(ImmutableSet.of(HealthGrpc.SERVICE_NAME)))
-                             .intercept(new ServiceAuthServerInterceptor(
-                                 ImmutableMap.of("manager", "managersecret"), ImmutableSet.of("some.service")))
-                             .build()
-                             .start());
+    grpcCleanup.register(
+        InProcessServerBuilder.forName(serverName)
+            .directExecutor()
+            .addService(new HealthStatusManager().getHealthService())
+            .addService(fakeService)
+            .intercept(contextRecordingInterceptor)
+            .intercept(new ValidateAuthServerInterceptor(ImmutableSet.of(HealthGrpc.SERVICE_NAME)))
+            .intercept(new ServiceAuthServerInterceptor(
+                ImmutableMap.<String, ServiceInfo>builder()
+                    .put("some.service", ServiceInfo.builder().id("manager").secret("managersecret").build())
+                    .build()))
+            .build()
+            .start());
     channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).build());
   }
 
@@ -77,8 +80,11 @@ public class ValidateAuthServerInterceptorTest extends CategoryTest {
                              .addService(fakeService)
                              .intercept(contextRecordingInterceptor)
                              .intercept(new ValidateAuthServerInterceptor(ImmutableSet.of()))
-                             .intercept(new ServiceAuthServerInterceptor(ImmutableMap.of("manager", "managersecret"),
-                                 ImmutableSet.of(EventPublisherGrpc.SERVICE_NAME)))
+                             .intercept(new ServiceAuthServerInterceptor(
+                                 ImmutableMap.<String, ServiceInfo>builder()
+                                     .put(EventPublisherGrpc.SERVICE_NAME,
+                                         ServiceInfo.builder().id("manager").secret("managersecret").build())
+                                     .build()))
                              .build()
                              .start());
     final String token = ServiceTokenGenerator.newInstance().getServiceToken("managersecret");

@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import io.grpc.Channel;
 import io.grpc.Metadata;
@@ -51,8 +50,11 @@ public class ServiceAuthServerInterceptorTest extends CategoryTest {
                              .addService(new HealthStatusManager().getHealthService())
                              .addService(fakeService)
                              .intercept(contextRecordingInterceptor)
-                             .intercept(new ServiceAuthServerInterceptor(ImmutableMap.of("manager", "managersecret"),
-                                 ImmutableSet.of(EventPublisherGrpc.SERVICE_NAME)))
+                             .intercept(new ServiceAuthServerInterceptor(
+                                 ImmutableMap.<String, ServiceInfo>builder()
+                                     .put(EventPublisherGrpc.SERVICE_NAME,
+                                         ServiceInfo.builder().id("manager").secret("managersecret").build())
+                                     .build()))
                              .build()
                              .start());
     channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).build());

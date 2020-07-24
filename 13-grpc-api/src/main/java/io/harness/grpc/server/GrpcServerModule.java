@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.Service;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
@@ -13,6 +14,8 @@ import io.grpc.health.v1.HealthGrpc;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.grpc.services.HealthStatusManager;
+import io.harness.grpc.auth.ServiceAuthServerInterceptor;
+import io.harness.grpc.auth.ServiceInfo;
 import io.harness.grpc.auth.ValidateAuthServerInterceptor;
 
 import java.util.List;
@@ -38,14 +41,17 @@ public class GrpcServerModule extends AbstractModule {
     Provider<HealthStatusManager> healthStatusManagerProvider = getProvider(HealthStatusManager.class);
     bindableServiceMultibinder.addBinding().toProvider(() -> healthStatusManagerProvider.get().getHealthService());
 
+    Multibinder<ServerInterceptor> serverInterceptorMultibinder =
+        Multibinder.newSetBinder(binder(), ServerInterceptor.class);
+
     Multibinder<String> nonAuthServices =
         Multibinder.newSetBinder(binder(), String.class, Names.named("excludedGrpcAuthValidationServices"));
     nonAuthServices.addBinding().toInstance(HealthGrpc.SERVICE_NAME);
     nonAuthServices.addBinding().toInstance(ServerReflectionGrpc.SERVICE_NAME);
-
-    Multibinder<ServerInterceptor> serverInterceptorMultibinder =
-        Multibinder.newSetBinder(binder(), ServerInterceptor.class);
     serverInterceptorMultibinder.addBinding().to(ValidateAuthServerInterceptor.class);
+
+    MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
+    serverInterceptorMultibinder.addBinding().to(ServiceAuthServerInterceptor.class);
 
     Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
     connectors.forEach(connector
