@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.k8s;
+package io.harness.k8s;
 
 public interface K8sConstants {
   String OIDC_CLIENT_ID = "${CLIENT_ID_DATA}";

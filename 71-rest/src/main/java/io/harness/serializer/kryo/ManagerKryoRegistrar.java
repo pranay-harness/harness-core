@@ -225,7 +225,6 @@ import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NotificationChannelType;
-import software.wings.beans.OidcGrantType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Permission;
 import software.wings.beans.PhaseStepType;
@@ -1616,7 +1615,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanaAnalyzeMetrics.Item.class, 7316);
 
     kryo.register(KubernetesClusterAuthType.class, 7317);
-    kryo.register(OidcGrantType.class, 7318);
     kryo.register(AwsVPC.class, 7319);
     kryo.register(AwsSubnet.class, 7320);
     kryo.register(AwsSecurityGroup.class, 7321);

@@ -5,6 +5,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
+import io.harness.k8s.model.OidcGrantType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
