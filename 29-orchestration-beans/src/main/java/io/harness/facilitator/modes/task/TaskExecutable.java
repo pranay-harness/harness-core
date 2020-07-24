@@ -26,9 +26,8 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 @Redesign
-public interface TaskExecutable {
-  Task obtainTask(Ambiance ambiance, StepParameters stepParameters, StepInputPackage inputPackage);
+public interface TaskExecutable<T extends StepParameters> {
+  Task obtainTask(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
-  StepResponse handleTaskResult(
-      Ambiance ambiance, StepParameters stepParameters, Map<String, ResponseData> responseDataMap);
+  StepResponse handleTaskResult(Ambiance ambiance, T stepParameters, Map<String, ResponseData> responseDataMap);
 }
