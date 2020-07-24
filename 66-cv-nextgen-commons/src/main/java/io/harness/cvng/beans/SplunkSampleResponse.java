@@ -11,4 +11,5 @@ import java.util.Map;
 public class SplunkSampleResponse {
   List<String> rawSampleLogs;
   Map<String, String> sample;
+  String errorMessage;
 }

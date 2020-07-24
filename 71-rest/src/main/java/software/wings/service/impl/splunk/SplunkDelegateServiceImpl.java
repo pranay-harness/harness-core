@@ -29,6 +29,7 @@ import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
@@ -49,6 +50,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -77,6 +79,8 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       FastDateFormat.getInstance("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone("UTC"));
   private static final int HTTP_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(25);
   private static final long BAR_DURATION_IN_HOURS = 6;
+  private static final String INVALID_SPLUNK_QUERY_MSG_SAMPLES_API =
+      "Wrong kind of splunk query. Query should have raw(_raw field) message. Please check the query";
 
   private final SimpleDateFormat SPLUNK_DATE_FORMATER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   @Inject private EncryptionService encryptionService;
@@ -163,38 +167,70 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
 
   @Override
   public List<SplunkSavedSearch> getSavedSearches(
-      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String requestGuid) {
     Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
+    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(splunkConfig.getAccountId(), requestGuid);
+    apiCallLog.setTitle("Fetch request to " + splunkConfig.getSplunkUrl());
+
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name(URL_STRING)
+                                     .value(Paths.get(splunkConfig.getSplunkUrl(), "saved/searches").toString())
+                                     .type(FieldType.URL)
+                                     .build());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+
     Args queryArgs = new Args();
     queryArgs.put("app", "search");
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallLog.ThirdPartyApiCallField.builder()
+                                     .name("Query")
+                                     .type(FieldType.JSON)
+                                     .value(JsonUtils.asJson(queryArgs))
+                                     .build());
     SavedSearchCollection savedSearchCollection = splunkService.getSavedSearches(queryArgs);
-    return savedSearchCollection.values()
-        .stream()
-        .map(splunkSearch
-            -> SplunkSavedSearch.builder().title(splunkSearch.getTitle()).searchQuery(splunkSearch.getSearch()).build())
-        .collect(Collectors.toList());
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+
+    List<SplunkSavedSearch> splunkSavedSearches = savedSearchCollection.values()
+                                                      .stream()
+                                                      .map(splunkSearch
+                                                          -> SplunkSavedSearch.builder()
+                                                                 .title(splunkSearch.getTitle())
+                                                                 .searchQuery(splunkSearch.getSearch())
+                                                                 .build())
+                                                      .collect(Collectors.toList());
+    apiCallLog.addFieldToResponse(HttpStatus.SC_OK, JsonUtils.asJson(splunkSavedSearches), FieldType.JSON);
+    delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
+    return splunkSavedSearches;
   }
 
   @Override
   public CVHistogram getHistogram(
-      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query) {
+      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid) {
     Preconditions.checkNotNull(splunkConfig, "splunkConfig can not be null");
     Preconditions.checkNotNull(query, "query can not be null");
     Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
+    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(splunkConfig.getAccountId(), requestGuid);
+    long now = Instant.now().toEpochMilli();
+    long nowMinus7Days = Instant.now().minus(7, ChronoUnit.DAYS).toEpochMilli();
+    String histogramQuery = getHistogramQuery(query);
+    addThirdPartyAPILogRequestFields(apiCallLog, splunkConfig.getSplunkUrl(), histogramQuery, nowMinus7Days, now);
     CVHistogramBuilder cvHistogram =
         CVHistogram.builder().query(query).intervalMs(Duration.ofHours(BAR_DURATION_IN_HOURS).toMillis());
 
     try {
-      ResultsReaderJson resultsReaderJson = executeSearch(splunkService, getHistogramQuery(query),
-          Instant.now().minus(7, ChronoUnit.DAYS).toEpochMilli(), Instant.now().toEpochMilli());
+      ResultsReaderJson resultsReaderJson = executeSearch(splunkService, histogramQuery, nowMinus7Days, now);
 
       Event event;
+      List<Event> events = new ArrayList<>();
       while ((event = resultsReaderJson.getNextEvent()) != null) {
         String time = event.get("_time");
         long timestamp = SPLUNK_DATE_FORMATER.parse(time).getTime();
         String count = event.get("count");
         cvHistogram.addBar(CVHistogram.Bar.builder().count(Long.parseLong(count)).timestamp(timestamp).build());
+        events.add(event);
       }
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_OK, JsonUtils.asJson(events), FieldType.JSON);
+      delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
     } catch (IOException | ParseException e) {
       throw new IllegalStateException(e);
     }
@@ -208,27 +244,41 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
 
   @Override
   public SplunkSampleResponse getSamples(
-      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query) {
+      SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails, String query, String requestGuid) {
     Preconditions.checkNotNull(splunkConfig, "splunkConfig can not be null");
     Preconditions.checkNotNull(query, "query can not be null");
-
+    String getSamplesQuery = "search " + query + " | head 10";
     Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
+    ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.createApiCallLog(splunkConfig.getAccountId(), requestGuid);
+    long now = Instant.now().toEpochMilli();
+    long nowMinus7Days = Instant.now().minus(7, ChronoUnit.DAYS).toEpochMilli();
+    addThirdPartyAPILogRequestFields(apiCallLog, splunkConfig.getSplunkUrl(), getSamplesQuery, nowMinus7Days, now);
     ResultsReaderJson resultsReaderJson;
     List<String> results = new ArrayList<>();
     Map<String, String> sample = new HashMap<>();
+    List<Event> events = new ArrayList<>();
+    String errorMessage = null;
     try {
-      resultsReaderJson = executeSearch(splunkService, "search " + query + " | head 10",
-          Instant.now().minus(7, ChronoUnit.DAYS).toEpochMilli(), Instant.now().toEpochMilli());
+      resultsReaderJson = executeSearch(splunkService, getSamplesQuery, nowMinus7Days, now);
       Event event;
       while ((event = resultsReaderJson.getNextEvent()) != null) {
         if (sample.isEmpty()) {
           sample = event;
         }
-        results.add(event.get("_raw"));
+        String rawMessage = event.get("_raw");
+        if (rawMessage == null) {
+          errorMessage = INVALID_SPLUNK_QUERY_MSG_SAMPLES_API;
+        } else {
+          results.add(rawMessage);
+        }
+        events.add(event);
       }
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+    apiCallLog.addFieldToResponse(HttpStatus.SC_OK, JsonUtils.asJson(events), FieldType.JSON);
+    delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
     // Fields starting with underscore are internal fields.
     // https://docs.splunk.com/Splexicon:Internalfield
     Map<String, String> withoutInternalFields =
@@ -237,7 +287,11 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
             .filter(entry -> entry.getKey().charAt(0) != '_')
             .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
 
-    return SplunkSampleResponse.builder().sample(withoutInternalFields).rawSampleLogs(results).build();
+    return SplunkSampleResponse.builder()
+        .sample(withoutInternalFields)
+        .rawSampleLogs(results)
+        .errorMessage(errorMessage)
+        .build();
   }
 
   private ResultsReaderJson executeSearch(Service service, String query, long startTimeMs, long endTimeMs)

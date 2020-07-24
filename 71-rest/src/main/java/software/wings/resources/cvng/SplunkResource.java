@@ -22,6 +22,7 @@ import software.wings.service.intfc.splunk.SplunkAnalysisService;
 
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -39,9 +40,9 @@ public class SplunkResource {
   @Path(SPLUNK_SAVED_SEARCH_PATH)
   @Timed
   @ExceptionMetered
-  public RestResponse<List<SplunkSavedSearch>> getSavedSearches(
-      @QueryParam("accountId") @Valid final String accountId, @QueryParam("connectorId") String connectorId) {
-    return new RestResponse<>(splunkAnalysisService.getSavedSearches(accountId, connectorId));
+  public RestResponse<List<SplunkSavedSearch>> getSavedSearches(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("connectorId") String connectorId, @QueryParam("requestGuid") @NotNull String requestGuid) {
+    return new RestResponse<>(splunkAnalysisService.getSavedSearches(accountId, connectorId, requestGuid));
   }
 
   @GET
@@ -49,8 +50,9 @@ public class SplunkResource {
   @Timed
   @ExceptionMetered
   public RestResponse<CVHistogram> getHistogram(@QueryParam("accountId") @Valid final String accountId,
-      @QueryParam("connectorId") String connectorId, @QueryParam("query") String query) {
-    return new RestResponse<>(splunkAnalysisService.getHistogram(accountId, connectorId, query));
+      @QueryParam("connectorId") String connectorId, @QueryParam("query") String query,
+      @QueryParam("requestGuid") @NotNull String requestGuid) {
+    return new RestResponse<>(splunkAnalysisService.getHistogram(accountId, connectorId, query, requestGuid));
   }
 
   @GET
@@ -58,7 +60,8 @@ public class SplunkResource {
   @Timed
   @ExceptionMetered
   public RestResponse<SplunkSampleResponse> getSamples(@QueryParam("accountId") @Valid final String accountId,
-      @QueryParam("connectorId") String connectorId, @QueryParam("query") String query) {
-    return new RestResponse<>(splunkAnalysisService.getSamples(accountId, connectorId, query));
+      @QueryParam("connectorId") String connectorId, @QueryParam("query") String query,
+      @QueryParam("requestGuid") @NotNull String requestGuid) {
+    return new RestResponse<>(splunkAnalysisService.getSamples(accountId, connectorId, query, requestGuid));
   }
 }

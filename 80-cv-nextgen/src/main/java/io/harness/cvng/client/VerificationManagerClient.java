@@ -38,16 +38,16 @@ public interface VerificationManagerClient {
       @Query("accountId") String accountId, @Query("taskId") String taskId);
 
   @GET(SPLUNK_RESOURCE_PATH + SPLUNK_SAVED_SEARCH_PATH)
-  Call<RestResponse<List<SplunkSavedSearch>>> getSavedSearches(
-      @Query("accountId") String accountId, @Query("connectorId") String connectorId);
+  Call<RestResponse<List<SplunkSavedSearch>>> getSavedSearches(@Query("accountId") String accountId,
+      @Query("connectorId") String connectorId, @Query("requestGuid") String requestGuid);
 
   @GET(SPLUNK_RESOURCE_PATH + SPLUNK_HISTOGRAM_PATH)
-  Call<RestResponse<CVHistogram>> getHistogram(
-      @Query("accountId") String accountId, @Query("connectorId") String connectorId, @Query("query") String query);
+  Call<RestResponse<CVHistogram>> getHistogram(@Query("accountId") String accountId,
+      @Query("connectorId") String connectorId, @Query("query") String query, @Query("requestGuid") String requestGuid);
 
   @GET(SPLUNK_RESOURCE_PATH + SPLUNK_SAMPLE_PATH)
-  Call<RestResponse<SplunkSampleResponse>> getSamples(
-      @Query("accountId") String accountId, @Query("connectorId") String connectorId, @Query("query") String query);
+  Call<RestResponse<SplunkSampleResponse>> getSamples(@Query("accountId") String accountId,
+      @Query("connectorId") String connectorId, @Query("query") String query, @Query("requestGuid") String requestGuid);
 
   @GET(CV_NEXTGEN_RESOURCE_PREFIX + "/auth/validate-token")
   Call<RestResponse<Boolean>> authenticateUser(

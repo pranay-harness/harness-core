@@ -15,17 +15,20 @@ public class SplunkServiceImpl implements SplunkService {
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private RequestExecutor requestExecutor;
   @Override
-  public List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId) {
-    return requestExecutor.execute(verificationManagerClient.getSavedSearches(accountId, connectorId)).getResource();
+  public List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorId, String requestGuid) {
+    return requestExecutor.execute(verificationManagerClient.getSavedSearches(accountId, connectorId, requestGuid))
+        .getResource();
   }
 
   @Override
-  public CVHistogram getHistogram(String accountId, String connectorId, String query) {
-    return requestExecutor.execute(verificationManagerClient.getHistogram(accountId, connectorId, query)).getResource();
+  public CVHistogram getHistogram(String accountId, String connectorId, String query, String requestGuid) {
+    return requestExecutor.execute(verificationManagerClient.getHistogram(accountId, connectorId, query, requestGuid))
+        .getResource();
   }
 
   @Override
-  public SplunkSampleResponse getSamples(String accountId, String connectorId, String query) {
-    return requestExecutor.execute(verificationManagerClient.getSamples(accountId, connectorId, query)).getResource();
+  public SplunkSampleResponse getSamples(String accountId, String connectorId, String query, String requestGuid) {
+    return requestExecutor.execute(verificationManagerClient.getSamples(accountId, connectorId, query, requestGuid))
+        .getResource();
   }
 }
