@@ -633,7 +633,7 @@ public class InstallUtils {
       return join("/", delegateConfiguration.getCdnUrl(),
           String.format(TERRAFORM_CONFIG_CDN_PATH, terraformConfigInspectVersion, getOsPath()));
     }
-    return join("/", getManagerBaseUrl(delegateConfiguration.getManagerUrl()),
+    return join("", getManagerBaseUrl(delegateConfiguration.getManagerUrl()),
         "storage/harness-download/harness-terraform-config"
             + "-inspect",
         terraformConfigInspectVersion, getOsPath(), "amd64", terraformConfigInspectBinary);
