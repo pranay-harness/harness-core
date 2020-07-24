@@ -81,6 +81,7 @@ import migrations.all.TerraformIsTemplatizedMigration;
 import migrations.all.TimeSeriesThresholdsMigration;
 import migrations.all.UpdateAccountEncryptionClassNames;
 import migrations.all.UpdateInstanceInfoWithLastArtifactIdMigration;
+import migrations.all.UpdateStaleDefaultAccountIds;
 import migrations.all.UpdateWorkflowExecutionAccountId;
 import migrations.all.UpdateWorkflowExecutionDuration;
 import migrations.all.WFEAddDeploymentMetaData;
@@ -232,12 +233,13 @@ public class MigrationBackgroundList {
         .add(Pair.of(133, MigrateServiceNowCriteriaInPipelines.class))
         .add(Pair.of(134, MigrateServiceNowCriteriaInWorkflows.class))
         .add(Pair.of(135, BaseMigration.class))
-        .add(Pair.of(136, RemoveDeletedAppIdsFromUserGroups.class))
+        .add(Pair.of(136, BaseMigration.class))
         .add(Pair.of(137, BaseMigration.class))
         .add(Pair.of(138, RemoveDeletedAppIdsFromUserGroups.class))
         .add(Pair.of(139, AddAccountIdToTriggers.class))
         .add(Pair.of(140, AddAccountIdToCommandLogs.class))
         .add(Pair.of(141, AddAccountIdToEntityVersion.class))
+        .add(Pair.of(142, UpdateStaleDefaultAccountIds.class))
         .build();
   }
 }
