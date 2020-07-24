@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.RUSHABH;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.FeatureFlag.Scope.GLOBAL;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
@@ -204,7 +205,11 @@ public class FeatureFlagTest extends WingsBaseTest {
     featureFlagService.initializeFeatureFlags();
 
     for (FeatureName featureName : FeatureName.values()) {
-      assertThat(featureFlagService.isEnabled(featureName, null)).isFalse();
+      if (featureName.getScope() == GLOBAL) {
+        assertThat(featureFlagService.isGlobalEnabled(featureName)).isFalse();
+      } else {
+        assertThat(featureFlagService.isEnabled(featureName, "accountId")).isFalse();
+      }
     }
   }
 }
