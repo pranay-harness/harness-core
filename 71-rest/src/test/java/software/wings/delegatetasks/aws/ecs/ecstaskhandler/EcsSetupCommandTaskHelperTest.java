@@ -3,6 +3,7 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.of;
@@ -969,5 +970,27 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(request).isNotNull();
     assertThat(request.getCluster()).isEqualTo("cluster");
     assertThat(request.getService()).isEqualTo("arn");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testSetLoadBalancerToServiceReplaceContainerNamePlaceholderInContainerName() {
+    EcsSetupParams params = anEcsSetupParams().build();
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    CreateServiceRequest createServiceRequest =
+        new CreateServiceRequest().withServiceName("foo__2").withCluster("cluster");
+    params.setTargetContainerName("${CONTAINER_NAME}_main");
+    params.setTargetPort("80");
+    params.setGeneratedContainerName("generatedContainerName");
+    ecsSetupCommandTaskHelper.setLoadBalancerToService(
+        params, attribute, emptyList(), taskDefinition, createServiceRequest, awsClusterService, mockCallback);
+    List<LoadBalancer> loadBalancers = createServiceRequest.getLoadBalancers();
+    assertThat(loadBalancers.size()).isEqualTo(1);
+    assertThat(loadBalancers.get(0).getContainerPort()).isEqualTo(80);
+    assertThat(loadBalancers.get(0).getContainerName()).isEqualTo("generatedContainerName_main");
+    assertThat(params.getTargetContainerName()).isEqualTo("generatedContainerName_main");
   }
 }
