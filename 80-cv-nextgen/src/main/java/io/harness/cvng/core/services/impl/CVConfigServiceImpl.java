@@ -75,11 +75,6 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public void delete(List<String> cvConfigIds) {
-    cvConfigIds.forEach(this ::delete); // TODO: implement batch delete
-  }
-
-  @Override
   public void deleteByGroupId(String accountId, String connectorId, String productName, String groupId) {
     hPersistence.delete(hPersistence.createQuery(CVConfig.class)
                             .filter(CVConfigKeys.accountId, accountId)

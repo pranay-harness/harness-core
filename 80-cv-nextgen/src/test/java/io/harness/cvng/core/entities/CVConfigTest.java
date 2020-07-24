@@ -104,7 +104,6 @@ public class CVConfigTest extends CategoryTest {
   }
 
   private void fillCommon(CVConfig cvConfig) {
-    cvConfig.setName("cvConfigName-" + generateUuid());
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
     cvConfig.setConnectorId(connectorId);

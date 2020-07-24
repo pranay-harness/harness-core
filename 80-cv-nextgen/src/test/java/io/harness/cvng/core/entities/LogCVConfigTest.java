@@ -88,7 +88,6 @@ public class LogCVConfigTest extends CategoryTest {
   }
 
   private void fillCommon(LogCVConfig cvConfig) {
-    cvConfig.setName("cvConfigName-" + generateUuid());
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
     cvConfig.setConnectorId(connectorId);

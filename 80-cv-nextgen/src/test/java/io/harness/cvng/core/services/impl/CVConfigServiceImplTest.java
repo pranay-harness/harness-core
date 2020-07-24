@@ -102,16 +102,6 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testDelete_batchAPI() {
-    List<CVConfig> cvConfigs = createCVConfigs(3);
-    cvConfigs.forEach(cvConfig -> save(cvConfig));
-    cvConfigService.delete(cvConfigs.stream().map(cvConfig -> cvConfig.getUuid()).collect(Collectors.toList()));
-    cvConfigs.forEach(cvConfig -> assertThat(cvConfigService.get(cvConfig.getUuid())).isEqualTo(null));
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
   public void testUpdate_withMultipleCVConfig() {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
@@ -249,7 +239,6 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
   }
 
   private void assertCommons(CVConfig actual, CVConfig expected) {
-    assertThat(actual.getName()).isEqualTo(expected.getName());
     assertThat(actual.getVerificationType()).isEqualTo(expected.getVerificationType());
     assertThat(actual.getAccountId()).isEqualTo(expected.getAccountId());
     assertThat(actual.getConnectorId()).isEqualTo(expected.getConnectorId());

@@ -64,7 +64,6 @@ public class MetricCVConfigTest extends CategoryTest {
   }
 
   private void fillCommon(MetricCVConfig cvConfig) {
-    cvConfig.setName("cvConfigName-" + generateUuid());
     cvConfig.setVerificationType(VerificationType.LOG);
     cvConfig.setAccountId(accountId);
     cvConfig.setConnectorId(connectorId);

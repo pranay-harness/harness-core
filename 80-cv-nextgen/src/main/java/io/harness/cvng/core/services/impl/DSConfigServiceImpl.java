@@ -40,8 +40,7 @@ public class DSConfigServiceImpl implements DSConfigService {
     List<CVConfig> saved = cvConfigService.list(
         dsConfig.getAccountId(), dsConfig.getConnectorId(), dsConfig.getProductName(), dsConfig.getIdentifier());
     CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);
-    cvConfigService.delete(
-        cvConfigUpdateResult.getDeleted().stream().map(cvConfig -> cvConfig.getUuid()).collect(Collectors.toList()));
+    cvConfigUpdateResult.getDeleted().forEach(cvConfig -> cvConfigService.delete(cvConfig.getUuid()));
     cvConfigService.update(cvConfigUpdateResult.getUpdated());
     cvConfigService.save(cvConfigUpdateResult.getAdded());
   }
