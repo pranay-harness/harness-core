@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static org.joor.Reflect.on;
+import static software.wings.api.DeploymentType.AZURE_VMSS;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
@@ -76,7 +77,10 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
       PcfInfrastructureMapping.class, "PCF_PCF", StencilCategory.OTHERS, 10, Lists.newArrayList(DeploymentType.PCF)),
 
   AZURE_INFRA(AzureInfrastructureMapping.class, "AZURE", StencilCategory.OTHERS, 11,
-      Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM));
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM)),
+
+  AZURE_VMSS_INFRA(
+      AzureVMSSInfrastructureMapping.class, "AZURE_VMSS", StencilCategory.OTHERS, 12, Lists.newArrayList(AZURE_VMSS));
 
   private static final String stencilsPath = "/templates/inframapping/";
   private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";

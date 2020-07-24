@@ -6,6 +6,7 @@ import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
 import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
 import static software.wings.beans.InfrastructureType.AZURE_KUBERNETES;
 import static software.wings.beans.InfrastructureType.AZURE_SSH;
+import static software.wings.beans.InfrastructureType.AZURE_VMSS;
 import static software.wings.beans.InfrastructureType.CODE_DEPLOY;
 import static software.wings.beans.InfrastructureType.DIRECT_KUBERNETES;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
@@ -24,6 +25,7 @@ import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.AzureKubernetesService;
+import software.wings.infra.AzureVMSSInfra;
 import software.wings.infra.CodeDeployInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
@@ -46,7 +48,8 @@ import software.wings.yaml.BaseYamlWithType;
       @JsonSubTypes.Type(value = GoogleKubernetesEngine.Yaml.class, name = GCP_KUBERNETES_ENGINE),
       @JsonSubTypes.Type(value = PcfInfraStructure.Yaml.class, name = PCF_INFRASTRUCTURE),
       @JsonSubTypes.Type(value = PhysicalInfra.Yaml.class, name = PHYSICAL_INFRA),
-      @JsonSubTypes.Type(value = PhysicalInfraWinrm.Yaml.class, name = PHYSICAL_INFRA_WINRM)
+      @JsonSubTypes.Type(value = PhysicalInfraWinrm.Yaml.class, name = PHYSICAL_INFRA_WINRM),
+      @JsonSubTypes.Type(value = AzureVMSSInfra.Yaml.class, name = AZURE_VMSS),
 })
 public abstract class CloudProviderInfrastructureYaml extends BaseYamlWithType {
   public CloudProviderInfrastructureYaml(String type) {

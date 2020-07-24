@@ -20,4 +20,5 @@ public class InfrastructureType {
   public static final String AWS_LAMBDA = "AWS_AWS_LAMBDA";
   public static final String AZURE_SSH = "AZURE_INFRA";
   public static final String AZURE_KUBERNETES = "AZURE_KUBERNETES";
+  public static final String AZURE_VMSS = "AZURE_VMSS";
 }
