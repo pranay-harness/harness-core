@@ -389,7 +389,7 @@ public class AccountServiceImpl implements AccountService {
   private void createDefaultOrganization(String accountId) {
     CreateOrganizationDTO createOrganizationDTO = new CreateOrganizationDTO();
     createOrganizationDTO.setIdentifier("default");
-    createOrganizationDTO.setColor("blue");
+    createOrganizationDTO.setColor("#05a660");
     createOrganizationDTO.setName("Default");
     createOrganizationDTO.setTags(emptyList());
     createOrganizationDTO.setDescription("Default Organization");

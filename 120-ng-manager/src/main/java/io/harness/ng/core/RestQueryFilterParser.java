@@ -6,10 +6,13 @@ import com.google.inject.Singleton;
 
 import com.github.rutledgepaulv.qbuilders.builders.GeneralQueryBuilder;
 import com.github.rutledgepaulv.qbuilders.conditions.Condition;
-import com.github.rutledgepaulv.qbuilders.visitors.MongoVisitor;
 import com.github.rutledgepaulv.rqe.pipes.QueryConversionPipeline;
+import io.harness.mongo.index.Field;
+import io.harness.ng.RsqlQueryable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.HashSet;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -20,18 +23,23 @@ import javax.validation.constraints.NotNull;
 @Singleton
 public class RestQueryFilterParser {
   private final QueryConversionPipeline pipeline;
-  private final MongoVisitor mongoVisitor;
 
   public RestQueryFilterParser() {
     pipeline = QueryConversionPipeline.defaultPipeline();
-    mongoVisitor = new MongoVisitor();
   }
 
   public Criteria getCriteriaFromFilterQuery(@NotNull String filterQuery, Class<?> targetEntityClass) {
     Criteria criteria = new Criteria();
+
     if (isNotBlank(filterQuery)) {
+      Field[] fields = targetEntityClass.getAnnotation(RsqlQueryable.class).fields();
+      Set<String> set = new HashSet<>();
+      for (Field field : fields) {
+        set.add(field.value());
+      }
+      ConstrainedMongoVisitor constrainedMongoVisitor = new ConstrainedMongoVisitor(set);
       Condition<GeneralQueryBuilder> condition = pipeline.apply(filterQuery, targetEntityClass);
-      criteria = condition.query(mongoVisitor);
+      criteria = condition.query(constrainedMongoVisitor);
     }
     return criteria;
   }
