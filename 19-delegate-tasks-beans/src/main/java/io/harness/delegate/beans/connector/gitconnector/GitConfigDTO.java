@@ -2,8 +2,8 @@ package io.harness.delegate.beans.connector.gitconnector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -17,16 +17,13 @@ import lombok.experimental.FieldDefaults;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonTypeName("Git")
 public class GitConfigDTO extends ConnectorConfigDTO {
   @JsonProperty("type") GitAuthType gitAuthType;
 
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = GitHTTPAuthenticationDTO.class, name = "Http")
-    , @JsonSubTypes.Type(value = GitSSHAuthenticationDTO.class, name = "Ssh")
-  })
   GitAuthenticationDTO gitAuth;
 
   @JsonProperty("gitSync") GitSyncConfig gitSyncConfig;

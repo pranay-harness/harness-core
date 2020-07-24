@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.connector.gitconnector;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +11,7 @@ import software.wings.settings.SettingVariableTypes;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@JsonTypeName("Http")
 public class GitHTTPAuthenticationDTO extends GitAuthenticationDTO {
   @JsonProperty("type") GitConnectionType gitConnectionType;
   String url;
