@@ -7,6 +7,7 @@ import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.Field;
 import io.harness.ng.ModuleType;
+import io.harness.ng.RsqlQueryable;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.persistence.PersistentEntity;
@@ -38,6 +39,8 @@ import javax.validation.constraints.Size;
 @CdIndex(name = "acctModulesOrgIdx",
     fields = { @Field(ProjectKeys.accountIdentifier)
                , @Field(ProjectKeys.modules), @Field(ProjectKeys.orgIdentifier) })
+@RsqlQueryable(fields = { @Field(ProjectKeys.modules)
+                          , @Field(ProjectKeys.orgIdentifier) })
 @Entity(value = "projects", noClassnameStored = true)
 @Document("projects")
 @TypeAlias("projects")
