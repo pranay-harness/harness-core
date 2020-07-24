@@ -200,7 +200,7 @@ public class DelegateServiceGrpc extends DelegateServiceImplBase {
     if (request.getContext().hasTaskClientParams()) {
       contextBuilder.clientParams(request.getContext().getTaskClientParams().getParamsMap());
     } else if (request.getContext().hasExecutionBundle()) {
-      contextBuilder.executionBundle(request.getContext().toByteArray());
+      contextBuilder.executionBundle(request.getContext().getExecutionBundle().toByteArray());
     }
 
     if (request.getContext().getLastContextUpdated() != null) {

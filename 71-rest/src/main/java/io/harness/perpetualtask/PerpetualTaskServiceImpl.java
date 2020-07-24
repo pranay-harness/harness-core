@@ -175,6 +175,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
     if (perpetualTaskRecord.getClientContext().getClientParams() != null) {
       PerpetualTaskServiceClient client = clientRegistry.getClient(perpetualTaskRecord.getPerpetualTaskType());
       perpetualTaskParams = client.getTaskParams(perpetualTaskRecord.getClientContext());
+
+      return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(perpetualTaskParams)).build();
     } else {
       PerpetualTaskExecutionBundle perpetualTaskExecutionBundle = null;
       try {
@@ -184,9 +186,11 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
         logger.error("Failed to parse perpetual task execution bundle from task parameters", e);
         return null;
       }
-      perpetualTaskParams = perpetualTaskExecutionBundle.getTaskParams();
+
+      return PerpetualTaskExecutionParams.newBuilder()
+          .setCustomizedParams(perpetualTaskExecutionBundle.getTaskParams())
+          .build();
     }
-    return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(perpetualTaskParams)).build();
   }
 
   @Override
