@@ -1,7 +1,8 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
 import static java.util.Collections.emptyMap;
-import static java.util.Optional.ofNullable;
+
+import com.google.common.collect.ImmutableSet;
 
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
@@ -14,6 +15,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequi
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -26,6 +28,16 @@ class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
   WorkloadSpecWriter(WorkloadRecommendationDao workloadRecommendationDao) {
     this.workloadRecommendationDao = workloadRecommendationDao;
     this.workloadToRecommendation = new HashMap<>();
+  }
+
+  static Map<String, String> sanitized(Map<String, String> resourceMap) {
+    ImmutableSet<String> trackedResources = ImmutableSet.of("cpu", "memory");
+    return Optional.ofNullable(resourceMap)
+        .orElse(emptyMap())
+        .entrySet()
+        .stream()
+        .filter(resourceEntry -> { return trackedResources.contains(resourceEntry.getKey()); })
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   @Override
@@ -45,8 +57,8 @@ class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
       List<K8sWorkloadSpec.ContainerSpec> containerSpecs = k8sWorkloadSpec.getContainerSpecsList();
       Map<String, ContainerRecommendation> containerRecommendations =
           containerSpecs.stream().collect(Collectors.toMap(K8sWorkloadSpec.ContainerSpec::getName, e -> {
-            Map<String, String> requestsMap = new HashMap<>(ofNullable(e.getRequestsMap()).orElse(emptyMap()));
-            Map<String, String> limitsMap = ofNullable(e.getLimitsMap()).orElse(emptyMap());
+            Map<String, String> requestsMap = new HashMap<>(sanitized(e.getRequestsMap()));
+            Map<String, String> limitsMap = sanitized(e.getLimitsMap());
             limitsMap.forEach(requestsMap::putIfAbsent);
             return ContainerRecommendation.builder()
                 .containerName(e.getName())

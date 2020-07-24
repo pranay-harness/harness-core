@@ -1,5 +1,6 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
+import static io.harness.batch.processing.config.k8s.recommendation.WorkloadSpecWriter.sanitized;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -7,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -75,6 +77,16 @@ public class WorkloadSpecWriterTest extends CategoryTest {
                        .limit("memory", "20Mi")
                        .build());
     assertThat(containerRecommendations.get("nothing").getCurrent()).isEqualTo(ResourceRequirement.builder().build());
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testSanitized() throws Exception {
+    assertThat(sanitized(null)).isEmpty();
+    assertThat(sanitized(ImmutableMap.of("nvidia.com/gpu", "1"))).isEqualTo(ImmutableMap.of());
+    assertThat(sanitized(ImmutableMap.of("cpu", "1", "memory", "1Gi", "nvidia.com/gpu", "1")))
+        .isEqualTo(ImmutableMap.of("cpu", "1", "memory", "1Gi"));
   }
 
   private List<? extends PublishedMessage> messages() {
