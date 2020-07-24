@@ -47,7 +47,7 @@ public abstract class AbstractSecretServiceImpl {
   @Inject protected SecretManagerConfigService secretManagerConfigService;
   @Inject private KmsService kmsService;
   @Inject private AccountService accountService;
-  @Inject private AlertService alertService;
+  @Inject protected AlertService alertService;
   @Inject @Named(SecretsManagementFeature.FEATURE_NAME) private PremiumFeature secretsManagementFeature;
   @Inject private AuditServiceHelper auditServiceHelper;
 

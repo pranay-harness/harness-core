@@ -102,13 +102,6 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
     this.secretId = SECRET_MASK;
   }
 
-  public long calculateRenewalInterval(long defaultRenewalInterval) {
-    if (getAccessType() == AccessType.APP_ROLE && renewalInterval <= 0) {
-      return defaultRenewalInterval;
-    }
-    return renewalInterval;
-  }
-
   public AccessType getAccessType() {
     return isNotEmpty(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;
   }

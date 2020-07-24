@@ -40,6 +40,8 @@ import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.VaultConfig.VaultConfigKeys;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedData.EncryptedDataKeys;
 import software.wings.security.encryption.EncryptedDataParent;
@@ -315,7 +317,11 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     if (auditChanges) {
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedVaultConfig);
     }
-    return secretManagerConfigService.save(savedVaultConfig);
+    String configId = secretManagerConfigService.save(savedVaultConfig);
+    if (isNotEmpty(configId)) {
+      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, getRenewalAlert(oldConfigForAudit));
+    }
+    return configId;
   }
 
   private String updateVaultConfig(String accountId, VaultConfig vaultConfig) {
@@ -686,5 +692,13 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       vaultConfig.setAuthToken(loginResult.getClientToken());
     }
     return Optional.of(vaultConfig);
+  }
+
+  public KmsSetupAlert getRenewalAlert(VaultConfig vaultConfig) {
+    return KmsSetupAlert.builder()
+        .kmsId(vaultConfig.getUuid())
+        .message(vaultConfig.getName()
+            + "(Hashicorp Vault) is not able to renew the token. Please check your setup and ensure that token is renewable")
+        .build();
   }
 }

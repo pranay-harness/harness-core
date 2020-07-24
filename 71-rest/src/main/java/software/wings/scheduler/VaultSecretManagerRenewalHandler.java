@@ -30,7 +30,6 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
   @Inject private AlertService alertService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MorphiaPersistenceProvider<SecretManagerConfig> persistenceProvider;
-  private static final long DEFAULT_RENEWAL_INTERVAL = 15;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
@@ -56,15 +55,9 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
   public void handle(SecretManagerConfig secretManagerConfig) {
     logger.info("renewing client tokens for {}", secretManagerConfig.getUuid());
     VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
-    KmsSetupAlert kmsSetupAlert =
-        KmsSetupAlert.builder()
-            .kmsId(vaultConfig.getUuid())
-            .message(vaultConfig.getName()
-                + "(Hashicorp Vault) is not able to renew the token. Please check your setup and ensure that token is renewable")
-            .build();
-
+    KmsSetupAlert kmsSetupAlert = vaultService.getRenewalAlert(vaultConfig);
     try {
-      long renewalInterval = vaultConfig.calculateRenewalInterval(DEFAULT_RENEWAL_INTERVAL);
+      long renewalInterval = vaultConfig.getRenewalInterval();
       if (renewalInterval <= 0 || SecretManagerConfig.isTemplatized(secretManagerConfig)) {
         logger.info("Vault {} not configured for renewal.", vaultConfig.getUuid());
         return;
@@ -81,7 +74,7 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
       }
       alertService.closeAlert(vaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
     } catch (Exception e) {
-      logger.info("Failed to renew vault token for account id {}", secretManagerConfig.getUuid(), e);
+      logger.info("Failed to renew vault token for vault id {}", secretManagerConfig.getUuid(), e);
       alertService.openAlert(vaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
     }
   }
