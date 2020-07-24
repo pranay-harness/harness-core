@@ -49,14 +49,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Singleton
-public class DelegateServiceGrpc extends DelegateServiceImplBase {
+public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   private DelegateCallbackRegistry delegateCallbackRegistry;
   private PerpetualTaskService perpetualTaskService;
   private DelegateService delegateService;
   private KryoSerializer kryoSerializer;
 
   @Inject
-  public DelegateServiceGrpc(DelegateCallbackRegistry delegateCallbackRegistry,
+  public DelegateServiceGrpcImpl(DelegateCallbackRegistry delegateCallbackRegistry,
       PerpetualTaskService perpetualTaskService, DelegateService delegateService, KryoSerializer kryoSerializer) {
     this.delegateCallbackRegistry = delegateCallbackRegistry;
     this.perpetualTaskService = perpetualTaskService;

@@ -31,7 +31,6 @@ public class OwnerRule implements TestRule {
   public static final String ASSIGNEE = "assignee";
   public static final String SUMMARY = "summary";
   public static final String NEEDS_FIXING = "needs fixing";
-  public static final String COMPONENTS = "components";
   public static final String PRIORITY = "priority";
   public static final String PRIORITY_VALUE0 = "P0";
   public static final String PRIORITY_VALUE1 = "P1";

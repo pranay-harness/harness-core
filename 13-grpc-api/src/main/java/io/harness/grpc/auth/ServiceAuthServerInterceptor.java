@@ -2,6 +2,7 @@ package io.harness.grpc.auth;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.grpc.Context;
@@ -16,25 +17,29 @@ import io.harness.grpc.utils.GrpcAuthUtils;
 import io.harness.security.ServiceTokenAuthenticator;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 
 @Slf4j
 @Singleton
 @InterceptorPriority(20)
 public class ServiceAuthServerInterceptor implements ServerInterceptor {
   private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
-  private final Set<String> includedGrpcServices;
-  private final Map<String, ServiceTokenAuthenticator> serviceIdToAuthenticatorMap;
+  private Set<String> includedGrpcServices;
+  private Map<String, ServiceTokenAuthenticator> serviceIdToAuthenticatorMap;
 
-  public ServiceAuthServerInterceptor(
-      @NotNull Map<String, String> serviceIdToSecretKeyMap, Set<String> includedGrpcServices) {
-    serviceIdToAuthenticatorMap = serviceIdToSecretKeyMap.entrySet().stream().collect(Collectors.toMap(
-        Map.Entry::getKey, entry -> ServiceTokenAuthenticator.builder().secretKey(entry.getValue()).build()));
-    this.includedGrpcServices = includedGrpcServices;
+  @Inject
+  public ServiceAuthServerInterceptor(Map<String, ServiceInfo> services) {
+    includedGrpcServices = new HashSet();
+    serviceIdToAuthenticatorMap = new HashMap<>();
+    for (Map.Entry<String, ServiceInfo> entry : services.entrySet()) {
+      includedGrpcServices.add(entry.getKey());
+      serviceIdToAuthenticatorMap.put(entry.getValue().getId(),
+          ServiceTokenAuthenticator.builder().secretKey(entry.getValue().getSecret()).build());
+    }
   }
 
   @Override

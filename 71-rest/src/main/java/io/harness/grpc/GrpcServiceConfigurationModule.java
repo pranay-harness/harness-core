@@ -1,7 +1,5 @@
 package io.harness.grpc;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
@@ -10,13 +8,15 @@ import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
+import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.delegate.NgDelegateTaskServiceGrpc;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
-import io.harness.grpc.auth.ServiceAuthServerInterceptor;
+import io.harness.grpc.auth.ServiceInfo;
 import io.harness.grpc.exception.GrpcExceptionMapper;
 import io.harness.grpc.exception.WingsExceptionGrpcMapper;
 import io.harness.grpc.ng.manager.DelegateTaskGrpcServer;
@@ -43,7 +43,7 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
   protected void configure() {
     bind(KeySource.class).to(AccountKeySource.class).in(Singleton.class);
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
-    bindableServiceMultibinder.addBinding().to(DelegateServiceGrpc.class);
+    bindableServiceMultibinder.addBinding().to(DelegateServiceGrpcImpl.class);
     bindableServiceMultibinder.addBinding().to(PerpetualTaskServiceGrpc.class);
     bindableServiceMultibinder.addBinding().to(PingPongService.class);
     bindableServiceMultibinder.addBinding().to(DelegateTaskGrpcServer.class);
@@ -51,12 +51,13 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
     Multibinder<ServerInterceptor> serverInterceptorMultibinder =
         Multibinder.newSetBinder(binder(), ServerInterceptor.class);
     serverInterceptorMultibinder.addBinding().to(DelegateAuthServerInterceptor.class);
-    serverInterceptorMultibinder.addBinding().toProvider(
-        ()
-            -> new ServiceAuthServerInterceptor(
-                ImmutableMap.of("ng-manager", serviceSecret, "delegate-service", serviceSecret),
-                ImmutableSet.of(
-                    NgDelegateTaskServiceGrpc.SERVICE_NAME, io.harness.delegate.DelegateServiceGrpc.SERVICE_NAME)));
+
+    MapBinder<String, ServiceInfo> stringServiceInfoMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
+    stringServiceInfoMapBinder.addBinding(DelegateServiceGrpc.SERVICE_NAME)
+        .toInstance(ServiceInfo.builder().id("delegate-service").secret(serviceSecret).build());
+    stringServiceInfoMapBinder.addBinding(NgDelegateTaskServiceGrpc.SERVICE_NAME)
+        .toInstance(ServiceInfo.builder().id("ng-manager").secret(serviceSecret).build());
 
     Multibinder<GrpcExceptionMapper> expectionMapperMultibinder =
         Multibinder.newSetBinder(binder(), GrpcExceptionMapper.class);
