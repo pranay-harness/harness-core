@@ -1516,7 +1516,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution savedWorkflowExecution;
     if (shouldNotQueueWorkflow(workflowExecution, workflow)) {
       stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
-      updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING);
+      // check if the first state is APPROVAL state => update startTs
+      boolean isApproval = APPROVAL.name().equals(stateExecutionInstance.getStateType())
+          || APPROVAL_RESUME.name().equals(stateExecutionInstance.getStateType());
+      if (isApproval && workflowExecution.getStartTs() == null) {
+        setWorkflowExecutionStartTs(workflowExecution);
+      } else {
+        updateStartStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), RUNNING);
+      }
       savedWorkflowExecution = wingsPersistence.getWithAppId(
           WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
       if (workflowExecution.getWorkflowType() == PIPELINE) {
@@ -1534,6 +1541,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
     }
     return savedWorkflowExecution;
+  }
+
+  private void setWorkflowExecutionStartTs(WorkflowExecution workflowExecution) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecution.getUuid())
+                                         .field(WorkflowExecutionKeys.status)
+                                         .in(Collections.singletonList(PAUSED));
+
+    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                        .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis());
+
+    wingsPersistence.update(query, updateOps);
   }
 
   private void addArtifactsToWorkflowExecution(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
