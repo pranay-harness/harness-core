@@ -7,4 +7,6 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "QLTriggerQueryParametersKeys")
 public class QLTriggerQueryParameters {
   private String triggerId;
+  private String triggerName;
+  private String applicationId;
 }

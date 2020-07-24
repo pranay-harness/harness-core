@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
@@ -42,15 +43,15 @@ public class DeleteTriggerDataFetcher extends BaseMutatorDataFetcher<QLDeleteTri
     }
 
     Trigger trigger = triggerService.get(appId, triggerId);
-    if (trigger != null) {
-      if (triggerService.triggerActionExists(trigger)) {
-        triggerService.authorize(trigger, true);
-      }
-      triggerService.delete(appId, triggerId);
+    notNullCheck("Trigger does not exist in the application", trigger);
 
-      if (triggerService.get(appId, triggerId) != null) {
-        throw new InvalidRequestException("Trigger is not deleted", USER);
-      }
+    if (triggerService.triggerActionExists(trigger)) {
+      triggerService.authorize(trigger, true);
+    }
+    triggerService.delete(appId, triggerId);
+
+    if (triggerService.get(appId, triggerId) != null) {
+      throw new InvalidRequestException("Could not delete Trigger", USER);
     }
 
     return QLDeleteTriggerPayload.builder().clientMutationId(parameter.getClientMutationId()).build();

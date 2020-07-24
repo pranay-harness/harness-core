@@ -6,9 +6,12 @@ import static io.harness.exception.WingsException.USER;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLTriggerQueryParameters;
 import software.wings.graphql.schema.type.trigger.QLTrigger;
@@ -22,15 +25,33 @@ import java.util.Collections;
 
 @OwnedBy(CDC)
 public class TriggerDataFetcher extends AbstractObjectDataFetcher<QLTrigger, QLTriggerQueryParameters> {
+  private static final String EMPTY_TRIGGER_NAME = "Trigger Name should not be empty";
   @Inject HPersistence persistence;
   @Inject AppService appService;
   @Inject TriggerAuthHandler triggerAuthHandler;
   @Inject TriggerController triggerController;
+  public static final String EMPTY_APPLICATION_ID = "Application Id should not be empty";
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLTrigger fetch(QLTriggerQueryParameters parameters, String accountId) {
-    Trigger trigger = persistence.get(Trigger.class, parameters.getTriggerId());
+    Trigger trigger = null;
+    if (parameters.getTriggerId() != null) {
+      trigger = persistence.get(Trigger.class, parameters.getTriggerId());
+    } else if (parameters.getTriggerName() != null) {
+      if (EmptyPredicate.isEmpty(parameters.getApplicationId())) {
+        throw new InvalidRequestException(EMPTY_APPLICATION_ID, WingsException.USER);
+      }
+
+      if (EmptyPredicate.isEmpty(parameters.getTriggerName())) {
+        throw new InvalidRequestException(EMPTY_TRIGGER_NAME, WingsException.USER);
+      }
+      trigger = persistence.createQuery(Trigger.class)
+                    .filter(TriggerKeys.name, parameters.getTriggerName())
+                    .filter(TriggerKeys.appId, parameters.getApplicationId())
+                    .get();
+    }
+
     if (trigger == null) {
       return null;
     }
