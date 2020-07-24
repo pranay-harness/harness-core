@@ -13,6 +13,7 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e DELEGATE_CHECK_LOCATION=${delegateCheckLocation} \
 -e DELEGATE_NAME=${delegateName} \
 -e DELEGATE_PROFILE=${delegateProfile} \
+-e DELEGATE_TYPE=${delegateType} \
 -e DEPLOY_MODE=${deployMode} \
 -e PROXY_HOST= \
 -e PROXY_PORT= \

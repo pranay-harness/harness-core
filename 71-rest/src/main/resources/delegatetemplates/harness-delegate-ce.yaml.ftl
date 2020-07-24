@@ -183,6 +183,8 @@ spec:
           value: ${delegateName}
         - name: DELEGATE_PROFILE
           value: "${delegateProfile}"
+        - name: DELEGATE_TYPE
+          value: "${delegateType}"
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT

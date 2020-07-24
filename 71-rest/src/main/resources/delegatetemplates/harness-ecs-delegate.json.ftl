@@ -28,7 +28,7 @@
         },
         {
           "name": "DELEGATE_TYPE",
-          "value": "ECS"
+          "value": "${delegateType}"
         },
         {
           "name": "DELEGATE_GROUP_NAME",
