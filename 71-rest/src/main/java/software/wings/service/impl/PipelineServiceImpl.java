@@ -611,7 +611,7 @@ public class PipelineServiceImpl implements PipelineService {
       workflowCache = new HashMap<>();
     }
 
-    setSinglePipelineDetails(pipeline, false, workflowCache);
+    setSinglePipelineDetails(pipeline, false, workflowCache, true);
     if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
       validateMultipleValuesAllowed(pipeline, pipelineVariables);
     }
@@ -778,11 +778,11 @@ public class PipelineServiceImpl implements PipelineService {
 
   private void setSinglePipelineDetails(Pipeline pipeline, boolean withFinalValuesOnly) {
     Map<String, Workflow> workflowCache = new HashMap<>();
-    setSinglePipelineDetails(pipeline, withFinalValuesOnly, workflowCache);
+    setSinglePipelineDetails(pipeline, withFinalValuesOnly, workflowCache, false);
   }
 
   private void setSinglePipelineDetails(
-      Pipeline pipeline, boolean withFinalValuesOnly, Map<String, Workflow> workflowCache) {
+      Pipeline pipeline, boolean withFinalValuesOnly, Map<String, Workflow> workflowCache, boolean withServices) {
     boolean hasSshInfraMapping = false;
     boolean templatized = false;
     boolean pipelineParameterized = false;
@@ -798,7 +798,8 @@ public class PipelineServiceImpl implements PipelineService {
         } else if (ENV_STATE.name().equals(pse.getType())) {
           try {
             String workflowId = (String) pse.getProperties().get("workflowId");
-            Workflow workflow = getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
+            Workflow workflow = withServices ? getWorkflowWithServices(pipeline, workflowCache, workflowId)
+                                             : getWorkflow(pipeline, infraRefactor, workflowCache, workflowId);
 
             if (!hasSshInfraMapping) {
               hasSshInfraMapping = workflowServiceHelper.workflowHasSshDeploymentPhase(
