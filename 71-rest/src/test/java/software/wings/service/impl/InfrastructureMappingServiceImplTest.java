@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.RIHAZ;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -9,6 +10,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.VMSSAuthType.PASSWORD;
+import static software.wings.beans.VMSSAuthType.SSH_PUBLIC_KEY;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
@@ -31,6 +34,7 @@ import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -363,6 +367,57 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
 
     assertThat(sgList.size()).isEqualTo(1);
     assertThat(sgList.get(0)).isEqualTo(sgId);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testValidateAzureVMSSInfraMapping() {
+    doReturn(aSettingAttribute().build()).when(settingsService).get(anyString());
+
+    final AzureVMSSInfrastructureMapping infrastructureMapping = AzureVMSSInfrastructureMapping.builder()
+                                                                     .baseVMSSName("BaseVMSS")
+                                                                     .subscriptionId("SubsId")
+                                                                     .resourceGroupName("ResName")
+                                                                     .userName("UName")
+                                                                     .vmssAuthType(PASSWORD)
+                                                                     .password("passwd")
+                                                                     .build();
+    infrastructureMappingService.validateAzureVMSSInfraMapping(infrastructureMapping);
+
+    infrastructureMapping.setBaseVMSSName("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateAzureVMSSInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    infrastructureMapping.setBaseVMSSName("BaseVMSS");
+
+    infrastructureMapping.setSubscriptionId("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateAzureVMSSInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    infrastructureMapping.setSubscriptionId("SubsId");
+
+    infrastructureMapping.setResourceGroupName("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateAzureVMSSInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    infrastructureMapping.setResourceGroupName("ResName");
+
+    infrastructureMapping.setUserName("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateAzureVMSSInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    infrastructureMapping.setUserName("UName");
+
+    infrastructureMapping.setVmssAuthType(null);
+    assertThatThrownBy(() -> infrastructureMappingService.validateAzureVMSSInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    infrastructureMapping.setVmssAuthType(PASSWORD);
+
+    infrastructureMapping.setPassword("");
+    assertThatThrownBy(() -> infrastructureMappingService.validateAzureVMSSInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
+    infrastructureMapping.setPassword("SubsId");
+
+    infrastructureMapping.setVmssAuthType(SSH_PUBLIC_KEY);
+    assertThatThrownBy(() -> infrastructureMappingService.validateAzureVMSSInfraMapping(infrastructureMapping))
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

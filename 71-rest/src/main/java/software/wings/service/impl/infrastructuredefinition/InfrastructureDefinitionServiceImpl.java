@@ -30,6 +30,7 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
+import static software.wings.api.DeploymentType.AZURE_VMSS;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
@@ -683,6 +684,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
         WINRM, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS, SettingVariableTypes.AZURE));
     deploymentCloudProviderOptions.put(PCF, asList(SettingVariableTypes.PCF));
     deploymentCloudProviderOptions.put(SPOTINST, asList(SettingVariableTypes.SPOT_INST));
+    deploymentCloudProviderOptions.put(AZURE_VMSS, asList(SettingVariableTypes.AZURE));
 
     return deploymentCloudProviderOptions;
   }

@@ -28,6 +28,8 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
+import static software.wings.beans.VMSSAuthType.PASSWORD;
+import static software.wings.beans.VMSSAuthType.SSH_PUBLIC_KEY;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
@@ -96,6 +98,7 @@ import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -400,6 +403,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (infraMapping instanceof AwsAmiInfrastructureMapping) {
       validateAwsAmiInfrastructureMapping((AwsAmiInfrastructureMapping) infraMapping);
+    }
+
+    if (infraMapping instanceof AzureVMSSInfrastructureMapping) {
+      validateAzureVMSSInfraMapping((AzureVMSSInfrastructureMapping) infraMapping);
     }
   }
 
@@ -1211,6 +1218,44 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (AmiDeploymentType.AWS_ASG == infrastructureMapping.getAmiDeploymentType()
         && isEmpty(infrastructureMapping.getAutoScalingGroupName())) {
       throw new InvalidRequestException("Auto Scaling Group is mandatory");
+    }
+  }
+
+  @VisibleForTesting
+  void validateAzureVMSSInfraMapping(AzureVMSSInfrastructureMapping infrastructureMapping) {
+    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    notNullCheck("SettingAttribute", settingAttribute, USER);
+
+    if (isEmpty(infrastructureMapping.getBaseVMSSName())) {
+      throw new InvalidRequestException("Base VMSS name should not be empty");
+    }
+
+    if (isEmpty(infrastructureMapping.getSubscriptionId())) {
+      throw new InvalidRequestException("Subscription Id should not be empty");
+    }
+
+    if (isEmpty(infrastructureMapping.getResourceGroupName())) {
+      throw new InvalidRequestException("Resource group name should not be empty");
+    }
+
+    if (isEmpty(infrastructureMapping.getUserName())) {
+      throw new InvalidRequestException("User name should not be empty");
+    }
+
+    if (infrastructureMapping.getVmssAuthType() == null) {
+      throw new InvalidRequestException("Auth Type should not be empty");
+    }
+
+    if (PASSWORD == infrastructureMapping.getVmssAuthType()) {
+      if (isEmpty(infrastructureMapping.getPassword())) {
+        throw new InvalidRequestException("Password should not be empty");
+      }
+    }
+
+    if (SSH_PUBLIC_KEY == infrastructureMapping.getVmssAuthType()) {
+      if (isEmpty(infrastructureMapping.getHostConnectionAttrs())) {
+        throw new InvalidRequestException("SSH Public Key should not be empty");
+      }
     }
   }
 
