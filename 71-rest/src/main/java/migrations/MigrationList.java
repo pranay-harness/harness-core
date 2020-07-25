@@ -119,6 +119,7 @@ import migrations.all.ResourceLookupMigration;
 import migrations.all.ScheduleSegmentPublishJob;
 import migrations.all.SecretManagerConfigMigration;
 import migrations.all.SecretTextNameKeyWordsMigration;
+import migrations.all.ServerlessInstanceChangeCollectionNameMigration;
 import migrations.all.ServiceAddArtifactStreamIdsMigration;
 import migrations.all.ServiceHelmValuesToManifestFileMigration;
 import migrations.all.ServiceNameMigrationIfEmpty;
@@ -357,6 +358,7 @@ public class MigrationList {
         .add(Pair.of(321, BaseMigration.class))
         .add(Pair.of(322, UpdateCVTaskIterationMigration.class))
         .add(Pair.of(323, VaultAppRoleRenewalMigration.class))
+        .add(Pair.of(324, ServerlessInstanceChangeCollectionNameMigration.class))
         .build();
   }
 }

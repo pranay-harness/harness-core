@@ -45,7 +45,7 @@ import javax.validation.constraints.NotNull;
 @CdIndex(name = "serverless_instance_index8", fields = { @Field("appId")
                                                          , @Field("serviceId"), @Field("isDeleted") })
 @FieldNameConstants(innerTypeName = "ServerlessInstanceKeys")
-@Entity(value = "serverless-instance", noClassnameStored = true)
+@Entity(value = "serverlessInstance", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class ServerlessInstance implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                            UpdatedByAware, ApplicationAccess {
