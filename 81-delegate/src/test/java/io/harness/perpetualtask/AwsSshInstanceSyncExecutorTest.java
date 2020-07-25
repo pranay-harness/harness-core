@@ -1,6 +1,7 @@
 package io.harness.perpetualtask;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -10,12 +11,13 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
-import io.harness.CategoryTest;
+import io.harness.DelegateTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
@@ -24,6 +26,7 @@ import io.harness.perpetualtask.instancesync.AwsSshInstanceSyncPerpetualTaskPara
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.KryoUtils;
 import org.eclipse.jetty.server.Response;
 import org.junit.Before;
@@ -48,17 +51,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AwsSshInstanceSyncExecutorTest extends CategoryTest {
+public class AwsSshInstanceSyncExecutorTest extends DelegateTest {
   @Mock private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;
-  @InjectMocks private AwsSshInstanceSyncExecutor executor = new AwsSshInstanceSyncExecutor();
+  @Inject KryoSerializer kryoSerializer;
+
+  @InjectMocks private AwsSshInstanceSyncExecutor executor;
 
   private ArgumentCaptor<AwsEc2ListInstancesResponse> captor =
       ArgumentCaptor.forClass(AwsEc2ListInstancesResponse.class);
 
   @Before
   public void setup() {
+    on(executor).set("kryoSerializer", kryoSerializer);
     MockitoAnnotations.initMocks(executor);
   }
 

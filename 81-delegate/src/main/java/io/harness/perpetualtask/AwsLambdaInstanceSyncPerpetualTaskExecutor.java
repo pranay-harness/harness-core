@@ -21,7 +21,7 @@ import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +51,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
   @Inject private AwsLambdaHelperServiceDelegate awsLambdaHelperServiceDelegate;
   @Inject private AwsCloudWatchHelperServiceDelegate awsCloudWatchHelperServiceDelegate;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -59,7 +60,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
     final AwsLambdaInstanceSyncPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), AwsLambdaInstanceSyncPerpetualTaskParams.class);
 
-    final AwsConfig awsConfig = (AwsConfig) KryoUtils.asObject(taskParams.getAwsConfig().toByteArray());
+    final AwsConfig awsConfig = (AwsConfig) kryoSerializer.asObject(taskParams.getAwsConfig().toByteArray());
 
     AwsLambdaDetailsMetricsResponse awsLambdaDetailsWithMetricsResponse = getAwsResponse(taskParams, awsConfig);
     publishAwsLambdaSyncResult(taskId, taskParams, awsConfig, awsLambdaDetailsWithMetricsResponse);
@@ -89,7 +90,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
       AwsLambdaInstanceSyncPerpetualTaskParams taskParams, AwsConfig awsConfig) {
     @SuppressWarnings("unchecked")
     final List<EncryptedDataDetail> encryptedDataDetails =
-        (List<EncryptedDataDetail>) KryoUtils.asObject(taskParams.getEncryptedData().toByteArray());
+        (List<EncryptedDataDetail>) kryoSerializer.asObject(taskParams.getEncryptedData().toByteArray());
 
     AwsLambdaDetailsResponse awsLambdaDetailsResponse =
         getAwsLambdaDetailsResponse(taskParams, awsConfig, encryptedDataDetails);

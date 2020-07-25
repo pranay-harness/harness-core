@@ -1,6 +1,7 @@
 package io.harness.perpetualtask;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
@@ -10,10 +11,11 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 
-import io.harness.CategoryTest;
+import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.k8s.model.K8sPod;
@@ -25,8 +27,10 @@ import io.harness.perpetualtask.instancesync.K8sContainerInstanceSyncPerpetualTa
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.KryoUtils;
 import org.eclipse.jetty.server.Response;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -54,12 +58,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest {
+public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private transient K8sTaskHelper k8sTaskHelper;
   @Mock private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private transient ContainerService containerService;
   @Mock private Call<RestResponse<Boolean>> call;
+  @Inject KryoSerializer kryoSerializer;
 
   private ArgumentCaptor<ContainerSyncResponse> containerSyncResponseCaptor =
       ArgumentCaptor.forClass(ContainerSyncResponse.class);
@@ -67,8 +72,12 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends CategoryTest
   private ArgumentCaptor<K8sTaskExecutionResponse> k8TaskResponseCaptor =
       ArgumentCaptor.forClass(K8sTaskExecutionResponse.class);
 
-  @InjectMocks
-  private ContainerInstanceSyncPerpetualTaskExecutor executor = new ContainerInstanceSyncPerpetualTaskExecutor();
+  @InjectMocks private ContainerInstanceSyncPerpetualTaskExecutor executor;
+
+  @Before
+  public void setup() {
+    on(executor).set("kryoSerializer", kryoSerializer);
+  }
 
   @Test
   @Owner(developers = OwnerRule.ACASIAN)
