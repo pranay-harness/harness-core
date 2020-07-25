@@ -2,19 +2,17 @@ package io.harness.queue;
 
 import static java.util.Arrays.asList;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 
-import io.harness.govern.DependencyModule;
 import io.harness.govern.ServersModule;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
-public class QueueModule extends DependencyModule implements ServersModule {
+public class QueueModule extends AbstractModule implements ServersModule {
   private static QueueModule instance;
 
   public static QueueModule getInstance() {
@@ -22,16 +20,6 @@ public class QueueModule extends DependencyModule implements ServersModule {
       instance = new QueueModule();
     }
     return instance;
-  }
-
-  @Override
-  protected void configure() {
-    // nothing to configure
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return Collections.emptySet();
   }
 
   @Override

@@ -36,11 +36,11 @@ public class WaiterModule extends DependencyModule {
 
   @Override
   protected void configure() {
-    // nothing to do
+    install(QueueModule.getInstance());
   }
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(QueueModule.getInstance());
+    return ImmutableSet.<DependencyModule>of();
   }
 }
