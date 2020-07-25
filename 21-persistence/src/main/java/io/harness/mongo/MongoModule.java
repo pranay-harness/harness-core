@@ -65,6 +65,7 @@ public class MongoModule extends DependencyModule {
   @Override
   protected void configure() {
     install(MorphiaModule.getInstance());
+    install(KryoModule.getInstance());
 
     MapBinder.newMapBinder(binder(), String.class, Migrator.class);
   }
@@ -141,6 +142,6 @@ public class MongoModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(KryoModule.getInstance());
+    return ImmutableSet.<DependencyModule>of();
   }
 }
