@@ -20,7 +20,7 @@ import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.testlib.RealMongo;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -74,6 +74,8 @@ import java.util.UUID;
 @RunWith(Parameterized.class)
 public class CyberArkTest extends WingsBaseTest {
   @Inject private CyberArkResource cyberArkResource;
+  @Inject private KryoSerializer kryoSerializer;
+
   @Mock private AccountService accountService;
   @Inject private LocalEncryptionService localEncryptionService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
@@ -296,7 +298,7 @@ public class CyberArkTest extends WingsBaseTest {
     String password = UUID.randomUUID().toString();
     JenkinsConfig jenkinsConfig = getJenkinsConfig(accountId, password);
     SettingAttribute settingAttribute = getSettingAttribute(jenkinsConfig);
-    String savedAttributeId = wingsPersistence.save(KryoUtils.clone(settingAttribute));
+    String savedAttributeId = wingsPersistence.save(kryoSerializer.clone(settingAttribute));
 
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     JenkinsConfig savedJenkinsConfig = (JenkinsConfig) savedAttribute.getValue();
@@ -335,7 +337,7 @@ public class CyberArkTest extends WingsBaseTest {
     cyberArkConfig.setName(name);
     cyberArkConfig.setAccountId(accountId);
 
-    cyberArkService.saveConfig(accountId, KryoUtils.clone(cyberArkConfig));
+    cyberArkService.saveConfig(accountId, kryoSerializer.clone(cyberArkConfig));
 
     CyberArkConfig savedConfig = (CyberArkConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
     assertThat(savedConfig.getClientCertificate()).isEqualTo(cyberArkConfig.getClientCertificate());
@@ -350,7 +352,7 @@ public class CyberArkTest extends WingsBaseTest {
     cyberArkConfig.maskSecrets();
 
     // Masked Secrets, only name and default flag should be updated.
-    cyberArkService.saveConfig(accountId, KryoUtils.clone(cyberArkConfig));
+    cyberArkService.saveConfig(accountId, kryoSerializer.clone(cyberArkConfig));
 
     CyberArkConfig modifiedSavedConfig = cyberArkService.getConfig(accountId, savedConfig.getUuid());
     assertThat(modifiedSavedConfig.getClientCertificate()).isEqualTo(savedConfig.getClientCertificate());
@@ -374,14 +376,14 @@ public class CyberArkTest extends WingsBaseTest {
     cyberArkConfig.setName(name);
     cyberArkConfig.setAccountId(accountId);
 
-    String secretManagerId = cyberArkService.saveConfig(accountId, KryoUtils.clone(cyberArkConfig));
+    String secretManagerId = cyberArkService.saveConfig(accountId, kryoSerializer.clone(cyberArkConfig));
     verify(auditServiceHelper)
         .reportForAuditingUsingAccountId(eq(accountId), eq(null), any(CyberArkConfig.class), eq(Type.CREATE));
 
     cyberArkConfig.setUuid(secretManagerId);
     cyberArkConfig.setDefault(false);
     cyberArkConfig.setName(cyberArkConfig.getName() + "_Updated");
-    cyberArkService.saveConfig(accountId, KryoUtils.clone(cyberArkConfig));
+    cyberArkService.saveConfig(accountId, kryoSerializer.clone(cyberArkConfig));
     verify(auditServiceHelper)
         .reportForAuditingUsingAccountId(
             eq(accountId), any(CyberArkConfig.class), any(CyberArkConfig.class), eq(Type.UPDATE));

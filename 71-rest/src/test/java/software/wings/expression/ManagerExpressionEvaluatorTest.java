@@ -18,7 +18,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.data.SweepingOutput;
 import io.harness.rule.Owner;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -38,6 +38,7 @@ import java.util.Map;
 public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
   @Inject private SweepingOutputService sweepingOutputService;
+  @Inject KryoSerializer kryoSerializer;
 
   @Test
   @Owner(developers = GEORGE)
@@ -112,7 +113,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
                                        .appId(appId)
                                        .pipelineExecutionId(pipelineExecutionId)
                                        .workflowExecutionId(workflowExecutionId)
-                                       .output(KryoUtils.asDeflatedBytes(ImmutableMap.of("foo", "bar")))
+                                       .output(kryoSerializer.asDeflatedBytes(ImmutableMap.of("foo", "bar")))
                                        .build());
 
     Map<String, Object> context =
@@ -151,7 +152,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
                                        .appId(appId)
                                        .pipelineExecutionId(pipelineExecutionId)
                                        .workflowExecutionId(workflowExecutionId)
-                                       .output(KryoUtils.asDeflatedBytes(ImmutableMap.of("foo", "bar")))
+                                       .output(kryoSerializer.asDeflatedBytes(ImmutableMap.of("foo", "bar")))
                                        .build());
 
     Map<String, Object> context =

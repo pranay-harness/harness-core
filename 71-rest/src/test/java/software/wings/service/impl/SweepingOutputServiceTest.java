@@ -13,7 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -23,6 +23,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 public class SweepingOutputServiceTest extends WingsBaseTest {
   @Inject SweepingOutputService sweepingOutputService;
   @Inject HPersistence persistence;
+  @Inject KryoSerializer kryoSerializer;
 
   @Test
   @Owner(developers = PRASHANT, intermittent = true)
@@ -31,12 +32,13 @@ public class SweepingOutputServiceTest extends WingsBaseTest {
   public void shouldGetInstanceId() {
     persistence.ensureIndexForTesting(SweepingOutputInstance.class);
 
-    final SweepingOutputInstanceBuilder builder = SweepingOutputInstance.builder()
-                                                      .name("jenkins")
-                                                      .appId(generateUuid())
-                                                      .pipelineExecutionId(generateUuid())
-                                                      .workflowExecutionId(generateUuid())
-                                                      .output(KryoUtils.asDeflatedBytes(ImmutableMap.of("foo", "bar")));
+    final SweepingOutputInstanceBuilder builder =
+        SweepingOutputInstance.builder()
+            .name("jenkins")
+            .appId(generateUuid())
+            .pipelineExecutionId(generateUuid())
+            .workflowExecutionId(generateUuid())
+            .output(kryoSerializer.asDeflatedBytes(ImmutableMap.of("foo", "bar")));
 
     sweepingOutputService.save(builder.uuid(generateUuid()).build());
     assertThatThrownBy(() -> sweepingOutputService.save(builder.uuid(generateUuid()).build()))
