@@ -190,6 +190,8 @@ public class CacheModule extends DependencyModule implements ServersModule {
 
   @Override
   protected void configure() {
+    install(HazelcastModule.getInstance());
+
     if (cacheConfig.getCacheBackend() == REDIS) {
       bind(RedissonKryoCodec.class).toInstance(new RedissonKryoCodec());
     }
@@ -222,7 +224,7 @@ public class CacheModule extends DependencyModule implements ServersModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return Collections.singleton(HazelcastModule.getInstance());
+    return Collections.emptySet();
   }
 
   @Override
