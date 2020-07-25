@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.helpers.ext.external.comm.CollaborationHandler;
@@ -34,6 +34,7 @@ import javax.mail.Transport;
 public class EmailHandler implements CollaborationHandler {
   @Inject private Mailer mailer;
   @Inject private EmailUtils emailHelperUtil;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Inject @Transient private transient EncryptionService encryptionService;
   private static final TimeLimiter timeLimiter = new SimpleTimeLimiter();
@@ -81,7 +82,7 @@ public class EmailHandler implements CollaborationHandler {
           if (isNotEmpty(smtpConfig.getPassword())) {
             props.setProperty("mail.smtp.auth", "true");
           }
-          SmtpConfig config = KryoUtils.clone(smtpConfig);
+          SmtpConfig config = kryoSerializer.clone(smtpConfig);
           encryptionService.decrypt(config, encryptionDetails);
           if (config.isUseSSL()) {
             props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");

@@ -45,7 +45,7 @@ import io.harness.expression.SecretString;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -166,6 +166,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private transient StateExecutionService stateExecutionService;
   @Inject private transient ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Inject private transient KryoSerializer kryoSerializer;
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
@@ -469,7 +470,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (result == null) {
       return null;
     }
-    return (Map<String, Artifact>) KryoUtils.asInflatedObject(result.getOutput());
+    return (Map<String, Artifact>) kryoSerializer.asInflatedObject(result.getOutput());
   }
 
   private boolean isArtifactVariableForService(String serviceId, ArtifactVariable artifactVariable) {

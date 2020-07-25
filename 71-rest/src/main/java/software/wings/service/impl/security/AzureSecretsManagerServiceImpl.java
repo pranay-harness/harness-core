@@ -18,7 +18,7 @@ import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.mongodb.DuplicateKeyException;
 import io.harness.exception.AzureKeyVaultOperationException;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.AzureVaultConfig;
@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements AzureSecretsManagerService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AzureHelperService azureHelperService;
+  @Inject private KryoSerializer kryoSerializer;
   private static final String SECRET_KEY_NAME_SUFFIX = "_secretKey";
 
   @Override
@@ -51,7 +52,7 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
 
     if (isNotEmpty(azureVautConfig.getUuid())) {
       savedAzureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, azureVautConfig.getUuid());
-      oldConfigForAudit = KryoUtils.clone(savedAzureVaultConfig);
+      oldConfigForAudit = kryoSerializer.clone(savedAzureVaultConfig);
 
       updateCallWithMaskedSecretKey = SECRET_MASK.equals(azureVautConfig.getSecretKey());
     }

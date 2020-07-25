@@ -13,7 +13,7 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient {
   @Inject private SecretManager secretManager;
   @Inject private SettingsService settingsService;
+  @Inject private KryoSerializer kryoSerializer;
 
   private static final String REGION = "region";
   private static final String SETTING_ID = "settingId";
@@ -47,8 +48,8 @@ public class EcsPerpetualTaskServiceClient implements PerpetualTaskServiceClient
     String clusterId = clientParams.get(CLUSTER_ID);
 
     AwsConfig awsConfig = getAwsConfig(settingId);
-    ByteString awsConfigBytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
-    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(getEncryptionDetails(awsConfig)));
+    ByteString awsConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(awsConfig));
+    ByteString encryptionDetailBytes = ByteString.copyFrom(kryoSerializer.asBytes(getEncryptionDetails(awsConfig)));
 
     EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
                                                         .setClusterName(clusterName)

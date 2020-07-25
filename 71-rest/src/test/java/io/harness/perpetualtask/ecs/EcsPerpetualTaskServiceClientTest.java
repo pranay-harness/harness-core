@@ -5,7 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
+import com.google.inject.Inject;
+
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -18,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
@@ -26,7 +28,7 @@ import software.wings.service.intfc.security.SecretManager;
 import java.util.HashMap;
 import java.util.Map;
 
-public class EcsPerpetualTaskServiceClientTest extends CategoryTest {
+public class EcsPerpetualTaskServiceClientTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";
   private static final String REGION = "region";
   private static final String SETTING_ID = "settingId";
@@ -37,7 +39,7 @@ public class EcsPerpetualTaskServiceClientTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
-  @InjectMocks EcsPerpetualTaskServiceClient ecsPerpetualTaskServiceClient;
+  @InjectMocks @Inject EcsPerpetualTaskServiceClient ecsPerpetualTaskServiceClient;
 
   @Before
   public void setUp() {

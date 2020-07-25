@@ -23,7 +23,7 @@ import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.verificationclient.CVNextGenServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -49,6 +49,8 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
   @Inject private DataCollectionDSLService dataCollectionDSLService;
   @Inject @Named("verificationDataCollectorExecutor") protected ExecutorService dataCollectionService;
 
+  @Inject private KryoSerializer kryoSerializer;
+
   @Override
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
@@ -56,7 +58,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
         AnyUtils.unpack(params.getCustomizedParams(), DataCollectionPerpetualTaskParams.class);
     logger.info("Executing for !! {} ", taskParams.getCvConfigId());
     CVDataCollectionInfo cvDataCollectionInfo =
-        (CVDataCollectionInfo) KryoUtils.asObject(taskParams.getDataCollectionInfo().toByteArray());
+        (CVDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());
     logger.info("DataCollectionInfo {} ", cvDataCollectionInfo);
     DataCollectionTaskDTO dataCollectionTask;
     try {
