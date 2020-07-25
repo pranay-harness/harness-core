@@ -29,7 +29,7 @@ public class TimeModuleTest extends CategoryTest {
   public void shouldPropagateLogContextInTimelimiterCall() throws Exception {
     List<Module> modules = new ArrayList<>();
     ExecutorModule.getInstance().setExecutorService(Executors.newSingleThreadExecutor());
-    modules.addAll(TimeModule.getInstance().cumulativeDependencies());
+    modules.add(TimeModule.getInstance());
     Injector injector = Guice.createInjector(modules);
     TimeLimiter timeLimiter = injector.getInstance(TimeLimiter.class);
     try (AutoLogContext context = new TestLogContext("foo", "bar", AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {

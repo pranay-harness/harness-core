@@ -1,18 +1,16 @@
 package io.harness.time;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
-import io.harness.govern.DependencyModule;
 import io.harness.threading.ExecutorModule;
 
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-public class TimeModule extends DependencyModule {
+public class TimeModule extends AbstractModule {
   private static volatile TimeModule instance;
 
   public static TimeModule getInstance() {
@@ -24,17 +22,12 @@ public class TimeModule extends DependencyModule {
 
   @Override
   protected void configure() {
-    // nothing to configure
+    install(ExecutorModule.getInstance());
   }
 
   @Provides
   @Singleton
   public TimeLimiter timeLimiter(ExecutorService executorService) {
     return new SimpleTimeLimiter(executorService);
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(ExecutorModule.getInstance());
   }
 }

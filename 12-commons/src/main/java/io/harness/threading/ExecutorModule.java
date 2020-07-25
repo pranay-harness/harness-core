@@ -1,14 +1,14 @@
 package io.harness.threading;
 
-import io.harness.govern.DependencyModule;
+import com.google.inject.AbstractModule;
+
 import io.harness.manage.ManagedExecutorService;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-public class ExecutorModule extends DependencyModule {
+public class ExecutorModule extends AbstractModule {
   private static volatile ExecutorModule instance;
 
   public static ExecutorModule getInstance() {
@@ -26,10 +26,5 @@ public class ExecutorModule extends DependencyModule {
     executorService.isShutdown();
 
     bind(ExecutorService.class).toInstance(new ManagedExecutorService(executorService));
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return null;
   }
 }

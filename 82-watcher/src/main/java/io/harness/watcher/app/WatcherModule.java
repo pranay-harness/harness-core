@@ -72,6 +72,8 @@ public class WatcherModule extends DependencyModule {
 
   @Override
   protected void configure() {
+    install(TimeModule.getInstance());
+
     bind(WatcherService.class).to(WatcherServiceImpl.class);
     bind(MessageService.class)
         .toInstance(
@@ -81,6 +83,6 @@ public class WatcherModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(TimeModule.getInstance());
+    return ImmutableSet.<DependencyModule>of();
   }
 }
