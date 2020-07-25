@@ -17,7 +17,7 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -45,14 +45,15 @@ public class AwsLambdaInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
   @Inject SecretManager secretManager;
   @Inject SettingsService settingsService;
   @Inject InfrastructureMappingService infraMappingService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
     final PerpetualTaskData perpetualTaskData = getPerpetualTaskData(clientContext);
 
-    ByteString awsConfigBytes = ByteString.copyFrom(KryoUtils.asBytes(perpetualTaskData.getAwsConfig()));
+    ByteString awsConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(perpetualTaskData.getAwsConfig()));
     ByteString encryptedAwsConfigBytes =
-        ByteString.copyFrom(KryoUtils.asBytes(perpetualTaskData.getEncryptedDataDetails()));
+        ByteString.copyFrom(kryoSerializer.asBytes(perpetualTaskData.getEncryptedDataDetails()));
 
     return AwsLambdaInstanceSyncPerpetualTaskParams.newBuilder()
         .setAwsConfig(awsConfigBytes)

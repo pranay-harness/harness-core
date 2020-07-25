@@ -18,7 +18,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Builder;
 import lombok.Data;
@@ -49,6 +49,7 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClient
   @Inject private AwsUtils awsUtils;
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public String create(String accountId, AwsCodeDeployInstanceSyncPerpetualTaskClientParams clientParams) {
@@ -69,9 +70,9 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClient
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
     PerpetualTaskData taskData = getPerpetualTaskData(clientContext);
-    ByteString filterBytes = ByteString.copyFrom(KryoUtils.asBytes(taskData.getFilters()));
-    ByteString configBytes = ByteString.copyFrom(KryoUtils.asBytes(taskData.getAwsConfig()));
-    ByteString encryptionDetailsBytes = ByteString.copyFrom(KryoUtils.asBytes(taskData.getEncryptionDetails()));
+    ByteString filterBytes = ByteString.copyFrom(kryoSerializer.asBytes(taskData.getFilters()));
+    ByteString configBytes = ByteString.copyFrom(kryoSerializer.asBytes(taskData.getAwsConfig()));
+    ByteString encryptionDetailsBytes = ByteString.copyFrom(kryoSerializer.asBytes(taskData.getEncryptionDetails()));
 
     return AwsCodeDeployInstanceSyncPerpetualTaskParams.newBuilder()
         .setRegion(taskData.getRegion())

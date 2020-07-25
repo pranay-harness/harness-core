@@ -3,6 +3,7 @@ package io.harness.perpetualtask;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -59,6 +60,8 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends DelegateTest {
 
   @Before
   public void setup() throws IOException {
+    on(executor).set("kryoSerializer", kryoSerializer);
+
     doReturn(singletonList(new Instance()))
         .when(ec2ServiceDelegate)
         .listEc2Instances(

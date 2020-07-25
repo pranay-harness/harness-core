@@ -1,7 +1,9 @@
 package io.harness.perpetualtask.datacollection;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -74,6 +76,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
 
   @Before
   public void setup() throws IllegalAccessException, IOException {
+    on(dataCollector).set("kryoSerializer", kryoSerializer);
     accountId = generateUuid();
     cvConfigId = generateUuid();
 
@@ -142,7 +145,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.KAMAL)
+  @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void testDataCollection_IfTaskReturnedIsNull() throws IOException {
     Call<RestResponse<DataCollectionTaskDTO>> nextTaskCall = mock(Call.class);

@@ -57,7 +57,7 @@ import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.LineIterator;
@@ -186,6 +186,7 @@ public class K8sStateHelper {
   @Inject private OpenShiftManagerService openShiftManagerService;
   @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
   @Inject private InstanceService instanceService;
+  @Inject private KryoSerializer kryoSerializer;
 
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
 
@@ -535,7 +536,7 @@ public class K8sStateHelper {
   public void saveK8sElement(ExecutionContext context, K8sElement k8sElement) {
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
                                    .name("k8s")
-                                   .output(KryoUtils.asDeflatedBytes(k8sElement))
+                                   .output(kryoSerializer.asDeflatedBytes(k8sElement))
                                    .build());
   }
 
@@ -545,7 +546,7 @@ public class K8sStateHelper {
     if (result == null) {
       return null;
     }
-    return (K8sElement) KryoUtils.asInflatedObject(result.getOutput());
+    return (K8sElement) kryoSerializer.asInflatedObject(result.getOutput());
   }
 
   public ContainerInfrastructureMapping getContainerInfrastructureMapping(ExecutionContext context) {
