@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
-import io.harness.CategoryTest;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -26,12 +25,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.WingsBaseTest;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class ArtifactCollectionPTaskServiceClientTest extends CategoryTest {
+public class ArtifactCollectionPTaskServiceClientTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";
   private String artifactStreamId = "ARTIFACT_STREAM_ID";
   private String taskId = "TASK_ID";
