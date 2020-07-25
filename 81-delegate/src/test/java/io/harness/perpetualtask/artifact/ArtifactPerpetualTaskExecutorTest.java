@@ -10,10 +10,11 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
+import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 
-import io.harness.CategoryTest;
+import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.logging.CommandExecutionStatus;
@@ -25,6 +26,7 @@ import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.KryoUtils;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
@@ -49,10 +51,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ArtifactPerpetualTaskExecutorTest extends CategoryTest {
+public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
   private static final String ARTIFACT_STREAM_ID = "ARTIFACT_STREAM_ID";
 
   private ArtifactPerpetualTaskExecutor artifactPerpetualTaskExecutor;
+
+  @Inject KryoSerializer kryoSerializer;
 
   @Mock private ArtifactRepositoryServiceImpl artifactRepositoryService;
   @Mock private ManagerClient managerClient;
@@ -62,7 +66,8 @@ public class ArtifactPerpetualTaskExecutorTest extends CategoryTest {
 
   @Before
   public void setUp() throws Exception {
-    artifactPerpetualTaskExecutor = new ArtifactPerpetualTaskExecutor(artifactRepositoryService, managerClient);
+    artifactPerpetualTaskExecutor =
+        new ArtifactPerpetualTaskExecutor(artifactRepositoryService, managerClient, kryoSerializer);
     perpetualTaskId = PerpetualTaskId.newBuilder().setId(UUIDGenerator.generateUuid()).build();
   }
 

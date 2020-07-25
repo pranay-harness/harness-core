@@ -17,7 +17,7 @@ import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskState;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
@@ -40,14 +40,16 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
 
   private final ArtifactRepositoryServiceImpl artifactRepositoryService;
   private final ManagerClient managerClient;
+  private final KryoSerializer kryoSerializer;
 
   private final Cache<String, ArtifactsPublishedCache> cache = Caffeine.newBuilder().build();
 
   @Inject
-  public ArtifactPerpetualTaskExecutor(
-      ArtifactRepositoryServiceImpl artifactRepositoryService, ManagerClient managerClient) {
+  public ArtifactPerpetualTaskExecutor(ArtifactRepositoryServiceImpl artifactRepositoryService,
+      ManagerClient managerClient, KryoSerializer kryoSerializer) {
     this.artifactRepositoryService = artifactRepositoryService;
     this.managerClient = managerClient;
+    this.kryoSerializer = kryoSerializer;
   }
 
   @Override
@@ -59,8 +61,8 @@ public class ArtifactPerpetualTaskExecutor implements PerpetualTaskExecutor {
     String artifactStreamId = artifactCollectionTaskParams.getArtifactStreamId();
     logger.info("Running artifact collection for artifactStreamId: {}", artifactStreamId);
 
-    final BuildSourceParameters buildSourceParameters =
-        (BuildSourceParameters) KryoUtils.asObject(artifactCollectionTaskParams.getBuildSourceParams().toByteArray());
+    final BuildSourceParameters buildSourceParameters = (BuildSourceParameters) kryoSerializer.asObject(
+        artifactCollectionTaskParams.getBuildSourceParams().toByteArray());
     String accountId = buildSourceParameters.getAccountId();
 
     // Fetch artifacts published cache for this artifactStreamId.
