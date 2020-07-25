@@ -3,6 +3,7 @@ package io.harness.perpetualtask;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -11,10 +12,11 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 
-import io.harness.CategoryTest;
+import io.harness.DelegateTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
@@ -23,8 +25,10 @@ import io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskP
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.KryoUtils;
 import org.eclipse.jetty.server.Response;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -47,17 +51,23 @@ import java.time.Instant;
 import java.util.ArrayList;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends CategoryTest {
+public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private AwsLambdaHelperServiceDelegate awsLambdaHelperServiceDelegate;
   @Mock private AwsCloudWatchHelperServiceDelegate awsCloudWatchHelperServiceDelegate;
   @Mock private Call<RestResponse<Boolean>> call;
 
+  @Inject KryoSerializer kryoSerializer;
+
   private ArgumentCaptor<AwsLambdaDetailsMetricsResponse> captor =
       ArgumentCaptor.forClass(AwsLambdaDetailsMetricsResponse.class);
 
-  @InjectMocks
-  private AwsLambdaInstanceSyncPerpetualTaskExecutor executor = new AwsLambdaInstanceSyncPerpetualTaskExecutor();
+  @InjectMocks private AwsLambdaInstanceSyncPerpetualTaskExecutor executor;
+
+  @Before
+  public void setup() {
+    on(executor).set("kryoSerializer", kryoSerializer);
+  }
 
   @Test
   @Owner(developers = OwnerRule.ACASIAN)

@@ -22,7 +22,6 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import io.harness.serializer.KryoUtils;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -91,7 +90,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
   }
 
   private Message buildK8ContainerInstanceSyncTaskParams(ContainerInstanceSyncPerpetualTaskData taskData) {
-    ByteString clusterConfig = ByteString.copyFrom(KryoUtils.asBytes(taskData.getK8sClusterConfig()));
+    ByteString clusterConfig = ByteString.copyFrom(kryoSerializer.asBytes(taskData.getK8sClusterConfig()));
 
     return ContainerInstanceSyncPerpetualTaskParams.newBuilder()
         .setContainerType(taskData.getContainerType())

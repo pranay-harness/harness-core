@@ -1,6 +1,7 @@
 package io.harness.perpetualtask;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -10,11 +11,12 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 
 import com.amazonaws.services.ec2.model.Instance;
-import io.harness.CategoryTest;
+import io.harness.DelegateTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
@@ -23,8 +25,10 @@ import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskPara
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.KryoUtils;
 import org.eclipse.jetty.server.Response;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -43,7 +47,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends CategoryTest {
+public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
   @Mock private AwsAsgHelperServiceDelegate awsAsgHelperServiceDelegate;
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;
@@ -51,7 +55,14 @@ public class AwsAmiInstanceSyncPerpetualTaskExecutorTest extends CategoryTest {
   private ArgumentCaptor<AwsAsgListInstancesResponse> captor =
       ArgumentCaptor.forClass(AwsAsgListInstancesResponse.class);
 
-  @InjectMocks private AwsAmiInstanceSyncPerpetualTaskExecutor executor = new AwsAmiInstanceSyncPerpetualTaskExecutor();
+  @Inject KryoSerializer kryoSerializer;
+
+  @InjectMocks private AwsAmiInstanceSyncPerpetualTaskExecutor executor;
+
+  @Before
+  public void setup() {
+    on(executor).set("kryoSerializer", kryoSerializer);
+  }
 
   @Test
   @Owner(developers = OwnerRule.YOGESH)
