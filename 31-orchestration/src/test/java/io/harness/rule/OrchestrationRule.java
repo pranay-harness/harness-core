@@ -120,7 +120,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
       }
     });
 
-    modules.addAll(TimeModule.getInstance().cumulativeDependencies());
+    modules.add(TimeModule.getInstance());
     modules.add(new OrchestrationPersistenceTestModule());
     modules.addAll(new OrchestrationModule(OrchestrationModuleConfig.builder()
                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())

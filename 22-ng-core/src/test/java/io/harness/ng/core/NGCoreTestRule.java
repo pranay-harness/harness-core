@@ -53,7 +53,7 @@ public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
         bind(HPersistence.class).to(MongoPersistence.class);
       }
     });
-    modules.addAll(TimeModule.getInstance().cumulativeDependencies());
+    modules.add(TimeModule.getInstance());
 
     modules.add(NGCoreModule.getInstance());
     modules.add(new NGCorePersistenceTestModule());

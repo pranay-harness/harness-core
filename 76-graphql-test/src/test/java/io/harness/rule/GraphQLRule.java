@@ -130,7 +130,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(mongoTypeModule(annotations));
 
     modules.add(VersionModule.getInstance());
-    modules.addAll(TimeModule.getInstance().cumulativeDependencies());
+    modules.add(TimeModule.getInstance());
     modules.add(new GraphQLPersistenceTestModule());
     modules.add(new ProviderModule() {
       @Provides

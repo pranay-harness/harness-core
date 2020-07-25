@@ -65,7 +65,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
         bind(HPersistence.class).to(MongoPersistence.class);
       }
     });
-    modules.addAll(TimeModule.getInstance().cumulativeDependencies());
+    modules.add(TimeModule.getInstance());
     modules.add(NGModule.getInstance());
     modules.add(new CDNGPersistenceTestModule());
     modules.addAll(new OrchestrationModule(OrchestrationModuleConfig.builder()

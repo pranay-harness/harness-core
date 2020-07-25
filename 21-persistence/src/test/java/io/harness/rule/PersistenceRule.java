@@ -165,7 +165,7 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
       }
     });
 
-    modules.addAll(TimeModule.getInstance().cumulativeDependencies());
+    modules.add(TimeModule.getInstance());
     return modules;
   }
 
