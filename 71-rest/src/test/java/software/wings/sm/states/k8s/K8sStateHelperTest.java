@@ -88,7 +88,7 @@ import io.harness.expression.VariableResolverTracker;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
@@ -220,6 +220,8 @@ public class K8sStateHelperTest extends WingsBaseTest {
   @Mock private InstanceService instanceService;
 
   @Inject @InjectMocks private K8sStateHelper k8sStateHelper;
+
+  @Inject KryoSerializer kryoSerializer;
 
   private static final String APPLICATION_MANIFEST_ID = "AppManifestId";
 
@@ -1313,7 +1315,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     SweepingOutputInstance sweepingOutputInstance =
         context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
             .name("k8s")
-            .output(KryoUtils.asDeflatedBytes(k8sElement))
+            .output(kryoSerializer.asDeflatedBytes(k8sElement))
             .build();
 
     when(sweepingOutputService.find(any())).thenReturn(sweepingOutputInstance);

@@ -11,7 +11,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -33,6 +33,7 @@ public class ExecutionGenTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject KryoSerializer kryoSerializer;
 
   @Test
   @Owner(developers = ANUBHAW)
@@ -44,7 +45,7 @@ public class ExecutionGenTest extends WingsBaseTest {
     PageResponse<WorkflowExecution> response = wingsPersistence.query(WorkflowExecution.class, pageRequest);
 
     for (int i = 0; i < 50; i++) {
-      WorkflowExecution workflowExecution = KryoUtils.clone(response.get(random.nextInt(response.size())));
+      WorkflowExecution workflowExecution = kryoSerializer.clone(response.get(random.nextInt(response.size())));
       if (workflowExecution.getStatus() != ExecutionStatus.SUCCESS
           && workflowExecution.getStatus() != ExecutionStatus.FAILED) {
         continue;

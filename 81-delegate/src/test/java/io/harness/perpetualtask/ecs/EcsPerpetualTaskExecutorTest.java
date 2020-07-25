@@ -14,6 +14,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
@@ -21,7 +22,7 @@ import com.google.protobuf.Message;
 import com.amazonaws.services.ecs.model.Cluster;
 import com.amazonaws.services.ecs.model.Service;
 import com.github.benmanes.caffeine.cache.Cache;
-import io.harness.CategoryTest;
+import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.EcsUtilization;
@@ -33,7 +34,7 @@ import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.ecs.support.EcsMetricClient;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.time.FakeClock;
 import org.joor.Reflect;
 import org.junit.Before;
@@ -62,11 +63,12 @@ import java.util.Map;
 import java.util.Set;
 
 @RunWith(Parameterized.class)
-public class EcsPerpetualTaskExecutorTest extends CategoryTest {
+public class EcsPerpetualTaskExecutorTest extends DelegateTest {
   @Mock private AwsEcsHelperServiceDelegate ecsHelperServiceDelegate;
   @Mock private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
   @Mock private EcsMetricClient ecsMetricClient;
   @Mock private EventPublisher eventPublisher;
+  @Inject KryoSerializer kryoSerializer;
 
   @Parameterized.Parameter public Clock clock;
   @Parameterized.Parameters(name = "{index}: with clock: {0}")
@@ -165,11 +167,11 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
     Instant heartBeatTime = Instant.now(clock);
 
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
-    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
+    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(awsConfig));
 
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     List<EncryptedDataDetail> encryptionDetails = new ArrayList<>(Collections.singletonList(encryptedDataDetail));
-    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
+    ByteString encryptionDetailBytes = ByteString.copyFrom(kryoSerializer.asBytes(encryptionDetails));
 
     EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
                                                         .setClusterId(CLUSTER_ID)
@@ -198,10 +200,10 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
     Instant metricsCollectedTillHour = now.truncatedTo(HOURS).minus(1, HOURS);
     cache.put(CLUSTER_ID, EcsActiveInstancesCache.builder().metricsCollectedTillHour(metricsCollectedTillHour).build());
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
-    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
+    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(awsConfig));
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     List<EncryptedDataDetail> encryptionDetails = new ArrayList<>(Collections.singletonList(encryptedDataDetail));
-    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
+    ByteString encryptionDetailBytes = ByteString.copyFrom(kryoSerializer.asBytes(encryptionDetails));
     EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
                                                         .setClusterId(CLUSTER_ID)
                                                         .setRegion(REGION)
@@ -229,10 +231,10 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
   public void shouldQuery24HoursIfNoLastHeartBeat() throws Exception {
     Instant heartBeatTime = Instant.ofEpochMilli(0);
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
-    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
+    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(awsConfig));
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     List<EncryptedDataDetail> encryptionDetails = new ArrayList<>(Collections.singletonList(encryptedDataDetail));
-    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
+    ByteString encryptionDetailBytes = ByteString.copyFrom(kryoSerializer.asBytes(encryptionDetails));
     EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
                                                         .setClusterId(CLUSTER_ID)
                                                         .setRegion(REGION)
@@ -262,10 +264,10 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
     Instant now = Instant.now(clock);
     Instant heartBeatTime = now.minus(Duration.ofHours(7));
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
-    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
+    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(awsConfig));
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     List<EncryptedDataDetail> encryptionDetails = new ArrayList<>(Collections.singletonList(encryptedDataDetail));
-    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
+    ByteString encryptionDetailBytes = ByteString.copyFrom(kryoSerializer.asBytes(encryptionDetails));
     EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
                                                         .setClusterId(CLUSTER_ID)
                                                         .setRegion(REGION)
@@ -296,10 +298,10 @@ public class EcsPerpetualTaskExecutorTest extends CategoryTest {
     Instant metricsCollectedTillHour = now.truncatedTo(HOURS);
     cache.put(CLUSTER_ID, EcsActiveInstancesCache.builder().metricsCollectedTillHour(metricsCollectedTillHour).build());
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).build();
-    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(awsConfig));
+    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(awsConfig));
     EncryptedDataDetail encryptedDataDetail = EncryptedDataDetail.builder().build();
     List<EncryptedDataDetail> encryptionDetails = new ArrayList<>(Collections.singletonList(encryptedDataDetail));
-    ByteString encryptionDetailBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
+    ByteString encryptionDetailBytes = ByteString.copyFrom(kryoSerializer.asBytes(encryptionDetails));
     EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
                                                         .setClusterId(CLUSTER_ID)
                                                         .setRegion(REGION)

@@ -27,7 +27,6 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.serializer.KryoSerializer;
-import io.harness.serializer.KryoUtils;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import org.junit.Before;
@@ -107,7 +106,7 @@ public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
                                                       .artifactStreamType(DOCKER.name())
                                                       .savedBuildDetailsKeys(new HashSet<>(asList("1", "2", "3")))
                                                       .build();
-    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(buildSourceParameters));
+    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(buildSourceParameters));
     ArtifactCollectionTaskParams artifactCollectionTaskParams = ArtifactCollectionTaskParams.newBuilder()
                                                                     .setArtifactStreamId(ARTIFACT_STREAM_ID)
                                                                     .setBuildSourceParams(bytes)

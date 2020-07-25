@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
@@ -22,7 +23,7 @@ import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.harness.CategoryTest;
+import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
@@ -38,7 +39,7 @@ import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetricsList;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetricsList;
 import io.harness.rule.Owner;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,7 +57,7 @@ import java.time.Instant;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
-public class K8SWatchTaskExecutorTest extends CategoryTest {
+public class K8SWatchTaskExecutorTest extends DelegateTest {
   @Rule public final KubernetesServer server = new KubernetesServer();
 
   private K8sMetricsClient k8sMetricClient;
@@ -68,6 +69,8 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
   @Mock K8sWatchServiceDelegate k8sWatchServiceDelegate;
   @Captor ArgumentCaptor<Message> messageArgumentCaptor;
   @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
+
+  @Inject KryoSerializer kryoSerializer;
 
   private static final String KUBE_SYSTEM_ID = "aa4062a7-d214-4642-8bb5-dfc32e750ed0";
   private final String WATCH_ID = "watch-id";
@@ -174,7 +177,7 @@ public class K8SWatchTaskExecutorTest extends CategoryTest {
 
   private K8sWatchTaskParams getK8sWatchTaskParams() {
     K8sClusterConfig config = K8sClusterConfig.builder().build();
-    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(config));
+    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(config));
 
     return K8sWatchTaskParams.newBuilder()
         .setCloudProviderId(CLOUD_PROVIDER_ID)

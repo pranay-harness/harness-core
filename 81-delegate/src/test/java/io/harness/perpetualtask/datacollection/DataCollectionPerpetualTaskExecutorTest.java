@@ -11,10 +11,11 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 
-import io.harness.CategoryTest;
+import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
@@ -31,7 +32,7 @@ import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.verificationclient.CVNextGenServiceClient;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -54,7 +55,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
+public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   private DataCollectionPerpetualTaskExecutor dataCollector = new DataCollectionPerpetualTaskExecutor();
   @Mock private TimeSeriesDataStoreService timeSeriesDataStoreService;
@@ -68,6 +69,8 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
   private AppDynamicsDataCollectionInfo dataCollectionInfo;
 
   private PerpetualTaskExecutionParams perpetualTaskParams;
+
+  @Inject KryoSerializer kryoSerializer;
 
   @Before
   public void setup() throws IllegalAccessException, IOException {
@@ -119,7 +122,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends CategoryTest {
                                                     .settingValue(appDynamicsConfig)
                                                     .encryptedDataDetails(Lists.newArrayList())
                                                     .build();
-    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(cvDataCollectionInfo));
+    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo));
     perpetualTaskParams = PerpetualTaskExecutionParams.newBuilder()
                               .setCustomizedParams(Any.pack(DataCollectionPerpetualTaskParams.newBuilder()
                                                                 .setAccountId(accountId)

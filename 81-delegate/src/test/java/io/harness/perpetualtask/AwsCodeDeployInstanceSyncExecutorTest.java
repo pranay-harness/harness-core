@@ -18,7 +18,7 @@ import com.google.protobuf.ByteString;
 
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
-import io.harness.CategoryTest;
+import io.harness.DelegateTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
@@ -28,7 +28,7 @@ import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualT
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import org.eclipse.jetty.server.Response;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,12 +48,14 @@ import java.time.Instant;
 import java.util.ArrayList;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AwsCodeDeployInstanceSyncExecutorTest extends CategoryTest {
+public class AwsCodeDeployInstanceSyncExecutorTest extends DelegateTest {
   @Mock private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;
 
-  @InjectMocks @Inject private AwsCodeDeployInstanceSyncExecutor executor;
+  @Inject KryoSerializer kryoSerializer;
+
+  @InjectMocks private AwsCodeDeployInstanceSyncExecutor executor;
 
   @Before
   public void setup() throws IOException {
@@ -139,15 +141,16 @@ public class AwsCodeDeployInstanceSyncExecutorTest extends CategoryTest {
   }
 
   private PerpetualTaskExecutionParams getPerpetualTaskParams() {
-    ByteString configBytes = ByteString.copyFrom(KryoUtils.asBytes(AwsConfig.builder().accountId("accountId").build()));
-    ByteString encryptionDetailsBytes = ByteString.copyFrom(KryoUtils.asBytes(new ArrayList<>()));
+    ByteString configBytes =
+        ByteString.copyFrom(kryoSerializer.asBytes(AwsConfig.builder().accountId("accountId").build()));
+    ByteString encryptionDetailsBytes = ByteString.copyFrom(kryoSerializer.asBytes(new ArrayList<>()));
     AwsCodeDeployInstanceSyncPerpetualTaskParams.Builder paramsBuilder =
         AwsCodeDeployInstanceSyncPerpetualTaskParams.newBuilder();
 
     paramsBuilder.setRegion("us-east-1");
     paramsBuilder.setAwsConfig(configBytes);
     paramsBuilder.setEncryptedData(encryptionDetailsBytes);
-    ByteString filterBytes = ByteString.copyFrom(KryoUtils.asBytes(singletonList(new Filter())));
+    ByteString filterBytes = ByteString.copyFrom(kryoSerializer.asBytes(singletonList(new Filter())));
     paramsBuilder.setFilter(filterBytes);
 
     return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(paramsBuilder.build())).build();
