@@ -28,6 +28,8 @@ public class OrchestrationBeansModule extends DependencyModule {
 
   @Override
   protected void configure() {
+    install(OrchestrationRegistryModule.getInstance());
+
     MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     MapBinder.newMapBinder(binder(), String.class, AdviserRegistrar.class);
     MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
@@ -41,6 +43,6 @@ public class OrchestrationBeansModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of(OrchestrationRegistryModule.getInstance());
+    return ImmutableSet.of();
   }
 }

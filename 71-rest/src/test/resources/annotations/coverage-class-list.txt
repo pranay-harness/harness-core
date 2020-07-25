@@ -1,7 +1,6 @@
 12-commons/src/main/java/io/harness/expression/EngineExpressionEvaluator.java
 12-commons/src/main/java/io/harness/expression/EngineVariableResolver.java
 12-commons/src/main/java/io/harness/expression/ExpressionEvaluatorUtils.java
-12-commons/src/main/java/io/harness/registries/RegistryModule.java
 12-commons/src/main/java/io/harness/registries/exceptions/DuplicateRegistryException.java
 12-commons/src/main/java/io/harness/registries/exceptions/UnregisteredKeyAccessException.java
 24-common-entities/src/main/java/io/harness/entity/ServiceSecretKey.java

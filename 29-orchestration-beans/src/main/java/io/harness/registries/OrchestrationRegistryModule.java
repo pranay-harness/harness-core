@@ -2,6 +2,7 @@ package io.harness.registries;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -36,7 +37,7 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 @Slf4j
-public class OrchestrationRegistryModule extends RegistryModule {
+public class OrchestrationRegistryModule extends AbstractModule {
   private static OrchestrationRegistryModule instance;
 
   public static synchronized OrchestrationRegistryModule getInstance() {
