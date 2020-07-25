@@ -28,7 +28,6 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.serializer.KryoSerializer;
-import io.harness.serializer.KryoUtils;
 import org.eclipse.jetty.server.Response;
 import org.junit.Before;
 import org.junit.Test;
@@ -269,9 +268,9 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
   private PerpetualTaskExecutionParams getContainerInstancePerpetualTaskParams() {
     AwsConfig awsConfig = AwsConfig.builder().accountId("accountId").build();
-    ByteString configBytes = ByteString.copyFrom(KryoUtils.asBytes(
+    ByteString configBytes = ByteString.copyFrom(kryoSerializer.asBytes(
         SettingAttribute.Builder.aSettingAttribute().withAccountId("accountId").withValue(awsConfig).build()));
-    ByteString encryptionDetailsBytes = ByteString.copyFrom(KryoUtils.asBytes(new ArrayList<>()));
+    ByteString encryptionDetailsBytes = ByteString.copyFrom(kryoSerializer.asBytes(new ArrayList<>()));
 
     ContainerInstanceSyncPerpetualTaskParams params =
         ContainerInstanceSyncPerpetualTaskParams.newBuilder()
@@ -290,7 +289,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
 
   private PerpetualTaskExecutionParams getK8sPerpetualTaskParams() {
     ByteString configBytes =
-        ByteString.copyFrom(KryoUtils.asBytes(K8sClusterConfig.builder().namespace("namespace").build()));
+        ByteString.copyFrom(kryoSerializer.asBytes(K8sClusterConfig.builder().namespace("namespace").build()));
 
     ContainerInstanceSyncPerpetualTaskParams params =
         ContainerInstanceSyncPerpetualTaskParams.newBuilder()

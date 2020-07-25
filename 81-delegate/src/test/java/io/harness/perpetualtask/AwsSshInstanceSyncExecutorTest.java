@@ -27,7 +27,6 @@ import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.serializer.KryoSerializer;
-import io.harness.serializer.KryoUtils;
 import org.eclipse.jetty.server.Response;
 import org.junit.Before;
 import org.junit.Test;
@@ -155,9 +154,10 @@ public class AwsSshInstanceSyncExecutorTest extends DelegateTest {
   }
 
   private PerpetualTaskExecutionParams getPerpetualTaskParams() {
-    ByteString configBytes = ByteString.copyFrom(KryoUtils.asBytes(AwsConfig.builder().accountId("accountId").build()));
-    ByteString filterBytes = ByteString.copyFrom(KryoUtils.asBytes(Arrays.asList(new Filter())));
-    ByteString encryptionDetailsBytes = ByteString.copyFrom(KryoUtils.asBytes(new ArrayList<>()));
+    ByteString configBytes =
+        ByteString.copyFrom(kryoSerializer.asBytes(AwsConfig.builder().accountId("accountId").build()));
+    ByteString filterBytes = ByteString.copyFrom(kryoSerializer.asBytes(Arrays.asList(new Filter())));
+    ByteString encryptionDetailsBytes = ByteString.copyFrom(kryoSerializer.asBytes(new ArrayList<>()));
 
     AwsSshInstanceSyncPerpetualTaskParams params = AwsSshInstanceSyncPerpetualTaskParams.newBuilder()
                                                        .setAwsConfig(configBytes)

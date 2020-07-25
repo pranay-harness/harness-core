@@ -50,6 +50,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -60,7 +61,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import org.apache.commons.jexl3.JexlException;
 import org.junit.Before;
 import org.junit.Test;
@@ -162,6 +163,8 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private State state;
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
+
+  @Inject KryoSerializer kryoSerializer;
 
   @Before
   public void setUp() throws Exception {
@@ -1247,7 +1250,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     verify(sweepingOutputService, times(1)).save(captor.capture());
 
     SweepingOutputInstance sweepingOutput = captor.getValue();
-    Map<String, Object> data = (Map<String, Object>) KryoUtils.asInflatedObject(sweepingOutput.getOutput());
+    Map<String, Object> data = (Map<String, Object>) kryoSerializer.asInflatedObject(sweepingOutput.getOutput());
 
     reset(sweepingOutputService);
     return data.keySet().stream().collect(Collectors.toList());
