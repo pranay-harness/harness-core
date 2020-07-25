@@ -5,7 +5,6 @@ import static org.springframework.test.util.ReflectionTestUtils.getField;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.mongo.QueryFactory;
-import io.harness.morphia.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -23,11 +22,6 @@ import java.util.Map;
 @Configuration
 @Profile("test")
 public class TestConfiguration implements MongoRuleMixin {
-  @Bean
-  MorphiaModule morphiaModule() {
-    return new MorphiaModule(true);
-  }
-
   @Bean
   MongoRuleMixin.MongoType mongoType() {
     return MongoType.FAKE;

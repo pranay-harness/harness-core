@@ -67,7 +67,7 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin {
       }
     });
 
-    modules.add(new MorphiaModule());
+    modules.add(MorphiaModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

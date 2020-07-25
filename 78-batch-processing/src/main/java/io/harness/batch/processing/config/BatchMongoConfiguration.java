@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.event.app.EventServiceApplication.EVENTS_STORE;
 
 import io.harness.mongo.MongoModule;
-import io.harness.morphia.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoModule;
 import lombok.extern.slf4j.Slf4j;
@@ -43,14 +42,6 @@ public class BatchMongoConfiguration {
   @Profile("!test")
   public MongoModule mongoModule() {
     return new MongoModule(true);
-  }
-
-  // Below are cumulative dependencies of MongoModule. Couldn't find a way to use cumulativeDependencies to add
-  // beans into spring context.
-  @Bean
-  @Profile("!test")
-  public MorphiaModule morphiaModule() {
-    return new MorphiaModule(true);
   }
 
   @Bean

@@ -92,11 +92,13 @@ public class TestMongoModule extends DependencyModule implements MongoRuleMixin 
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(MorphiaModule.getInstance());
+    return ImmutableSet.<DependencyModule>of();
   }
 
   @Override
   protected void configure() {
+    install(MorphiaModule.getInstance());
+
     MapBinder.newMapBinder(binder(), String.class, Migrator.class);
   }
 }

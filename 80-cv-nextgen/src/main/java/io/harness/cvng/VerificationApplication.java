@@ -136,7 +136,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
       }
     });
     modules.add(new MongoModule());
-    modules.add(new MorphiaModule());
+    modules.add(MorphiaModule.getInstance());
     modules.add(new CVServiceModule());
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));
