@@ -29,7 +29,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.SweepingOutput;
 import io.harness.deployment.InstanceDetails;
 import io.harness.rule.Owner;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Before;
@@ -77,6 +77,7 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
 
   private SweepingOutputInstance sweepingOutputInstance;
   private StateExecutionInstance stateExecutionInstance;
+  @Inject KryoSerializer kryoSerializer;
 
   @Value
   @Builder
@@ -111,7 +112,7 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
 
     sweepingOutputInstance =
         sweepingOutputService.save(sweepingOutputBuilder.name(SWEEPING_OUTPUT_NAME)
-                                       .output(KryoUtils.asBytes(SWEEPING_OUTPUT_CONTENT))
+                                       .output(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT))
                                        .value(SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
                                        .build());
   }

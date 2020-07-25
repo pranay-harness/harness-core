@@ -18,7 +18,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -49,6 +49,7 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
 
   @Inject @InjectMocks private ResumeStateUtils resumeStateUtils;
   @Inject private SweepingOutputService sweepingOutputService;
+  @Inject KryoSerializer kryoSerializer;
 
   @Mock private StateExecutionService stateExecutionService;
 
@@ -124,7 +125,7 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
             .prepareSweepingOutputBuilder(appId, pipelineExecutionUuid, workflowExecutionUuid, phaseExecutionId,
                 stateExecutionInstanceIdEnvState, SweepingOutputInstance.Scope.WORKFLOW)
             .name("wf1")
-            .output(KryoUtils.asBytes(SWEEPING_OUTPUT_CONTENT))
+            .output(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT))
             .value(SweepingOutputServiceImplTest.SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
             .build());
 
@@ -134,7 +135,7 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
             .prepareSweepingOutputBuilder(appId, pipelineExecutionUuid, workflowExecutionUuid, phaseExecutionId,
                 stateExecutionInstanceIdEnvState, SweepingOutputInstance.Scope.PIPELINE)
             .name("pl1")
-            .output(KryoUtils.asBytes(SWEEPING_OUTPUT_CONTENT))
+            .output(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT))
             .value(SweepingOutputServiceImplTest.SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
             .build());
     sweepingOutputService.save(
@@ -142,7 +143,7 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
             .prepareSweepingOutputBuilder(appId, pipelineExecutionUuid, workflowExecutionUuid, phaseExecutionId,
                 stateExecutionInstanceIdEnvState, SweepingOutputInstance.Scope.PIPELINE)
             .name("pl2")
-            .output(KryoUtils.asBytes(SWEEPING_OUTPUT_CONTENT))
+            .output(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT))
             .value(SweepingOutputServiceImplTest.SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
             .build());
     sweepingOutputService.save(
@@ -150,7 +151,7 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
             .prepareSweepingOutputBuilder(appId, pipelineExecutionUuid, null, null,
                 stateExecutionInstanceIdApprovalState, SweepingOutputInstance.Scope.PIPELINE)
             .name("pl3")
-            .output(KryoUtils.asBytes(SWEEPING_OUTPUT_CONTENT))
+            .output(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT))
             .value(SweepingOutputServiceImplTest.SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build())
             .build());
 
@@ -214,7 +215,7 @@ public class ResumeStateUtilsTest extends WingsBaseTest {
   }
 
   private void verifyOutputAndValue(SweepingOutputInstance instance) {
-    assertThat(instance.getOutput()).isEqualTo(KryoUtils.asBytes(SWEEPING_OUTPUT_CONTENT));
+    assertThat(instance.getOutput()).isEqualTo(kryoSerializer.asBytes(SWEEPING_OUTPUT_CONTENT));
     assertThat(((SweepingOutputServiceImplTest.SweepingOutputData) instance.getValue()).getText())
         .isEqualTo(SWEEPING_OUTPUT_CONTENT);
   }

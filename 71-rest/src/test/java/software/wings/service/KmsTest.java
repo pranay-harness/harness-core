@@ -48,7 +48,7 @@ import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.stream.BoundedInputStream;
 import io.harness.testlib.RealMongo;
 import lombok.extern.slf4j.Slf4j;
@@ -194,6 +194,8 @@ public class KmsTest extends WingsBaseTest {
   private KmsTransitionEventListener transitionEventListener;
   @Mock private FeatureFlagService featureFlagService;
 
+  @Inject KryoSerializer kryoSerializer;
+
   @Before
   public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
     initMocks(this);
@@ -272,7 +274,7 @@ public class KmsTest extends WingsBaseTest {
         (KmsConfig) secretManagerConfigService.getDefaultSecretManager(UUID.randomUUID().toString());
     assertThat(savedConfig).isNull();
 
-    kmsResource.saveGlobalKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+    kmsResource.saveGlobalKmsConfig(accountId, kryoSerializer.clone(kmsConfig));
 
     savedConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(UUID.randomUUID().toString());
     kmsConfig.setUuid(savedConfig.getUuid());
@@ -287,7 +289,7 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig globalKmsConfig = getKmsConfig();
     globalKmsConfig.setName("Global config");
     globalKmsConfig.setDefault(true);
-    kmsResource.saveGlobalKmsConfig(accountId, KryoUtils.clone(globalKmsConfig));
+    kmsResource.saveGlobalKmsConfig(accountId, kryoSerializer.clone(globalKmsConfig));
 
     KmsConfig savedGlobalKmsConfig = kmsService.getGlobalKmsConfig();
     assertThat(savedGlobalKmsConfig).isNotNull();
@@ -349,7 +351,7 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
 
-    kmsResource.saveKmsConfig(kmsConfig.getAccountId(), KryoUtils.clone(kmsConfig));
+    kmsResource.saveKmsConfig(kmsConfig.getAccountId(), kryoSerializer.clone(kmsConfig));
 
     KmsConfig savedConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(kmsConfig.getAccountId());
     kmsConfig.setUuid(savedConfig.getUuid());
@@ -366,7 +368,7 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig.setName(name);
     kmsConfig.setAccountId(accountId);
 
-    kmsResource.saveKmsConfig(kmsConfig.getAccountId(), KryoUtils.clone(kmsConfig));
+    kmsResource.saveKmsConfig(kmsConfig.getAccountId(), kryoSerializer.clone(kmsConfig));
 
     KmsConfig savedConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(kmsConfig.getAccountId());
     kmsConfig.setUuid(savedConfig.getUuid());
@@ -411,7 +413,7 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig.setName(name);
     kmsConfig.setAccountId(accountId);
 
-    kmsService.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+    kmsService.saveKmsConfig(accountId, kryoSerializer.clone(kmsConfig));
 
     KmsConfig savedConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
     assertThat(savedConfig.getAccessKey()).isEqualTo(kmsConfig.getAccessKey());
@@ -427,7 +429,7 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig.maskSecrets();
 
     // Masked Secrets, only name and default flag should be updated.
-    kmsService.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+    kmsService.saveKmsConfig(accountId, kryoSerializer.clone(kmsConfig));
 
     KmsConfig modifiedSavedConfig = kmsService.getKmsConfig(accountId, savedConfig.getUuid());
     assertThat(modifiedSavedConfig.getAccessKey()).isEqualTo(savedConfig.getAccessKey());
@@ -1650,7 +1652,7 @@ public class KmsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void kmsEncryptionSaveGlobalConfig() {
     KmsConfig kmsConfig = getKmsConfig();
-    kmsResource.saveGlobalKmsConfig(GLOBAL_ACCOUNT_ID, KryoUtils.clone(kmsConfig));
+    kmsResource.saveGlobalKmsConfig(GLOBAL_ACCOUNT_ID, kryoSerializer.clone(kmsConfig));
     assertThat(wingsPersistence.createQuery(KmsConfig.class).count()).isEqualTo(1);
 
     KmsConfig savedKmsConfig = (KmsConfig) secretManagerConfigService.getDefaultSecretManager(accountId);
@@ -1674,7 +1676,7 @@ public class KmsTest extends WingsBaseTest {
   public void listEncryptedValues() {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
-    kmsResource.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+    kmsResource.saveKmsConfig(accountId, kryoSerializer.clone(kmsConfig));
 
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = getSettingAttributes(accountId, numOfSettingAttributes);
@@ -1719,12 +1721,12 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig kmsConfig1 = getKmsConfig();
     kmsConfig1.setDefault(true);
     kmsConfig1.setName(UUID.randomUUID().toString());
-    kmsResource.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig1));
+    kmsResource.saveKmsConfig(accountId, kryoSerializer.clone(kmsConfig1));
 
     KmsConfig kmsConfig2 = getKmsConfig();
     kmsConfig2.setDefault(false);
     kmsConfig2.setName(UUID.randomUUID().toString());
-    String kms2Id = kmsResource.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig2)).getResource();
+    String kms2Id = kmsResource.saveKmsConfig(accountId, kryoSerializer.clone(kmsConfig2)).getResource();
 
     Collection<SecretManagerConfig> kmsConfigs =
         secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
@@ -1762,7 +1764,7 @@ public class KmsTest extends WingsBaseTest {
     kmsConfig2.setName(UUID.randomUUID().toString());
     kmsConfig2.setDefault(true);
 
-    kmsResource.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig2));
+    kmsResource.saveKmsConfig(accountId, kryoSerializer.clone(kmsConfig2));
 
     kmsConfigs = secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
     assertThat(kmsConfigs).hasSize(2);
@@ -1945,10 +1947,10 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig globalKmsConfig = getKmsConfig();
     globalKmsConfig.setDefault(false);
     globalKmsConfig.setName("global-kms-config");
-    kmsResource.saveGlobalKmsConfig(accountId, KryoUtils.clone(globalKmsConfig));
+    kmsResource.saveGlobalKmsConfig(accountId, kryoSerializer.clone(globalKmsConfig));
 
     KmsConfig kmsConfig = getKmsConfig();
-    kmsResource.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+    kmsResource.saveKmsConfig(accountId, kryoSerializer.clone(kmsConfig));
 
     Collection<SecretManagerConfig> kmsConfigs =
         secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
@@ -2016,7 +2018,7 @@ public class KmsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void listKmsConfig() {
     KmsConfig kmsConfig = getKmsConfig();
-    kmsResource.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+    kmsResource.saveKmsConfig(accountId, kryoSerializer.clone(kmsConfig));
 
     Collection<SecretManagerConfig> kmsConfigs =
         secretManagerConfigService.listSecretManagersByType(accountId, EncryptionType.KMS, true);
@@ -3030,14 +3032,14 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
 
-    String secretManagerId = kmsService.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+    String secretManagerId = kmsService.saveKmsConfig(accountId, kryoSerializer.clone(kmsConfig));
     verify(auditServiceHelper)
         .reportForAuditingUsingAccountId(eq(accountId), eq(null), any(KmsConfig.class), eq(Event.Type.CREATE));
 
     kmsConfig.setUuid(secretManagerId);
     kmsConfig.setDefault(false);
     kmsConfig.setName(kmsConfig.getName() + "_Updated");
-    kmsService.saveKmsConfig(accountId, KryoUtils.clone(kmsConfig));
+    kmsService.saveKmsConfig(accountId, kryoSerializer.clone(kmsConfig));
     verify(auditServiceHelper)
         .reportForAuditingUsingAccountId(
             eq(accountId), any(KmsConfig.class), any(KmsConfig.class), eq(Event.Type.UPDATE));
