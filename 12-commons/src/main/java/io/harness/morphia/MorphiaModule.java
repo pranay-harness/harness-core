@@ -2,16 +2,15 @@ package io.harness.morphia;
 
 import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import io.harness.exception.GeneralException;
 import io.harness.exception.UnexpectedException;
-import io.harness.govern.DependencyModule;
 import io.harness.reflection.CodeUtils;
 import io.harness.testing.TestExecution;
 import lombok.extern.slf4j.Slf4j;
@@ -24,13 +23,12 @@ import org.reflections.Reflections;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 @Slf4j
-public class MorphiaModule extends DependencyModule {
+public class MorphiaModule extends AbstractModule {
   private static volatile MorphiaModule instance;
 
   public static MorphiaModule getInstance() {
@@ -40,15 +38,7 @@ public class MorphiaModule extends DependencyModule {
     return instance;
   }
 
-  private boolean inSpring;
-
-  public MorphiaModule() {
-    inSpring = false;
-  }
-
-  public MorphiaModule(boolean inSpring) {
-    this.inSpring = inSpring;
-  }
+  protected MorphiaModule() {}
 
   private static synchronized Set<Class> collectMorphiaClasses() {
     Set<Class> morphiaClasses = new ConcurrentHashSet<>();
@@ -106,11 +96,6 @@ public class MorphiaModule extends DependencyModule {
     return morphia;
   }
 
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return Collections.emptySet();
-  }
-
   public void testAutomaticSearch() {
     Morphia morphia;
     try {
@@ -161,16 +146,12 @@ public class MorphiaModule extends DependencyModule {
 
   @Override
   protected void configure() {
-    if (!inSpring) {
-      MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
-      MapBinder<String, TestExecution> testExecutionMapBinder =
-          MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
+    MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
+    MapBinder<String, TestExecution> testExecutionMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
+    if (!binder().currentStage().name().equals("TOOL")) {
       testExecutionMapBinder.addBinding("Morphia test registration").toInstance(() -> testAutomaticSearch());
       testExecutionMapBinder.addBinding("Morphia test registrars").toInstance(() -> testAllRegistrars());
-    } else {
-      bind(new TypeLiteral<Map<Class, String>>() {})
-          .annotatedWith(Names.named("morphiaClasses"))
-          .toInstance(Collections.emptyMap());
     }
   }
 }

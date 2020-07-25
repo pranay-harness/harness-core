@@ -197,7 +197,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
       }
     });
     modules.add(new MongoModule());
-    modules.add(new MorphiaModule());
+    modules.add(MorphiaModule.getInstance());
     modules.add(new VerificationServiceModule(configuration));
     modules.add(new VerificationServiceSchedulerModule(configuration));
     modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));

@@ -80,7 +80,7 @@ public class EventServiceApplication {
     });
 
     modules.add(new MongoModule());
-    modules.add(new MorphiaModule());
+    modules.add(MorphiaModule.getInstance());
     modules.add(new EventServiceModule(config));
 
     Injector injector = Guice.createInjector(modules);

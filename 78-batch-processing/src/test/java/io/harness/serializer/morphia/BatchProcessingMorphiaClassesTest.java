@@ -21,7 +21,7 @@ public class BatchProcessingMorphiaClassesTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testEventSearchAndList() {
-    new MorphiaModule().testAutomaticSearch();
+    MorphiaModule.getInstance().testAutomaticSearch();
   }
 
   @Test
