@@ -11,7 +11,6 @@ import com.google.inject.name.Named;
 
 import com.hazelcast.core.HazelcastInstance;
 import io.harness.govern.DependencyModule;
-import io.harness.govern.DependencyProviderModule;
 import io.harness.hazelcast.HazelcastModule;
 import io.harness.redis.RedisConfig;
 import io.harness.stream.hazelcast.HazelcastBroadcaster;
@@ -26,11 +25,16 @@ import org.atmosphere.cpr.MetaBroadcaster;
 import java.util.Collections;
 import java.util.Set;
 
-public class StreamModule extends DependencyProviderModule {
+public class StreamModule extends DependencyModule {
   private AtmosphereBroadcaster atmosphereBroadcaster;
 
   public StreamModule(AtmosphereBroadcaster atmosphereBroadcaster) {
     this.atmosphereBroadcaster = atmosphereBroadcaster;
+  }
+
+  @Override
+  protected void configure() {
+    install(HazelcastModule.getInstance());
   }
 
   @Provides
@@ -73,6 +77,6 @@ public class StreamModule extends DependencyProviderModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return Collections.singleton(HazelcastModule.getInstance());
+    return Collections.emptySet();
   }
 }
