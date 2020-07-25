@@ -11,7 +11,7 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -24,6 +24,7 @@ public class ArtifactCollectionPTaskServiceClient implements PerpetualTaskServic
   private static final String ARTIFACT_STREAM_ID = "artifactStreamId";
 
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public ArtifactCollectionTaskParams getTaskParams(PerpetualTaskClientContext clientContext) {
@@ -31,7 +32,7 @@ public class ArtifactCollectionPTaskServiceClient implements PerpetualTaskServic
     String artifactStreamId = clientParams.get(ARTIFACT_STREAM_ID);
     BuildSourceParameters buildSourceParameters =
         artifactCollectionUtils.prepareBuildSourceParameters(artifactStreamId);
-    ByteString bytes = ByteString.copyFrom(KryoUtils.asBytes(buildSourceParameters));
+    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(buildSourceParameters));
     return ArtifactCollectionTaskParams.newBuilder()
         .setArtifactStreamId(artifactStreamId)
         .setBuildSourceParams(bytes)
