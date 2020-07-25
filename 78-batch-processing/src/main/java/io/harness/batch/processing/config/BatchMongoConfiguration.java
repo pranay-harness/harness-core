@@ -5,7 +5,6 @@ import static io.harness.event.app.EventServiceApplication.EVENTS_STORE;
 
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.HPersistence;
-import io.harness.serializer.KryoModule;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.springframework.context.annotation.Bean;
@@ -42,11 +41,5 @@ public class BatchMongoConfiguration {
   @Profile("!test")
   public MongoModule mongoModule() {
     return new MongoModule(true);
-  }
-
-  @Bean
-  @Profile("!test")
-  public KryoModule kryoModule() {
-    return new KryoModule(true);
   }
 }
