@@ -463,6 +463,8 @@ public class DelegateModule extends DependencyModule {
 
   @Override
   protected void configure() {
+    install(VersionModule.getInstance());
+
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
@@ -665,7 +667,6 @@ public class DelegateModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(
-        TimeModule.getInstance(), VersionModule.getInstance(), NGDelegateModule.getInstance());
+    return ImmutableSet.<DependencyModule>of(TimeModule.getInstance(), NGDelegateModule.getInstance());
   }
 }

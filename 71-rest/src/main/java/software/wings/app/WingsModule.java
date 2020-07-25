@@ -721,6 +721,8 @@ public class WingsModule extends DependencyModule implements ServersModule {
 
   @Override
   protected void configure() {
+    install(VersionModule.getInstance());
+
     bind(MainConfiguration.class).toInstance(configuration);
     bind(SchedulerConfig.class)
         .annotatedWith(Names.named("BackgroundSchedule"))
@@ -1285,7 +1287,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(TimeModule.getInstance(), VersionModule.getInstance(),
+    return ImmutableSet.<DependencyModule>of(TimeModule.getInstance(),
         OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .build()),

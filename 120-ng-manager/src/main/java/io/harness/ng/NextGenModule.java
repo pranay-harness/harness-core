@@ -53,6 +53,8 @@ public class NextGenModule extends DependencyModule {
 
   @Override
   protected void configure() {
+    install(VersionModule.getInstance());
+
     bind(NextGenConfiguration.class).toInstance(appConfig);
 
     install(new ProviderModule() {
@@ -134,7 +136,7 @@ public class NextGenModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.of(VersionModule.getInstance(),
+    return ImmutableSet.of(
         OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)

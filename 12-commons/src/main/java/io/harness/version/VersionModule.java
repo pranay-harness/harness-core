@@ -1,10 +1,8 @@
 package io.harness.version;
 
-import io.harness.govern.DependencyModule;
+import com.google.inject.AbstractModule;
 
-import java.util.Set;
-
-public class VersionModule extends DependencyModule {
+public class VersionModule extends AbstractModule {
   private static VersionModule instance;
 
   public static VersionModule getInstance() {
@@ -17,10 +15,5 @@ public class VersionModule extends DependencyModule {
   @Override
   protected void configure() {
     bind(VersionInfoManager.class).toInstance(new VersionInfoManager());
-  }
-
-  @Override
-  public Set<DependencyModule> dependencies() {
-    return null;
   }
 }
