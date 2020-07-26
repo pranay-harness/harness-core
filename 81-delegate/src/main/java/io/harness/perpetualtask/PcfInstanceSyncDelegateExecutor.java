@@ -11,7 +11,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParams;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.jsonwebtoken.lang.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
@@ -31,6 +31,7 @@ import java.util.List;
 public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
   @Inject PcfDelegateTaskHelper pcfDelegateTaskHelper;
   @Inject DelegateAgentManagerClient delegateAgentManagerClient;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -42,12 +43,12 @@ public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
     String orgName = instanceSyncParams.getOrgName();
     String space = instanceSyncParams.getSpace();
 
-    PcfConfig pcfConfig = (PcfConfig) KryoUtils.asObject(instanceSyncParams.getPcfConfig().toByteArray());
+    PcfConfig pcfConfig = (PcfConfig) kryoSerializer.asObject(instanceSyncParams.getPcfConfig().toByteArray());
 
     ByteString encryptedData = instanceSyncParams.getEncryptedData();
 
     List<EncryptedDataDetail> encryptedDataDetailList =
-        (List<EncryptedDataDetail>) KryoUtils.asObject(encryptedData.toByteArray());
+        (List<EncryptedDataDetail>) kryoSerializer.asObject(encryptedData.toByteArray());
 
     PcfInstanceSyncRequest pcfInstanceSyncRequest =
         PcfInstanceSyncRequest.builder()

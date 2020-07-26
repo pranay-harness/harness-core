@@ -21,7 +21,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ForkElement;
 import software.wings.beans.CountsByStatuses;
@@ -60,6 +60,7 @@ public class StateMachineExecutionSimulator {
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
   @Inject private SettingsService settingsService;
+  @Inject private KryoSerializer kryoSerializer;
 
   /**
    * Gets status breakdown.
@@ -187,7 +188,7 @@ public class StateMachineExecutionSimulator {
       }
       State repeat = stateMachine.getState(null, ((RepeatState) state).getRepeatTransitionStateName());
       repeatElements.forEach(repeatElement -> {
-        StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
+        StateExecutionInstance cloned = kryoSerializer.clone(stateExecutionInstance);
         cloned.setStateParams(null);
         cloned.setDisplayName(repeat.getName());
         cloned.setContextElement(repeatElement);
@@ -203,7 +204,7 @@ public class StateMachineExecutionSimulator {
     if (state instanceof ForkState) {
       ((ForkState) state).getForkStateNames().forEach(childStateName -> {
         State child = stateMachine.getState(null, childStateName);
-        StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
+        StateExecutionInstance cloned = kryoSerializer.clone(stateExecutionInstance);
         cloned.setStateParams(null);
         cloned.setDisplayName(child.getName());
         cloned.setContextElement(

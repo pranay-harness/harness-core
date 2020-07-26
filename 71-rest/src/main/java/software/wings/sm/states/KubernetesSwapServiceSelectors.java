@@ -26,7 +26,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Getter;
 import lombok.Setter;
@@ -86,6 +86,7 @@ public class KubernetesSwapServiceSelectors extends State {
   @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
   @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Getter @Setter @Attributes(title = "Service One") private String service1;
 
@@ -334,13 +335,13 @@ public class KubernetesSwapServiceSelectors extends State {
     if (result == null) {
       return null;
     }
-    return (K8sSwapServiceElement) KryoUtils.asInflatedObject(result.getOutput());
+    return (K8sSwapServiceElement) kryoSerializer.asInflatedObject(result.getOutput());
   }
 
   private void saveK8sSwapServiceElement(ExecutionContext context, K8sSwapServiceElement k8sSwapServiceElement) {
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
                                    .name(K8S_SWAP_SERVICE_ELEMENT)
-                                   .output(KryoUtils.asDeflatedBytes(k8sSwapServiceElement))
+                                   .output(kryoSerializer.asDeflatedBytes(k8sSwapServiceElement))
                                    .build());
   }
 }

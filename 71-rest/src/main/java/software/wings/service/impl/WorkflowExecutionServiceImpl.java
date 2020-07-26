@@ -117,7 +117,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueuePublisher;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.Data;
@@ -376,6 +376,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private ArtifactStreamHelper artifactStreamHelper;
   @Inject private DeploymentAuthHandler deploymentAuthHandler;
   @Inject private AuthService authService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -1664,7 +1665,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                    .prepareSweepingOutputBuilder(workflowExecution.getAppId(),
                                        workflowExecution.getUuid(), null, null, null, Scope.PIPELINE)
                                    .name("pipeline")
-                                   .output(KryoUtils.asDeflatedBytes(pipelineElement))
+                                   .output(kryoSerializer.asDeflatedBytes(pipelineElement))
                                    .build());
   }
 
@@ -2584,7 +2585,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       try {
-        ExecutionInterrupt executionInterruptClone = KryoUtils.clone(executionInterrupt);
+        ExecutionInterrupt executionInterruptClone = kryoSerializer.clone(executionInterrupt);
         executionInterruptClone.setUuid(generateUuid());
         executionInterruptClone.setExecutionUuid(workflowExecution2.getUuid());
         executionInterruptManager.registerExecutionInterrupt(executionInterruptClone);

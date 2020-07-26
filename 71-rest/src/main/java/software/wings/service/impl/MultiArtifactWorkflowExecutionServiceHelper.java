@@ -12,7 +12,7 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.exception.InvalidRequestException;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
@@ -31,6 +31,7 @@ import java.util.Map;
 public class MultiArtifactWorkflowExecutionServiceHelper {
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private ArtifactService artifactService;
+  @Inject private KryoSerializer kryoSerializer;
 
   public void saveArtifactsToSweepingOutput(
       ExecutionArgs executionArgs, WorkflowExecution workflowExecution, String workflowId, String accountId) {
@@ -40,7 +41,7 @@ public class MultiArtifactWorkflowExecutionServiceHelper {
                                      .prepareSweepingOutputBuilder(workflowExecution.getAppId(), null,
                                          workflowExecution.getUuid(), null, null, SweepingOutputInstance.Scope.WORKFLOW)
                                      .name("artifacts")
-                                     .output(KryoUtils.asDeflatedBytes(workflowVariables))
+                                     .output(kryoSerializer.asDeflatedBytes(workflowVariables))
                                      .build());
     }
   }

@@ -3,6 +3,7 @@ package io.harness.perpetualtask;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -62,6 +63,7 @@ public class SpotinstAmiInstanceSyncDelegateExecutorTest extends DelegateTest {
 
   @Before
   public void setUp() {
+    on(executor).set("kryoSerializer", kryoSerializer);
     when(delegateAgentManagerClient.publishInstanceSyncResult(anyString(), anyString(), any(ResponseData.class)))
         .thenReturn(call);
   }

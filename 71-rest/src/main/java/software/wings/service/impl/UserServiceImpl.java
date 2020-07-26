@@ -95,7 +95,7 @@ import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.persistence.UuidAware;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -272,6 +272,7 @@ public class UserServiceImpl implements UserService {
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Inject private TOTPAuthHandler totpAuthHandler;
+  @Inject private KryoSerializer kryoSerializer;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -792,7 +793,7 @@ public class UserServiceImpl implements UserService {
     List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
 
     for (String email : userInvite.getEmails()) {
-      UserInvite userInviteClone = KryoUtils.clone(userInvite);
+      UserInvite userInviteClone = kryoSerializer.clone(userInvite);
       userInviteClone.setEmail(email.trim());
       inviteOperationResponses.add(inviteUser(userInviteClone, true, false));
     }

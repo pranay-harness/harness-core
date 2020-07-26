@@ -6,7 +6,7 @@ import static software.wings.beans.VariableType.ARTIFACT;
 import com.google.inject.Inject;
 
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -22,6 +22,7 @@ public class TemplateUtils {
   private static final Pattern p = Pattern.compile("\\$\\{(.*?)\\}");
 
   @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private KryoSerializer kryoSerializer;
 
   private void processArtifactVariable(ExecutionContext context, Variable variable) {
     String expression = getExpression(variable.getValue());
@@ -35,7 +36,7 @@ public class TemplateUtils {
     }
     sweepingOutputService.ensure(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.STATE)
                                      .name(name)
-                                     .output(KryoUtils.asDeflatedBytes(artifact))
+                                     .output(kryoSerializer.asDeflatedBytes(artifact))
                                      .build());
   }
 
