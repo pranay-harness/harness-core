@@ -16,7 +16,7 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -44,6 +44,7 @@ public class PcfInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceC
   @Inject SecretManager secretManager;
   @Inject SettingsService settingsService;
   @Inject InfrastructureMappingService infraMappingService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
@@ -52,8 +53,8 @@ public class PcfInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceC
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails(perpetualTaskParams.getPcfConfig(), null, null);
 
-    ByteString configBytes = ByteString.copyFrom(KryoUtils.asBytes(perpetualTaskParams.getPcfConfig()));
-    ByteString encryptedConfigBytes = ByteString.copyFrom(KryoUtils.asBytes(encryptionDetails));
+    ByteString configBytes = ByteString.copyFrom(kryoSerializer.asBytes(perpetualTaskParams.getPcfConfig()));
+    ByteString encryptedConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(encryptionDetails));
 
     return PcfInstanceSyncPerpetualTaskParams.newBuilder()
         .setApplicationName(perpetualTaskParams.getApplicationName())

@@ -30,7 +30,7 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.BaseFile;
@@ -63,6 +63,7 @@ import java.util.UUID;
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
   @Inject private FileService fileService;
   @Inject private GlobalEncryptDecryptClient globalEncryptDecryptClient;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public EncryptedData encrypt(char[] value, String accountId, KmsConfig kmsConfig) {
@@ -169,7 +170,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
       // secret field un-decrypted version of saved KMS config
       savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid());
-      oldConfigForAudit = KryoUtils.clone(savedKmsConfig);
+      oldConfigForAudit = kryoSerializer.clone(savedKmsConfig);
     }
 
     // Validate every time when secret manager config change submitted

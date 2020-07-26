@@ -21,7 +21,7 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
@@ -106,6 +106,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   @Inject @Transient private FeatureFlagService featureFlagService;
   @Inject @Transient private PhaseSubWorkflowHelperService phaseSubWorkflowHelperService;
   @Inject @Transient private SettingsService settingsService;
+  @Inject @Transient private KryoSerializer kryoSerializer;
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
@@ -355,7 +356,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                                      .prepareSweepingOutputBuilder(
                                          appId, null, null, phaseExecutionId, null, SweepingOutputInstance.Scope.PHASE)
                                      .name(artifactVariable.getName())
-                                     .output(KryoUtils.asDeflatedBytes(artifact))
+                                     .output(kryoSerializer.asDeflatedBytes(artifact))
                                      .build());
     }
   }
@@ -367,7 +368,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                                      .prepareSweepingOutputBuilder(
                                          appId, null, null, phaseExecutionId, null, SweepingOutputInstance.Scope.PHASE)
                                      .name("artifacts")
-                                     .output(KryoUtils.asDeflatedBytes(artifactsMap))
+                                     .output(kryoSerializer.asDeflatedBytes(artifactsMap))
                                      .build());
     }
   }

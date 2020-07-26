@@ -73,7 +73,7 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.observer.Subject;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspectionListener;
@@ -172,6 +172,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private WorkflowService workflowService;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private PipelineConfig pipelineConfig;
+  @Inject private KryoSerializer kryoSerializer;
 
   /**
    * Execute.
@@ -1172,7 +1173,7 @@ public class StateMachineExecutor implements StateInspectionListener {
    * @param nextState              @return
    */
   private StateExecutionInstance clone(StateExecutionInstance stateExecutionInstance, State nextState) {
-    StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
+    StateExecutionInstance cloned = kryoSerializer.clone(stateExecutionInstance);
     cloned.setInterruptHistory(null);
     cloned.setStateExecutionDataHistory(null);
     cloned.setDedicatedInterruptCount(null);

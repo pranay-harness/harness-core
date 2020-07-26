@@ -17,7 +17,7 @@ import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -44,17 +44,18 @@ public class SpotinstAmiInstanceSyncPerpetualTaskClient implements PerpetualTask
   @Inject InfrastructureMappingService infraMappingService;
   @Inject SettingsService settingsService;
   @Inject SecretManager secretManager;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public Message getTaskParams(PerpetualTaskClientContext clientContext) {
     final PerpetualTaskData delegateTaskData = getPerpetualTaskData(clientContext);
 
-    ByteString awsConfigBytes = ByteString.copyFrom(KryoUtils.asBytes(delegateTaskData.getAwsConfig()));
-    ByteString spotinstConfigBytes = ByteString.copyFrom(KryoUtils.asBytes(delegateTaskData.getSpotinstConfig()));
+    ByteString awsConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(delegateTaskData.getAwsConfig()));
+    ByteString spotinstConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(delegateTaskData.getSpotinstConfig()));
     ByteString awsEncryptedDataBytes =
-        ByteString.copyFrom(KryoUtils.asBytes(delegateTaskData.getAwsEncryptedDataData()));
+        ByteString.copyFrom(kryoSerializer.asBytes(delegateTaskData.getAwsEncryptedDataData()));
     ByteString spotinstEncryptedDataBytes =
-        ByteString.copyFrom(KryoUtils.asBytes(delegateTaskData.getSpotinstEncryptedData()));
+        ByteString.copyFrom(kryoSerializer.asBytes(delegateTaskData.getSpotinstEncryptedData()));
 
     return SpotinstAmiInstanceSyncPerpetualTaskParams.newBuilder()
         .setRegion(delegateTaskData.getRegion())

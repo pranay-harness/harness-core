@@ -13,7 +13,7 @@ import io.harness.cache.CacheEntity.CacheEntityKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.govern.IgnoreThrowable;
 import io.harness.persistence.HPersistence;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -30,6 +30,7 @@ public class MongoStore implements DistributedStore {
   private static final int version = 1;
 
   @Inject HPersistence hPersistence;
+  @Inject private KryoSerializer kryoSerializer;
 
   String canonicalKey(long algorithmId, long structureHash, String key, List<String> params) {
     if (EmptyPredicate.isEmpty(params)) {
@@ -66,7 +67,7 @@ public class MongoStore implements DistributedStore {
         return null;
       }
 
-      return (T) KryoUtils.asInflatedObject(cacheEntity.getEntity());
+      return (T) kryoSerializer.asInflatedObject(cacheEntity.getEntity());
     } catch (RuntimeException ex) {
       logger.error("Failed to obtain from cache", ex);
     }
@@ -93,7 +94,7 @@ public class MongoStore implements DistributedStore {
       final UpdateOperations<CacheEntity> updateOperations = hPersistence.createUpdateOperations(CacheEntity.class);
       updateOperations.set(CacheEntityKeys.contextValue, contextValue);
       updateOperations.set(CacheEntityKeys.canonicalKey, canonicalKey);
-      updateOperations.set(CacheEntityKeys.entity, KryoUtils.asDeflatedBytes(entity));
+      updateOperations.set(CacheEntityKeys.entity, kryoSerializer.asDeflatedBytes(entity));
       updateOperations.set(CacheEntityKeys.validUntil, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
 
       final Query<CacheEntity> query =

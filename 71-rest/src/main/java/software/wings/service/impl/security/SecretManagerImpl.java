@@ -79,7 +79,7 @@ import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.JsonUtils;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.harness.stream.BoundedInputStream;
 import lombok.Builder;
 import lombok.NonNull;
@@ -210,6 +210,7 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private SecretSetupUsageService secretSetupUsageService;
   @Inject @Named("hashicorpvault") private RuntimeCredentialsInjector vaultRuntimeCredentialsInjector;
   @Inject private SettingServiceHelper settingServiceHelper;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -1547,7 +1548,7 @@ public class SecretManagerImpl implements SecretManager {
                                     String reason = "Secret " + secretText.getName() + "does not exists";
                                     throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, null, USER);
                                   });
-    EncryptedData oldEntity = KryoUtils.clone(savedData);
+    EncryptedData oldEntity = kryoSerializer.clone(savedData);
 
     if (containsIllegalCharacters(secretText.getName())) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
@@ -2073,7 +2074,7 @@ public class SecretManagerImpl implements SecretManager {
       }
 
       // This is needed for auditing as encryptedData will be changed in the process of update
-      oldEntityData = KryoUtils.clone(encryptedData);
+      oldEntityData = kryoSerializer.clone(encryptedData);
     }
 
     if (encryptedData == null) {

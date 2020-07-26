@@ -5,7 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
+import com.google.inject.Inject;
+
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -18,12 +19,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import software.wings.WingsBaseTest;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
+public class K8sWatchPerpetualTaskServiceClientTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
   private String taskId = "TASK_ID";
@@ -36,7 +38,7 @@ public class K8sWatchPerpetualTaskServiceClientTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock SettingsService settingsService;
   @Mock K8sClusterConfigFactory k8sClusterConfigFactory;
-  @InjectMocks K8sWatchPerpetualTaskServiceClient k8SWatchPerpetualTaskServiceClient;
+  @InjectMocks @Inject K8sWatchPerpetualTaskServiceClient k8SWatchPerpetualTaskServiceClient;
 
   @Before
   public void setUp() {
