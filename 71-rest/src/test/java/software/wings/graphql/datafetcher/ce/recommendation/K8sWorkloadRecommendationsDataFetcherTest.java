@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import graphql.schema.DataFetchingFieldSelectionSet;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.persistence.HPersistence;
@@ -66,8 +67,12 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
       return false;
     }
   };
+
   @Inject private K8sWorkloadRecommendationsDataFetcher k8sWorkloadRecommendationsDataFetcher;
   @Inject private HPersistence hPersistence;
+  @Inject private ClusterRecordDao clusterRecordDao;
+
+  private String clusterId;
 
   @Before
   public void setUp() throws Exception {
@@ -75,6 +80,16 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
     User user = testUtils.createUser(account);
     UserThreadLocal.set(user);
     createAccount(ACCOUNT1_ID, getLicenseInfo());
+    clusterId = clusterRecordDao
+                    .upsertCluster(ClusterRecord.builder()
+                                       .accountId(ACCOUNT1_ID)
+                                       .cluster(DirectKubernetesCluster.builder()
+                                                    .clusterName(CLUSTER1_NAME)
+                                                    .cloudProviderId(CLOUD_PROVIDER1_ID_ACCOUNT1)
+                                                    .build())
+                                       .isDeactivated(true)
+                                       .build())
+                    .getUuid();
   }
 
   @Test
@@ -84,7 +99,7 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
     K8sWorkloadRecommendation recommendation = K8sWorkloadRecommendation.builder()
                                                    .populated(true)
                                                    .accountId(ACCOUNT1_ID)
-                                                   .clusterId(CLUSTER1_ID)
+                                                   .clusterId(clusterId)
                                                    .namespace("default")
                                                    .workloadType("Deployment")
                                                    .workloadName("my-nginx")
@@ -114,13 +129,9 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
                                                    .estimatedSavings(BigDecimal.valueOf(100.0))
                                                    .build();
     hPersistence.save(recommendation);
-    hPersistence.save(ClusterRecord.builder()
-                          .uuid(CLUSTER1_ID)
-                          .cluster(DirectKubernetesCluster.builder().clusterName("cluster-1-name").build())
-                          .build());
     List<QLK8sWorkloadFilter> filters = ImmutableList.of(
         QLK8sWorkloadFilter.builder()
-            .cluster(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {CLUSTER1_ID}).build())
+            .cluster(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {clusterId}).build())
             .build(),
         QLK8sWorkloadFilter.builder()
             .namespace(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"default"}).build())
@@ -139,8 +150,8 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
     List<QLK8sWorkloadRecommendation> nodes = qlk8SWorkloadRecommendationConnection.getNodes();
     assertThat(nodes.get(0))
         .isEqualTo(QLK8sWorkloadRecommendation.builder()
-                       .clusterId(CLUSTER1_ID)
-                       .clusterName("cluster-1-name")
+                       .clusterId(clusterId)
+                       .clusterName(CLUSTER1_NAME)
                        .namespace("default")
                        .workloadType("Deployment")
                        .workloadName("my-nginx")

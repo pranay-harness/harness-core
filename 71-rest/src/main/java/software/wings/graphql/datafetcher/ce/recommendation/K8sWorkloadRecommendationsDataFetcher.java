@@ -2,9 +2,13 @@ package software.wings.graphql.datafetcher.ce.recommendation;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import graphql.schema.DataFetchingEnvironment;
+import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.kubernetes.client.custom.Quantity;
@@ -44,17 +48,22 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Singleton
 public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2DataFetcher<QLK8sWorkloadFilter,
     QLNoOpSortCriteria, QLK8SWorkloadRecommendationConnection> {
-  private final LoadingCache<String, String> clusterNameCache =
-      Caffeine.newBuilder()
-          .expireAfterWrite(Duration.ofMinutes(5))
-          .maximumSize(1000)
-          .build(clusterId
-              -> Optional.ofNullable(wingsPersistence.get(ClusterRecord.class, clusterId))
-                     .map(ClusterRecord::getCluster)
-                     .map(Cluster::getClusterName)
-                     .orElse(""));
+  private final LoadingCache<String, String> clusterNameCache;
+
+  @Inject
+  public K8sWorkloadRecommendationsDataFetcher(final ClusterRecordDao clusterRecordDao) {
+    clusterNameCache = Caffeine.newBuilder()
+                           .expireAfterWrite(Duration.ofMinutes(5))
+                           .maximumSize(1000)
+                           .build(clusterId
+                               -> Optional.ofNullable(clusterRecordDao.get(clusterId))
+                                      .map(ClusterRecord::getCluster)
+                                      .map(Cluster::getClusterName)
+                                      .orElse(""));
+  }
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
