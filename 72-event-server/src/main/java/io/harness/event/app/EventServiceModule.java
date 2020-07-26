@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
 
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
@@ -21,12 +22,14 @@ import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.persistence.HPersistence;
 import io.harness.security.KeySource;
+import io.harness.serializer.KryoRegistrar;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AccountKeySource;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.Collections;
 import java.util.Set;
 
 public class EventServiceModule extends AbstractModule {
@@ -63,6 +66,19 @@ public class EventServiceModule extends AbstractModule {
     install(new GrpcServerModule(eventServiceConfig.getConnectors(), //
         getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {})),
         getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}))));
+  }
+
+  @Provides
+  @Singleton
+  @Named("morphiaClasses")
+  public Set<Class<?>> morphiaClasses() {
+    return Collections.emptySet();
+  }
+
+  @Provides
+  @Singleton
+  public Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
+    return Collections.emptySet();
   }
 
   @Provides
