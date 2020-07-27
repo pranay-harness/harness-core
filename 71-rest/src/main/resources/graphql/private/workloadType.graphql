@@ -10,4 +10,5 @@ enum WorkloadType {
   ReplicaSet
   Job
   CronJob
+  Pod
 }

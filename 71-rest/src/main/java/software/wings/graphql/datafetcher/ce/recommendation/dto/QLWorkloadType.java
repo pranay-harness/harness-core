@@ -9,7 +9,8 @@ public enum QLWorkloadType implements QLEnum {
   Deployment,
   ReplicaSet,
   Job,
-  CronJob;
+  CronJob,
+  Pod;
 
   @Override
   public String getStringValue() {

@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.ce.recommendation.entity;
 
 import io.harness.annotation.StoreIn;
+import io.harness.data.structure.MongoMapSanitizer;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -20,6 +21,8 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.PostLoad;
+import org.mongodb.morphia.annotations.PrePersist;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -37,6 +40,8 @@ import java.util.Map;
       , @Field("clusterId"), @Field("namespace"), @Field("workloadName"), @Field("workloadType") })
 public class K8sWorkloadRecommendation
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  private static final MongoMapSanitizer SANITIZER = new MongoMapSanitizer('~');
+
   @Id String uuid;
   long createdAt;
   long lastUpdatedAt;
@@ -55,4 +60,52 @@ public class K8sWorkloadRecommendation
   @EqualsAndHashCode.Exclude @FdTtlIndex Instant ttl;
 
   boolean populated;
+
+  @PostLoad
+  public void postLoad() {
+    for (ContainerRecommendation cr : containerRecommendations.values()) {
+      if (cr.getCurrent() != null) {
+        cr.setCurrent(ResourceRequirement.builder()
+                          .requests(SANITIZER.decodeDotsInKey(cr.getCurrent().getRequests()))
+                          .limits(SANITIZER.decodeDotsInKey(cr.getCurrent().getLimits()))
+                          .build());
+      }
+      if (cr.getBurstable() != null) {
+        cr.setBurstable(ResourceRequirement.builder()
+                            .requests(SANITIZER.decodeDotsInKey(cr.getBurstable().getRequests()))
+                            .limits(SANITIZER.decodeDotsInKey(cr.getBurstable().getLimits()))
+                            .build());
+      }
+      if (cr.getGuaranteed() != null) {
+        cr.setGuaranteed(ResourceRequirement.builder()
+                             .requests(SANITIZER.decodeDotsInKey(cr.getGuaranteed().getRequests()))
+                             .limits(SANITIZER.decodeDotsInKey(cr.getGuaranteed().getLimits()))
+                             .build());
+      }
+    }
+  }
+
+  @PrePersist
+  public void prePersist() {
+    for (ContainerRecommendation cr : containerRecommendations.values()) {
+      if (cr.getCurrent() != null) {
+        cr.setCurrent(ResourceRequirement.builder()
+                          .requests(SANITIZER.encodeDotsInKey(cr.getCurrent().getRequests()))
+                          .limits(SANITIZER.encodeDotsInKey(cr.getCurrent().getLimits()))
+                          .build());
+      }
+      if (cr.getBurstable() != null) {
+        cr.setBurstable(ResourceRequirement.builder()
+                            .requests(SANITIZER.encodeDotsInKey(cr.getBurstable().getRequests()))
+                            .limits(SANITIZER.encodeDotsInKey(cr.getBurstable().getLimits()))
+                            .build());
+      }
+      if (cr.getGuaranteed() != null) {
+        cr.setGuaranteed(ResourceRequirement.builder()
+                             .requests(SANITIZER.encodeDotsInKey(cr.getGuaranteed().getRequests()))
+                             .limits(SANITIZER.encodeDotsInKey(cr.getGuaranteed().getLimits()))
+                             .build());
+      }
+    }
+  }
 }
