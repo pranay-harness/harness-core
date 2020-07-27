@@ -11,6 +11,7 @@ import migrations.all.AddAccountIdToInfraDefinition;
 import migrations.all.AddAccountIdToLogAnalysisRecordsMigration;
 import migrations.all.AddAccountIdToLogDataRecordsMigration;
 import migrations.all.AddAccountIdToNewRelicMetricAnalysisRecords;
+import migrations.all.AddAccountIdToServiceVariables;
 import migrations.all.AddAccountIdToTerraformConfig;
 import migrations.all.AddAccountIdToTimeSeriesAnalysisRecords;
 import migrations.all.AddAccountIdToTimeSeriesAnomaliesRecordMigration;
@@ -240,6 +241,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(140, AddAccountIdToCommandLogs.class))
         .add(Pair.of(141, AddAccountIdToEntityVersion.class))
         .add(Pair.of(142, UpdateStaleDefaultAccountIds.class))
+        .add(Pair.of(143, AddAccountIdToServiceVariables.class))
         .build();
   }
 }

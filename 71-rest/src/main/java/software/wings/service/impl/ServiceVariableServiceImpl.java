@@ -174,6 +174,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
     validateServiceVariable(serviceVariable);
 
+    if (serviceVariable.getAccountId() == null) {
+      String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
+      serviceVariable.setAccountId(accountId);
+    }
+
     ServiceVariable newServiceVariable = duplicateCheck(
         () -> wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable), "name", serviceVariable.getName());
 
@@ -189,9 +194,9 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     newServiceVariable.setSyncFromGit(syncFromGit);
 
     // Type.UPDATE is intentionally passed. Don't change this.
-    String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
-    yamlPushService.pushYamlChangeSet(
-        accountId, newServiceVariable, newServiceVariable, Event.Type.UPDATE, syncFromGit, false);
+    yamlPushService.pushYamlChangeSet(newServiceVariable.getAccountId(), newServiceVariable, newServiceVariable,
+        Event.Type.UPDATE, syncFromGit, false);
+
     return newServiceVariable;
   }
 
@@ -270,6 +275,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     }
     updateMap.put(ServiceVariableKeys.allowedList, allowedList);
 
+    if (savedServiceVariable.getAccountId() == null) {
+      String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
+      updateMap.put(ServiceVariableKeys.accountId, accountId);
+    }
+
     if (isNotEmpty(updateMap)) {
       wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(), updateMap);
       entityVersionService.newEntityVersion(serviceVariable.getAppId(), EntityType.CONFIG, serviceVariable.getUuid(),
@@ -279,9 +289,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         return null;
       }
 
-      String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
-      yamlPushService.pushYamlChangeSet(
-          accountId, serviceVariable, updatedServiceVariable, Event.Type.UPDATE, syncFromGit, false);
+      yamlPushService.pushYamlChangeSet(updatedServiceVariable.getAccountId(), serviceVariable, updatedServiceVariable,
+          Event.Type.UPDATE, syncFromGit, false);
       // variables with type ARTIFACT have null value
       if (isNotEmpty(serviceVariable.getValue())) {
         serviceVariable.setEncryptedValue(String.valueOf(serviceVariable.getValue()));
