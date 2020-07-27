@@ -292,9 +292,7 @@ public class ApplicationManifestUtils {
       Map<String, GitFile> namedGitFiles = new LinkedHashMap<>();
       K8sValuesLocation k8sValuesLocation = K8sValuesLocation.valueOf(entry.getKey());
       for (GitFile file : gitFetchFilesResult.getFiles()) {
-        if (isNotBlank(file.getFileContent())) {
-          namedGitFiles.put(file.getFilePath(), file);
-        }
+        namedGitFiles.put(file.getFilePath(), file);
       }
 
       ApplicationManifest manifest = appManifest.get(k8sValuesLocation);

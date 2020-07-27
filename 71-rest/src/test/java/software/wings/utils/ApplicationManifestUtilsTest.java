@@ -3,6 +3,7 @@ package software.wings.utils;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -766,6 +767,31 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     assertThatThrownBy(() -> applicationManifestUtils.populateRemoteGitConfigFilePathList(context, appManifestNull))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Empty file path is not allowed for Environment Values YAML");
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetMultiValuesFilesFromGitFetchFilesResponseWithEmptyFileContent() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
+        ImmutableMap.of(Environment, createApplicationManifestWithGitFilePathList("file1"), K8sValuesLocation.Service,
+            createApplicationManifestWithGitFile("file2"), ServiceOverride,
+            createApplicationManifestWithGitFilePathList("file3"), EnvironmentGlobal,
+            createApplicationManifestWithGitFilePathList());
+
+    GitCommandExecutionResponse executionResponse =
+        gitExecutionResponseWithFilesFromMultipleRepo(ImmutableMap.of("Environment",
+            ImmutableMap.of("file1", "content1"), "Service", ImmutableMap.of("file2", "   ", "ignore", "ignore"),
+            "EnvironmentGlobal", ImmutableMap.of(), "ServiceOverride", ImmutableMap.of("file3", "  ")));
+
+    Map<K8sValuesLocation, Collection<String>> valuesFiles =
+        applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
+
+    assertThat(valuesFiles.get(Environment)).containsExactly("content1");
+    assertThat(valuesFiles.get(EnvironmentGlobal)).isNullOrEmpty();
+    assertThat(valuesFiles.get(K8sValuesLocation.Service)).containsExactly("   ");
+
+    assertThat(valuesFiles.get(ServiceOverride)).containsExactly("  ");
   }
 
   private ApplicationManifest createApplicationManifestWithGitFile(String filePath) {
