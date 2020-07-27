@@ -1,5 +1,6 @@
 package io.harness.mongo;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -140,13 +141,15 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
         new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
-    Set<String> names = ImmutableSet.<String>builder().add("foo2").build();
+    String index2 = generateUuid();
+    Set<String> names = ImmutableSet.<String>builder().add(index2).build();
 
-    session.create(buildIndexCreator(collection, "foo1", 1).build());
-    session.create(buildIndexCreator(collection, "foo2", 1).build());
+    String index1 = generateUuid();
+    session.create(buildIndexCreator(collection, index1, 1).build());
+    session.create(buildIndexCreator(collection, index2, -1).build());
 
     List<String> obsoleteIndexes = createCollectionSession(collection).obsoleteIndexes(names);
 
-    assertThat(obsoleteIndexes).containsExactly("foo1");
+    assertThat(obsoleteIndexes).containsExactly(index1);
   }
 }

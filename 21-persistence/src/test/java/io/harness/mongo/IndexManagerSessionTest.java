@@ -1,5 +1,6 @@
 package io.harness.mongo;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -42,19 +43,20 @@ public class IndexManagerSessionTest extends PersistenceTest {
         new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
 
-    IndexCreator original = buildIndexCreator(collection, "foo", 1).build();
+    String index1 = generateUuid();
+    IndexCreator original = buildIndexCreator(collection, index1, 1).build();
     session.create(original);
 
-    IndexCreator indexCreator = buildIndexCreator(collection, "foo2", 1).build();
-    session.create(indexCreator);
+    String index2 = generateUuid();
+    IndexCreator indexCreator = buildIndexCreator(collection, index2, 1).build();
 
     DBObject dbObject = createCollectionSession(collection).findIndexByFields(indexCreator);
-    assertThat(dbObject.get("name")).isEqualTo("foo");
+    assertThat(dbObject.get("name")).isEqualTo(index1);
 
     assertThat(session.rebuildIndex(createCollectionSession(collection), indexCreator, ofSeconds(0))).isTrue();
 
     DBObject dbObject2 = createCollectionSession(collection).findIndexByFields(indexCreator);
-    assertThat(dbObject2.get("name")).isEqualTo("foo2");
+    assertThat(dbObject2.get("name")).isEqualTo(index2);
   }
 
   @Test
@@ -147,7 +149,7 @@ public class IndexManagerSessionTest extends PersistenceTest {
     IndexManagerSession session =
         new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
     assertThat(session.createNewIndexes(createCollectionSession(collection), creators)).isEqualTo(creators.size());
-    Date afterCreatingIndexes = new Date();
+    Date afterCreatingIndexes = new Date(System.currentTimeMillis() + Duration.ofSeconds(2).toMillis());
 
     Map<String, Accesses> accesses = IndexManagerSession.fetchIndexAccesses(collection);
     Date tooNew = new Date(System.currentTimeMillis() - Duration.ofDays(1).toMillis());

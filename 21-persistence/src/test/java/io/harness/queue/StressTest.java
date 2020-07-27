@@ -15,6 +15,7 @@ import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.threading.Poller;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -34,6 +35,7 @@ public class StressTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(StressTests.class)
   @RealMongo
+  @Ignore("This is stress test we should ignore it to allow for simple run of unit tests")
   public void topicPerformance() throws IOException {
     assertThatCode(() -> {
       persistence.ensureIndexForTesting(TestTopicQueuableObject.class);
@@ -78,6 +80,7 @@ public class StressTest extends PersistenceTest {
   @Owner(developers = GEORGE)
   @Category(StressTests.class)
   @RealMongo
+  @Ignore("This is stress test we should ignore it to allow for simple run of unit tests")
   public void noTopicPerformance() throws IOException {
     assertThatCode(() -> {
       persistence.ensureIndexForTesting(TestNoTopicQueuableObject.class);
