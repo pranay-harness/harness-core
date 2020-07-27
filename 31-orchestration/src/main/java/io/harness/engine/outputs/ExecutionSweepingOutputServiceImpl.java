@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.AmbianceUtils;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.ExecutionSweepingOutputInstance;
@@ -32,11 +33,12 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
   @Inject private ExecutionSweepingOutputInstanceRepository repository;
+  @Inject private AmbianceUtils ambianceUtils;
 
   @Override
   public String consumeInternal(Ambiance ambiance, String name, SweepingOutput value, int levelsToKeep) {
     if (levelsToKeep >= 0) {
-      ambiance = ambiance.clone(levelsToKeep);
+      ambiance = ambianceUtils.clone(ambiance, levelsToKeep);
     }
 
     try {

@@ -12,6 +12,7 @@ import com.google.inject.name.Named;
 
 import com.mongodb.client.result.UpdateResult;
 import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionEngineDispatcher;
@@ -37,13 +38,14 @@ public class RetryHelper {
   @Inject private OrchestrationEngine engine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private MongoTemplate mongoTemplate;
+  @Inject private AmbianceUtils ambianceUtils;
 
   public void retryNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
     PlanNode node = nodeExecution.getNode();
     String newUuid = generateUuid();
     NodeExecution newNodeExecution = cloneForRetry(nodeExecution);
-    Ambiance ambiance = nodeExecution.getAmbiance().cloneForFinish();
+    Ambiance ambiance = ambianceUtils.cloneForFinish(nodeExecution.getAmbiance());
     ambiance.addLevel(Level.builder()
                           .setupId(node.getUuid())
                           .runtimeId(newUuid)

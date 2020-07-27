@@ -9,6 +9,7 @@ import com.google.inject.name.Named;
 
 import io.harness.OrchestrationPublisherName;
 import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionEngineDispatcher;
@@ -36,6 +37,7 @@ public class ChildChainStrategy implements InvokeStrategy {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
+  @Inject private AmbianceUtils ambianceUtils;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
@@ -60,7 +62,7 @@ public class ChildChainStrategy implements InvokeStrategy {
     NodeExecution nodeExecution = nodeExecutionService.get(ambiance.obtainCurrentRuntimeId());
     Plan plan = planExecution.getPlan();
     PlanNode node = plan.fetchNode(childChainResponse.getNextChildId());
-    Ambiance clonedAmbiance = ambiance.cloneForChild();
+    Ambiance clonedAmbiance = ambianceUtils.cloneForChild(ambiance);
     clonedAmbiance.addLevel(Level.fromPlanNode(childInstanceId, node));
     NodeExecution childNodeExecution = NodeExecution.builder()
                                            .uuid(childInstanceId)

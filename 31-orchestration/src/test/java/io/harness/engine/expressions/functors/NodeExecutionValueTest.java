@@ -7,9 +7,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 
-import io.harness.CategoryTest;
+import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -34,9 +36,10 @@ import org.mockito.junit.MockitoRule;
 
 import java.util.Collections;
 
-public class NodeExecutionValueTest extends CategoryTest {
+public class NodeExecutionValueTest extends OrchestrationTest {
   @Mock NodeExecutionService nodeExecutionService;
   @Mock OutcomeService outcomeService;
+  @Inject private AmbianceUtils ambianceUtils;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -114,7 +117,7 @@ public class NodeExecutionValueTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testNodeExecutionChildFunctor() {
-    Ambiance newAmbiance = ambiance.cloneForChild();
+    Ambiance newAmbiance = ambianceUtils.cloneForChild(ambiance);
     newAmbiance.addLevel(Level.builder().runtimeId(nodeExecution1.getUuid()).build());
     NodeExecutionChildFunctor functor =
         NodeExecutionChildFunctor.builder()
@@ -134,7 +137,7 @@ public class NodeExecutionValueTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testNodeExecutionAncestorFunctor() {
-    Ambiance newAmbiance = ambiance.cloneForChild();
+    Ambiance newAmbiance = ambianceUtils.cloneForChild(ambiance);
     newAmbiance.addLevel(Level.builder().runtimeId(nodeExecution6.getUuid()).build());
     NodeExecutionAncestorFunctor functor =
         NodeExecutionAncestorFunctor.builder()
