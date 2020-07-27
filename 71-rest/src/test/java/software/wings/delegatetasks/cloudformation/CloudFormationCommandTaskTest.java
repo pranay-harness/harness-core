@@ -1,15 +1,19 @@
 package software.wings.delegatetasks.cloudformation;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static java.util.Collections.emptyList;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +30,7 @@ import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRe
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationListStacksRequest;
+import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 
 public class CloudFormationCommandTaskTest extends WingsBaseTest {
   @Mock private CloudFormationCreateStackHandler mockCreateStackHandler;
@@ -66,5 +71,31 @@ public class CloudFormationCommandTaskTest extends WingsBaseTest {
         CloudFormationListStacksRequest.builder().commandType(CloudFormationCommandType.GET_STACKS).build();
     task.run(new Object[] {listStacksRequest, emptyList()});
     verify(mockListStacksHandler).execute(any(), any());
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testRunWithNoExecute() {
+    CloudFormationCreateStackRequest unknownRequest =
+        CloudFormationCreateStackRequest.builder().commandType(CloudFormationCommandType.UNKNOWN_REQUEST).build();
+    CloudFormationCommandExecutionResponse response = task.run(new Object[] {unknownRequest, emptyList()});
+    assert (response.getCommandExecutionStatus()).equals(CommandExecutionStatus.FAILURE);
+    verify(mockCreateStackHandler, never()).execute(any(), any());
+    verify(mockDeleteStackHandler, never()).execute(any(), any());
+    verify(mockListStacksHandler, never()).execute(any(), any());
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testRunWithException() {
+    CloudFormationCreateStackRequest createStackRequest =
+        CloudFormationCreateStackRequest.builder().commandType(CloudFormationCommandType.CREATE_STACK).build();
+    doThrow(new RuntimeException("Exception")).when(mockCreateStackHandler).execute(any(), any());
+    CloudFormationCommandExecutionResponse response = task.run(new Object[] {createStackRequest, emptyList()});
+    assert (response.getCommandExecutionStatus()).equals(CommandExecutionStatus.FAILURE);
+    verify(mockDeleteStackHandler, never()).execute(any(), any());
+    verify(mockListStacksHandler, never()).execute(any(), any());
   }
 }

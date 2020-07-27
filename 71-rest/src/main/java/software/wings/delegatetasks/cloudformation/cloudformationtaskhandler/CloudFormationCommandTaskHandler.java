@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static java.lang.String.format;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.cloudformation.model.DescribeStackEventsRequest;
@@ -69,6 +70,7 @@ public abstract class CloudFormationCommandTaskHandler {
     }
   }
 
+  @VisibleForTesting
   protected long printStackEvents(CloudFormationCommandRequest request, long stackEventsTs, Stack stack,
       ExecutionLogCallback executionLogCallback) {
     List<StackEvent> stackEvents = getStackEvents(request, stack);
