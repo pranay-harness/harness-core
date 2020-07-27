@@ -9,6 +9,6 @@ import software.wings.graphql.schema.type.QLObject;
 @Builder
 @FieldNameConstants(innerTypeName = "QLInlineSSHKeyKeys")
 public class QLInlineSSHKey implements QLObject {
-  String sshKey;
-  String passphrase;
+  String sshKeySecretFileId;
+  String passphraseSecretId;
 }

@@ -75,7 +75,6 @@ import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event;
-import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.Service;
@@ -1287,7 +1286,6 @@ public class KmsTest extends WingsBaseTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testGetSecretMappedToAccountByName() {
-    when(featureFlagService.isEnabled(FeatureName.USE_SCOPED_TO_ACCOUNT_SECRETS, accountId)).thenReturn(false);
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1302,18 +1300,6 @@ public class KmsTest extends WingsBaseTest {
     assertThat(secretByName.getName()).isEqualTo(secretName);
     assertThat(secretByName.getUuid()).isEqualTo(secretId);
     assertThat(secretByName.isScopedToAccount()).isFalse();
-
-    when(featureFlagService.isEnabled(FeatureName.USE_SCOPED_TO_ACCOUNT_SECRETS, accountId)).thenReturn(true);
-
-    secretName = UUID.randomUUID().toString();
-    secretValue = UUID.randomUUID().toString();
-    secretText = SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).scopedToAccount(true).build();
-    secretId = secretManager.saveSecret(accountId, secretText);
-    secretByName = secretManager.getSecretMappedToAccountByName(accountId, secretName);
-    assertThat(secretByName).isNotNull();
-    assertThat(secretByName.getName()).isEqualTo(secretName);
-    assertThat(secretByName.getUuid()).isEqualTo(secretId);
-    assertThat(secretByName.isScopedToAccount()).isTrue();
   }
 
   @Test

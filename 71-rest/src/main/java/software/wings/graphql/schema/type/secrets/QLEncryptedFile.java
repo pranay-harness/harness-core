@@ -13,4 +13,5 @@ public class QLEncryptedFile implements QLSecret {
   private QLSecretType secretType;
   private String id;
   private QLUsageScope usageScope;
+  private boolean scopedToAccount;
 }

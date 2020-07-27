@@ -4,6 +4,7 @@ input EncryptedTextInput {
   value: String
   secretReference: String
   usageScope: UsageScopeInput
+  scopedToAccount: Boolean
 }
 
 input UpdateEncryptedText {
@@ -11,6 +12,7 @@ input UpdateEncryptedText {
   value: String
   secretReference: String
   usageScope: UsageScopeInput
+  scopedToAccount: Boolean
 }
 
 type EncryptedText implements Secret {
@@ -19,4 +21,5 @@ type EncryptedText implements Secret {
   secretType: SecretType
   id: String
   usageScope: UsageScope
+  scopedToAccount: Boolean
 }

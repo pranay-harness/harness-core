@@ -37,7 +37,6 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.FeatureName.USE_SCOPED_TO_ACCOUNT_SECRETS;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.encryption.EncryptedData.PARENT_ID_KEY;
@@ -1315,19 +1314,11 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData getSecretMappedToAccountByName(String accountId, String name) {
-    Query<EncryptedData> query = null;
-    if (featureFlagService.isEnabled(USE_SCOPED_TO_ACCOUNT_SECRETS, accountId)) {
-      query = wingsPersistence.createQuery(EncryptedData.class)
-                  .filter(EncryptedDataKeys.accountId, accountId)
-                  .filter(EncryptedDataKeys.name, name)
-                  .filter(EncryptedDataKeys.scopedToAccount, Boolean.TRUE);
-    } else {
-      query = wingsPersistence.createQuery(EncryptedData.class)
-                  .filter(EncryptedDataKeys.accountId, accountId)
-                  .filter(EncryptedDataKeys.name, name)
-                  .field(EncryptedDataKeys.usageRestrictions)
-                  .doesNotExist();
-    }
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                     .filter(EncryptedDataKeys.accountId, accountId)
+                                     .filter(EncryptedDataKeys.name, name)
+                                     .field(EncryptedDataKeys.usageRestrictions)
+                                     .doesNotExist();
     return query.get();
   }
 

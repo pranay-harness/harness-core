@@ -20,6 +20,7 @@ import software.wings.graphql.schema.type.secrets.QLWinRMCredential;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredentialInput;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredentialUpdate;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 
 import javax.validation.constraints.NotNull;
 
@@ -27,6 +28,7 @@ import javax.validation.constraints.NotNull;
 @Singleton
 public class WinRMCredentialController {
   @Inject SettingsService settingService;
+  @Inject SecretManager secretManager;
   @Inject UsageScopeController usageScopeController;
 
   public QLWinRMCredential populateWinRMCredential(@NotNull SettingAttribute settingAttribute) {
@@ -46,13 +48,14 @@ public class WinRMCredentialController {
         .build();
   }
 
-  private void validateSettingAttribute(QLWinRMCredentialInput winRMCredentialInput) {
+  private void validateSettingAttribute(QLWinRMCredentialInput winRMCredentialInput, String accountId) {
     if (isBlank(winRMCredentialInput.getUserName())) {
       throw new InvalidRequestException("The username cannot be blank for the winRM credential input");
     }
 
-    if (isBlank(winRMCredentialInput.getPassword())) {
-      throw new InvalidRequestException("The password cannot be blank for the winRM credential input");
+    if (isBlank(winRMCredentialInput.getPasswordSecretId())
+        || secretManager.getSecretById(accountId, winRMCredentialInput.getPasswordSecretId()) == null) {
+      throw new InvalidRequestException("The password secret id is invalid for the winRM credential input");
     }
 
     if (isBlank(winRMCredentialInput.getName())) {
@@ -62,7 +65,7 @@ public class WinRMCredentialController {
 
   public SettingAttribute createSettingAttribute(
       @NotNull QLWinRMCredentialInput winRMCredentialInput, String accountId) {
-    validateSettingAttribute(winRMCredentialInput);
+    validateSettingAttribute(winRMCredentialInput, accountId);
     WinRmConnectionAttributes.AuthenticationScheme authenticationScheme = NTLM;
     boolean skipCertChecks = true;
     boolean useSSL = true;
@@ -82,7 +85,7 @@ public class WinRMCredentialController {
     }
     WinRmConnectionAttributes settingValue = WinRmConnectionAttributes.builder()
                                                  .username(winRMCredentialInput.getUserName())
-                                                 .password(winRMCredentialInput.getPassword().toCharArray())
+                                                 .password(winRMCredentialInput.getPasswordSecretId().toCharArray())
                                                  .authenticationScheme(authenticationScheme)
                                                  .port(port)
                                                  .skipCertChecks(skipCertChecks)
@@ -125,15 +128,15 @@ public class WinRMCredentialController {
     if (updateInput.getUserName().isPresent()) {
       String userName = updateInput.getUserName().getValue().map(StringUtils::strip).orElse(null);
       if (isBlank(userName)) {
-        throw new InvalidRequestException("Cannot set the username in wirRM Credential as null");
+        throw new InvalidRequestException("Cannot set the username in winRM Credential as null");
       }
       settingValue.setUsername(userName);
     }
 
-    if (updateInput.getPassword().isPresent()) {
-      String password = updateInput.getPassword().getValue().map(StringUtils::strip).orElse(null);
-      if (isBlank(password)) {
-        throw new InvalidRequestException("Cannot set the password in wirRM Credential as null");
+    if (updateInput.getPasswordSecretId().isPresent()) {
+      String password = updateInput.getPasswordSecretId().getValue().map(StringUtils::strip).orElse(null);
+      if (isBlank(password) || secretManager.getSecretById(accountId, password) == null) {
+        throw new InvalidRequestException("Invalid password in winRM Credential");
       }
       settingValue.setPassword(password.toCharArray());
     }

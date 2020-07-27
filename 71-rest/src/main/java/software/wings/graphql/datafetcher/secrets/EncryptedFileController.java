@@ -18,6 +18,7 @@ public class EncryptedFileController {
         .secretManagerId(encryptedFile.getKmsId())
         .name(encryptedFile.getName())
         .usageScope(usageScopeController.populateUsageScope(encryptedFile.getUsageRestrictions()))
+        .scopedToAccount(encryptedFile.isScopedToAccount())
         .build();
   }
 }

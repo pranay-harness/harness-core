@@ -18,15 +18,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
+import software.wings.service.impl.security.SecretText;
+import software.wings.service.intfc.security.SecretManager;
 
 public class UpdateWinRMCredentialsTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;
   @Inject private OwnerManager ownerManager;
   @Inject private WinRMCredentialHelper winRMCredentialHelper;
+  @Inject private SecretManager secretManager;
 
   private String updatedUserName = "updatedUserName";
   private String updatedName = "updatedName";
-  private String updatedPassword = "updatedPassword";
   private int updatedPort = 222;
   private String accountId;
   private String secretId;
@@ -39,7 +41,10 @@ public class UpdateWinRMCredentialsTest extends GraphQLTest {
     accountId = account.getUuid();
     secretId = winRMCredentialHelper.createWinRMCredential("secretName");
   }
+
   private String getUpdateWinRMCredentialNameInput() {
+    String passwordSecretId =
+        secretManager.saveSecret(accountId, SecretText.builder().name("winrmPasswordSecretId").build());
     String input = $GQL(/*
     {
     secretType: WINRM_CREDENTIAL,
@@ -48,13 +53,13 @@ public class UpdateWinRMCredentialsTest extends GraphQLTest {
         name: "%s",
         userName: "%s",
         authenticationScheme:  NTLM,
-        password: "%s"
+        passwordSecretId: "%s"
         useSSL: false,
         skipCertCheck: false,
         port: %d
      }
     }
-    */ secretId, updatedName, updatedUserName, updatedPassword, updatedPort);
+    */ secretId, updatedName, updatedUserName, passwordSecretId, updatedPort);
     return input;
   }
 

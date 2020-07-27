@@ -15,5 +15,6 @@ public class QLEncryptedTextUpdate {
   RequestField<String> name;
   RequestField<String> value;
   RequestField<String> secretReference;
+  RequestField<Boolean> scopedToAccount;
   RequestField<QLUsageScope> usageScope;
 }

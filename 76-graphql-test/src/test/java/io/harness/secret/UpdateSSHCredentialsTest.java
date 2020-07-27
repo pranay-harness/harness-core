@@ -18,11 +18,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
+import software.wings.service.impl.security.SecretText;
+import software.wings.service.intfc.security.SecretManager;
 
 public class UpdateSSHCredentialsTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;
   @Inject private OwnerManager ownerManager;
   @Inject SSHCredentialHelper sshCredentialHelper;
+  @Inject SecretManager secretManager;
   private String updatedSecretName = "updatedSecretName";
   private String updatedUserName = "updatedUserName";
   private int updatedPort = 222;
@@ -39,6 +42,7 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
     accountId = account.getUuid();
     secretId = sshCredentialHelper.createSSHCredential("secretName");
   }
+
   private String updateMutationInput(String variable) {
     String query = $GQL(/*
   mutation{
@@ -77,6 +81,7 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
   }
 
   private String getUpdateSSHCredentialInput() {
+    String sshKeySecretId = secretManager.saveSecret(accountId, SecretText.builder().name("sshKeySecretId").build());
     String queryVariable = $GQL(/*
   {
       secretType: SSH_CREDENTIAL,
@@ -90,14 +95,14 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
           sshAuthenticationMethod: {
           sshCredentialType: SSH_KEY,
           inlineSSHKey: {
-              sshKey: "sshKeyUpdated"
+              sshKeySecretFileId: "%s"
             }
           }
       }
       }
   }
 
-  */ secretId, updatedSecretName, updatedPort, updatedUserName);
+  */ secretId, updatedSecretName, updatedPort, updatedUserName, sshKeySecretId);
     return queryVariable;
   }
 
@@ -122,6 +127,8 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
   }
 
   private String getkerberosUpdateInput() {
+    String passwordSecretId =
+        secretManager.saveSecret(accountId, SecretText.builder().name("kerberosPasswordSecretId").build());
     String queryVariable = $GQL(/*
 
     {
@@ -136,7 +143,7 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
           realm: "%s",
           tgtGenerationMethod: {
             kerberosPassword: {
-              password: "password"
+              passwordSecretId: "%s"
             },
             tgtGenerationUsing: PASSWORD
           }
@@ -144,7 +151,7 @@ public class UpdateSSHCredentialsTest extends GraphQLTest {
       }
     }
 
-*/ secretId, updatedSecretName, updatedPort, updatedPrincipal, updatedRealm);
+*/ secretId, updatedSecretName, updatedPort, updatedPrincipal, updatedRealm, passwordSecretId);
     return queryVariable;
   }
 
