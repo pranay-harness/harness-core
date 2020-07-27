@@ -13,24 +13,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.sm.StateType.HELM_DEPLOY;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -92,6 +101,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
+import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -101,10 +111,12 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -117,6 +129,7 @@ import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
+import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
@@ -585,6 +598,53 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHelmChartSpecWithGitEmptyYAMLFilePath() {
+    helmDeployState.setGitFileConfig(
+        GitFileConfig.builder().connectorId(GIT_CONNECTOR_ID).branch(GIT_BRANCH).filePath("").build());
+
+    Map<String, String> invalidFields = helmDeployState.validateFields();
+
+    assertThat(invalidFields).containsKey(FILE_PATH_VALIDATION_MSG_KEY);
+    assertThat(invalidFields).containsValue("File path must not be blank if git connector is selected");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHelmChartSpecWithInvalidGitBranch() {
+    helmDeployState.setGitFileConfig(
+        GitFileConfig.builder().connectorId(GIT_CONNECTOR_ID).filePath(GIT_NOT_YML_FILE_PATH).build());
+
+    Map<String, String> invalidFields = helmDeployState.validateFields();
+    assertThat(invalidFields).containsKey("Branch or commit id");
+    assertThat(invalidFields).containsValue("Branch or commit id must not be blank if git connector is selected");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHelmChartSpecWithMissingHelmReleaseNamePrefix() {
+    Map<String, String> invalidFields;
+    helmDeployState.setHelmReleaseNamePrefix(null);
+
+    invalidFields = helmDeployState.validateFields();
+    assertThat(invalidFields).containsKey("Helm release name prefix");
+    assertThat(invalidFields.get("Helm release name prefix")).isEqualTo("Helm release name prefix must not be blank");
+
+    helmDeployState.setHelmReleaseNamePrefix("");
+    invalidFields = helmDeployState.validateFields();
+    assertThat(invalidFields).containsKey("Helm release name prefix");
+    assertThat(invalidFields.get("Helm release name prefix")).isEqualTo("Helm release name prefix must not be blank");
+
+    helmDeployState.setHelmReleaseNamePrefix("     ");
+    invalidFields = helmDeployState.validateFields();
+    assertThat(invalidFields).containsKey("Helm release name prefix");
+    assertThat(invalidFields.get("Helm release name prefix")).isEqualTo("Helm release name prefix must not be blank");
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecuteWithCommandFlags() {
@@ -925,6 +985,33 @@ public class HelmDeployStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteHelmTaskWithNoInitialRollbackNeeded() throws InterruptedException {
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance()
+            .addContextElement(workflowStandardParams)
+            .addContextElement(phaseElement)
+            .addContextElement(
+                HelmDeployContextElement.builder().releaseName("release").previousReleaseRevision(0).build())
+            .build();
+    HelmDeployState spyHelmDeployState = spy(helmDeployState);
+    on(context).set("stateExecutionInstance", stateExecutionInstance);
+
+    spyHelmDeployState.setStateType(StateType.HELM_ROLLBACK.name());
+
+    doReturn(true).when(logService).batchedSaveCommandUnitLogs(any(), any(), any());
+    doReturn(Activity.builder().uuid(ACTIVITY_ID).build())
+        .when(spyHelmDeployState)
+        .createActivity(eq(context), anyListOf(CommandUnit.class));
+
+    spyHelmDeployState.executeInternal(context);
+    verify(spyHelmDeployState, times(1)).isRollBackNotNeeded(context);
+    verify(spyHelmDeployState, times(1))
+        .initialRollbackNotNeeded(eq(context), eq(ACTIVITY_ID), any(HelmDeployStateExecutionData.class));
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testTagsInExecuteGitTask() {
@@ -1057,5 +1144,176 @@ public class HelmDeployStateTest extends WingsBaseTest {
         WingsTestConstants.ACCOUNT_ID, WingsTestConstants.APP_ID, WingsTestConstants.ACTIVITY_ID,
         ImageDetails.builder().build(), "repo", GitConfig.builder().build(), Collections.emptyList(), null,
         K8sDelegateManifestConfig.builder().build(), Collections.emptyMap(), HelmConstants.HelmVersion.V3);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteHelmValuesFetchTaskWithHelmChartServiceManifest() {
+    Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap = new HashMap<>();
+    helmOverrideManifestMap.put(
+        K8sValuesLocation.EnvironmentGlobal, ApplicationManifest.builder().storeType(StoreType.Local).build());
+
+    ApplicationManifest serviceHelmChartManifest =
+        ApplicationManifest.builder()
+            .storeType(StoreType.HelmChartRepo)
+            .helmChartConfig(HelmChartConfig.builder().chartName("helm-chart").build())
+            .build();
+
+    doReturn(serviceHelmChartManifest).when(applicationManifestUtils).getApplicationManifestForService(context);
+    when(helmChartConfigHelperService.getHelmChartConfigTaskParams(context, serviceHelmChartManifest))
+        .thenReturn(HelmChartConfigParams.builder().repoName("repoName").build());
+
+    helmDeployState.executeHelmValuesFetchTask(context, ACTIVITY_ID, helmOverrideManifestMap);
+
+    ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(applicationManifestUtils, times(1))
+        .applyK8sValuesLocationBasedHelmChartOverride(
+            serviceHelmChartManifest, helmOverrideManifestMap, K8sValuesLocation.EnvironmentGlobal);
+    verify(delegateService, times(1)).queueTask(delegateTaskCaptor.capture());
+
+    DelegateTask task = delegateTaskCaptor.getValue();
+    HelmValuesFetchTaskParameters taskParameters = (HelmValuesFetchTaskParameters) task.getData().getParameters()[0];
+    assertThat(taskParameters.getHelmChartConfigTaskParams()).isNotNull();
+    assertThat(taskParameters.getHelmChartConfigTaskParams().getRepoName()).isEqualTo("repoName");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleAsyncInternalForGitTask() throws InterruptedException {
+    HelmDeployState spyDeployState = spy(helmDeployState);
+    GitCommandExecutionResponse gitCommandExecutionResponse =
+        GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
+    HelmDeployStateExecutionData helmStateExecutionData =
+        (HelmDeployStateExecutionData) context.getStateExecutionData();
+
+    Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap = new HashMap<>();
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    String activityId = "activityId";
+    helmStateExecutionData.setActivityId(activityId);
+    helmStateExecutionData.setCurrentTaskType(TaskType.GIT_COMMAND);
+    helmStateExecutionData.setAppManifestMap(applicationManifestMap);
+    ExecutionResponse helmTaskExecutionResponse = ExecutionResponse.builder().build();
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put(activityId, gitCommandExecutionResponse);
+
+    doReturn(helmOverrideManifestMap)
+        .when(applicationManifestUtils)
+        .getOverrideApplicationManifests(context, HELM_CHART_OVERRIDE);
+    doReturn(helmTaskExecutionResponse)
+        .when(spyDeployState)
+        .executeHelmTask(context, activityId, applicationManifestMap, helmOverrideManifestMap);
+    ExecutionResponse executionResponse = spyDeployState.handleAsyncInternal(context, response);
+
+    assertThat(executionResponse).isSameAs(helmTaskExecutionResponse);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testUpdateHelmExecutionSummaryNegative() {
+    HelmExecutionSummary executionSummary = spy(HelmExecutionSummary.builder().build());
+    WorkflowExecution workflowExecution =
+        spy(WorkflowExecution.builder().appId(APP_ID).helmExecutionSummary(executionSummary).build());
+    doReturn(workflowExecution)
+        .when(workflowExecutionService)
+        .getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
+
+    testUpdateHelmExecutionSummaryWithReleaseHistoryCommandResponse(executionSummary);
+    testUpdateHelmExecutionSummaryWithoutHelmDeployStateType(executionSummary);
+    testUpdateHelmExecutionSummaryWithoutHelmChartInfo(executionSummary);
+    testUpdateHelmExecutionSummaryWithException();
+  }
+
+  private void testUpdateHelmExecutionSummaryWithReleaseHistoryCommandResponse(HelmExecutionSummary executionSummary) {
+    reset(executionSummary);
+    HelmReleaseHistoryCommandResponse commandResponse = HelmReleaseHistoryCommandResponse.builder().build();
+    helmDeployState.updateHelmExecutionSummary(context, commandResponse);
+    verifyZeroInteractions(executionSummary);
+  }
+
+  private void testUpdateHelmExecutionSummaryWithoutHelmDeployStateType(HelmExecutionSummary executionSummary) {
+    reset(executionSummary);
+    HelmInstallCommandResponse commandResponse = HelmInstallCommandResponse.builder().build();
+    helmDeployState.setStateType("NON_HELM_DEPLOY");
+    helmDeployState.updateHelmExecutionSummary(context, commandResponse);
+    verifyZeroInteractions(executionSummary);
+  }
+
+  private void testUpdateHelmExecutionSummaryWithoutHelmChartInfo(HelmExecutionSummary executionSummary) {
+    reset(executionSummary);
+    HelmInstallCommandResponse commandResponse = HelmInstallCommandResponse.builder().helmChartInfo(null).build();
+    helmDeployState.setStateType(HELM_DEPLOY.name());
+    helmDeployState.updateHelmExecutionSummary(context, commandResponse);
+    verifyZeroInteractions(executionSummary);
+  }
+
+  private void testUpdateHelmExecutionSummaryWithException() {
+    HelmInstallCommandResponse commandResponse = HelmInstallCommandResponse.builder().build();
+    doThrow(new RuntimeException("Something went wrong"))
+        .when(workflowExecutionService)
+        .getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
+    // Test exception hasn't been propagated upper
+    helmDeployState.updateHelmExecutionSummary(context, commandResponse);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testUpdateHelmExecutionSummary() {
+    HelmExecutionSummary executionSummary = spy(HelmExecutionSummary.builder().build());
+    WorkflowExecution workflowExecution =
+        spy(WorkflowExecution.builder().appId(APP_ID).helmExecutionSummary(executionSummary).build());
+    doReturn(workflowExecution)
+        .when(workflowExecutionService)
+        .getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
+
+    testUpdateHelmExecutionSummaryWithHelmChartInfoDetails(executionSummary);
+    testUpdateHelmExecutionSummaryWithContainerInfoList(executionSummary);
+  }
+
+  private void testUpdateHelmExecutionSummaryWithHelmChartInfoDetails(HelmExecutionSummary executionSummary) {
+    HelmChartInfo helmChartInfo = HelmChartInfo.builder().build();
+    HelmChartInfo summaryHelmChartInfo = spy(HelmChartInfo.builder().build());
+    HelmInstallCommandResponse commandResponse =
+        HelmInstallCommandResponse.builder().helmChartInfo(helmChartInfo).build();
+    helmDeployState.setStateType(HELM_DEPLOY.name());
+
+    // empty helm chart info
+    reset(executionSummary);
+    helmDeployState.updateHelmExecutionSummary(context, commandResponse);
+    verify(executionSummary, times(1)).getHelmChartInfo();
+    verify(executionSummary, times(1)).setHelmChartInfo(HelmChartInfo.builder().build());
+    verifyNoMoreInteractions(executionSummary);
+
+    // with helm chart values
+    reset(executionSummary);
+    doReturn(summaryHelmChartInfo).when(executionSummary).getHelmChartInfo();
+    helmChartInfo.setName("helm-chart");
+    helmChartInfo.setVersion("helm-version");
+    helmChartInfo.setRepoUrl("helm-repo-url");
+    helmDeployState.updateHelmExecutionSummary(context, commandResponse);
+    verify(executionSummary, never()).setHelmChartInfo(HelmChartInfo.builder().build());
+    verify(summaryHelmChartInfo, times(1)).setName("helm-chart");
+    verify(summaryHelmChartInfo, times(1)).setVersion("helm-version");
+    verify(summaryHelmChartInfo, times(1)).setRepoUrl("helm-repo-url");
+    verifyNoMoreInteractions(summaryHelmChartInfo);
+  }
+
+  private void testUpdateHelmExecutionSummaryWithContainerInfoList(HelmExecutionSummary executionSummary) {
+    reset(executionSummary);
+    HelmInstallCommandResponse commandResponse =
+        HelmInstallCommandResponse.builder()
+            .containerInfoList(Arrays.asList(
+                ContainerInfo.builder().podName("p1").build(), ContainerInfo.builder().podName("p2").build()))
+            .helmChartInfo(HelmChartInfo.builder().build())
+            .build();
+    helmDeployState.setStateType(HELM_DEPLOY.name());
+    helmDeployState.updateHelmExecutionSummary(context, commandResponse);
+    ArgumentCaptor<List<ContainerInfo>> containerInfoListCaptor = ArgumentCaptor.forClass((Class) List.class);
+    verify(executionSummary, times(1)).setContainerInfoList(containerInfoListCaptor.capture());
+    List<ContainerInfo> containerInfoList = containerInfoListCaptor.getValue();
+    assertThat(containerInfoList.stream().map(ContainerInfo::getPodName)).containsExactlyInAnyOrder("p1", "p2");
   }
 }

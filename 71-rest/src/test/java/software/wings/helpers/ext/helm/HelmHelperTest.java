@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.expression.ExpressionEvaluator.ARTIFACT_FILE_NAME_VARIABLE;
+import static io.harness.expression.ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -29,6 +32,9 @@ import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class HelmHelperTest extends WingsBaseTest {
   @Mock private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
@@ -202,5 +208,41 @@ public class HelmHelperTest extends WingsBaseTest {
     helmHelper.replaceManifestPlaceholdersWithLocalConfig(manifestFile);
 
     assertThat(manifestFile.getFileContent()).isEqualTo(manifestMaskSecret);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testIsArtifactReferencedInValuesYaml() {
+    assertThat(HelmHelper.isArtifactReferencedInValuesYaml("value: Text value\n")).isFalse();
+
+    String dockerImageNameRef = "dockerImageName: " + HelmConstants.HELM_DOCKER_IMAGE_NAME_PLACEHOLDER;
+    String dockerImageTagRef = "dockerImageTag: " + HelmConstants.HELM_DOCKER_IMAGE_TAG_PLACEHOLDER;
+    assertThat(HelmHelper.isArtifactReferencedInValuesYaml(dockerImageNameRef)).isTrue();
+    assertThat(HelmHelper.isArtifactReferencedInValuesYaml(dockerImageTagRef)).isTrue();
+
+    String multipleRefs = "image: ${" + ARTIFACT_FILE_NAME_VARIABLE + "}\n";
+    multipleRefs += "buildNo: ${" + DEFAULT_ARTIFACT_VARIABLE_NAME + ".buildNo}\n";
+    multipleRefs += "imageTag: " + HelmConstants.HELM_DOCKER_IMAGE_TAG_PLACEHOLDER;
+    assertThat(HelmHelper.isArtifactReferencedInValuesYaml(multipleRefs)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testUpdateArtifactVariableNamesReferencedInValuesYaml() {
+    Set<String> serviceArtifactVariableNames = new HashSet<>();
+    HelmHelper.updateArtifactVariableNamesReferencedInValuesYaml("var: no references", serviceArtifactVariableNames);
+    assertThat(serviceArtifactVariableNames).isEmpty();
+
+    HelmHelper.updateArtifactVariableNamesReferencedInValuesYaml(
+        "image: ${" + ARTIFACT_FILE_NAME_VARIABLE + "}", serviceArtifactVariableNames);
+    assertThat(serviceArtifactVariableNames).hasSize(1);
+    assertThat(serviceArtifactVariableNames).contains(DEFAULT_ARTIFACT_VARIABLE_NAME);
+
+    serviceArtifactVariableNames = new HashSet<>();
+    HelmHelper.updateArtifactVariableNamesReferencedInValuesYaml(
+        "imageTag: " + HelmConstants.HELM_DOCKER_IMAGE_TAG_PLACEHOLDER, serviceArtifactVariableNames);
+    assertThat(serviceArtifactVariableNames).contains(DEFAULT_ARTIFACT_VARIABLE_NAME);
   }
 }

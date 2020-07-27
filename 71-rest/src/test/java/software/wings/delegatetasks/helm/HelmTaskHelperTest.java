@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -419,5 +420,24 @@ public class HelmTaskHelperTest extends WingsBaseTest {
 
   private HelmChartSpecification getHelmChartSpecification(String url) {
     return HelmChartSpecification.builder().chartName("chartName").chartVersion("").chartUrl(url).build();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testCreateProcessExecutor() {
+    long timeoutMillis = 9000;
+    String command = "v3/helm repo remove repoName";
+    String workingDir = "/pwd/wd";
+    String emptyWorkingDir = "";
+    doCallRealMethod().when(helmTaskHelper).createProcessExecutor(anyString(), anyString(), anyLong());
+
+    ProcessExecutor executor = helmTaskHelper.createProcessExecutor(command, workingDir, timeoutMillis);
+    assertThat(executor.getDirectory()).isEqualTo(new File(workingDir));
+    assertThat(String.join(" ", executor.getCommand())).isEqualTo(command);
+
+    executor = helmTaskHelper.createProcessExecutor(command, emptyWorkingDir, timeoutMillis);
+    assertThat(executor.getDirectory()).isNull();
+    assertThat(String.join(" ", executor.getCommand())).isEqualTo(command);
   }
 }
