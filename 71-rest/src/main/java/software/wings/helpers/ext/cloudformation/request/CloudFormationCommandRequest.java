@@ -27,5 +27,5 @@ public class CloudFormationCommandRequest implements ExecutionCapabilityDemander
     return awsConfig.fetchRequiredExecutionCapabilities();
   }
 
-  public enum CloudFormationCommandType { CREATE_STACK, GET_STACKS, DELETE_STACK }
+  public enum CloudFormationCommandType { CREATE_STACK, GET_STACKS, DELETE_STACK, UNKNOWN_REQUEST }
 }
