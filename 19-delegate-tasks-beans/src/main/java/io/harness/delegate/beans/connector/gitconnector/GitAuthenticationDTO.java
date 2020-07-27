@@ -8,5 +8,7 @@ import software.wings.annotation.EncryptableSetting;
 public abstract class GitAuthenticationDTO implements EncryptableSetting {
   public abstract String getUrl();
 
+  public abstract String getBranchName();
+
   public abstract GitConnectionType getGitConnectionType();
 }

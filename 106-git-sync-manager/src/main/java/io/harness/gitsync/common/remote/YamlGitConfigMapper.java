@@ -5,15 +5,15 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.gitsync.common.ScopeHelper.getScope;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.delegate.beans.git.EntityScope.Scope;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
-import io.harness.gitsync.common.EntityScope.Scope;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.beans.YamlGitFolderConfig;
 import io.harness.gitsync.common.beans.YamlGitFolderConfig.YamlGitFolderConfigBuilder;
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncFolderConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncFolderConfigDTO.GitSyncFolderConfigDTOBuilder;
-import io.harness.gitsync.common.dtos.YamlGitConfigDTO;
 import lombok.SneakyThrows;
 
 import java.util.List;

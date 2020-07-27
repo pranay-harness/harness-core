@@ -1,6 +1,6 @@
 package io.harness.gitsync.common.service;
 
-import io.harness.gitsync.common.dtos.YamlGitConfigDTO;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;

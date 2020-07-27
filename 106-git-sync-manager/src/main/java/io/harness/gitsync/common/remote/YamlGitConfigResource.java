@@ -6,8 +6,8 @@ import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConf
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
-import io.harness.gitsync.common.dtos.YamlGitConfigDTO;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

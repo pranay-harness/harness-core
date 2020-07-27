@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.Trimmed;
-import io.harness.gitsync.common.EntityScope.Scope;
+import io.harness.delegate.beans.git.EntityScope.Scope;
 import io.harness.ng.core.ProjectAccess;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -27,7 +27,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document("yamlGitConfigs")
-@TypeAlias("yamlGitConfigs")
+@TypeAlias("io.harness.gitsync.common.beans.yamlGitConfigs")
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
