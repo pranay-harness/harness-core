@@ -73,7 +73,7 @@ class AwsHelperServiceDelegateBase {
 
   @VisibleForTesting
   void handleAmazonClientException(AmazonClientException amazonClientException) {
-    logger.error("AWS API Client call exception", amazonClientException);
+    logger.error("AWS API Client call exception: {}", amazonClientException.getMessage());
     String errorMessage = amazonClientException.getMessage();
     if (isNotEmpty(errorMessage) && errorMessage.contains("/meta-data/iam/security-credentials/")) {
       throw new InvalidRequestException("The IAM role on the Ec2 delegate does not exist OR does not"
@@ -87,7 +87,7 @@ class AwsHelperServiceDelegateBase {
 
   @VisibleForTesting
   void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
-    logger.error("AWS API call exception", amazonServiceException);
+    logger.error("AWS API call exception: {}", amazonServiceException.getMessage());
     if (amazonServiceException instanceof AmazonCodeDeployException) {
       throw new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
