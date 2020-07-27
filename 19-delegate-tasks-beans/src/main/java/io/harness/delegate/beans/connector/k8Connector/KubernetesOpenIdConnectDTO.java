@@ -8,36 +8,37 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
+import org.hibernate.validator.constraints.NotBlank;
 import software.wings.settings.SettingVariableTypes;
 
 @Value
 @Builder
 @JsonTypeName("OpenIdConnect")
 public class KubernetesOpenIdConnectDTO extends KubernetesAuthCredentialDTO {
-  String oidcIssuerUrl;
+  @NotBlank String oidcIssuerUrl;
 
   @Getter(onMethod = @__(@JsonIgnore))
   @JsonIgnore
   @ApiModelProperty(hidden = true)
   @Encrypted(fieldName = "oidcClientId", isReference = true)
   char[] oidcClientId;
-  @JsonProperty("oidcClientIdRef") String encryptedOidcClientId;
+  @JsonProperty("oidcClientIdRef") @NotBlank String encryptedOidcClientId;
 
-  String oidcUsername;
+  @NotBlank String oidcUsername;
 
   @Getter(onMethod = @__(@JsonIgnore))
   @JsonIgnore
   @ApiModelProperty(hidden = true)
   @Encrypted(fieldName = "oidcPassword", isReference = true)
   char[] oidcPassword;
-  @JsonProperty("oidcPasswordRef") String encryptedOidcPassword;
+  @JsonProperty("oidcPasswordRef") @NotBlank String encryptedOidcPassword;
 
   @Getter(onMethod = @__(@JsonIgnore))
   @JsonIgnore
   @ApiModelProperty(hidden = true)
   @Encrypted(fieldName = "oidcSecret", isReference = true)
   char[] oidcSecret;
-  @JsonProperty("oidcSecretRef") String encryptedOidcSecret;
+  @JsonProperty("oidcSecretRef") @NotBlank String encryptedOidcSecret;
 
   String oidcScopes;
 

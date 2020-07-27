@@ -6,6 +6,7 @@ import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.NotBlank;
 import software.wings.settings.SettingVariableTypes;
 
 @Data
@@ -14,7 +15,7 @@ import software.wings.settings.SettingVariableTypes;
 @JsonTypeName("Http")
 public class GitHTTPAuthenticationDTO extends GitAuthenticationDTO {
   @JsonProperty("type") GitConnectionType gitConnectionType;
-  String url;
+  @NotBlank String url;
   String username;
   @Encrypted(fieldName = "password", isReference = true) char[] password;
   @JsonProperty("passwordReference") String encryptedPassword;

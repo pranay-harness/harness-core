@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import org.hibernate.validator.constraints.NotBlank;
 import software.wings.settings.SettingVariableTypes;
 
 @Data
@@ -19,7 +20,7 @@ public class KubernetesServiceAccountDTO extends KubernetesAuthCredentialDTO {
   @Encrypted(fieldName = "serviceAccountToken", isReference = true)
   protected char[] serviceAccountToken;
 
-  @JsonProperty("serviceAccountTokenRef") String encryptedServiceAccountToken;
+  @JsonProperty("serviceAccountTokenRef") @NotBlank String encryptedServiceAccountToken;
   @ApiModelProperty(hidden = true) String accountId;
 
   private static final String DUMMY_ACCOUNT_ID = "AccountId";

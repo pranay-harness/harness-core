@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.connector.ConnectorFilterHelper;
 import io.harness.connector.ConnectorScopeHelper;
 import io.harness.connector.FullyQualitifedIdentifierHelper;
@@ -25,7 +24,6 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -113,9 +111,11 @@ public class ConnectorServiceImpl implements ConnectorService {
       throw new InvalidRequestException(
           String.format("No connector exists with the  Identitier %s", connectorRequestDTO.getIdentifier()));
     }
-    Connector updatedConnectorEntity =
-        connectorRepository.save(applyUpdateToConnector(existingConnector.get(), connectorRequestDTO));
-    return connectorMapper.writeDTO(updatedConnectorEntity);
+    Connector newConnector = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
+    newConnector.setId(existingConnector.get().getId());
+    newConnector.setVersion(existingConnector.get().getVersion());
+    Connector updatedConnector = connectorRepository.save(newConnector);
+    return connectorMapper.writeDTO(updatedConnector);
   }
 
   @Override
@@ -123,14 +123,8 @@ public class ConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     String fullyQualifiedIdentifier = FullyQualitifedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    connectorRepository.deleteByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
-    return true;
-  }
-
-  @SneakyThrows
-  static Connector applyUpdateToConnector(Connector connector, ConnectorRequestDTO updateConnector) {
-    String jsonString = new ObjectMapper().writer().writeValueAsString(updateConnector);
-    return new ObjectMapper().readerForUpdating(connector).readValue(jsonString);
+    Long connectorsDeleted = connectorRepository.deleteByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
+    return connectorsDeleted == 1;
   }
 
   public ConnectorValidationResult validate(ConnectorRequestDTO connectorDTO, String accountId) {

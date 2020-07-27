@@ -8,20 +8,21 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import org.hibernate.validator.constraints.NotBlank;
 import software.wings.settings.SettingVariableTypes;
 
 @Data
 @Builder
 @JsonTypeName("UsernamePassword")
 public class KubernetesUserNamePasswordDTO extends KubernetesAuthCredentialDTO {
-  String username;
+  @NotBlank String username;
 
   @Getter(onMethod = @__(@JsonIgnore))
   @JsonIgnore
   @Encrypted(fieldName = "password", isReference = true)
   char[] password;
 
-  @JsonProperty("passwordRef") String encryptedPassword;
+  @JsonProperty("passwordRef") @NotBlank String encryptedPassword;
   @ApiModelProperty(hidden = true) String accountId;
   // todo @deepak: Remove this field if not required
   private String cacert;
