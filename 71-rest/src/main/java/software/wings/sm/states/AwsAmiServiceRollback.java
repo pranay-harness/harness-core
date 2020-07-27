@@ -7,6 +7,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_AMI_ALL_PHASE_ROLLBACK_NAME;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -15,7 +16,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.AmiServiceDeployElement;
@@ -41,6 +42,7 @@ import java.util.List;
 
 public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   @Getter @Setter @Attributes(title = "Rollback all phases at once") private boolean rollbackAllPhasesAtOnce;
+  @Inject private KryoSerializer kryoSerializer;
 
   public AwsAmiServiceRollback(String name) {
     super(name, StateType.AWS_AMI_SERVICE_ROLLBACK.name());
@@ -151,11 +153,11 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   }
 
   private void markAllPhaseRollbackDone(ExecutionContext context) {
-    sweepingOutputService.save(
-        context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
-            .name(AWS_AMI_ALL_PHASE_ROLLBACK_NAME)
-            .output(KryoUtils.asDeflatedBytes(AwsAmiAllPhaseRollbackData.builder().allPhaseRollbackDone(true).build()))
-            .build());
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+                                   .name(AWS_AMI_ALL_PHASE_ROLLBACK_NAME)
+                                   .output(kryoSerializer.asDeflatedBytes(
+                                       AwsAmiAllPhaseRollbackData.builder().allPhaseRollbackDone(true).build()))
+                                   .build());
   }
 
   private boolean allPhaseRollbackDone(ExecutionContext context) {
@@ -165,7 +167,7 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
     if (result == null) {
       return false;
     }
-    return ((AwsAmiAllPhaseRollbackData) KryoUtils.asInflatedObject(result.getOutput())).isAllPhaseRollbackDone();
+    return ((AwsAmiAllPhaseRollbackData) kryoSerializer.asInflatedObject(result.getOutput())).isAllPhaseRollbackDone();
   }
 
   @Override

@@ -121,6 +121,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
             .put("context",
                 SweepingOutputFunctor.builder()
                     .sweepingOutputService(sweepingOutputService)
+                    .kryoSerializer(kryoSerializer)
                     .sweepingOutputInquiryBuilder(SweepingOutputInquiry.builder()
                                                       .appId(appId)
                                                       .pipelineExecutionId(pipelineExecutionId)
@@ -160,6 +161,7 @@ public class ManagerExpressionEvaluatorTest extends WingsBaseTest {
             .put("workflow",
                 SweepingOutputValue.builder()
                     .sweepingOutputService(sweepingOutputService)
+                    .kryoSerializer(kryoSerializer)
                     .sweepingOutputInquiry(SweepingOutputInquiry.builder()
                                                .name("workflow")
                                                .appId(appId)

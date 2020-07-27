@@ -19,6 +19,7 @@ import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KE
 import static software.wings.settings.SettingVariableTypes.AWS_SECRETS_MANAGER;
 
 import com.google.common.io.Files;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -32,7 +33,7 @@ import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import com.mongodb.DuplicateKeyException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.AwsSecretsManagerConfig;
@@ -65,6 +66,8 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
   private static final String SECRET_KEY_NAME_SUFFIX = "_secretKey";
   private static final String AWS_SECRETS_MANAGER_VALIDATION_URL = "aws_secrets_manager_validation";
+
+  @Inject private KryoSerializer kryoSerializer;
 
   private void validateSecretName(String name) {
     if (!AWS_SECRET_NAME_PATTERN.matcher(name).find()) {
@@ -151,7 +154,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
       // secret field un-decrypted version of saved AWS config
       savedSecretsManagerConfig = wingsPersistence.get(AwsSecretsManagerConfig.class, secretsManagerConfig.getUuid());
-      oldConfigForAudit = KryoUtils.clone(savedSecretsManagerConfig);
+      oldConfigForAudit = kryoSerializer.clone(savedSecretsManagerConfig);
     }
 
     // Validate every time when secret manager config change submitted

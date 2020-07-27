@@ -16,7 +16,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ExecutionDataValue;
@@ -60,6 +60,7 @@ public class RepeatState extends State {
   @SchemaIgnore private String repeatTransitionStateName;
 
   @Transient @Inject private WorkflowExecutionService workflowExecutionService;
+  @Transient @Inject private KryoSerializer kryoSerializer;
   @Transient @Inject private RepeatStateHelper repeatStateHelper;
 
   /**
@@ -73,6 +74,10 @@ public class RepeatState extends State {
 
   public void setWorkflowExecutionService(WorkflowExecutionService workflowExecutionService) {
     this.workflowExecutionService = workflowExecutionService;
+  }
+
+  public void setKryoSerializer(KryoSerializer kryoSerializer) {
+    this.kryoSerializer = kryoSerializer;
   }
 
   /**
@@ -227,7 +232,7 @@ public class RepeatState extends State {
   private void processChildState(StateExecutionInstance stateExecutionInstance, List<String> correlationIds,
       ExecutionResponseBuilder executionResponseBuilder, ContextElement repeatElement) {
     String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getUuid();
-    StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
+    StateExecutionInstance childStateExecutionInstance = kryoSerializer.clone(stateExecutionInstance);
     childStateExecutionInstance.setStateParams(null);
     childStateExecutionInstance.setDisplayName(repeatTransitionStateName);
     childStateExecutionInstance.setStateName(repeatTransitionStateName);

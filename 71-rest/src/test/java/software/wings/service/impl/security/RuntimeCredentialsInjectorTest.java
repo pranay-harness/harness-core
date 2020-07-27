@@ -14,24 +14,28 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
-import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.wings.WingsBaseTest;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.service.intfc.AlertService;
 
 import java.util.Optional;
 
-public class RuntimeCredentialsInjectorTest extends CategoryTest {
+public class RuntimeCredentialsInjectorTest extends WingsBaseTest {
   @Mock private AlertService alertService;
   @InjectMocks @Inject private VaultServiceImpl vaultService;
+
+  @Inject private KryoSerializer kryoSerializer;
 
   @Before
   public void setup() {
@@ -44,6 +48,7 @@ public class RuntimeCredentialsInjectorTest extends CategoryTest {
   public void testUpdateRuntimeParameters_shouldSucceed() {
     SecretManagerConfig vaultConfig = VaultConfig.builder().build();
     VaultServiceImpl spyVaultService = spy(vaultService);
+    Reflect.on(spyVaultService).set("kryoSerializer", kryoSerializer);
     vaultConfig.setTemplatizedFields(Lists.newArrayList("authToken"));
 
     doReturn("vaultId").when(spyVaultService).updateVaultConfig(any(), any(), anyBoolean());
@@ -61,6 +66,7 @@ public class RuntimeCredentialsInjectorTest extends CategoryTest {
   public void testUpdateRuntimeParameters_shouldFailDueToSecretManagerNotTemplatized() {
     SecretManagerConfig vaultConfig = VaultConfig.builder().build();
     VaultServiceImpl spyVaultService = spy(vaultService);
+    Reflect.on(spyVaultService).set("kryoSerializer", kryoSerializer);
 
     Optional<SecretManagerConfig> updatedVaultConfig = spyVaultService.updateRuntimeCredentials(
         vaultConfig, Maps.newHashMap(ImmutableMap.of("authToken", "abcde")), true);

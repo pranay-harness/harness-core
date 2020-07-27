@@ -53,7 +53,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTest {
     SharedInformerFactoryFactory sharedInformerFactoryFactory = mock(SharedInformerFactoryFactory.class);
     ApiClientFactory apiClientFactory = mock(ApiClientFactory.class);
     this.k8sWatchServiceDelegate = new K8sWatchServiceDelegate(
-        watcherFactory, kubernetesClientFactory, sharedInformerFactoryFactory, apiClientFactory);
+        watcherFactory, kubernetesClientFactory, sharedInformerFactoryFactory, apiClientFactory, kryoSerializer);
     podWatcher = mock(PodWatcher.class);
     nodeWatcher = mock(NodeWatcher.class);
     clusterEventWatcher = mock(ClusterEventWatcher.class);

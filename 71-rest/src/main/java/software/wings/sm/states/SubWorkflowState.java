@@ -9,7 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.NameValuePair;
@@ -34,7 +34,8 @@ import java.util.Map;
 public class SubWorkflowState extends State {
   private List<NameValuePair> variableOverrides;
 
-  @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
+  @Transient @Inject private WorkflowExecutionService workflowExecutionService;
+  @Transient @Inject private KryoSerializer kryoSerializer;
 
   /**
    * Instantiates a new repeat state.
@@ -68,7 +69,7 @@ public class SubWorkflowState extends State {
   }
 
   protected StateExecutionInstance getSpawningInstance(StateExecutionInstance stateExecutionInstance) {
-    StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
+    StateExecutionInstance childStateExecutionInstance = kryoSerializer.clone(stateExecutionInstance);
     childStateExecutionInstance.setStateParams(null);
 
     childStateExecutionInstance.setChildStateMachineId(subWorkflowId);
