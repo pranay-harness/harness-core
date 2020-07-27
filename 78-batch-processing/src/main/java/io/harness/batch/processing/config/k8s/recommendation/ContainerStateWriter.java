@@ -11,6 +11,10 @@ import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.protoToChe
 import static io.harness.time.DurationUtils.truncate;
 import static java.math.RoundingMode.HALF_UP;
 import static java.time.Duration.between;
+import static java.util.Collections.emptyMap;
+import static java.util.Optional.ofNullable;
+
+import com.google.common.collect.ImmutableSet;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -43,7 +47,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -164,6 +167,24 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
     return new WorkloadState(workloadRecommendationDao.fetchRecommendationForWorkload(workloadId));
   }
 
+  private static Map<String, String> extendedResourcesMap(Map<String, String> resourceMap) {
+    ImmutableSet<String> standardResources = ImmutableSet.of("cpu", "memory");
+    return ofNullable(resourceMap)
+        .orElse(emptyMap())
+        .entrySet()
+        .stream()
+        .filter(e -> !standardResources.contains(e.getKey()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  static ResourceRequirement copyExtendedResources(ResourceRequirement current, ResourceRequirement recommended) {
+    HashMap<String, String> mergedRequests = new HashMap<>(extendedResourcesMap(current.getRequests()));
+    mergedRequests.putAll(ofNullable(recommended.getRequests()).orElse(emptyMap()));
+    HashMap<String, String> mergedLimits = new HashMap<>(extendedResourcesMap(current.getLimits()));
+    mergedLimits.putAll(ofNullable(recommended.getLimits()).orElse(emptyMap()));
+    return ResourceRequirement.builder().requests(mergedRequests).limits(mergedLimits).build();
+  }
+
   /**
    *  Update the cached recommendations into DB.
    */
@@ -175,7 +196,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
       K8sWorkloadRecommendation recommendation = workloadRecommendationDao.fetchRecommendationForWorkload(workloadId);
       recommendation.setContainerCheckpoints(updatedContainerCheckpoints);
       Map<String, ContainerRecommendation> containerRecommendations =
-          Optional.ofNullable(recommendation.getContainerRecommendations()).orElseGet(HashMap::new);
+          ofNullable(recommendation.getContainerRecommendations()).orElseGet(HashMap::new);
       recommendation.setContainerRecommendations(containerRecommendations);
 
       for (Map.Entry<String, ContainerRecommendation> entry : containerRecommendations.entrySet()) {
@@ -184,8 +205,13 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
         ContainerState containerState = containerStates.get(containerName);
         if (containerState != null) {
           ResourceRequirement burstable = burstableRecommender().getEstimatedResourceRequirements(containerState);
-          containerRecommendation.setBurstable(burstable);
           ResourceRequirement guaranteed = guaranteedRecommender().getEstimatedResourceRequirements(containerState);
+          ResourceRequirement current = containerRecommendation.getCurrent();
+          if (current != null) {
+            burstable = copyExtendedResources(current, burstable);
+            guaranteed = copyExtendedResources(current, guaranteed);
+          }
+          containerRecommendation.setBurstable(burstable);
           containerRecommendation.setGuaranteed(guaranteed);
           long days = between(containerState.getFirstSampleStart(), containerState.getLastSampleStart()).toDays();
           containerRecommendation.setNumDays((int) days);
@@ -241,13 +267,13 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
     BigDecimal resourceChange = BigDecimal.ZERO;
     boolean atLeastOneContainerComputable = false;
     for (ContainerRecommendation containerRecommendation : containerRecommendations.values()) {
-      BigDecimal current = Optional.ofNullable(containerRecommendation.getCurrent())
+      BigDecimal current = ofNullable(containerRecommendation.getCurrent())
                                .map(ResourceRequirement::getRequests)
                                .map(requests -> requests.get(resource))
                                .map(Quantity::fromString)
                                .map(Quantity::getNumber)
                                .orElse(null);
-      BigDecimal recommended = Optional.ofNullable(containerRecommendation.getGuaranteed())
+      BigDecimal recommended = ofNullable(containerRecommendation.getGuaranteed())
                                    .map(ResourceRequirement::getRequests)
                                    .map(requests -> requests.get(resource))
                                    .map(Quantity::fromString)

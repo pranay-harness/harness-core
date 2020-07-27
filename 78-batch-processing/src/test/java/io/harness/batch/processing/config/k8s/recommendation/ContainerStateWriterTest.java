@@ -379,4 +379,52 @@ public class ContainerStateWriterTest extends CategoryTest {
         // monthlySavings = -3.591 * -30 = 107.74
         .isEqualTo(BigDecimal.valueOf(107.74));
   }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testCopyExtendedResources() throws Exception {
+    ResourceRequirement current = ResourceRequirement.builder()
+                                      .request("cpu", "1")
+                                      .request("nvidia.com/gpu", "1")
+                                      .limit("nvidia.com/gpu", "2")
+                                      .build();
+    ResourceRequirement recommended = ResourceRequirement.builder()
+                                          .request("cpu", "0.25")
+                                          .request("memory", "1G")
+                                          .limit("cpu", "1")
+                                          .limit("memory", "2G")
+                                          .build();
+    recommended = ContainerStateWriter.copyExtendedResources(current, recommended);
+    assertThat(recommended)
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "0.25")
+                       .request("memory", "1G")
+                       .limit("cpu", "1")
+                       .limit("memory", "2G")
+                       .request("nvidia.com/gpu", "1")
+                       .limit("nvidia.com/gpu", "2")
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testCopyExtendedResourcesNulls() throws Exception {
+    ResourceRequirement current = ResourceRequirement.builder().build();
+    ResourceRequirement recommended = ResourceRequirement.builder()
+                                          .request("cpu", "0.25")
+                                          .request("memory", "1G")
+                                          .limit("cpu", "1")
+                                          .limit("memory", "2G")
+                                          .build();
+    recommended = ContainerStateWriter.copyExtendedResources(current, recommended);
+    assertThat(recommended)
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "0.25")
+                       .request("memory", "1G")
+                       .limit("cpu", "1")
+                       .limit("memory", "2G")
+                       .build());
+  }
 }
