@@ -34,6 +34,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.oidc.OidcTokenRetriever;
+import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.oidc.model.OidcTokenRequestData;
 import io.harness.rule.Owner;
@@ -61,7 +62,7 @@ import java.util.Map;
 public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
   @Mock private OidcTokenRetriever oidcTokenRetriever;
   @Mock private KubernetesContainerService kubernetesContainerService;
-  @Mock ExecutionLogCallback logCallback;
+  @Mock LogCallback logCallback;
   @Mock private EncryptionService encryptionService;
   @Spy @InjectMocks ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
@@ -182,8 +183,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     when(kubernetesContainerService.getPods(eq(kubernetesConfig), anyMap())).thenReturn(existingPods);
     doReturn(null)
         .when(containerDeploymentDelegateHelper)
-        .getContainerInfosWhenReadyByLabels(
-            any(KubernetesConfig.class), any(ExecutionLogCallback.class), anyMap(), anyList());
+        .getContainerInfosWhenReadyByLabels(any(KubernetesConfig.class), any(LogCallback.class), anyMap(), anyList());
 
     containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel(
         "name", "value", kubernetesConfig, logCallback, existingPods);

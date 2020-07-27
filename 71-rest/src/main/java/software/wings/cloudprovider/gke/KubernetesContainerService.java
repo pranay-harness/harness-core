@@ -11,11 +11,11 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.VersionInfo;
+import io.harness.logging.LogCallback;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import software.wings.beans.KubernetesConfig;
-import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.LinkedHashMap;
@@ -48,14 +48,12 @@ public interface KubernetesContainerService {
   void deleteAutoscaler(KubernetesConfig kubernetesConfig, String name);
 
   List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String clusterName,
-      String controllerName, int previousCount, int count, int serviceSteadyStateTimeout,
-      ExecutionLogCallback executionLogCallback);
+      String controllerName, int previousCount, int count, int serviceSteadyStateTimeout, LogCallback logCallback);
 
   @SuppressWarnings("squid:S00107")
   List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig, String controllerName,
       int previousCount, int desiredCount, int serviceSteadyStateTimeout, List<Pod> originalPods,
-      boolean isNotVersioned, ExecutionLogCallback executionLogCallback, boolean wait, long startTime,
-      String namespace);
+      boolean isNotVersioned, LogCallback logCallback, boolean wait, long startTime, String namespace);
 
   Optional<Integer> getControllerPodCount(KubernetesConfig kubernetesConfig, String name);
 
@@ -116,7 +114,7 @@ public interface KubernetesContainerService {
   List<Pod> getRunningPods(KubernetesConfig kubernetesConfig, String controllerName);
 
   void waitForPodsToStop(KubernetesConfig kubernetesConfig, Map<String, String> labels, int serviceSteadyStateTimeout,
-      List<Pod> originalPods, long startTime, ExecutionLogCallback executionLogCallback);
+      List<Pod> originalPods, long startTime, LogCallback logCallback);
 
   String fetchReleaseHistory(KubernetesConfig kubernetesConfig, String infraMappingId);
 
