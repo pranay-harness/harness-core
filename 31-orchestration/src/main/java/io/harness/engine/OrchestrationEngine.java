@@ -25,6 +25,7 @@ import io.harness.adviser.Adviser;
 import io.harness.adviser.AdviserObtainment;
 import io.harness.adviser.AdvisingEvent;
 import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -102,6 +103,7 @@ public class OrchestrationEngine {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private InterruptService interruptService;
+  @Inject private AmbianceUtils ambianceUtils;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   public void startNodeExecution(String nodeExecutionId) {
@@ -138,7 +140,7 @@ public class OrchestrationEngine {
   }
 
   private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNode node, String uuid) {
-    Ambiance cloned = ambiance.obtainCurrentRuntimeId() == null ? ambiance : ambiance.cloneForFinish();
+    Ambiance cloned = ambiance.obtainCurrentRuntimeId() == null ? ambiance : ambianceUtils.cloneForFinish(ambiance);
     cloned.addLevel(Level.fromPlanNode(uuid, node));
     return cloned;
   }

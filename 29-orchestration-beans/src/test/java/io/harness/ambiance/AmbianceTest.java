@@ -1,7 +1,6 @@
 package io.harness.ambiance;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,19 +28,6 @@ public class AmbianceTest extends OrchestrationBeansTest {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldTestDeepCopy() {
-    Ambiance ambiance = buildAmbiance();
-    Ambiance copy = ambiance.deepCopy();
-
-    assertThat(copy).isNotNull();
-    assertThat(System.identityHashCode(copy.getLevels())).isNotEqualTo(System.identityHashCode(ambiance.getLevels()));
-    assertThat(copy.getSetupAbstractions()).isEqualTo(ambiance.getSetupAbstractions());
-    assertThat(copy.getLevels()).isEqualTo(ambiance.getLevels());
-  }
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
   public void shouldTestAddLevelExecution() {
     String setupId = generateUuid();
     String runtimeId = generateUuid();
@@ -50,60 +36,6 @@ public class AmbianceTest extends OrchestrationBeansTest {
     assertThat(ambiance.getLevels()).hasSize(2);
     ambiance.addLevel(stepLevel);
     assertThat(ambiance.getLevels()).hasSize(3);
-  }
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void shouldTestCloneForNext() {
-    Ambiance ambiance = buildAmbiance();
-    assertThat(ambiance.getLevels()).hasSize(2);
-
-    Ambiance clonedAmbiance = ambiance.cloneForFinish();
-    assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(1);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
-  }
-
-  @Test
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
-  public void shouldTestCloneForLevelsToKeep() {
-    Ambiance ambiance = buildAmbiance();
-    assertThat(ambiance.getLevels()).hasSize(2);
-
-    Ambiance clonedAmbiance = ambiance.clone(0);
-    assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(0);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
-
-    clonedAmbiance = ambiance.clone(1);
-    assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(1);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
-
-    clonedAmbiance = ambiance.clone(2);
-    assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(2);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
-
-    clonedAmbiance = ambiance.clone(3);
-    assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(2);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
-  }
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void shouldTestCloneForChild() {
-    Ambiance ambiance = buildAmbiance();
-    assertThat(ambiance.getLevels()).hasSize(2);
-
-    Ambiance clonedAmbiance = ambiance.cloneForChild();
-    assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevels()).hasSize(2);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(EXECUTION_INSTANCE_ID);
   }
 
   @Test

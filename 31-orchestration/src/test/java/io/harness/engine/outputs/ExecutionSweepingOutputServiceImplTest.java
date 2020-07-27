@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationTest;
 import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
 import io.harness.category.element.UnitTests;
 import io.harness.data.SweepingOutput;
@@ -28,6 +29,7 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
   private static final String STEP_SETUP_ID = generateUuid();
 
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
+  @Inject private AmbianceUtils ambianceUtils;
 
   @Test
   @RealMongo
@@ -35,7 +37,7 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void testConsumeAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
-    Ambiance ambiancePhase = ambianceSection.cloneForFinish();
+    Ambiance ambiancePhase = ambianceUtils.cloneForFinish(ambianceSection);
     Ambiance ambianceStep = prepareStepAmbiance(ambianceSection);
 
     String outputName = "outputName";
@@ -61,7 +63,7 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void testSaveWithLevelsToKeepAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
-    Ambiance ambiancePhase = ambianceSection.cloneForFinish();
+    Ambiance ambiancePhase = ambianceUtils.cloneForFinish(ambianceSection);
     Ambiance ambianceStep = prepareStepAmbiance(ambianceSection);
 
     String outputName = "outputName";
@@ -87,7 +89,7 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void testSaveAtScopeAndFind() {
     Ambiance ambianceSection = AmbianceTestUtils.buildAmbiance();
-    Ambiance ambiancePhase = ambianceSection.cloneForFinish();
+    Ambiance ambiancePhase = ambianceUtils.cloneForFinish(ambianceSection);
     Ambiance ambianceStep = prepareStepAmbiance(ambianceSection);
 
     String outputName = "outputName";
@@ -121,7 +123,7 @@ public class ExecutionSweepingOutputServiceImplTest extends OrchestrationTest {
   }
 
   private Ambiance prepareStepAmbiance(Ambiance ambianceSection) {
-    Ambiance ambianceStep = ambianceSection.cloneForChild();
+    Ambiance ambianceStep = ambianceUtils.cloneForChild(ambianceSection);
     ambianceStep.addLevel(Level.builder()
                               .runtimeId(STEP_RUNTIME_ID)
                               .setupId(STEP_SETUP_ID)

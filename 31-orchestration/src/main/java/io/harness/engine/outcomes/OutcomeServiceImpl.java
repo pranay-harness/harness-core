@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.ambiance.Ambiance;
+import io.harness.ambiance.AmbianceUtils;
 import io.harness.ambiance.Level;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -40,12 +41,13 @@ public class OutcomeServiceImpl implements OutcomeService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
   @Inject private OutcomeRepository outcomeRepository;
+  @Inject private AmbianceUtils ambianceUtils;
 
   @Override
   public String consumeInternal(Ambiance ambiance, String name, Outcome value, int levelsToKeep) {
     Level producedBy = ambiance.obtainCurrentLevel();
     if (levelsToKeep >= 0) {
-      ambiance = ambiance.clone(levelsToKeep);
+      ambiance = ambianceUtils.clone(ambiance, levelsToKeep);
     }
 
     try {
