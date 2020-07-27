@@ -1,11 +1,10 @@
-package io.harness.gitsync.common.dtos;
+package io.harness.delegate.beans.git;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.harness.beans.EmbeddedUser;
-import io.harness.gitsync.common.EntityScope.Scope;
+import io.harness.delegate.beans.git.EntityScope.Scope;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -33,11 +32,6 @@ public class YamlGitConfigDTO {
 
   private String entityFQN;
   private Scope scope;
-
-  private EmbeddedUser createdBy;
-  private long createdAt;
-  private EmbeddedUser lastUpdatedBy;
-  private long lastUpdatedAt;
 
   @Data
   @FieldDefaults(level = AccessLevel.PRIVATE)

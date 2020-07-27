@@ -1,0 +1,77 @@
+package io.harness.gitsync.core.beans;
+
+import com.google.common.collect.ImmutableList;
+
+import io.harness.beans.EmbeddedUser;
+import io.harness.delegate.beans.git.GitCommandResult;
+import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
+import io.harness.persistence.AccountAccess;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Indexed;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.List;
+import javax.validation.constraints.NotNull;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Entity(value = "gitCommit", noClassnameStored = true)
+@Document("gitCommit")
+@TypeAlias("io.harness.gitsync.core.beans.gitCommit")
+@FieldNameConstants(innerTypeName = "GitCommitKeys")
+public class GitCommit implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+                                  UpdatedByAware, AccountAccess {
+  @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
+  private String accountId;
+  private List<String> yamlGitConfigId;
+  private String commitId;
+  private String yamlChangeSetId;
+  private GitCommandResult gitCommandResult;
+  @Indexed private Status status;
+  private FailureReason failureReason;
+  private List<String> yamlChangeSetsProcessed;
+  private GitFileProcessingSummary fileProcessingSummary;
+  private String commitMessage;
+  private String gitConnectorId;
+  private String repo;
+  private String branchName;
+  private EmbeddedUser createdBy;
+  @Indexed private long createdAt;
+  private EmbeddedUser lastUpdatedBy;
+  @NotNull private long lastUpdatedAt;
+
+  public enum Status { QUEUED, RUNNING, COMPLETED, FAILED, COMPLETED_WITH_ERRORS, SKIPPED }
+
+  public enum FailureReason {
+    GIT_CONNECTION_FAILED,
+    GIT_CLONE_FAILED,
+    GIT_PUSH_FAILED,
+    GIT_PULL_FAILED,
+    COMMIT_PARSING_FAILED
+  }
+
+  public static final List<Status> GIT_COMMIT_PROCESSED_STATUS =
+      ImmutableList.of(Status.COMPLETED, Status.COMPLETED_WITH_ERRORS);
+
+  public static final List<Status> GIT_COMMIT_ALL_STATUS_LIST = ImmutableList.<Status>builder()
+                                                                    .addAll(GIT_COMMIT_PROCESSED_STATUS)
+                                                                    .add(Status.FAILED)
+                                                                    .add(Status.SKIPPED)
+                                                                    .build();
+}

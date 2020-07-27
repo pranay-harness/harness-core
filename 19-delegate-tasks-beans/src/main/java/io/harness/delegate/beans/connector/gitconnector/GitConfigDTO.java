@@ -32,7 +32,8 @@ public class GitConfigDTO extends ConnectorConfigDTO {
   @JsonProperty("gitSync") GitSyncConfig gitSyncConfig;
 
   @Builder
-  public GitConfigDTO(GitAuthType gitAuthType, GitAuthenticationDTO gitAuth, GitSyncConfig gitSyncConfig) {
+  public GitConfigDTO(GitAuthType gitAuthType, GitAuthenticationDTO gitAuth, GitSyncConfig gitSyncConfig,
+      String accountId, String reference) {
     this.gitAuthType = gitAuthType;
     this.gitAuth = gitAuth;
     this.gitSyncConfig = gitSyncConfig;

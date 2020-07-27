@@ -9,12 +9,12 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.gitsync.common.EntityScope.Scope;
+import io.harness.delegate.beans.git.EntityScope.Scope;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.beans.YamlGitFolderConfig;
 import io.harness.gitsync.common.dao.api.repositories.yamlGitConfig.YamlGitConfigRepository;
 import io.harness.gitsync.common.dao.api.repositories.yamlGitFolderConfig.YamlGitFolderConfigRepository;
-import io.harness.gitsync.common.dtos.YamlGitConfigDTO;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import lombok.AllArgsConstructor;
