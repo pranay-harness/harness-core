@@ -86,6 +86,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.openapi.models.V1ResourceAttributes;
@@ -106,7 +107,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import software.wings.beans.KubernetesConfig;
-import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.ContainerInfoBuilder;
 import software.wings.cloudprovider.ContainerInfo.Status;
@@ -498,12 +498,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String clusterName,
       String controllerName, int previousCount, int desiredCount, int serviceSteadyStateTimeout,
-      ExecutionLogCallback executionLogCallback) {
+      LogCallback logCallback) {
     boolean sizeChanged = previousCount != desiredCount;
     long startTime = clock.millis();
     List<Pod> originalPods = getRunningPods(kubernetesConfig, controllerName);
     if (sizeChanged) {
-      executionLogCallback.saveExecutionLog(format("Resizing controller [%s] in cluster [%s] from %s to %s instances",
+      logCallback.saveExecutionLog(format("Resizing controller [%s] in cluster [%s] from %s to %s instances",
           controllerName, clusterName, previousCount, desiredCount));
       HasMetadata controller = getController(kubernetesConfig, controllerName);
 
@@ -533,11 +533,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       logger.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName,
           previousCount, desiredCount);
     } else {
-      executionLogCallback.saveExecutionLog(
+      logCallback.saveExecutionLog(
           format("Controller [%s] in cluster [%s] stays at %s instances", controllerName, clusterName, previousCount));
     }
     return getContainerInfosWhenReady(kubernetesConfig, controllerName, previousCount, desiredCount,
-        serviceSteadyStateTimeout, originalPods, false, executionLogCallback, sizeChanged, startTime,
+        serviceSteadyStateTimeout, originalPods, false, logCallback, sizeChanged, startTime,
         kubernetesConfig.getNamespace());
   }
 
@@ -545,11 +545,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @SuppressWarnings("squid:S3776")
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig, String controllerName,
       int previousCount, int desiredCount, int serviceSteadyStateTimeout, List<Pod> originalPods,
-      boolean isNotVersioned, ExecutionLogCallback executionLogCallback, boolean wait, long startTime,
-      String namespace) {
+      boolean isNotVersioned, LogCallback logCallback, boolean wait, long startTime, String namespace) {
     List<Pod> pods = wait
         ? waitForPodsToBeRunning(kubernetesConfig, controllerName, previousCount, desiredCount,
-              serviceSteadyStateTimeout, originalPods, isNotVersioned, startTime, namespace, executionLogCallback)
+              serviceSteadyStateTimeout, originalPods, isNotVersioned, startTime, namespace, logCallback)
         : originalPods;
 
     HasMetadata controllerInfo = getController(kubernetesConfig, controllerName, namespace);
@@ -576,7 +575,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         msg += format("Pod count did not reach desired count (%d/%d)", pods.size(), desiredCount);
       }
       logger.error(msg);
-      executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+      logCallback.saveExecutionLog(msg, LogLevel.ERROR);
     }
     for (Pod pod : pods) {
       String podName = pod.getMetadata().getName();
@@ -609,7 +608,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         hasErrors = true;
         String msg = format("Pod %s does not have image %s", podName, images);
         logger.error(msg);
-        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+        logCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
 
       if (isNotVersioned || desiredCount > previousCount) {
@@ -617,21 +616,21 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           hasErrors = true;
           String msg = format("Pod %s failed to start", podName);
           logger.error(msg);
-          executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+          logCallback.saveExecutionLog(msg, LogLevel.ERROR);
         }
 
         if (!inSteadyState(pod)) {
           hasErrors = true;
           String msg = format("Pod %s failed to reach steady state", podName);
           logger.error(msg);
-          executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+          logCallback.saveExecutionLog(msg, LogLevel.ERROR);
         }
       }
 
       if (!hasErrors) {
         containerInfoBuilder.status(Status.SUCCESS);
         logger.info("Pod {} started successfully", podName);
-        executionLogCallback.saveExecutionLog(format("Pod [%s] is running. Host IP: %s. Pod IP: %s", podName,
+        logCallback.saveExecutionLog(format("Pod [%s] is running. Host IP: %s. Pod IP: %s", podName,
             pod.getStatus().getHostIP(), pod.getStatus().getPodIP()));
       } else {
         containerInfoBuilder.status(Status.FAILURE);
@@ -653,8 +652,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             format("Pod [%s] has state [%s]. Current status: phase - %s. Container status: [%s]. Condition: [%s].",
                 podName, reason, pod.getStatus().getPhase(), containerMessage, conditionMessage);
         logger.error(msg);
-        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
-        executionLogCallback.saveExecutionLog("\nCheck Kubernetes console for more information");
+        logCallback.saveExecutionLog(msg, LogLevel.ERROR);
+        logCallback.saveExecutionLog("\nCheck Kubernetes console for more information");
       }
       containerInfos.add(containerInfoBuilder.build());
     }
@@ -1179,8 +1178,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void waitForPodsToStop(KubernetesConfig kubernetesConfig, Map<String, String> labels,
-      int serviceSteadyStateTimeout, List<Pod> originalPods, long startTime,
-      ExecutionLogCallback executionLogCallback) {
+      int serviceSteadyStateTimeout, List<Pod> originalPods, long startTime, LogCallback logCallback) {
     KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
     List<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList());
     String namespace = kubernetesConfig.getNamespace();
@@ -1191,11 +1189,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         Set<String> seenEvents = new HashSet<>();
 
         while (true) {
-          executionLogCallback.saveExecutionLog(waitingMsg);
+          logCallback.saveExecutionLog(waitingMsg);
           List<Pod> pods = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
 
-          showPodEvents(
-              kubernetesClient, namespace, pods, originalPodNames, seenEvents, startTime, executionLogCallback);
+          showPodEvents(kubernetesClient, namespace, pods, originalPodNames, seenEvents, startTime, logCallback);
 
           pods = prunePodsInFinalState(pods);
           if (pods.size() <= 0) {
@@ -1207,7 +1204,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to stop";
       logger.error(msg, e);
-      executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+      logCallback.saveExecutionLog(msg, LogLevel.ERROR);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -1218,7 +1215,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @SuppressWarnings({"squid:S00107", "squid:S3776"})
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig, String controllerName, int previousCount,
       int desiredCount, int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned, long startTime,
-      String namespace, ExecutionLogCallback executionLogCallback) {
+      String namespace, LogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, controllerName, namespace);
     if (controller == null) {
       throw new InvalidArgumentsException(Pair.of(controllerName, "is null"));
@@ -1349,8 +1346,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   private void showPodEvents(KubernetesClient kubernetesClient, String namespace, List<Pod> currentPods,
-      List<String> originalPodNames, Set<String> seenEvents, long startTime,
-      ExecutionLogCallback executionLogCallback) {
+      List<String> originalPodNames, Set<String> seenEvents, long startTime, LogCallback executionLogCallback) {
     try {
       Set<String> podNames = new LinkedHashSet<>(originalPodNames);
       podNames.addAll(currentPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList()));
@@ -1385,7 +1381,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   private void showControllerEvents(KubernetesClient kubernetesClient, String namespace, String controllerName,
-      Set<String> seenEvents, long startTime, ExecutionLogCallback executionLogCallback) {
+      Set<String> seenEvents, long startTime, LogCallback executionLogCallback) {
     try {
       List<Event> newEvents = kubernetesClient.events()
                                   .inNamespace(namespace)

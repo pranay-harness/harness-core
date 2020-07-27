@@ -57,7 +57,6 @@ import software.wings.beans.KubernetesClusterAuthType;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
@@ -322,28 +321,27 @@ public class ContainerDeploymentDelegateHelper {
     return controllers.size();
   }
 
-  public List<ContainerInfo> getContainerInfosWhenReadyByLabels(KubernetesConfig kubernetesConfig,
-      ExecutionLogCallback executionLogCallback, Map<String, String> labels, List<Pod> existingPods) {
+  public List<ContainerInfo> getContainerInfosWhenReadyByLabels(
+      KubernetesConfig kubernetesConfig, LogCallback logCallback, Map<String, String> labels, List<Pod> existingPods) {
     List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(kubernetesConfig, labels);
 
-    executionLogCallback.saveExecutionLog(format("Deployed Controllers [%s]:", controllers.size()));
+    logCallback.saveExecutionLog(format("Deployed Controllers [%s]:", controllers.size()));
     controllers.forEach(controller
-        -> executionLogCallback.saveExecutionLog(format("Kind:%s, Name:%s (desired: %s)", controller.getKind(),
+        -> logCallback.saveExecutionLog(format("Kind:%s, Name:%s (desired: %s)", controller.getKind(),
             controller.getMetadata().getName(), kubernetesContainerService.getControllerPodCount(controller))));
 
-    return fetchContainersUsingControllersWhenReady(kubernetesConfig, executionLogCallback, controllers, existingPods);
+    return fetchContainersUsingControllersWhenReady(kubernetesConfig, logCallback, controllers, existingPods);
   }
 
-  public boolean useK8sSteadyStateCheck(boolean isK8sSteadyStateCheckEnabled,
-      ContainerServiceParams containerServiceParams, ExecutionLogCallback executionLogCallback) {
+  public boolean useK8sSteadyStateCheck(
+      boolean isK8sSteadyStateCheckEnabled, ContainerServiceParams containerServiceParams, LogCallback logCallback) {
     if (!isK8sSteadyStateCheckEnabled) {
       return false;
     }
 
     KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
     VersionInfo versionInfo = kubernetesContainerService.getVersion(kubernetesConfig);
-    executionLogCallback.saveExecutionLog(
-        format("Kubernetess version [%s.%s]", versionInfo.getMajor(), versionInfo.getMinor()));
+    logCallback.saveExecutionLog(format("Kubernetess version [%s.%s]", versionInfo.getMajor(), versionInfo.getMinor()));
     int versionMajorMin = Integer.parseInt(escapeNonDigitsAndTruncate(versionInfo.getMajor() + versionInfo.getMinor()));
 
     return KUBERNETESS_116_VERSION <= versionMajorMin;
@@ -355,7 +353,7 @@ public class ContainerDeploymentDelegateHelper {
   }
 
   private List<ContainerInfo> fetchContainersUsingControllersWhenReady(KubernetesConfig kubernetesConfig,
-      ExecutionLogCallback executionLogCallback, List<? extends HasMetadata> controllers, List<Pod> existingPods) {
+      LogCallback executionLogCallback, List<? extends HasMetadata> controllers, List<Pod> existingPods) {
     if (isNotEmpty(controllers)) {
       return controllers.stream()
           .filter(controller
@@ -376,7 +374,7 @@ public class ContainerDeploymentDelegateHelper {
 
   public List<ContainerInfo> getContainerInfosWhenReadyByLabel(String labelName, String labelValue,
       KubernetesConfig kubernetesConfig, LogCallback executionLogCallback, List<Pod> existingPods) {
-    return getContainerInfosWhenReadyByLabels(kubernetesConfig, (ExecutionLogCallback) executionLogCallback,
-        ImmutableMap.of(labelName, labelValue), existingPods);
+    return getContainerInfosWhenReadyByLabels(
+        kubernetesConfig, executionLogCallback, ImmutableMap.of(labelName, labelValue), existingPods);
   }
 }

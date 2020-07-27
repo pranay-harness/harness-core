@@ -49,6 +49,7 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfig;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.logging.LogCallback;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +76,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesClusterAuthType;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
-import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.yaml.YamlHelper;
@@ -242,7 +242,7 @@ public class KubernetesHelperService {
   }
 
   public static void printVirtualServiceRouteWeights(
-      IstioResource virtualService, String controllerPrefix, ExecutionLogCallback executionLogCallback) {
+      IstioResource virtualService, String controllerPrefix, LogCallback logCallback) {
     VirtualServiceSpec virtualServiceSpec = ((VirtualService) virtualService).getSpec();
     if (isNotEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
       List<DestinationWeight> sorted = virtualServiceSpec.getHttp().get(0).getRoute();
@@ -250,10 +250,10 @@ public class KubernetesHelperService {
       for (DestinationWeight destinationWeight : sorted) {
         int weight = destinationWeight.getWeight();
         String rev = destinationWeight.getDestination().getSubset();
-        executionLogCallback.saveExecutionLog(format("   %s%s%s: %d%%", controllerPrefix, DASH, rev, weight));
+        logCallback.saveExecutionLog(format("   %s%s%s: %d%%", controllerPrefix, DASH, rev, weight));
       }
     } else {
-      executionLogCallback.saveExecutionLog("   None specified");
+      logCallback.saveExecutionLog("   None specified");
     }
   }
 

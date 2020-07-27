@@ -7,8 +7,8 @@ import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
-import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.util.concurrent.TimeUnit;
@@ -77,7 +77,7 @@ public class Misc {
     }
   }
 
-  public static void logAllMessages(Exception ex, ExecutionLogCallback executionLogCallback) {
+  public static void logAllMessages(Exception ex, LogCallback executionLogCallback) {
     int i = 0;
     Throwable t = ex;
     while (t != null && i++ < MAX_CAUSES) {
