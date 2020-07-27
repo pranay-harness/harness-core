@@ -20,15 +20,19 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredential;
+import software.wings.service.impl.security.SecretText;
+import software.wings.service.intfc.security.SecretManager;
 
 public class CreateWinRMSecretTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;
   @Inject private OwnerManager ownerManager;
+  @Inject private SecretManager secretManager;
   private String secretName = "tests";
   private String userName = "harnessadmin";
   private String password = "H@rnessH@rness";
   private int port = 5986;
   private String accountId;
+  private String secretId;
 
   @Before
   public void setup() {
@@ -36,6 +40,7 @@ public class CreateWinRMSecretTest extends GraphQLTest {
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
+    secretId = secretManager.saveSecret(accountId, SecretText.builder().name("sshPasswordSecretId").build());
   }
 
   private String getCreateWinRMCredentialInput() {
@@ -46,13 +51,13 @@ public class CreateWinRMSecretTest extends GraphQLTest {
           name: "tests",
           userName: "%s",
           authenticationScheme:  NTLM,
-          password: "%s"
+          passwordSecretId: "%s"
           useSSL: true,
           skipCertCheck: true,
           port: %d
        }
      }
-    */ userName, password, port);
+    */ userName, secretId, port);
     return input;
   }
 

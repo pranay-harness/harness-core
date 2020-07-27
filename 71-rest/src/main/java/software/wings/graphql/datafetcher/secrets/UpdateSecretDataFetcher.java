@@ -92,7 +92,7 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
         secret = sshCredentialController.populateSSHCredential(savedSSH);
         break;
       case ENCRYPTED_FILE:
-        throw new InvalidRequestException("Encrypted file secret cannot be created through API.");
+        throw new InvalidRequestException("Encrypted file secret cannot be updated through API.");
       default:
         throw new InvalidRequestException("Invalid Secret Type");
     }

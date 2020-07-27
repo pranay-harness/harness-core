@@ -18,10 +18,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.beans.Account;
+import software.wings.service.impl.security.SecretText;
+import software.wings.service.intfc.security.SecretManager;
 
 public class CreateSSHCredentialTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;
   @Inject private OwnerManager ownerManager;
+  @Inject private SecretManager secretManager;
   private String secretName = "tests";
   private String userName = "ubuntu";
   private int port = 5986;
@@ -29,6 +32,7 @@ public class CreateSSHCredentialTest extends GraphQLTest {
   private String path = "path";
   private String principal = "principal";
   private String realm = "realm";
+  private String secretId;
 
   @Before
   public void setup() {
@@ -36,6 +40,7 @@ public class CreateSSHCredentialTest extends GraphQLTest {
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);
     accountId = account.getUuid();
+    secretId = secretManager.saveSecret(accountId, SecretText.builder().name("sshPasswordSecretId").build());
   }
 
   private String createMutationInput(String variable) {
@@ -88,14 +93,14 @@ public class CreateSSHCredentialTest extends GraphQLTest {
           sshAuthenticationMethod: {
           sshCredentialType: SSH_KEY,
           inlineSSHKey: {
-              sshKey: "sshKey"
+              sshKeySecretFileId: "%s"
             }
           }
       }
       }
   }
 
-  */ secretName, port, userName);
+  */ secretName, port, userName, secretId);
     return queryVariable;
   }
 
@@ -167,14 +172,14 @@ public class CreateSSHCredentialTest extends GraphQLTest {
         sshAuthenticationMethod: {
                sshCredentialType: PASSWORD,
                    serverPassword:  {
-               password: "password"
+               passwordSecretId: "%s"
             }
         }
       }
     }
 }
 
-*/ secretName, port, userName);
+*/ secretName, port, userName, secretId);
     return queryVariable;
   }
 
@@ -203,7 +208,7 @@ public class CreateSSHCredentialTest extends GraphQLTest {
           realm: "%s",
           tgtGenerationMethod: {
             kerberosPassword: {
-              password: "password"
+              passwordSecretId: "%s"
             },
             tgtGenerationUsing: PASSWORD
           }
@@ -211,7 +216,7 @@ public class CreateSSHCredentialTest extends GraphQLTest {
       }
     }
 
-*/ secretName, port, principal, realm);
+*/ secretName, port, principal, realm, secretId);
     return queryVariable;
   }
 

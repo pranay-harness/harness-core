@@ -10,5 +10,5 @@ import software.wings.graphql.schema.type.QLObject;
 @FieldNameConstants(innerTypeName = "QLSSHCredentialInputKeys")
 public class QLSSHKeyFile implements QLObject {
   String path;
-  String passphrase;
+  String passphraseSecretId;
 }

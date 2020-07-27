@@ -9,5 +9,5 @@ import software.wings.graphql.schema.type.QLObject;
 @Builder
 @FieldNameConstants(innerTypeName = "QLSSHPasswordKeys")
 public class QLSSHPassword implements QLObject {
-  String password;
+  String passwordSecretId;
 }

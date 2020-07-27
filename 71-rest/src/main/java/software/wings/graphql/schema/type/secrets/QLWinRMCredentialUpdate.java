@@ -17,7 +17,7 @@ public class QLWinRMCredentialUpdate {
   RequestField<WinRmConnectionAttributes.AuthenticationScheme> authenticationScheme;
   RequestField<String> domain;
   RequestField<String> userName;
-  RequestField<String> password;
+  RequestField<String> passwordSecretId;
   RequestField<Boolean> useSSL;
   RequestField<Boolean> skipCertCheck;
   RequestField<Integer> port;

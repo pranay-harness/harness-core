@@ -12,7 +12,7 @@ public class QLWinRMCredentialInput {
   private String domain;
   private QLAuthScheme authenticationScheme;
   private String userName;
-  private String password;
+  private String passwordSecretId;
   private Boolean useSSL;
   private Boolean skipCertCheck;
   private Integer port;
