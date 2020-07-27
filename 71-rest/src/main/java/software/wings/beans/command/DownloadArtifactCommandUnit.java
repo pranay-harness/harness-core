@@ -261,7 +261,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         aLog()
             .withAppId(context.getAppId())
             .withActivityId(context.getActivityId())
-            .withHostName(context.getHost().getPublicDns())
+            .withHostName(context.getHost() == null ? null : context.getHost().getPublicDns())
             .withLogLevel(logLevel)
             .withCommandUnitName(getName())
             .withLogLine(line)
