@@ -27,7 +27,7 @@ import software.wings.sm.StateType;
 public class SpotInstRollbackState extends SpotInstDeployState {
   @Inject private transient SpotInstStateHelper spotInstStateHelper;
   @Inject private transient SweepingOutputService sweepingOutputService;
-  @Inject private KryoSerializer kryoSerializer;
+  @Inject private transient KryoSerializer kryoSerializer;
 
   public SpotInstRollbackState(String name) {
     super(name, StateType.SPOTINST_ROLLBACK.name());

@@ -839,6 +839,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     contextMap.put("context",
         SweepingOutputFunctor.builder()
             .sweepingOutputService(sweepingOutputService)
+            .kryoSerializer(kryoSerializer)
             .sweepingOutputInquiryBuilder(prepareSweepingOutputInquiryBuilder())
             .build());
 

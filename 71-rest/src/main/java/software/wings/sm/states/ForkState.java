@@ -4,12 +4,14 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 
+import com.google.inject.Inject;
+
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.ForkElement;
@@ -34,6 +36,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Slf4j
 public class ForkState extends State {
+  @Inject transient KryoSerializer kryoSerializer;
   @SchemaIgnore private List<String> forkStateNames = new ArrayList<>();
 
   /**
@@ -62,7 +65,7 @@ public class ForkState extends State {
     forkStateExecutionData.setElements(new ArrayList<>());
     for (String state : forkStateNames) {
       ForkElement element = ForkElement.builder().stateName(state).parentId(stateExecutionInstance.getUuid()).build();
-      StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
+      StateExecutionInstance childStateExecutionInstance = kryoSerializer.clone(stateExecutionInstance);
       childStateExecutionInstance.setStateParams(null);
 
       childStateExecutionInstance.setContextElement(element);

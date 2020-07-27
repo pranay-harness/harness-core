@@ -49,8 +49,8 @@ public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
 
   @Override
   public CustomConversions customConversions() {
-    return new MongoCustomConversions(
-        ImmutableList.of(new SweepingOutputReadMongoConverter(), new SweepingOutputWriteMongoConverter()));
+    return new MongoCustomConversions(ImmutableList.of(injector.getInstance(SweepingOutputReadMongoConverter.class),
+        injector.getInstance(SweepingOutputWriteMongoConverter.class)));
   }
 
   @Bean(name = "orchestrationMongoTemplate")

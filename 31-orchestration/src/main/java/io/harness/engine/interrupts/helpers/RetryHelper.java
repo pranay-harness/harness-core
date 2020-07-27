@@ -22,6 +22,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.status.Status;
 import io.harness.plan.PlanNode;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,6 +40,7 @@ public class RetryHelper {
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private AmbianceUtils ambianceUtils;
+  @Inject private KryoSerializer kryoSerializer;
 
   public void retryNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
@@ -62,7 +64,7 @@ public class RetryHelper {
   }
 
   private NodeExecution cloneForRetry(NodeExecution nodeExecution) {
-    NodeExecution newNodeExecution = nodeExecution.deepCopy();
+    NodeExecution newNodeExecution = kryoSerializer.clone(nodeExecution);
     newNodeExecution.setStartTs(null);
     newNodeExecution.setStatus(Status.QUEUED);
     List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new ArrayList<>() : nodeExecution.getRetryIds();

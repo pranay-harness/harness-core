@@ -20,12 +20,14 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PHASE_STEP;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import org.joor.Reflect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -62,6 +64,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
   private static final String STATE_NAME = "state";
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private FeatureFlagService featureFlagService;
+  @Inject private KryoSerializer kryoSerializer;
 
   private List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
 
@@ -90,6 +93,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     phaseStepSubWorkflow.setStepsInParallel(true);
     phaseStepSubWorkflow.setDefaultFailureStrategy(true);
     Reflect.on(phaseStepSubWorkflow).set("featureFlagService", featureFlagService);
+    Reflect.on(phaseStepSubWorkflow).set("kryoSerializer", kryoSerializer);
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     doReturn(ACCOUNT_ID).when(context).getAccountId();
 
@@ -123,6 +127,7 @@ public class StepSubWorkflowTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_DEPLOY);
     Reflect.on(phaseStepSubWorkflow).set("featureFlagService", featureFlagService);
+    Reflect.on(phaseStepSubWorkflow).set("kryoSerializer", kryoSerializer);
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     doReturn(ACCOUNT_ID).when(context).getAccountId();
 

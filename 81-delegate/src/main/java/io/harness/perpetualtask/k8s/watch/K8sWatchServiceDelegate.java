@@ -11,7 +11,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.informer.cache.Store;
 import io.kubernetes.client.openapi.ApiClient;
@@ -51,15 +51,18 @@ public class K8sWatchServiceDelegate {
   private final ApiClientFactory apiClientFactory;
 
   private final Map<String, WatcherGroup> watchMap; // <id, Watch>
+  private final KryoSerializer kryoSerializer; // <id, Watch>
 
   @Inject
   public K8sWatchServiceDelegate(WatcherFactory watcherFactory, KubernetesClientFactory kubernetesClientFactory,
-      SharedInformerFactoryFactory sharedInformerFactoryFactory, ApiClientFactory apiClientFactory) {
+      SharedInformerFactoryFactory sharedInformerFactoryFactory, ApiClientFactory apiClientFactory,
+      KryoSerializer kryoSerializer) {
     this.watcherFactory = watcherFactory;
     this.kubernetesClientFactory = kubernetesClientFactory;
     this.sharedInformerFactoryFactory = sharedInformerFactoryFactory;
     this.apiClientFactory = apiClientFactory;
     this.watchMap = new ConcurrentHashMap<>();
+    this.kryoSerializer = kryoSerializer;
   }
 
   @Value
@@ -90,7 +93,7 @@ public class K8sWatchServiceDelegate {
     watchMap.computeIfAbsent(watchId, id -> {
       logger.info("Creating watch with id: {}", id);
       K8sClusterConfig k8sClusterConfig =
-          (K8sClusterConfig) KryoUtils.asObject(params.getK8SClusterConfig().toByteArray());
+          (K8sClusterConfig) kryoSerializer.asObject(params.getK8SClusterConfig().toByteArray());
       KubernetesClient client = kubernetesClientFactory.newKubernetesClient(k8sClusterConfig);
       String kubeSystemUid = getKubeSystemUid(client);
       ClusterDetails clusterDetails = ClusterDetails.builder()

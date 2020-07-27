@@ -21,6 +21,7 @@ import static software.wings.settings.SettingVariableTypes.VAULT;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
@@ -31,7 +32,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.SecretString;
 import io.harness.persistence.HPersistence;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
@@ -71,6 +72,8 @@ import java.util.Optional;
 public class VaultServiceImpl extends AbstractSecretServiceImpl implements VaultService, RuntimeCredentialsInjector {
   private static final String TOKEN_SECRET_NAME_SUFFIX = "_token";
   private static final String SECRET_ID_SECRET_NAME_SUFFIX = "_secret_id";
+
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
@@ -282,7 +285,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   String updateVaultConfig(String accountId, VaultConfig vaultConfig, boolean auditChanges) {
     VaultConfig savedVaultConfigWithCredentials = getVaultConfig(accountId, vaultConfig.getUuid());
     VaultConfig oldConfigForAudit = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
-    VaultConfig savedVaultConfig = KryoUtils.clone(oldConfigForAudit);
+    VaultConfig savedVaultConfig = kryoSerializer.clone(oldConfigForAudit);
     // Replaced masked secrets with the real secret value.
     if (SECRET_MASK.equals(vaultConfig.getAuthToken())) {
       vaultConfig.setAuthToken(savedVaultConfigWithCredentials.getAuthToken());
@@ -670,7 +673,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       return Optional.empty();
     }
 
-    VaultConfig vaultConfig = (VaultConfig) KryoUtils.clone(secretManagerConfig);
+    VaultConfig vaultConfig = (VaultConfig) kryoSerializer.clone(secretManagerConfig);
     for (String templatizedField : secretManagerConfig.getTemplatizedFields()) {
       String templatizedFieldValue = runtimeParameters.get(templatizedField);
       if (StringUtils.isEmpty(templatizedFieldValue)) {

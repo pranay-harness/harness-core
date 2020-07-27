@@ -29,7 +29,7 @@ import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.collector.K8sMetricCollector;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactory;
 import software.wings.delegatetasks.k8s.exception.K8sClusterException;
@@ -54,13 +54,15 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   private final EventPublisher eventPublisher;
   private final KubernetesClientFactory kubernetesClientFactory;
   private final K8sWatchServiceDelegate k8sWatchServiceDelegate;
+  private final KryoSerializer kryoSerializer;
 
   @Inject
   public K8SWatchTaskExecutor(EventPublisher eventPublisher, KubernetesClientFactory kubernetesClientFactory,
-      K8sWatchServiceDelegate k8sWatchServiceDelegate) {
+      K8sWatchServiceDelegate k8sWatchServiceDelegate, KryoSerializer kryoSerializer) {
     this.eventPublisher = eventPublisher;
     this.kubernetesClientFactory = kubernetesClientFactory;
     this.k8sWatchServiceDelegate = k8sWatchServiceDelegate;
+    this.kryoSerializer = kryoSerializer;
   }
 
   @Override
@@ -73,7 +75,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
         String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
         logger.info("Ensured watch exists with id {}.", watchId);
         K8sClusterConfig k8sClusterConfig =
-            (K8sClusterConfig) KryoUtils.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
+            (K8sClusterConfig) kryoSerializer.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
         K8sMetricsClient k8sMetricsClient =
             kubernetesClientFactory.newAdaptedClient(k8sClusterConfig, K8sMetricsClient.class);
         taskWatchIdMap.putIfAbsent(taskId.getId(), watchId);

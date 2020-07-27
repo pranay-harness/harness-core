@@ -15,7 +15,6 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.plan.PlanNode;
-import io.harness.serializer.KryoUtils;
 import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepParameters;
 import io.harness.state.io.StepTransput;
@@ -103,10 +102,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
       return null;
     }
     return executableResponses.get(executableResponses.size() - 1);
-  }
-
-  public NodeExecution deepCopy() {
-    return KryoUtils.clone(this);
   }
 
   @UtilityClass

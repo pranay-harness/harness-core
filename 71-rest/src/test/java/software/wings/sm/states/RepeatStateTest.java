@@ -11,13 +11,16 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
+import com.google.inject.Inject;
+
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import software.wings.WingsBaseTest;
 import software.wings.api.ServiceElement;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
@@ -37,10 +40,13 @@ import java.util.List;
  * @author Rishi
  */
 @Slf4j
-public class RepeatStateTest extends CategoryTest {
+public class RepeatStateTest extends WingsBaseTest {
+  @Inject KryoSerializer kryoSerializer;
+
   /**
    * Should execute serial.
    */
+
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
@@ -53,6 +59,7 @@ public class RepeatStateTest extends CategoryTest {
     when(workflowExecutionService.checkIfOnDemand(any(), any())).thenReturn(false);
     RepeatState repeatState = new RepeatState(stateName);
     repeatState.setWorkflowExecutionService(workflowExecutionService);
+    repeatState.setKryoSerializer(kryoSerializer);
     repeatState.setRepeatElementExpression("services()");
     repeatState.setExecutionStrategy(ExecutionStrategy.SERIAL);
     repeatState.setRepeatTransitionStateName("abc");
@@ -88,6 +95,7 @@ public class RepeatStateTest extends CategoryTest {
 
     RepeatState repeatState = new RepeatState(stateName);
     repeatState.setWorkflowExecutionService(workflowExecutionService);
+    repeatState.setKryoSerializer(kryoSerializer);
     repeatState.setRepeatElementExpression("services()");
     repeatState.setExecutionStrategy(ExecutionStrategy.PARALLEL);
     repeatState.setRepeatTransitionStateName("abc");

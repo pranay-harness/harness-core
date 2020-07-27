@@ -86,7 +86,8 @@ public class K8SWatchTaskExecutorTest extends DelegateTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    k8SWatchTaskExecutor = new K8SWatchTaskExecutor(eventPublisher, kubernetesClientFactory, k8sWatchServiceDelegate);
+    k8SWatchTaskExecutor =
+        new K8SWatchTaskExecutor(eventPublisher, kubernetesClientFactory, k8sWatchServiceDelegate, kryoSerializer);
     k8sMetricClient = new K8sMetricsExtensionAdapter().adapt(server.getClient());
     client = server.getClient();
 

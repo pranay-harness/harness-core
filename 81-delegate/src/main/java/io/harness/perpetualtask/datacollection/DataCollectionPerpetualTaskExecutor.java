@@ -45,11 +45,10 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
   @Inject private DelegateLogService delegateLogService;
   @Inject private TimeSeriesDataStoreService timeSeriesDataStoreService;
   @Inject private LogRecordDataStoreService logRecordDataStoreService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Inject private DataCollectionDSLService dataCollectionDSLService;
   @Inject @Named("verificationDataCollectorExecutor") protected ExecutorService dataCollectionService;
-
-  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public PerpetualTaskResponse runOnce(

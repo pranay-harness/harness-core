@@ -97,7 +97,7 @@ public class EcsPerpetualTaskExecutorTest extends DelegateTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     ecsPerpetualTaskExecutor = new EcsPerpetualTaskExecutor(
-        ecsHelperServiceDelegate, ec2ServiceDelegate, ecsMetricClient, eventPublisher, clock);
+        ecsHelperServiceDelegate, ec2ServiceDelegate, ecsMetricClient, eventPublisher, clock, kryoSerializer);
     cache = Reflect.on(ecsPerpetualTaskExecutor).get("cache");
   }
 

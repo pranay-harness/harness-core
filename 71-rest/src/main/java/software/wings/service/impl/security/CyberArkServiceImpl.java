@@ -14,12 +14,13 @@ import static software.wings.service.intfc.security.SecretManager.ACCOUNT_ID_KEY
 import static software.wings.service.intfc.security.SecretManager.SECRET_NAME_KEY;
 import static software.wings.settings.SettingVariableTypes.CYBERARK;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
-import io.harness.serializer.KryoUtils;
+import io.harness.serializer.KryoSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.CyberArkConfig;
@@ -41,6 +42,8 @@ import java.util.Objects;
 @Slf4j
 public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements CyberArkService {
   private static final String CLIENT_CERTIFICATE_NAME_SUFFIX = "_clientCertificate";
+
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public char[] decrypt(EncryptedData data, String accountId, CyberArkConfig cyberArkConfig) {
@@ -101,7 +104,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
 
       // Secret field un-decrypted version of saved config
       savedConfig = wingsPersistence.get(CyberArkConfig.class, cyberArkConfig.getUuid());
-      oldConfigForAudit = KryoUtils.clone(savedConfig);
+      oldConfigForAudit = kryoSerializer.clone(savedConfig);
     }
 
     // Validate every time when secret manager config change submitted
