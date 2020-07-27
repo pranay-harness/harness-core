@@ -711,7 +711,8 @@ public class HelmDeployState extends State {
     }
   }
 
-  private ExecutionResponse executeHelmTask(ExecutionContext context, String activityId,
+  @VisibleForTesting
+  ExecutionResponse executeHelmTask(ExecutionContext context, String activityId,
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
       Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap) throws InterruptedException {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PHASE_PARAM);
@@ -1291,7 +1292,8 @@ public class HelmDeployState extends State {
     }
   }
 
-  private void updateHelmExecutionSummary(ExecutionContext context, HelmCommandResponse helmCommandResponse) {
+  @VisibleForTesting
+  void updateHelmExecutionSummary(ExecutionContext context, HelmCommandResponse helmCommandResponse) {
     try {
       if (helmCommandResponse instanceof HelmInstallCommandResponse) {
         HelmInstallCommandResponse helmInstallCommandResponse = (HelmInstallCommandResponse) helmCommandResponse;
