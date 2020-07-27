@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
@@ -25,7 +26,7 @@ public class ConnectorDTO {
   String projectIdentifer;
   List<String> tags;
 
-  @JsonProperty("type") ConnectorType connectorType;
+  @NotNull @JsonProperty("type") ConnectorType connectorType;
 
   @JsonProperty("spec")
   @JsonTypeInfo(

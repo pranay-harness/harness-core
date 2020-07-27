@@ -18,6 +18,10 @@ public class ResponseDTO<T> {
 
   private ResponseDTO() {}
 
+  public static ResponseDTO newResponse() {
+    return newResponse(null, null);
+  }
+
   public static <T> ResponseDTO<T> newResponse(T data) {
     return newResponse(data, null);
   }

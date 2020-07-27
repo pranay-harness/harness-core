@@ -12,6 +12,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import javax.validation.constraints.NotNull;
+
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -24,6 +26,7 @@ public class GitConfigDTO extends ConnectorConfigDTO {
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+  @NotNull
   GitAuthenticationDTO gitAuth;
 
   @JsonProperty("gitSync") GitSyncConfig gitSyncConfig;

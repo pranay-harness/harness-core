@@ -13,16 +13,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 import java.util.List;
+import javax.validation.Valid;
 
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ConnectorRequestDTO {
-  String name;
-  String identifier;
+  @NotBlank String name;
+  @NotBlank String identifier;
   String description;
   String orgIdentifier;
   String projectIdentifer;
@@ -31,9 +33,8 @@ public class ConnectorRequestDTO {
   @JsonProperty("type") ConnectorType connectorType;
 
   @Builder
-  public ConnectorRequestDTO(String name, String identifier, String description, String accountIdentifier,
-      String orgIdentifier, String projectIdentifer, List<String> tags, ConnectorType connectorType,
-      ConnectorConfigDTO connectorConfig) {
+  public ConnectorRequestDTO(String name, String identifier, String description, String orgIdentifier,
+      String projectIdentifer, List<String> tags, ConnectorType connectorType, ConnectorConfigDTO connectorConfig) {
     this.name = name;
     this.identifier = identifier;
     this.description = description;
@@ -51,5 +52,6 @@ public class ConnectorRequestDTO {
     @JsonSubTypes.Type(value = KubernetesClusterConfigDTO.class, name = "K8sCluster")
     , @JsonSubTypes.Type(value = GitConfigDTO.class, name = "Git")
   })
+  @Valid
   ConnectorConfigDTO connectorConfig;
 }

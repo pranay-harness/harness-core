@@ -7,11 +7,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesAuthDTO {
-  @JsonProperty("type") KubernetesAuthType authType;
+  @NotNull @JsonProperty("type") KubernetesAuthType authType;
 
   @Builder
   public KubernetesAuthDTO(KubernetesAuthType authType, KubernetesAuthCredentialDTO credentials) {
@@ -22,5 +25,7 @@ public class KubernetesAuthDTO {
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+  @NotNull
+  @Valid
   KubernetesAuthCredentialDTO credentials;
 }

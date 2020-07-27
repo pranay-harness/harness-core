@@ -9,16 +9,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("K8sCluster")
 public class KubernetesClusterConfigDTO extends ConnectorConfigDTO {
-  @JsonProperty("type") KubernetesCredentialType kubernetesCredentialType;
+  @NotNull @JsonProperty("type") KubernetesCredentialType kubernetesCredentialType;
 
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+  @NotNull
+  @Valid
   KubernetesCredentialDTO config;
 
   @Builder

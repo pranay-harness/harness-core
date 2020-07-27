@@ -7,6 +7,7 @@ import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import org.hibernate.validator.constraints.NotBlank;
 import software.wings.settings.SettingVariableTypes;
 
 @Data
@@ -17,19 +18,19 @@ public class KubernetesClientKeyCertDTO extends KubernetesAuthCredentialDTO {
   @JsonIgnore
   @Encrypted(fieldName = "clientCert", isReference = true)
   char[] clientCert;
-  @JsonProperty("clientCertRef") String encryptedClientCert;
+  @JsonProperty("clientCertRef") @NotBlank String encryptedClientCert;
 
   @Getter(onMethod = @__(@JsonIgnore))
   @JsonIgnore
   @Encrypted(fieldName = "clientKey", isReference = true)
   char[] clientKey;
-  @JsonProperty("clientKeyRef") String encryptedClientKey;
+  @JsonProperty("clientKeyRef") @NotBlank String encryptedClientKey;
 
   @Getter(onMethod = @__(@JsonIgnore))
   @JsonIgnore
   @Encrypted(fieldName = "clientKeyPassphrase", isReference = true)
   char[] clientKeyPassphrase;
-  @JsonProperty("clientKeyPassphraseRef") String encryptedClientKeyPassphrase;
+  @JsonProperty("clientKeyPassphraseRef") @NotBlank String encryptedClientKeyPassphrase;
 
   String clientKeyAlgo;
 

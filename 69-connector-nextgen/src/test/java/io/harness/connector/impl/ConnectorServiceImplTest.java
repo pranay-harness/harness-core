@@ -27,7 +27,6 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import lombok.extern.slf4j.Slf4j;
@@ -211,17 +210,13 @@ public class ConnectorServiceImplTest extends CategoryTest {
     assertThat(kubernetesUserNamePasswordDTO.getCacert()).isEqualTo(cacert);
   }
 
-  @Test(expected = InvalidRequestException.class)
+  @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testDelete() {
-    createConnector();
-    when(connectorRepository.findByFullyQualifiedIdentifier(anyString())).thenReturn(Optional.of(connector));
+    when(connectorRepository.deleteByFullyQualifiedIdentifier(anyString())).thenReturn(1L);
     boolean deleted = connectorService.delete(null, null, null, identifier);
     assertThat(deleted).isTrue();
-    when(connectorRepository.findByFullyQualifiedIdentifier(anyString())).thenReturn(Optional.empty());
-    Optional<ConnectorDTO> connectorDTO = connectorService.get(null, null, null, identifier);
-    assertThat(connectorDTO.isPresent()).isFalse();
   }
 
   @Test
