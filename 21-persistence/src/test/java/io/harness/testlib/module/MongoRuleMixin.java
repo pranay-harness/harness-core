@@ -14,6 +14,7 @@ import io.harness.testlib.RealMongo;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Random;
 
 public interface MongoRuleMixin {
   enum MongoType { REAL, FAKE }
@@ -28,8 +29,11 @@ public interface MongoRuleMixin {
     };
   }
 
+  Random random = new Random();
+
   default String databaseName() {
-    return System.getProperty("dbName", "harness");
+    return System.getProperty(
+        "dbName", String.format("unit_tests_%d_%d", 1000 + random.nextInt(8999), System.currentTimeMillis() / 1000));
   }
 
   default MongoClient fakeMongoClient(ClosingFactory closingFactory) {
@@ -38,8 +42,8 @@ public interface MongoRuleMixin {
     return fakeMongo.getMongoClient();
   }
 
-  default MongoClient realMongoClient(ClosingFactory closingFactory) {
-    RealMongoCreator.RealMongo realMongo = takeRealMongo();
+  default MongoClient realMongoClient(ClosingFactory closingFactory, String databaseName) {
+    RealMongoCreator.RealMongo realMongo = takeRealMongo(databaseName);
     closingFactory.addServer(realMongo);
     return realMongo.getMongoClient();
   }

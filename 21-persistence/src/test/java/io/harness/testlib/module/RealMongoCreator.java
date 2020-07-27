@@ -5,6 +5,7 @@ import static java.time.Duration.ofMillis;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -49,17 +50,34 @@ class RealMongoCreator {
   static class RealMongo implements Closeable {
     MongodExecutable mongodExecutable;
     MongoClient mongoClient;
+    String temporaryDatabaseName;
 
     @Override
     public void close() {
       executorService.submit(() -> {
+        if (temporaryDatabaseName != null) {
+          mongoClient.dropDatabase(temporaryDatabaseName);
+        }
+
         mongoClient.close();
-        mongodExecutable.stop();
+        if (mongodExecutable != null) {
+          mongodExecutable.stop();
+        }
       });
     }
   }
 
-  private static RealMongo realMongo() throws Exception {
+  private static RealMongo realMongo(String databaseName) throws Exception {
+    String testMongoUri = System.getenv("TEST_MONGO_URI");
+    if (testMongoUri != null) {
+      MongoClientURI mongoClientURI = new MongoClientURI(testMongoUri + "/" + databaseName);
+      return RealMongo.builder()
+          .mongodExecutable(null)
+          .temporaryDatabaseName(databaseName)
+          .mongoClient(new MongoClient(mongoClientURI))
+          .build();
+    }
+
     Exception persistent = null;
 
     // FreeServerPort releases the port before it returns it. This creates a race between the moment it is obtain
@@ -94,9 +112,9 @@ class RealMongoCreator {
     throw persistent;
   }
 
-  static RealMongo takeRealMongo() {
+  static RealMongo takeRealMongo(String databaseName) {
     try {
-      return realMongo();
+      return realMongo(databaseName);
     } catch (Exception exception) {
       throw new GeneralException("", exception);
     }

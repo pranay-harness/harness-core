@@ -48,8 +48,9 @@ public class TestMongoModule extends DependencyModule implements MongoRuleMixin 
   @Provides
   @Named("realMongoClient")
   @Singleton
-  public MongoClient realMongoClientProvider(ClosingFactory closingFactory) throws Exception {
-    return realMongoClient(closingFactory);
+  public MongoClient realMongoClientProvider(@Named("databaseName") String databaseName, ClosingFactory closingFactory)
+      throws Exception {
+    return realMongoClient(closingFactory, databaseName);
   }
 
   @Provides
