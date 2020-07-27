@@ -20,4 +20,8 @@ public class BarrierInstanceWorkflow {
 
   private String stepUuid;
   private String stepExecutionId;
+
+  public String getUniqueWorkflowKeyInPipeline() {
+    return pipelineStageId + uuid;
+  }
 }

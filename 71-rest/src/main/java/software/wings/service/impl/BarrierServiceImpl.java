@@ -121,8 +121,11 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
     // First lets try to fill up all the missing data that is available already
     final BarrierInstancePipeline pipeline = barrierInstance.getPipeline();
-    Map<String, List<BarrierInstanceWorkflow>> barrierWorkflows =
-        pipeline.getWorkflows().stream().collect(Collectors.groupingBy(BarrierInstanceWorkflow::getUuid));
+    // Grouping by on workflowId + pipelineStageId Because If a workflow is added twice manually in pipeline in same
+    // parallel section, then they have different pipeline stages IDs, whereas we only want to group together the looped
+    // workflows.
+    Map<String, List<BarrierInstanceWorkflow>> barrierWorkflows = pipeline.getWorkflows().stream().collect(
+        Collectors.groupingBy(BarrierInstanceWorkflow::getUniqueWorkflowKeyInPipeline));
     for (Map.Entry<String, List<BarrierInstanceWorkflow>> entry : barrierWorkflows.entrySet()) {
       List<BarrierInstanceWorkflow> workflows = entry.getValue();
       String pipelineStageId = workflows.get(0).getPipelineStageId();
@@ -148,13 +151,14 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
         }
       }
 
+      String workflowId = workflows.get(0).getUuid();
       if (workflows.stream().anyMatch(t -> t.getWorkflowExecutionId() == null)) {
         try (HKeyIterator<WorkflowExecution> keys = new HKeyIterator(
                  wingsPersistence.createQuery(WorkflowExecution.class)
                      .filter(WorkflowExecutionKeys.appId, barrierInstance.getAppId())
                      .filter(WorkflowExecutionKeys.pipelineExecutionId, pipeline.getExecutionId())
                      .filter(WorkflowExecutionKeys.executionArgs_pipelinePhaseElementId, pipelineStageId)
-                     .filter(WorkflowExecutionKeys.workflowId, entry.getKey())
+                     .filter(WorkflowExecutionKeys.workflowId, workflowId)
                      .fetchKeys())) {
           if (!keys.hasNext()) {
             continue;
