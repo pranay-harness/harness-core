@@ -69,11 +69,13 @@ public class SftpHelperService {
 
     try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
       // Host can be reached and host key is verified. Check if connection is established
-      if (!connectionEstablished) {
+      if (connectionEstablished) {
+        ssh.loadKnownHosts();
+      } else {
         ssh.addHostKeyVerifier(hostKeyVerifier);
-        ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
       }
 
+      ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
       ssh.authPassword(sftpConfig.getUsername(), sftpConfig.getPassword());
       try (SFTPClient sftp = ssh.newSFTPClient()) {
         List<RemoteResourceInfo> resourceInfos = Collections.EMPTY_LIST;
@@ -176,10 +178,13 @@ public class SftpHelperService {
 
     try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
       // Host can be reached and host key is verified. Check if connection is established
-      if (!connectionEstablished) {
+      if (connectionEstablished) {
+        ssh.loadKnownHosts();
+      } else {
         ssh.addHostKeyVerifier(hostKeyVerifier);
-        ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
       }
+
+      ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
       ssh.authPassword(sftpConfig.getUsername(), sftpConfig.getPassword());
       final SFTPClient sftp = ssh.newSFTPClient();
 
