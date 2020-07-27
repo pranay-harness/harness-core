@@ -440,6 +440,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
                                    .build();
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
+    variable.setAccountId(ACCOUNT_ID);
 
     when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     serviceVariableService.update(variable);
@@ -462,6 +463,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
                                    .build();
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
+    variable.setAccountId(ACCOUNT_ID);
 
     when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     serviceVariableService.update(variable);
