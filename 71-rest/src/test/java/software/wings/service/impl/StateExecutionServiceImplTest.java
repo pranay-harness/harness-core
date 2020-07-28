@@ -321,6 +321,7 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
         .isEqualTo(stateExecutionInstance.isSelectionLogsTrackingForTasksEnabled());
     assertThat(dbStateExecutionInstance.getDelegateTasksDetails())
         .isEqualTo(stateExecutionInstance.getDelegateTasksDetails());
+    assertThat(dbStateExecutionInstance.getDelegateTaskId()).isEqualTo(stateExecutionInstance.getDelegateTaskId());
   }
 
   private StateExecutionInstance createStateExecutionInstance() {
