@@ -72,6 +72,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -123,7 +124,6 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.features.api.FeatureService;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
-import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
@@ -1143,7 +1143,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
         HelmChartSpecification.builder().build(), ContainerServiceParams.builder().build(), "release-name",
         WingsTestConstants.ACCOUNT_ID, WingsTestConstants.APP_ID, WingsTestConstants.ACTIVITY_ID,
         ImageDetails.builder().build(), "repo", GitConfig.builder().build(), Collections.emptyList(), null,
-        K8sDelegateManifestConfig.builder().build(), Collections.emptyMap(), HelmConstants.HelmVersion.V3);
+        K8sDelegateManifestConfig.builder().build(), Collections.emptyMap(), HelmVersion.V3);
   }
 
   @Test

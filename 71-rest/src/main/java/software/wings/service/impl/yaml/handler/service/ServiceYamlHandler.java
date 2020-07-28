@@ -19,6 +19,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.EncryptDecryptException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.HelmVersion;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AllowedValueYaml;
@@ -34,7 +35,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.service.impl.yaml.handler.ArtifactVariableYamlHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.ServiceVariableYamlHelper;

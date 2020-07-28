@@ -49,6 +49,7 @@ import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.OidcGrantType;
@@ -140,5 +141,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(SettingVariableTypes.class, 5131);
     kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);
+    kryo.register(HelmVersion.class, 7303);
   }
 }

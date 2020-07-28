@@ -15,6 +15,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -26,7 +27,6 @@ import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
-import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.nio.file.Paths;

@@ -10,11 +10,11 @@ import com.google.inject.Inject;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
+import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.k8s.model.HelmVersion;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
 import software.wings.helpers.ext.helm.HelmCommandTemplateFactory;
-import software.wings.helpers.ext.helm.HelmConstants;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 public class HelmInstallationCapabilityCheck implements CapabilityCheck {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
@@ -28,7 +28,7 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck {
     }
     String helmVersionCommand =
         HelmCommandTemplateFactory
-            .getHelmCommandTemplate(HelmCommandTemplateFactory.HelmCliCommandType.VERSION, HelmConstants.HelmVersion.V3)
+            .getHelmCommandTemplate(HelmCommandTemplateFactory.HelmCliCommandType.VERSION, HelmVersion.V3)
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(helmPath))
             .replace("${COMMAND_FLAGS}", StringUtils.EMPTY);
     return CapabilityResponse.builder()

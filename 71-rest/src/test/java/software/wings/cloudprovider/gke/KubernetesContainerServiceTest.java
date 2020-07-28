@@ -18,6 +18,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.openapi.models.V1ResourceAttributes;
@@ -34,7 +35,6 @@ import org.mockito.junit.MockitoRule;
 import software.wings.beans.KubernetesConfig;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.impl.KubernetesHelperService;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.time.Clock;
 import java.util.Arrays;

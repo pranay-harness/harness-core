@@ -2,10 +2,10 @@ package software.wings.helpers.ext.k8s.request;
 
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
+import io.harness.k8s.model.HelmVersion;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 
 import java.util.List;
 

@@ -19,6 +19,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -31,11 +33,9 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.DelegateTaskPackage;
 import software.wings.delegatetasks.k8s.taskhandler.K8sTaskHandler;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.util.Map;
 import java.util.function.BooleanSupplier;
@@ -62,7 +62,7 @@ public class K8sTaskTest extends WingsBaseTest {
   public void setup() {
     k8sClusterConfig = K8sClusterConfig.builder().build();
     k8sTaskParameters = new K8sTaskParameters(ACCOUNT_ID, APP_ID, COMMAND_NAME, ACTIVITY_ID, k8sClusterConfig,
-        WORKFLOW_EXECUTION_ID, RELEASE_NAME, TIMEOUT_INTERVAL, K8sTaskType.INSTANCE_SYNC, HelmConstants.HelmVersion.V2);
+        WORKFLOW_EXECUTION_ID, RELEASE_NAME, TIMEOUT_INTERVAL, K8sTaskType.INSTANCE_SYNC, HelmVersion.V2);
   }
 
   @Test

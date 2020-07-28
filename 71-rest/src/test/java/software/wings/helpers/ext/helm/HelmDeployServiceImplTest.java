@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.helm;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.k8s.model.HelmVersion.V2;
+import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ACASIAN;
@@ -26,8 +28,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.spy;
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V3;
 import static software.wings.helpers.ext.helm.HelmDeployServiceImpl.WORKING_DIR;
 import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
@@ -80,7 +81,6 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.GitService;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.HelmTestConstants;
 

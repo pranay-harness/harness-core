@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -18,7 +19,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.HelmDeployService;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
@@ -33,8 +33,7 @@ public class HelmCommandCapabilityCheckTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void performCapabilityCheck() {
-    HelmCommandRequest commandRequest =
-        HelmInstallCommandRequest.builder().helmVersion(HelmConstants.HelmVersion.V3).build();
+    HelmCommandRequest commandRequest = HelmInstallCommandRequest.builder().helmVersion(HelmVersion.V3).build();
     HelmCommandResponse helmCommandResponse = new HelmCommandResponse(CommandExecutionStatus.SUCCESS, "");
     when(containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(any())).thenReturn("kubeConfig");
     when(helmDeployService.ensureHelmInstalled(commandRequest)).thenReturn(helmCommandResponse);

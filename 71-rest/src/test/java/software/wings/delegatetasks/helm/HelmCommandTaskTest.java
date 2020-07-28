@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
+import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
@@ -40,7 +41,6 @@ import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.service.impl.ContainerServiceParams;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.io.IOException;
 

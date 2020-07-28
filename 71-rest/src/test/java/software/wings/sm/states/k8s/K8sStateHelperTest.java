@@ -85,6 +85,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.K8sPodSyncException;
 import io.harness.exception.WingsException;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -139,7 +140,6 @@ import software.wings.common.VariableProcessor;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
@@ -730,8 +730,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     when(delegateService.executeTask(any())).thenReturn(response);
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SETTING_ID);
     when(evaluator.substitute(anyString(), any(), any(), anyString())).thenReturn("default");
-    when(serviceResourceService.getHelmVersionWithDefault(anyString(), anyString()))
-        .thenReturn(HelmConstants.HelmVersion.V2);
+    when(serviceResourceService.getHelmVersionWithDefault(anyString(), anyString())).thenReturn(HelmVersion.V2);
 
     K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
     k8sStateHelper.queueK8sDelegateTask(context, taskParameters);
@@ -771,8 +770,7 @@ public class K8sStateHelperTest extends WingsBaseTest {
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SETTING_ID);
     when(infrastructureMappingService.get(anyString(), anyString())).thenReturn(infrastructureMapping);
     when(evaluator.substitute(anyString(), any(), any(), anyString())).thenReturn("default");
-    when(serviceResourceService.getHelmVersionWithDefault(anyString(), anyString()))
-        .thenReturn(HelmConstants.HelmVersion.V2);
+    when(serviceResourceService.getHelmVersionWithDefault(anyString(), anyString())).thenReturn(HelmVersion.V2);
     doReturn(K8sClusterConfig.builder().build())
         .when(containerDeploymentManagerHelper)
         .getK8sClusterConfig(any(ContainerInfrastructureMapping.class), eq(context));

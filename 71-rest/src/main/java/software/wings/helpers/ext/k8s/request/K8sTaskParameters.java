@@ -1,7 +1,5 @@
 package software.wings.helpers.ext.k8s.request;
 
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
-
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
@@ -9,6 +7,7 @@ import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
+import io.harness.k8s.model.HelmVersion;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;

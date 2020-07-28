@@ -6,12 +6,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.configuration.InstallUtils;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
-import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 
 public class K8sGlobalConfigServiceImplTest extends CategoryTest {
   private K8sGlobalConfigServiceImpl k8sGlobalConfigService = Mockito.spy(K8sGlobalConfigServiceImpl.class);

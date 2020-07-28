@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.k8s.model.HelmVersion.V2;
+import static io.harness.k8s.model.HelmVersion.V3;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V3;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
