@@ -15,6 +15,7 @@ import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_
 import static software.wings.common.VerificationConstants.NUM_LOG_RECORDS;
 import static software.wings.common.VerificationConstants.getDataAnalysisMetricHelpDocument;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -71,6 +72,8 @@ import io.harness.scheduler.ServiceGuardAccountPoller;
 import io.harness.scheduler.WorkflowVerificationTaskPoller;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import io.harness.serializer.JsonSubtypeResolver;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.kryo.VerificationKryoRegistrar;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
@@ -179,6 +182,13 @@ public class VerificationServiceApplication extends Application<VerificationServ
                                             .buildValidatorFactory();
 
     List<Module> modules = new ArrayList<>();
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().add(VerificationKryoRegistrar.class).build();
+      }
+    });
     modules.add(MetricsInstrumentationModule.builder()
                     .withMetricRegistry(metricRegistry)
                     .withMatcher(not(new AbstractMatcher<TypeLiteral<?>>() {

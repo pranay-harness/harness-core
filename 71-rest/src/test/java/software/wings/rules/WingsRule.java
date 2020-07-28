@@ -168,11 +168,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(ManagerRegistrars.kryoRegistrars)
-            .add(TestManagerRegistrar.class)
-            .add(TestPersistenceKryoRegistrar.class)
-            .build();
+        return getKryoRegistrars();
       }
     });
     addQueueModules(modules);
@@ -200,6 +196,14 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         }
       }
     }
+  }
+
+  protected Set<Class<? extends KryoRegistrar>> getKryoRegistrars() {
+    return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+        .addAll(ManagerRegistrars.kryoRegistrars)
+        .add(TestManagerRegistrar.class)
+        .add(TestPersistenceKryoRegistrar.class)
+        .build();
   }
 
   protected void registerProviders() {

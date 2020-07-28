@@ -11,13 +11,12 @@ import io.harness.testing.TestExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import software.wings.WingsBaseTest;
 
 import java.util.Map;
 import java.util.Map.Entry;
 
 @Slf4j
-public class VerificationComponentTest extends WingsBaseTest {
+public class VerificationComponentTest extends VerificationBaseTest {
   @Inject private Map<String, TestExecution> tests;
 
   @Test

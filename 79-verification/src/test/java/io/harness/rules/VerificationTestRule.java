@@ -1,5 +1,6 @@
 package io.harness.rules;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
@@ -12,6 +13,8 @@ import io.harness.app.VerificationServiceModule;
 import io.harness.app.VerificationServiceSchedulerModule;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.mongo.MongoConfig;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.kryo.VerificationKryoRegistrar;
 import io.harness.testlib.RealMongo;
 import io.harness.testlib.module.TestMongoModule;
 import software.wings.rules.SetupScheduler;
@@ -20,6 +23,7 @@ import software.wings.rules.WingsRule;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by rsingh on 9/25/18.
@@ -54,6 +58,14 @@ public class VerificationTestRule extends WingsRule {
     modules.add(new VerificationTestModule());
     modules.add(new VerificationServiceSchedulerModule((VerificationServiceConfiguration) configuration));
     return modules;
+  }
+
+  @Override
+  protected Set<Class<? extends KryoRegistrar>> getKryoRegistrars() {
+    return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+        .addAll(super.getKryoRegistrars())
+        .add(VerificationKryoRegistrar.class)
+        .build();
   }
 
   @Override
