@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.NoAvaliableDelegatesException;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.WingsException;
 import lombok.extern.slf4j.Slf4j;
@@ -125,6 +126,9 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
           latestpcfInstanceInfoList =
               pcfHelperService.getApplicationDetails(pcfApplicationName, pcfInfrastructureMapping.getOrganization(),
                   pcfInfrastructureMapping.getSpace(), pcfConfig, pcfCommandExecutionResponse);
+        } catch (NoAvaliableDelegatesException e) {
+          logger.warn("Delegates are not available", e.getMessage());
+          failedToRetrieveData = true;
         } catch (Exception e) {
           logger.warn("Error while fetching application details for PCFApplication", e);
 
