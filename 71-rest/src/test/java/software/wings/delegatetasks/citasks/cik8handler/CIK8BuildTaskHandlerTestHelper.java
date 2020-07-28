@@ -15,7 +15,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.KubernetesConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.ci.CIK8BuildTaskParams;
 import software.wings.beans.ci.pod.CIContainerType;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
@@ -42,7 +42,7 @@ public class CIK8BuildTaskHandlerTestHelper {
   private static final String registryUrl = "https://index.docker.io/v1/";
 
   public static CIK8BuildTaskParams buildGitSecretErrorTaskParams() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace(namespace).build();
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
     List<EncryptedDataDetail> encryptionDetails = mock(List.class);
     GitConfig gitConfig = GitConfig.builder().build();
 
@@ -51,7 +51,7 @@ public class CIK8BuildTaskHandlerTestHelper {
     CIK8PodParams<CIK8ContainerParams> cik8PodParams =
         CIK8PodParams.<CIK8ContainerParams>builder().name(podName).namespace(namespace).build();
     return CIK8BuildTaskParams.builder()
-        .kubernetesConfig(kubernetesConfig)
+        .kubernetesClusterConfig(kubernetesClusterConfig)
         .encryptionDetails(encryptionDetails)
         .gitFetchFilesConfig(gitFetchFilesConfig)
         .cik8PodParams(cik8PodParams)
@@ -59,7 +59,7 @@ public class CIK8BuildTaskHandlerTestHelper {
   }
 
   public static CIK8BuildTaskParams buildImageSecretErrorTaskParams() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace(namespace).build();
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
     List<EncryptedDataDetail> encryptionDetails = mock(List.class);
     GitConfig gitConfig = GitConfig.builder().build();
     GitFetchFilesConfig gitFetchFilesConfig =
@@ -85,7 +85,7 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                            .build();
 
     return CIK8BuildTaskParams.builder()
-        .kubernetesConfig(kubernetesConfig)
+        .kubernetesClusterConfig(kubernetesClusterConfig)
         .encryptionDetails(encryptionDetails)
         .gitFetchFilesConfig(gitFetchFilesConfig)
         .cik8PodParams(cik8PodParams)
@@ -93,7 +93,7 @@ public class CIK8BuildTaskHandlerTestHelper {
   }
 
   public static CIK8BuildTaskParams buildPodCreateErrorTaskParams() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace(namespace).build();
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
     List<EncryptedDataDetail> encryptionDetails = mock(List.class);
     GitConfig gitConfig = GitConfig.builder().build();
     GitFetchFilesConfig gitFetchFilesConfig =
@@ -119,7 +119,7 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                            .build();
 
     return CIK8BuildTaskParams.builder()
-        .kubernetesConfig(kubernetesConfig)
+        .kubernetesClusterConfig(kubernetesClusterConfig)
         .encryptionDetails(encryptionDetails)
         .gitFetchFilesConfig(gitFetchFilesConfig)
         .cik8PodParams(cik8PodParams)
@@ -127,7 +127,7 @@ public class CIK8BuildTaskHandlerTestHelper {
   }
 
   public static CIK8BuildTaskParams buildTaskParams() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace(namespace).build();
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
     List<EncryptedDataDetail> encryptionDetails = mock(List.class);
     GitConfig gitConfig = GitConfig.builder().build();
     GitFetchFilesConfig gitFetchFilesConfig =
@@ -160,7 +160,7 @@ public class CIK8BuildTaskHandlerTestHelper {
                                                            .build();
 
     return CIK8BuildTaskParams.builder()
-        .kubernetesConfig(kubernetesConfig)
+        .kubernetesClusterConfig(kubernetesClusterConfig)
         .encryptionDetails(encryptionDetails)
         .gitFetchFilesConfig(gitFetchFilesConfig)
         .cik8PodParams(cik8PodParams)

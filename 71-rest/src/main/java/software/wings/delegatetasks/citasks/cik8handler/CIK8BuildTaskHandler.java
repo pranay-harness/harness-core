@@ -10,6 +10,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder.SECRET;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.DEFAULT_SECRET_MOUNT_PATH;
@@ -44,6 +45,7 @@ import software.wings.delegatetasks.citasks.CIBuildTaskHandler;
 import software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilder;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.KubernetesHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -61,6 +63,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private CIK8CtlHandler kubeCtlHandler;
   @Inject private CIK8PodSpecBuilder podSpecBuilder;
+  @Inject private EncryptionService encryptionService;
   @NotNull private Type type = CIBuildTaskHandler.Type.GCP_K8;
 
   private static final String imageIdFormat = "%s-%s";
@@ -73,7 +76,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   public K8sTaskExecutionResponse executeTaskInternal(CIBuildSetupTaskParams ciBuildSetupTaskParams) {
     CIK8BuildTaskParams cik8BuildTaskParams = (CIK8BuildTaskParams) ciBuildSetupTaskParams;
     GitFetchFilesConfig gitFetchFilesConfig = cik8BuildTaskParams.getGitFetchFilesConfig();
-    KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesConfig();
+
     PodParams podParams = cik8BuildTaskParams.getCik8PodParams();
     String namespace = podParams.getNamespace();
     String podName = podParams.getName();
@@ -82,7 +85,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     try (AutoLogContext ignore1 = new K8LogContext(podParams.getName(), null, OVERRIDE_ERROR)) {
       try {
         KubernetesClient kubernetesClient = createKubernetesClient(cik8BuildTaskParams);
-        createGitSecret(kubernetesClient, kubernetesConfig, gitFetchFilesConfig);
+        createGitSecret(kubernetesClient, "default", gitFetchFilesConfig);
         createImageSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
         createEnvVariablesSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
 
@@ -107,15 +110,17 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   }
 
   private KubernetesClient createKubernetesClient(CIK8BuildTaskParams cik8BuildTaskParams) {
-    return kubernetesHelperService.getKubernetesClient(
-        cik8BuildTaskParams.getKubernetesConfig(), cik8BuildTaskParams.getEncryptionDetails());
+    encryptionService.decrypt(
+        cik8BuildTaskParams.getKubernetesClusterConfig(), cik8BuildTaskParams.getEncryptionDetails());
+    KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesClusterConfig().createKubernetesConfig(null);
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
   }
 
   private void createGitSecret(
-      KubernetesClient kubernetesClient, KubernetesConfig kubernetesConfig, GitFetchFilesConfig gitFetchFilesConfig) {
+      KubernetesClient kubernetesClient, String namespace, GitFetchFilesConfig gitFetchFilesConfig) {
     try {
-      kubeCtlHandler.createGitSecret(kubernetesClient, kubernetesConfig.getNamespace(),
-          gitFetchFilesConfig.getGitConfig(), gitFetchFilesConfig.getEncryptedDataDetails());
+      kubeCtlHandler.createGitSecret(kubernetesClient, namespace, gitFetchFilesConfig.getGitConfig(),
+          gitFetchFilesConfig.getEncryptedDataDetails());
     } catch (UnsupportedEncodingException e) {
       String errMsg = format("Unknown format for GIT password %s", e.getMessage());
       logger.error(errMsg);

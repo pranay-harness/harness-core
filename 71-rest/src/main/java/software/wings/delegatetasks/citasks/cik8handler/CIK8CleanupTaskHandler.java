@@ -12,18 +12,22 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ci.CICleanupTaskParams;
 import software.wings.beans.ci.CIK8CleanupTaskParams;
 import software.wings.delegatetasks.citasks.CICleanupTaskHandler;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.KubernetesHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.Collections;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
 public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
   @Inject private CIK8CtlHandler kubeCtlHandler;
   @Inject private KubernetesHelperService kubernetesHelperService;
+  @Inject private EncryptionService encryptionService;
 
   @NotNull private CICleanupTaskHandler.Type type = CICleanupTaskHandler.Type.GCP_K8;
 
@@ -60,7 +64,11 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
   }
 
   private KubernetesClient createKubernetesClient(CIK8CleanupTaskParams cik8DeleteSetupTaskParams) {
-    return kubernetesHelperService.getKubernetesClient(
-        cik8DeleteSetupTaskParams.getKubernetesConfig(), cik8DeleteSetupTaskParams.getEncryptionDetails());
+    encryptionService.decrypt(
+        cik8DeleteSetupTaskParams.getKubernetesClusterConfig(), cik8DeleteSetupTaskParams.getEncryptionDetails());
+    KubernetesConfig kubernetesConfig =
+        cik8DeleteSetupTaskParams.getKubernetesClusterConfig().createKubernetesConfig(null);
+
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, Collections.emptyList());
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.citasks.cik8handler;
 
 import static io.harness.rule.OwnerRule.SHUBHAM;
+import static java.util.Collections.emptyList;
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -24,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesClusterAuthType;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ci.K8ExecCommandParams;
 import software.wings.beans.ci.K8ExecuteCommandTaskParams;
@@ -31,6 +33,7 @@ import software.wings.beans.ci.ShellScriptType;
 import software.wings.delegatetasks.citasks.ExecuteCommandTaskHandler;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.KubernetesHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
@@ -40,6 +43,8 @@ import java.util.concurrent.TimeoutException;
 public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   @Mock private KubernetesHelperService kubernetesHelperService;
   @Mock private K8CommandExecutor k8CommandExecutor;
+  @Mock private EncryptionService encryptionService;
+
   @InjectMocks private K8ExecuteCommandTaskHandler k8ExecuteCommandTaskHandler;
 
   private static final String MASTER_URL = "http://masterUrl/";
@@ -53,11 +58,8 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
   private static final Integer cmdTimeoutSecs = 3600;
 
   public K8ExecuteCommandTaskParams getExecCmdTaskParams() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
-                                            .masterUrl(MASTER_URL)
-                                            .authType(KubernetesClusterAuthType.OIDC)
-                                            .namespace(namespace)
-                                            .build();
+    KubernetesClusterConfig kubernetesClusterConfig =
+        KubernetesClusterConfig.builder().masterUrl(MASTER_URL).authType(KubernetesClusterAuthType.OIDC).build();
     List<EncryptedDataDetail> encryptionDetails = mock(List.class);
     K8ExecCommandParams k8ExecCommandParams = K8ExecCommandParams.builder()
                                                   .podName(podName)
@@ -72,7 +74,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
                                                   .build();
     return K8ExecuteCommandTaskParams.builder()
         .encryptionDetails(encryptionDetails)
-        .kubernetesConfig(kubernetesConfig)
+        .kubernetesClusterConfig(kubernetesClusterConfig)
         .k8ExecCommandParams(k8ExecCommandParams)
         .build();
   }
@@ -86,9 +88,9 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
 
-    when(kubernetesHelperService.getConfig(
-             params.getKubernetesConfig(), params.getEncryptionDetails(), StringUtils.EMPTY))
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(emptyList()), eq(StringUtils.EMPTY)))
         .thenReturn(config);
+
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     doThrow(KubernetesClientException.class)
         .when(k8CommandExecutor)
@@ -107,8 +109,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
 
-    when(kubernetesHelperService.getConfig(
-             params.getKubernetesConfig(), params.getEncryptionDetails(), StringUtils.EMPTY))
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(emptyList()), eq(StringUtils.EMPTY)))
         .thenReturn(config);
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     doThrow(TimeoutException.class).when(k8CommandExecutor).executeCommand(any(), eq(params.getK8ExecCommandParams()));
@@ -126,8 +127,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
 
-    when(kubernetesHelperService.getConfig(
-             params.getKubernetesConfig(), params.getEncryptionDetails(), StringUtils.EMPTY))
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(emptyList()), eq(StringUtils.EMPTY)))
         .thenReturn(config);
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     doThrow(InterruptedException.class)
@@ -146,8 +146,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
 
-    when(kubernetesHelperService.getConfig(
-             params.getKubernetesConfig(), params.getEncryptionDetails(), StringUtils.EMPTY))
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(emptyList()), eq(StringUtils.EMPTY)))
         .thenReturn(config);
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     when(k8CommandExecutor.executeCommand(any(), eq(params.getK8ExecCommandParams())))
@@ -165,8 +164,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
 
-    when(kubernetesHelperService.getConfig(
-             params.getKubernetesConfig(), params.getEncryptionDetails(), StringUtils.EMPTY))
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(emptyList()), eq(StringUtils.EMPTY)))
         .thenReturn(config);
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     when(k8CommandExecutor.executeCommand(any(), eq(params.getK8ExecCommandParams())))
