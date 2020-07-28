@@ -13,5 +13,6 @@ public class IndexMigratorModule extends AbstractModule {
     MapBinder<String, Migrator> indexMigrators = MapBinder.newMapBinder(binder(), String.class, Migrator.class);
     indexMigrators.addBinding("delegateProfiles.uniqueName").to(DelegateProfileNameUniqueInAccountMigration.class);
     indexMigrators.addBinding("apiKeys.uniqueName").to(ApiKeysNameUniqueInAccountMigration.class);
+    indexMigrators.addBinding("delegateScopes.uniqueScopeName").to(DelegateProfileNameUniqueInAccountMigration.class);
   }
 }

@@ -3,6 +3,7 @@ package io.harness.mongo;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSession;
+import static io.harness.mongo.IndexManagerSession.UNIQUE;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,12 +22,14 @@ import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mongodb.morphia.Morphia;
 
 import java.util.List;
 import java.util.Set;
 
 public class IndexManagerCollectionSessionTest extends PersistenceTest {
   @Inject HPersistence persistence;
+  @Inject Morphia morphia;
 
   private IndexCreatorBuilder buildIndexCreator(DBCollection collection, String name, int i) {
     return IndexCreator.builder()
@@ -113,6 +116,11 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
 
     IndexCreator differentNameCreator = buildIndexCreator(collection, "foo2", 1).build();
     assertThat(createCollectionSession(collection).isRebuildNeeded(differentNameCreator)).isTrue();
+
+    IndexCreator differentUniqueFlagCreator = buildIndexCreator(collection, "foo", 1).build();
+    differentUniqueFlagCreator.getOptions().put(UNIQUE, Boolean.TRUE);
+
+    assertThat(createCollectionSession(collection).isRebuildNeeded(differentUniqueFlagCreator)).isTrue();
   }
 
   @Test
@@ -151,5 +159,24 @@ public class IndexManagerCollectionSessionTest extends PersistenceTest {
     List<String> obsoleteIndexes = createCollectionSession(collection).obsoleteIndexes(names);
 
     assertThat(obsoleteIndexes).containsExactly(index1);
+  }
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void testisUniqueFlag() {
+    persistence.ensureIndexForTesting(TestIndexEntity.class);
+
+    IndexManagerSession session =
+        new IndexManagerSession(persistence.getDatastore(TestIndexEntity.class), emptyMap(), AUTO);
+
+    DBCollection collection = persistence.getCollection(TestIndexEntity.class);
+    DBObject index = createCollectionSession(collection).findIndexByName("index");
+    assertThat(index).isNotNull();
+    assertThat(IndexCreator.isUniqueIndex(index)).isFalse();
+
+    DBObject uniqueIndex = createCollectionSession(collection).findIndexByName("uniqueTest_1");
+    assertThat(uniqueIndex).isNotNull();
+    assertThat(IndexCreator.isUniqueIndex(uniqueIndex)).isTrue();
   }
 }

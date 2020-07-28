@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @Data
@@ -27,6 +28,7 @@ import org.mongodb.morphia.annotations.Id;
 @CdSparseIndex(name = "sparse_index",
     fields = { @Field(TestIndexEntity.TestEntityKeys.name)
                , @Field(TestIndexEntity.TestEntityKeys.sparseTest) })
+@Entity(value = "!!!testIndexes", noClassnameStored = true)
 public class TestIndexEntity implements PersistentEntity, UuidAccess {
   @Id private String uuid;
   private String name;

@@ -5,6 +5,7 @@ import io.harness.iterator.TestFibonacciIterableEntity;
 import io.harness.iterator.TestIrregularIterableEntity;
 import io.harness.iterator.TestIterableEntity;
 import io.harness.iterator.TestRegularIterableEntity;
+import io.harness.mongo.TestIndexEntity;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.persistence.MorphiaClass;
@@ -27,6 +28,7 @@ public class TestPersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TestNoTopicQueuableObject.class);
     set.add(TestRegularIterableEntity.class);
     set.add(TestTopicQueuableObject.class);
+    set.add(TestIndexEntity.class);
   }
 
   @Override
