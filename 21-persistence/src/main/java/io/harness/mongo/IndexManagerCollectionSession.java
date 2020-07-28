@@ -112,6 +112,20 @@ class IndexManagerCollectionSession {
       return true;
     }
 
+    if (indexByName != null) {
+      Boolean newUniqueFlag = (Boolean) indexCreator.getOptions().get(UNIQUE);
+
+      if (newUniqueFlag == null || !newUniqueFlag.booleanValue()) {
+        if (IndexCreator.isUniqueIndex(indexByName)) {
+          return true;
+        }
+      } else {
+        if (!IndexCreator.isUniqueIndex(indexByName)) {
+          return true;
+        }
+      }
+    }
+
     // else there is no collision or it is the same index
     return false;
   }
