@@ -28,6 +28,7 @@ import static software.wings.utils.KubernetesConvention.getRevisionFromControlle
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -371,17 +372,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public void validateCEPermissions(KubernetesConfig kubernetesConfig) {
     AuthorizationV1Api apiClient = ApiClientFactoryImpl.getAuthorizationClient(kubernetesConfig);
 
-    List<V1ResourceAttributes> cePermissions = new ArrayList<>();
-
-    cePermissions.addAll(k8sResourcePermission.v1ResourceAttributesListBuilder(new String[] {""},
-        new String[] {"pods", "nodes", "events", "namespaces"}, new String[] {"get", "list", "watch"}));
-    cePermissions.addAll(k8sResourcePermission.v1ResourceAttributesListBuilder(new String[] {"apps", "extensions"},
-        new String[] {"statefulsets", "deployments", "daemonsets", "replicasets"},
-        new String[] {"get", "list", "watch"}));
-    cePermissions.addAll(k8sResourcePermission.v1ResourceAttributesListBuilder(
-        new String[] {"batch"}, new String[] {"jobs", "cronjobs"}, new String[] {"get", "list", "watch"}));
-    cePermissions.addAll(k8sResourcePermission.v1ResourceAttributesListBuilder(
-        new String[] {"metrics.k8s.io"}, new String[] {"pods", "nodes"}, new String[] {"get", "list"}));
+    List<V1ResourceAttributes> cePermissions =
+        ImmutableList.copyOf(k8sResourcePermission.v1ResourceAttributesListBuilder(
+            new String[] {""}, new String[] {"nodes", "pods", "events"}, new String[] {"watch"}));
 
     List<V1SubjectAccessReviewStatus> response = k8sResourcePermission.validate(apiClient, cePermissions, 12);
     String result = k8sResourcePermission.buildResponse(cePermissions, response);
