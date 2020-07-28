@@ -16,5 +16,5 @@ import java.util.List;
 @Data
 public class GcbArtifacts {
   private List<String> images;
-  private GcbArtifactObjects artifactObjects;
+  private GcbArtifactObjects objects;
 }

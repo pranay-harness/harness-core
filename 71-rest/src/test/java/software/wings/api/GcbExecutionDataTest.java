@@ -20,7 +20,6 @@ import software.wings.helpers.ext.gcb.models.GcbArtifacts;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.sm.states.GcbState.GcbDelegateResponse;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -32,23 +31,26 @@ public class GcbExecutionDataTest extends CategoryTest {
   public static final String BUILD_ID = "buildId";
   public static final String BUILD_URL = "https://gcb.com/testjob/11";
   public static final String LOGS_URL = "https://logs.com";
+  public static final String LOCATION = "artifactsLocation";
   public static final Map<String, String> SUBSTITUTIONS = ImmutableMap.of("$1", "1");
   public static final List<String> TAGS = Collections.singletonList("blue");
+  public static final List<String> IMAGES = Collections.singletonList("docker");
+  public static final List<String> ARTIFACTS = Collections.singletonList("dockerImage");
   private final GcbExecutionData gcbExecutionData =
-      GcbExecutionData.builder().activityId(ACTIVITY_ID).buildId(BUILD_ID).buildUrl(BUILD_URL).build();
+      GcbExecutionData.builder().activityId(ACTIVITY_ID).buildNo(BUILD_ID).buildUrl(BUILD_URL).build();
 
   private static final Map<String, ExecutionDataValue> expected =
       ImmutableMap.<String, ExecutionDataValue>builder()
           .put("activityId", executionDataValue("Activity Id", ACTIVITY_ID))
-          .put("buildNumber", executionDataValue("Build Number", BUILD_ID))
-          .put("build", executionDataValue("Build Url", BUILD_URL))
+          .put("buildNo", executionDataValue("BuildNo", BUILD_ID))
+          .put("buildUrl", executionDataValue("Build Url", BUILD_URL))
           .put("substitutions", executionDataValue("Substitutions", SUBSTITUTIONS))
           .put("logUrl", executionDataValue("Logs Url", LOGS_URL))
           .put("createTime", executionDataValue("Created Time", CREATE_TIME))
           .put("tags", executionDataValue("Tags", TAGS))
           .put("name", executionDataValue("Name", BUILD_NAME))
           .put("status", executionDataValue("Status", WORKING))
-          .put("images", executionDataValue("Images", Arrays.asList("a", "b", "c")))
+          .put("images", executionDataValue("Images", IMAGES))
           .build();
 
   @Before
@@ -62,9 +64,9 @@ public class GcbExecutionDataTest extends CategoryTest {
     gcbExecutionData.setCreateTime(CREATE_TIME);
     gcbExecutionData.setName(BUILD_NAME);
     gcbExecutionData.setBuildStatus(WORKING);
-    GcbArtifacts artifacts = new GcbArtifacts();
-    artifacts.setImages(Arrays.asList("a", "b", "c"));
-    gcbExecutionData.setArtifacts(artifacts);
+    gcbExecutionData.setImages(IMAGES);
+    gcbExecutionData.setArtifactLocation(LOCATION);
+    gcbExecutionData.setArtifacts(ARTIFACTS);
   }
 
   @Test
@@ -93,7 +95,7 @@ public class GcbExecutionDataTest extends CategoryTest {
   @Category(UnitTests.class)
   public void lombokGettersTe() {
     assertThat(gcbExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
-    assertThat(gcbExecutionData.getBuildId()).isEqualTo(BUILD_ID);
+    assertThat(gcbExecutionData.getBuildNo()).isEqualTo(BUILD_ID);
     assertThat(gcbExecutionData.getBuildUrl()).isEqualTo(BUILD_URL);
     assertThat(gcbExecutionData.getBuildStatus()).isEqualTo(WORKING);
     assertThat(gcbExecutionData.getTags()).isEqualTo(TAGS);
@@ -101,9 +103,9 @@ public class GcbExecutionDataTest extends CategoryTest {
     assertThat(gcbExecutionData.getSubstitutions()).isEqualTo(SUBSTITUTIONS);
     assertThat(gcbExecutionData.getCreateTime()).isEqualTo(CREATE_TIME);
     assertThat(gcbExecutionData.getName()).isEqualTo(BUILD_NAME);
-    GcbArtifacts artifacts = new GcbArtifacts();
-    artifacts.setImages(Arrays.asList("a", "b", "c"));
-    assertThat(gcbExecutionData.getArtifacts()).isEqualTo(artifacts);
+    assertThat(gcbExecutionData.getImages()).isEqualTo(IMAGES);
+    assertThat(gcbExecutionData.getArtifactLocation()).isEqualTo(LOCATION);
+    assertThat(gcbExecutionData.getArtifacts()).isEqualTo(ARTIFACTS);
   }
 
   @Test
@@ -111,10 +113,10 @@ public class GcbExecutionDataTest extends CategoryTest {
   @Category(UnitTests.class)
   public void withDelegateResponse() {
     GcbArtifacts artifacts = new GcbArtifacts();
-    artifacts.setImages(Arrays.asList("a", "b", "c"));
+    artifacts.setImages(IMAGES);
 
     GcbExecutionData expected = new GcbExecutionData(ACTIVITY_ID, GcbExecutionData.GCB_URL + BUILD_ID, BUILD_ID, TAGS,
-        WORKING, BUILD_NAME, BUILD_NAME, SUBSTITUTIONS, LOGS_URL, artifacts);
+        WORKING, BUILD_NAME, BUILD_NAME, SUBSTITUTIONS, LOGS_URL, IMAGES, null, null);
 
     GcbDelegateResponse delegateResponse =
         gcbDelegateResponseOf(GcbTaskParams.builder().buildId(BUILD_ID).buildName(BUILD_NAME).build(),
@@ -126,8 +128,7 @@ public class GcbExecutionDataTest extends CategoryTest {
                 .logUrl(LOGS_URL)
                 .artifacts(artifacts)
                 .build());
-    GcbExecutionData actual = new GcbExecutionData(ACTIVITY_ID, null, null, null, null, null, null, null, null, null)
-                                  .withDelegateResponse(delegateResponse);
+    GcbExecutionData actual = new GcbExecutionData(ACTIVITY_ID).withDelegateResponse(delegateResponse);
     assertThat(actual).isEqualTo(expected);
   }
 }
