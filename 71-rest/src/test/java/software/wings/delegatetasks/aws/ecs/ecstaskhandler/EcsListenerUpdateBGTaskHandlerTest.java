@@ -98,7 +98,7 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
         .updateServiceTags(any(), anyList(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
     doNothing()
         .when(ecsSwapRoutesCommandTaskHelper)
-        .downsizeOlderService(any(), anyList(), anyString(), anyString(), anyString(), any());
+        .downsizeOlderService(any(), anyList(), anyString(), anyString(), anyString(), any(), any());
     doReturn(Collections.emptyList())
         .when(awsElbHelperServiceDelegate)
         .getMatchingTargetGroupForSpecificListenerRuleArn(
@@ -128,7 +128,7 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
         .updateServiceTags(any(), anyList(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
     doNothing()
         .when(ecsSwapRoutesCommandTaskHelper)
-        .downsizeOlderService(any(), anyList(), anyString(), anyString(), anyString(), any());
+        .downsizeOlderService(any(), anyList(), anyString(), anyString(), anyString(), any(), any());
 
     EcsBGListenerUpdateRequest ecsBGListenerUpdateRequest = EcsBGListenerUpdateRequest.builder()
                                                                 .rollback(false)
