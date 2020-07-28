@@ -37,10 +37,10 @@ public class SaveCacheStepProtobufSerializerTest extends CIBeansTest {
     String serialize = protobufSerializer.serialize(saveCacheStepInfo);
     Step saveCacheStep = Step.parseFrom(Base64.decodeBase64(serialize));
 
-    assertThat(saveCacheStep.getDisplayName()).isEqualTo(SAVE_CACHE);
-    assertThat(saveCacheStep.getId()).isEqualTo(SAVE_CACHE_ID);
-    assertThat(saveCacheStep.getSaveCache().getKey()).isEqualTo(SAVE_CACHE_KEY);
-    assertThat(saveCacheStep.getSaveCache().getPaths(0)).isEqualTo(PATH_1);
-    assertThat(saveCacheStep.getSaveCache().getPaths(1)).isEqualTo(PATH_2);
+    assertThat(saveCacheStep.getUnit().getDisplayName()).isEqualTo(SAVE_CACHE);
+    assertThat(saveCacheStep.getUnit().getId()).isEqualTo(SAVE_CACHE_ID);
+    assertThat(saveCacheStep.getUnit().getSaveCache().getKey()).isEqualTo(SAVE_CACHE_KEY);
+    assertThat(saveCacheStep.getUnit().getSaveCache().getPaths(0)).isEqualTo(PATH_1);
+    assertThat(saveCacheStep.getUnit().getSaveCache().getPaths(1)).isEqualTo(PATH_2);
   }
 }

@@ -51,10 +51,10 @@ public class ExecutionProtobufSerializerTest extends CIBeansTest {
 
     assertThat(parsedExecution.getStepsList()).hasSize(2);
 
-    assertThat(parsedExecution.getStepsList().get(0).getRun().getCommands(0)).isEqualTo("run1c1");
-    assertThat(parsedExecution.getStepsList().get(0).getRun().getCommands(1)).isEqualTo("run1c2");
+    assertThat(parsedExecution.getStepsList().get(0).getUnit().getRun().getCommands(0)).isEqualTo("run1c1");
+    assertThat(parsedExecution.getStepsList().get(0).getUnit().getRun().getCommands(1)).isEqualTo("run1c2");
 
-    assertThat(parsedExecution.getStepsList().get(1).getRun().getCommands(0)).isEqualTo("run2c1");
-    assertThat(parsedExecution.getStepsList().get(1).getRun().getCommands(1)).isEqualTo("run2c2");
+    assertThat(parsedExecution.getStepsList().get(1).getUnit().getRun().getCommands(0)).isEqualTo("run2c1");
+    assertThat(parsedExecution.getStepsList().get(1).getUnit().getRun().getCommands(1)).isEqualTo("run2c2");
   }
 }

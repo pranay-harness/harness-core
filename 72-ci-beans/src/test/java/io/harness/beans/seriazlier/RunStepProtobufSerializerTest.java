@@ -40,10 +40,10 @@ public class RunStepProtobufSerializerTest extends CIBeansTest {
                                   .build();
     String serialize = protobufSerializer.serialize(runStepInfo);
     Step runStep = Step.parseFrom(Base64.decodeBase64(serialize));
-    assertThat(runStep.getId()).isEqualTo(RUN_STEP_ID);
-    assertThat(runStep.getDisplayName()).isEqualTo(RUN_STEP);
-    assertThat(runStep.getRun().getContext().getNumRetries()).isEqualTo(RETRY);
-    assertThat(runStep.getRun().getContext().getExecutionTimeoutSecs()).isEqualTo(TIMEOUT);
-    assertThat(runStep.getRun().getCommands(0)).isEqualTo(MVN_CLEAN_INSTALL);
+    assertThat(runStep.getUnit().getId()).isEqualTo(RUN_STEP_ID);
+    assertThat(runStep.getUnit().getDisplayName()).isEqualTo(RUN_STEP);
+    assertThat(runStep.getUnit().getRun().getContext().getNumRetries()).isEqualTo(RETRY);
+    assertThat(runStep.getUnit().getRun().getContext().getExecutionTimeoutSecs()).isEqualTo(TIMEOUT);
+    assertThat(runStep.getUnit().getRun().getCommands(0)).isEqualTo(MVN_CLEAN_INSTALL);
   }
 }

@@ -11,14 +11,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// handler is used to implement CIAddonServer
+// handler is used to implement AddonServer
 type handler struct {
 	stopCh chan bool
 	log    *zap.SugaredLogger
 }
 
-// NewCIAddonHandler returns a GRPC handler that implements pb.CIAddonServer
-func NewCIAddonHandler(stopCh chan bool, log *zap.SugaredLogger) pb.CIAddonServer {
+// NewAddonHandler returns a GRPC handler that implements pb.AddonServer
+func NewAddonHandler(stopCh chan bool, log *zap.SugaredLogger) pb.AddonServer {
 	return &handler{stopCh, log}
 }
 
@@ -52,6 +52,6 @@ func (h *handler) TaskProgress(ctx context.Context, in *pb.TaskProgressRequest) 
 }
 
 // TaskProgressUpdates streams status of a task run
-func (h *handler) TaskProgressUpdates(in *pb.TaskProgressUpdatesRequest, stream pb.CIAddon_TaskProgressUpdatesServer) error {
+func (h *handler) TaskProgressUpdates(in *pb.TaskProgressUpdatesRequest, stream pb.Addon_TaskProgressUpdatesServer) error {
 	return nil
 }

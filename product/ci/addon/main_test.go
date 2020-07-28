@@ -14,8 +14,8 @@ import (
 func Test_MainWithGrpc(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
-	mockServer := mgrpcserver.NewMockCIAddonServer(ctrl)
-	s := func(uint, *zap.SugaredLogger) (grpc.CIAddonServer, error) {
+	mockServer := mgrpcserver.NewMockAddonServer(ctrl)
+	s := func(uint, *zap.SugaredLogger) (grpc.AddonServer, error) {
 		return mockServer, nil
 	}
 
@@ -23,9 +23,9 @@ func Test_MainWithGrpc(t *testing.T) {
 	defer func() { os.Args = oldArgs }()
 	os.Args = []string{"addon", "--port", "20000"}
 
-	oldAddonServer := ciAddonServer
-	defer func() { ciAddonServer = oldAddonServer }()
-	ciAddonServer = s
+	oldAddonServer := addonServer
+	defer func() { addonServer = oldAddonServer }()
+	addonServer = s
 
 	mockServer.EXPECT().Start()
 	mockServer.EXPECT().Stop().AnyTimes()

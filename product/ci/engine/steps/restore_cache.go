@@ -41,7 +41,7 @@ type restoreCacheStep struct {
 }
 
 // NewRestoreCacheStep creates a restore cache step executor
-func NewRestoreCacheStep(step *pb.Step, tmpFilePath string, fs filesystem.FileSystem,
+func NewRestoreCacheStep(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
 	log *zap.SugaredLogger) RestoreCacheStep {
 	archiver := archive.NewArchiver(archiveFormat, fs, log)
 	backoff := utils.WithMaxRetries(utils.NewExponentialBackOffFactory(), restoreCacheMaxRetries).NewBackOff()

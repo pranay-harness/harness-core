@@ -11,14 +11,14 @@ import (
 
 func TestServerFailToListen(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	_, err := NewCIAddonServer(65536, log.Sugar())
+	_, err := NewAddonServer(65536, log.Sugar())
 	assert.Error(t, err)
 }
 
 func TestStopNilServer(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	stopCh := make(chan bool, 1)
-	s := &ciAddonServer{
+	s := &addonServer{
 		port:   65534,
 		log:    log.Sugar(),
 		stopCh: stopCh,
@@ -30,7 +30,7 @@ func TestStopNilServer(t *testing.T) {
 func TestStopRunningServer(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	stopCh := make(chan bool, 1)
-	s := &ciAddonServer{
+	s := &addonServer{
 		port:       65533,
 		grpcServer: grpc.NewServer(),
 		log:        log.Sugar(),
@@ -38,4 +38,11 @@ func TestStopRunningServer(t *testing.T) {
 	}
 	stopCh <- true
 	s.Stop()
+}
+
+func TestNewAddonServer(t *testing.T) {
+	port := uint(5000)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	_, err := NewAddonServer(port, log.Sugar())
+	assert.Equal(t, err, nil)
 }

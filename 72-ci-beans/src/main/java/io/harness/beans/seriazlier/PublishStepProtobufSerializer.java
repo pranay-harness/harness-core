@@ -18,6 +18,7 @@ import io.harness.product.ci.addon.proto.LocationType;
 import io.harness.product.ci.addon.proto.UploadFile;
 import io.harness.product.ci.engine.proto.PublishArtifactsStep;
 import io.harness.product.ci.engine.proto.Step;
+import io.harness.product.ci.engine.proto.UnitStep;
 import org.apache.commons.codec.binary.Base64;
 
 import java.util.Optional;
@@ -48,9 +49,11 @@ public class PublishStepProtobufSerializer implements ProtobufSerializer<Publish
       }
     });
     return Step.newBuilder()
-        .setId(publishStepInfo.getIdentifier())
-        .setDisplayName(Optional.ofNullable(publishStepInfo.getDisplayName()).orElse(""))
-        .setPublishArtifacts(publishArtifactsStepBuilder.build())
+        .setUnit(UnitStep.newBuilder()
+                     .setId(publishStepInfo.getIdentifier())
+                     .setDisplayName(Optional.ofNullable(publishStepInfo.getDisplayName()).orElse(""))
+                     .setPublishArtifacts(publishArtifactsStepBuilder.build())
+                     .build())
         .build();
   }
 

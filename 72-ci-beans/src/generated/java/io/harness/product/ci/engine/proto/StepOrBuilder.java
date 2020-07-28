@@ -8,89 +8,34 @@ public interface StepOrBuilder extends
     // @@protoc_insertion_point(interface_extends:io.harness.product.ci.engine.proto.Step)
     com.google.protobuf.MessageOrBuilder {
   /**
-   * <code>string id = 1[json_name = "id"];</code>
-   * @return The id.
+   * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
+   * @return Whether the parallel field is set.
    */
-  java.lang.String getId();
+  boolean hasParallel();
   /**
-   * <code>string id = 1[json_name = "id"];</code>
-   * @return The bytes for id.
+   * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
+   * @return The parallel.
    */
-  com.google.protobuf.ByteString getIdBytes();
+  io.harness.product.ci.engine.proto.ParallelStep getParallel();
+  /**
+   * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
+   */
+  io.harness.product.ci.engine.proto.ParallelStepOrBuilder getParallelOrBuilder();
 
   /**
-   * <code>string display_name = 2[json_name = "displayName"];</code>
-   * @return The displayName.
+   * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
+   * @return Whether the unit field is set.
    */
-  java.lang.String getDisplayName();
+  boolean hasUnit();
   /**
-   * <code>string display_name = 2[json_name = "displayName"];</code>
-   * @return The bytes for displayName.
+   * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
+   * @return The unit.
    */
-  com.google.protobuf.ByteString getDisplayNameBytes();
-
+  io.harness.product.ci.engine.proto.UnitStep getUnit();
   /**
-   * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-   * @return Whether the run field is set.
+   * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
    */
-  boolean hasRun();
-  /**
-   * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-   * @return The run.
-   */
-  io.harness.product.ci.engine.proto.RunStep getRun();
-  /**
-   * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-   */
-  io.harness.product.ci.engine.proto.RunStepOrBuilder getRunOrBuilder();
-
-  /**
-   * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
-   * @return Whether the saveCache field is set.
-   */
-  boolean hasSaveCache();
-  /**
-   * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
-   * @return The saveCache.
-   */
-  io.harness.product.ci.engine.proto.SaveCacheStep getSaveCache();
-  /**
-   * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
-   */
-  io.harness.product.ci.engine.proto.SaveCacheStepOrBuilder getSaveCacheOrBuilder();
-
-  /**
-   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
-   * @return Whether the restoreCache field is set.
-   */
-  boolean hasRestoreCache();
-  /**
-   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
-   * @return The restoreCache.
-   */
-  io.harness.product.ci.engine.proto.RestoreCacheStep getRestoreCache();
-  /**
-   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
-   */
-  io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder getRestoreCacheOrBuilder();
-
-  /**
-   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-   * "publishArtifacts"];</code>
-   * @return Whether the publishArtifacts field is set.
-   */
-  boolean hasPublishArtifacts();
-  /**
-   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-   * "publishArtifacts"];</code>
-   * @return The publishArtifacts.
-   */
-  io.harness.product.ci.engine.proto.PublishArtifactsStep getPublishArtifacts();
-  /**
-   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-   * "publishArtifacts"];</code>
-   */
-  io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder getPublishArtifactsOrBuilder();
+  io.harness.product.ci.engine.proto.UnitStepOrBuilder getUnitOrBuilder();
 
   public io.harness.product.ci.engine.proto.Step.StepCase getStepCase();
 }

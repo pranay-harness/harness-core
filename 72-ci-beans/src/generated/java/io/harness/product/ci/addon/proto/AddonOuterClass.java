@@ -3,9 +3,9 @@
 
 package io.harness.product.ci.addon.proto;
 
-@javax.annotation.Generated(value = "protoc", comments = "annotations:Addon.java.pb.meta")
-public final class Addon {
-  private Addon() {}
+@javax.annotation.Generated(value = "protoc", comments = "annotations:AddonOuterClass.java.pb.meta")
+public final class AddonOuterClass {
+  private AddonOuterClass() {}
   public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {}
 
   public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
@@ -121,22 +121,22 @@ public final class Addon {
         + "ERROR\020\002*X\n\014LocationType\022\013\n\007UNKNOWN\020\000\022\006\n\002"
         + "S3\020\001\022\007\n\003GCS\020\002\022\t\n\005JFROG\020\003\022\007\n\003GCR\020\004\022\007\n\003ECR"
         + "\020\005\022\r\n\tDOCKERHUB\020\006*;\n\010AuthType\022\016\n\nBASIC_A"
-        + "UTH\020\000\022\017\n\013SECRET_FILE\020\001\022\016\n\nACCESS_KEY\020\0022\254"
-        + "\004\n\007CIAddon\022\213\001\n\020PublishArtifacts\022:.io.har"
-        + "ness.product.ci.addon.proto.PublishArtif"
-        + "actsRequest\032;.io.harness.product.ci.addo"
-        + "n.proto.PublishArtifactsResponse\022y\n\nSign"
-        + "alStop\0224.io.harness.product.ci.addon.pro"
-        + "to.SignalStopRequest\0325.io.harness.produc"
-        + "t.ci.addon.proto.SignalStopResponse\022\177\n\014T"
-        + "askProgress\0226.io.harness.product.ci.addo"
-        + "n.proto.TaskProgressRequest\0327.io.harness"
-        + ".product.ci.addon.proto.TaskProgressResp"
-        + "onse\022\226\001\n\023TaskProgressUpdates\022=.io.harnes"
-        + "s.product.ci.addon.proto.TaskProgressUpd"
-        + "atesRequest\032>.io.harness.product.ci.addo"
-        + "n.proto.TaskProgressUpdatesResponse0\001B\rP"
-        + "\001Z\tciaddonpbb\006proto3"};
+        + "UTH\020\000\022\017\n\013SECRET_FILE\020\001\022\016\n\nACCESS_KEY\020\0022\252"
+        + "\004\n\005Addon\022\213\001\n\020PublishArtifacts\022:.io.harne"
+        + "ss.product.ci.addon.proto.PublishArtifac"
+        + "tsRequest\032;.io.harness.product.ci.addon."
+        + "proto.PublishArtifactsResponse\022y\n\nSignal"
+        + "Stop\0224.io.harness.product.ci.addon.proto"
+        + ".SignalStopRequest\0325.io.harness.product."
+        + "ci.addon.proto.SignalStopResponse\022\177\n\014Tas"
+        + "kProgress\0226.io.harness.product.ci.addon."
+        + "proto.TaskProgressRequest\0327.io.harness.p"
+        + "roduct.ci.addon.proto.TaskProgressRespon"
+        + "se\022\226\001\n\023TaskProgressUpdates\022=.io.harness."
+        + "product.ci.addon.proto.TaskProgressUpdat"
+        + "esRequest\032>.io.harness.product.ci.addon."
+        + "proto.TaskProgressUpdatesResponse0\001B\rP\001Z"
+        + "\tciaddonpbb\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             io.harness.product.ci.addon.proto.Progress.getDescriptor(),

@@ -87,7 +87,7 @@ public enum ErrorType implements com
     return getDescriptor();
   }
   public static final com.google.protobuf.Descriptors.EnumDescriptor getDescriptor() {
-    return io.harness.product.ci.addon.proto.Addon.getDescriptor().getEnumTypes().get(0);
+    return io.harness.product.ci.addon.proto.AddonOuterClass.getDescriptor().getEnumTypes().get(0);
   }
 
   private static final ErrorType[] VALUES = values();

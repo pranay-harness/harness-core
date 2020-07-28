@@ -98,14 +98,14 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
     }
   }
   public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_Destination_descriptor;
   }
 
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_Destination_fieldAccessorTable
         .ensureFieldAccessorsInitialized(io.harness.product.ci.addon.proto.Destination.class,
             io.harness.product.ci.addon.proto.Destination.Builder.class);
@@ -400,14 +400,14 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
       // @@protoc_insertion_point(builder_implements:io.harness.product.ci.addon.proto.Destination)
       io.harness.product.ci.addon.proto.DestinationOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_Destination_descriptor;
     }
 
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_Destination_fieldAccessorTable
           .ensureFieldAccessorsInitialized(io.harness.product.ci.addon.proto.Destination.class,
               io.harness.product.ci.addon.proto.Destination.Builder.class);
@@ -447,7 +447,7 @@ public final class Destination extends com.google.protobuf.GeneratedMessageV3 im
     @java.
     lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_Destination_descriptor;
     }
 

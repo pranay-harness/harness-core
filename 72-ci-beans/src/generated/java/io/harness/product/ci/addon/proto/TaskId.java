@@ -71,13 +71,14 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
     }
   }
   public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-    return io.harness.product.ci.addon.proto.Addon.internal_static_io_harness_product_ci_addon_proto_TaskId_descriptor;
+    return io.harness.product.ci.addon.proto.AddonOuterClass
+        .internal_static_io_harness_product_ci_addon_proto_TaskId_descriptor;
   }
 
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_TaskId_fieldAccessorTable.ensureFieldAccessorsInitialized(
             io.harness.product.ci.addon.proto.TaskId.class, io.harness.product.ci.addon.proto.TaskId.Builder.class);
   }
@@ -260,14 +261,14 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
       // @@protoc_insertion_point(builder_implements:io.harness.product.ci.addon.proto.TaskId)
       io.harness.product.ci.addon.proto.TaskIdOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_TaskId_descriptor;
     }
 
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_TaskId_fieldAccessorTable.ensureFieldAccessorsInitialized(
               io.harness.product.ci.addon.proto.TaskId.class, io.harness.product.ci.addon.proto.TaskId.Builder.class);
     }
@@ -296,7 +297,7 @@ public final class TaskId extends com.google.protobuf.GeneratedMessageV3 impleme
     @java.
     lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_TaskId_descriptor;
     }
 

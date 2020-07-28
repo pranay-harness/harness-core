@@ -19,7 +19,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func getEncodedStepProto(t *testing.T, step *pb.Step) string {
+func getEncodedStepProto(t *testing.T, step *pb.UnitStep) string {
 	data, err := proto.Marshal(step)
 	if err != nil {
 		t.Fatalf("marshaling error: %v", err)
@@ -32,18 +32,18 @@ func TestStepRun(t *testing.T) {
 	defer ctrl.Finish()
 
 	tmpFilePath := "/tmp"
-	stepProto1 := &pb.Step{
-		Step: &pb.Step_Run{
+	stepProto1 := &pb.UnitStep{
+		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{},
 		},
 	}
-	stepProto2 := &pb.Step{
+	stepProto2 := &pb.UnitStep{
 		Id: "test1",
-		Step: &pb.Step_Run{
+		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{},
 		},
 	}
-	stepProto3 := &pb.Step{
+	stepProto3 := &pb.UnitStep{
 		Id: "test1",
 	}
 
@@ -52,7 +52,7 @@ func TestStepRun(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		step        *pb.Step
+		step        *pb.UnitStep
 		logPath     string
 		expectedErr bool
 	}{
@@ -82,7 +82,7 @@ func TestStepRun(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		e := NewStepExecutor(tc.logPath, tmpFilePath, log.Sugar())
+		e := NewUnitExecutor(tc.logPath, tmpFilePath, log.Sugar())
 		got := e.Run(ctx, tc.step)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
@@ -95,9 +95,9 @@ func TestStepSaveCacheError(t *testing.T) {
 	defer ctrl.Finish()
 
 	tmpFilePath := "/tmp"
-	stepProto := &pb.Step{
+	stepProto := &pb.UnitStep{
 		Id: "test2",
-		Step: &pb.Step_SaveCache{
+		Step: &pb.UnitStep_SaveCache{
 			SaveCache: &pb.SaveCacheStep{
 				Key:   "key",
 				Paths: []string{"/tmp/m2"},
@@ -110,14 +110,14 @@ func TestStepSaveCacheError(t *testing.T) {
 
 	oldStep := saveCacheStep
 	defer func() { saveCacheStep = oldStep }()
-	saveCacheStep = func(step *pb.Step, tmpFilePath string, fs filesystem.FileSystem,
+	saveCacheStep = func(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
 		log *zap.SugaredLogger) steps.SaveCacheStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(errors.New("caching failed"))
 
-	e := NewStepExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
 	err := e.Run(ctx, stepProto)
 	assert.NotEqual(t, err, nil)
 }
@@ -127,9 +127,9 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	tmpFilePath := "/tmp"
-	stepProto := &pb.Step{
+	stepProto := &pb.UnitStep{
 		Id: "test2",
-		Step: &pb.Step_SaveCache{
+		Step: &pb.UnitStep_SaveCache{
 			SaveCache: &pb.SaveCacheStep{
 				Key:   "key",
 				Paths: []string{"/tmp/m2"},
@@ -142,14 +142,14 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 
 	oldStep := saveCacheStep
 	defer func() { saveCacheStep = oldStep }()
-	saveCacheStep = func(step *pb.Step, tmpFilePath string, fs filesystem.FileSystem,
+	saveCacheStep = func(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
 		log *zap.SugaredLogger) steps.SaveCacheStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(nil)
 
-	e := NewStepExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
 	err := e.Run(ctx, stepProto)
 	assert.Equal(t, err, nil)
 }
@@ -159,9 +159,9 @@ func TestStepRestoreCacheErr(t *testing.T) {
 	defer ctrl.Finish()
 
 	tmpFilePath := "/tmp"
-	stepProto := &pb.Step{
+	stepProto := &pb.UnitStep{
 		Id: "test3",
-		Step: &pb.Step_RestoreCache{
+		Step: &pb.UnitStep_RestoreCache{
 			RestoreCache: &pb.RestoreCacheStep{
 				Key: "key",
 			},
@@ -173,14 +173,14 @@ func TestStepRestoreCacheErr(t *testing.T) {
 
 	oldStep := restoreCacheStep
 	defer func() { restoreCacheStep = oldStep }()
-	restoreCacheStep = func(step *pb.Step, tmpFilePath string, fs filesystem.FileSystem,
+	restoreCacheStep = func(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
 		log *zap.SugaredLogger) steps.RestoreCacheStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(errors.New("restore failed"))
 
-	e := NewStepExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
 	err := e.Run(ctx, stepProto)
 	assert.NotEqual(t, err, nil)
 }
@@ -190,9 +190,9 @@ func TestStepRestoreCacheSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	tmpFilePath := "/tmp"
-	stepProto := &pb.Step{
+	stepProto := &pb.UnitStep{
 		Id: "test3",
-		Step: &pb.Step_RestoreCache{
+		Step: &pb.UnitStep_RestoreCache{
 			RestoreCache: &pb.RestoreCacheStep{
 				Key: "key",
 			},
@@ -204,14 +204,14 @@ func TestStepRestoreCacheSuccess(t *testing.T) {
 
 	oldStep := restoreCacheStep
 	defer func() { restoreCacheStep = oldStep }()
-	restoreCacheStep = func(step *pb.Step, tmpFilePath string, fs filesystem.FileSystem,
+	restoreCacheStep = func(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
 		log *zap.SugaredLogger) steps.RestoreCacheStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(nil)
 
-	e := NewStepExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
 	err := e.Run(ctx, stepProto)
 	assert.Equal(t, err, nil)
 }
@@ -221,9 +221,9 @@ func TestPublishArtifactsSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	tmpFilePath := "/tmp"
-	stepProto := &pb.Step{
+	stepProto := &pb.UnitStep{
 		Id: "test3",
-		Step: &pb.Step_PublishArtifacts{
+		Step: &pb.UnitStep_PublishArtifacts{
 			PublishArtifacts: &pb.PublishArtifactsStep{
 				Images: []*pb2.BuildPublishImage{},
 				Files:  []*pb2.UploadFile{},
@@ -236,13 +236,13 @@ func TestPublishArtifactsSuccess(t *testing.T) {
 
 	oldStep := publishArtifactsStep
 	defer func() { publishArtifactsStep = oldStep }()
-	publishArtifactsStep = func(step *pb.Step, log *zap.SugaredLogger) steps.PublishArtifactsStep {
+	publishArtifactsStep = func(step *pb.UnitStep, log *zap.SugaredLogger) steps.PublishArtifactsStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(errors.New("Could not publish artifacts"))
 
-	e := NewStepExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
 	err := e.Run(ctx, stepProto)
 	assert.NotEqual(t, err, nil)
 }
@@ -252,9 +252,9 @@ func TestPublishArtifactsErr(t *testing.T) {
 	defer ctrl.Finish()
 
 	tmpFilePath := "/tmp"
-	stepProto := &pb.Step{
+	stepProto := &pb.UnitStep{
 		Id: "test3",
-		Step: &pb.Step_PublishArtifacts{
+		Step: &pb.UnitStep_PublishArtifacts{
 			PublishArtifacts: &pb.PublishArtifactsStep{
 				Images: []*pb2.BuildPublishImage{},
 				Files:  []*pb2.UploadFile{},
@@ -267,13 +267,13 @@ func TestPublishArtifactsErr(t *testing.T) {
 
 	oldStep := publishArtifactsStep
 	defer func() { publishArtifactsStep = oldStep }()
-	publishArtifactsStep = func(step *pb.Step, log *zap.SugaredLogger) steps.PublishArtifactsStep {
+	publishArtifactsStep = func(step *pb.UnitStep, log *zap.SugaredLogger) steps.PublishArtifactsStep {
 		return mockStep
 	}
 
 	mockStep.EXPECT().Run(ctx).Return(nil)
 
-	e := NewStepExecutor(logPath, tmpFilePath, log.Sugar())
+	e := NewUnitExecutor(logPath, tmpFilePath, log.Sugar())
 	err := e.Run(ctx, stepProto)
 	assert.Equal(t, err, nil)
 }
@@ -281,7 +281,7 @@ func TestPublishArtifactsErr(t *testing.T) {
 func TestExecuteStep(t *testing.T) {
 	logPath := "/a/b"
 	tmpFilePath := "/tmp"
-	stepProto := &pb.Step{
+	stepProto := &pb.UnitStep{
 		Id: "test4",
 	}
 	emptyStep := getEncodedStepProto(t, stepProto)
@@ -290,15 +290,15 @@ func TestExecuteStep(t *testing.T) {
 	ExecuteStep(emptyStep, logPath, tmpFilePath, log.Sugar())
 }
 
-func TestDecodeStep(t *testing.T) {
+func TestDecodeUnitStep(t *testing.T) {
 	incorrectBase64Enc := "x"
 	invalidStepEnc := "YWJjZA=="
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
-	_, err := DecodeStep(incorrectBase64Enc, log.Sugar())
+	_, err := decodeUnitStep(incorrectBase64Enc, log.Sugar())
 	assert.NotEqual(t, err, nil)
 
-	_, err = DecodeStep(invalidStepEnc, log.Sugar())
+	_, err = decodeUnitStep(invalidStepEnc, log.Sugar())
 	assert.NotEqual(t, err, nil)
 }

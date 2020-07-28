@@ -4,6 +4,7 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.product.ci.engine.proto.RunStep;
 import io.harness.product.ci.engine.proto.Step;
 import io.harness.product.ci.engine.proto.StepContext;
+import io.harness.product.ci.engine.proto.UnitStep;
 import org.apache.commons.codec.binary.Base64;
 
 import java.util.Optional;
@@ -26,9 +27,11 @@ public class RunStepProtobufSerializer implements ProtobufSerializer<RunStepInfo
                                   .build());
 
     return Step.newBuilder()
-        .setId(runStepInfo.getIdentifier())
-        .setDisplayName(Optional.ofNullable(runStepInfo.getDisplayName()).orElse(""))
-        .setRun(runStepBuilder.build())
+        .setUnit(UnitStep.newBuilder()
+                     .setId(runStepInfo.getIdentifier())
+                     .setDisplayName(Optional.ofNullable(runStepInfo.getDisplayName()).orElse(""))
+                     .setRun(runStepBuilder.build())
+                     .build())
         .build();
   }
 }

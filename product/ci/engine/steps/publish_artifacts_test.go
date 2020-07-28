@@ -14,9 +14,9 @@ import (
 
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	addon "github.com/wings-software/portal/product/ci/addon/grpc"
+	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
+	mgrpc "github.com/wings-software/portal/product/ci/addon/grpc/client/mocks"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
-	egrpc "github.com/wings-software/portal/product/ci/engine/grpc"
-	mgrpc "github.com/wings-software/portal/product/ci/engine/grpc/mocks"
 	enginepb "github.com/wings-software/portal/product/ci/engine/proto"
 )
 
@@ -27,10 +27,10 @@ const bufSize = 1024 * 1024
 func init() {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	stopCh := make(chan bool)
-	server := addon.NewCIAddonHandler(stopCh, log.Sugar())
+	server := addon.NewAddonHandler(stopCh, log.Sugar())
 	lis = bufconn.Listen(bufSize)
 	s := grpc.NewServer()
-	addonpb.RegisterCIAddonServer(s, server)
+	addonpb.RegisterAddonServer(s, server)
 	go func() {
 		if err := s.Serve(lis); err != nil {
 			log.Sugar().Fatalw(fmt.Sprintf("Server exited with error: %d", err))
@@ -42,7 +42,7 @@ func bufDialer(context.Context, string) (net.Conn, error) {
 	return lis.Dial()
 }
 
-func createPublishArtifactsStep() *enginepb.Step {
+func createPublishArtifactsStep() *enginepb.UnitStep {
 	// Registry type not specified
 	info1 := &addonpb.BuildPublishImage{
 		DockerFile: "/step/harness/Dockerifle_1",
@@ -99,14 +99,14 @@ func createPublishArtifactsStep() *enginepb.Step {
 	y := []*addonpb.UploadFile{}
 	y = append(y, info4)
 
-	publishArtifactsStep := &enginepb.Step_PublishArtifacts{
+	publishArtifactsStep := &enginepb.UnitStep_PublishArtifacts{
 		PublishArtifacts: &enginepb.PublishArtifactsStep{
 			Images: x,
 			Files:  y,
 		},
 	}
 
-	return &enginepb.Step{
+	return &enginepb.UnitStep{
 		Id:          "10",
 		DisplayName: "publishing",
 		Step:        publishArtifactsStep,
@@ -128,27 +128,27 @@ func TestCreatePublishArtifacts_Success(t *testing.T) {
 
 	// Create a valid PublishArtifacts step
 	x := []*addonpb.BuildPublishImage{}
-	publishArtifactsStep := &enginepb.Step_PublishArtifacts{
+	publishArtifactsStep := &enginepb.UnitStep_PublishArtifacts{
 		PublishArtifacts: &enginepb.PublishArtifactsStep{
 			Images: x,
 		},
 	}
 
-	step := &enginepb.Step{
+	step := &enginepb.UnitStep{
 		Id:          "xyz",
 		DisplayName: "publishing",
 		Step:        publishArtifactsStep,
 	}
 
-	client := addonpb.NewCIAddonClient(conn)
+	client := addonpb.NewAddonClient(conn)
 
-	oldClient := newCIAddonClient
-	defer func() { newCIAddonClient = oldClient }()
+	oldClient := newAddonClient
+	defer func() { newAddonClient = oldClient }()
 	// Initialize a mock CI addon
-	mockClient := mgrpc.NewMockCIAddonClient(ctrl)
+	mockClient := mgrpc.NewMockAddonClient(ctrl)
 	mockClient.EXPECT().Client().Return(client)
 	mockClient.EXPECT().CloseConn().Return(nil)
-	newCIAddonClient = func(port uint, log *zap.SugaredLogger) (egrpc.CIAddonClient, error) {
+	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
 		return mockClient, nil
 	}
 
@@ -173,15 +173,15 @@ func TestCreatePublishArtifacts_Invalid(t *testing.T) {
 
 	// Create an invalid publish artifacts image step
 	step := createPublishArtifactsStep()
-	client := addonpb.NewCIAddonClient(conn)
+	client := addonpb.NewAddonClient(conn)
 
-	oldClient := newCIAddonClient
-	defer func() { newCIAddonClient = oldClient }()
+	oldClient := newAddonClient
+	defer func() { newAddonClient = oldClient }()
 	// Initialize a mock CI addon
-	mockClient := mgrpc.NewMockCIAddonClient(ctrl)
+	mockClient := mgrpc.NewMockAddonClient(ctrl)
 	mockClient.EXPECT().Client().Return(client)
 	mockClient.EXPECT().CloseConn().Return(nil)
-	newCIAddonClient = func(port uint, log *zap.SugaredLogger) (egrpc.CIAddonClient, error) {
+	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
 		return mockClient, nil
 	}
 
@@ -201,10 +201,10 @@ func TestCreatePublishArtifacts_ClientCreationErr(t *testing.T) {
 	// Create an invalid publish artifacts image step
 	step := createPublishArtifactsStep()
 
-	oldClient := newCIAddonClient
-	defer func() { newCIAddonClient = oldClient }()
+	oldClient := newAddonClient
+	defer func() { newAddonClient = oldClient }()
 	// Initialize a mock CI addon
-	newCIAddonClient = func(port uint, log *zap.SugaredLogger) (egrpc.CIAddonClient, error) {
+	newAddonClient = func(port uint, log *zap.SugaredLogger) (caddon.AddonClient, error) {
 		return nil, errors.New("Could not create client")
 	}
 
@@ -228,15 +228,15 @@ func Test_GetRequestArgError(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		input       *enginepb.Step
+		input       *enginepb.UnitStep
 		expectedErr bool
 	}{
 		{
 			name: "invalid file pattern",
-			input: &enginepb.Step{
+			input: &enginepb.UnitStep{
 				Id:          stepID,
 				DisplayName: stepName,
-				Step: &enginepb.Step_PublishArtifacts{
+				Step: &enginepb.UnitStep_PublishArtifacts{
 					PublishArtifacts: &enginepb.PublishArtifactsStep{
 						Files: []*addonpb.UploadFile{
 							{
@@ -250,10 +250,10 @@ func Test_GetRequestArgError(t *testing.T) {
 		},
 		{
 			name: "invalid docker file",
-			input: &enginepb.Step{
+			input: &enginepb.UnitStep{
 				Id:          stepID,
 				DisplayName: stepName,
-				Step: &enginepb.Step_PublishArtifacts{
+				Step: &enginepb.UnitStep_PublishArtifacts{
 					PublishArtifacts: &enginepb.PublishArtifactsStep{
 						Images: []*addonpb.BuildPublishImage{
 							{
@@ -267,10 +267,10 @@ func Test_GetRequestArgError(t *testing.T) {
 		},
 		{
 			name: "invalid context",
-			input: &enginepb.Step{
+			input: &enginepb.UnitStep{
 				Id:          stepID,
 				DisplayName: stepName,
-				Step: &enginepb.Step_PublishArtifacts{
+				Step: &enginepb.UnitStep_PublishArtifacts{
 					PublishArtifacts: &enginepb.PublishArtifactsStep{
 						Images: []*addonpb.BuildPublishImage{
 							{

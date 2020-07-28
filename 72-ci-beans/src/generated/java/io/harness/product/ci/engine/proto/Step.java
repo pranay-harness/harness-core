@@ -15,10 +15,7 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
   private Step(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private Step() {
-    id_ = "";
-    displayName_ = "";
-  }
+  private Step() {}
 
   @java.
   lang.Override
@@ -48,68 +45,29 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
             done = true;
             break;
           case 10: {
-            java.lang.String s = input.readStringRequireUtf8();
-
-            id_ = s;
+            io.harness.product.ci.engine.proto.ParallelStep.Builder subBuilder = null;
+            if (stepCase_ == 1) {
+              subBuilder = ((io.harness.product.ci.engine.proto.ParallelStep) step_).toBuilder();
+            }
+            step_ = input.readMessage(io.harness.product.ci.engine.proto.ParallelStep.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom((io.harness.product.ci.engine.proto.ParallelStep) step_);
+              step_ = subBuilder.buildPartial();
+            }
+            stepCase_ = 1;
             break;
           }
           case 18: {
-            java.lang.String s = input.readStringRequireUtf8();
-
-            displayName_ = s;
-            break;
-          }
-          case 26: {
-            io.harness.product.ci.engine.proto.RunStep.Builder subBuilder = null;
-            if (stepCase_ == 3) {
-              subBuilder = ((io.harness.product.ci.engine.proto.RunStep) step_).toBuilder();
+            io.harness.product.ci.engine.proto.UnitStep.Builder subBuilder = null;
+            if (stepCase_ == 2) {
+              subBuilder = ((io.harness.product.ci.engine.proto.UnitStep) step_).toBuilder();
             }
-            step_ = input.readMessage(io.harness.product.ci.engine.proto.RunStep.parser(), extensionRegistry);
+            step_ = input.readMessage(io.harness.product.ci.engine.proto.UnitStep.parser(), extensionRegistry);
             if (subBuilder != null) {
-              subBuilder.mergeFrom((io.harness.product.ci.engine.proto.RunStep) step_);
+              subBuilder.mergeFrom((io.harness.product.ci.engine.proto.UnitStep) step_);
               step_ = subBuilder.buildPartial();
             }
-            stepCase_ = 3;
-            break;
-          }
-          case 34: {
-            io.harness.product.ci.engine.proto.SaveCacheStep.Builder subBuilder = null;
-            if (stepCase_ == 4) {
-              subBuilder = ((io.harness.product.ci.engine.proto.SaveCacheStep) step_).toBuilder();
-            }
-            step_ = input.readMessage(io.harness.product.ci.engine.proto.SaveCacheStep.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom((io.harness.product.ci.engine.proto.SaveCacheStep) step_);
-              step_ = subBuilder.buildPartial();
-            }
-            stepCase_ = 4;
-            break;
-          }
-          case 42: {
-            io.harness.product.ci.engine.proto.RestoreCacheStep.Builder subBuilder = null;
-            if (stepCase_ == 5) {
-              subBuilder = ((io.harness.product.ci.engine.proto.RestoreCacheStep) step_).toBuilder();
-            }
-            step_ = input.readMessage(io.harness.product.ci.engine.proto.RestoreCacheStep.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom((io.harness.product.ci.engine.proto.RestoreCacheStep) step_);
-              step_ = subBuilder.buildPartial();
-            }
-            stepCase_ = 5;
-            break;
-          }
-          case 50: {
-            io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder subBuilder = null;
-            if (stepCase_ == 6) {
-              subBuilder = ((io.harness.product.ci.engine.proto.PublishArtifactsStep) step_).toBuilder();
-            }
-            step_ =
-                input.readMessage(io.harness.product.ci.engine.proto.PublishArtifactsStep.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom((io.harness.product.ci.engine.proto.PublishArtifactsStep) step_);
-              step_ = subBuilder.buildPartial();
-            }
-            stepCase_ = 6;
+            stepCase_ = 2;
             break;
           }
           default: {
@@ -146,7 +104,7 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
   private java.lang.Object step_;
   public enum StepCase implements com
   .google.protobuf.Internal.EnumLite, com.google.protobuf.AbstractMessage.InternalOneOfEnum {
-    RUN(3), SAVE_CACHE(4), RESTORE_CACHE(5), PUBLISH_ARTIFACTS(6), STEP_NOT_SET(0);
+    PARALLEL(1), UNIT(2), STEP_NOT_SET(0);
     private final int value;
     private StepCase(int value) {
       this.value = value;
@@ -163,14 +121,10 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
 
     public static StepCase forNumber(int value) {
       switch (value) {
-        case 3:
-          return RUN;
-        case 4:
-          return SAVE_CACHE;
-        case 5:
-          return RESTORE_CACHE;
-        case 6:
-          return PUBLISH_ARTIFACTS;
+        case 1:
+          return PARALLEL;
+        case 2:
+          return UNIT;
         case 0:
           return STEP_NOT_SET;
         default:
@@ -186,183 +140,60 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     return StepCase.forNumber(stepCase_);
   }
 
-  public static final int ID_FIELD_NUMBER = 1;
-  private volatile java.lang.Object id_;
+  public static final int PARALLEL_FIELD_NUMBER = 1;
   /**
-   * <code>string id = 1[json_name = "id"];</code>
-   * @return The id.
+   * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
+   * @return Whether the parallel field is set.
    */
-  public java.lang.String getId() {
-    java.lang.Object ref = id_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      id_ = s;
-      return s;
-    }
+  public boolean hasParallel() {
+    return stepCase_ == 1;
   }
   /**
-   * <code>string id = 1[json_name = "id"];</code>
-   * @return The bytes for id.
+   * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
+   * @return The parallel.
    */
-  public com.google.protobuf.ByteString getIdBytes() {
-    java.lang.Object ref = id_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-      id_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
+  public io.harness.product.ci.engine.proto.ParallelStep getParallel() {
+    if (stepCase_ == 1) {
+      return (io.harness.product.ci.engine.proto.ParallelStep) step_;
     }
+    return io.harness.product.ci.engine.proto.ParallelStep.getDefaultInstance();
+  }
+  /**
+   * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
+   */
+  public io.harness.product.ci.engine.proto.ParallelStepOrBuilder getParallelOrBuilder() {
+    if (stepCase_ == 1) {
+      return (io.harness.product.ci.engine.proto.ParallelStep) step_;
+    }
+    return io.harness.product.ci.engine.proto.ParallelStep.getDefaultInstance();
   }
 
-  public static final int DISPLAY_NAME_FIELD_NUMBER = 2;
-  private volatile java.lang.Object displayName_;
+  public static final int UNIT_FIELD_NUMBER = 2;
   /**
-   * <code>string display_name = 2[json_name = "displayName"];</code>
-   * @return The displayName.
+   * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
+   * @return Whether the unit field is set.
    */
-  public java.lang.String getDisplayName() {
-    java.lang.Object ref = displayName_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      displayName_ = s;
-      return s;
+  public boolean hasUnit() {
+    return stepCase_ == 2;
+  }
+  /**
+   * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
+   * @return The unit.
+   */
+  public io.harness.product.ci.engine.proto.UnitStep getUnit() {
+    if (stepCase_ == 2) {
+      return (io.harness.product.ci.engine.proto.UnitStep) step_;
     }
+    return io.harness.product.ci.engine.proto.UnitStep.getDefaultInstance();
   }
   /**
-   * <code>string display_name = 2[json_name = "displayName"];</code>
-   * @return The bytes for displayName.
+   * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
    */
-  public com.google.protobuf.ByteString getDisplayNameBytes() {
-    java.lang.Object ref = displayName_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-      displayName_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
+  public io.harness.product.ci.engine.proto.UnitStepOrBuilder getUnitOrBuilder() {
+    if (stepCase_ == 2) {
+      return (io.harness.product.ci.engine.proto.UnitStep) step_;
     }
-  }
-
-  public static final int RUN_FIELD_NUMBER = 3;
-  /**
-   * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-   * @return Whether the run field is set.
-   */
-  public boolean hasRun() {
-    return stepCase_ == 3;
-  }
-  /**
-   * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-   * @return The run.
-   */
-  public io.harness.product.ci.engine.proto.RunStep getRun() {
-    if (stepCase_ == 3) {
-      return (io.harness.product.ci.engine.proto.RunStep) step_;
-    }
-    return io.harness.product.ci.engine.proto.RunStep.getDefaultInstance();
-  }
-  /**
-   * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-   */
-  public io.harness.product.ci.engine.proto.RunStepOrBuilder getRunOrBuilder() {
-    if (stepCase_ == 3) {
-      return (io.harness.product.ci.engine.proto.RunStep) step_;
-    }
-    return io.harness.product.ci.engine.proto.RunStep.getDefaultInstance();
-  }
-
-  public static final int SAVE_CACHE_FIELD_NUMBER = 4;
-  /**
-   * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
-   * @return Whether the saveCache field is set.
-   */
-  public boolean hasSaveCache() {
-    return stepCase_ == 4;
-  }
-  /**
-   * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
-   * @return The saveCache.
-   */
-  public io.harness.product.ci.engine.proto.SaveCacheStep getSaveCache() {
-    if (stepCase_ == 4) {
-      return (io.harness.product.ci.engine.proto.SaveCacheStep) step_;
-    }
-    return io.harness.product.ci.engine.proto.SaveCacheStep.getDefaultInstance();
-  }
-  /**
-   * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
-   */
-  public io.harness.product.ci.engine.proto.SaveCacheStepOrBuilder getSaveCacheOrBuilder() {
-    if (stepCase_ == 4) {
-      return (io.harness.product.ci.engine.proto.SaveCacheStep) step_;
-    }
-    return io.harness.product.ci.engine.proto.SaveCacheStep.getDefaultInstance();
-  }
-
-  public static final int RESTORE_CACHE_FIELD_NUMBER = 5;
-  /**
-   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
-   * @return Whether the restoreCache field is set.
-   */
-  public boolean hasRestoreCache() {
-    return stepCase_ == 5;
-  }
-  /**
-   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
-   * @return The restoreCache.
-   */
-  public io.harness.product.ci.engine.proto.RestoreCacheStep getRestoreCache() {
-    if (stepCase_ == 5) {
-      return (io.harness.product.ci.engine.proto.RestoreCacheStep) step_;
-    }
-    return io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
-  }
-  /**
-   * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
-   */
-  public io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder getRestoreCacheOrBuilder() {
-    if (stepCase_ == 5) {
-      return (io.harness.product.ci.engine.proto.RestoreCacheStep) step_;
-    }
-    return io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
-  }
-
-  public static final int PUBLISH_ARTIFACTS_FIELD_NUMBER = 6;
-  /**
-   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-   * "publishArtifacts"];</code>
-   * @return Whether the publishArtifacts field is set.
-   */
-  public boolean hasPublishArtifacts() {
-    return stepCase_ == 6;
-  }
-  /**
-   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-   * "publishArtifacts"];</code>
-   * @return The publishArtifacts.
-   */
-  public io.harness.product.ci.engine.proto.PublishArtifactsStep getPublishArtifacts() {
-    if (stepCase_ == 6) {
-      return (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_;
-    }
-    return io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
-  }
-  /**
-   * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-   * "publishArtifacts"];</code>
-   */
-  public io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder getPublishArtifactsOrBuilder() {
-    if (stepCase_ == 6) {
-      return (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_;
-    }
-    return io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
+    return io.harness.product.ci.engine.proto.UnitStep.getDefaultInstance();
   }
 
   private byte memoizedIsInitialized = -1;
@@ -380,23 +211,11 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
 
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-    if (!getIdBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, id_);
+    if (stepCase_ == 1) {
+      output.writeMessage(1, (io.harness.product.ci.engine.proto.ParallelStep) step_);
     }
-    if (!getDisplayNameBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, displayName_);
-    }
-    if (stepCase_ == 3) {
-      output.writeMessage(3, (io.harness.product.ci.engine.proto.RunStep) step_);
-    }
-    if (stepCase_ == 4) {
-      output.writeMessage(4, (io.harness.product.ci.engine.proto.SaveCacheStep) step_);
-    }
-    if (stepCase_ == 5) {
-      output.writeMessage(5, (io.harness.product.ci.engine.proto.RestoreCacheStep) step_);
-    }
-    if (stepCase_ == 6) {
-      output.writeMessage(6, (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_);
+    if (stepCase_ == 2) {
+      output.writeMessage(2, (io.harness.product.ci.engine.proto.UnitStep) step_);
     }
     unknownFields.writeTo(output);
   }
@@ -408,27 +227,13 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
       return size;
 
     size = 0;
-    if (!getIdBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, id_);
-    }
-    if (!getDisplayNameBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, displayName_);
-    }
-    if (stepCase_ == 3) {
+    if (stepCase_ == 1) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(
-          3, (io.harness.product.ci.engine.proto.RunStep) step_);
+          1, (io.harness.product.ci.engine.proto.ParallelStep) step_);
     }
-    if (stepCase_ == 4) {
+    if (stepCase_ == 2) {
       size += com.google.protobuf.CodedOutputStream.computeMessageSize(
-          4, (io.harness.product.ci.engine.proto.SaveCacheStep) step_);
-    }
-    if (stepCase_ == 5) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(
-          5, (io.harness.product.ci.engine.proto.RestoreCacheStep) step_);
-    }
-    if (stepCase_ == 6) {
-      size += com.google.protobuf.CodedOutputStream.computeMessageSize(
-          6, (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_);
+          2, (io.harness.product.ci.engine.proto.UnitStep) step_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -445,27 +250,15 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     }
     io.harness.product.ci.engine.proto.Step other = (io.harness.product.ci.engine.proto.Step) obj;
 
-    if (!getId().equals(other.getId()))
-      return false;
-    if (!getDisplayName().equals(other.getDisplayName()))
-      return false;
     if (!getStepCase().equals(other.getStepCase()))
       return false;
     switch (stepCase_) {
-      case 3:
-        if (!getRun().equals(other.getRun()))
+      case 1:
+        if (!getParallel().equals(other.getParallel()))
           return false;
         break;
-      case 4:
-        if (!getSaveCache().equals(other.getSaveCache()))
-          return false;
-        break;
-      case 5:
-        if (!getRestoreCache().equals(other.getRestoreCache()))
-          return false;
-        break;
-      case 6:
-        if (!getPublishArtifacts().equals(other.getPublishArtifacts()))
+      case 2:
+        if (!getUnit().equals(other.getUnit()))
           return false;
         break;
       case 0:
@@ -483,26 +276,14 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + ID_FIELD_NUMBER;
-    hash = (53 * hash) + getId().hashCode();
-    hash = (37 * hash) + DISPLAY_NAME_FIELD_NUMBER;
-    hash = (53 * hash) + getDisplayName().hashCode();
     switch (stepCase_) {
-      case 3:
-        hash = (37 * hash) + RUN_FIELD_NUMBER;
-        hash = (53 * hash) + getRun().hashCode();
+      case 1:
+        hash = (37 * hash) + PARALLEL_FIELD_NUMBER;
+        hash = (53 * hash) + getParallel().hashCode();
         break;
-      case 4:
-        hash = (37 * hash) + SAVE_CACHE_FIELD_NUMBER;
-        hash = (53 * hash) + getSaveCache().hashCode();
-        break;
-      case 5:
-        hash = (37 * hash) + RESTORE_CACHE_FIELD_NUMBER;
-        hash = (53 * hash) + getRestoreCache().hashCode();
-        break;
-      case 6:
-        hash = (37 * hash) + PUBLISH_ARTIFACTS_FIELD_NUMBER;
-        hash = (53 * hash) + getPublishArtifacts().hashCode();
+      case 2:
+        hash = (37 * hash) + UNIT_FIELD_NUMBER;
+        hash = (53 * hash) + getUnit().hashCode();
         break;
       case 0:
       default:
@@ -619,10 +400,6 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      id_ = "";
-
-      displayName_ = "";
-
       stepCase_ = 0;
       step_ = null;
       return this;
@@ -655,34 +432,18 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     lang.Override
     public io.harness.product.ci.engine.proto.Step buildPartial() {
       io.harness.product.ci.engine.proto.Step result = new io.harness.product.ci.engine.proto.Step(this);
-      result.id_ = id_;
-      result.displayName_ = displayName_;
-      if (stepCase_ == 3) {
-        if (runBuilder_ == null) {
+      if (stepCase_ == 1) {
+        if (parallelBuilder_ == null) {
           result.step_ = step_;
         } else {
-          result.step_ = runBuilder_.build();
+          result.step_ = parallelBuilder_.build();
         }
       }
-      if (stepCase_ == 4) {
-        if (saveCacheBuilder_ == null) {
+      if (stepCase_ == 2) {
+        if (unitBuilder_ == null) {
           result.step_ = step_;
         } else {
-          result.step_ = saveCacheBuilder_.build();
-        }
-      }
-      if (stepCase_ == 5) {
-        if (restoreCacheBuilder_ == null) {
-          result.step_ = step_;
-        } else {
-          result.step_ = restoreCacheBuilder_.build();
-        }
-      }
-      if (stepCase_ == 6) {
-        if (publishArtifactsBuilder_ == null) {
-          result.step_ = step_;
-        } else {
-          result.step_ = publishArtifactsBuilder_.build();
+          result.step_ = unitBuilder_.build();
         }
       }
       result.stepCase_ = stepCase_;
@@ -728,29 +489,13 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
     public Builder mergeFrom(io.harness.product.ci.engine.proto.Step other) {
       if (other == io.harness.product.ci.engine.proto.Step.getDefaultInstance())
         return this;
-      if (!other.getId().isEmpty()) {
-        id_ = other.id_;
-        onChanged();
-      }
-      if (!other.getDisplayName().isEmpty()) {
-        displayName_ = other.displayName_;
-        onChanged();
-      }
       switch (other.getStepCase()) {
-        case RUN: {
-          mergeRun(other.getRun());
+        case PARALLEL: {
+          mergeParallel(other.getParallel());
           break;
         }
-        case SAVE_CACHE: {
-          mergeSaveCache(other.getSaveCache());
-          break;
-        }
-        case RESTORE_CACHE: {
-          mergeRestoreCache(other.getRestoreCache());
-          break;
-        }
-        case PUBLISH_ARTIFACTS: {
-          mergePublishArtifacts(other.getPublishArtifacts());
+        case UNIT: {
+          mergeUnit(other.getUnit());
           break;
         }
         case STEP_NOT_SET: {
@@ -796,346 +541,70 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
       return this;
     }
 
-    private java.lang.Object id_ = "";
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.ParallelStep,
+        io.harness.product.ci.engine.proto.ParallelStep.Builder,
+        io.harness.product.ci.engine.proto.ParallelStepOrBuilder> parallelBuilder_;
     /**
-     * <code>string id = 1[json_name = "id"];</code>
-     * @return The id.
+     * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
+     * @return Whether the parallel field is set.
      */
-    public java.lang.String getId() {
-      java.lang.Object ref = id_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        id_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
+    public boolean hasParallel() {
+      return stepCase_ == 1;
     }
     /**
-     * <code>string id = 1[json_name = "id"];</code>
-     * @return The bytes for id.
+     * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
+     * @return The parallel.
      */
-    public com.google.protobuf.ByteString getIdBytes() {
-      java.lang.Object ref = id_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        id_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string id = 1[json_name = "id"];</code>
-     * @param value The id to set.
-     * @return This builder for chaining.
-     */
-    public Builder setId(java.lang.String value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-
-      id_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string id = 1[json_name = "id"];</code>
-     * @return This builder for chaining.
-     */
-    public Builder clearId() {
-      id_ = getDefaultInstance().getId();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string id = 1[json_name = "id"];</code>
-     * @param value The bytes for id to set.
-     * @return This builder for chaining.
-     */
-    public Builder setIdBytes(com.google.protobuf.ByteString value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-      checkByteStringIsUtf8(value);
-
-      id_ = value;
-      onChanged();
-      return this;
-    }
-
-    private java.lang.Object displayName_ = "";
-    /**
-     * <code>string display_name = 2[json_name = "displayName"];</code>
-     * @return The displayName.
-     */
-    public java.lang.String getDisplayName() {
-      java.lang.Object ref = displayName_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        displayName_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
-    }
-    /**
-     * <code>string display_name = 2[json_name = "displayName"];</code>
-     * @return The bytes for displayName.
-     */
-    public com.google.protobuf.ByteString getDisplayNameBytes() {
-      java.lang.Object ref = displayName_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-        displayName_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string display_name = 2[json_name = "displayName"];</code>
-     * @param value The displayName to set.
-     * @return This builder for chaining.
-     */
-    public Builder setDisplayName(java.lang.String value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-
-      displayName_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string display_name = 2[json_name = "displayName"];</code>
-     * @return This builder for chaining.
-     */
-    public Builder clearDisplayName() {
-      displayName_ = getDefaultInstance().getDisplayName();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string display_name = 2[json_name = "displayName"];</code>
-     * @param value The bytes for displayName to set.
-     * @return This builder for chaining.
-     */
-    public Builder setDisplayNameBytes(com.google.protobuf.ByteString value) {
-      if (value == null) {
-        throw new NullPointerException();
-      }
-      checkByteStringIsUtf8(value);
-
-      displayName_ = value;
-      onChanged();
-      return this;
-    }
-
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.RunStep,
-        io.harness.product.ci.engine.proto.RunStep.Builder, io.harness.product.ci.engine.proto.RunStepOrBuilder>
-        runBuilder_;
-    /**
-     * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-     * @return Whether the run field is set.
-     */
-    public boolean hasRun() {
-      return stepCase_ == 3;
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-     * @return The run.
-     */
-    public io.harness.product.ci.engine.proto.RunStep getRun() {
-      if (runBuilder_ == null) {
-        if (stepCase_ == 3) {
-          return (io.harness.product.ci.engine.proto.RunStep) step_;
+    public io.harness.product.ci.engine.proto.ParallelStep getParallel() {
+      if (parallelBuilder_ == null) {
+        if (stepCase_ == 1) {
+          return (io.harness.product.ci.engine.proto.ParallelStep) step_;
         }
-        return io.harness.product.ci.engine.proto.RunStep.getDefaultInstance();
+        return io.harness.product.ci.engine.proto.ParallelStep.getDefaultInstance();
       } else {
-        if (stepCase_ == 3) {
-          return runBuilder_.getMessage();
+        if (stepCase_ == 1) {
+          return parallelBuilder_.getMessage();
         }
-        return io.harness.product.ci.engine.proto.RunStep.getDefaultInstance();
+        return io.harness.product.ci.engine.proto.ParallelStep.getDefaultInstance();
       }
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
+     * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
      */
-    public Builder setRun(io.harness.product.ci.engine.proto.RunStep value) {
-      if (runBuilder_ == null) {
+    public Builder setParallel(io.harness.product.ci.engine.proto.ParallelStep value) {
+      if (parallelBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
         }
         step_ = value;
         onChanged();
       } else {
-        runBuilder_.setMessage(value);
+        parallelBuilder_.setMessage(value);
       }
-      stepCase_ = 3;
+      stepCase_ = 1;
       return this;
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
+     * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
      */
-    public Builder setRun(io.harness.product.ci.engine.proto.RunStep.Builder builderForValue) {
-      if (runBuilder_ == null) {
+    public Builder setParallel(io.harness.product.ci.engine.proto.ParallelStep.Builder builderForValue) {
+      if (parallelBuilder_ == null) {
         step_ = builderForValue.build();
         onChanged();
       } else {
-        runBuilder_.setMessage(builderForValue.build());
+        parallelBuilder_.setMessage(builderForValue.build());
       }
-      stepCase_ = 3;
+      stepCase_ = 1;
       return this;
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
+     * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
      */
-    public Builder mergeRun(io.harness.product.ci.engine.proto.RunStep value) {
-      if (runBuilder_ == null) {
-        if (stepCase_ == 3 && step_ != io.harness.product.ci.engine.proto.RunStep.getDefaultInstance()) {
-          step_ =
-              io.harness.product.ci.engine.proto.RunStep.newBuilder((io.harness.product.ci.engine.proto.RunStep) step_)
-                  .mergeFrom(value)
-                  .buildPartial();
-        } else {
-          step_ = value;
-        }
-        onChanged();
-      } else {
-        if (stepCase_ == 3) {
-          runBuilder_.mergeFrom(value);
-        }
-        runBuilder_.setMessage(value);
-      }
-      stepCase_ = 3;
-      return this;
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-     */
-    public Builder clearRun() {
-      if (runBuilder_ == null) {
-        if (stepCase_ == 3) {
-          stepCase_ = 0;
-          step_ = null;
-          onChanged();
-        }
-      } else {
-        if (stepCase_ == 3) {
-          stepCase_ = 0;
-          step_ = null;
-        }
-        runBuilder_.clear();
-      }
-      return this;
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-     */
-    public io.harness.product.ci.engine.proto.RunStep.Builder getRunBuilder() {
-      return getRunFieldBuilder().getBuilder();
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-     */
-    public io.harness.product.ci.engine.proto.RunStepOrBuilder getRunOrBuilder() {
-      if ((stepCase_ == 3) && (runBuilder_ != null)) {
-        return runBuilder_.getMessageOrBuilder();
-      } else {
-        if (stepCase_ == 3) {
-          return (io.harness.product.ci.engine.proto.RunStep) step_;
-        }
-        return io.harness.product.ci.engine.proto.RunStep.getDefaultInstance();
-      }
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.RunStep run = 3[json_name = "run"];</code>
-     */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.RunStep,
-        io.harness.product.ci.engine.proto.RunStep.Builder, io.harness.product.ci.engine.proto.RunStepOrBuilder>
-    getRunFieldBuilder() {
-      if (runBuilder_ == null) {
-        if (!(stepCase_ == 3)) {
-          step_ = io.harness.product.ci.engine.proto.RunStep.getDefaultInstance();
-        }
-        runBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.RunStep,
-            io.harness.product.ci.engine.proto.RunStep.Builder, io.harness.product.ci.engine.proto.RunStepOrBuilder>(
-            (io.harness.product.ci.engine.proto.RunStep) step_, getParentForChildren(), isClean());
-        step_ = null;
-      }
-      stepCase_ = 3;
-      onChanged();
-      ;
-      return runBuilder_;
-    }
-
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.SaveCacheStep,
-        io.harness.product.ci.engine.proto.SaveCacheStep.Builder,
-        io.harness.product.ci.engine.proto.SaveCacheStepOrBuilder> saveCacheBuilder_;
-    /**
-     * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
-     * @return Whether the saveCache field is set.
-     */
-    public boolean hasSaveCache() {
-      return stepCase_ == 4;
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
-     * @return The saveCache.
-     */
-    public io.harness.product.ci.engine.proto.SaveCacheStep getSaveCache() {
-      if (saveCacheBuilder_ == null) {
-        if (stepCase_ == 4) {
-          return (io.harness.product.ci.engine.proto.SaveCacheStep) step_;
-        }
-        return io.harness.product.ci.engine.proto.SaveCacheStep.getDefaultInstance();
-      } else {
-        if (stepCase_ == 4) {
-          return saveCacheBuilder_.getMessage();
-        }
-        return io.harness.product.ci.engine.proto.SaveCacheStep.getDefaultInstance();
-      }
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
-     */
-    public Builder setSaveCache(io.harness.product.ci.engine.proto.SaveCacheStep value) {
-      if (saveCacheBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        step_ = value;
-        onChanged();
-      } else {
-        saveCacheBuilder_.setMessage(value);
-      }
-      stepCase_ = 4;
-      return this;
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
-     */
-    public Builder setSaveCache(io.harness.product.ci.engine.proto.SaveCacheStep.Builder builderForValue) {
-      if (saveCacheBuilder_ == null) {
-        step_ = builderForValue.build();
-        onChanged();
-      } else {
-        saveCacheBuilder_.setMessage(builderForValue.build());
-      }
-      stepCase_ = 4;
-      return this;
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
-     */
-    public Builder mergeSaveCache(io.harness.product.ci.engine.proto.SaveCacheStep value) {
-      if (saveCacheBuilder_ == null) {
-        if (stepCase_ == 4 && step_ != io.harness.product.ci.engine.proto.SaveCacheStep.getDefaultInstance()) {
-          step_ = io.harness.product.ci.engine.proto.SaveCacheStep
-                      .newBuilder((io.harness.product.ci.engine.proto.SaveCacheStep) step_)
+    public Builder mergeParallel(io.harness.product.ci.engine.proto.ParallelStep value) {
+      if (parallelBuilder_ == null) {
+        if (stepCase_ == 1 && step_ != io.harness.product.ci.engine.proto.ParallelStep.getDefaultInstance()) {
+          step_ = io.harness.product.ci.engine.proto.ParallelStep
+                      .newBuilder((io.harness.product.ci.engine.proto.ParallelStep) step_)
                       .mergeFrom(value)
                       .buildPartial();
         } else {
@@ -1143,140 +612,139 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
         }
         onChanged();
       } else {
-        if (stepCase_ == 4) {
-          saveCacheBuilder_.mergeFrom(value);
+        if (stepCase_ == 1) {
+          parallelBuilder_.mergeFrom(value);
         }
-        saveCacheBuilder_.setMessage(value);
+        parallelBuilder_.setMessage(value);
       }
-      stepCase_ = 4;
+      stepCase_ = 1;
       return this;
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
+     * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
      */
-    public Builder clearSaveCache() {
-      if (saveCacheBuilder_ == null) {
-        if (stepCase_ == 4) {
+    public Builder clearParallel() {
+      if (parallelBuilder_ == null) {
+        if (stepCase_ == 1) {
           stepCase_ = 0;
           step_ = null;
           onChanged();
         }
       } else {
-        if (stepCase_ == 4) {
+        if (stepCase_ == 1) {
           stepCase_ = 0;
           step_ = null;
         }
-        saveCacheBuilder_.clear();
+        parallelBuilder_.clear();
       }
       return this;
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
+     * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
      */
-    public io.harness.product.ci.engine.proto.SaveCacheStep.Builder getSaveCacheBuilder() {
-      return getSaveCacheFieldBuilder().getBuilder();
+    public io.harness.product.ci.engine.proto.ParallelStep.Builder getParallelBuilder() {
+      return getParallelFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
+     * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
      */
-    public io.harness.product.ci.engine.proto.SaveCacheStepOrBuilder getSaveCacheOrBuilder() {
-      if ((stepCase_ == 4) && (saveCacheBuilder_ != null)) {
-        return saveCacheBuilder_.getMessageOrBuilder();
+    public io.harness.product.ci.engine.proto.ParallelStepOrBuilder getParallelOrBuilder() {
+      if ((stepCase_ == 1) && (parallelBuilder_ != null)) {
+        return parallelBuilder_.getMessageOrBuilder();
       } else {
-        if (stepCase_ == 4) {
-          return (io.harness.product.ci.engine.proto.SaveCacheStep) step_;
+        if (stepCase_ == 1) {
+          return (io.harness.product.ci.engine.proto.ParallelStep) step_;
         }
-        return io.harness.product.ci.engine.proto.SaveCacheStep.getDefaultInstance();
+        return io.harness.product.ci.engine.proto.ParallelStep.getDefaultInstance();
       }
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.SaveCacheStep save_cache = 4[json_name = "saveCache"];</code>
+     * <code>.io.harness.product.ci.engine.proto.ParallelStep parallel = 1[json_name = "parallel"];</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.SaveCacheStep,
-        io.harness.product.ci.engine.proto.SaveCacheStep.Builder,
-        io.harness.product.ci.engine.proto.SaveCacheStepOrBuilder>
-    getSaveCacheFieldBuilder() {
-      if (saveCacheBuilder_ == null) {
-        if (!(stepCase_ == 4)) {
-          step_ = io.harness.product.ci.engine.proto.SaveCacheStep.getDefaultInstance();
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.ParallelStep,
+        io.harness.product.ci.engine.proto.ParallelStep.Builder,
+        io.harness.product.ci.engine.proto.ParallelStepOrBuilder>
+    getParallelFieldBuilder() {
+      if (parallelBuilder_ == null) {
+        if (!(stepCase_ == 1)) {
+          step_ = io.harness.product.ci.engine.proto.ParallelStep.getDefaultInstance();
         }
-        saveCacheBuilder_ =
-            new com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.SaveCacheStep,
-                io.harness.product.ci.engine.proto.SaveCacheStep.Builder,
-                io.harness.product.ci.engine.proto.SaveCacheStepOrBuilder>(
-                (io.harness.product.ci.engine.proto.SaveCacheStep) step_, getParentForChildren(), isClean());
+        parallelBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.ParallelStep,
+            io.harness.product.ci.engine.proto.ParallelStep.Builder,
+            io.harness.product.ci.engine.proto.ParallelStepOrBuilder>(
+            (io.harness.product.ci.engine.proto.ParallelStep) step_, getParentForChildren(), isClean());
         step_ = null;
       }
-      stepCase_ = 4;
+      stepCase_ = 1;
       onChanged();
       ;
-      return saveCacheBuilder_;
+      return parallelBuilder_;
     }
 
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.RestoreCacheStep,
-        io.harness.product.ci.engine.proto.RestoreCacheStep.Builder,
-        io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder> restoreCacheBuilder_;
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.UnitStep,
+        io.harness.product.ci.engine.proto.UnitStep.Builder, io.harness.product.ci.engine.proto.UnitStepOrBuilder>
+        unitBuilder_;
     /**
-     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
-     * @return Whether the restoreCache field is set.
+     * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
+     * @return Whether the unit field is set.
      */
-    public boolean hasRestoreCache() {
-      return stepCase_ == 5;
+    public boolean hasUnit() {
+      return stepCase_ == 2;
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
-     * @return The restoreCache.
+     * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
+     * @return The unit.
      */
-    public io.harness.product.ci.engine.proto.RestoreCacheStep getRestoreCache() {
-      if (restoreCacheBuilder_ == null) {
-        if (stepCase_ == 5) {
-          return (io.harness.product.ci.engine.proto.RestoreCacheStep) step_;
+    public io.harness.product.ci.engine.proto.UnitStep getUnit() {
+      if (unitBuilder_ == null) {
+        if (stepCase_ == 2) {
+          return (io.harness.product.ci.engine.proto.UnitStep) step_;
         }
-        return io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
+        return io.harness.product.ci.engine.proto.UnitStep.getDefaultInstance();
       } else {
-        if (stepCase_ == 5) {
-          return restoreCacheBuilder_.getMessage();
+        if (stepCase_ == 2) {
+          return unitBuilder_.getMessage();
         }
-        return io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
+        return io.harness.product.ci.engine.proto.UnitStep.getDefaultInstance();
       }
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
      */
-    public Builder setRestoreCache(io.harness.product.ci.engine.proto.RestoreCacheStep value) {
-      if (restoreCacheBuilder_ == null) {
+    public Builder setUnit(io.harness.product.ci.engine.proto.UnitStep value) {
+      if (unitBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
         }
         step_ = value;
         onChanged();
       } else {
-        restoreCacheBuilder_.setMessage(value);
+        unitBuilder_.setMessage(value);
       }
-      stepCase_ = 5;
+      stepCase_ = 2;
       return this;
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
      */
-    public Builder setRestoreCache(io.harness.product.ci.engine.proto.RestoreCacheStep.Builder builderForValue) {
-      if (restoreCacheBuilder_ == null) {
+    public Builder setUnit(io.harness.product.ci.engine.proto.UnitStep.Builder builderForValue) {
+      if (unitBuilder_ == null) {
         step_ = builderForValue.build();
         onChanged();
       } else {
-        restoreCacheBuilder_.setMessage(builderForValue.build());
+        unitBuilder_.setMessage(builderForValue.build());
       }
-      stepCase_ = 5;
+      stepCase_ = 2;
       return this;
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
      */
-    public Builder mergeRestoreCache(io.harness.product.ci.engine.proto.RestoreCacheStep value) {
-      if (restoreCacheBuilder_ == null) {
-        if (stepCase_ == 5 && step_ != io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance()) {
-          step_ = io.harness.product.ci.engine.proto.RestoreCacheStep
-                      .newBuilder((io.harness.product.ci.engine.proto.RestoreCacheStep) step_)
+    public Builder mergeUnit(io.harness.product.ci.engine.proto.UnitStep value) {
+      if (unitBuilder_ == null) {
+        if (stepCase_ == 2 && step_ != io.harness.product.ci.engine.proto.UnitStep.getDefaultInstance()) {
+          step_ = io.harness.product.ci.engine.proto.UnitStep
+                      .newBuilder((io.harness.product.ci.engine.proto.UnitStep) step_)
                       .mergeFrom(value)
                       .buildPartial();
         } else {
@@ -1284,225 +752,71 @@ public final class Step extends com.google.protobuf.GeneratedMessageV3 implement
         }
         onChanged();
       } else {
-        if (stepCase_ == 5) {
-          restoreCacheBuilder_.mergeFrom(value);
+        if (stepCase_ == 2) {
+          unitBuilder_.mergeFrom(value);
         }
-        restoreCacheBuilder_.setMessage(value);
+        unitBuilder_.setMessage(value);
       }
-      stepCase_ = 5;
+      stepCase_ = 2;
       return this;
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
      */
-    public Builder clearRestoreCache() {
-      if (restoreCacheBuilder_ == null) {
-        if (stepCase_ == 5) {
+    public Builder clearUnit() {
+      if (unitBuilder_ == null) {
+        if (stepCase_ == 2) {
           stepCase_ = 0;
           step_ = null;
           onChanged();
         }
       } else {
-        if (stepCase_ == 5) {
+        if (stepCase_ == 2) {
           stepCase_ = 0;
           step_ = null;
         }
-        restoreCacheBuilder_.clear();
+        unitBuilder_.clear();
       }
       return this;
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
      */
-    public io.harness.product.ci.engine.proto.RestoreCacheStep.Builder getRestoreCacheBuilder() {
-      return getRestoreCacheFieldBuilder().getBuilder();
+    public io.harness.product.ci.engine.proto.UnitStep.Builder getUnitBuilder() {
+      return getUnitFieldBuilder().getBuilder();
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
      */
-    public io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder getRestoreCacheOrBuilder() {
-      if ((stepCase_ == 5) && (restoreCacheBuilder_ != null)) {
-        return restoreCacheBuilder_.getMessageOrBuilder();
+    public io.harness.product.ci.engine.proto.UnitStepOrBuilder getUnitOrBuilder() {
+      if ((stepCase_ == 2) && (unitBuilder_ != null)) {
+        return unitBuilder_.getMessageOrBuilder();
       } else {
-        if (stepCase_ == 5) {
-          return (io.harness.product.ci.engine.proto.RestoreCacheStep) step_;
+        if (stepCase_ == 2) {
+          return (io.harness.product.ci.engine.proto.UnitStep) step_;
         }
-        return io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
+        return io.harness.product.ci.engine.proto.UnitStep.getDefaultInstance();
       }
     }
     /**
-     * <code>.io.harness.product.ci.engine.proto.RestoreCacheStep restore_cache = 5[json_name = "restoreCache"];</code>
+     * <code>.io.harness.product.ci.engine.proto.UnitStep unit = 2[json_name = "unit"];</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.RestoreCacheStep,
-        io.harness.product.ci.engine.proto.RestoreCacheStep.Builder,
-        io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder>
-    getRestoreCacheFieldBuilder() {
-      if (restoreCacheBuilder_ == null) {
-        if (!(stepCase_ == 5)) {
-          step_ = io.harness.product.ci.engine.proto.RestoreCacheStep.getDefaultInstance();
+    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.UnitStep,
+        io.harness.product.ci.engine.proto.UnitStep.Builder, io.harness.product.ci.engine.proto.UnitStepOrBuilder>
+    getUnitFieldBuilder() {
+      if (unitBuilder_ == null) {
+        if (!(stepCase_ == 2)) {
+          step_ = io.harness.product.ci.engine.proto.UnitStep.getDefaultInstance();
         }
-        restoreCacheBuilder_ =
-            new com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.RestoreCacheStep,
-                io.harness.product.ci.engine.proto.RestoreCacheStep.Builder,
-                io.harness.product.ci.engine.proto.RestoreCacheStepOrBuilder>(
-                (io.harness.product.ci.engine.proto.RestoreCacheStep) step_, getParentForChildren(), isClean());
+        unitBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.UnitStep,
+            io.harness.product.ci.engine.proto.UnitStep.Builder, io.harness.product.ci.engine.proto.UnitStepOrBuilder>(
+            (io.harness.product.ci.engine.proto.UnitStep) step_, getParentForChildren(), isClean());
         step_ = null;
       }
-      stepCase_ = 5;
+      stepCase_ = 2;
       onChanged();
       ;
-      return restoreCacheBuilder_;
-    }
-
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.PublishArtifactsStep,
-        io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder,
-        io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder> publishArtifactsBuilder_;
-    /**
-     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-     * "publishArtifacts"];</code>
-     * @return Whether the publishArtifacts field is set.
-     */
-    public boolean hasPublishArtifacts() {
-      return stepCase_ == 6;
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-     * "publishArtifacts"];</code>
-     * @return The publishArtifacts.
-     */
-    public io.harness.product.ci.engine.proto.PublishArtifactsStep getPublishArtifacts() {
-      if (publishArtifactsBuilder_ == null) {
-        if (stepCase_ == 6) {
-          return (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_;
-        }
-        return io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
-      } else {
-        if (stepCase_ == 6) {
-          return publishArtifactsBuilder_.getMessage();
-        }
-        return io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
-      }
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-     * "publishArtifacts"];</code>
-     */
-    public Builder setPublishArtifacts(io.harness.product.ci.engine.proto.PublishArtifactsStep value) {
-      if (publishArtifactsBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        step_ = value;
-        onChanged();
-      } else {
-        publishArtifactsBuilder_.setMessage(value);
-      }
-      stepCase_ = 6;
-      return this;
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-     * "publishArtifacts"];</code>
-     */
-    public Builder setPublishArtifacts(
-        io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder builderForValue) {
-      if (publishArtifactsBuilder_ == null) {
-        step_ = builderForValue.build();
-        onChanged();
-      } else {
-        publishArtifactsBuilder_.setMessage(builderForValue.build());
-      }
-      stepCase_ = 6;
-      return this;
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-     * "publishArtifacts"];</code>
-     */
-    public Builder mergePublishArtifacts(io.harness.product.ci.engine.proto.PublishArtifactsStep value) {
-      if (publishArtifactsBuilder_ == null) {
-        if (stepCase_ == 6 && step_ != io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance()) {
-          step_ = io.harness.product.ci.engine.proto.PublishArtifactsStep
-                      .newBuilder((io.harness.product.ci.engine.proto.PublishArtifactsStep) step_)
-                      .mergeFrom(value)
-                      .buildPartial();
-        } else {
-          step_ = value;
-        }
-        onChanged();
-      } else {
-        if (stepCase_ == 6) {
-          publishArtifactsBuilder_.mergeFrom(value);
-        }
-        publishArtifactsBuilder_.setMessage(value);
-      }
-      stepCase_ = 6;
-      return this;
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-     * "publishArtifacts"];</code>
-     */
-    public Builder clearPublishArtifacts() {
-      if (publishArtifactsBuilder_ == null) {
-        if (stepCase_ == 6) {
-          stepCase_ = 0;
-          step_ = null;
-          onChanged();
-        }
-      } else {
-        if (stepCase_ == 6) {
-          stepCase_ = 0;
-          step_ = null;
-        }
-        publishArtifactsBuilder_.clear();
-      }
-      return this;
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-     * "publishArtifacts"];</code>
-     */
-    public io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder getPublishArtifactsBuilder() {
-      return getPublishArtifactsFieldBuilder().getBuilder();
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-     * "publishArtifacts"];</code>
-     */
-    public io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder getPublishArtifactsOrBuilder() {
-      if ((stepCase_ == 6) && (publishArtifactsBuilder_ != null)) {
-        return publishArtifactsBuilder_.getMessageOrBuilder();
-      } else {
-        if (stepCase_ == 6) {
-          return (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_;
-        }
-        return io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
-      }
-    }
-    /**
-     * <code>.io.harness.product.ci.engine.proto.PublishArtifactsStep publish_artifacts = 6[json_name =
-     * "publishArtifacts"];</code>
-     */
-    private com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.PublishArtifactsStep,
-        io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder,
-        io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder>
-    getPublishArtifactsFieldBuilder() {
-      if (publishArtifactsBuilder_ == null) {
-        if (!(stepCase_ == 6)) {
-          step_ = io.harness.product.ci.engine.proto.PublishArtifactsStep.getDefaultInstance();
-        }
-        publishArtifactsBuilder_ =
-            new com.google.protobuf.SingleFieldBuilderV3<io.harness.product.ci.engine.proto.PublishArtifactsStep,
-                io.harness.product.ci.engine.proto.PublishArtifactsStep.Builder,
-                io.harness.product.ci.engine.proto.PublishArtifactsStepOrBuilder>(
-                (io.harness.product.ci.engine.proto.PublishArtifactsStep) step_, getParentForChildren(), isClean());
-        step_ = null;
-      }
-      stepCase_ = 6;
-      onChanged();
-      ;
-      return publishArtifactsBuilder_;
+      return unitBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

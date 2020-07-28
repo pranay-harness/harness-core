@@ -77,13 +77,14 @@ public final class Error extends com.google.protobuf.GeneratedMessageV3 implemen
     }
   }
   public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-    return io.harness.product.ci.addon.proto.Addon.internal_static_io_harness_product_ci_addon_proto_Error_descriptor;
+    return io.harness.product.ci.addon.proto.AddonOuterClass
+        .internal_static_io_harness_product_ci_addon_proto_Error_descriptor;
   }
 
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_Error_fieldAccessorTable.ensureFieldAccessorsInitialized(
             io.harness.product.ci.addon.proto.Error.class, io.harness.product.ci.addon.proto.Error.Builder.class);
   }
@@ -295,13 +296,14 @@ public final class Error extends com.google.protobuf.GeneratedMessageV3 implemen
       // @@protoc_insertion_point(builder_implements:io.harness.product.ci.addon.proto.Error)
       io.harness.product.ci.addon.proto.ErrorOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return io.harness.product.ci.addon.proto.Addon.internal_static_io_harness_product_ci_addon_proto_Error_descriptor;
+      return io.harness.product.ci.addon.proto.AddonOuterClass
+          .internal_static_io_harness_product_ci_addon_proto_Error_descriptor;
     }
 
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_Error_fieldAccessorTable.ensureFieldAccessorsInitialized(
               io.harness.product.ci.addon.proto.Error.class, io.harness.product.ci.addon.proto.Error.Builder.class);
     }
@@ -332,7 +334,8 @@ public final class Error extends com.google.protobuf.GeneratedMessageV3 implemen
     @java.
     lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-      return io.harness.product.ci.addon.proto.Addon.internal_static_io_harness_product_ci_addon_proto_Error_descriptor;
+      return io.harness.product.ci.addon.proto.AddonOuterClass
+          .internal_static_io_harness_product_ci_addon_proto_Error_descriptor;
     }
 
     @java.

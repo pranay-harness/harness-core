@@ -1,4 +1,4 @@
-package grpc
+package grpcclient
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 
 func TestValidClientClose(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	client, err := NewCIAddonClient(65534, log.Sugar())
+	client, err := NewLiteEngineClient(65534, log.Sugar())
 	assert.Nil(t, err)
 	err = client.CloseConn()
 	assert.Nil(t, err)
@@ -18,7 +18,7 @@ func TestValidClientClose(t *testing.T) {
 
 func TestMultipleClose(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	client, err := NewCIAddonClient(65534, log.Sugar())
+	client, err := NewLiteEngineClient(65534, log.Sugar())
 	fmt.Println(client.Client())
 	assert.Nil(t, err)
 	err = client.CloseConn()

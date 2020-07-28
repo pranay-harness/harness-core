@@ -19,7 +19,7 @@ const (
 	port            = 8001
 )
 
-var ciAddonServer = grpc.NewCIAddonServer
+var addonServer = grpc.NewAddonServer
 
 var args struct {
 	Verbose bool `arg:"--verbose" help:"enable verbose logging mode"`
@@ -52,7 +52,7 @@ func main() {
 	logger := logBuilder.MustBuild().Sugar()
 
 	logger.Infow("Starting CI addon server", "port", args.Port)
-	s, err := ciAddonServer(args.Port, logger)
+	s, err := addonServer(args.Port, logger)
 	if err != nil {
 		logger.Fatalw("error while running CI addon server", "port", args.Port, zap.Error(err))
 	}

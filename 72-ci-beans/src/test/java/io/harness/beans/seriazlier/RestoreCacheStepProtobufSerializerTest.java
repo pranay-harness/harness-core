@@ -34,9 +34,9 @@ public class RestoreCacheStepProtobufSerializerTest extends CIBeansTest {
     String serialize = protobufSerializer.serialize(restoreCacheStepInfo);
     Step restoreStep = Step.parseFrom(Base64.decodeBase64(serialize));
 
-    assertThat(restoreStep.getRestoreCache().getKey()).isEqualTo(RESTORE_KEY);
-    assertThat(restoreStep.getDisplayName()).isEqualTo(RESTORE_CACHE);
-    assertThat(restoreStep.getId()).isEqualTo(RESTORE_ID);
-    assertThat(restoreStep.getRestoreCache().getFailIfNotExist()).isTrue();
+    assertThat(restoreStep.getUnit().getRestoreCache().getKey()).isEqualTo(RESTORE_KEY);
+    assertThat(restoreStep.getUnit().getDisplayName()).isEqualTo(RESTORE_CACHE);
+    assertThat(restoreStep.getUnit().getId()).isEqualTo(RESTORE_ID);
+    assertThat(restoreStep.getUnit().getRestoreCache().getFailIfNotExist()).isTrue();
   }
 }

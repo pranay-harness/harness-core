@@ -41,7 +41,7 @@ type runStep struct {
 }
 
 // NewRunStep creates a run step executor
-func NewRunStep(step *pb.Step, relLogPath string, tmpFilePath string, fs filesystem.FileSystem, log *zap.SugaredLogger) RunStep {
+func NewRunStep(step *pb.UnitStep, relLogPath string, tmpFilePath string, fs filesystem.FileSystem, log *zap.SugaredLogger) RunStep {
 	r := step.GetRun()
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
 	if timeoutSecs == 0 {
