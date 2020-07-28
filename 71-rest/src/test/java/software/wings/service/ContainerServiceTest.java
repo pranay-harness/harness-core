@@ -8,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -35,6 +36,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
@@ -45,6 +47,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ContainerServiceImpl;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ContainerService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.Collections;
 import java.util.Date;
@@ -59,6 +62,7 @@ public class ContainerServiceTest extends WingsBaseTest {
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock private AwsClusterService awsClusterService;
   @Mock private AwsHelperService awsHelperService;
+  @Mock private EncryptionService encryptionService;
 
   @InjectMocks private ContainerService containerService = new ContainerServiceImpl();
 
@@ -71,6 +75,13 @@ public class ContainerServiceTest extends WingsBaseTest {
                                                   .password("pass".toCharArray())
                                                   .accountId(ACCOUNT_ID)
                                                   .build();
+
+  private KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder()
+                                                                .masterUrl("masterUrl")
+                                                                .username("user")
+                                                                .password("pass".toCharArray())
+                                                                .accountId(ACCOUNT_ID)
+                                                                .build();
 
   private ContainerServiceParams gcpParams =
       ContainerServiceParams.builder()
@@ -103,7 +114,7 @@ public class ContainerServiceTest extends WingsBaseTest {
 
   private ContainerServiceParams kubernetesConfigParams =
       ContainerServiceParams.builder()
-          .settingAttribute(aSettingAttribute().withValue(kubernetesConfig).build())
+          .settingAttribute(aSettingAttribute().withValue(kubernetesClusterConfig).build())
           .encryptionDetails(emptyList())
           .clusterName(CLUSTER_NAME)
           .namespace("default")
@@ -155,6 +166,7 @@ public class ContainerServiceTest extends WingsBaseTest {
         .thenReturn(Optional.of(2));
     when(kubernetesContainerService.getControllerPodCount(any(ReplicationController.class))).thenReturn(2);
     when(kubernetesContainerService.getPodTemplateSpec(replicationController)).thenReturn(podTemplateSpec);
+    doReturn(null).when(encryptionService).decrypt(eq(kubernetesClusterConfig), anyObject());
 
     Service ecsService = new Service();
     ecsService.setServiceName(ECS_SERVICE_NAME);

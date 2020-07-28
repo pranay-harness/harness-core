@@ -88,9 +88,8 @@ public class KubernetesHelperServiceTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetKubernetesClient() {
-    KubernetesConfig kubernetesConfig = new KubernetesConfig();
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     kubernetesConfig.setAuthType(KubernetesClusterAuthType.OIDC);
-    kubernetesConfig.setDecrypted(true);
     when(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig)).thenReturn(null);
 
     helperService.getKubernetesClient(kubernetesConfig);
@@ -101,9 +100,8 @@ public class KubernetesHelperServiceTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testGetIstioClient() {
-    KubernetesConfig kubernetesConfig = new KubernetesConfig();
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     kubernetesConfig.setAuthType(KubernetesClusterAuthType.OIDC);
-    kubernetesConfig.setDecrypted(true);
     when(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig)).thenReturn(null);
 
     helperService.getIstioClient(kubernetesConfig);

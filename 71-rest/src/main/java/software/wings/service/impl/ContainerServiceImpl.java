@@ -64,8 +64,7 @@ public class ContainerServiceImpl implements ContainerService {
   @Inject private EncryptionService encryptionService;
 
   private boolean isKubernetesClusterConfig(SettingValue value) {
-    return value instanceof AzureConfig || value instanceof GcpConfig || value instanceof KubernetesConfig
-        || value instanceof KubernetesClusterConfig;
+    return value instanceof AzureConfig || value instanceof GcpConfig || value instanceof KubernetesClusterConfig;
   }
 
   @Override
@@ -97,16 +96,13 @@ public class ContainerServiceImpl implements ContainerService {
           azureHelperService.getKubernetesClusterConfig(azureConfig, containerServiceParams.getEncryptionDetails(),
               containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
               containerServiceParams.getClusterName(), containerServiceParams.getNamespace());
-    } else if (containerServiceParams.getSettingAttribute().getValue() instanceof KubernetesClusterConfig) {
+    } else {
       KubernetesClusterConfig kubernetesClusterConfig =
           (KubernetesClusterConfig) containerServiceParams.getSettingAttribute().getValue();
       encryptionService.decrypt(kubernetesClusterConfig, containerServiceParams.getEncryptionDetails());
       kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(containerServiceParams.getNamespace());
-    } else {
-      kubernetesConfig = (KubernetesConfig) containerServiceParams.getSettingAttribute().getValue();
     }
 
-    kubernetesConfig.setDecrypted(true);
     return kubernetesConfig;
   }
 
@@ -272,7 +268,6 @@ public class ContainerServiceImpl implements ContainerService {
         KubernetesConfig kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig,
             containerServiceParams.getEncryptionDetails(), containerServiceParams.getSubscriptionId(),
             containerServiceParams.getResourceGroup(), containerServiceParams.getClusterName(), namespace);
-        kubernetesConfig.setDecrypted(true);
         kubernetesContainerService.validate(kubernetesConfig);
         return true;
       } else {
@@ -283,7 +278,6 @@ public class ContainerServiceImpl implements ContainerService {
       encryptionService.decrypt(kubernetesClusterConfig, containerServiceParams.getEncryptionDetails());
 
       KubernetesConfig kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
-      kubernetesConfig.setDecrypted(true);
       kubernetesContainerService.validate(kubernetesConfig, kubernetesClusterConfig.cloudCostEnabled());
       return true;
     } else if (isKubernetesClusterConfig(value)) {

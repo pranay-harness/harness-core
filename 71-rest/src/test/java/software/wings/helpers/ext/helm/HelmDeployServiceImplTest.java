@@ -790,7 +790,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                                              .releaseName("first-release")
                                              .build();
 
-    KubernetesConfig kubernetesConfig = new KubernetesConfig();
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
 
     when(helmClient.rollback(request))
         .thenReturn(HelmInstallCommandResponse.builder()
@@ -798,9 +798,9 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                         .commandExecutionStatus(SUCCESS)
                         .build());
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class)))
-        .thenReturn(new KubernetesConfig());
+        .thenReturn(KubernetesConfig.builder().build());
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(ContainerServiceParams.class)))
-        .thenReturn(new KubernetesConfig());
+        .thenReturn(KubernetesConfig.builder().build());
     when(containerDeploymentDelegateHelper.getContainerInfosWhenReadyByLabel(
              anyString(), anyString(), any(), any(), eq(Collections.emptyList())))
         .thenReturn(asList(new ContainerInfo()));

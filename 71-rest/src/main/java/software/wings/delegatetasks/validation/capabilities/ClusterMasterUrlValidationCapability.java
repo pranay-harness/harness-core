@@ -8,7 +8,6 @@ import lombok.Value;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.KubernetesConfig;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.settings.SettingValue;
 
@@ -26,8 +25,6 @@ public class ClusterMasterUrlValidationCapability implements ExecutionCapability
     if (value instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
       return kubernetesClusterConfig.getMasterUrl();
-    } else if (value instanceof KubernetesConfig) {
-      return ((KubernetesConfig) value).getMasterUrl();
     } else if (value instanceof GcpConfig) {
       return "GCP:" + containerServiceParams.getClusterName();
     } else if (value instanceof AzureConfig) {

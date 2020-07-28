@@ -251,10 +251,11 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void k8sVersionIsGreaterOrEqualTo116() throws Exception {
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
     ContainerServiceParams containerServiceParams =
         ContainerServiceParams.builder()
-            .settingAttribute(SettingAttribute.Builder.aSettingAttribute().withValue(kubernetesConfig).build())
+            .settingAttribute(SettingAttribute.Builder.aSettingAttribute().withValue(kubernetesClusterConfig).build())
             .encryptionDetails(Collections.emptyList())
             .build();
 
@@ -264,8 +265,8 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     jsonData.put("buildDate", "2020-06-06T10:54:00Z");
     VersionInfo version = new VersionInfo(jsonData);
 
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.getVersion(kubernetesConfig)).thenReturn(version);
+    doReturn(kubernetesConfig).when(containerDeploymentDelegateHelper).getKubernetesConfig(containerServiceParams);
+    doReturn(version).when(kubernetesContainerService).getVersion(kubernetesConfig);
 
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
         true, containerServiceParams, new ExecutionLogCallback());
@@ -279,7 +280,9 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
     ContainerServiceParams containerServiceParams =
         ContainerServiceParams.builder()
-            .settingAttribute(SettingAttribute.Builder.aSettingAttribute().withValue(kubernetesConfig).build())
+            .settingAttribute(SettingAttribute.Builder.aSettingAttribute()
+                                  .withValue(KubernetesClusterConfig.builder().build())
+                                  .build())
             .encryptionDetails(Collections.emptyList())
             .build();
 
@@ -289,8 +292,8 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     jsonData.put("buildDate", "2020-06-06T10:54:00Z");
     VersionInfo version = new VersionInfo(jsonData);
 
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.getVersion(kubernetesConfig)).thenReturn(version);
+    doReturn(kubernetesConfig).when(containerDeploymentDelegateHelper).getKubernetesConfig(containerServiceParams);
+    doReturn(version).when(kubernetesContainerService).getVersion(kubernetesConfig);
 
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
         true, containerServiceParams, new ExecutionLogCallback());
@@ -304,7 +307,9 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
     ContainerServiceParams containerServiceParams =
         ContainerServiceParams.builder()
-            .settingAttribute(SettingAttribute.Builder.aSettingAttribute().withValue(kubernetesConfig).build())
+            .settingAttribute(SettingAttribute.Builder.aSettingAttribute()
+                                  .withValue(KubernetesClusterConfig.builder().build())
+                                  .build())
             .encryptionDetails(Collections.emptyList())
             .build();
 
@@ -314,8 +319,8 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     jsonData.put("buildDate", "2020-06-06T10:54:00Z");
     VersionInfo version = new VersionInfo(jsonData);
 
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(containerServiceParams)).thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.getVersion(kubernetesConfig)).thenReturn(version);
+    doReturn(kubernetesConfig).when(containerDeploymentDelegateHelper).getKubernetesConfig(containerServiceParams);
+    doReturn(version).when(kubernetesContainerService).getVersion(kubernetesConfig);
 
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
         true, containerServiceParams, new ExecutionLogCallback());

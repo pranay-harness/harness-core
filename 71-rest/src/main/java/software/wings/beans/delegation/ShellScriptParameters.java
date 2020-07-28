@@ -21,7 +21,6 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KerberosConfig;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.local.executors.ShellExecutorConfig;
@@ -165,8 +164,8 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
           SettingValue value = settingAttribute.getValue();
           boolean useKubernetesDelegate =
               value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate();
-          boolean isKubernetes = value instanceof KubernetesConfig || value instanceof GcpConfig
-              || value instanceof AzureConfig || value instanceof KubernetesClusterConfig;
+          boolean isKubernetes =
+              value instanceof GcpConfig || value instanceof AzureConfig || value instanceof KubernetesClusterConfig;
           if (useKubernetesDelegate || (isKubernetes && script.contains(HARNESS_KUBE_CONFIG_PATH))) {
             return containerServiceParams.fetchRequiredExecutionCapabilities();
           }

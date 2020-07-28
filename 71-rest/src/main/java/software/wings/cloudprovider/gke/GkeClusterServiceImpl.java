@@ -134,9 +134,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     if (masterAuth.getClientKey() != null) {
       kubernetesConfigBuilder.clientKey(masterAuth.getClientKey().toCharArray());
     }
-    KubernetesConfig kubernetesConfig = kubernetesConfigBuilder.build();
-    kubernetesConfig.setDecrypted(true);
-    return kubernetesConfig;
+    return kubernetesConfigBuilder.build();
   }
 
   private GcpConfig validateAndGetCredentials(SettingAttribute computeProviderSetting) {

@@ -77,8 +77,6 @@ public class K8sValidationHelper {
         return "delegate-name: " + kubernetesClusterConfig.getDelegateName();
       }
       return kubernetesClusterConfig.getMasterUrl();
-    } else if (value instanceof KubernetesConfig) {
-      return ((KubernetesConfig) value).getMasterUrl();
     } else if (value instanceof GcpConfig) {
       return "GCP:" + k8sClusterConfig.getGcpKubernetesCluster().getClusterName();
     } else if (value instanceof AzureConfig) {
@@ -147,26 +145,22 @@ public class K8sValidationHelper {
   private String getKubernetesMasterUrl(K8sClusterConfig k8sClusterConfig) {
     SettingValue value = k8sClusterConfig.getCloudProvider();
     KubernetesConfig kubernetesConfig;
-    if (value instanceof KubernetesConfig) {
-      kubernetesConfig = (KubernetesConfig) value;
+    String namespace = k8sClusterConfig.getNamespace();
+    List<EncryptedDataDetail> edd = k8sClusterConfig.getCloudProviderEncryptionDetails();
+    if (value instanceof GcpConfig) {
+      kubernetesConfig = gkeClusterService.getCluster(
+          (GcpConfig) value, edd, k8sClusterConfig.getGcpKubernetesCluster().getClusterName(), namespace);
+    } else if (value instanceof AzureConfig) {
+      AzureConfig azureConfig = (AzureConfig) value;
+      kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig, edd,
+          k8sClusterConfig.getAzureKubernetesCluster().getSubscriptionId(),
+          k8sClusterConfig.getAzureKubernetesCluster().getResourceGroup(),
+          k8sClusterConfig.getAzureKubernetesCluster().getName(), namespace);
+    } else if (value instanceof KubernetesClusterConfig) {
+      return ((KubernetesClusterConfig) value).getMasterUrl();
     } else {
-      String namespace = k8sClusterConfig.getNamespace();
-      List<EncryptedDataDetail> edd = k8sClusterConfig.getCloudProviderEncryptionDetails();
-      if (value instanceof GcpConfig) {
-        kubernetesConfig = gkeClusterService.getCluster(
-            (GcpConfig) value, edd, k8sClusterConfig.getGcpKubernetesCluster().getClusterName(), namespace);
-      } else if (value instanceof AzureConfig) {
-        AzureConfig azureConfig = (AzureConfig) value;
-        kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig, edd,
-            k8sClusterConfig.getAzureKubernetesCluster().getSubscriptionId(),
-            k8sClusterConfig.getAzureKubernetesCluster().getResourceGroup(),
-            k8sClusterConfig.getAzureKubernetesCluster().getName(), namespace);
-      } else if (value instanceof KubernetesClusterConfig) {
-        return ((KubernetesClusterConfig) value).getMasterUrl();
-      } else {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-            .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());
-      }
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());
     }
     return kubernetesConfig.getMasterUrl();
   }

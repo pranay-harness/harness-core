@@ -500,7 +500,6 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     KubernetesResource kubernetesResource =
         KubernetesResource.builder().resourceId(KubernetesResourceId.builder().namespace("default").build()).build();
     on(k8sBlueGreenDeployTaskHandler).set("managedWorkload", kubernetesResource);
-    on(k8sBlueGreenDeployTaskHandler).set("kubernetesConfig", new KubernetesConfig());
     on(k8sBlueGreenDeployTaskHandler).set("releaseName", "releaseName");
     on(k8sBlueGreenDeployTaskHandler).set("stageColor", "stageColor");
     on(k8sBlueGreenDeployTaskHandler).set("primaryColor", "primaryColor");
