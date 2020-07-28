@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.beans.git.GitCommandResult;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -19,12 +20,14 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
@@ -43,7 +46,7 @@ public class GitCommit implements PersistentEntity, UuidAware, CreatedAtAware, C
   private String commitId;
   private String yamlChangeSetId;
   private GitCommandResult gitCommandResult;
-  @Indexed private Status status;
+  @FdIndex private Status status;
   private FailureReason failureReason;
   private List<String> yamlChangeSetsProcessed;
   private GitFileProcessingSummary fileProcessingSummary;
@@ -51,10 +54,10 @@ public class GitCommit implements PersistentEntity, UuidAware, CreatedAtAware, C
   private String gitConnectorId;
   private String repo;
   private String branchName;
-  private EmbeddedUser createdBy;
-  @Indexed private long createdAt;
-  private EmbeddedUser lastUpdatedBy;
-  @NotNull private long lastUpdatedAt;
+  @CreatedBy private EmbeddedUser createdBy;
+  @CreatedDate private long createdAt;
+  @LastModifiedBy private EmbeddedUser lastUpdatedBy;
+  @LastModifiedDate private long lastUpdatedAt;
 
   public enum Status { QUEUED, RUNNING, COMPLETED, FAILED, COMPLETED_WITH_ERRORS, SKIPPED }
 

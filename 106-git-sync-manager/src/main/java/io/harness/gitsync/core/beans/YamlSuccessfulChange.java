@@ -2,6 +2,7 @@ package io.harness.gitsync.core.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -14,11 +15,6 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -26,9 +22,6 @@ import java.util.Date;
 
 @Data
 @Builder
-@Indexes(@Index(fields = { @Field("accountId")
-                           , @Field("yamlFilePath") },
-    options = @IndexOptions(unique = true, name = "uniqueIdx")))
 @FieldNameConstants(innerTypeName = "YamlSuccessfulChangeKeys")
 @Entity(value = "yamlSuccessfulChange", noClassnameStored = true)
 @HarnessEntity(exportable = false)
@@ -48,7 +41,7 @@ public class YamlSuccessfulChange implements PersistentEntity, UuidAware, Create
   private EmbeddedUser lastUpdatedBy;
   private long lastUpdatedAt;
 
-  @Indexed(options = @IndexOptions(expireAfterSeconds = 24 * 60 * 60)) @Default private Date validUntil = new Date();
+  @FdTtlIndex(24 * 60 * 60) @Default private Date validUntil = new Date();
 
   public enum ChangeSource { GIT, HARNESS }
 }
