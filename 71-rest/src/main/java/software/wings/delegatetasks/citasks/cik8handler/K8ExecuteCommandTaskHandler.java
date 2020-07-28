@@ -5,6 +5,7 @@ package software.wings.delegatetasks.citasks.cik8handler;
  */
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static java.util.Collections.emptyList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -14,7 +15,6 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +25,7 @@ import software.wings.beans.ci.K8ExecuteCommandTaskParams;
 import software.wings.delegatetasks.citasks.ExecuteCommandTaskHandler;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.KubernetesHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
 
@@ -35,6 +36,7 @@ public class K8ExecuteCommandTaskHandler implements ExecuteCommandTaskHandler {
   @Inject private CIK8CtlHandler cik8CtlHandler;
   @Inject private K8CommandExecutor k8CommandExecutor;
   @Inject private KubernetesHelperService kubernetesHelperService;
+  @Inject private EncryptionService encryptionService;
 
   @Override
   public ExecuteCommandTaskHandler.Type getType() {
@@ -44,8 +46,11 @@ public class K8ExecuteCommandTaskHandler implements ExecuteCommandTaskHandler {
   @Override
   public K8sTaskExecutionResponse executeTaskInternal(ExecuteCommandTaskParams executeCommandTaskParams) {
     K8ExecuteCommandTaskParams k8ExecuteCommandTaskParams = (K8ExecuteCommandTaskParams) executeCommandTaskParams;
-    KubernetesConfig kubernetesConfig = k8ExecuteCommandTaskParams.getKubernetesConfig();
-    List<EncryptedDataDetail> encryptedDataDetails = k8ExecuteCommandTaskParams.getEncryptionDetails();
+
+    encryptionService.decrypt(
+        k8ExecuteCommandTaskParams.getKubernetesClusterConfig(), k8ExecuteCommandTaskParams.getEncryptionDetails());
+    KubernetesConfig kubernetesConfig =
+        k8ExecuteCommandTaskParams.getKubernetesClusterConfig().createKubernetesConfig(null);
 
     K8ExecCommandParams k8ExecCommandParams = k8ExecuteCommandTaskParams.getK8ExecCommandParams();
     String podName = k8ExecCommandParams.getPodName();
@@ -54,7 +59,7 @@ public class K8ExecuteCommandTaskHandler implements ExecuteCommandTaskHandler {
 
     K8sTaskExecutionResponse result;
     try (AutoLogContext ignore = new K8LogContext(podName, containerName, OVERRIDE_ERROR)) {
-      Config config = kubernetesHelperService.getConfig(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
+      Config config = kubernetesHelperService.getConfig(kubernetesConfig, emptyList(), StringUtils.EMPTY);
       OkHttpClient okHttpClient = kubernetesHelperService.createHttpClientWithProxySetting(config);
       try (DefaultKubernetesClient kubernetesClient = new DefaultKubernetesClient(okHttpClient, config)) {
         ExecCommandStatus status = k8CommandExecutor.executeCommand(kubernetesClient, k8ExecCommandParams);

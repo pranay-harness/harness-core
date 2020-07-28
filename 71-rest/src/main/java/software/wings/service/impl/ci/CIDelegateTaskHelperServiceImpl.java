@@ -84,7 +84,6 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     KubernetesConfig kubernetesConfig = null;
     if (googleCloud != null) {
       kubernetesClusterConfig = (KubernetesClusterConfig) googleCloud.getValue();
-      kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(null);
       encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
     }
 
@@ -114,7 +113,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
                         .parameters(new Object[] {CIK8BuildTaskParams.builder()
                                                       .gitFetchFilesConfig(gitFetchFilesConfig)
                                                       .encryptionDetails(encryptedDataDetails)
-                                                      .kubernetesConfig(kubernetesConfig)
+                                                      .kubernetesClusterConfig(kubernetesClusterConfig)
                                                       .cik8PodParams(podParamsWithGitDetails)
                                                       .build()})
                         .timeout(TimeUnit.SECONDS.toMillis(600))
@@ -173,7 +172,6 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     KubernetesConfig kubernetesConfig = null;
     if (googleCloud != null) {
       kubernetesClusterConfig = (KubernetesClusterConfig) googleCloud.getValue();
-      kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(null);
       encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
     }
 
@@ -187,7 +185,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
                         .async(false)
                         .parameters(new Object[] {K8ExecuteCommandTaskParams.builder()
                                                       .encryptionDetails(encryptedDataDetails)
-                                                      .kubernetesConfig(kubernetesConfig)
+                                                      .kubernetesClusterConfig(kubernetesClusterConfig)
                                                       .k8ExecCommandParams(params)
                                                       .build()})
                         .timeout(TimeUnit.SECONDS.toMillis(3600))
@@ -211,7 +209,6 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
     KubernetesConfig kubernetesConfig = null;
     if (googleCloud != null) {
       kubernetesClusterConfig = (KubernetesClusterConfig) googleCloud.getValue();
-      kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(null);
       encryptedDataDetails = secretManager.getEncryptionDetails(kubernetesClusterConfig);
     }
 
@@ -225,7 +222,7 @@ public class CIDelegateTaskHelperServiceImpl implements CIDelegateTaskHelperServ
                         .async(false)
                         .parameters(new Object[] {CIK8CleanupTaskParams.builder()
                                                       .encryptionDetails(encryptedDataDetails)
-                                                      .kubernetesConfig(kubernetesConfig)
+                                                      .kubernetesClusterConfig(kubernetesClusterConfig)
                                                       .podName(podName)
                                                       .namespace(namespace)
                                                       .build()})

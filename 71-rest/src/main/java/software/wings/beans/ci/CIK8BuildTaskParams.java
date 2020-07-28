@@ -5,7 +5,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.GitFetchFilesConfig;
-import software.wings.beans.KubernetesConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.ci.pod.CIK8ContainerParams;
 import software.wings.beans.ci.pod.CIK8PodParams;
 
@@ -15,7 +15,7 @@ import java.util.List;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CIK8BuildTaskParams implements CIBuildSetupTaskParams {
-  private KubernetesConfig kubernetesConfig;
+  private KubernetesClusterConfig kubernetesClusterConfig;
   private GitFetchFilesConfig gitFetchFilesConfig;
   private CIK8PodParams<CIK8ContainerParams> cik8PodParams;
   private List<EncryptedDataDetail> encryptionDetails;
