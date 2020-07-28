@@ -2,10 +2,12 @@ package io.harness.functional.graphQLAPIs.executions;
 
 import static io.harness.generator.EnvironmentGenerator.Environments.GENERIC_TEST;
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.PRABU;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -22,6 +24,7 @@ import io.harness.testframework.restutils.ArtifactRestUtils;
 import io.harness.testframework.restutils.GraphQLRestUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
+import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,6 +48,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class GetPipelineExecutionsFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -64,6 +68,7 @@ public class GetPipelineExecutionsFunctionalTest extends AbstractFunctionalTest 
   private final Randomizer.Seed seed = new Randomizer.Seed(0);
   private OwnerManager.Owners owners;
   private Pipeline savedPipeline;
+  private String workflowExecutionId;
 
   @Before
   public void setUp() {
@@ -89,6 +94,7 @@ public class GetPipelineExecutionsFunctionalTest extends AbstractFunctionalTest 
     Workflow savedWorkflow =
         WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
     assertThat(savedWorkflow).isNotNull();
+    workflowExecutionId = savedWorkflow.getUuid();
 
     String pipelineName = "GraphQLAPI Test - " + System.currentTimeMillis();
 
@@ -129,6 +135,39 @@ public class GetPipelineExecutionsFunctionalTest extends AbstractFunctionalTest 
     assertThat(workflowFromExecution.get("id")).isEqualTo(savedPipeline.getUuid());
   }
 
+  @Test
+  @Owner(developers = PRABU)
+  @Category(FunctionalTests.class)
+  public void shouldGetMemberWorkflowExecutionWithPipeline() {
+    Artifact artifact = getArtifact(service, service.getAppId());
+    ExecutionArgs executionArgs = prepareExecutionArgs(savedPipeline, Collections.singletonList(artifact));
+    WorkflowExecution workflowExecution = startPipeline(application.getAppId(), environment.getUuid(), executionArgs);
+    final String executionId = workflowExecution.getUuid();
+    Awaitility.await().atMost(120, TimeUnit.SECONDS).pollInterval(10, TimeUnit.SECONDS).until(() -> {
+      final WorkflowExecution pipelineExecution =
+          workflowExecutionService.getWorkflowExecution(savedPipeline.getAppId(), executionId);
+      return pipelineExecution != null && pipelineExecution.getStatus() != ExecutionStatus.NEW;
+    });
+    workflowExecution =
+        workflowExecutionService.getWorkflowExecution(savedPipeline.getAppId(), workflowExecution.getUuid());
+    assertThat(workflowExecution).isNotNull();
+
+    String query = getGraphqlQueryForExecutions(workflowExecution.getUuid());
+    Map<Object, Object> response = GraphQLRestUtils.executeGraphQLQuery(bearerToken, application.getAccountId(), query);
+
+    assertThat(response).isNotEmpty();
+    assertThat(response.get("executions")).isNotNull();
+    Map<String, Object> executionsData = (Map<String, Object>) response.get("executions");
+    assertThat(executionsData.get("nodes")).isNotNull();
+    Map<String, Object> workflowNode = ((List<Map<String, Object>>) executionsData.get("nodes")).get(0);
+    assertThat(workflowNode.get("workflow")).isNotNull();
+    Map<String, Object> workflowData = (Map<String, Object>) workflowNode.get("workflow");
+    assertThat(workflowData.get("id")).isEqualTo(workflowExecutionId);
+    assertThat(workflowNode.get("application")).isNotNull();
+    Map<String, Object> applicationData = (Map<String, Object>) workflowNode.get("application");
+    assertThat(applicationData.get("id")).isEqualTo(savedPipeline.getAppId());
+  }
+
   private WorkflowExecution startPipeline(String appId, String environmentId, ExecutionArgs executionArgs) {
     return workflowExecutionService.triggerEnvExecution(appId, environmentId, executionArgs, null);
   }
@@ -160,6 +199,32 @@ id
 
 }
 }
+}*/ executionId);
+  }
+
+  private String getGraphqlQueryForExecutions(String executionId) {
+    return $GQL(/*
+query
+{
+  executions(filters: [
+    {status: {operator: NOT_IN, values: ["SUCCESS", "PAUSED"]}},
+    {pipelineExecutionId: {operator: EQUALS, values: ["%s"]}}
+  ], limit: 10) {
+    nodes {
+      application {
+        name
+        id
+      }
+      status
+      id
+      ...on WorkflowExecution{
+          workflow{
+                                                name
+                                                id
+        }
+      }
+    }
+  }
 }*/ executionId);
   }
 }
