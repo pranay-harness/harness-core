@@ -18,6 +18,7 @@ import io.harness.commandlibrary.server.service.intfc.CommandArchiveHandler;
 import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandStoreService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.exception.UnexpectedException;
 import io.harness.persistence.HPersistence;
@@ -104,6 +105,7 @@ public class CommandLibraryServerModule extends AbstractModule {
     MapBinder<Class, String> morphiaClasses =
         MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
     morphiaClasses.addBinding(DelegateSyncTaskResponse.class).toInstance("delegateSyncTaskResponses");
+    morphiaClasses.addBinding(DelegateAsyncTaskResponse.class).toInstance("delegateAsyncTaskResponses");
   }
 
   private void bindCommandArchiveHandlers() {

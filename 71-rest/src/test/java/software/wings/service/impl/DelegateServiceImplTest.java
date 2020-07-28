@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -16,6 +17,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,8 +38,12 @@ import io.harness.delegate.beans.ResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.service.intfc.DelegateCallbackRegistry;
+import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.waiter.StringNotifyResponseData;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.junit.Before;
@@ -65,12 +72,14 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private Broadcaster broadcaster;
   @Mock private BroadcasterFactory broadcasterFactory;
   @Mock private DelegateTaskBroadcastHelper broadcastHelper;
+  @Mock private DelegateCallbackRegistry delegateCallbackRegistry;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
   @InjectMocks @Inject private DelegateSyncServiceImpl delegateSyncService;
   @Mock private AssignDelegateService assignDelegateService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
   @InjectMocks @Spy private DelegateServiceImpl spydelegateService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Before
   public void setUp() {
@@ -285,5 +294,91 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     boolean checkingValidationForRandomName =
         delegateService.validateThatDelegateNameIsUnique(ACCOUNT_ID, String.valueOf(System.currentTimeMillis()));
     assertThat(checkingValidationForRandomName).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testHandleDriverResponseWithoutArguments() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .uuid(generateUuid())
+                                    .accountId(generateUuid())
+                                    .driverId(generateUuid())
+                                    .data(TaskData.builder().async(false).build())
+                                    .build();
+
+    DelegateTaskResponse delegateTaskResponse =
+        DelegateTaskResponse.builder().response(StringNotifyResponseData.builder().data("OK").build()).build();
+
+    delegateService.handleDriverResponse(null, delegateTaskResponse);
+    verify(delegateCallbackRegistry, never()).obtainDelegateCallbackService(any());
+
+    delegateService.handleDriverResponse(delegateTask, null);
+    verify(delegateCallbackRegistry, never()).obtainDelegateCallbackService(any());
+
+    delegateService.handleDriverResponse(null, null);
+    verify(delegateCallbackRegistry, never()).obtainDelegateCallbackService(any());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testHandleDriverResponseWithNonExistingDriver() {
+    DelegateTask delegateTask = mock(DelegateTask.class);
+    DelegateTaskResponse delegateTaskResponse = mock(DelegateTaskResponse.class);
+
+    when(delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId())).thenReturn(null);
+
+    delegateService.handleDriverResponse(delegateTask, delegateTaskResponse);
+
+    verify(delegateTask, never()).getUuid();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testHandleDriverSyncResponse() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .uuid(generateUuid())
+                                    .accountId(generateUuid())
+                                    .driverId(generateUuid())
+                                    .data(TaskData.builder().async(false).build())
+                                    .build();
+
+    DelegateTaskResponse delegateTaskResponse =
+        DelegateTaskResponse.builder().response(StringNotifyResponseData.builder().data("OK").build()).build();
+
+    DelegateCallbackService delegateCallbackService = mock(DelegateCallbackService.class);
+    when(delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId()))
+        .thenReturn(delegateCallbackService);
+    byte[] responseData = kryoSerializer.asDeflatedBytes(delegateTaskResponse.getResponse());
+
+    delegateService.handleDriverResponse(delegateTask, delegateTaskResponse);
+
+    verify(delegateCallbackService).publishSyncTaskResponse(delegateTask.getUuid(), responseData);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testHandleDriverAsyncResponse() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .uuid(generateUuid())
+                                    .accountId(generateUuid())
+                                    .driverId(generateUuid())
+                                    .data(TaskData.builder().async(true).build())
+                                    .build();
+
+    DelegateTaskResponse delegateTaskResponse =
+        DelegateTaskResponse.builder().response(StringNotifyResponseData.builder().data("OK").build()).build();
+
+    DelegateCallbackService delegateCallbackService = mock(DelegateCallbackService.class);
+    when(delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId()))
+        .thenReturn(delegateCallbackService);
+    byte[] responseData = kryoSerializer.asDeflatedBytes(delegateTaskResponse.getResponse());
+
+    delegateService.handleDriverResponse(delegateTask, delegateTaskResponse);
+
+    verify(delegateCallbackService).publishAsyncTaskResponse(delegateTask.getUuid(), responseData);
   }
 }
