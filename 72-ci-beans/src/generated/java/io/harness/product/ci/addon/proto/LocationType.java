@@ -127,7 +127,7 @@ public enum LocationType implements com
     return getDescriptor();
   }
   public static final com.google.protobuf.Descriptors.EnumDescriptor getDescriptor() {
-    return io.harness.product.ci.addon.proto.Addon.getDescriptor().getEnumTypes().get(1);
+    return io.harness.product.ci.addon.proto.AddonOuterClass.getDescriptor().getEnumTypes().get(1);
   }
 
   private static final LocationType[] VALUES = values();

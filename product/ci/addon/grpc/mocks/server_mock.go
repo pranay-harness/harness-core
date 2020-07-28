@@ -9,49 +9,49 @@ import (
 	reflect "reflect"
 )
 
-// MockCIAddonServer is a mock of CIAddonServer interface.
-type MockCIAddonServer struct {
+// MockAddonServer is a mock of AddonServer interface.
+type MockAddonServer struct {
 	ctrl     *gomock.Controller
-	recorder *MockCIAddonServerMockRecorder
+	recorder *MockAddonServerMockRecorder
 }
 
-// MockCIAddonServerMockRecorder is the mock recorder for MockCIAddonServer.
-type MockCIAddonServerMockRecorder struct {
-	mock *MockCIAddonServer
+// MockAddonServerMockRecorder is the mock recorder for MockAddonServer.
+type MockAddonServerMockRecorder struct {
+	mock *MockAddonServer
 }
 
-// NewMockCIAddonServer creates a new mock instance.
-func NewMockCIAddonServer(ctrl *gomock.Controller) *MockCIAddonServer {
-	mock := &MockCIAddonServer{ctrl: ctrl}
-	mock.recorder = &MockCIAddonServerMockRecorder{mock}
+// NewMockAddonServer creates a new mock instance.
+func NewMockAddonServer(ctrl *gomock.Controller) *MockAddonServer {
+	mock := &MockAddonServer{ctrl: ctrl}
+	mock.recorder = &MockAddonServerMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCIAddonServer) EXPECT() *MockCIAddonServerMockRecorder {
+func (m *MockAddonServer) EXPECT() *MockAddonServerMockRecorder {
 	return m.recorder
 }
 
 // Start mocks base method.
-func (m *MockCIAddonServer) Start() {
+func (m *MockAddonServer) Start() {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Start")
 }
 
 // Start indicates an expected call of Start.
-func (mr *MockCIAddonServerMockRecorder) Start() *gomock.Call {
+func (mr *MockAddonServerMockRecorder) Start() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockCIAddonServer)(nil).Start))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockAddonServer)(nil).Start))
 }
 
 // Stop mocks base method.
-func (m *MockCIAddonServer) Stop() {
+func (m *MockAddonServer) Stop() {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Stop")
 }
 
 // Stop indicates an expected call of Stop.
-func (mr *MockCIAddonServerMockRecorder) Stop() *gomock.Call {
+func (mr *MockAddonServerMockRecorder) Stop() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockCIAddonServer)(nil).Stop))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockAddonServer)(nil).Stop))
 }

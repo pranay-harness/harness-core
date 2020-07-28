@@ -12,6 +12,7 @@ proto_library(
 
 go_proto_library(
     name = "cienginepb_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
     importpath = "github.com/wings-software/portal/product/ci/engine/proto",
     proto = ":cienginepb_proto",
     visibility = ["//visibility:public"],

@@ -14,15 +14,15 @@ const (
 	hardStopWaitTimeout = 10
 )
 
-//go:generate mockgen -source server.go -package=grpc -destination mocks/server_mock.go CIAddonServer
+//go:generate mockgen -source server.go -package=grpc -destination mocks/server_mock.go AddonServer
 
-//CIAddonServer implements a GRPC server that listens to messages from lite engine
-type CIAddonServer interface {
+//AddonServer implements a GRPC server that listens to messages from lite engine
+type AddonServer interface {
 	Start()
 	Stop()
 }
 
-type ciAddonServer struct {
+type addonServer struct {
 	port       uint
 	listener   net.Listener
 	grpcServer *grpc.Server
@@ -30,15 +30,15 @@ type ciAddonServer struct {
 	stopCh     chan bool
 }
 
-//NewCIAddonServer constructs a new CIAddonServer
-func NewCIAddonServer(port uint, log *zap.SugaredLogger) (CIAddonServer, error) {
+//NewAddonServer constructs a new AddonServer
+func NewAddonServer(port uint, log *zap.SugaredLogger) (AddonServer, error) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return nil, err
 	}
 
 	stopCh := make(chan bool, 1)
-	server := ciAddonServer{
+	server := addonServer{
 		port:   port,
 		log:    log,
 		stopCh: stopCh,
@@ -49,8 +49,8 @@ func NewCIAddonServer(port uint, log *zap.SugaredLogger) (CIAddonServer, error) 
 }
 
 //Start signals the GRPC server to begin serving on the configured port
-func (s *ciAddonServer) Start() {
-	pb.RegisterCIAddonServer(s.grpcServer, NewCIAddonHandler(s.stopCh, s.log))
+func (s *addonServer) Start() {
+	pb.RegisterAddonServer(s.grpcServer, NewAddonHandler(s.stopCh, s.log))
 	err := s.grpcServer.Serve(s.listener)
 	if err != nil {
 		s.log.Fatalw("error starting gRPC server", zap.Error(err))
@@ -58,7 +58,7 @@ func (s *ciAddonServer) Start() {
 }
 
 //Stop method waits for signal to stop the server and stops GRPC server upon receiving it
-func (s *ciAddonServer) Stop() {
+func (s *addonServer) Stop() {
 	<-s.stopCh
 	s.log.Infow("Initiating shutdown of CI addon server")
 	if s.grpcServer != nil {

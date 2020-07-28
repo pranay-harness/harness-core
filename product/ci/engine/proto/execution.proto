@@ -9,10 +9,6 @@ option go_package = "cienginepb";
 // will closely resemble the protobufs there.
 import "product/ci/addon/proto/addon.proto";
 
-message Execution {
-  repeated Step steps = 1;
-}
-
 message PublishArtifactsStep {
   repeated io.harness.product.ci.addon.proto.UploadFile files = 1;
   repeated io.harness.product.ci.addon.proto.BuildPublishImage images = 2;
@@ -39,7 +35,7 @@ message RestoreCacheStep {
   bool fail_if_not_exist = 2;
 }
 
-message Step {
+message UnitStep {
   string id = 1;
   string display_name = 2;
   oneof step {
@@ -48,4 +44,42 @@ message Step {
     RestoreCacheStep restore_cache = 5;
     PublishArtifactsStep publish_artifacts = 6;
   }
+}
+
+message ParallelStep {
+  string id = 1;
+  string display_name = 2;
+  repeated UnitStep steps = 3;
+}
+
+message Step {
+  oneof step {
+    ParallelStep parallel = 1;
+    UnitStep unit = 2;
+  }
+}
+
+message Execution {
+  repeated Step steps = 1;
+}
+
+message ExecuteStepRequest {
+  UnitStep step = 1;
+}
+
+message ExecuteStepResponse {
+}
+
+message SignalStopRequest {
+}
+
+message SignalStopResponse {
+}
+
+service LiteEngine {
+  // Synchronous RPC to execute a step
+  rpc ExecuteStep(ExecuteStepRequest) returns (ExecuteStepResponse);
+
+  // Synchronous RPC to send a signal to stop GRPC server
+  rpc SignalStop(SignalStopRequest) returns (SignalStopResponse);
 }

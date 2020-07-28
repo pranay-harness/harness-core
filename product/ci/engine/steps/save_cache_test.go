@@ -20,14 +20,14 @@ import (
 	"go.uber.org/zap"
 )
 
-func getSaveStep(id, key string, paths []string) *pb.Step {
-	saveCacheStep := &pb.Step_SaveCache{
+func getSaveStep(id, key string, paths []string) *pb.UnitStep {
+	saveCacheStep := &pb.UnitStep_SaveCache{
 		SaveCache: &pb.SaveCacheStep{
 			Key:   key,
 			Paths: paths,
 		},
 	}
-	return &pb.Step{
+	return &pb.UnitStep{
 		Id:          id,
 		DisplayName: "test save cache step",
 		Step:        saveCacheStep,

@@ -40,7 +40,7 @@ type saveCacheStep struct {
 }
 
 // NewSaveCacheStep creates a save cache step executor
-func NewSaveCacheStep(step *pb.Step, tmpFilePath string, fs filesystem.FileSystem,
+func NewSaveCacheStep(step *pb.UnitStep, tmpFilePath string, fs filesystem.FileSystem,
 	log *zap.SugaredLogger) SaveCacheStep {
 	archiver := archive.NewArchiver(archiveFormat, fs, log)
 	backoff := utils.WithMaxRetries(utils.NewExponentialBackOffFactory(), saveCacheMaxRetries).NewBackOff()

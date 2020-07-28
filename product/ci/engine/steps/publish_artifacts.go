@@ -11,14 +11,14 @@ import (
 
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
-	egrpc "github.com/wings-software/portal/product/ci/engine/grpc"
 	enginepb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
 
 var (
-	newCIAddonClient = egrpc.NewCIAddonClient
+	newAddonClient = caddon.NewAddonClient
 )
 
 // mockgen -source publish_artifacts.go -package steps -destination mocks/publish_artifacts_mock.go
@@ -36,7 +36,7 @@ type publishArtifactsStep struct {
 	log         *zap.SugaredLogger
 }
 
-func NewPublishArtifactsStep(step *enginepb.Step, log *zap.SugaredLogger) PublishArtifactsStep {
+func NewPublishArtifactsStep(step *enginepb.UnitStep, log *zap.SugaredLogger) PublishArtifactsStep {
 	s := step.GetPublishArtifacts()
 	return &publishArtifactsStep{
 		id:          step.GetId(),
@@ -55,14 +55,14 @@ func (s *publishArtifactsStep) Run(ctx context.Context) error {
 		return err
 	}
 
-	ciAddonClient, err := newCIAddonClient(egrpc.CIAddonPort, s.log)
+	addonClient, err := newAddonClient(caddon.AddonPort, s.log)
 	if err != nil {
 		s.log.Warnw("Unable to create CI addon client", "error_msg", zap.Error(err))
 		return errors.Wrap(err, "Could not create CI Addon client")
 	}
-	defer ciAddonClient.CloseConn()
+	defer addonClient.CloseConn()
 
-	c := ciAddonClient.Client()
+	c := addonClient.Client()
 	_, err = c.PublishArtifacts(ctx, arg)
 	if err != nil {
 		s.log.Warnw("Publish artifact RPC failed", "error_msg", zap.Error(err), "elapsed_time_ms", utils.TimeSince(st))

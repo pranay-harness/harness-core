@@ -70,9 +70,9 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
 
     String serialize = protobufSerializer.serialize(publishStepInfo);
     Step publishArtifactStep = Step.parseFrom(Base64.decodeBase64(serialize));
-    assertThat(publishArtifactStep.getId()).isEqualTo(PUBLISH_ID);
-    assertThat(publishArtifactStep.getDisplayName()).isEqualTo(PUBLISH_NAME);
-    UploadFile uploadFile = publishArtifactStep.getPublishArtifacts().getFiles(0);
+    assertThat(publishArtifactStep.getUnit().getId()).isEqualTo(PUBLISH_ID);
+    assertThat(publishArtifactStep.getUnit().getDisplayName()).isEqualTo(PUBLISH_NAME);
+    UploadFile uploadFile = publishArtifactStep.getUnit().getPublishArtifacts().getFiles(0);
     assertThat(uploadFile.getFilePattern()).isEqualTo(FILE_PATTERN);
     assertThat(uploadFile.getDestination().getDestinationUrl()).isEqualTo(REPOSITORY + ARTIFACT_PATH);
     assertThat(uploadFile.getDestination().getConnector().getId()).isEqualTo(ARTIFACTORY_CONNECTOR);
@@ -102,9 +102,9 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
 
     String serialize = protobufSerializer.serialize(publishStepInfo);
     Step publishArtifactStep = Step.parseFrom(Base64.decodeBase64(serialize));
-    assertThat(publishArtifactStep.getId()).isEqualTo(PUBLISH_ID);
-    assertThat(publishArtifactStep.getDisplayName()).isEqualTo(PUBLISH_NAME);
-    BuildPublishImage buildPublishImage = publishArtifactStep.getPublishArtifacts().getImages(0);
+    assertThat(publishArtifactStep.getUnit().getId()).isEqualTo(PUBLISH_ID);
+    assertThat(publishArtifactStep.getUnit().getDisplayName()).isEqualTo(PUBLISH_NAME);
+    BuildPublishImage buildPublishImage = publishArtifactStep.getUnit().getPublishArtifacts().getImages(0);
     assertThat(buildPublishImage.getContext()).isEqualTo(CONTEXT);
     assertThat(buildPublishImage.getDockerFile()).isEqualTo(DOCKER_FILE);
     assertThat(buildPublishImage.getDestination().getDestinationUrl()).isEqualTo(GCR_LOCATION);
@@ -135,9 +135,9 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
 
     String serialize = protobufSerializer.serialize(publishStepInfo);
     Step publishArtifactStep = Step.parseFrom(Base64.decodeBase64(serialize));
-    assertThat(publishArtifactStep.getId()).isEqualTo(PUBLISH_ID);
-    assertThat(publishArtifactStep.getDisplayName()).isEqualTo(PUBLISH_NAME);
-    BuildPublishImage buildPublishImage = publishArtifactStep.getPublishArtifacts().getImages(0);
+    assertThat(publishArtifactStep.getUnit().getId()).isEqualTo(PUBLISH_ID);
+    assertThat(publishArtifactStep.getUnit().getDisplayName()).isEqualTo(PUBLISH_NAME);
+    BuildPublishImage buildPublishImage = publishArtifactStep.getUnit().getPublishArtifacts().getImages(0);
     assertThat(buildPublishImage.getContext()).isEqualTo(CONTEXT);
     assertThat(buildPublishImage.getDockerFile()).isEqualTo(DOCKER_FILE);
     assertThat(buildPublishImage.getDestination().getDestinationUrl()).isEqualTo(IMAGE + ":" + TAG);
@@ -169,9 +169,9 @@ public class PublishStepProtobufSerializerTest extends CIBeansTest {
 
     String serialize = protobufSerializer.serialize(publishStepInfo);
     Step publishArtifactStep = Step.parseFrom(Base64.decodeBase64(serialize));
-    assertThat(publishArtifactStep.getId()).isEqualTo(PUBLISH_ID);
-    assertThat(publishArtifactStep.getDisplayName()).isEqualTo(PUBLISH_NAME);
-    BuildPublishImage buildPublishImage = publishArtifactStep.getPublishArtifacts().getImages(0);
+    assertThat(publishArtifactStep.getUnit().getId()).isEqualTo(PUBLISH_ID);
+    assertThat(publishArtifactStep.getUnit().getDisplayName()).isEqualTo(PUBLISH_NAME);
+    BuildPublishImage buildPublishImage = publishArtifactStep.getUnit().getPublishArtifacts().getImages(0);
     assertThat(buildPublishImage.getContext()).isEqualTo(CONTEXT);
     assertThat(buildPublishImage.getDockerFile()).isEqualTo(DOCKER_FILE);
     assertThat(buildPublishImage.getDestination().getDestinationUrl()).isEqualTo(ECR_LOCATION);

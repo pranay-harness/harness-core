@@ -103,14 +103,14 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
     }
   }
   public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_PublishArtifactsRequest_descriptor;
   }
 
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_PublishArtifactsRequest_fieldAccessorTable
         .ensureFieldAccessorsInitialized(io.harness.product.ci.addon.proto.PublishArtifactsRequest.class,
             io.harness.product.ci.addon.proto.PublishArtifactsRequest.Builder.class);
@@ -384,14 +384,14 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
       // @@protoc_insertion_point(builder_implements:io.harness.product.ci.addon.proto.PublishArtifactsRequest)
       io.harness.product.ci.addon.proto.PublishArtifactsRequestOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_PublishArtifactsRequest_descriptor;
     }
 
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_PublishArtifactsRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(io.harness.product.ci.addon.proto.PublishArtifactsRequest.class,
               io.harness.product.ci.addon.proto.PublishArtifactsRequest.Builder.class);
@@ -439,7 +439,7 @@ public final class PublishArtifactsRequest extends com.google.protobuf.Generated
     @java.
     lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_PublishArtifactsRequest_descriptor;
     }
 

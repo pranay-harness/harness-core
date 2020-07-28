@@ -63,14 +63,14 @@ public final class SignalStopRequest extends com.google.protobuf.GeneratedMessag
     }
   }
   public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_SignalStopRequest_descriptor;
   }
 
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_SignalStopRequest_fieldAccessorTable
         .ensureFieldAccessorsInitialized(io.harness.product.ci.addon.proto.SignalStopRequest.class,
             io.harness.product.ci.addon.proto.SignalStopRequest.Builder.class);
@@ -214,14 +214,14 @@ public final class SignalStopRequest extends com.google.protobuf.GeneratedMessag
       // @@protoc_insertion_point(builder_implements:io.harness.product.ci.addon.proto.SignalStopRequest)
       io.harness.product.ci.addon.proto.SignalStopRequestOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_SignalStopRequest_descriptor;
     }
 
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_SignalStopRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(io.harness.product.ci.addon.proto.SignalStopRequest.class,
               io.harness.product.ci.addon.proto.SignalStopRequest.Builder.class);
@@ -249,7 +249,7 @@ public final class SignalStopRequest extends com.google.protobuf.GeneratedMessag
     @java.
     lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_SignalStopRequest_descriptor;
     }
 

@@ -3,6 +3,7 @@ package io.harness.beans.seriazlier;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.product.ci.engine.proto.SaveCacheStep;
 import io.harness.product.ci.engine.proto.Step;
+import io.harness.product.ci.engine.proto.UnitStep;
 import org.apache.commons.codec.binary.Base64;
 
 import java.util.Optional;
@@ -19,9 +20,11 @@ public class SaveCacheStepProtobufSerializer implements ProtobufSerializer<SaveC
     saveCacheBuilder.setKey(saveCacheStepInfo.getKey());
 
     return Step.newBuilder()
-        .setId(saveCacheStepInfo.getIdentifier())
-        .setDisplayName(Optional.ofNullable(saveCacheStepInfo.getDisplayName()).orElse(""))
-        .setSaveCache(saveCacheBuilder.build())
+        .setUnit(UnitStep.newBuilder()
+                     .setId(saveCacheStepInfo.getIdentifier())
+                     .setDisplayName(Optional.ofNullable(saveCacheStepInfo.getDisplayName()).orElse(""))
+                     .setSaveCache(saveCacheBuilder.build())
+                     .build())
         .build();
   }
 }

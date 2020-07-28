@@ -21,7 +21,7 @@ jobs:
       - name: Test
         run: |
           echo "Testing golang code using bazel..."
-          bazel test //...
+          bazel test --test_output=all //...
 
       - name: Coverage
         run: |

@@ -76,14 +76,14 @@ public final class TaskProgressUpdatesRequest extends com.google.protobuf.Genera
     }
   }
   public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesRequest_descriptor;
   }
 
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesRequest_fieldAccessorTable
         .ensureFieldAccessorsInitialized(io.harness.product.ci.addon.proto.TaskProgressUpdatesRequest.class,
             io.harness.product.ci.addon.proto.TaskProgressUpdatesRequest.Builder.class);
@@ -267,14 +267,14 @@ public final class TaskProgressUpdatesRequest extends com.google.protobuf.Genera
       // @@protoc_insertion_point(builder_implements:io.harness.product.ci.addon.proto.TaskProgressUpdatesRequest)
       io.harness.product.ci.addon.proto.TaskProgressUpdatesRequestOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesRequest_descriptor;
     }
 
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(io.harness.product.ci.addon.proto.TaskProgressUpdatesRequest.class,
               io.harness.product.ci.addon.proto.TaskProgressUpdatesRequest.Builder.class);
@@ -308,7 +308,7 @@ public final class TaskProgressUpdatesRequest extends com.google.protobuf.Genera
     @java.
     lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_TaskProgressUpdatesRequest_descriptor;
     }
 

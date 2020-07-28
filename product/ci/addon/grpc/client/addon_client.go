@@ -1,4 +1,4 @@
-package grpc
+package grpcclient
 
 import (
 	"fmt"
@@ -11,28 +11,30 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
+//go:generate mockgen -source addon_client.go -package=grpcclient -destination mocks/addon_client_mock.go AddonClient
+
 const (
 	backoffTime = 100 * time.Millisecond
 	maxRetries  = 9
-	// CIAddonPort is the port on which CI addon service runs.
-	CIAddonPort = 8001
+	// AddonPort is the port on which CI addon service runs.
+	AddonPort = 8001
 )
 
-//CIAddonClient implements a GRPC client to communicate with CI addon
-type CIAddonClient interface {
+//AddonClient implements a GRPC client to communicate with CI addon
+type AddonClient interface {
 	CloseConn() error
-	Client() pb.CIAddonClient
+	Client() pb.AddonClient
 }
 
-type ciAddonClient struct {
+type addonClient struct {
 	port       uint
 	conn       *grpc.ClientConn
 	log        *zap.SugaredLogger
-	grpcClient pb.CIAddonClient
+	grpcClient pb.AddonClient
 }
 
-// NewCIAddonClient creates a CI addon client
-func NewCIAddonClient(port uint, log *zap.SugaredLogger) (CIAddonClient, error) {
+// NewAddonClient creates a CI addon client
+func NewAddonClient(port uint, log *zap.SugaredLogger) (AddonClient, error) {
 	// Default gRPC Call options - can be made configurable if the need arises
 	// Retries are ENABLED by default for all RPCs on the below codes. To disable retries, pass in a zero value
 	// Example: client.PublishArtifacts(ctx, req, grpc_retry.WithMax(0))
@@ -56,8 +58,8 @@ func NewCIAddonClient(port uint, log *zap.SugaredLogger) (CIAddonClient, error) 
 		return nil, err
 	}
 
-	c := pb.NewCIAddonClient(conn)
-	client := ciAddonClient{
+	c := pb.NewAddonClient(conn)
+	client := addonClient{
 		port:       port,
 		log:        log,
 		conn:       conn,
@@ -66,13 +68,13 @@ func NewCIAddonClient(port uint, log *zap.SugaredLogger) (CIAddonClient, error) 
 	return &client, nil
 }
 
-func (c *ciAddonClient) CloseConn() error {
+func (c *addonClient) CloseConn() error {
 	if err := c.conn.Close(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *ciAddonClient) Client() pb.CIAddonClient {
+func (c *addonClient) Client() pb.AddonClient {
 	return c.grpcClient
 }

@@ -99,7 +99,7 @@ message TaskProgressUpdatesResponse {
   Error error = 2;
 }
 
-service CIAddon {
+service Addon {
   // Asynchronous RPC to upload files as well as build docker images and publish them
   // It takes a list of files/file_patterns and uploads them to a destination location
   // It also takes a list of local Dockerfiles, builds them and upload to specified destination location

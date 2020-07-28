@@ -32,14 +32,14 @@ func (fi fileInfo) ModTime() time.Time { return time.Now() }
 func (fi fileInfo) IsDir() bool        { return false }
 func (fi fileInfo) Sys() interface{}   { return nil }
 
-func getRestoreStep(id, key string, failIfNotExist bool) *pb.Step {
-	restoreCache := &pb.Step_RestoreCache{
+func getRestoreStep(id, key string, failIfNotExist bool) *pb.UnitStep {
+	restoreCache := &pb.UnitStep_RestoreCache{
 		RestoreCache: &pb.RestoreCacheStep{
 			Key:            key,
 			FailIfNotExist: failIfNotExist,
 		},
 	}
-	return &pb.Step{
+	return &pb.UnitStep{
 		Id:          id,
 		DisplayName: "test save cache step",
 		Step:        restoreCache,

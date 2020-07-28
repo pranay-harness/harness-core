@@ -292,9 +292,9 @@ func TestRunExecuteErr(t *testing.T) {
 	logFilePath := "/a/"
 	fs := filesystem.NewMockFileSystem(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	step := &pb.Step{
+	step := &pb.UnitStep{
 		Id: "test",
-		Step: &pb.Step_Run{
+		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
 				Commands: []string{"cd .", "ls"},
 			},

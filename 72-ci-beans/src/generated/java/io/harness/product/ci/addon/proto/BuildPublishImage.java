@@ -91,14 +91,14 @@ public final class BuildPublishImage extends com.google.protobuf.GeneratedMessag
     }
   }
   public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_BuildPublishImage_descriptor;
   }
 
   @java.
   lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-    return io.harness.product.ci.addon.proto.Addon
+    return io.harness.product.ci.addon.proto.AddonOuterClass
         .internal_static_io_harness_product_ci_addon_proto_BuildPublishImage_fieldAccessorTable
         .ensureFieldAccessorsInitialized(io.harness.product.ci.addon.proto.BuildPublishImage.class,
             io.harness.product.ci.addon.proto.BuildPublishImage.Builder.class);
@@ -365,14 +365,14 @@ public final class BuildPublishImage extends com.google.protobuf.GeneratedMessag
       // @@protoc_insertion_point(builder_implements:io.harness.product.ci.addon.proto.BuildPublishImage)
       io.harness.product.ci.addon.proto.BuildPublishImageOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_BuildPublishImage_descriptor;
     }
 
     @java.
     lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_BuildPublishImage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(io.harness.product.ci.addon.proto.BuildPublishImage.class,
               io.harness.product.ci.addon.proto.BuildPublishImage.Builder.class);
@@ -410,7 +410,7 @@ public final class BuildPublishImage extends com.google.protobuf.GeneratedMessag
     @java.
     lang.Override
     public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
-      return io.harness.product.ci.addon.proto.Addon
+      return io.harness.product.ci.addon.proto.AddonOuterClass
           .internal_static_io_harness_product_ci_addon_proto_BuildPublishImage_descriptor;
     }
 
