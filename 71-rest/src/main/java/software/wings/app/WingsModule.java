@@ -50,6 +50,7 @@ import io.harness.datahandler.services.AdminUserService;
 import io.harness.datahandler.services.AdminUserServiceImpl;
 import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
@@ -1284,6 +1285,7 @@ public class WingsModule extends DependencyModule implements ServersModule {
     MapBinder<Class, String> morphiaClasses =
         MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
     morphiaClasses.addBinding(DelegateSyncTaskResponse.class).toInstance("delegateSyncTaskResponses");
+    morphiaClasses.addBinding(DelegateAsyncTaskResponse.class).toInstance("delegateAsyncTaskResponses");
   }
 
   @Override

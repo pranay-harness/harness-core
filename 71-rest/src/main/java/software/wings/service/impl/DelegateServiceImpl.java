@@ -2382,7 +2382,12 @@ public class DelegateServiceImpl implements DelegateService {
     wingsPersistence.delete(taskQuery);
   }
 
-  private void handleDriverResponse(DelegateTask delegateTask, DelegateTaskResponse response) {
+  @VisibleForTesting
+  void handleDriverResponse(DelegateTask delegateTask, DelegateTaskResponse response) {
+    if (delegateTask == null || response == null) {
+      return;
+    }
+
     DelegateCallbackService delegateCallbackService =
         delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId());
     if (delegateCallbackService == null) {
@@ -2392,8 +2397,13 @@ public class DelegateServiceImpl implements DelegateService {
     try (DelegateDriverLogContext driverLogContext =
              new DelegateDriverLogContext(delegateTask.getDriverId(), OVERRIDE_ERROR);
          TaskLogContext taskLogContext = new TaskLogContext(delegateTask.getUuid(), OVERRIDE_ERROR)) {
-      delegateCallbackService.publishTaskResponse(
-          delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
+      if (delegateTask.getData().isAsync()) {
+        delegateCallbackService.publishAsyncTaskResponse(
+            delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
+      } else {
+        delegateCallbackService.publishSyncTaskResponse(
+            delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
+      }
     } catch (Exception ex) {
       logger.error("Failed publishing task response for task", ex);
     }

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.executionplan.ExecutionPlanModule;
@@ -33,6 +34,7 @@ public class CIExecutionServiceModule extends DependencyModule {
     MapBinder<Class, String> morphiaClasses =
         MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
     morphiaClasses.addBinding(DelegateSyncTaskResponse.class).toInstance("delegateSyncTaskResponses");
+    morphiaClasses.addBinding(DelegateAsyncTaskResponse.class).toInstance("delegateAsyncTaskResponses");
   }
 
   @Override

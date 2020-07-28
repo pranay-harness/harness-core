@@ -66,7 +66,7 @@ public class MongoDelegateCallbackServiceTest extends DelegateServiceTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void testPublishTaskResponse() {
+  public void testPublishSyncTaskResponse() {
     DelegateCallback delegateCallback =
         DelegateCallback.newBuilder()
             .setMongoDatabase(
@@ -76,7 +76,7 @@ public class MongoDelegateCallbackServiceTest extends DelegateServiceTest {
     DelegateCallbackService delegateCallbackService = delegateCallbackRegistry.obtainDelegateCallbackService(driverId);
 
     try {
-      delegateCallbackService.publishTaskResponse(
+      delegateCallbackService.publishSyncTaskResponse(
           "taskId", kryoSerializer.asDeflatedBytes(StringNotifyResponseData.builder().data("OK").build()));
     } catch (Exception e) {
       fail(e.getMessage());
@@ -88,5 +88,33 @@ public class MongoDelegateCallbackServiceTest extends DelegateServiceTest {
 
     assertThat(mongoCollection.countDocuments()).isEqualTo(1);
     assertThat(mongoCollection.find().first().keySet()).containsExactlyInAnyOrder("_id", "responseData");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testPublishAsyncTaskResponse() {
+    DelegateCallback delegateCallback =
+        DelegateCallback.newBuilder()
+            .setMongoDatabase(
+                MongoDatabase.newBuilder().setConnection(getMongoUri()).setCollectionNamePrefix("cx").build())
+            .build();
+    String driverId = delegateCallbackRegistry.ensureCallback(delegateCallback);
+    DelegateCallbackService delegateCallbackService = delegateCallbackRegistry.obtainDelegateCallbackService(driverId);
+
+    try {
+      delegateCallbackService.publishAsyncTaskResponse(
+          "taskId", kryoSerializer.asDeflatedBytes(StringNotifyResponseData.builder().data("OK").build()));
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
+
+    MongoClient mongoClient = new MongoClient(new MongoClientURI(getMongoUri()));
+    MongoCollection<Document> mongoCollection =
+        mongoClient.getDatabase("harness").getCollection("cx_delegateAsyncTaskResponses");
+
+    assertThat(mongoCollection.countDocuments()).isEqualTo(1);
+    assertThat(mongoCollection.find().first().keySet())
+        .containsExactlyInAnyOrder("_id", "responseData", "lastProcessingAttempt");
   }
 }

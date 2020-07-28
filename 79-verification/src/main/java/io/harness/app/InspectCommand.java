@@ -14,6 +14,7 @@ import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.cli.ConfiguredCommand;
 import io.dropwizard.setup.Bootstrap;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.IndexManager;
@@ -57,6 +58,7 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
         MapBinder<Class, String> morphiaClasses =
             MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
         morphiaClasses.addBinding(DelegateSyncTaskResponse.class).toInstance("delegateSyncTaskResponses");
+        morphiaClasses.addBinding(DelegateAsyncTaskResponse.class).toInstance("delegateAsyncTaskResponses");
       }
 
       @Provides

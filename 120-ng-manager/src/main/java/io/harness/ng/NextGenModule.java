@@ -13,6 +13,7 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.cdng.NGModule;
 import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.connector.ConnectorModule;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.executionplan.ExecutionPlanModule;
@@ -123,6 +124,7 @@ public class NextGenModule extends DependencyModule {
     MapBinder<Class, String> morphiaClasses =
         MapBinder.newMapBinder(binder(), Class.class, String.class, Names.named("morphiaClasses"));
     morphiaClasses.addBinding(DelegateSyncTaskResponse.class).toInstance("delegateSyncTaskResponses");
+    morphiaClasses.addBinding(DelegateAsyncTaskResponse.class).toInstance("delegateAsyncTaskResponses");
 
     bind(RemotePerpetualTaskServiceClientManager.class).to(RemotePerpetualTaskServiceClientManagerImpl.class);
   }
