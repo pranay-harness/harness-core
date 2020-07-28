@@ -11,4 +11,4 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-public class NGLocalConfigDTO extends NGSecretManagerConfigDTO {}
+public class LocalConfigDTO extends SecretManagerConfigDTO {}

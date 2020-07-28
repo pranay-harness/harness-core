@@ -19,11 +19,12 @@ import java.util.List;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "encryptionType",
     visible = true)
 @JsonSubTypes({
-  @Type(name = "LOCAL", value = NGLocalConfigDTO.class), @Type(name = "VAULT", value = NGVaultConfigDTO.class),
+  @Type(name = "LOCAL", value = LocalConfigDTO.class), @Type(name = "VAULT", value = VaultConfigDTO.class)
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class NGSecretManagerConfigDTO {
+public abstract class SecretManagerConfigDTO {
   private String uuid;
+  private String name;
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
@@ -31,4 +32,5 @@ public abstract class NGSecretManagerConfigDTO {
   private String identifier;
   private EncryptionType encryptionType;
   private boolean isDefault;
+  private String description;
 }

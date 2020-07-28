@@ -2,7 +2,6 @@ package io.harness.ng.core.services.api.impl;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.harness.rule.OwnerRule.PHOENIKX;
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -13,8 +12,8 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
-import io.harness.secretmanagerclient.dto.NGVaultConfigDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -47,15 +46,15 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testCreateSecretManager() throws IOException {
-    String kmsId = randomAlphabetic(20);
-    Call<RestResponse<String>> request = mock(Call.class);
+    SecretManagerConfigDTO dto = random(VaultConfigDTO.class);
+    Call<RestResponse<SecretManagerConfigDTO>> request = mock(Call.class);
 
     when(secretManagerClient.createSecretManager(any())).thenReturn(request);
-    when(request.execute()).thenReturn(Response.success(new RestResponse<>(kmsId)));
+    when(request.execute()).thenReturn(Response.success(new RestResponse<>(dto)));
 
-    String savedKmsId = ngSecretManagerService.createSecretManager(random(NGVaultConfigDTO.class));
+    SecretManagerConfigDTO savedDTO = ngSecretManagerService.createSecretManager(random(VaultConfigDTO.class));
 
-    Assertions.assertThat(savedKmsId).isEqualTo(kmsId);
+    Assertions.assertThat(savedDTO).isEqualTo(dto);
   }
 
   @Test
@@ -77,13 +76,13 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testListSecretManagers() throws IOException {
-    List<NGSecretManagerConfigDTO> secretManagerConfigs = Lists.newArrayList(random(NGVaultConfigDTO.class));
-    Call<RestResponse<List<NGSecretManagerConfigDTO>>> request = mock(Call.class);
+    List<SecretManagerConfigDTO> secretManagerConfigs = Lists.newArrayList(random(VaultConfigDTO.class));
+    Call<RestResponse<List<SecretManagerConfigDTO>>> request = mock(Call.class);
 
     when(secretManagerClient.listSecretManagers(any(), any(), any())).thenReturn(request);
     when(request.execute()).thenReturn(Response.success(new RestResponse<>(secretManagerConfigs)));
 
-    List<NGSecretManagerConfigDTO> secretManagerConfigList =
+    List<SecretManagerConfigDTO> secretManagerConfigList =
         ngSecretManagerService.listSecretManagers(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
 
     Assertions.assertThat(secretManagerConfigList).isNotEmpty();

@@ -322,6 +322,11 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public String saveEncryptedData(EncryptedData encryptedData) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public void deleteByAccountId(String accountId) {
     // NoOp Function
   }

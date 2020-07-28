@@ -16,10 +16,10 @@ import java.util.List;
 @NoArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "encryptionType",
     visible = true)
-@JsonSubTypes({ @JsonSubTypes.Type(name = "VAULT", value = NGVaultConfigUpdateDTO.class)
-                , })
+@JsonSubTypes({ @JsonSubTypes.Type(name = "VAULT", value = VaultConfigUpdateDTO.class) })
 public class NGSecretManagerConfigUpdateDTO {
   private List<String> tags;
   private EncryptionType encryptionType;
   private boolean isDefault;
+  private String description;
 }

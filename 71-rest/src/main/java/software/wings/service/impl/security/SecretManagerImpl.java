@@ -1727,29 +1727,6 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
-  private void validateSecretPath(EncryptionType encryptionType, String path) {
-    if (isNotEmpty(path)) {
-      switch (encryptionType) {
-        case VAULT:
-          // Path should always have a "#" in and a key name after the #.
-          if (path.indexOf('#') < 0) {
-            throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
-                "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.",
-                USER);
-          }
-          break;
-        case AWS_SECRETS_MANAGER:
-        case CYBERARK:
-        case AZURE_VAULT:
-          break;
-        default:
-          throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
-              "Secret path can be specified only if the secret manager is of VAULT/AWS_SECRETS_MANAGER/CYBERARK/AZURE_VAULT type!",
-              USER);
-      }
-    }
-  }
-
   private boolean eligibleForCrudAudit(EncryptedData savedData) {
     return SettingVariableTypes.CONFIG_FILE == savedData.getType()
         || SettingVariableTypes.SECRET_TEXT == savedData.getType();
@@ -2270,7 +2247,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @VisibleForTesting
-  String saveEncryptedData(EncryptedData encryptedData) {
+  public String saveEncryptedData(EncryptedData encryptedData) {
     if (encryptedData == null) {
       return null;
     }

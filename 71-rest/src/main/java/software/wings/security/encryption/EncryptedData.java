@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
@@ -12,8 +13,10 @@ import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
+import io.harness.ng.core.NGAccess;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
+import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
@@ -40,6 +43,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.validation.constraints.NotNull;
@@ -62,8 +66,8 @@ import javax.validation.constraints.NotNull;
 @CdIndex(name = "acctKmsIdx", fields = { @Field("accountId")
                                          , @Field("kmsId") })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
-public class EncryptedData
-    extends Base implements EncryptedRecord, NameAccess, PersistentRegularIterable, AccountAccess, ScopedEntity {
+public class EncryptedData extends Base
+    implements EncryptedRecord, NameAccess, PersistentRegularIterable, AccountAccess, ScopedEntity, NGAccess {
   public static final String PARENT_ID_KEY =
       String.format("%s.%s", EncryptedDataKeys.parents, EncryptedDataParentKeys.id);
 
@@ -130,6 +134,8 @@ public class EncryptedData
   @SchemaIgnore @Transient private transient int changeLog;
 
   @SchemaIgnore @FdIndex private List<String> keywords;
+
+  @JsonIgnore private NGEncryptedDataMetadata ngMetadata;
 
   public String getKmsId() {
     if (encryptionType == LOCAL) {
@@ -280,6 +286,30 @@ public class EncryptedData
     if (!isEmpty(searchTags)) {
       searchTags.clear();
     }
+  }
+
+  @Override
+  @JsonIgnore
+  public String getIdentifier() {
+    return Optional.ofNullable(ngMetadata).map(NGEncryptedDataMetadata::getIdentifier).orElse(null);
+  }
+
+  @Override
+  @JsonIgnore
+  public String getAccountIdentifier() {
+    return Optional.ofNullable(ngMetadata).map(NGEncryptedDataMetadata::getAccountIdentifier).orElse(null);
+  }
+
+  @Override
+  @JsonIgnore
+  public String getOrgIdentifier() {
+    return Optional.ofNullable(ngMetadata).map(NGEncryptedDataMetadata::getOrgIdentifier).orElse(null);
+  }
+
+  @Override
+  @JsonIgnore
+  public String getProjectIdentifier() {
+    return Optional.ofNullable(ngMetadata).map(NGEncryptedDataMetadata::getProjectIdentifier).orElse(null);
   }
 
   @UtilityClass

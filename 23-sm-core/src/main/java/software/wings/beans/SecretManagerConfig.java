@@ -18,7 +18,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
-import io.harness.secretmanagerclient.NGSecretMetadata;
+import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTOConverter;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
@@ -75,7 +75,7 @@ public abstract class SecretManagerConfig
 
   @FdIndex private Long nextTokenRenewIteration;
 
-  private NGSecretMetadata ngMetadata;
+  @JsonIgnore private NGSecretManagerMetadata ngMetadata;
 
   private List<String> templatizedFields;
 
@@ -111,24 +111,24 @@ public abstract class SecretManagerConfig
   @Override
   @JsonIgnore
   public String getAccountIdentifier() {
-    return Optional.ofNullable(ngMetadata).map(NGSecretMetadata::getAccountIdentifier).orElse(null);
+    return Optional.ofNullable(ngMetadata).map(NGSecretManagerMetadata::getAccountIdentifier).orElse(null);
   }
 
   @Override
   @JsonIgnore
   public String getOrgIdentifier() {
-    return Optional.ofNullable(ngMetadata).map(NGSecretMetadata::getOrgIdentifier).orElse(null);
+    return Optional.ofNullable(ngMetadata).map(NGSecretManagerMetadata::getOrgIdentifier).orElse(null);
   }
 
   @Override
   @JsonIgnore
   public String getProjectIdentifier() {
-    return Optional.ofNullable(ngMetadata).map(NGSecretMetadata::getProjectIdentifier).orElse(null);
+    return Optional.ofNullable(ngMetadata).map(NGSecretManagerMetadata::getProjectIdentifier).orElse(null);
   }
 
   @Override
   @JsonIgnore
   public String getIdentifier() {
-    return Optional.ofNullable(ngMetadata).map(NGSecretMetadata::getIdentifier).orElse(null);
+    return Optional.ofNullable(ngMetadata).map(NGSecretManagerMetadata::getIdentifier).orElse(null);
   }
 }

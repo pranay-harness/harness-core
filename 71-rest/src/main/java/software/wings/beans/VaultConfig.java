@@ -12,9 +12,9 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.mongo.index.FdIndex;
-import io.harness.secretmanagerclient.NGSecretMetadata;
-import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
-import io.harness.secretmanagerclient.dto.NGVaultConfigDTO;
+import io.harness.secretmanagerclient.NGSecretManagerMetadata;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -107,19 +107,19 @@ public class VaultConfig extends SecretManagerConfig implements ExecutionCapabil
   }
 
   @Override
-  public NGSecretManagerConfigDTO toDTO() {
-    NGVaultConfigDTO ngVaultConfigDTO = NGVaultConfigDTO.builder()
-                                            .uuid(getUuid())
-                                            .encryptionType(getEncryptionType())
-                                            .name(getName())
-                                            .isDefault(isDefault())
-                                            .isReadOnly(isReadOnly())
-                                            .basePath(getBasePath())
-                                            .secretEngineName(getSecretEngineName())
-                                            .renewIntervalHours(getRenewIntervalHours())
-                                            .vaultUrl(getVaultUrl())
-                                            .build();
-    NGSecretMetadata ngMetadata = getNgMetadata();
+  public SecretManagerConfigDTO toDTO() {
+    VaultConfigDTO ngVaultConfigDTO = VaultConfigDTO.builder()
+                                          .uuid(getUuid())
+                                          .encryptionType(getEncryptionType())
+                                          .name(getName())
+                                          .isDefault(isDefault())
+                                          .isReadOnly(isReadOnly())
+                                          .basePath(getBasePath())
+                                          .secretEngineName(getSecretEngineName())
+                                          .renewIntervalHours(getRenewIntervalHours())
+                                          .vaultUrl(getVaultUrl())
+                                          .build();
+    NGSecretManagerMetadata ngMetadata = getNgMetadata();
     if (ngMetadata != null) {
       ngVaultConfigDTO.setAccountIdentifier(ngMetadata.getAccountIdentifier());
       ngVaultConfigDTO.setOrgIdentifier(ngMetadata.getOrgIdentifier());

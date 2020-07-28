@@ -1,30 +1,31 @@
 package software.wings.resources.secretsmanagement;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
+import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 
 import io.harness.NgManagerServiceDriver;
-import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
-import io.harness.exception.WingsException;
-import io.harness.logging.AccountLogContext;
-import io.harness.logging.AutoLogContext;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
+import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.SecretTextCreateDTO;
+import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
-import retrofit2.http.Body;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.security.annotations.NextGenManagerAuth;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretText;
-import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.security.NGSecretService;
 import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -43,61 +44,84 @@ import javax.ws.rs.QueryParam;
 @NextGenManagerAuth
 @Slf4j
 public class SecretsResourceNG {
-  private final SecretManager secretManager;
   private final NgManagerServiceDriver ngManagerServiceDriver;
+  private final NGSecretService ngSecretService;
+  public static final String ACCOUNT_IDENTIFIER = "accountIdentifier";
+  public static final String ORG_IDENTIFIER = "orgIdentifier";
+  public static final String PROJECT_IDENTIFIER = "projectIdentifier";
+  public static final String LIMIT = "limit";
+  public static final String OFFSET = "offset";
 
   @Inject
-  public SecretsResourceNG(SecretManager secretManager, NgManagerServiceDriver ngManagerServiceDriver) {
-    this.secretManager = secretManager;
+  public SecretsResourceNG(NgManagerServiceDriver ngManagerServiceDriver, NGSecretService ngSecretService) {
     this.ngManagerServiceDriver = ngManagerServiceDriver;
-  }
-
-  @GET
-  @Path("{secretId}")
-  public RestResponse<EncryptedData> get(@PathParam("secretId") String secretId,
-      @QueryParam("accountId") final String accountId, @QueryParam("userId") final String userId) {
-    return new RestResponse<>(secretManager.getSecretById(accountId, secretId));
-  }
-
-  @GET
-  public RestResponse<PageResponse<EncryptedData>> listSecrets(@QueryParam("accountId") final String accountId,
-      @QueryParam("type") final SettingVariableTypes type,
-      @DefaultValue("true") @QueryParam("details") boolean details) {
-    PageRequest<EncryptedData> pageRequest = new PageRequest<>();
-    try {
-      pageRequest.addFilter("type", Operator.EQ, type);
-      pageRequest.addFilter("accountId", Operator.EQ, accountId);
-      return new RestResponse<>(secretManager.listSecretsMappedToAccount(accountId, pageRequest, details));
-    } catch (IllegalAccessException e) {
-      throw new WingsException(e);
-    }
+    this.ngSecretService = ngSecretService;
   }
 
   @POST
-  public RestResponse<String> createSecret(
-      @QueryParam("accountId") String accountId, @QueryParam("local") boolean localMode, SecretText secretText) {
-    if (localMode) {
-      return new RestResponse<>(secretManager.saveSecretUsingLocalMode(accountId, secretText));
-    }
-    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Adding a secret");
-      return new RestResponse<>(secretManager.saveSecret(accountId, secretText));
-    }
+  public RestResponse<EncryptedDataDTO> createSecret(SecretTextCreateDTO dto) {
+    EncryptedData encryptedData = EncryptedDataMapper.fromDTO(dto);
+    EncryptedData createdEncryptedData = ngSecretService.createSecretText(encryptedData, dto.getValue());
+    return new RestResponse<>(EncryptedDataMapper.toDTO(createdEncryptedData));
+  }
+
+  @GET
+  public RestResponse<PageResponse<EncryptedDataDTO>> listSecrets(
+      @QueryParam(ACCOUNT_IDENTIFIER) final String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER) final String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER) final String projectIdentifier,
+      @QueryParam(LIMIT) @DefaultValue("100") final String limit,
+      @QueryParam(OFFSET) @DefaultValue("0") final String offset, @QueryParam("type") final SettingVariableTypes type) {
+    PageResponse<EncryptedData> encryptedDataPageResponse =
+        ngSecretService.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, type, limit, offset);
+    List<EncryptedDataDTO> dtoList =
+        encryptedDataPageResponse.getResponse().stream().map(EncryptedDataMapper::toDTO).collect(Collectors.toList());
+    PageResponse<EncryptedDataDTO> dtoPageResponse = new PageResponse<>();
+    dtoPageResponse.setResponse(dtoList);
+    dtoPageResponse.setTotal(encryptedDataPageResponse.getTotal());
+    dtoPageResponse.setLimit(encryptedDataPageResponse.getLimit());
+    dtoPageResponse.setOffset(encryptedDataPageResponse.getOffset());
+    return new RestResponse<>(dtoPageResponse);
+  }
+
+  @GET
+  @Path("{identifier}")
+  public RestResponse<EncryptedDataDTO> get(@PathParam("identifier") String identifier,
+      @QueryParam(ACCOUNT_IDENTIFIER) final String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER) final String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER) final String projectIdentifier) {
+    Optional<EncryptedData> encryptedDataOptional =
+        ngSecretService.getSecretText(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    return new RestResponse<>(encryptedDataOptional.map(EncryptedDataMapper::toDTO).orElse(null));
   }
 
   @PUT
-  public RestResponse<Boolean> updateSecret(
-      @QueryParam("accountId") String accountId, @QueryParam("uuid") String uuId, @Body SecretText secretText) {
-    return new RestResponse<>(secretManager.updateSecret(accountId, uuId, secretText));
+  @Path("{identifier}")
+  public RestResponse<Boolean> updateSecret(@PathParam("identifier") String identifier,
+      @QueryParam(ACCOUNT_IDENTIFIER) final String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER) final String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER) final String projectIdentifier, SecretTextUpdateDTO dto) {
+    if (!StringUtils.isEmpty(dto.getPath()) && !StringUtils.isEmpty(dto.getValue())) {
+      throw new InvalidRequestException("Cannot update both path and value", INVALID_REQUEST, USER);
+    }
+    Optional<EncryptedData> encryptedDataOptional =
+        ngSecretService.getSecretText(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (encryptedDataOptional.isPresent()) {
+      EncryptedData appliedUpdate = EncryptedDataMapper.applyUpdate(dto, encryptedDataOptional.get());
+      boolean success = ngSecretService.updateSecretText(appliedUpdate, dto.getValue());
+      return new RestResponse<>(success);
+    }
+    throw new InvalidRequestException("No such secret found", INVALID_REQUEST, USER);
   }
 
   @DELETE
-  public RestResponse<Boolean> deleteSecret(
-      @QueryParam("accountId") String accountId, @QueryParam("uuid") String uuId) {
-    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      logger.info("Deleting a secret");
-      return new RestResponse<>(secretManager.deleteSecret(accountId, uuId, null));
-    }
+  @Path("{identifier}")
+  public RestResponse<Boolean> deleteSecret(@PathParam("identifier") String identifier,
+      @QueryParam(ACCOUNT_IDENTIFIER) final String accountIdentifier,
+      @QueryParam(ORG_IDENTIFIER) final String orgIdentifier,
+      @QueryParam(PROJECT_IDENTIFIER) final String projectIdentifier) {
+    return new RestResponse<>(
+        ngSecretService.deleteSecretText(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
 
   @POST
@@ -105,7 +129,7 @@ public class SecretsResourceNG {
   @Consumes("application/x-kryo")
   @Produces("application/x-kryo")
   public RestResponse<List<EncryptedDataDetail>> getEncryptionDetails(EncryptableSetting encryptableSetting) {
-    return new RestResponse<>(secretManager.getEncryptionDetails(encryptableSetting));
+    return new RestResponse<>(ngSecretService.getEncryptionDetails(encryptableSetting));
   }
 
   @GET

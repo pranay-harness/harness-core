@@ -1,17 +1,19 @@
 package software.wings.resources.secretsmanagement;
 
-import static software.wings.resources.secretsmanagement.mappers.SecretManagerConfigMapper.applyUpdate;
+import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.rest.RestResponse;
-import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTOConverter;
 import io.harness.secretmanagerclient.dto.NGSecretManagerConfigUpdateDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.swagger.annotations.Api;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.resources.secretsmanagement.mappers.SecretManagerConfigMapper;
 import software.wings.security.annotations.NextGenManagerAuth;
+import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.intfc.security.NGSecretManagerService;
 
 import java.util.List;
@@ -41,13 +43,13 @@ public class SecretManagerResourceNG {
   public static final String IDENTIFIER = "identifier";
 
   @POST
-  public RestResponse<String> createOrUpdateSecretManager(NGSecretManagerConfigDTO dto) {
-    SecretManagerConfig secretManagerConfig = applyUpdate(dto);
+  public RestResponse<SecretManagerConfig> createSecretManager(SecretManagerConfigDTO dto) {
+    SecretManagerConfig secretManagerConfig = SecretManagerConfigMapper.fromDTO(dto);
     return new RestResponse<>(ngSecretManagerService.createSecretManager(secretManagerConfig));
   }
 
   @GET
-  public RestResponse<List<NGSecretManagerConfigDTO>> getSecretManagers(
+  public RestResponse<List<SecretManagerConfigDTO>> getSecretManagers(
       @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
       @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier) {
     List<SecretManagerConfig> secretManagerConfigs =
@@ -58,28 +60,28 @@ public class SecretManagerResourceNG {
 
   @GET
   @Path("{identifier}")
-  public RestResponse<NGSecretManagerConfigDTO> getSecretManager(@PathParam(IDENTIFIER) String identifier,
+  public RestResponse<SecretManagerConfigDTO> getSecretManager(@PathParam(IDENTIFIER) String identifier,
       @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
       @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier) {
-    SecretManagerConfig secretManagerConfig =
+    Optional<SecretManagerConfig> secretManagerConfigOptional =
         ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    return new RestResponse<>(Optional.ofNullable(secretManagerConfig).map(SecretManagerConfig::toDTO).orElse(null));
+    return new RestResponse<>(secretManagerConfigOptional.map(SecretManagerConfig::toDTO).orElse(null));
   }
 
   @PUT
   @Path("/{identifier}")
-  public RestResponse<String> updateSecretManager(@PathParam(IDENTIFIER) String identifier,
+  public RestResponse<SecretManagerConfig> updateSecretManager(@PathParam(IDENTIFIER) String identifier,
       @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
       @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier,
       NGSecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
-    SecretManagerConfig secretManagerConfig =
+    Optional<SecretManagerConfig> secretManagerConfigOptional =
         ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    if (Optional.ofNullable(secretManagerConfig).isPresent()) {
+    if (secretManagerConfigOptional.isPresent()) {
       SecretManagerConfig applyUpdate =
-          SecretManagerConfigMapper.applyUpdate(secretManagerConfig, secretManagerConfigUpdateDTO);
-      return new RestResponse<>(ngSecretManagerService.updateSecretManager(secretManagerConfig));
+          SecretManagerConfigMapper.applyUpdate(secretManagerConfigOptional.get(), secretManagerConfigUpdateDTO);
+      return new RestResponse<>(ngSecretManagerService.updateSecretManager(applyUpdate));
     }
-    return new RestResponse<>(null);
+    throw new SecretManagementException(ErrorCode.SECRET_MANAGEMENT_ERROR, "Secret Manager not found", USER);
   }
 
   @DELETE

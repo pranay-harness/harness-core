@@ -1,21 +1,22 @@
-package software.wings.service.intfc.security;
+package software.wings.service.impl.security;
 
-import static io.harness.validation.Validator.notEmptyCheck;
-
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.secretmanagerclient.NGMetadata;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
+import io.harness.secretmanagerclient.NGSecretManagerMetadata;
+import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionType;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerConfig;
 import software.wings.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.security.NGSecretManagerService;
+import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.security.VaultService;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,25 +28,38 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   @Inject private WingsPersistence wingsPersistence;
 
   private static final String ACCOUNT_IDENTIFIER_KEY =
-      SecretManagerConfigKeys.ngMetadata + "." + NGMetadataKeys.accountIdentifier;
+      SecretManagerConfigKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.accountIdentifier;
 
   private static final String ORG_IDENTIFIER_KEY =
-      SecretManagerConfigKeys.ngMetadata + "." + NGMetadataKeys.orgIdentifier;
+      SecretManagerConfigKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.orgIdentifier;
 
   private static final String PROJECT_IDENTIFIER_KEY =
-      SecretManagerConfigKeys.ngMetadata + "." + NGMetadataKeys.projectIdentifier;
+      SecretManagerConfigKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.projectIdentifier;
 
   private static final String IDENTIFIER_KEY = SecretManagerConfigKeys.ngMetadata + "." + NGMetadataKeys.identifier;
 
   @Override
-  public String createSecretManager(SecretManagerConfig secretManagerConfig) {
-    NGMetadata ngMetadata = secretManagerConfig.getNgMetadata();
+  public SecretManagerConfig createSecretManager(SecretManagerConfig secretManagerConfig) {
+    NGSecretManagerMetadata ngMetadata = secretManagerConfig.getNgMetadata();
     if (Optional.ofNullable(ngMetadata).isPresent()) {
+      // TODO{phoenikx} Do it using a DB index
+      boolean duplicatePresent = checkForDuplicate(ngMetadata.getAccountIdentifier(), ngMetadata.getOrgIdentifier(),
+          ngMetadata.getProjectIdentifier(), ngMetadata.getIdentifier());
+      if (duplicatePresent) {
+        throw new DuplicateFieldException("Secret manager with same configuration exists");
+      }
+
       if (secretManagerConfig.getEncryptionType() == EncryptionType.VAULT) {
         vaultService.saveOrUpdateVaultConfig(secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig);
+        return secretManagerConfig;
       }
     }
     throw new UnsupportedOperationException("secret manager not supported in NG");
+  }
+
+  private boolean checkForDuplicate(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier).isPresent();
   }
 
   private Query<SecretManagerConfig> getQuery(
@@ -63,31 +77,23 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   public List<SecretManagerConfig> listSecretManagers(
       @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Query<SecretManagerConfig> secretManagerConfigQuery;
-    if (!StringUtils.isEmpty(projectIdentifier)) {
-      notEmptyCheck("Account/Org identifier cannot be empty", Lists.newArrayList(accountIdentifier, orgIdentifier));
-      secretManagerConfigQuery = getQuery(accountIdentifier, orgIdentifier, projectIdentifier);
-    } else if (!StringUtils.isEmpty(orgIdentifier)) {
-      notEmptyCheck("Account identifier be empty", Lists.newArrayList(accountIdentifier));
-      secretManagerConfigQuery = getQuery(accountIdentifier, orgIdentifier, null);
-    } else {
-      secretManagerConfigQuery = getQuery(accountIdentifier, null, null);
-    }
+    secretManagerConfigQuery = getQuery(accountIdentifier, null, null);
     return secretManagerConfigQuery.asList();
   }
 
   @Override
-  public SecretManagerConfig getSecretManager(
+  public Optional<SecretManagerConfig> getSecretManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     Query<SecretManagerConfig> secretManagerConfigQuery = getQuery(accountIdentifier, orgIdentifier, projectIdentifier);
     secretManagerConfigQuery.field(IDENTIFIER_KEY).equal(identifier);
-    return secretManagerConfigQuery.get();
+    return Optional.ofNullable(secretManagerConfigQuery.get());
   }
 
   @Override
-  public String updateSecretManager(SecretManagerConfig secretManagerConfig) {
+  public SecretManagerConfig updateSecretManager(SecretManagerConfig secretManagerConfig) {
     if (secretManagerConfig.getEncryptionType() == EncryptionType.VAULT) {
-      return vaultService.saveOrUpdateVaultConfig(
-          secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig);
+      vaultService.saveOrUpdateVaultConfig(secretManagerConfig.getAccountId(), (VaultConfig) secretManagerConfig);
+      return secretManagerConfig;
     }
     throw new UnsupportedOperationException("Secret Manager not supported in NG");
   }
@@ -100,18 +106,15 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   @Override
   public boolean deleteSecretManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    SecretManagerConfig secretManagerConfig =
+    Optional<SecretManagerConfig> secretManagerConfigOptional =
         getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    if (Optional.ofNullable(secretManagerConfig).isPresent()) {
-      switch (secretManagerConfig.getEncryptionType()) {
-        case VAULT:
-          VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
-          return vaultService.deleteVaultConfig(vaultConfig.getAccountId(), vaultConfig.getUuid());
-        case GCP_KMS:
-          // TODO{phoenikx} Support GCP KMS soon
-        default:
-          throw new UnsupportedOperationException("Secret manager not supported");
+    if (secretManagerConfigOptional.isPresent()) {
+      SecretManagerConfig secretManagerConfig = secretManagerConfigOptional.get();
+      if (secretManagerConfig.getEncryptionType() == EncryptionType.VAULT) {
+        VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
+        return vaultService.deleteVaultConfig(vaultConfig.getAccountId(), vaultConfig.getUuid());
       }
+      throw new UnsupportedOperationException("Secret manager not supported");
     }
     return false;
   }
