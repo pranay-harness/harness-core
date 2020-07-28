@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 @Builder
 public class PerpetualTaskAlert implements AlertData {
   private String accountId;
-  private String taskId;
+  private String description;
   private String perpetualTaskType;
   private String message;
 
@@ -16,11 +16,15 @@ public class PerpetualTaskAlert implements AlertData {
   public boolean matches(AlertData alertData) {
     PerpetualTaskAlert otherAlert = (PerpetualTaskAlert) alertData;
     return StringUtils.equals(accountId, otherAlert.getAccountId())
-        && StringUtils.equals(taskId, otherAlert.getTaskId());
+        && StringUtils.equals(perpetualTaskType, otherAlert.getPerpetualTaskType());
   }
 
   @Override
   public String buildTitle() {
+    if (StringUtils.isNotBlank(description)) {
+      return message + String.format(" For example %s.", description);
+    }
+
     return message;
   }
 }

@@ -86,7 +86,10 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
     verify(perpetualTaskService).appointDelegate(eq(accountId), anyString(), eq(delegateId), anyLong());
     verify(alertService, times(1))
         .closeAlert(eq(accountId), eq(null), eq(AlertType.PerpetualTaskAlert),
-            eq(PerpetualTaskAlert.builder().accountId(accountId).taskId(taskId).build()));
+            eq(PerpetualTaskAlert.builder()
+                    .accountId(accountId)
+                    .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
+                    .build()));
   }
 
   @Test
@@ -105,13 +108,14 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   public void shouldNotHandle_ServiceUnavailableNoDelegateAvailableToHandlePT() throws InterruptedException {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new NoAvaliableDelegatesException());
     perpetualTaskRecordHandler.handle(record);
+    String expectedMessage =
+        String.format(NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK, record.getPerpetualTaskType());
     verify(alertService, times(1))
         .openAlert(eq(accountId), eq(null), eq(AlertType.PerpetualTaskAlert),
             eq(PerpetualTaskAlert.builder()
                     .accountId(accountId)
-                    .taskId(taskId)
                     .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                    .message(NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK)
+                    .message(expectedMessage)
                     .build()));
   }
 
@@ -121,13 +125,14 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   public void shouldNotHandle_ServiceUnavailableFailedToAssignAnyDelegateToPT() throws InterruptedException {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new WingsException(""));
     perpetualTaskRecordHandler.handle(record);
+    String expectedMessage =
+        String.format(PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE, record.getPerpetualTaskType());
     verify(alertService, times(1))
         .openAlert(eq(accountId), eq(null), eq(AlertType.PerpetualTaskAlert),
             eq(PerpetualTaskAlert.builder()
                     .accountId(accountId)
-                    .taskId(taskId)
                     .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                    .message(PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE)
+                    .message(expectedMessage)
                     .build()));
   }
 
@@ -137,13 +142,14 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   public void shouldNotHandle_ServiceUnavailableFailedToAssignAnyDelegateToPT2() throws InterruptedException {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new RuntimeException());
     perpetualTaskRecordHandler.handle(record);
+    String expectedMessage =
+        String.format(FAIL_TO_ASSIGN_ANY_DELEGATE_TO_PERPETUAL_TASK, record.getPerpetualTaskType());
     verify(alertService, times(1))
         .openAlert(eq(accountId), eq(null), eq(AlertType.PerpetualTaskAlert),
             eq(PerpetualTaskAlert.builder()
                     .accountId(accountId)
-                    .taskId(taskId)
                     .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                    .message(FAIL_TO_ASSIGN_ANY_DELEGATE_TO_PERPETUAL_TASK)
+                    .message(expectedMessage)
                     .build()));
   }
 }
