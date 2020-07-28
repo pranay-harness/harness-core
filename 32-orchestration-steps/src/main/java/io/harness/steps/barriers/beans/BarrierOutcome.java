@@ -1,16 +1,16 @@
-package io.harness.barriers;
+package io.harness.steps.barriers.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ResponseData;
+import io.harness.data.Outcome;
 import lombok.Builder;
 import lombok.Value;
 
 @OwnedBy(CDC)
 @Value
 @Builder
-public class BarrierResponseData implements ResponseData {
-  boolean failed;
-  String errorMessage;
+public class BarrierOutcome implements Outcome {
+  String message;
+  String identifier;
 }

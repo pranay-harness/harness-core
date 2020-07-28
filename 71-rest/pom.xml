@@ -782,6 +782,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>32-orchestration-steps</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>38-execution-plan</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -908,6 +913,7 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
     <build>
         <finalName>rest</finalName>

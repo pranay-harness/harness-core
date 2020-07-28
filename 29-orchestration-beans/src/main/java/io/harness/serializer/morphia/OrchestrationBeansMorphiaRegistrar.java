@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.adviser.AdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.barriers.BarrierExecutionInstance;
 import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.Outcome;
 import io.harness.data.OutcomeInstance;
@@ -46,7 +45,6 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(RefObject.class);
     set.add(ExecutableResponse.class);
     set.add(PassThroughData.class);
-    set.add(BarrierExecutionInstance.class);
     set.add(SweepingOutput.class);
     set.add(ExecutionSweepingOutputInstance.class);
   }

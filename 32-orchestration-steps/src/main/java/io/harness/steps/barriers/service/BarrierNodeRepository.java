@@ -1,10 +1,10 @@
-package io.harness.engine.executions.barrier;
+package io.harness.steps.barriers.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.barriers.BarrierExecutionInstance;
+import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;

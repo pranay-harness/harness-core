@@ -1,4 +1,4 @@
-package io.harness.engine.barriers;
+package io.harness.steps.barriers.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.distribution.barrier.Barrier.State;
@@ -11,24 +11,23 @@ import static io.harness.execution.status.Status.ABORTED;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static java.time.Duration.ofMinutes;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.barriers.BarrierExecutionInstance;
-import io.harness.barriers.BarrierExecutionInstance.BarrierExecutionInstanceKeys;
-import io.harness.barriers.BarrierResponseData;
 import io.harness.distribution.barrier.Barrier;
 import io.harness.distribution.barrier.BarrierId;
 import io.harness.distribution.barrier.ForceProctor;
 import io.harness.distribution.barrier.Forcer;
 import io.harness.distribution.barrier.ForcerId;
-import io.harness.engine.executions.barrier.BarrierNodeRepository;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.status.Status;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -36,6 +35,10 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.persistence.HPersistence;
+import io.harness.steps.barriers.BarrierStep;
+import io.harness.steps.barriers.beans.BarrierExecutionInstance;
+import io.harness.steps.barriers.beans.BarrierExecutionInstance.BarrierExecutionInstanceKeys;
+import io.harness.steps.barriers.beans.BarrierResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -189,7 +192,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       int barrierExecutionInstancesSize = (Integer) metadata.get(BARRIER_NODES_SIZE);
 
       BarrierExecutionInstance barrierExecutionInstance = (BarrierExecutionInstance) metadata.get(BARRIER);
-      List<NodeExecution> nodeExecutions = nodeExecutionService.findBarrierNodesByPlanExecutionIdAndIdentifier(
+      List<NodeExecution> nodeExecutions = findBarrierNodesByPlanExecutionIdAndIdentifier(
           barrierExecutionInstance.getPlanExecutionId(), barrierExecutionInstance.getIdentifier());
 
       if (nodeExecutions.stream().anyMatch(node -> node.getStatus() == Status.SUCCEEDED)) {
@@ -217,5 +220,12 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     }
 
     return APPROACHING;
+  }
+
+  @Override
+  public List<NodeExecution> findBarrierNodesByPlanExecutionIdAndIdentifier(String planExecutionId, String identifier) {
+    Query query = query(new Criteria().andOperator(where(NodeExecutionKeys.planExecutionId).is(planExecutionId),
+        where("node.stepType").is(BarrierStep.STEP_TYPE), where("node.stepParameters.identifier").is(identifier)));
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 }

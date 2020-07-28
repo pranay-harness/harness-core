@@ -1,4 +1,4 @@
-package io.harness.state.core.barrier;
+package io.harness.steps.barriers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

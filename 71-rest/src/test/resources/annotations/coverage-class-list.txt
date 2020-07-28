@@ -14,8 +14,6 @@
 29-orchestration-beans/src/main/java/io/harness/ambiance/Ambiance.java
 29-orchestration-beans/src/main/java/io/harness/ambiance/Level.java
 29-orchestration-beans/src/main/java/io/harness/ambiance/LevelType.java
-29-orchestration-beans/src/main/java/io/harness/barriers/BarrierExecutionInstance.java
-29-orchestration-beans/src/main/java/io/harness/barriers/BarrierResponseData.java
 29-orchestration-beans/src/main/java/io/harness/data/ExecutionSweepingOutputInstance.java
 29-orchestration-beans/src/main/java/io/harness/data/OutcomeInstance.java
 29-orchestration-beans/src/main/java/io/harness/data/OutcomeType.java
@@ -94,7 +92,6 @@
 31-orchestration/src/main/java/io/harness/engine/advise/handlers/EndPlanAdviseHandler.java
 31-orchestration/src/main/java/io/harness/engine/advise/handlers/NextStepHandler.java
 31-orchestration/src/main/java/io/harness/engine/advise/handlers/RetryAdviseHandler.java
-31-orchestration/src/main/java/io/harness/engine/barriers/BarrierServiceImpl.java
 31-orchestration/src/main/java/io/harness/engine/events/OrchestrationEventEmitter.java
 31-orchestration/src/main/java/io/harness/engine/executables/ExecutableInvoker.java
 31-orchestration/src/main/java/io/harness/engine/executables/ExecutableInvokerFactory.java
@@ -167,9 +164,6 @@
 31-orchestration/src/main/java/io/harness/serializer/kryo/OrchestrationKryoRegister.java
 31-orchestration/src/main/java/io/harness/serializer/morphia/OrchestrationMorphiaRegistrar.java
 31-orchestration/src/main/java/io/harness/state/StateInspectionUtils.java
-31-orchestration/src/main/java/io/harness/state/core/barrier/BarrierOutcome.java
-31-orchestration/src/main/java/io/harness/state/core/barrier/BarrierStep.java
-31-orchestration/src/main/java/io/harness/state/core/barrier/BarrierStepParameters.java
 31-orchestration/src/main/java/io/harness/state/core/dummy/DummySectionOutcome.java
 31-orchestration/src/main/java/io/harness/state/core/dummy/DummySectionStep.java
 31-orchestration/src/main/java/io/harness/state/core/dummy/DummySectionStepParameters.java
@@ -186,6 +180,17 @@
 31-orchestration/src/main/java/io/harness/state/inspection/ExpressionVariableUsage.java
 31-orchestration/src/main/java/io/harness/state/inspection/StateInspection.java
 31-orchestration/src/main/java/io/harness/state/inspection/StateInspectionServiceImpl.java
+32-orchestration-steps/src/main/java/io/harness/registrars/OrchestrationStepsModuleEventHandlerRegistrar.java
+32-orchestration-steps/src/main/java/io/harness/registrars/OrchestrationStepsModuleFacilitatorRegistrar.java
+32-orchestration-steps/src/main/java/io/harness/registrars/OrchestrationStepsModuleStepRegistrar.java
+32-orchestration-steps/src/main/java/io/harness/serializer/kryo/OrchestrationStepsKryoRegistrar.java
+32-orchestration-steps/src/main/java/io/harness/serializer/morphia/OrchestrationStepsMorphiaRegistrar.java
+32-orchestration-steps/src/main/java/io/harness/steps/barriers/BarrierStep.java
+32-orchestration-steps/src/main/java/io/harness/steps/barriers/BarrierStepParameters.java
+32-orchestration-steps/src/main/java/io/harness/steps/barriers/beans/BarrierExecutionInstance.java
+32-orchestration-steps/src/main/java/io/harness/steps/barriers/beans/BarrierOutcome.java
+32-orchestration-steps/src/main/java/io/harness/steps/barriers/beans/BarrierResponseData.java
+32-orchestration-steps/src/main/java/io/harness/steps/barriers/service/BarrierServiceImpl.java
 71-rest/src/main/java/io/harness/artifact/ArtifactCollectionPTaskClientParams.java
 71-rest/src/main/java/io/harness/artifact/ArtifactCollectionPTaskServiceClient.java
 71-rest/src/main/java/io/harness/artifact/ArtifactCollectionResponseHandler.java

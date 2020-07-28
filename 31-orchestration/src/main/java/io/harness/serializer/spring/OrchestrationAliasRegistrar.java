@@ -5,8 +5,6 @@ import io.harness.advisers.ignore.IgnoreAdviserParameters;
 import io.harness.advisers.retry.RetryAdviserParameters;
 import io.harness.advisers.success.OnSuccessAdviserParameters;
 import io.harness.spring.AliasRegistrar;
-import io.harness.state.core.barrier.BarrierOutcome;
-import io.harness.state.core.barrier.BarrierStepParameters;
 import io.harness.state.core.dummy.DummySectionOutcome;
 import io.harness.state.core.dummy.DummySectionStepParameters;
 import io.harness.state.core.dummy.DummySectionStepTransput;
@@ -24,7 +22,6 @@ import java.util.Map;
 public class OrchestrationAliasRegistrar implements AliasRegistrar {
   @Override
   public void register(Map<String, Class<?>> orchestrationElements) {
-    orchestrationElements.put("barrierStepParameters", BarrierStepParameters.class);
     orchestrationElements.put("dummySectionOutcome", DummySectionOutcome.class);
     orchestrationElements.put("dummySectionStepParameters", DummySectionStepParameters.class);
     orchestrationElements.put("dummySectionStepTransput", DummySectionStepTransput.class);
@@ -37,6 +34,5 @@ public class OrchestrationAliasRegistrar implements AliasRegistrar {
     orchestrationElements.put("sectionChainPassThroughData", SectionChainPassThroughData.class);
     orchestrationElements.put("sectionChainStepParameters", SectionChainStepParameters.class);
     orchestrationElements.put("sectionStepParameters", SectionStepParameters.class);
-    orchestrationElements.put("barrierOutcome", BarrierOutcome.class);
   }
 }

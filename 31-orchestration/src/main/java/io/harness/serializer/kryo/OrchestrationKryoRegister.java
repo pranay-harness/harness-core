@@ -16,7 +16,6 @@ import io.harness.presentation.Graph;
 import io.harness.presentation.GraphVertex;
 import io.harness.presentation.Subgraph;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.state.core.barrier.BarrierOutcome;
 import io.harness.state.core.dummy.DummySectionOutcome;
 import io.harness.state.core.dummy.DummySectionStepTransput;
 
@@ -38,7 +37,6 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(Graph.class, 3110);
     kryo.register(GraphVertex.class, 3111);
     kryo.register(Subgraph.class, 3112);
-    kryo.register(BarrierOutcome.class, 3113);
 
     // Put promoted classes here and do not change the id
     kryo.register(DelayEventNotifyData.class, 7273);

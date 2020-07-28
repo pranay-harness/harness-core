@@ -8,7 +8,7 @@ import software.wings.app.WingsPersistenceConfig;
 public class DataGenPersistenceModule extends PersistenceModule {
   @Override
   protected Class<? extends SpringPersistenceConfig>[] getConfigClasses() {
-    return new Class[] {
-        OrchestrationPersistenceConfig.class, WingsPersistenceConfig.class, ConnectorPersistenceConfig.class};
+    return new Class[] {OrchestrationPersistenceConfig.class, OrchestrationStepsPersistenceConfig.class,
+        WingsPersistenceConfig.class, ConnectorPersistenceConfig.class};
   }
 }

@@ -1,4 +1,4 @@
-package io.harness.facilitator.barrier;
+package io.harness.steps.barriers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.facilitator.modes.ExecutionMode.ASYNC;
@@ -11,16 +11,15 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.fabric8.utils.Lists;
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationStepsTest;
 import io.harness.ambiance.Ambiance;
-import io.harness.barriers.BarrierExecutionInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.barriers.BarrierService;
 import io.harness.facilitator.DefaultFacilitatorParams;
 import io.harness.facilitator.FacilitatorParameters;
 import io.harness.facilitator.FacilitatorResponse;
 import io.harness.rule.Owner;
-import io.harness.state.core.barrier.BarrierStepParameters;
+import io.harness.steps.barriers.beans.BarrierExecutionInstance;
+import io.harness.steps.barriers.service.BarrierService;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -28,7 +27,7 @@ import org.mockito.Mock;
 
 import java.util.Collections;
 
-public class BarrierFacilitatorTest extends OrchestrationTest {
+public class BarrierFacilitatorTest extends OrchestrationStepsTest {
   @Mock private BarrierService barrierService;
   @Inject @InjectMocks private BarrierFacilitator barrierFacilitator;
 
