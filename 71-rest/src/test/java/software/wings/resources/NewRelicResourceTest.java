@@ -38,7 +38,7 @@ public class NewRelicResourceTest extends WingsBaseTest {
 
   @ClassRule
   public static final ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(NEW_RELIC_RESOURCE).addProvider(WingsExceptionMapper.class).build();
+      ResourceTestRule.builder().instance(NEW_RELIC_RESOURCE).type(WingsExceptionMapper.class).build();
 
   @Before
   public void setUp() throws IllegalAccessException {

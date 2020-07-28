@@ -35,8 +35,8 @@ public class VersionResourceTest extends CategoryTest {
 
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new VersionResource(ENTITY_VERSION_SERVICE))
-                                                       .addProvider(WingsExceptionMapper.class)
+                                                       .instance(new VersionResource(ENTITY_VERSION_SERVICE))
+                                                       .type(WingsExceptionMapper.class)
                                                        .build();
 
   @Test

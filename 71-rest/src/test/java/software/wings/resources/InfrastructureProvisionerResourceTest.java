@@ -39,7 +39,7 @@ public class InfrastructureProvisionerResourceTest extends WingsBaseTest {
    */
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(infrastructureProvisionerResource).build();
+      ResourceTestRule.builder().instance(infrastructureProvisionerResource).build();
 
   @Test
   @Owner(developers = VAIBHAV_SI)

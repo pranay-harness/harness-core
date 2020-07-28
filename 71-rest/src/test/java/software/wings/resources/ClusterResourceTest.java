@@ -28,7 +28,7 @@ public class ClusterResourceTest extends CategoryTest {
   private static ClusterRecordService clusterRecordService = mock(ClusterRecordService.class);
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(new ClusterResource(clusterRecordService)).build();
+      ResourceTestRule.builder().instance(new ClusterResource(clusterRecordService)).build();
 
   @Test
   @Owner(developers = HANTANG)

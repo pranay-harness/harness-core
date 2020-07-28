@@ -31,7 +31,7 @@ public class SamplePTaskResourceTest extends CategoryTest {
 
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(new SamplePTaskResource(samplePTaskService)).build();
+      ResourceTestRule.builder().instance(new SamplePTaskResource(samplePTaskService)).build();
 
   @Before
   public void setUp() {}

@@ -99,16 +99,16 @@ public class DelegateAgentResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
+          .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
               delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
               instanceSyncResponseHandler, delegateConnectionDao))
-          .addResource(new AbstractBinder() {
+          .instance(new AbstractBinder() {
             @Override
             protected void configure() {
               bind(httpServletRequest).to(HttpServletRequest.class);
             }
           })
-          .addProvider(WingsExceptionMapper.class)
+          .type(WingsExceptionMapper.class)
           .build();
 
   @Before

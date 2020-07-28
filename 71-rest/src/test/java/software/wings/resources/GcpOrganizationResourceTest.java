@@ -30,7 +30,7 @@ public class GcpOrganizationResourceTest {
   private static GcpOrganizationService gcpOrganizationService = mock(GcpOrganizationService.class);
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(new GcpOrganizationResource(gcpOrganizationService)).build();
+      ResourceTestRule.builder().instance(new GcpOrganizationResource(gcpOrganizationService)).build();
 
   @Before
   public void setUp() {

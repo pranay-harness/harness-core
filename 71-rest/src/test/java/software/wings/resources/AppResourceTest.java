@@ -37,7 +37,7 @@ public class AppResourceTest extends CategoryTest {
    */
   @ClassRule
   public static final ResourceTestRule resources =
-      ResourceTestRule.builder().addResource(new AppResource(appService, limitCheckerFactory)).build();
+      ResourceTestRule.builder().instance(new AppResource(appService, limitCheckerFactory)).build();
   private final long TIME_IN_MS = System.currentTimeMillis();
   private final String TEST_UUID = "TEST-UUID-" + TIME_IN_MS;
   private final String TEST_UUID2 = "TEST-UUID2-" + TIME_IN_MS + 10;

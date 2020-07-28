@@ -63,15 +63,15 @@ public class GraphQLResourceTest extends CategoryTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new GraphQLResource(GRAPH_QL_PROVIDER, FEATURE_FLAG_SERVICE, API_KEY_SERVICE,
+          .instance(new GraphQLResource(GRAPH_QL_PROVIDER, FEATURE_FLAG_SERVICE, API_KEY_SERVICE,
               DATA_LOADER_REGISTRY_HELPER, PREMIUM_FEATURE, GRAPH_QL_UTILS))
-          .addResource(new AbstractBinder() {
+          .instance(new AbstractBinder() {
             @Override
             protected void configure() {
               bind(httpServletRequest).to(HttpServletRequest.class);
             }
           })
-          .addProvider(WingsExceptionMapper.class)
+          .type(WingsExceptionMapper.class)
           .build();
 
   @Before

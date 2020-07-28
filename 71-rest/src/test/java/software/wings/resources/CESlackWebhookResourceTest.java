@@ -30,7 +30,7 @@ public class CESlackWebhookResourceTest extends CategoryTest {
 
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(new CESlackWebhookResource(ceSlackWebhookService)).build();
+      ResourceTestRule.builder().instance(new CESlackWebhookResource(ceSlackWebhookService)).build();
   @Before
   public void setUp() {
     ceSlackWebhook = CESlackWebhook.builder().accountId(accountId).webhookUrl("WEBHOOK_URL").build();

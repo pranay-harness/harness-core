@@ -66,8 +66,8 @@ public class ActivityResourceTest extends CategoryTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE, LOG_DATA_STORE_SERVICE, WINGS_PERSISTENCE))
-          .addProvider(WingsExceptionMapper.class)
+          .instance(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE, LOG_DATA_STORE_SERVICE, WINGS_PERSISTENCE))
+          .type(WingsExceptionMapper.class)
           .build();
 
   /**

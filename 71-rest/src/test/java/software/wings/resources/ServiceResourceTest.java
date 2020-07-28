@@ -51,8 +51,8 @@ public class ServiceResourceTest extends CategoryTest {
    */
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new ServiceResource(RESOURCE_SERVICE))
-                                                       .addProvider(WingsExceptionMapper.class)
+                                                       .instance(new ServiceResource(RESOURCE_SERVICE))
+                                                       .type(WingsExceptionMapper.class)
                                                        .build();
   private static final Service aSERVICE = Service.builder()
                                               .appId(APP_ID)

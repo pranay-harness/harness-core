@@ -45,11 +45,10 @@ public class HostResourceTest extends WingsBaseTest {
    * The constant RESOURCES.
    */
   @ClassRule
-  public static final ResourceTestRule RESOURCES =
-      ResourceTestRule.builder()
-          .addResource(new HostResource(RESOURCE_SERVICE, MAIN_CONFIGURATION))
-          .addProvider(WingsExceptionMapper.class)
-          .build();
+  public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
+                                                       .instance(new HostResource(RESOURCE_SERVICE, MAIN_CONFIGURATION))
+                                                       .type(WingsExceptionMapper.class)
+                                                       .build();
   private static final Host host = Builder.aHost().withAppId(APP_ID).withEnvId(ENV_ID).withHostName(HOST_NAME).build();
 
   /**

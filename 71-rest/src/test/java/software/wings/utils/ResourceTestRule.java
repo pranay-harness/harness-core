@@ -1,7 +1,8 @@
 package software.wings.utils;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +11,10 @@ import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.DropwizardResourceConfig;
 import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
 import io.dropwizard.jersey.validation.Validators;
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Getter;
+import lombok.Singular;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletProperties;
@@ -33,54 +38,17 @@ import javax.validation.Validator;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Context;
 
-/**
- * Created by peeyushaggarwal on 6/16/16.
- */
+@Getter
+@Builder
 public class ResourceTestRule implements TestRule {
-  private final Set<Object> singletons;
-  private final Set<Class<?>> providers;
-  private final Map<String, Object> properties;
-  private final ObjectMapper mapper;
-  private final Validator validator;
-  private final TestContainerFactory testContainerFactory;
+  @Singular private final Set<Object> instances;
+  @Singular private final Set<Class<?>> types;
+  @Singular private final Map<String, Object> properties;
+  @Default private ObjectMapper mapper = Jackson.newObjectMapper();
+  @Default private Validator validator = Validators.newValidator();
+  @Default private TestContainerFactory testContainerFactory = new InMemoryTestContainerFactory();
+
   private JerseyTest test;
-
-  private ResourceTestRule(Set<Object> singletons, Set<Class<?>> providers, Map<String, Object> properties,
-      ObjectMapper mapper, Validator validator, TestContainerFactory testContainerFactory) {
-    this.singletons = singletons;
-    this.providers = providers;
-    this.properties = properties;
-    this.mapper = mapper;
-    this.validator = validator;
-    this.testContainerFactory = testContainerFactory;
-  }
-
-  /**
-   * Builder builder.
-   *
-   * @return the builder
-   */
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  /**
-   * Gets validator.
-   *
-   * @return the validator
-   */
-  public Validator getValidator() {
-    return validator;
-  }
-
-  /**
-   * Gets object mapper.
-   *
-   * @return the object mapper
-   */
-  public ObjectMapper getObjectMapper() {
-    return mapper;
-  }
 
   /**
    * Client client.
@@ -89,15 +57,6 @@ public class ResourceTestRule implements TestRule {
    */
   public Client client() {
     return test.client();
-  }
-
-  /**
-   * Gets jersey test.
-   *
-   * @return the jersey test
-   */
-  public JerseyTest getJerseyTest() {
-    return test;
   }
 
   @Override
@@ -145,105 +104,6 @@ public class ResourceTestRule implements TestRule {
   }
 
   /**
-   * The type Builder.
-   */
-  public static class Builder {
-    private final Set<Object> singletons = Sets.newHashSet();
-    private final Set<Class<?>> providers = Sets.newHashSet();
-    private final Map<String, Object> properties = new HashMap<>();
-    private ObjectMapper mapper = Jackson.newObjectMapper();
-    private Validator validator = Validators.newValidator();
-    private TestContainerFactory testContainerFactory = new InMemoryTestContainerFactory();
-
-    /**
-     * Sets mapper.
-     *
-     * @param mapper the mapper
-     * @return the mapper
-     */
-    public Builder setMapper(ObjectMapper mapper) {
-      this.mapper = mapper;
-      return this;
-    }
-
-    /**
-     * Sets validator.
-     *
-     * @param validator the validator
-     * @return the validator
-     */
-    public Builder setValidator(Validator validator) {
-      this.validator = validator;
-      return this;
-    }
-
-    /**
-     * Add resource builder.
-     *
-     * @param resource the resource
-     * @return the builder
-     */
-    public Builder addResource(Object resource) {
-      singletons.add(resource);
-      return this;
-    }
-
-    /**
-     * Add provider builder.
-     *
-     * @param klass the klass
-     * @return the builder
-     */
-    public Builder addProvider(Class<?> klass) {
-      providers.add(klass);
-      return this;
-    }
-
-    /**
-     * Add provider builder.
-     *
-     * @param provider the provider
-     * @return the builder
-     */
-    public Builder addProvider(Object provider) {
-      singletons.add(provider);
-      return this;
-    }
-
-    /**
-     * Add property builder.
-     *
-     * @param property the property
-     * @param value    the value
-     * @return the builder
-     */
-    public Builder addProperty(String property, Object value) {
-      properties.put(property, value);
-      return this;
-    }
-
-    /**
-     * Sets test container factory.
-     *
-     * @param factory the factory
-     * @return the test container factory
-     */
-    public Builder setTestContainerFactory(TestContainerFactory factory) {
-      testContainerFactory = factory;
-      return this;
-    }
-
-    /**
-     * Build resource test rule.
-     *
-     * @return the resource test rule
-     */
-    public ResourceTestRule build() {
-      return new ResourceTestRule(singletons, providers, properties, mapper, validator, testContainerFactory);
-    }
-  }
-
-  /**
    * The type Resource test resource config.
    */
   public static class ResourceTestResourceConfig extends DropwizardResourceConfig {
@@ -279,17 +139,27 @@ public class ResourceTestRule implements TestRule {
 
     private void configure(ResourceTestRule resourceTestRule) {
       register(new ConstraintViolationExceptionMapper());
-      register(new KryoFeature());
-      for (Class<?> provider : resourceTestRule.providers) {
-        register(provider);
-      }
-      property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
-      for (Map.Entry<String, Object> property : resourceTestRule.properties.entrySet()) {
-        property(property.getKey(), property.getValue());
-      }
       register(new JacksonMessageBodyProvider(resourceTestRule.mapper));
-      for (Object singleton : resourceTestRule.singletons) {
-        register(singleton);
+      register(KryoFeature.class);
+
+      property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
+
+      if (isNotEmpty(resourceTestRule.types)) {
+        for (Class<?> provider : resourceTestRule.types) {
+          register(provider);
+        }
+      }
+
+      if (isNotEmpty(resourceTestRule.properties)) {
+        for (Map.Entry<String, Object> property : resourceTestRule.properties.entrySet()) {
+          property(property.getKey(), property.getValue());
+        }
+      }
+
+      if (isNotEmpty(resourceTestRule.instances)) {
+        for (Object instance : resourceTestRule.instances) {
+          register(instance);
+        }
       }
     }
   }

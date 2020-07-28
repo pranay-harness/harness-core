@@ -49,8 +49,8 @@ public class WhitelistResourceTest extends WingsBaseTest {
    */
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new WhitelistResource(WHITELIST_SERVICE))
-                                                       .addProvider(WingsExceptionMapper.class)
+                                                       .instance(new WhitelistResource(WHITELIST_SERVICE))
+                                                       .type(WingsExceptionMapper.class)
                                                        .build();
 
   private static String WHITELIST_ID = "WHITELIST_ID";

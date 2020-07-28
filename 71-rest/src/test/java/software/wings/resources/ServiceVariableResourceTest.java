@@ -64,7 +64,7 @@ public class ServiceVariableResourceTest extends CategoryTest {
    */
   @ClassRule
   public static final ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(VARIABLE_RESOURCE).addProvider(WingsExceptionMapper.class).build();
+      ResourceTestRule.builder().instance(VARIABLE_RESOURCE).type(WingsExceptionMapper.class).build();
 
   private static final ServiceVariable SERVICE_VARIABLE = ServiceVariable.builder()
                                                               .envId(GLOBAL_ENV_ID)

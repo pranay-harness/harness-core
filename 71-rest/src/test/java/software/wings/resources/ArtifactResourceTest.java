@@ -73,10 +73,10 @@ public class ArtifactResourceTest extends CategoryTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new ArtifactResource(
+          .instance(new ArtifactResource(
               ARTIFACT_SERVICE, ARTIFACT_STREAM_SERVICE, PERMIT_SERVICE, APP_SERVICE, ALERT_SERVICE))
-          .addProvider(ConstraintViolationExceptionMapper.class)
-          .addProvider(WingsExceptionMapper.class)
+          .type(ConstraintViolationExceptionMapper.class)
+          .type(WingsExceptionMapper.class)
           .build();
 
   /**

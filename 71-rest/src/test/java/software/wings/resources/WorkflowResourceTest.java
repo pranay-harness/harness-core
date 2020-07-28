@@ -55,11 +55,10 @@ public class WorkflowResourceTest extends WingsBaseTest {
    * The constant RESOURCES.
    */
   @ClassRule
-  public static final ResourceTestRule RESOURCES =
-      ResourceTestRule.builder()
-          .addResource(new WorkflowResource(WORKFLOW_SERVICE, AUTH_SERVICE))
-          .addProvider(WingsExceptionMapper.class)
-          .build();
+  public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
+                                                       .instance(new WorkflowResource(WORKFLOW_SERVICE, AUTH_SERVICE))
+                                                       .type(WingsExceptionMapper.class)
+                                                       .build();
 
   private static String APP_ID = "APP_ID";
   private static String WORKFLOW_ID = "WORKFLOW_ID";
