@@ -1,4 +1,4 @@
-package io.harness.state.core.barrier;
+package io.harness.steps.barriers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.distribution.barrier.Barrier.State.DOWN;
@@ -7,10 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.ambiance.Ambiance;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.barriers.BarrierExecutionInstance;
-import io.harness.barriers.BarrierResponseData;
 import io.harness.delegate.beans.ResponseData;
-import io.harness.engine.barriers.BarrierService;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.PassThroughData;
 import io.harness.facilitator.modes.async.AsyncExecutable;
@@ -23,6 +20,10 @@ import io.harness.state.io.FailureInfo;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
 import io.harness.state.io.StepResponse.StepResponseBuilder;
+import io.harness.steps.barriers.beans.BarrierExecutionInstance;
+import io.harness.steps.barriers.beans.BarrierOutcome;
+import io.harness.steps.barriers.beans.BarrierResponseData;
+import io.harness.steps.barriers.service.BarrierService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;

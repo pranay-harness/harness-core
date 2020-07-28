@@ -36,8 +36,6 @@ import io.harness.redesign.states.wait.WaitStep;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.references.OutcomeRefObject;
 import io.harness.state.StepType;
-import io.harness.state.core.barrier.BarrierStep;
-import io.harness.state.core.barrier.BarrierStepParameters;
 import io.harness.state.core.dummy.DummySectionStep;
 import io.harness.state.core.dummy.DummySectionStepParameters;
 import io.harness.state.core.fork.ForkStep;
@@ -47,6 +45,8 @@ import io.harness.state.core.section.SectionStepParameters;
 import io.harness.state.core.section.chain.SectionChainStep;
 import io.harness.state.core.section.chain.SectionChainStepParameters;
 import io.harness.state.io.StepParameters;
+import io.harness.steps.barriers.BarrierStep;
+import io.harness.steps.barriers.BarrierStepParameters;
 import lombok.experimental.UtilityClass;
 import software.wings.sm.states.ShellScriptState;
 

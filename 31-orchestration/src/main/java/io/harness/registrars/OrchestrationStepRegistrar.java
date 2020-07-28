@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.registries.registrar.StepRegistrar;
 import io.harness.state.Step;
 import io.harness.state.StepType;
-import io.harness.state.core.barrier.BarrierStep;
 import io.harness.state.core.dummy.DummySectionStep;
 import io.harness.state.core.dummy.DummyStep;
 import io.harness.state.core.fork.ForkStep;
@@ -25,6 +24,5 @@ public class OrchestrationStepRegistrar implements StepRegistrar {
     stepClasses.add(Pair.of(DummyStep.STEP_TYPE, DummyStep.class));
     stepClasses.add(Pair.of(SectionChainStep.STEP_TYPE, SectionChainStep.class));
     stepClasses.add(Pair.of(DummySectionStep.STEP_TYPE, DummySectionStep.class));
-    stepClasses.add(Pair.of(BarrierStep.STEP_TYPE, BarrierStep.class));
   }
 }

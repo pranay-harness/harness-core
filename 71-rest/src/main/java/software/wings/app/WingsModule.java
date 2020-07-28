@@ -17,6 +17,7 @@ import com.google.inject.name.Names;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.OrchestrationStepsModule;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -1132,8 +1133,8 @@ public class WingsModule extends DependencyModule implements ServersModule {
     install(new OrganizationManagementClientModule(
         configuration.getOrganizationManagerClientConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
 
-    // Custom Workflow Dependencies
-    install(new CVNextGenCommonsServiceModule());
+    // Orchestration Dependencies
+    install(OrchestrationStepsModule.getInstance());
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);

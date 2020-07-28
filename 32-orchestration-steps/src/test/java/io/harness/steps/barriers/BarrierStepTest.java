@@ -1,4 +1,4 @@
-package io.harness.state.core.barrier;
+package io.harness.steps.barriers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.distribution.barrier.Barrier.State.DOWN;
@@ -12,18 +12,18 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
+import io.harness.OrchestrationStepsTest;
 import io.harness.ambiance.Ambiance;
 import io.harness.ambiance.Level;
-import io.harness.barriers.BarrierExecutionInstance;
-import io.harness.barriers.BarrierResponseData;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.barriers.BarrierService;
 import io.harness.execution.status.Status;
 import io.harness.facilitator.modes.async.AsyncExecutableResponse;
 import io.harness.rule.Owner;
 import io.harness.state.io.StepInputPackage;
 import io.harness.state.io.StepResponse;
+import io.harness.steps.barriers.beans.BarrierExecutionInstance;
+import io.harness.steps.barriers.beans.BarrierResponseData;
+import io.harness.steps.barriers.service.BarrierService;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -31,7 +31,7 @@ import org.mockito.Mock;
 
 import java.util.Collections;
 
-public class BarrierStepTest extends OrchestrationTest {
+public class BarrierStepTest extends OrchestrationStepsTest {
   @Mock BarrierService barrierService;
   @Inject @InjectMocks BarrierStep barrierStep;
 

@@ -1,4 +1,4 @@
-package io.harness.engine.barriers;
+package io.harness.steps.barriers.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.distribution.barrier.Barrier.State.DOWN;
@@ -8,12 +8,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
-import io.harness.OrchestrationTest;
-import io.harness.barriers.BarrierExecutionInstance;
+import io.harness.OrchestrationStepsTest;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.executions.barrier.BarrierNodeRepository;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
+import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.testlib.RealMongo;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
@@ -21,7 +20,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
-public class BarrierServiceImplTest extends OrchestrationTest {
+public class BarrierServiceImplTest extends OrchestrationStepsTest {
   @Inject private BarrierNodeRepository barrierNodeRepository;
   @Inject BarrierService barrierService;
 

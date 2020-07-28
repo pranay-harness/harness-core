@@ -9,6 +9,18 @@
     <artifactId>32-orchestration-steps</artifactId>
     <dependencies>
         <dependency>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.bwaldvogel</groupId>
+            <artifactId>mongo-java-server-memory-backend</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
@@ -37,6 +49,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>29-orchestration-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>31-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
