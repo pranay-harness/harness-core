@@ -5,6 +5,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Test;
@@ -15,7 +16,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
-import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
@@ -55,6 +55,6 @@ public class HelmRollbackStateTest extends WingsBaseTest {
         HelmChartSpecification.builder().build(), ContainerServiceParams.builder().build(), "release-name",
         WingsTestConstants.ACCOUNT_ID, WingsTestConstants.APP_ID, WingsTestConstants.ACTIVITY_ID,
         ImageDetails.builder().build(), "repo", GitConfig.builder().build(), Collections.emptyList(), null,
-        K8sDelegateManifestConfig.builder().build(), Collections.emptyMap(), HelmConstants.HelmVersion.V3);
+        K8sDelegateManifestConfig.builder().build(), Collections.emptyMap(), HelmVersion.V3);
   }
 }

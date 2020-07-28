@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm.request;
 
+import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.Builder;
@@ -7,7 +8,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
-import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.List;

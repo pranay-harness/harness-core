@@ -491,7 +491,6 @@ import software.wings.helpers.ext.gcb.models.SubstitutionOption;
 import software.wings.helpers.ext.gcb.models.TimeSpan;
 import software.wings.helpers.ext.gcb.models.VerifyOption;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
-import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
@@ -1600,7 +1599,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanaMetricItem.class, 7299);
     kryo.register(InstanaMetricValues.class, 7300);
     kryo.register(InstanaDataCollectionInfo.class, 7301);
-    kryo.register(HelmVersion.class, 7303);
     kryo.register(InstanaTagFilter.class, 7304);
 
     kryo.register(CustomAPMDataCollectionInfo.class, 7305);

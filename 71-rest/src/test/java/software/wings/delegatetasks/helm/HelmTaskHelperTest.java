@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.helm;
 
+import static io.harness.k8s.model.HelmVersion.V2;
+import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -17,13 +19,12 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V3;
 import static software.wings.utils.WingsTestConstants.LONG_TIMEOUT_INTERVAL;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.rule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -51,7 +52,6 @@ import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 

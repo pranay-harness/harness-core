@@ -29,6 +29,7 @@ import com.google.inject.Inject;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import io.harness.k8s.K8sGlobalConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
@@ -38,7 +39,6 @@ import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.core.ssh.executors.ScriptProcessExecutor.StringBufferOutputStream;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.settings.SettingValue;
 
 import java.net.Socket;

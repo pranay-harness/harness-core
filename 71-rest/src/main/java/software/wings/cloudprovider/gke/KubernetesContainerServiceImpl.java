@@ -87,6 +87,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
@@ -114,7 +115,6 @@ import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.delegatetasks.k8s.apiclient.ApiClientFactoryImpl;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.impl.KubernetesHelperService;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.utils.Misc;
 
 import java.time.Clock;

@@ -12,6 +12,7 @@ import com.google.inject.Singleton;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
@@ -19,7 +20,6 @@ import software.wings.beans.HelmChartConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.settings.helm.HelmRepoConfig;
-import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams.HelmChartConfigParamsBuilder;
 import software.wings.service.intfc.ServiceResourceService;
@@ -167,7 +167,7 @@ public class HelmChartConfigHelperService {
     return helmChartConfigParamsBuilder.build();
   }
 
-  private HelmConstants.HelmVersion getHelmVersionFromService(ExecutionContext context) {
+  private HelmVersion getHelmVersionFromService(ExecutionContext context) {
     return serviceResourceService.getHelmVersionWithDefault(context.getAppId(),
         ((PhaseElement) context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM))
             .getServiceElement()

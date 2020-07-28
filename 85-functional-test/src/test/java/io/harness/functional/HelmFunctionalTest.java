@@ -20,6 +20,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.SettingGenerator;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +43,6 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
-import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -116,7 +116,7 @@ public class HelmFunctionalTest extends AbstractFunctionalTest {
                           .deploymentType(DeploymentType.HELM)
                           .appId(infrastructureDefinition.getAppId())
                           .artifactType(ArtifactType.DOCKER)
-                          .helmVersion(HelmConstants.HelmVersion.V3)
+                          .helmVersion(HelmVersion.V3)
                           .build();
 
     Service savedService = serviceResourceService.getServiceByName(service.getAppId(), service.getName());

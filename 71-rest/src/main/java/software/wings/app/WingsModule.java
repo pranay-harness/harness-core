@@ -69,6 +69,7 @@ import io.harness.governance.pipeline.service.evaluators.OnPipeline;
 import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator;
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
+import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -584,7 +585,6 @@ import software.wings.service.intfc.instance.licensing.InstanceUsageLimitExcessH
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.ServerlessInstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.limits.LimitVicinityHandler;
 import software.wings.service.intfc.marketplace.MarketPlaceService;
 import software.wings.service.intfc.newrelic.NewRelicService;

@@ -1,12 +1,12 @@
 package io.harness.delegate.service;
 
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
+import static io.harness.k8s.model.HelmVersion.V2;
 
 import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.k8s.model.HelmVersion;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import javax.annotation.Nullable;
 

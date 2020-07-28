@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +40,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;

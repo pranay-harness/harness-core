@@ -77,6 +77,7 @@ import io.fabric8.openshift.client.dsl.DeployableScalableResource;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -93,7 +94,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.impl.KubernetesHelperService;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.time.Clock;
 import java.util.HashMap;

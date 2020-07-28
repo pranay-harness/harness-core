@@ -1,6 +1,6 @@
-package software.wings.service.intfc.k8s.delegate;
+package io.harness.k8s;
 
-import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
+import io.harness.k8s.model.HelmVersion;
 
 public interface K8sGlobalConfigService {
   String getKubectlPath();

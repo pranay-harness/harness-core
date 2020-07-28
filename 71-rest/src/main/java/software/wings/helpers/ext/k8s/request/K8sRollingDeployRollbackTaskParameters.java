@@ -1,8 +1,7 @@
 package software.wings.helpers.ext.k8s.request;
 
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
-
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.k8s.model.HelmVersion;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

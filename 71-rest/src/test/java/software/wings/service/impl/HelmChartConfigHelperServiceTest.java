@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.GeneralException;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import org.junit.Before;
@@ -29,7 +30,6 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
-import software.wings.helpers.ext.helm.HelmConstants;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -57,7 +57,7 @@ public class HelmChartConfigHelperServiceTest extends WingsBaseTest {
                         .serviceElement(ServiceElement.builder().uuid(WingsTestConstants.SERVICE_ID).build())
                         .build());
     when(serviceResourceService.getHelmVersionWithDefault(APP_ID, WingsTestConstants.SERVICE_ID))
-        .thenReturn(HelmConstants.HelmVersion.V3);
+        .thenReturn(HelmVersion.V3);
 
     helmConnector = new SettingAttribute();
     helmConnector.setName("helm-connector");

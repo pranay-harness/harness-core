@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.helm.request;
 
-import static software.wings.helpers.ext.helm.HelmConstants.HelmVersion.V2;
+import static io.harness.k8s.model.HelmVersion.V2;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -8,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,6 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
-import software.wings.helpers.ext.helm.HelmConstants.HelmVersion;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
 

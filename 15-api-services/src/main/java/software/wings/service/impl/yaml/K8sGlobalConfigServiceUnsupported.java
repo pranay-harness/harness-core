@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml;
 
-import software.wings.helpers.ext.helm.HelmConstants;
-import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
+import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.k8s.model.HelmVersion;
 
 public class K8sGlobalConfigServiceUnsupported implements K8sGlobalConfigService {
   private static final String UNSUPPORTED_OPERATION_MSG = "K8sGlobalConfigService not available in manager";
@@ -17,7 +17,7 @@ public class K8sGlobalConfigServiceUnsupported implements K8sGlobalConfigService
   }
 
   @Override
-  public String getHelmPath(HelmConstants.HelmVersion helmVersion) {
+  public String getHelmPath(HelmVersion helmVersion) {
     throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MSG);
   }
 
