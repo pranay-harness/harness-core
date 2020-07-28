@@ -26,7 +26,6 @@ import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRe
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -51,7 +50,41 @@ public class WorkloadSpecWriterTest extends CategoryTest {
                         .containerRecommendations(new HashMap<>())
                         .containerCheckpoints(new HashMap<>())
                         .build());
-    workloadSpecWriter.write(messages());
+    workloadSpecWriter.write(
+        ImmutableList.of(PublishedMessage.builder()
+                             .accountId(ACCOUNT_ID)
+                             .message(K8sWorkloadSpec.newBuilder()
+                                          .setClusterId(CLUSTER_ID)
+                                          .setNamespace("kube-system")
+                                          .setWorkloadKind("kube-dns")
+                                          .setWorkloadName("Deployment")
+                                          .addContainerSpecs(ContainerSpec.newBuilder()
+                                                                 .setName("kubedns")
+                                                                 .putRequests("cpu", "100m")
+                                                                 .putRequests("memory", "70Mi")
+                                                                 .putLimits("memory", "170Mi")
+                                                                 .build())
+
+                                          .addContainerSpecs(ContainerSpec.newBuilder()
+                                                                 .setName("dnsmasq")
+                                                                 .putRequests("cpu", "150m")
+                                                                 .putRequests("memory", "20Mi")
+                                                                 .build())
+                                          .addContainerSpecs(ContainerSpec.newBuilder()
+                                                                 .setName("sidecar")
+                                                                 .putRequests("cpu", "10m")
+                                                                 .putRequests("memory", "20Mi")
+                                                                 .build())
+
+                                          .addContainerSpecs(ContainerSpec.newBuilder()
+                                                                 .setName("without-requests")
+                                                                 .putLimits("cpu", "10m")
+                                                                 .putLimits("memory", "20Mi")
+                                                                 .build())
+
+                                          .addContainerSpecs(ContainerSpec.newBuilder().setName("nothing").build())
+                                          .build())
+                             .build()));
     ArgumentCaptor<K8sWorkloadRecommendation> captor = ArgumentCaptor.forClass(K8sWorkloadRecommendation.class);
     verify(workloadRecommendationDao).save(captor.capture());
     assertThat(captor.getAllValues()).hasSize(1);
@@ -77,40 +110,115 @@ public class WorkloadSpecWriterTest extends CategoryTest {
     assertThat(containerRecommendations.get("nothing").getCurrent()).isEqualTo(ResourceRequirement.builder().build());
   }
 
-  private List<? extends PublishedMessage> messages() {
-    return ImmutableList.of(PublishedMessage.builder()
-                                .accountId(ACCOUNT_ID)
-                                .message(K8sWorkloadSpec.newBuilder()
-                                             .setClusterId(CLUSTER_ID)
-                                             .setNamespace("kube-system")
-                                             .setWorkloadKind("kube-dns")
-                                             .setWorkloadName("Deployment")
-                                             .addContainerSpecs(ContainerSpec.newBuilder()
-                                                                    .setName("kubedns")
-                                                                    .putRequests("cpu", "100m")
-                                                                    .putRequests("memory", "70Mi")
-                                                                    .putLimits("memory", "170Mi")
-                                                                    .build())
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testExistingRecommendationIsNotOverwritten() throws Exception {
+    when(workloadRecommendationDao.fetchRecommendationForWorkload(any()))
+        .thenReturn(
+            K8sWorkloadRecommendation.builder()
+                .accountId(ACCOUNT_ID)
+                .clusterId(CLUSTER_ID)
+                .namespace("harness")
+                .workloadName("test-ctr")
+                .workloadType("Deployment")
+                .containerRecommendation("test-ctr",
+                    ContainerRecommendation.builder()
+                        .current(ResourceRequirement.builder().build())
+                        .guaranteed(ResourceRequirement.builder().request("cpu", "10m").limit("cpu", "10m").build())
+                        .burstable(ResourceRequirement.builder().request("cpu", "5m").limit("cpu", "25m").build())
+                        .build())
+                .containerCheckpoints(new HashMap<>())
+                .build());
+    workloadSpecWriter.write(ImmutableList.of(PublishedMessage.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .message(K8sWorkloadSpec.newBuilder()
+                                                               .setClusterId(CLUSTER_ID)
+                                                               .setNamespace("harness")
+                                                               .setWorkloadName("test-ctr")
+                                                               .setWorkloadKind("Deployment")
+                                                               .addContainerSpecs(ContainerSpec.newBuilder()
+                                                                                      .setName("test-ctr")
+                                                                                      .putRequests("cpu", "1500m")
+                                                                                      .putLimits("cpu", "3000m")
+                                                                                      .build())
+                                                               .build())
+                                                  .build()));
+    ArgumentCaptor<K8sWorkloadRecommendation> captor = ArgumentCaptor.forClass(K8sWorkloadRecommendation.class);
+    verify(workloadRecommendationDao).save(captor.capture());
+    assertThat(captor.getAllValues()).hasSize(1);
+    Map<String, ContainerRecommendation> containerRecommendations = captor.getValue().getContainerRecommendations();
+    assertThat(containerRecommendations).hasSize(1);
+    assertThat(containerRecommendations.get("test-ctr").getCurrent())
+        .isEqualTo(ResourceRequirement.builder().request("cpu", "1500m").limit("cpu", "3000m").build());
+    assertThat(containerRecommendations.get("test-ctr").getGuaranteed())
+        .isEqualTo(ResourceRequirement.builder().request("cpu", "10m").limit("cpu", "10m").build());
+    assertThat(containerRecommendations.get("test-ctr").getBurstable())
+        .isEqualTo(ResourceRequirement.builder().request("cpu", "5m").limit("cpu", "25m").build());
+  }
 
-                                             .addContainerSpecs(ContainerSpec.newBuilder()
-                                                                    .setName("dnsmasq")
-                                                                    .putRequests("cpu", "150m")
-                                                                    .putRequests("memory", "20Mi")
-                                                                    .build())
-                                             .addContainerSpecs(ContainerSpec.newBuilder()
-                                                                    .setName("sidecar")
-                                                                    .putRequests("cpu", "10m")
-                                                                    .putRequests("memory", "20Mi")
-                                                                    .build())
-
-                                             .addContainerSpecs(ContainerSpec.newBuilder()
-                                                                    .setName("without-requests")
-                                                                    .putLimits("cpu", "10m")
-                                                                    .putLimits("memory", "20Mi")
-                                                                    .build())
-
-                                             .addContainerSpecs(ContainerSpec.newBuilder().setName("nothing").build())
-                                             .build())
-                                .build());
+  @Test
+  @Owner(developers = AVMOHAN)
+  @Category(UnitTests.class)
+  public void testAddRemoveContainers() throws Exception {
+    // existing in db has containers (a, b) and both have current recommendations.
+    // according to new workload spec, we have containers (b, c). i.e a was deleted, b was added.
+    // final state should have (b, c) but with current history of b preserved.
+    when(workloadRecommendationDao.fetchRecommendationForWorkload(any()))
+        .thenReturn(
+            K8sWorkloadRecommendation.builder()
+                .accountId(ACCOUNT_ID)
+                .clusterId(CLUSTER_ID)
+                .namespace("harness")
+                .workloadName("test-ctr")
+                .workloadType("Deployment")
+                .containerRecommendation("ctr-a",
+                    ContainerRecommendation.builder()
+                        .current(ResourceRequirement.builder().build())
+                        .guaranteed(ResourceRequirement.builder().request("cpu", "20m").limit("cpu", "20m").build())
+                        .burstable(ResourceRequirement.builder().request("cpu", "15m").limit("cpu", "35m").build())
+                        .build())
+                .containerRecommendation("ctr-b",
+                    ContainerRecommendation.builder()
+                        .current(ResourceRequirement.builder().build())
+                        .guaranteed(ResourceRequirement.builder().request("cpu", "10m").limit("cpu", "10m").build())
+                        .burstable(ResourceRequirement.builder().request("cpu", "5m").limit("cpu", "25m").build())
+                        .build())
+                .containerCheckpoints(new HashMap<>())
+                .build());
+    workloadSpecWriter.write(ImmutableList.of(PublishedMessage.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .message(K8sWorkloadSpec.newBuilder()
+                                                               .setClusterId(CLUSTER_ID)
+                                                               .setNamespace("harness")
+                                                               .setWorkloadName("test-ctr")
+                                                               .setWorkloadKind("Deployment")
+                                                               .addContainerSpecs(ContainerSpec.newBuilder()
+                                                                                      .setName("ctr-b")
+                                                                                      .putRequests("cpu", "1000m")
+                                                                                      .putLimits("cpu", "1500m")
+                                                                                      .build())
+                                                               .addContainerSpecs(ContainerSpec.newBuilder()
+                                                                                      .setName("ctr-c")
+                                                                                      .putRequests("cpu", "500m")
+                                                                                      .putLimits("cpu", "750m")
+                                                                                      .build())
+                                                               .build())
+                                                  .build()));
+    ArgumentCaptor<K8sWorkloadRecommendation> captor = ArgumentCaptor.forClass(K8sWorkloadRecommendation.class);
+    verify(workloadRecommendationDao).save(captor.capture());
+    assertThat(captor.getAllValues()).hasSize(1);
+    Map<String, ContainerRecommendation> containerRecommendations = captor.getValue().getContainerRecommendations();
+    assertThat(containerRecommendations).hasSize(2).containsOnlyKeys("ctr-b", "ctr-c");
+    assertThat(containerRecommendations.get("ctr-b").getCurrent())
+        .isEqualTo(ResourceRequirement.builder().request("cpu", "1000m").limit("cpu", "1500m").build());
+    assertThat(containerRecommendations.get("ctr-b").getGuaranteed())
+        .isEqualTo(ResourceRequirement.builder().request("cpu", "10m").limit("cpu", "10m").build());
+    assertThat(containerRecommendations.get("ctr-b").getBurstable())
+        .isEqualTo(ResourceRequirement.builder().request("cpu", "5m").limit("cpu", "25m").build());
+    assertThat(containerRecommendations.get("ctr-c").getCurrent())
+        .isEqualTo(ResourceRequirement.builder().request("cpu", "500m").limit("cpu", "750m").build());
+    assertThat(containerRecommendations.get("ctr-c").getGuaranteed()).isNull();
+    assertThat(containerRecommendations.get("ctr-c").getBurstable()).isNull();
   }
 }

@@ -40,6 +40,8 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -70,11 +72,14 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
   protected QLK8SWorkloadRecommendationConnection fetchConnection(List<QLK8sWorkloadFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     @SuppressWarnings("unchecked")
-    Query<K8sWorkloadRecommendation> query = (Query<K8sWorkloadRecommendation>) populateFilters(
-        wingsPersistence, filters, K8sWorkloadRecommendation.class, true)
-                                                 .order(Sort.descending(K8sWorkloadRecommendationKeys.estimatedSavings))
-                                                 .field(K8sWorkloadRecommendationKeys.populated)
-                                                 .equal(Boolean.TRUE);
+    Query<K8sWorkloadRecommendation> query =
+        ((Query<K8sWorkloadRecommendation>) populateFilters(
+             wingsPersistence, filters, K8sWorkloadRecommendation.class, true))
+            .order(Sort.descending(K8sWorkloadRecommendationKeys.estimatedSavings))
+            .field(K8sWorkloadRecommendationKeys.lastUpdatedAt)
+            .greaterThanOrEq(Instant.now().truncatedTo(ChronoUnit.DAYS).minus(Duration.ofDays(2)).toEpochMilli())
+            .field(K8sWorkloadRecommendationKeys.populated)
+            .equal(Boolean.TRUE);
     QLK8SWorkloadRecommendationConnectionBuilder connectionBuilder = QLK8SWorkloadRecommendationConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, k8sWorkloadRecommendation -> {
       Collection<? extends QLContainerRecommendation> containerRecommendations =

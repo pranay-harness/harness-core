@@ -14,6 +14,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequi
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -41,20 +42,32 @@ class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
                                   .kind(k8sWorkloadSpec.getWorkloadKind())
                                   .build();
 
-      // Make sure the list of containers in the recommendation match the list of containers in the spec
       List<K8sWorkloadSpec.ContainerSpec> containerSpecs = k8sWorkloadSpec.getContainerSpecsList();
-      Map<String, ContainerRecommendation> containerRecommendations =
+      Map<String, ResourceRequirement> containerCurrentResources =
           containerSpecs.stream().collect(Collectors.toMap(K8sWorkloadSpec.ContainerSpec::getName, e -> {
             Map<String, String> requestsMap = new HashMap<>(ofNullable(e.getRequestsMap()).orElse(emptyMap()));
             Map<String, String> limitsMap = ofNullable(e.getLimitsMap()).orElse(emptyMap());
             limitsMap.forEach(requestsMap::putIfAbsent);
-            return ContainerRecommendation.builder()
-                .containerName(e.getName())
-                .current(ResourceRequirement.builder().requests(requestsMap).limits(limitsMap).build())
-                .build();
+            return ResourceRequirement.builder().requests(requestsMap).limits(limitsMap).build();
           }));
-      workloadToRecommendation.computeIfAbsent(workloadId, workloadRecommendationDao::fetchRecommendationForWorkload)
-          .setContainerRecommendations(containerRecommendations);
+
+      K8sWorkloadRecommendation recommendation = workloadToRecommendation.computeIfAbsent(
+          workloadId, workloadRecommendationDao::fetchRecommendationForWorkload);
+
+      Map<String, ContainerRecommendation> existingRecommendations = recommendation.getContainerRecommendations();
+      Map<String, ContainerRecommendation> updatedRecommendations =
+          containerCurrentResources.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+              currentResources
+              -> ContainerRecommendation.builder()
+                     .current(currentResources.getValue())
+                     .guaranteed(Optional.ofNullable(existingRecommendations.get(currentResources.getKey()))
+                                     .map(ContainerRecommendation::getGuaranteed)
+                                     .orElse(null))
+                     .burstable(Optional.ofNullable(existingRecommendations.get(currentResources.getKey()))
+                                    .map(ContainerRecommendation::getBurstable)
+                                    .orElse(null))
+                     .build()));
+      recommendation.setContainerRecommendations(updatedRecommendations);
     }
     updateRecommendations();
   }

@@ -100,66 +100,69 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
         // pod to workload mapping not found in instanceData. Skip this pod.
         return;
       }
-      String containerName = containerStateProto.getContainerName();
       WorkloadState workloadState = workloadToRecommendation.computeIfAbsent(workloadId, this ::getWorkloadState);
-      Map<String, ContainerState> containerStateMap = workloadState.getContainerStateMap();
-
-      ContainerState containerState = containerStateMap.get(containerName);
-      Instant firstSampleStart = HTimestamps.toInstant(containerStateProto.getFirstSampleStart());
-      Instant lastSampleStart = HTimestamps.toInstant(containerStateProto.getLastSampleStart());
-      if (containerState != null && containerState.getVersion() >= containerStateProto.getVersion()
-          && firstSampleStart.isBefore(containerState.getLastSampleStart())) {
-        logger.debug("Skipping sample {} as interval already covered", containerStateProto);
-      } else {
-        if (containerState == null || containerState.getVersion() < containerStateProto.getVersion()) {
-          // First sample seen for this container, or new version of proto for this container
-          // Re-initialize containerState
-          containerState = new ContainerState();
-          containerState.setFirstSampleStart(firstSampleStart);
-          containerStateMap.put(containerName, containerState);
-          containerState.setVersion(containerStateProto.getVersion());
-        }
-        containerState.setLastUpdateTime(Instant.now());
-        containerState.setLastSampleStart(lastSampleStart);
-        containerState.setTotalSamplesCount(
-            containerState.getTotalSamplesCount() + containerStateProto.getTotalSamplesCount());
-
-        // Handle cpu
-        // Just merge the histogram received from delegate into the existing histogram
-        Histogram protoHistogram = newCpuHistogram();
-        protoHistogram.loadFromCheckPoint(protoToCheckpoint(containerStateProto.getCpuHistogram()));
-        containerState.getCpuHistogram().merge(protoHistogram);
-
-        // Handle memory
-        // Treat the memoryPeak received from delegate as a single memory sample to be added to existing histogram
-        Instant memoryTs = HTimestamps.toInstant(containerStateProto.getMemoryPeakTime());
-        if (containerState.getWindowEnd() == null) {
-          containerState.setWindowEnd(memoryTs);
-        }
-
-        boolean addNewPeak = false;
-        if (memoryTs.isBefore(containerState.getWindowEnd())) {
-          long oldMaxMem = containerState.getMemoryPeak();
-          if (oldMaxMem != 0 && containerStateProto.getMemoryPeak() > oldMaxMem) {
-            containerState.getMemoryHistogram().subtractSample(oldMaxMem, 1.0, containerState.getWindowEnd());
-            addNewPeak = true;
-          }
-        } else {
-          // Shift the memory aggregation window to the next interval.
-          Duration shift = truncate(between(containerState.getWindowEnd(), memoryTs), MEMORY_AGGREGATION_INTERVAL)
-                               .plus(MEMORY_AGGREGATION_INTERVAL);
-          containerState.setWindowEnd(containerState.getWindowEnd().plus(shift));
-          containerState.setMemoryPeak(0);
-          addNewPeak = true;
-        }
-        if (addNewPeak) {
-          containerState.getMemoryHistogram().addSample(
-              containerStateProto.getMemoryPeak(), 1.0, containerState.getWindowEnd());
-          containerState.setMemoryPeak(containerStateProto.getMemoryPeak());
-        }
-      }
+      updateContainerStateMap(workloadState.getContainerStateMap(), containerStateProto);
     }
     updateRecommendations();
+  }
+
+  private void updateContainerStateMap(
+      Map<String, ContainerState> containerStateMap, ContainerStateProto containerStateProto) {
+    String containerName = containerStateProto.getContainerName();
+    ContainerState containerState = containerStateMap.get(containerName);
+    Instant firstSampleStart = HTimestamps.toInstant(containerStateProto.getFirstSampleStart());
+    Instant lastSampleStart = HTimestamps.toInstant(containerStateProto.getLastSampleStart());
+    if (containerState != null && containerState.getVersion() >= containerStateProto.getVersion()
+        && firstSampleStart.isBefore(containerState.getLastSampleStart())) {
+      logger.info("Skipping sample {} as interval already covered", containerStateProto);
+    } else {
+      if (containerState == null || containerState.getVersion() < containerStateProto.getVersion()) {
+        // First sample seen for this container, or new version of proto for this container
+        // Re-initialize containerState
+        containerState = new ContainerState();
+        containerState.setFirstSampleStart(firstSampleStart);
+        containerStateMap.put(containerName, containerState);
+        containerState.setVersion(containerStateProto.getVersion());
+      }
+      containerState.setLastUpdateTime(Instant.now());
+      containerState.setLastSampleStart(lastSampleStart);
+      containerState.setTotalSamplesCount(
+          containerState.getTotalSamplesCount() + containerStateProto.getTotalSamplesCount());
+
+      // Handle cpu
+      // Just merge the histogram received from delegate into the existing histogram
+      Histogram protoHistogram = newCpuHistogram();
+      protoHistogram.loadFromCheckPoint(protoToCheckpoint(containerStateProto.getCpuHistogram()));
+      containerState.getCpuHistogram().merge(protoHistogram);
+
+      // Handle memory
+      // Treat the memoryPeak received from delegate as a single memory sample to be added to existing histogram
+      Instant memoryTs = HTimestamps.toInstant(containerStateProto.getMemoryPeakTime());
+      if (containerState.getWindowEnd() == null) {
+        containerState.setWindowEnd(memoryTs);
+      }
+
+      boolean addNewPeak = false;
+      if (memoryTs.isBefore(containerState.getWindowEnd())) {
+        long oldMaxMem = containerState.getMemoryPeak();
+        if (oldMaxMem != 0 && containerStateProto.getMemoryPeak() > oldMaxMem) {
+          containerState.getMemoryHistogram().subtractSample(oldMaxMem, 1.0, containerState.getWindowEnd());
+          addNewPeak = true;
+        }
+      } else {
+        // Shift the memory aggregation window to the next interval.
+        Duration shift = truncate(between(containerState.getWindowEnd(), memoryTs), MEMORY_AGGREGATION_INTERVAL)
+                             .plus(MEMORY_AGGREGATION_INTERVAL);
+        containerState.setWindowEnd(containerState.getWindowEnd().plus(shift));
+        containerState.setMemoryPeak(0);
+        addNewPeak = true;
+      }
+      if (addNewPeak) {
+        containerState.getMemoryHistogram().addSample(
+            containerStateProto.getMemoryPeak(), 1.0, containerState.getWindowEnd());
+        containerState.setMemoryPeak(containerStateProto.getMemoryPeak());
+      }
+    }
   }
 
   @NotNull
@@ -285,7 +288,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
         atLeastOneContainerComputable = true;
       }
     }
-    if (atLeastOneContainerComputable && !(resourceCurrent.compareTo(BigDecimal.ZERO) == 0)) {
+    if (atLeastOneContainerComputable && resourceCurrent.compareTo(BigDecimal.ZERO) != 0) {
       return resourceChange.setScale(3, HALF_UP).divide(resourceCurrent, HALF_UP);
     }
     return null;
