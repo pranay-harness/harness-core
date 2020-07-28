@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
@@ -233,8 +232,8 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
 
   @Before
   public void setUp() throws Exception {
-    when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG, emptyList())).thenReturn(kubernetesClient);
-    when(kubernetesHelperService.getOpenShiftClient(KUBERNETES_CONFIG, emptyList())).thenReturn(openShiftClient);
+    when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG)).thenReturn(kubernetesClient);
+    when(kubernetesHelperService.getOpenShiftClient(KUBERNETES_CONFIG)).thenReturn(openShiftClient);
 
     when(kubernetesClient.services()).thenReturn(services);
     when(kubernetesClient.extensions()).thenReturn(extensionsAPIGroupClient);

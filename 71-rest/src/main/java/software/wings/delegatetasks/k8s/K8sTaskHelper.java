@@ -1602,7 +1602,7 @@ public class K8sTaskHelper {
       throw new InvalidRequestException(msg, USER);
     }
 
-    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
     kubernetesClient.customResources(
         kubernetesContainerService.getCustomResourceDefinition(kubernetesClient, new DestinationRuleBuilder().build()),
         DestinationRule.class, KubernetesResourceList.class, DoneableDestinationRule.class);
@@ -1650,7 +1650,7 @@ public class K8sTaskHelper {
       throw new InvalidRequestException(msg, USER);
     }
 
-    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
     kubernetesClient.customResources(
         kubernetesContainerService.getCustomResourceDefinition(kubernetesClient, new VirtualServiceBuilder().build()),
         VirtualService.class, KubernetesResourceList.class, DoneableVirtualService.class);

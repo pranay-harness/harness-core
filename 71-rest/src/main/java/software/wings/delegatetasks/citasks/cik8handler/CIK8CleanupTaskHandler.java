@@ -20,7 +20,6 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.util.Collections;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -69,6 +68,6 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
     KubernetesConfig kubernetesConfig =
         cik8DeleteSetupTaskParams.getKubernetesClusterConfig().createKubernetesConfig(null);
 
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, Collections.emptyList());
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig);
   }
 }

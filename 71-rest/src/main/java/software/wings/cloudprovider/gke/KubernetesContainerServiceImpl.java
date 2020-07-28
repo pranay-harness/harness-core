@@ -799,7 +799,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       RollableScalableResource<ReplicationController, DoneableReplicationController>>
   rcOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .replicationControllers()
         .inNamespace(namespace);
   }
@@ -808,7 +808,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       ScalableResource<Deployment, DoneableDeployment>>
   deploymentOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .extensions()
         .deployments()
         .inNamespace(namespace);
@@ -818,7 +818,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       RollableScalableResource<ReplicaSet, DoneableReplicaSet>>
   replicaOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .extensions()
         .replicaSets()
         .inNamespace(namespace);
@@ -827,7 +827,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   private NonNamespaceOperation<DaemonSet, DaemonSetList, DoneableDaemonSet, Resource<DaemonSet, DoneableDaemonSet>>
   daemonOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .extensions()
         .daemonSets()
         .inNamespace(namespace);
@@ -837,24 +837,19 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       RollableScalableResource<StatefulSet, DoneableStatefulSet>>
   statefulOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
-        .apps()
-        .statefulSets()
-        .inNamespace(namespace);
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).apps().statefulSets().inNamespace(namespace);
   }
 
   private NonNamespaceOperation<DeploymentConfig, DeploymentConfigList, DoneableDeploymentConfig,
       DeployableScalableResource<DeploymentConfig, DoneableDeploymentConfig>>
   deploymentConfigOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
-    return kubernetesHelperService.getOpenShiftClient(kubernetesConfig, emptyList())
-        .deploymentConfigs()
-        .inNamespace(namespace);
+    return kubernetesHelperService.getOpenShiftClient(kubernetesConfig).deploymentConfigs().inNamespace(namespace);
   }
 
   @Override
   public Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .services()
         .inNamespace(kubernetesConfig.getNamespace())
         .createOrReplace(definition);
@@ -862,7 +857,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public Service getService(KubernetesConfig kubernetesConfig, String name, String namespace) {
-    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                                   .services()
                                   .inNamespace(isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace())
                                   .withName(name)
@@ -872,7 +867,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public Service getService(KubernetesConfig kubernetesConfig, String name) {
-    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                                   .services()
                                   .inNamespace(kubernetesConfig.getNamespace())
                                   .withName(name)
@@ -882,7 +877,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public List<Service> getServices(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .services()
         .inNamespace(kubernetesConfig.getNamespace())
         .withLabels(labels)
@@ -893,7 +888,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public void deleteService(KubernetesConfig kubernetesConfig, String name) {
     logger.info("Deleting service {}", name);
-    kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .services()
         .inNamespace(kubernetesConfig.getNamespace())
         .withName(name)
@@ -903,14 +898,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public Ingress createOrReplaceIngress(KubernetesConfig kubernetesConfig, Ingress definition) {
     String name = definition.getMetadata().getName();
-    Ingress ingress = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    Ingress ingress = kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                           .extensions()
                           .ingresses()
                           .inNamespace(kubernetesConfig.getNamespace())
                           .withName(name)
                           .get();
     logger.info("{} ingress [{}]", ingress == null ? "Creating" : "Replacing", name);
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .extensions()
         .ingresses()
         .inNamespace(kubernetesConfig.getNamespace())
@@ -919,7 +914,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public Ingress getIngress(KubernetesConfig kubernetesConfig, String name) {
-    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                                   .extensions()
                                   .ingresses()
                                   .inNamespace(kubernetesConfig.getNamespace())
@@ -931,7 +926,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public void deleteIngress(KubernetesConfig kubernetesConfig, String name) {
     logger.info("Deleting service {}", name);
-    kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .extensions()
         .ingresses()
         .inNamespace(kubernetesConfig.getNamespace())
@@ -942,13 +937,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public ConfigMap createOrReplaceConfigMap(KubernetesConfig kubernetesConfig, ConfigMap definition) {
     String name = definition.getMetadata().getName();
-    ConfigMap configMap = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    ConfigMap configMap = kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                               .configMaps()
                               .inNamespace(kubernetesConfig.getNamespace())
                               .withName(name)
                               .get();
     logger.info("{} config map [{}]", configMap == null ? "Creating" : "Replacing", name);
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .configMaps()
         .inNamespace(kubernetesConfig.getNamespace())
         .createOrReplace(definition);
@@ -957,7 +952,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public ConfigMap getConfigMap(KubernetesConfig kubernetesConfig, String name) {
     try {
-      return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+      return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
           .configMaps()
           .inNamespace(kubernetesConfig.getNamespace())
           .withName(name)
@@ -969,7 +964,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void deleteConfigMap(KubernetesConfig kubernetesConfig, String name) {
-    kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .configMaps()
         .inNamespace(kubernetesConfig.getNamespace())
         .withName(name)
@@ -981,13 +976,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     String name = definition.getMetadata().getName();
     String kind = definition.getKind();
     logger.info("Registering {} [{}]", kind, name);
-    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, emptyList());
+    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig);
     return istioClient.registerOrUpdateCustomResource(definition);
   }
 
   @Override
   public VirtualService getIstioVirtualService(KubernetesConfig kubernetesConfig, String name) {
-    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
     try {
       VirtualService virtualService = new VirtualServiceBuilder().build();
 
@@ -1004,7 +999,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public DestinationRule getIstioDestinationRule(KubernetesConfig kubernetesConfig, String name) {
-    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
     try {
       DestinationRule destinationRule = new DestinationRuleBuilder().build();
 
@@ -1033,7 +1028,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void deleteIstioDestinationRule(KubernetesConfig kubernetesConfig, String name) {
-    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, emptyList());
+    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig);
     try {
       istioClient.unregisterCustomResource(new DestinationRuleBuilder()
                                                .withNewMetadata()
@@ -1048,7 +1043,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void deleteIstioVirtualService(KubernetesConfig kubernetesConfig, String name) {
-    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, emptyList());
+    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig);
     try {
       istioClient.unregisterCustomResource(new VirtualServiceBuilder()
                                                .withNewMetadata()
@@ -1105,13 +1100,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig) {
     try {
-      Namespace namespace = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+      Namespace namespace = kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                                 .namespaces()
                                 .withName(kubernetesConfig.getNamespace())
                                 .get();
       if (namespace == null) {
         logger.info("Creating namespace [{}]", kubernetesConfig.getNamespace());
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig)
             .namespaces()
             .create(new NamespaceBuilder()
                         .withNewMetadata()
@@ -1126,7 +1121,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public Secret getSecret(KubernetesConfig kubernetesConfig, String secretName) {
-    return isNotBlank(secretName) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return isNotBlank(secretName) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                                         .secrets()
                                         .inNamespace(kubernetesConfig.getNamespace())
                                         .withName(secretName)
@@ -1136,7 +1131,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void deleteSecret(KubernetesConfig kubernetesConfig, String secretName) {
-    kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .secrets()
         .inNamespace(kubernetesConfig.getNamespace())
         .withName(secretName)
@@ -1145,7 +1140,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public Secret createOrReplaceSecret(KubernetesConfig kubernetesConfig, Secret secret) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .secrets()
         .inNamespace(kubernetesConfig.getNamespace())
         .createOrReplace(secret);
@@ -1153,7 +1148,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public List<Pod> getPods(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .pods()
         .inNamespace(kubernetesConfig.getNamespace())
         .withLabels(labels)
@@ -1172,7 +1167,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public void waitForPodsToStop(KubernetesConfig kubernetesConfig, Map<String, String> labels,
       int serviceSteadyStateTimeout, List<Pod> originalPods, long startTime, LogCallback logCallback) {
-    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
     List<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList());
     String namespace = kubernetesConfig.getNamespace();
     String waitingMsg = "Waiting for pods to stop...";
@@ -1220,7 +1215,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     Set<String> images = getControllerImages(podTemplateSpec);
     Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
     List<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList());
-    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
     logger.info("Waiting for pods to be ready...");
     AtomicBoolean countReached = new AtomicBoolean(false);
     AtomicBoolean haveImagesCountReached = new AtomicBoolean(false);
@@ -1407,7 +1402,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       return emptyList();
     }
     Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .pods()
         .inNamespace(kubernetesConfig.getNamespace())
         .withLabels(labels)
@@ -1420,7 +1415,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   public void checkStatus(KubernetesConfig kubernetesConfig, String rcName, String serviceName) {
-    KubernetesClient client = kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
+    KubernetesClient client = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
     String masterUrl = client.getMasterUrl().toString();
     ReplicationController rc =
         client.replicationControllers().inNamespace(kubernetesConfig.getNamespace()).withName(rcName).get();
@@ -1477,7 +1472,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public List<Pod> getRunningPodsWithLabels(
       KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList())
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .pods()
         .inNamespace(namespace)
         .withLabels(labels)
@@ -1492,6 +1487,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public VersionInfo getVersion(KubernetesConfig kubernetesConfig) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList()).getVersion();
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).getVersion();
   }
 }

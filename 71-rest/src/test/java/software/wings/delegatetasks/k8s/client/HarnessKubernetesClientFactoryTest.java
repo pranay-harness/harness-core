@@ -25,8 +25,6 @@ import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.service.impl.KubernetesHelperService;
 
-import java.util.Collections;
-
 public class HarnessKubernetesClientFactoryTest extends WingsBaseTest {
   @InjectMocks @Inject private HarnessKubernetesClientFactory harnessKubernetesClientFactory;
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -88,7 +86,7 @@ public class HarnessKubernetesClientFactoryTest extends WingsBaseTest {
         .thenReturn(kubernetesConfig);
 
     harnessKubernetesClientFactory.newKubernetesClient(k8sClusterConfig);
-    verify(kubernetesHelperService, times(1)).getKubernetesClient(kubernetesConfig, Collections.emptyList());
+    verify(kubernetesHelperService, times(1)).getKubernetesClient(kubernetesConfig);
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(k8sClusterConfig);
     assertThat(kubernetesConfig.getMasterUrl()).isEqualTo("https://int-capi-rancher.cncpl.us:443/k8s/clusters/c-pv9p9");
   }

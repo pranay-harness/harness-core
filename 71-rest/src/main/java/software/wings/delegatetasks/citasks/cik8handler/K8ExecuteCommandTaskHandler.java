@@ -5,7 +5,6 @@ package software.wings.delegatetasks.citasks.cik8handler;
  */
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static java.util.Collections.emptyList;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -59,7 +58,7 @@ public class K8ExecuteCommandTaskHandler implements ExecuteCommandTaskHandler {
 
     K8sTaskExecutionResponse result;
     try (AutoLogContext ignore = new K8LogContext(podName, containerName, OVERRIDE_ERROR)) {
-      Config config = kubernetesHelperService.getConfig(kubernetesConfig, emptyList(), StringUtils.EMPTY);
+      Config config = kubernetesHelperService.getConfig(kubernetesConfig, StringUtils.EMPTY);
       OkHttpClient okHttpClient = kubernetesHelperService.createHttpClientWithProxySetting(config);
       try (DefaultKubernetesClient kubernetesClient = new DefaultKubernetesClient(okHttpClient, config)) {
         ExecCommandStatus status = k8CommandExecutor.executeCommand(kubernetesClient, k8ExecCommandParams);

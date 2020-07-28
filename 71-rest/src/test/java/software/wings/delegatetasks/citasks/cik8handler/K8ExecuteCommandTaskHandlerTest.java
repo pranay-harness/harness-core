@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.citasks.cik8handler;
 
 import static io.harness.rule.OwnerRule.SHUBHAM;
-import static java.util.Collections.emptyList;
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -88,8 +87,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
 
-    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(emptyList()), eq(StringUtils.EMPTY)))
-        .thenReturn(config);
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(StringUtils.EMPTY))).thenReturn(config);
 
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     doThrow(KubernetesClientException.class)
@@ -109,8 +107,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
 
-    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(emptyList()), eq(StringUtils.EMPTY)))
-        .thenReturn(config);
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(StringUtils.EMPTY))).thenReturn(config);
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     doThrow(TimeoutException.class).when(k8CommandExecutor).executeCommand(any(), eq(params.getK8ExecCommandParams()));
 
@@ -127,8 +124,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
 
-    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(emptyList()), eq(StringUtils.EMPTY)))
-        .thenReturn(config);
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(StringUtils.EMPTY))).thenReturn(config);
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     doThrow(InterruptedException.class)
         .when(k8CommandExecutor)
@@ -146,8 +142,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
 
-    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(emptyList()), eq(StringUtils.EMPTY)))
-        .thenReturn(config);
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(StringUtils.EMPTY))).thenReturn(config);
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     when(k8CommandExecutor.executeCommand(any(), eq(params.getK8ExecCommandParams())))
         .thenReturn(ExecCommandStatus.SUCCESS);
@@ -164,8 +159,7 @@ public class K8ExecuteCommandTaskHandlerTest extends WingsBaseTest {
     Config config = new ConfigBuilder().withMasterUrl(MASTER_URL).withNamespace(namespace).build();
     OkHttpClient okHttpClient = HttpClientUtils.createHttpClient(config);
 
-    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(emptyList()), eq(StringUtils.EMPTY)))
-        .thenReturn(config);
+    when(kubernetesHelperService.getConfig(any(KubernetesConfig.class), eq(StringUtils.EMPTY))).thenReturn(config);
     when(kubernetesHelperService.createHttpClientWithProxySetting(config)).thenReturn(okHttpClient);
     when(k8CommandExecutor.executeCommand(any(), eq(params.getK8ExecCommandParams())))
         .thenReturn(ExecCommandStatus.FAILURE);
