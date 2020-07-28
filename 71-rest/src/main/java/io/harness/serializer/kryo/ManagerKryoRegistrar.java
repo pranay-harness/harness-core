@@ -474,6 +474,7 @@ import software.wings.helpers.ext.external.comm.EmailRequest;
 import software.wings.helpers.ext.gcb.models.BuildOptions;
 import software.wings.helpers.ext.gcb.models.BuildStep;
 import software.wings.helpers.ext.gcb.models.BuiltImage;
+import software.wings.helpers.ext.gcb.models.GcbArtifactObjects;
 import software.wings.helpers.ext.gcb.models.GcbArtifacts;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildSource;
@@ -1759,5 +1760,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TemplatizedSecretManagerStateExecutionData.class, 7457);
     kryo.register(TerraformPlanParam.class, 7458);
     kryo.register(AzureVMSSCommandRequest.class, 8035);
+    kryo.register(GcbArtifactObjects.class, 8046);
   }
 }

@@ -6,9 +6,11 @@ import static software.wings.api.ExecutionDataValue.executionDataValue;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import software.wings.beans.command.GcbTaskParams;
@@ -28,33 +30,45 @@ import java.util.Map;
 @OwnedBy(CDC)
 @Data
 @Builder
+@AllArgsConstructor
+@RequiredArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class GcbExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   public static final String GCB_URL = "https://console.cloud.google.com/cloud-build/builds/";
-  @NotNull private String activityId;
+  @NotNull private final String activityId;
   @Nullable private String buildUrl;
-  @Nullable private String buildId;
+  @Nullable private String buildNo;
   @Nullable private List<String> tags;
   @Nullable private GcbBuildStatus buildStatus;
   @Nullable private String name;
   @Nullable private String createTime;
   @Nullable private Map<String, String> substitutions;
   @Nullable private String logUrl;
-  @Nullable private GcbArtifacts artifacts;
+  @Nullable private List<String> images;
+  @Nullable private String artifactLocation;
+  @Nullable private List<String> artifacts;
 
   @NotNull
   public GcbExecutionData withDelegateResponse(@NotNull final GcbState.GcbDelegateResponse delegateResponse) {
     GcbTaskParams params = delegateResponse.getParams();
     name = params.getBuildName();
-    buildId = params.getBuildId();
-    buildUrl = GCB_URL + buildId;
+    buildNo = params.getBuildId();
+    buildUrl = GCB_URL + buildNo;
     GcbBuildDetails buildDetails = delegateResponse.getBuild();
     tags = buildDetails.getTags();
     buildStatus = buildDetails.getStatus();
     createTime = buildDetails.getCreateTime();
     substitutions = buildDetails.getSubstitutions();
     logUrl = buildDetails.getLogUrl();
-    artifacts = buildDetails.getArtifacts();
+    final GcbArtifacts gcbArtifacts = buildDetails.getArtifacts();
+    if (gcbArtifacts != null) {
+      images = gcbArtifacts.getImages();
+      final GcbArtifactObjects artifactObjects = gcbArtifacts.getObjects();
+      if (artifactObjects != null) {
+        artifactLocation = artifactObjects.getLocation();
+        this.artifacts = artifactObjects.getPaths();
+      }
+    }
     return this;
   }
 
@@ -93,32 +107,28 @@ public class GcbExecutionData extends StateExecutionData implements DelegateTask
       executionDetails.put("substitutions", executionDataValue("Substitutions", removeNullValues(substitutions)));
     }
 
-    if (isNotEmpty(buildId)) {
-      executionDetails.put("buildNumber", executionDataValue("Build Number", buildId));
+    if (isNotEmpty(buildNo)) {
+      executionDetails.put("buildNo", executionDataValue("BuildNo", buildNo));
     }
 
     if (isNotEmpty(buildUrl)) {
-      executionDetails.put("build", executionDataValue("Build Url", buildUrl));
+      executionDetails.put("buildUrl", executionDataValue("Build Url", buildUrl));
     }
 
     if (isNotEmpty(activityId)) {
       putNotNull(executionDetails, "activityId", executionDataValue("Activity Id", activityId));
     }
 
-    if (artifacts != null) {
-      if (isNotEmpty(artifacts.getImages())) {
-        putNotNull(executionDetails, "images", executionDataValue("Images", artifacts.getImages()));
-      }
-      if (artifacts.getArtifactObjects() != null) {
-        final GcbArtifactObjects objects = artifacts.getArtifactObjects();
-        if (isNotEmpty(objects.getLocation())) {
-          putNotNull(
-              executionDetails, "artifactLocation", executionDataValue("Artifact Location", objects.getLocation()));
-        }
-        if (isNotEmpty(objects.getPaths())) {
-          putNotNull(executionDetails, "artifactPaths", executionDataValue("Artifact Paths", objects.getPaths()));
-        }
-      }
+    if (isNotEmpty(images)) {
+      putNotNull(executionDetails, "images", executionDataValue("Images", images));
+    }
+
+    if (isNotEmpty(artifactLocation)) {
+      putNotNull(executionDetails, "artifactLocation", executionDataValue("Artifact Location", artifactLocation));
+    }
+
+    if (isNotEmpty(artifacts)) {
+      putNotNull(executionDetails, "artifacts", executionDataValue("Artifacts", artifacts));
     }
 
     return executionDetails;
