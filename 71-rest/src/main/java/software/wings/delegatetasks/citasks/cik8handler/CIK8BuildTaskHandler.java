@@ -35,6 +35,7 @@ import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ContainerParams;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.ci.pod.PVCParams;
 import software.wings.beans.ci.pod.PodParams;
 import software.wings.beans.ci.pod.SecretParams;
 import software.wings.beans.ci.pod.SecretVarParams;
@@ -84,9 +85,10 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     try (AutoLogContext ignore1 = new K8LogContext(podParams.getName(), null, OVERRIDE_ERROR)) {
       try {
         KubernetesClient kubernetesClient = createKubernetesClient(cik8BuildTaskParams);
-        createGitSecret(kubernetesClient, "default", gitFetchFilesConfig);
+        createGitSecret(kubernetesClient, namespace, gitFetchFilesConfig);
         createImageSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
         createEnvVariablesSecrets(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
+        createPVCs(kubernetesClient, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
 
         Pod pod = podSpecBuilder.createSpec(podParams).build();
         logger.info("Creating pod with spec: {}", pod);
@@ -117,6 +119,10 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private void createGitSecret(
       KubernetesClient kubernetesClient, String namespace, GitFetchFilesConfig gitFetchFilesConfig) {
+    if (gitFetchFilesConfig == null) {
+      return;
+    }
+
     try {
       kubeCtlHandler.createGitSecret(kubernetesClient, namespace, gitFetchFilesConfig.getGitConfig(),
           gitFetchFilesConfig.getEncryptedDataDetails());
@@ -124,6 +130,20 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       String errMsg = format("Unknown format for GIT password %s", e.getMessage());
       logger.error(errMsg);
       throw new InvalidRequestException(errMsg, e, WingsException.USER);
+    }
+  }
+
+  private void createPVCs(
+      KubernetesClient kubernetesClient, String namespace, CIK8PodParams<CIK8ContainerParams> podParams) {
+    if (podParams.getPvcParamList() == null) {
+      return;
+    }
+
+    for (PVCParams pvcParams : podParams.getPvcParamList()) {
+      if (!pvcParams.isPresent()) {
+        kubeCtlHandler.createPVC(
+            kubernetesClient, namespace, pvcParams.getClaimName(), pvcParams.getStorageClass(), pvcParams.getSizeMib());
+      }
     }
   }
 
@@ -152,6 +172,10 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
     Map<String, String> secretData = new HashMap<>();
     for (CIK8ContainerParams containerParams : containerParamsList) {
+      if (containerParams.getContainerSecrets() == null) {
+        continue;
+      }
+
       Map<String, EncryptedVariableWithType> encryptedSecrets =
           containerParams.getContainerSecrets().getEncryptedSecrets();
       Map<String, EncryptableSettingWithEncryptionDetails> publishArtifactEncryptedValues =

@@ -5,11 +5,13 @@ import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodFluent;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import software.wings.beans.ci.pod.ContainerParams;
+import software.wings.beans.ci.pod.PVCParams;
 import software.wings.beans.ci.pod.PodParams;
 import software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilder;
 import software.wings.delegatetasks.citasks.cik8handler.container.ContainerSpecBuilderResponse;
@@ -44,10 +46,12 @@ public abstract class BasePodSpecBuilder {
     List<LocalObjectReference> imageSecrets = new ArrayList<>();
 
     Set<Volume> volumesToCreate = new HashSet<>();
+    Map<String, String> volumeToPVCMap = getPVC(podParams.getPvcParamList());
     Map<String, LocalObjectReference> imageSecretByName = new HashMap<>();
-    List<Container> containers = getContainers(podParams.getContainerParamsList(), volumesToCreate, imageSecretByName);
+    List<Container> containers =
+        getContainers(podParams.getContainerParamsList(), volumesToCreate, volumeToPVCMap, imageSecretByName);
     List<Container> initContainers =
-        getContainers(podParams.getInitContainerParamsList(), volumesToCreate, imageSecretByName);
+        getContainers(podParams.getInitContainerParamsList(), volumesToCreate, volumeToPVCMap, imageSecretByName);
 
     imageSecretByName.forEach((imageName, imageSecret) -> imageSecrets.add(imageSecret));
 
@@ -65,7 +69,7 @@ public abstract class BasePodSpecBuilder {
   }
 
   private List<Container> getContainers(List<ContainerParams> containerParamsList, Set<Volume> volumesToCreate,
-      Map<String, LocalObjectReference> imageSecretByName) {
+      Map<String, String> volumeToPVCMap, Map<String, LocalObjectReference> imageSecretByName) {
     List<Container> containers = new ArrayList<>();
     if (containerParamsList == null) {
       return containers;
@@ -74,11 +78,7 @@ public abstract class BasePodSpecBuilder {
     for (ContainerParams containerParams : containerParamsList) {
       if (containerParams.getVolumeToMountPath() != null) {
         containerParams.getVolumeToMountPath().forEach(
-            (volumeName, volumeMountPath)
-                -> volumesToCreate.add(new VolumeBuilder()
-                                           .withName(volumeName)
-                                           .withEmptyDir(new EmptyDirVolumeSourceBuilder().build())
-                                           .build()));
+            (volumeName, volumeMountPath) -> volumesToCreate.add(getVolume(volumeName, volumeToPVCMap)));
       }
 
       ContainerSpecBuilderResponse containerSpecBuilderResponse = containerSpecBuilder.createSpec(containerParams);
@@ -93,5 +93,29 @@ public abstract class BasePodSpecBuilder {
       }
     }
     return containers;
+  }
+
+  private Map<String, String> getPVC(List<PVCParams> pvcParamsList) {
+    Map<String, String> volumeToPVCMap = new HashMap<>();
+    if (pvcParamsList == null) {
+      return volumeToPVCMap;
+    }
+
+    for (PVCParams pvcParam : pvcParamsList) {
+      volumeToPVCMap.put(pvcParam.getVolumeName(), pvcParam.getClaimName());
+    }
+    return volumeToPVCMap;
+  }
+
+  private Volume getVolume(String volumeName, Map<String, String> volumeToPVCMap) {
+    if (volumeToPVCMap.containsKey(volumeName)) {
+      return new VolumeBuilder()
+          .withName(volumeName)
+          .withPersistentVolumeClaim(
+              new PersistentVolumeClaimVolumeSourceBuilder().withClaimName(volumeToPVCMap.get(volumeName)).build())
+          .build();
+    } else {
+      return new VolumeBuilder().withName(volumeName).withEmptyDir(new EmptyDirVolumeSourceBuilder().build()).build();
+    }
   }
 }

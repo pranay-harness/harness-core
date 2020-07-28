@@ -23,8 +23,11 @@ import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstant
 
 import com.google.inject.Provider;
 
+import io.fabric8.kubernetes.api.model.DoneablePersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.DoneableSecret;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -81,6 +84,12 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   @Mock private MixedOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> mockKubePod;
   @Mock private NonNamespaceOperation<Pod, PodList, DoneablePod, PodResource<Pod, DoneablePod>> mockPodNonNamespacedOp;
   @Mock private PodResource<Pod, DoneablePod> mockPodNamed;
+  @Mock
+  private MixedOperation<PersistentVolumeClaim, PersistentVolumeClaimList, DoneablePersistentVolumeClaim,
+      Resource<PersistentVolumeClaim, DoneablePersistentVolumeClaim>> mockPVCOp;
+  @Mock
+  private NonNamespaceOperation<PersistentVolumeClaim, PersistentVolumeClaimList, DoneablePersistentVolumeClaim,
+      Resource<PersistentVolumeClaim, DoneablePersistentVolumeClaim>> mockPVCNonNamespacedOp;
 
   @Mock Provider<ExecCommandListener> execListenerProvider;
   @Mock
@@ -100,6 +109,10 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
   private static final String podName = "pod";
   private static final String containerName = "container";
   private static final String namespace = "default";
+  private static final String storageClass = "default-storage";
+  private static final Integer storageMib = 100;
+  private static final String volumeName = "test-volume";
+
   private static final String[] commands = new String[] {"ls", "cd dir", "ls"};
   private static final String stdoutFilePath = "dir/stdout";
   private static final String stderrFilePath = "dir/stderr";
@@ -455,5 +468,17 @@ public class CIK8CtlHandlerTest extends WingsBaseTest {
     when(mockSecretNonNamespacedOp.createOrReplace(secret)).thenReturn(secret);
     Secret secret1 = cik8CtlHandler.createSecret(mockKubernetesClient, "secret-name", namespace, decryptedSecret);
     assertThat(secret1).isEqualTo(secret);
+  }
+
+  @Test()
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void createPVC() {
+    PersistentVolumeClaim pvc = mock(PersistentVolumeClaim.class);
+    when(mockKubernetesClient.persistentVolumeClaims()).thenReturn(mockPVCOp);
+    when(mockPVCOp.inNamespace(namespace)).thenReturn(mockPVCNonNamespacedOp);
+    when(mockPVCNonNamespacedOp.create(any())).thenReturn(pvc);
+    cik8CtlHandler.createPVC(mockKubernetesClient, namespace, volumeName, storageClass, storageMib);
+    verify(mockKubernetesClient).persistentVolumeClaims();
   }
 }

@@ -282,6 +282,7 @@ import software.wings.beans.ci.pod.ContainerResourceParams;
 import software.wings.beans.ci.pod.ContainerSecrets;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.ci.pod.PVCParams;
 import software.wings.beans.ci.pod.PodParams;
 import software.wings.beans.cloudprovider.azure.AzureEnvironmentType;
 import software.wings.beans.command.AbstractCommandUnit;
@@ -1763,5 +1764,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerraformPlanParam.class, 7458);
     kryo.register(AzureVMSSCommandRequest.class, 8035);
     kryo.register(GcbArtifactObjects.class, 8046);
+    kryo.register(PVCParams.class, 7459);
   }
 }

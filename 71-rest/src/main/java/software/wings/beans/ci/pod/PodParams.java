@@ -15,6 +15,7 @@ public abstract class PodParams<T extends ContainerParams> {
   private Map<String, String> labels;
   private List<T> containerParamsList;
   private List<T> initContainerParamsList;
+  private List<PVCParams> pvcParamList;
 
   public abstract PodParams.Type getType();
 
