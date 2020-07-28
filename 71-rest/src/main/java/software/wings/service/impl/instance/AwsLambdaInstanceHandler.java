@@ -31,6 +31,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.delegate.beans.NoAvaliableDelegatesException;
 import io.harness.delegate.beans.ResponseData;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
@@ -305,6 +306,8 @@ public class AwsLambdaInstanceHandler extends InstanceHandler implements Instanc
           new Date(instanceToUpdate.getLastDeployedAt()), infrastructureMapping, awsConfig, encryptedDataDetails);
       syncLambdaInstanceInDB(instanceToUpdate, lambdaInstanceInfo);
 
+    } catch (NoAvaliableDelegatesException ex) {
+      logger.warn("Delegates are not available ", ex.getMessage());
     } catch (Exception e) {
       logger.info("error while Syncing Aws Lambda Instance. skipping the sync for it", e);
     }
