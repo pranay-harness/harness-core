@@ -10,7 +10,11 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
@@ -23,9 +27,11 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
 import software.wings.beans.ci.pod.SecretParams;
+import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -47,6 +53,28 @@ public class CIK8CtlHandler {
     if (secret != null) {
       kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);
     }
+  }
+
+  public void createPVC(
+      KubernetesClient kubernetesClient, String namespace, String claimName, String storageClass, Integer storageMib) {
+    List<String> accessModes = new ArrayList<>();
+    accessModes.add(CIConstants.PVC_READ_WRITE_ONCE);
+
+    PersistentVolumeClaim pvc =
+        new PersistentVolumeClaimBuilder()
+            .withNewMetadata()
+            .withName(claimName)
+            .endMetadata()
+            .withNewSpec()
+            .withStorageClassName(storageClass)
+            .withAccessModes(accessModes)
+            .withResources(new ResourceRequirementsBuilder()
+                               .addToRequests(CIConstants.STORAGE,
+                                   new Quantity(format("%d%s", storageMib, CIConstants.STORAGE_FORMAT)))
+                               .build())
+            .endSpec()
+            .build();
+    kubernetesClient.persistentVolumeClaims().inNamespace(namespace).create(pvc);
   }
 
   public Map<String, SecretParams> fetchCustomVariableSecretKeyMap(

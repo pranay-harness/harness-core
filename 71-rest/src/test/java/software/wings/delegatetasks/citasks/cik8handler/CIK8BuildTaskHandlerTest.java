@@ -11,6 +11,7 @@ import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHand
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildImageSecretErrorTaskParams;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildPodCreateErrorTaskParams;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildTaskParams;
+import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.buildTaskParamsWithPVC;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getCustomVarSecret;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getEncryptedDetails;
 import static software.wings.delegatetasks.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getPublishArtifactSecrets;
@@ -54,6 +55,10 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
 
   private static final String namespace = "default";
   private static final String secretName = "secret";
+  private static String storageClass = "test-storage";
+  private static Integer storageMib = 100;
+  private static String claimName = "pvc";
+  private static String volume1 = "volume1";
 
   @Test
   @Owner(developers = SHUBHAM)
@@ -136,6 +141,31 @@ public class CIK8BuildTaskHandlerTest extends WingsBaseTest {
     when(kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class))).thenReturn(kubernetesClient);
     doNothing().when(kubeCtlHandler).createGitSecret(kubernetesClient, namespace, gitConfig, encryptionDetails);
     doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
+    when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
+    when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
+    when(kubeCtlHandler.waitUntilPodIsReady(
+             kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace))
+        .thenReturn(false);
+
+    K8sTaskExecutionResponse response = cik8BuildTaskHandler.executeTaskInternal(cik8BuildTaskParams);
+    assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void executeTaskInternalWithPVC() throws UnsupportedEncodingException, TimeoutException, InterruptedException {
+    KubernetesClient kubernetesClient = mock(KubernetesClient.class);
+    PodBuilder podBuilder = new PodBuilder();
+
+    CIK8BuildTaskParams cik8BuildTaskParams = buildTaskParamsWithPVC();
+    List<EncryptedDataDetail> encryptionDetails = cik8BuildTaskParams.getEncryptionDetails();
+    ImageDetailsWithConnector imageDetailsWithConnector =
+        cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
+
+    when(kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class))).thenReturn(kubernetesClient);
+    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
+    doNothing().when(kubeCtlHandler).createPVC(kubernetesClient, namespace, claimName, storageClass, storageMib);
     when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
     when(kubeCtlHandler.waitUntilPodIsReady(

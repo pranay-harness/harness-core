@@ -12,9 +12,11 @@ import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBu
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.basicContainerParamsWithoutImageCred;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.basicExpectedPod;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.basicExpectedPodWithImageCred;
+import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.basicExpectedPodWithPVC;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.basicExpectedPodWithVolumeMount;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.basicInput;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.basicInputWithImageCred;
+import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.basicInputWithPVC;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.basicInputWithVolumeMount;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.containerBuilderWithVolumeMount;
 import static software.wings.delegatetasks.citasks.cik8handler.pod.CIK8PodSpecBuilderTestHelper.containerParamsWithSecretEnvVar;
@@ -104,6 +106,26 @@ public class CIK8PodSpecBuilderTest extends WingsBaseTest {
     CIK8ContainerParams containerParams = containerParamsWithVoluemMount();
 
     Pod expectedPod = basicExpectedPodWithVolumeMount();
+    ContainerBuilder containerBuilder = containerBuilderWithVolumeMount();
+
+    when(containerSpecBuilder.createSpec(containerParams))
+        .thenReturn(ContainerSpecBuilderResponse.builder()
+                        .imageSecret(new LocalObjectReference(registrySecretName))
+                        .containerBuilder(containerBuilder)
+                        .build());
+    when(gitCloneContainerSpecBuilder.createGitCloneSpec(any())).thenReturn(null);
+    PodBuilder responsePodBuilder = cik8PodSpecBuilder.createSpec((PodParams) podParams);
+    assertThat(responsePodBuilder.build()).isEqualTo(expectedPod);
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void createBasicSpecWithPVC() {
+    CIK8PodParams<CIK8ContainerParams> podParams = basicInputWithPVC();
+    CIK8ContainerParams containerParams = containerParamsWithVoluemMount();
+
+    Pod expectedPod = basicExpectedPodWithPVC();
     ContainerBuilder containerBuilder = containerBuilderWithVolumeMount();
 
     when(containerSpecBuilder.createSpec(containerParams))

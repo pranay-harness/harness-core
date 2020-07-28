@@ -9,6 +9,9 @@ public final class CIConstants {
   public static final String MEMORY_FORMAT = "Mi";
   public static final String CPU = "cpu";
   public static final String CPU_FORMAT = "m";
+  public static final String STORAGE = "storage";
+  public static final String STORAGE_FORMAT = "Mi";
+  public static final String PVC_READ_WRITE_ONCE = "ReadWriteOnce";
   public static final String RESTART_POLICY = "Never";
 
   public static final long POD_MAX_TTL_SECS = 86400L; // 1 day

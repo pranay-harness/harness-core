@@ -5,6 +5,7 @@ import static software.wings.beans.ci.pod.EncryptedVariableWithType.Type.TEXT;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
@@ -20,6 +21,7 @@ import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ContainerSecrets;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.ci.pod.PVCParams;
 import software.wings.beans.container.ImageDetails;
 import software.wings.delegatetasks.citasks.cik8handler.params.CIConstants;
 
@@ -54,6 +56,9 @@ public class CIK8PodSpecBuilderTestHelper {
   private static String userName = "usr";
   private static String password = "pwd";
   private static String registrySecretName = "hs-index-docker-io-v1-usr-hs";
+  private static String storageClass = "test-storage";
+  private static Integer storageMib = 100;
+  private static String claimName = "pvc";
 
   public static CIK8ContainerParams basicContainerParamsWithoutImageCred() {
     ImageDetails imageWithoutCred = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
@@ -117,6 +122,16 @@ public class CIK8PodSpecBuilderTestHelper {
         .build();
   }
 
+  public static PVCParams pvcParams(String volumeName) {
+    return PVCParams.builder()
+        .volumeName(volumeName)
+        .claimName(claimName)
+        .storageClass(storageClass)
+        .isPresent(false)
+        .sizeMib(storageMib)
+        .build();
+  }
+
   public static ContainerBuilder basicContainerBuilder() {
     return new ContainerBuilder().withName(containerName1).withImage(imageCtrName);
   }
@@ -169,6 +184,16 @@ public class CIK8PodSpecBuilderTestHelper {
         .containerParamsList(Arrays.asList(containerParamsWithVoluemMount()))
         .build();
   }
+  public static CIK8PodParams<CIK8ContainerParams> basicInputWithPVC() {
+    return CIK8PodParams.<CIK8ContainerParams>builder()
+        .name(podName)
+        .namespace(namespace)
+        .stepExecVolumeName(stepExecVolumeName)
+        .stepExecWorkingDir(stepExecWorkingDir)
+        .containerParamsList(Arrays.asList(containerParamsWithVoluemMount()))
+        .pvcParamList(Arrays.asList(pvcParams(volume1)))
+        .build();
+  }
 
   public static Pod basicExpectedPod() {
     return new PodBuilder()
@@ -202,6 +227,28 @@ public class CIK8PodSpecBuilderTestHelper {
   public static Pod basicExpectedPodWithVolumeMount() {
     List<Volume> volumes = new ArrayList<>();
     volumes.add(new VolumeBuilder().withName(volume1).withEmptyDir(new EmptyDirVolumeSourceBuilder().build()).build());
+    return new PodBuilder()
+        .withNewMetadata()
+        .withName(podName)
+        .withNamespace(namespace)
+        .endMetadata()
+        .withNewSpec()
+        .withContainers(containerBuilderWithVolumeMount().build())
+        .withRestartPolicy(CIConstants.RESTART_POLICY)
+        .withImagePullSecrets(new LocalObjectReference(registrySecretName))
+        .withVolumes(volumes)
+        .withActiveDeadlineSeconds(CIConstants.POD_MAX_TTL_SECS)
+        .endSpec()
+        .build();
+  }
+
+  public static Pod basicExpectedPodWithPVC() {
+    List<Volume> volumes = new ArrayList<>();
+    volumes.add(
+        new VolumeBuilder()
+            .withName(volume1)
+            .withPersistentVolumeClaim(new PersistentVolumeClaimVolumeSourceBuilder().withClaimName(claimName).build())
+            .build());
     return new PodBuilder()
         .withNewMetadata()
         .withName(podName)

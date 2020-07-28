@@ -23,10 +23,12 @@ import software.wings.beans.ci.pod.CIK8PodParams;
 import software.wings.beans.ci.pod.ContainerSecrets;
 import software.wings.beans.ci.pod.EncryptedVariableWithType;
 import software.wings.beans.ci.pod.ImageDetailsWithConnector;
+import software.wings.beans.ci.pod.PVCParams;
 import software.wings.beans.ci.pod.SecretParams;
 import software.wings.beans.container.ImageDetails;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +42,10 @@ public class CIK8BuildTaskHandlerTestHelper {
   private static final String containerName1 = "container1";
   private static final String tag = "TAG";
   private static final String registryUrl = "https://index.docker.io/v1/";
+  private static String storageClass = "test-storage";
+  private static Integer storageMib = 100;
+  private static String claimName = "pvc";
+  private static String volume1 = "volume1";
 
   public static CIK8BuildTaskParams buildGitSecretErrorTaskParams() {
     KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
@@ -163,6 +169,48 @@ public class CIK8BuildTaskHandlerTestHelper {
         .kubernetesClusterConfig(kubernetesClusterConfig)
         .encryptionDetails(encryptionDetails)
         .gitFetchFilesConfig(gitFetchFilesConfig)
+        .cik8PodParams(cik8PodParams)
+        .build();
+  }
+
+  public static CIK8BuildTaskParams buildTaskParamsWithPVC() {
+    KubernetesClusterConfig kubernetesClusterConfig = KubernetesClusterConfig.builder().build();
+    ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
+    ImageDetails imageDetailsWithoutRegistry = ImageDetails.builder().name(imageName).tag(tag).build();
+
+    List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .name(containerName1)
+            .containerType(CIContainerType.ADD_ON)
+            .imageDetailsWithConnector(ImageDetailsWithConnector.builder().imageDetails(imageDetails).build())
+            .containerSecrets(
+                ContainerSecrets.builder().publishArtifactEncryptedValues(getPublishArtifactSettings()).build())
+            .build());
+    containerParamsList.add(
+        CIK8ContainerParams.builder()
+            .containerSecrets(ContainerSecrets.builder().encryptedSecrets(getEncryptedDetails()).build())
+            .name(containerName2)
+            .containerType(CIContainerType.STEP_EXECUTOR)
+            .imageDetailsWithConnector(
+                ImageDetailsWithConnector.builder().imageDetails(imageDetailsWithoutRegistry).build())
+            .build());
+
+    CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
+                                                           .name(podName)
+                                                           .namespace(namespace)
+                                                           .containerParamsList(containerParamsList)
+                                                           .pvcParamList(Arrays.asList(PVCParams.builder()
+                                                                                           .volumeName(volume1)
+                                                                                           .claimName(claimName)
+                                                                                           .storageClass(storageClass)
+                                                                                           .isPresent(false)
+                                                                                           .sizeMib(storageMib)
+                                                                                           .build()))
+                                                           .build();
+
+    return CIK8BuildTaskParams.builder()
+        .kubernetesClusterConfig(kubernetesClusterConfig)
         .cik8PodParams(cik8PodParams)
         .build();
   }
