@@ -15,7 +15,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.jsontype.AnnotationAwareJsonSubtypeResolver;
+import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import lombok.Builder;
 import lombok.Data;
 import org.junit.Before;

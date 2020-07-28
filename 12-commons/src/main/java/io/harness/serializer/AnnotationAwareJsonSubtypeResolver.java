@@ -1,4 +1,4 @@
-package io.harness.yaml.core.jsontype;
+package io.harness.serializer;
 
 import com.google.common.collect.Sets;
 
@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.jsontype.SubtypeResolver;
 import io.harness.reflection.CodeUtils;
-import io.harness.serializer.JsonSubtypeResolver;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
