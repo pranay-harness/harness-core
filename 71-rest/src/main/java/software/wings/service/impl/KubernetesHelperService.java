@@ -15,7 +15,6 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.network.Http.joinHostPort;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -51,7 +50,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.LogCallback;
 import io.harness.network.Http;
-import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
@@ -139,17 +137,15 @@ public class KubernetesHelperService {
     }
   }
 
-  public KubernetesClient getKubernetesClient(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    return getKubernetesClient(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
+  public KubernetesClient getKubernetesClient(KubernetesConfig kubernetesConfig) {
+    return getKubernetesClient(kubernetesConfig, StringUtils.EMPTY);
   }
 
   /**
    * Gets a Kubernetes client.
    */
-  public KubernetesClient getKubernetesClient(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String apiVersion) {
-    Config config = getConfig(kubernetesConfig, encryptedDataDetails, apiVersion);
+  public KubernetesClient getKubernetesClient(KubernetesConfig kubernetesConfig, String apiVersion) {
+    Config config = getConfig(kubernetesConfig, apiVersion);
 
     String namespace = "default";
     if (isNotBlank(config.getNamespace())) {
@@ -162,9 +158,8 @@ public class KubernetesHelperService {
     }
   }
 
-  public OpenShiftClient getOpenShiftClient(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    Config config = getConfig(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
+  public OpenShiftClient getOpenShiftClient(KubernetesConfig kubernetesConfig) {
+    Config config = getConfig(kubernetesConfig, StringUtils.EMPTY);
 
     String namespace = "default";
     if (isNotBlank(config.getNamespace())) {
@@ -177,12 +172,7 @@ public class KubernetesHelperService {
     }
   }
 
-  public Config getConfig(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String apiVersion) {
-    if (!kubernetesConfig.isDecrypted()) {
-      encryptionService.decrypt(kubernetesConfig, encryptedDataDetails);
-    }
-
+  public Config getConfig(KubernetesConfig kubernetesConfig, String apiVersion) {
     ConfigBuilder configBuilder = new ConfigBuilder().withTrustCerts(true);
     if (isNotBlank(kubernetesConfig.getNamespace())) {
       configBuilder.withNamespace(kubernetesConfig.getNamespace().trim());
@@ -227,8 +217,8 @@ public class KubernetesHelperService {
     return config;
   }
 
-  public IstioClient getIstioClient(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    Config config = getConfig(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
+  public IstioClient getIstioClient(KubernetesConfig kubernetesConfig) {
+    Config config = getConfig(kubernetesConfig, StringUtils.EMPTY);
 
     String namespace = "default";
     if (isNotBlank(config.getNamespace())) {
@@ -440,8 +430,7 @@ public class KubernetesHelperService {
   public NonNamespaceOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
       Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>>
   hpaOperationsForCustomMetricHPA(KubernetesConfig kubernetesConfig, String apiName) {
-    DefaultKubernetesClient kubernetesClient =
-        (DefaultKubernetesClient) getKubernetesClient(kubernetesConfig, emptyList(), apiName);
+    DefaultKubernetesClient kubernetesClient = (DefaultKubernetesClient) getKubernetesClient(kubernetesConfig, apiName);
 
     /*
      * Following constructor invocation content is copied from HorizontalPodAutoscalerOperationsImpl(OkHttpClient
@@ -467,7 +456,7 @@ public class KubernetesHelperService {
   public NonNamespaceOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
       Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>>
   hpaOperations(KubernetesConfig kubernetesConfig) {
-    return getKubernetesClient(kubernetesConfig, emptyList())
+    return getKubernetesClient(kubernetesConfig)
         .autoscaling()
         .horizontalPodAutoscalers()
         .inNamespace(kubernetesConfig.getNamespace());

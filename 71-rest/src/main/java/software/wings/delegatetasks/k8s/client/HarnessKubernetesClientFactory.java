@@ -1,7 +1,5 @@
 package software.wings.delegatetasks.k8s.client;
 
-import static java.util.Collections.emptyList;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -28,7 +26,7 @@ public class HarnessKubernetesClientFactory implements KubernetesClientFactory {
   public KubernetesClient newKubernetesClient(K8sClusterConfig k8sClusterConfig) {
     KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
     kubernetesConfig.setMasterUrl(modifyMasterUrl(kubernetesConfig.getMasterUrl()));
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig);
   }
 
   @Override

@@ -3,7 +3,6 @@ package software.wings.delegatetasks.citasks.cik8handler;
 import static io.harness.rule.OwnerRule.SHUBHAM;
 import static junit.framework.TestCase.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,7 +25,6 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.util.Collections;
 import java.util.List;
 
 public class CIK8CleanupTaskHandlerTest extends WingsBaseTest {
@@ -56,8 +54,7 @@ public class CIK8CleanupTaskHandlerTest extends WingsBaseTest {
     KubernetesClient kubernetesClient = mock(KubernetesClient.class);
     CIK8CleanupTaskParams taskParams = getTaskParams();
 
-    when(kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class), eq(Collections.emptyList())))
-        .thenReturn(kubernetesClient);
+    when(kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class))).thenReturn(kubernetesClient);
     when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.TRUE);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
@@ -71,9 +68,7 @@ public class CIK8CleanupTaskHandlerTest extends WingsBaseTest {
     KubernetesClient kubernetesClient = mock(KubernetesClient.class);
     CIK8CleanupTaskParams taskParams = getTaskParams();
 
-    when(
-        kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class), eq(taskParams.getEncryptionDetails())))
-        .thenReturn(kubernetesClient);
+    when(kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class))).thenReturn(kubernetesClient);
     when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.FALSE);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
@@ -87,9 +82,7 @@ public class CIK8CleanupTaskHandlerTest extends WingsBaseTest {
     KubernetesClient kubernetesClient = mock(KubernetesClient.class);
     CIK8CleanupTaskParams taskParams = getTaskParams();
 
-    when(
-        kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class), eq(taskParams.getEncryptionDetails())))
-        .thenReturn(kubernetesClient);
+    when(kubernetesHelperService.getKubernetesClient(any(KubernetesConfig.class))).thenReturn(kubernetesClient);
     when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenThrow(KubernetesClientException.class);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);

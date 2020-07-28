@@ -11,7 +11,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
@@ -26,7 +25,7 @@ import java.util.List;
 @Data
 @ToString(exclude = {"password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "serviceAccountToken"})
 @EqualsAndHashCode(callSuper = true)
-public class KubernetesConfig extends SettingValue implements EncryptableSetting, ExecutionCapabilityDemander {
+public class KubernetesConfig extends SettingValue implements ExecutionCapabilityDemander {
   @NotEmpty private String masterUrl;
   private String username;
   @Encrypted(fieldName = "password") private char[] password;

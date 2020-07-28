@@ -10,7 +10,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.delegatetasks.citasks.cik8handler.SecretSpecBuilder.SECRET;
 import static software.wings.delegatetasks.citasks.cik8handler.params.CIConstants.DEFAULT_SECRET_MOUNT_PATH;
@@ -113,7 +112,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     encryptionService.decrypt(
         cik8BuildTaskParams.getKubernetesClusterConfig(), cik8BuildTaskParams.getEncryptionDetails());
     KubernetesConfig kubernetesConfig = cik8BuildTaskParams.getKubernetesClusterConfig().createKubernetesConfig(null);
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, emptyList());
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig);
   }
 
   private void createGitSecret(

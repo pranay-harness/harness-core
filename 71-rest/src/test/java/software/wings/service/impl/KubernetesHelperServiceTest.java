@@ -27,8 +27,6 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.util.Collections;
-
 public class KubernetesHelperServiceTest extends WingsBaseTest {
   public static final String MASTER_URL = "http://masterUrl/";
   public static final String OC_URL = "http://masterUrl/oapi/v1/";
@@ -56,16 +54,14 @@ public class KubernetesHelperServiceTest extends WingsBaseTest {
 
   private void ocClientWithNullNamespace() {
     final String namespace = null;
-    OpenShiftClient ocClient =
-        kubernetesHelperService.getOpenShiftClient(configWithNameSpace(namespace), Collections.emptyList());
+    OpenShiftClient ocClient = kubernetesHelperService.getOpenShiftClient(configWithNameSpace(namespace));
     assertThat(ocClient.getOpenshiftUrl().toString()).isEqualTo(OC_URL);
     assertThat(ocClient.getMasterUrl().toString()).isEqualTo(MASTER_URL);
   }
 
   private void ocClientWithDefaultNamespace() {
     final String namespace = "default";
-    OpenShiftClient ocClient =
-        kubernetesHelperService.getOpenShiftClient(configWithNameSpace(namespace), Collections.emptyList());
+    OpenShiftClient ocClient = kubernetesHelperService.getOpenShiftClient(configWithNameSpace(namespace));
     assertThat(ocClient.getNamespace()).isEqualTo(namespace);
     assertThat(ocClient.getOpenshiftUrl().toString()).isEqualTo(OC_URL);
     assertThat(ocClient.getMasterUrl().toString()).isEqualTo(MASTER_URL);
@@ -73,8 +69,7 @@ public class KubernetesHelperServiceTest extends WingsBaseTest {
 
   private void ocClientWithNonDefaultNamespace() {
     final String namespace = "newSpace";
-    OpenShiftClient ocClient =
-        kubernetesHelperService.getOpenShiftClient(configWithNameSpace(namespace), Collections.emptyList());
+    OpenShiftClient ocClient = kubernetesHelperService.getOpenShiftClient(configWithNameSpace(namespace));
     assertThat(ocClient.getNamespace()).isEqualTo(namespace);
     assertThat(ocClient.getOpenshiftUrl().toString()).isEqualTo(OC_URL);
     assertThat(ocClient.getMasterUrl().toString()).isEqualTo(MASTER_URL);
@@ -98,7 +93,7 @@ public class KubernetesHelperServiceTest extends WingsBaseTest {
     kubernetesConfig.setDecrypted(true);
     when(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig)).thenReturn(null);
 
-    helperService.getKubernetesClient(kubernetesConfig, Collections.emptyList());
+    helperService.getKubernetesClient(kubernetesConfig);
     verify(containerDeploymentDelegateHelper, times(1)).getOidcIdToken(kubernetesConfig);
   }
 
@@ -111,7 +106,7 @@ public class KubernetesHelperServiceTest extends WingsBaseTest {
     kubernetesConfig.setDecrypted(true);
     when(containerDeploymentDelegateHelper.getOidcIdToken(kubernetesConfig)).thenReturn(null);
 
-    helperService.getIstioClient(kubernetesConfig, Collections.emptyList());
+    helperService.getIstioClient(kubernetesConfig);
     verify(containerDeploymentDelegateHelper, times(1)).getOidcIdToken(kubernetesConfig);
   }
 }

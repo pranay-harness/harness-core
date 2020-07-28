@@ -38,7 +38,6 @@ import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 
 import java.time.Clock;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class KubernetesContainerServiceTest extends CategoryTest {
@@ -65,7 +64,7 @@ public class KubernetesContainerServiceTest extends CategoryTest {
   @Before
   public void setUp() {
     client = server.getClient();
-    when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG, Collections.emptyList())).thenReturn(client);
+    when(kubernetesHelperService.getKubernetesClient(KUBERNETES_CONFIG)).thenReturn(client);
 
     resourceList = Arrays.asList(new V1ResourceAttributes().verb("verb").resource("resource").group("group"));
     response = Arrays.asList(new V1SubjectAccessReviewStatus());

@@ -355,6 +355,5 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
 
     KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig);
     assertThat(kubernetesConfig.getMasterUrl()).isEqualTo("https://example.com");
-    assertThat(kubernetesConfig.isDecrypted()).isTrue();
   }
 }
