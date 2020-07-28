@@ -220,6 +220,14 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(node.isSelectionLogsTrackingForTasksEnabled())
         .isEqualTo(instance.isSelectionLogsTrackingForTasksEnabled());
     assertThat(node.getDelegateTasksDetails()).isEqualTo(instance.getDelegateTasksDetails());
+
+    instance.setDelegateTasksDetails(null);
+    instance.setDelegateTaskId(taskId);
+
+    node = graphRenderer.convertToNode(instance);
+    assertThat(node.getDelegateTasksDetails()).isNotNull();
+    assertThat(node.getDelegateTasksDetails().get(0))
+        .isEqualTo(DelegateTaskDetails.builder().delegateTaskId(taskId).build());
   }
 
   @Test

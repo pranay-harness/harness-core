@@ -34,9 +34,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusCategory;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.GraphGroup;
@@ -54,6 +56,7 @@ import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -538,6 +541,9 @@ public class GraphRenderer {
           .collect(Collectors.toList());
 
       builder.delegateTasksDetails(instance.getDelegateTasksDetails());
+    } else if (StringUtils.isNotBlank(instance.getDelegateTaskId())) {
+      builder.delegateTasksDetails(
+          Arrays.asList(DelegateTaskDetails.builder().delegateTaskId(instance.getDelegateTaskId()).build()));
     }
 
     if (instance.getStateExecutionDataHistory() != null) {
