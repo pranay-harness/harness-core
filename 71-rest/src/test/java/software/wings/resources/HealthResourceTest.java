@@ -31,8 +31,8 @@ public class HealthResourceTest extends CategoryTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new HealthResource(configuration, asymmetricEncryptor, null))
-          .addProvider(WingsExceptionMapper.class)
+          .instance(new HealthResource(configuration, asymmetricEncryptor, null))
+          .type(WingsExceptionMapper.class)
           .build();
 
   @Test

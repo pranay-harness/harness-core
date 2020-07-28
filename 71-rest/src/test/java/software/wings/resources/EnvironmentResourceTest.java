@@ -45,8 +45,8 @@ public class EnvironmentResourceTest extends WingsBaseTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new EnvironmentResource(environmentService, authService, appManifestService))
-          .addProvider(WingsExceptionMapper.class)
+          .instance(new EnvironmentResource(environmentService, authService, appManifestService))
+          .type(WingsExceptionMapper.class)
           .build();
 
   @Test

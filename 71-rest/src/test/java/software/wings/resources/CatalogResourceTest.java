@@ -58,7 +58,7 @@ public class CatalogResourceTest extends WingsBaseTest {
    */
   @ClassRule
   public static final ResourceTestRule resources =
-      ResourceTestRule.builder().addResource(new CatalogResource(catalogService, settingsService)).build();
+      ResourceTestRule.builder().instance(new CatalogResource(catalogService, settingsService)).build();
 
   /**
    * The Verifier.

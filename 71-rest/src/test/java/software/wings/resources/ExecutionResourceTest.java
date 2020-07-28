@@ -57,7 +57,7 @@ public class ExecutionResourceTest extends CategoryTest {
       ExecutionResource executionResource = new ExecutionResource();
       FieldUtils.writeField(executionResource, "authService", authService, true);
       FieldUtils.writeField(executionResource, "workflowExecutionService", workflowExecutionService, true);
-      return ResourceTestRule.builder().addResource(executionResource).build();
+      return ResourceTestRule.builder().instance(executionResource).build();
     } catch (IllegalAccessException ex) {
       throw new RuntimeException(ex);
     }

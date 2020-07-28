@@ -156,7 +156,7 @@ public class SecureResourceTest extends CategoryTest {
    */
   @ClassRule
   public static final ResourceTestRule resources =
-      ResourceTestRule.builder().addResource(new SecureResource()).addProvider(authRuleFilter).build();
+      ResourceTestRule.builder().instance(new SecureResource()).instance(authRuleFilter).build();
 
   private String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
 

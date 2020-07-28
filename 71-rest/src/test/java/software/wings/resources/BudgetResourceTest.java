@@ -35,7 +35,7 @@ public class BudgetResourceTest extends CategoryTest {
   private static BudgetService budgetService = mock(BudgetService.class);
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(new BudgetResource(budgetService)).build();
+      ResourceTestRule.builder().instance(new BudgetResource(budgetService)).build();
 
   @Before
   public void setUp() {

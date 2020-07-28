@@ -33,7 +33,7 @@ public class AdminAccountResourceTest extends CategoryTest {
 
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(new AdminAccountResource(adminAccountService, adminUserService)).build();
+      ResourceTestRule.builder().instance(new AdminAccountResource(adminAccountService, adminUserService)).build();
 
   @Before
   public void setUp() {

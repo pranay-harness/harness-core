@@ -30,14 +30,14 @@ public class DelegateSelectionLogResourceTest {
   public static final ResourceTestRule RESOURCES =
 
       ResourceTestRule.builder()
-          .addResource(new DelegateSelectionLogResource(delegateSelectionLogsService))
-          .addResource(new AbstractBinder() {
+          .instance(new DelegateSelectionLogResource(delegateSelectionLogsService))
+          .instance(new AbstractBinder() {
             @Override
             protected void configure() {
               bind(httpServletRequest).to(HttpServletRequest.class);
             }
           })
-          .addProvider(WingsExceptionMapper.class)
+          .type(WingsExceptionMapper.class)
           .build();
 
   @Test

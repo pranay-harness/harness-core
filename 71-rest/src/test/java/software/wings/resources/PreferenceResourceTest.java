@@ -45,7 +45,7 @@ public class PreferenceResourceTest extends WingsBaseTest {
 
   @ClassRule
   public static final ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(new PreferenceResource(preferenceService)).build();
+      ResourceTestRule.builder().instance(new PreferenceResource(preferenceService)).build();
   public static final String PREFERENCE_ID = "PREFERENCE_ID";
 
   /**

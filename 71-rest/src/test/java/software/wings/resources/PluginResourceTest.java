@@ -33,9 +33,9 @@ public class PluginResourceTest extends CategoryTest {
 
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new PluginResource(PLUGIN_SERVICE))
-                                                       .addProvider(ConstraintViolationExceptionMapper.class)
-                                                       .addProvider(WingsExceptionMapper.class)
+                                                       .instance(new PluginResource(PLUGIN_SERVICE))
+                                                       .type(ConstraintViolationExceptionMapper.class)
+                                                       .type(WingsExceptionMapper.class)
                                                        .build();
 
   @Before

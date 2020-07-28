@@ -37,7 +37,7 @@ public class CECommunicationsResourceTest extends CategoryTest {
   private static CECommunicationsService communicationsService = mock(CECommunicationsService.class);
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder().addResource(new CECommunicationsResource(communicationsService)).build();
+      ResourceTestRule.builder().instance(new CECommunicationsResource(communicationsService)).build();
 
   @Before
   public void setUp() {

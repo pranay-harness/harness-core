@@ -53,8 +53,8 @@ public class GitSyncResourceTest extends WingsBaseTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new GitSyncResource(GIT_SYNC_SERVICE, GIT_SYNC_ERROR_SERVICE))
-          .addProvider(WingsExceptionMapper.class)
+          .instance(new GitSyncResource(GIT_SYNC_SERVICE, GIT_SYNC_ERROR_SERVICE))
+          .type(WingsExceptionMapper.class)
           .build();
   private static final GitToHarnessErrorDetails gitToHarnessErrorDetails =
       GitToHarnessErrorDetails.builder().gitCommitId("gitCommitId1").yamlContent("yamlContent").build();

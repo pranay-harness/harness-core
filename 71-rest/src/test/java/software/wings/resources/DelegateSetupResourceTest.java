@@ -82,15 +82,15 @@ public class DelegateSetupResourceTest {
   public static final ResourceTestRule RESOURCES =
 
       ResourceTestRule.builder()
-          .addResource(new DelegateSetupResource(
+          .instance(new DelegateSetupResource(
               delegateService, delegateScopeService, downloadTokenService, subdomainUrlHelper))
-          .addResource(new AbstractBinder() {
+          .instance(new AbstractBinder() {
             @Override
             protected void configure() {
               bind(httpServletRequest).to(HttpServletRequest.class);
             }
           })
-          .addProvider(WingsExceptionMapper.class)
+          .type(WingsExceptionMapper.class)
           .build();
 
   @Test

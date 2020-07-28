@@ -39,7 +39,7 @@ public class GcpBillingAccountResourceTest extends CategoryTest {
   @ClassRule
   public static ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new GcpBillingAccountResource(gcpBillingAccountService, awsAccountService))
+          .instance(new GcpBillingAccountResource(gcpBillingAccountService, awsAccountService))
           .build();
 
   @Before

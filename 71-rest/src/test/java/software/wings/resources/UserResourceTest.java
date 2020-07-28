@@ -97,11 +97,11 @@ public class UserResourceTest extends WingsBaseTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, ACCOUNT_PERMISSION_UTILS,
+          .instance(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, ACCOUNT_PERMISSION_UTILS,
               AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHES, HARNESS_USER_GROUP_SERVICE,
               USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB, RE_CAPTCHA_VERIFIER))
-          .addProvider(WingsExceptionMapper.class)
-          .addProvider(MultiPartFeature.class)
+          .type(WingsExceptionMapper.class)
+          .type(MultiPartFeature.class)
           .build();
 
   /**
