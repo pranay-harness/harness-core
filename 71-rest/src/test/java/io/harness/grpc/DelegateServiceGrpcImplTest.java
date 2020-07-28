@@ -71,6 +71,8 @@ import java.util.function.Consumer;
 public class DelegateServiceGrpcImplTest extends WingsBaseTest implements MockableTestMixin {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
+  public static final String TASK_DESCRIPTION = "taskDescription";
+
   private DelegateServiceGrpcClient delegateServiceGrpcClient;
   private DelegateServiceGrpcImpl delegateServiceGrpcImpl;
 
@@ -266,11 +268,12 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
                                              .lastContextUpdated(lastContextUpdated)
                                              .build();
 
-    when(perpetualTaskService.createTask(eq(type), eq(accountId), eq(context), eq(schedule), eq(false)))
+    when(perpetualTaskService.createTask(
+             eq(type), eq(accountId), eq(context), eq(schedule), eq(false), eq(TASK_DESCRIPTION)))
         .thenReturn(taskId);
 
     PerpetualTaskId perpetualTaskId = delegateServiceGrpcClient.createPerpetualTask(
-        AccountId.newBuilder().setId(accountId).build(), type, schedule, contextDetails, false);
+        AccountId.newBuilder().setId(accountId).build(), type, schedule, contextDetails, false, TASK_DESCRIPTION);
 
     assertThat(perpetualTaskId).isNotNull();
     assertThat(perpetualTaskId.getId()).isEqualTo(taskId);

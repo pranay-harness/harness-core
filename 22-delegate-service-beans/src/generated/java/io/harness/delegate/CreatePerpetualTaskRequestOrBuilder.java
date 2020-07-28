@@ -68,4 +68,15 @@ public interface CreatePerpetualTaskRequestOrBuilder extends
    * @return The allowDuplicate.
    */
   boolean getAllowDuplicate();
+
+  /**
+   * <code>string task_description = 6[json_name = "taskDescription"];</code>
+   * @return The taskDescription.
+   */
+  java.lang.String getTaskDescription();
+  /**
+   * <code>string task_description = 6[json_name = "taskDescription"];</code>
+   * @return The bytes for taskDescription.
+   */
+  com.google.protobuf.ByteString getTaskDescriptionBytes();
 }

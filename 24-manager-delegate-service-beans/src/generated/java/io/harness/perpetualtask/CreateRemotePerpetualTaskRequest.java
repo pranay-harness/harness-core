@@ -18,6 +18,7 @@ public final class CreateRemotePerpetualTaskRequest extends com.google.protobuf.
   private CreateRemotePerpetualTaskRequest() {
     accountId_ = "";
     taskType_ = "";
+    taskDescription_ = "";
   }
 
   @java.
@@ -90,6 +91,12 @@ public final class CreateRemotePerpetualTaskRequest extends com.google.protobuf.
           }
           case 40: {
             allowDuplicate_ = input.readBool();
+            break;
+          }
+          case 50: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            taskDescription_ = s;
             break;
           }
           default: {
@@ -243,6 +250,38 @@ public final class CreateRemotePerpetualTaskRequest extends com.google.protobuf.
     return allowDuplicate_;
   }
 
+  public static final int TASK_DESCRIPTION_FIELD_NUMBER = 6;
+  private volatile java.lang.Object taskDescription_;
+  /**
+   * <code>string task_description = 6[json_name = "taskDescription"];</code>
+   * @return The taskDescription.
+   */
+  public java.lang.String getTaskDescription() {
+    java.lang.Object ref = taskDescription_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      taskDescription_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string task_description = 6[json_name = "taskDescription"];</code>
+   * @return The bytes for taskDescription.
+   */
+  public com.google.protobuf.ByteString getTaskDescriptionBytes() {
+    java.lang.Object ref = taskDescription_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      taskDescription_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -273,6 +312,9 @@ public final class CreateRemotePerpetualTaskRequest extends com.google.protobuf.
     if (allowDuplicate_ != false) {
       output.writeBool(5, allowDuplicate_);
     }
+    if (!getTaskDescriptionBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 6, taskDescription_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -297,6 +339,9 @@ public final class CreateRemotePerpetualTaskRequest extends com.google.protobuf.
     }
     if (allowDuplicate_ != false) {
       size += com.google.protobuf.CodedOutputStream.computeBoolSize(5, allowDuplicate_);
+    }
+    if (!getTaskDescriptionBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, taskDescription_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -332,6 +377,8 @@ public final class CreateRemotePerpetualTaskRequest extends com.google.protobuf.
     }
     if (getAllowDuplicate() != other.getAllowDuplicate())
       return false;
+    if (!getTaskDescription().equals(other.getTaskDescription()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -358,6 +405,8 @@ public final class CreateRemotePerpetualTaskRequest extends com.google.protobuf.
     }
     hash = (37 * hash) + ALLOW_DUPLICATE_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getAllowDuplicate());
+    hash = (37 * hash) + TASK_DESCRIPTION_FIELD_NUMBER;
+    hash = (53 * hash) + getTaskDescription().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -490,6 +539,8 @@ public final class CreateRemotePerpetualTaskRequest extends com.google.protobuf.
       }
       allowDuplicate_ = false;
 
+      taskDescription_ = "";
+
       return this;
     }
 
@@ -534,6 +585,7 @@ public final class CreateRemotePerpetualTaskRequest extends com.google.protobuf.
         result.context_ = contextBuilder_.build();
       }
       result.allowDuplicate_ = allowDuplicate_;
+      result.taskDescription_ = taskDescription_;
       onBuilt();
       return result;
     }
@@ -592,6 +644,10 @@ public final class CreateRemotePerpetualTaskRequest extends com.google.protobuf.
       }
       if (other.getAllowDuplicate() != false) {
         setAllowDuplicate(other.getAllowDuplicate());
+      }
+      if (!other.getTaskDescription().isEmpty()) {
+        taskDescription_ = other.taskDescription_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1024,6 +1080,75 @@ public final class CreateRemotePerpetualTaskRequest extends com.google.protobuf.
      */
     public Builder clearAllowDuplicate() {
       allowDuplicate_ = false;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object taskDescription_ = "";
+    /**
+     * <code>string task_description = 6[json_name = "taskDescription"];</code>
+     * @return The taskDescription.
+     */
+    public java.lang.String getTaskDescription() {
+      java.lang.Object ref = taskDescription_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        taskDescription_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string task_description = 6[json_name = "taskDescription"];</code>
+     * @return The bytes for taskDescription.
+     */
+    public com.google.protobuf.ByteString getTaskDescriptionBytes() {
+      java.lang.Object ref = taskDescription_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        taskDescription_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string task_description = 6[json_name = "taskDescription"];</code>
+     * @param value The taskDescription to set.
+     * @return This builder for chaining.
+     */
+    public Builder setTaskDescription(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      taskDescription_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string task_description = 6[json_name = "taskDescription"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearTaskDescription() {
+      taskDescription_ = getDefaultInstance().getTaskDescription();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string task_description = 6[json_name = "taskDescription"];</code>
+     * @param value The bytes for taskDescription to set.
+     * @return This builder for chaining.
+     */
+    public Builder setTaskDescriptionBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      taskDescription_ = value;
       onChanged();
       return this;
     }

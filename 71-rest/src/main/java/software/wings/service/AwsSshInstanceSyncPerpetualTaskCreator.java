@@ -46,7 +46,7 @@ public class AwsSshInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpe
                                          .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
                                          .build();
     return perpetualTaskService.createTask(
-        PerpetualTaskType.AWS_SSH_INSTANCE_SYNC, accountId, clientContext, schedule, false);
+        PerpetualTaskType.AWS_SSH_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
   }
 
   private String createPerpetualTaskInternal(String accountId, String appId, String infraMappingId) {

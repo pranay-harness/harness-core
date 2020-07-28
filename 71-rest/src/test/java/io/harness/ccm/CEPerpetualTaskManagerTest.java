@@ -106,10 +106,10 @@ public class CEPerpetualTaskManagerTest extends CategoryTest {
     when(clusterRecordService.removePerpetualTaskId(isA(ClusterRecord.class), anyString())).thenReturn(clusterRecord);
     when(perpetualTaskService.getPerpetualTaskType(anyString())).thenReturn(K8S_WATCH);
     when(perpetualTaskService.createTask(eq(PerpetualTaskType.ECS_CLUSTER), eq(accountId),
-             isA(PerpetualTaskClientContext.class), isA(PerpetualTaskSchedule.class), eq(false)))
+             isA(PerpetualTaskClientContext.class), isA(PerpetualTaskSchedule.class), eq(false), eq("")))
         .thenReturn(taskId);
     when(perpetualTaskService.createTask(eq(PerpetualTaskType.K8S_WATCH), eq(accountId),
-             isA(PerpetualTaskClientContext.class), isA(PerpetualTaskSchedule.class), eq(false)))
+             isA(PerpetualTaskClientContext.class), isA(PerpetualTaskSchedule.class), eq(false), eq("")))
         .thenReturn(taskId);
   }
 
@@ -122,7 +122,7 @@ public class CEPerpetualTaskManagerTest extends CategoryTest {
     manager.createEcsTask(accountId, params);
     verify(perpetualTaskService)
         .createTask(eq(PerpetualTaskType.ECS_CLUSTER), eq(accountId), isA(PerpetualTaskClientContext.class),
-            isA(PerpetualTaskSchedule.class), eq(false));
+            isA(PerpetualTaskSchedule.class), eq(false), eq(""));
   }
 
   @Test
@@ -134,7 +134,7 @@ public class CEPerpetualTaskManagerTest extends CategoryTest {
     manager.createK8WatchTask(accountId, params);
     verify(perpetualTaskService)
         .createTask(eq(PerpetualTaskType.K8S_WATCH), eq(accountId), isA(PerpetualTaskClientContext.class),
-            isA(PerpetualTaskSchedule.class), eq(false));
+            isA(PerpetualTaskSchedule.class), eq(false), eq(""));
   }
 
   @Test

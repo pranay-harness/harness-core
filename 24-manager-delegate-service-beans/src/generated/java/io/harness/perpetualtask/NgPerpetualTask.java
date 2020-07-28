@@ -52,7 +52,7 @@ public final class NgPerpetualTask {
         + "proto\"\211\001\n\033RemotePerpetualTaskSchedule\0225\n"
         + "\010interval\030\001 \001(\0132\031.google.protobuf.Durati"
         + "onR\010interval\0223\n\007timeout\030\002 \001(\0132\031.google.p"
-        + "rotobuf.DurationR\007timeout\"\260\002\n CreateRemo"
+        + "rotobuf.DurationR\007timeout\"\333\002\n CreateRemo"
         + "tePerpetualTaskRequest\022\035\n\naccount_id\030\001 \001"
         + "(\tR\taccountId\022\033\n\ttask_type\030\002 \001(\tR\010taskTy"
         + "pe\022Q\n\010schedule\030\003 \001(\01325.io.harness.perpet"
@@ -60,18 +60,19 @@ public final class NgPerpetualTask {
         + "edule\022T\n\007context\030\004 \001(\0132:.io.harness.perp"
         + "etualtask.RemotePerpetualTaskClientConte"
         + "xtR\007context\022\'\n\017allow_duplicate\030\005 \001(\010R\016al"
-        + "lowDuplicate\"O\n!CreateRemotePerpetualTas"
-        + "kResponse\022*\n\021perpetual_task_id\030\001 \001(\tR\017pe"
-        + "rpetualTaskId\"m\n DeleteRemotePerpetualTa"
-        + "skRequest\022\035\n\naccount_id\030\001 \001(\tR\taccountId"
-        + "\022*\n\021perpetual_task_id\030\002 \001(\tR\017perpetualTa"
-        + "skId\"=\n!DeleteRemotePerpetualTaskRespons"
-        + "e\022\030\n\007success\030\001 \001(\010R\007success\"l\n\037ResetRemo"
-        + "tePerpetualTaskRequest\022\035\n\naccount_id\030\001 \001"
-        + "(\tR\taccountId\022*\n\021perpetual_task_id\030\002 \001(\t"
-        + "R\017perpetualTaskId\"<\n ResetRemotePerpetua"
-        + "lTaskResponse\022\030\n\007success\030\001 \001(\010R\007successB"
-        + "\002P\001b\006proto3"};
+        + "lowDuplicate\022)\n\020task_description\030\006 \001(\tR\017"
+        + "taskDescription\"O\n!CreateRemotePerpetual"
+        + "TaskResponse\022*\n\021perpetual_task_id\030\001 \001(\tR"
+        + "\017perpetualTaskId\"m\n DeleteRemotePerpetua"
+        + "lTaskRequest\022\035\n\naccount_id\030\001 \001(\tR\taccoun"
+        + "tId\022*\n\021perpetual_task_id\030\002 \001(\tR\017perpetua"
+        + "lTaskId\"=\n!DeleteRemotePerpetualTaskResp"
+        + "onse\022\030\n\007success\030\001 \001(\010R\007success\"l\n\037ResetR"
+        + "emotePerpetualTaskRequest\022\035\n\naccount_id\030"
+        + "\001 \001(\tR\taccountId\022*\n\021perpetual_task_id\030\002 "
+        + "\001(\tR\017perpetualTaskId\"<\n ResetRemotePerpe"
+        + "tualTaskResponse\022\030\n\007success\030\001 \001(\010R\007succe"
+        + "ssB\002P\001b\006proto3"};
     descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
             io.harness.perpetualtask.NgPerpetualTaskClient.getDescriptor(),
@@ -97,6 +98,7 @@ public final class NgPerpetualTask {
                 "Schedule",
                 "Context",
                 "AllowDuplicate",
+                "TaskDescription",
             });
     internal_static_io_harness_perpetualtask_CreateRemotePerpetualTaskResponse_descriptor =
         getDescriptor().getMessageTypes().get(2);

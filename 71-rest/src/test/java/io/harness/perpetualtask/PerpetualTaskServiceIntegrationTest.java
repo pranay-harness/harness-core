@@ -49,10 +49,10 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   @Category(DeprecatedIntegrationTests.class)
   public void shouldCreatePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
-        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false);
+        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false, "");
     assertThat(taskId).isNotNull();
     String duplicateTaskId = perpetualTaskService.createTask(
-        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false);
+        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false, "");
     assertThat(duplicateTaskId).isEqualTo(taskId);
   }
 
@@ -61,10 +61,10 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   @Category(DeprecatedIntegrationTests.class)
   public void shouldCreateDuplicatePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
-        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, true);
+        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, true, "");
     assertThat(taskId).isNotNull();
     String duplicateTaskId = perpetualTaskService.createTask(
-        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, true);
+        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, true, "");
     assertThat(duplicateTaskId).isNotEqualTo(taskId);
   }
 
@@ -73,7 +73,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   @Category(DeprecatedIntegrationTests.class)
   public void shouldDeletePerpetualTask() {
     String taskId = perpetualTaskService.createTask(
-        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false);
+        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false, "");
     boolean deleteTask = perpetualTaskService.deleteTask(TEST_ACCOUNT_ID, taskId);
     assertThat(deleteTask).isTrue();
   }
@@ -83,7 +83,7 @@ public class PerpetualTaskServiceIntegrationTest extends BaseIntegrationTest {
   @Category(DeprecatedIntegrationTests.class)
   public void shouldUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(
-        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false);
+        DEFAULT_TASK_TYPE, TEST_ACCOUNT_ID, getPerpetualTaskClientContext(), TASK_SCHEDULE, false, "");
     PerpetualTaskResponse perpetualTaskResponse = PerpetualTaskResponse.builder().build();
     boolean heartbeatUpdated = perpetualTaskService.triggerCallback(taskId, HEARTBEAT_MILLIS, perpetualTaskResponse);
     assertThat(heartbeatUpdated).isTrue();

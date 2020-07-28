@@ -108,6 +108,6 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreator implements InstanceSync
                                          .build();
 
     return perpetualTaskService.createTask(
-        PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC, accountId, clientContext, schedule, false);
+        PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
   }
 }

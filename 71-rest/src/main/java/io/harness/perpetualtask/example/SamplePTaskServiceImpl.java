@@ -45,7 +45,8 @@ public class SamplePTaskServiceImpl implements SamplePTaskService {
                                            .setInterval(Durations.fromMinutes(1))
                                            .setTimeout(Durations.fromSeconds(30))
                                            .build();
-      return perpetualTaskService.createTask(PerpetualTaskType.SAMPLE, accountId, clientContext, schedule, false);
+      return perpetualTaskService.createTask(
+          PerpetualTaskType.SAMPLE, accountId, clientContext, schedule, false, "taskDescription");
     }
   }
 

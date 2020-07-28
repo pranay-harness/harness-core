@@ -48,7 +48,7 @@ public class ArtifactCollectionPTaskServiceClientTest extends WingsBaseTest {
   @Before
   public void setUp() {
     when(perpetualTaskService.createTask(eq(PerpetualTaskType.ARTIFACT_COLLECTION), eq(accountId),
-             isA(PerpetualTaskClientContext.class), isA(PerpetualTaskSchedule.class), eq(false)))
+             isA(PerpetualTaskClientContext.class), isA(PerpetualTaskSchedule.class), eq(false), eq("")))
         .thenReturn(taskId);
 
     clientParamsMap.put(ARTIFACT_STREAM_ID, artifactStreamId);

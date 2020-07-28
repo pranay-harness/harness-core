@@ -53,6 +53,7 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
   long intervalSeconds;
   long timeoutMillis;
   String delegateId;
+  String taskDescription;
   String state;
   long lastHeartbeat;
 

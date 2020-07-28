@@ -75,7 +75,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
 
   @Override
   public String createTask(String perpetualTaskType, String accountId, PerpetualTaskClientContext clientContext,
-      PerpetualTaskSchedule schedule, boolean allowDuplicate) {
+      PerpetualTaskSchedule schedule, boolean allowDuplicate, String taskDescription) {
     try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       if (!allowDuplicate) {
         Optional<PerpetualTaskRecord> perpetualTaskMaybe =
@@ -95,6 +95,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService {
                                        .intervalSeconds(schedule.getInterval().getSeconds())
                                        .delegateId("")
                                        .state(PerpetualTaskState.TASK_UNASSIGNED.name())
+                                       .taskDescription(taskDescription)
                                        .build();
 
       perpetualTaskCrudSubject.fireInform(PerpetualTaskCrudObxxxxxxxx:onPerpetualTaskCreated);

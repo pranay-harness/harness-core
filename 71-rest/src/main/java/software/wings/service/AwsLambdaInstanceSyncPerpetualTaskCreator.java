@@ -128,7 +128,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
                                          .build();
 
     return perpetualTaskService.createTask(
-        PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC, accountId, clientContext, schedule, false);
+        PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
   }
 
   private Set<AwsLambdaFunction> getActiveLambdaFunctions(InfrastructureMapping infrastructureMapping) {

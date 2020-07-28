@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface PerpetualTaskService {
   String createTask(String perpetualTaskType, String accountId, PerpetualTaskClientContext clientContext,
-      PerpetualTaskSchedule schedule, boolean allowDuplicate);
+      PerpetualTaskSchedule schedule, boolean allowDuplicate, String taskDescription);
 
   boolean resetTask(String accountId, String taskId, PerpetualTaskExecutionBundle taskExecutionBundle);
 

@@ -41,7 +41,7 @@ public class AwsSshInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   public void setup() {
     doReturn(PERPETUAL_TASK_ID)
         .when(perpetualTaskService)
-        .createTask(eq(PerpetualTaskType.AWS_SSH_INSTANCE_SYNC), anyString(), any(), any(), eq(false));
+        .createTask(eq(PerpetualTaskType.AWS_SSH_INSTANCE_SYNC), anyString(), any(), any(), eq(false), eq(""));
   }
 
   @Test
@@ -81,6 +81,6 @@ public class AwsSshInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
                     .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))
                     .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
                     .build()),
-            eq(false));
+            eq(false), eq(""));
   }
 }

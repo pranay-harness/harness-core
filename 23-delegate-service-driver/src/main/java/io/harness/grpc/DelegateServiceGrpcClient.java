@@ -103,7 +103,7 @@ public class DelegateServiceGrpcClient {
   }
 
   public PerpetualTaskId createPerpetualTask(AccountId accountId, String type, PerpetualTaskSchedule schedule,
-      PerpetualTaskClientContextDetails context, boolean allowDuplicate) {
+      PerpetualTaskClientContextDetails context, boolean allowDuplicate, String taskDescription) {
     CreatePerpetualTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
                                                .createPerpetualTask(CreatePerpetualTaskRequest.newBuilder()
                                                                         .setAccountId(accountId)
@@ -111,6 +111,7 @@ public class DelegateServiceGrpcClient {
                                                                         .setSchedule(schedule)
                                                                         .setContext(context)
                                                                         .setAllowDuplicate(allowDuplicate)
+                                                                        .setTaskDescription(taskDescription)
                                                                         .build());
 
     return response.getPerpetualTaskId();

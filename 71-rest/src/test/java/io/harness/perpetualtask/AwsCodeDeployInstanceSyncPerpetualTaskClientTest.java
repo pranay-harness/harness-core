@@ -98,7 +98,7 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClientTest extends WingsBaseT
                 .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))
                 .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
                 .build(),
-            false);
+            false, "");
   }
 
   @Test

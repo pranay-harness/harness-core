@@ -68,7 +68,7 @@ public class CEPerpetualTaskManager {
                                          .setInterval(Durations.fromMinutes(1))
                                          .setTimeout(Durations.fromSeconds(30))
                                          .build();
-    return perpetualTaskService.createTask(PerpetualTaskType.K8S_WATCH, accountId, clientContext, schedule, false);
+    return perpetualTaskService.createTask(PerpetualTaskType.K8S_WATCH, accountId, clientContext, schedule, false, "");
   }
 
   public String createEcsTask(String accountId, EcsPerpetualTaskClientParams clientParams) {
@@ -86,7 +86,8 @@ public class CEPerpetualTaskManager {
                                          .setTimeout(Durations.fromMillis(180000))
                                          .build();
 
-    return perpetualTaskService.createTask(PerpetualTaskType.ECS_CLUSTER, accountId, clientContext, schedule, false);
+    return perpetualTaskService.createTask(
+        PerpetualTaskType.ECS_CLUSTER, accountId, clientContext, schedule, false, "");
   }
 
   public boolean createPerpetualTasks(Account account, String clusterType) {
