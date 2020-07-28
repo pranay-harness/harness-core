@@ -1,5 +1,9 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
+import static io.harness.exception.WingsException.USER;
+
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -15,6 +19,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.setupusage.SecretSetupUsage;
+import software.wings.service.impl.security.SecretManagementException;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingVariableTypes;
@@ -187,4 +192,29 @@ public interface SecretManager extends OwnedByAccount {
 
   Optional<SecretManagerRuntimeParameters> getSecretManagerRuntimeCredentialsForExecution(
       String executionId, String secretManagerId);
+
+  String saveEncryptedData(EncryptedData encryptedData);
+
+  default void validateSecretPath(EncryptionType encryptionType, String path) {
+    if (isNotEmpty(path)) {
+      switch (encryptionType) {
+        case VAULT:
+          // Path should always have a "#" in and a key name after the #.
+          if (path.indexOf('#') < 0) {
+            throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+                "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.",
+                USER);
+          }
+          break;
+        case AWS_SECRETS_MANAGER:
+        case CYBERARK:
+        case AZURE_VAULT:
+          break;
+        default:
+          throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+              "Secret path can be specified only if the secret manager is of VAULT/AWS_SECRETS_MANAGER/CYBERARK/AZURE_VAULT type!",
+              USER);
+      }
+    }
+  }
 }

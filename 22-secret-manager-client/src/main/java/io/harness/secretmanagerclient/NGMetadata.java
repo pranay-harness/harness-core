@@ -13,7 +13,4 @@ import lombok.experimental.SuperBuilder;
 @FieldNameConstants(innerTypeName = "NGMetadataKeys")
 public abstract class NGMetadata {
   private String identifier;
-  private String accountIdentifier;
-  private String orgIdentifier;
-  private String projectIdentifier;
 }

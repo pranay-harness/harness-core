@@ -1,13 +1,28 @@
 package software.wings.service.intfc.security;
 
+import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.security.encryption.EncryptedData;
+import software.wings.settings.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Optional;
+import javax.validation.constraints.NotNull;
 
 public interface NGSecretService {
-  Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId);
+  EncryptedData createSecretText(EncryptedData encryptedData, String secretValue);
+
+  PageResponse<EncryptedData> listSecrets(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      SettingVariableTypes settingVariableTypes, String limit, String offset);
+
+  Optional<EncryptedData> getSecretText(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
+  boolean updateSecretText(EncryptedData encryptedData, String secretValue);
+
+  boolean deleteSecretText(
+      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier);
 
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object);
 }

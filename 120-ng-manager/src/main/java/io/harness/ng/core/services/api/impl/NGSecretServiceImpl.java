@@ -8,7 +8,7 @@ import com.google.inject.Singleton;
 import io.harness.ng.core.services.api.NGSecretService;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import io.harness.secretmanagerclient.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.dto.SecretTextCreateDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import lombok.AllArgsConstructor;
@@ -36,8 +36,8 @@ public class NGSecretServiceImpl implements NGSecretService {
   }
 
   @Override
-  public String createSecret(boolean localMode, SecretTextDTO dto) {
-    return getResponse(secretManagerClient.createSecret(localMode, dto));
+  public EncryptedDataDTO createSecret(SecretTextCreateDTO dto) {
+    return getResponse(secretManagerClient.createSecret(dto));
   }
 
   @Override

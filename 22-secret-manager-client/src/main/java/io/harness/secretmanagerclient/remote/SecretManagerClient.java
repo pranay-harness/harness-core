@@ -4,9 +4,9 @@ import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.NGSecretManagerConfigUpdateDTO;
-import io.harness.secretmanagerclient.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.SecretTextCreateDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.kryo.KryoRequest;
@@ -33,8 +33,7 @@ public interface SecretManagerClient {
   String SECRET_MANAGERS_API = "/api/ng/secret-managers";
 
   // create secret
-  @POST(SECRETS_API)
-  Call<RestResponse<String>> createSecret(@Query(value = "local") boolean localMode, @Body SecretTextDTO secretText);
+  @POST(SECRETS_API) Call<RestResponse<EncryptedDataDTO>> createSecret(@Body SecretTextCreateDTO secretText);
 
   // get secret
   @GET(SECRETS_API + "/{identifier}")
@@ -69,25 +68,25 @@ public interface SecretManagerClient {
 
   // create secret manager
   @POST(SECRET_MANAGERS_API)
-  Call<RestResponse<String>> createSecretManager(@Body NGSecretManagerConfigDTO secretManagerConfig);
+  Call<RestResponse<SecretManagerConfigDTO>> createSecretManager(@Body SecretManagerConfigDTO secretManagerConfig);
 
   // update secret manager
   @PUT(SECRET_MANAGERS_API + "/{identifier}")
-  Call<RestResponse<String>> updateSecretManager(@Path("identifier") String identifier,
+  Call<RestResponse<SecretManagerConfigDTO>> updateSecretManager(@Path("identifier") String identifier,
       @Query(ACCOUNT_IDENTIFIER_KEY) String accountIdentifier, @Query(ORG_IDENTIFIER_KEY) String orgIdentifier,
       @Query(PROJECT_IDENTIFIER_KEY) String projectIdentifier,
       @Body NGSecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO);
 
   // list secret managers
   @GET(SECRET_MANAGERS_API)
-  Call<RestResponse<List<NGSecretManagerConfigDTO>>> listSecretManagers(
+  Call<RestResponse<List<SecretManagerConfigDTO>>> listSecretManagers(
       @Query(value = ACCOUNT_IDENTIFIER_KEY) String accountIdentifier,
       @Query(value = ORG_IDENTIFIER_KEY) String orgIdentifier,
       @Query(value = PROJECT_IDENTIFIER_KEY) String projectIdentifier);
 
   // get secret manager
   @GET(SECRET_MANAGERS_API + "/{identifier}")
-  Call<RestResponse<NGSecretManagerConfigDTO>> getSecretManager(@Path("identifier") String identifier,
+  Call<RestResponse<SecretManagerConfigDTO>> getSecretManager(@Path("identifier") String identifier,
       @Query(ACCOUNT_IDENTIFIER_KEY) String accountIdentifier, @Query(ORG_IDENTIFIER_KEY) String orgIdentifier,
       @Query(PROJECT_IDENTIFIER_KEY) String projectIdentifier);
 

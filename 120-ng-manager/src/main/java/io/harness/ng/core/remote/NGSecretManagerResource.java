@@ -6,8 +6,8 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.services.api.NGSecretManagerService;
-import io.harness.secretmanagerclient.dto.NGSecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.NGSecretManagerConfigUpdateDTO;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -45,16 +45,16 @@ public class NGSecretManagerResource {
 
   @POST
   @ApiOperation(value = "Create a secret manager", nickname = "createSecretManager")
-  public ResponseDTO<String> create(NGSecretManagerConfigDTO secretManagerConfig) {
+  public ResponseDTO<SecretManagerConfigDTO> create(SecretManagerConfigDTO secretManagerConfig) {
     return ResponseDTO.newResponse(ngSecretManagerService.createSecretManager(secretManagerConfig));
   }
 
   @GET
   @ApiOperation(value = "Get secret managers", nickname = "listSecretManagers")
-  public ResponseDTO<List<NGSecretManagerConfigDTO>> list(
+  public ResponseDTO<List<SecretManagerConfigDTO>> list(
       @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
       @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier) {
-    List<NGSecretManagerConfigDTO> secretManagerConfigs =
+    List<SecretManagerConfigDTO> secretManagerConfigs =
         ngSecretManagerService.listSecretManagers(accountIdentifier, orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(secretManagerConfigs);
   }
@@ -62,10 +62,10 @@ public class NGSecretManagerResource {
   @GET
   @Path("/{identifier}")
   @ApiOperation(value = "Get a secret manager by identifier", nickname = "getSecretManagerByIdentifier")
-  public ResponseDTO<NGSecretManagerConfigDTO> get(@PathParam(IDENTIFIER) String identifier,
+  public ResponseDTO<SecretManagerConfigDTO> get(@PathParam(IDENTIFIER) String identifier,
       @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
       @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier) {
-    NGSecretManagerConfigDTO secretManagerConfig =
+    SecretManagerConfigDTO secretManagerConfig =
         ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return ResponseDTO.newResponse(secretManagerConfig);
   }
@@ -73,7 +73,7 @@ public class NGSecretManagerResource {
   @PUT
   @Path("/{identifier}")
   @ApiOperation(value = "Update secret manager", nickname = "updateSecretManager")
-  public ResponseDTO<String> update(@PathParam(IDENTIFIER) String identifier,
+  public ResponseDTO<SecretManagerConfigDTO> update(@PathParam(IDENTIFIER) String identifier,
       @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
       @QueryParam(ORG_IDENTIFIER) String orgIdentifier, @QueryParam(PROJECT_IDENTIFIER) String projectIdentifier,
       NGSecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {

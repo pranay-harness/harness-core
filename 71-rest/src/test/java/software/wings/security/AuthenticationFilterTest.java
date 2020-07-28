@@ -63,7 +63,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 public class AuthenticationFilterTest extends CategoryTest {
-  private ResourceInfo resourceInfo = mock(ResourceInfo.class);
+  @Mock ResourceInfo resourceInfo = mock(ResourceInfo.class);
   @Mock MainConfiguration configuration = mock(MainConfiguration.class);
   @Mock AuthService authService = mock(AuthService.class);
   @Mock UserService userService = mock(UserService.class);
@@ -361,7 +361,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   private Method getMockResourceMethod() {
     Class mockClass = SecretsResourceNG.class;
     try {
-      return mockClass.getMethod("get", String.class, String.class, String.class);
+      return mockClass.getMethod("get", String.class, String.class, String.class, String.class);
     } catch (NoSuchMethodException e) {
       return null;
     }

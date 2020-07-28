@@ -5,17 +5,18 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerConfig;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface NGSecretManagerService {
-  String createSecretManager(SecretManagerConfig secretManagerConfig);
+  SecretManagerConfig createSecretManager(SecretManagerConfig secretManagerConfig);
 
   List<SecretManagerConfig> listSecretManagers(
       String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
-  SecretManagerConfig getSecretManager(
+  Optional<SecretManagerConfig> getSecretManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
-  String updateSecretManager(SecretManagerConfig secretManagerConfig);
+  SecretManagerConfig updateSecretManager(SecretManagerConfig secretManagerConfig);
 
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object);
 

@@ -8,7 +8,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.services.api.NGSecretService;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import io.harness.secretmanagerclient.dto.SecretTextDTO;
+import io.harness.secretmanagerclient.dto.SecretTextCreateDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,7 +23,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -50,9 +49,8 @@ public class NGSecretResource {
 
   @POST
   @ApiOperation(value = "Create a secret text", nickname = "createSecretText")
-  public ResponseDTO<String> create(
-      @QueryParam("local") @DefaultValue("false") boolean localMode, SecretTextDTO secretText) {
-    return ResponseDTO.newResponse(ngSecretService.createSecret(localMode, secretText));
+  public ResponseDTO<EncryptedDataDTO> create(SecretTextCreateDTO secretText) {
+    return ResponseDTO.newResponse(ngSecretService.createSecret(secretText));
   }
 
   @GET
@@ -77,6 +75,7 @@ public class NGSecretResource {
   }
 
   @PUT
+  @Path("{identifier}")
   @ApiOperation(value = "Update a secret text", nickname = "updateSecretText")
   public ResponseDTO<Boolean> updateSecret(@PathParam("identifier") @NotEmpty String identifier,
       @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
@@ -87,6 +86,7 @@ public class NGSecretResource {
   }
 
   @DELETE
+  @Path("{identifier}")
   @ApiOperation(value = "Delete a secret text", nickname = "deleteSecretText")
   public ResponseDTO<Boolean> deleteSecret(@PathParam("identifier") @NotEmpty String identifier,
       @QueryParam(ACCOUNT_IDENTIFIER) @NotNull String accountIdentifier,
