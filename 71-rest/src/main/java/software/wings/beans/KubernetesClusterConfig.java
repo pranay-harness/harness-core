@@ -203,38 +203,25 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
 
     if (EmptyPredicate.isNotEmpty(password)) {
       kubernetesConfig.password(password);
-    } else {
-      kubernetesConfig.encryptedPassword(encryptedPassword);
     }
 
     if (EmptyPredicate.isNotEmpty(caCert)) {
       kubernetesConfig.caCert(caCert);
-    } else {
-      kubernetesConfig.encryptedCaCert(encryptedCaCert);
     }
 
     if (EmptyPredicate.isNotEmpty(clientCert)) {
       kubernetesConfig.clientCert(clientCert);
-    } else {
-      kubernetesConfig.encryptedClientCert(encryptedClientCert);
     }
-
     if (EmptyPredicate.isNotEmpty(clientKey)) {
       kubernetesConfig.clientKey(clientKey);
-    } else {
-      kubernetesConfig.encryptedClientKey(encryptedClientKey);
     }
 
     if (EmptyPredicate.isNotEmpty(clientKeyPassphrase)) {
       kubernetesConfig.clientKeyPassphrase(clientKeyPassphrase);
-    } else {
-      kubernetesConfig.encryptedClientKeyPassphrase(encryptedClientKeyPassphrase);
     }
 
     if (EmptyPredicate.isNotEmpty(serviceAccountToken)) {
       kubernetesConfig.serviceAccountToken(serviceAccountToken);
-    } else {
-      kubernetesConfig.encryptedServiceAccountToken(encryptedServiceAccountToken);
     }
 
     return kubernetesConfig.build();
@@ -242,12 +229,9 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
 
   private KubernetesConfig initWithOidcAuthDetails(KubernetesConfigBuilder kubernetesConfig) {
     kubernetesConfig.oidcClientId(oidcClientId);
-    kubernetesConfig.encryptedOidcClientId(encryptedOidcClientId);
     kubernetesConfig.oidcSecret(oidcSecret);
-    kubernetesConfig.encryptedOidcSecret(encryptedOidcSecret);
     kubernetesConfig.oidcUsername(oidcUsername);
     kubernetesConfig.oidcPassword(oidcPassword);
-    kubernetesConfig.encryptedOidcPassword(encryptedOidcPassword);
     kubernetesConfig.oidcGrantType(oidcGrantType);
     kubernetesConfig.oidcIdentityProviderUrl(oidcIdentityProviderUrl);
     kubernetesConfig.authType(authType);

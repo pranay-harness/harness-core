@@ -75,7 +75,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
     releaseHistory.createNewRelease(ImmutableList.of(
         KubernetesResourceId.builder().kind("VirtualService").name(VIRTUAL_SERVICE).namespace("default").build()));
 
-    KubernetesConfig kubernetesConfig = new KubernetesConfig();
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
 
     on(k8sTrafficSplitTaskHandler).set("kubernetesConfig", kubernetesConfig);
 

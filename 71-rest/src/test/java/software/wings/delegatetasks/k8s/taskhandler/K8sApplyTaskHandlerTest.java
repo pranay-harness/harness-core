@@ -155,7 +155,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void readAllFilesSpecifiedInApply() throws Exception {
-    doReturn(new KubernetesConfig())
+    doReturn(KubernetesConfig.builder().build())
         .when(containerDeploymentDelegateHelper)
         .getKubernetesConfig(any(K8sClusterConfig.class));
 
@@ -188,7 +188,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void invalidManifestFiles() throws Exception {
-    doReturn(new KubernetesConfig())
+    doReturn(KubernetesConfig.builder().build())
         .when(containerDeploymentDelegateHelper)
         .getKubernetesConfig(any(K8sClusterConfig.class));
 

@@ -211,9 +211,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   private KubernetesConfig getKubernetesConfig(ContextData contextData) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     KubernetesConfig kubernetesConfig;
-    if (contextData.settingAttribute.getValue() instanceof KubernetesConfig) {
-      kubernetesConfig = (KubernetesConfig) contextData.settingAttribute.getValue();
-    } else if (contextData.settingAttribute.getValue() instanceof KubernetesClusterConfig) {
+    if (contextData.settingAttribute.getValue() instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig config = (KubernetesClusterConfig) contextData.settingAttribute.getValue();
       encryptionService.decrypt(config, contextData.encryptedDataDetails);
       String delegateName = System.getenv().get("DELEGATE_NAME");
@@ -238,7 +236,6 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
               "Unknown kubernetes cloud provider setting value: " + contextData.settingAttribute.getValue().getType());
     }
 
-    kubernetesConfig.setDecrypted(true);
     return kubernetesConfig;
   }
 

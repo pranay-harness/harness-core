@@ -1,22 +1,11 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
-import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
-import io.harness.encryption.Encrypted;
 import io.harness.k8s.model.OidcGrantType;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.audit.ResourceType;
-import software.wings.settings.SettingValue;
-import software.wings.settings.SettingVariableTypes;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by bzane on 2/28/17
@@ -24,26 +13,18 @@ import java.util.List;
 @JsonTypeName("KUBERNETES")
 @Data
 @ToString(exclude = {"password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "serviceAccountToken"})
-@EqualsAndHashCode(callSuper = true)
-public class KubernetesConfig extends SettingValue implements ExecutionCapabilityDemander {
+public class KubernetesConfig {
   @NotEmpty private String masterUrl;
   private String username;
-  @Encrypted(fieldName = "password") private char[] password;
-  @Encrypted(fieldName = "ca_certificate") private char[] caCert;
-  @Encrypted(fieldName = "client_certificate") private char[] clientCert;
-  @Encrypted(fieldName = "client_key") private char[] clientKey;
-  @Encrypted(fieldName = "client_key_passphrase") private char[] clientKeyPassphrase;
-  @Encrypted(fieldName = "service_account_token") private char[] serviceAccountToken;
+  private char[] password;
+  private char[] caCert;
+  private char[] clientCert;
+  private char[] clientKey;
+  private char[] clientKeyPassphrase;
+  private char[] serviceAccountToken;
   private String clientKeyAlgo;
   private String namespace;
   @NotEmpty private String accountId;
-
-  private String encryptedPassword;
-  private String encryptedCaCert;
-  private String encryptedClientCert;
-  private String encryptedClientKey;
-  private String encryptedClientKeyPassphrase;
-  private String encryptedServiceAccountToken;
 
   private KubernetesClusterAuthType authType;
   // -- OIDC AUTH fields.
@@ -51,29 +32,16 @@ public class KubernetesConfig extends SettingValue implements ExecutionCapabilit
   private String oidcUsername;
   private OidcGrantType oidcGrantType;
   private String oidcScopes;
-  @Encrypted(fieldName = "oidc_client_id") private char[] oidcClientId;
-  @Encrypted(fieldName = "oidc_secret") private char[] oidcSecret;
-  @Encrypted(fieldName = "oidc_password") private char[] oidcPassword;
-  private String encryptedOidcSecret;
-  private String encryptedOidcPassword;
-  private String encryptedOidcClientId;
-
-  /**
-   * Instantiates a new setting value.
-   */
-  public KubernetesConfig() {
-    super(SettingVariableTypes.KUBERNETES.name());
-  }
+  private char[] oidcSecret;
+  private char[] oidcClientId;
+  private char[] oidcPassword;
 
   @Builder
   public KubernetesConfig(String masterUrl, String username, char[] password, char[] caCert, char[] clientCert,
       char[] clientKey, char[] clientKeyPassphrase, char[] serviceAccountToken, String clientKeyAlgo, String namespace,
-      String accountId, String encryptedPassword, String encryptedCaCert, String encryptedClientCert,
-      String encryptedClientKey, String encryptedClientKeyPassphrase, String encryptedServiceAccountToken,
-      KubernetesClusterAuthType authType, char[] oidcClientId, char[] oidcSecret, String oidcIdentityProviderUrl,
-      String oidcUsername, char[] oidcPassword, String oidcScopes, String encryptedOidcSecret,
-      String encryptedOidcPassword, String encryptedOidcClientId, OidcGrantType oidcGrantType) {
-    this();
+      String accountId, KubernetesClusterAuthType authType, char[] oidcClientId, char[] oidcSecret,
+      String oidcIdentityProviderUrl, String oidcUsername, char[] oidcPassword, String oidcScopes,
+      OidcGrantType oidcGrantType) {
     this.masterUrl = masterUrl;
     this.username = username;
     this.password = password == null ? null : password.clone();
@@ -85,12 +53,6 @@ public class KubernetesConfig extends SettingValue implements ExecutionCapabilit
     this.clientKeyAlgo = clientKeyAlgo;
     this.namespace = namespace;
     this.accountId = accountId;
-    this.encryptedPassword = encryptedPassword;
-    this.encryptedCaCert = encryptedCaCert;
-    this.encryptedClientCert = encryptedClientCert;
-    this.encryptedClientKey = encryptedClientKey;
-    this.encryptedClientKeyPassphrase = encryptedClientKeyPassphrase;
-    this.encryptedServiceAccountToken = encryptedServiceAccountToken;
     this.authType = authType;
     this.oidcClientId = oidcClientId == null ? null : oidcClientId.clone();
     this.oidcSecret = oidcSecret == null ? null : oidcSecret.clone();
@@ -98,19 +60,6 @@ public class KubernetesConfig extends SettingValue implements ExecutionCapabilit
     this.oidcUsername = oidcUsername;
     this.oidcPassword = oidcPassword == null ? null : oidcPassword.clone();
     this.oidcScopes = oidcScopes;
-    this.encryptedOidcClientId = encryptedOidcClientId;
-    this.encryptedOidcPassword = encryptedOidcPassword;
-    this.encryptedOidcSecret = encryptedOidcSecret;
     this.oidcGrantType = oidcGrantType == null ? OidcGrantType.password : oidcGrantType;
-  }
-
-  @Override
-  public String fetchResourceCategory() {
-    return ResourceType.CLOUD_PROVIDER.name();
-  }
-
-  @Override
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities() {
-    return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl));
   }
 }

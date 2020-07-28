@@ -256,9 +256,7 @@ public class ContainerDeploymentDelegateHelper {
     String namespace = containerServiceParam.getNamespace();
 
     KubernetesConfig kubernetesConfig;
-    if (settingAttribute.getValue() instanceof KubernetesConfig) {
-      kubernetesConfig = (KubernetesConfig) settingAttribute.getValue();
-    } else if (settingAttribute.getValue() instanceof KubernetesClusterConfig) {
+    if (settingAttribute.getValue() instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();
       encryptionService.decrypt(kubernetesClusterConfig, encryptedDataDetails);
       kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
@@ -274,7 +272,6 @@ public class ContainerDeploymentDelegateHelper {
               "args", "Unknown kubernetes cloud provider setting value: " + settingAttribute.getValue().getType());
     }
 
-    kubernetesConfig.setDecrypted(true);
     return kubernetesConfig;
   }
 
@@ -284,9 +281,7 @@ public class ContainerDeploymentDelegateHelper {
     String namespace = k8sClusterConfig.getNamespace();
 
     KubernetesConfig kubernetesConfig;
-    if (cloudProvider instanceof KubernetesConfig) {
-      kubernetesConfig = (KubernetesConfig) cloudProvider;
-    } else if (cloudProvider instanceof KubernetesClusterConfig) {
+    if (cloudProvider instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) cloudProvider;
       encryptionService.decrypt(kubernetesClusterConfig, encryptedDataDetails);
       kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
@@ -302,7 +297,6 @@ public class ContainerDeploymentDelegateHelper {
           .addParam("args", "Unknown kubernetes cloud provider setting value: " + cloudProvider.getType());
     }
 
-    kubernetesConfig.setDecrypted(true);
     return kubernetesConfig;
   }
 

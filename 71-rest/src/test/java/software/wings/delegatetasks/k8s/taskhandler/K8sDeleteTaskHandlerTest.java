@@ -147,7 +147,9 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.SAHIL)
   @Category(UnitTests.class)
   public void deleteGivenFiles() throws Exception {
-    doReturn(new KubernetesConfig()).when(deploymentDelegateHelper).getKubernetesConfig(any(K8sClusterConfig.class));
+    doReturn(KubernetesConfig.builder().build())
+        .when(deploymentDelegateHelper)
+        .getKubernetesConfig(any(K8sClusterConfig.class));
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(
@@ -171,7 +173,9 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.SAHIL)
   @Category(UnitTests.class)
   public void deleteFilesGivenNoFilePaths() throws Exception {
-    doReturn(new KubernetesConfig()).when(deploymentDelegateHelper).getKubernetesConfig(any(K8sClusterConfig.class));
+    doReturn(KubernetesConfig.builder().build())
+        .when(deploymentDelegateHelper)
+        .getKubernetesConfig(any(K8sClusterConfig.class));
     doReturn(true)
         .when(k8sTaskHelper)
         .fetchManifestFilesAndWriteToDirectory(

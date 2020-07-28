@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
@@ -56,8 +55,8 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
           SettingValue value = settingAttribute.getValue();
           boolean useKubernetesDelegate =
               value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate();
-          boolean isKubernetes = value instanceof KubernetesConfig || value instanceof GcpConfig
-              || value instanceof AzureConfig || value instanceof KubernetesClusterConfig;
+          boolean isKubernetes =
+              value instanceof GcpConfig || value instanceof AzureConfig || value instanceof KubernetesClusterConfig;
           if (useKubernetesDelegate || (isKubernetes && parameters.getScript().contains(HARNESS_KUBE_CONFIG_PATH))) {
             criteria = containerValidationHelper.getCriteria(containerServiceParams);
           }

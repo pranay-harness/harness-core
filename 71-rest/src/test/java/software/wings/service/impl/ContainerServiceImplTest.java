@@ -110,7 +110,7 @@ public class ContainerServiceImplTest extends WingsBaseTest {
     assertThat(containerService.validate(containerServiceParams)).isTrue();
 
     containerServiceParams.setSettingAttribute(
-        SettingAttribute.Builder.aSettingAttribute().withValue(KubernetesConfig.builder().build()).build());
+        SettingAttribute.Builder.aSettingAttribute().withValue(KubernetesClusterConfig.builder().build()).build());
     doNothing().when(kubernetesContainerService).validate(any(KubernetesConfig.class));
     assertThat(containerService.validate(containerServiceParams)).isTrue();
   }

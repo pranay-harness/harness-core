@@ -15,7 +15,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.settings.SettingValue;
@@ -50,8 +49,7 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
 
     SettingValue value = settingAttribute.getValue();
 
-    return value instanceof AzureConfig || value instanceof GcpConfig || value instanceof KubernetesConfig
-        || value instanceof KubernetesClusterConfig;
+    return value instanceof AzureConfig || value instanceof GcpConfig || value instanceof KubernetesClusterConfig;
   }
 
   @Override

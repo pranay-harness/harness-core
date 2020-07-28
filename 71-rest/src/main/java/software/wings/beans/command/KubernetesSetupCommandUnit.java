@@ -217,9 +217,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       lookupLabels = ImmutableMap.of(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY, setupParams.getReleaseName());
 
       KubernetesConfig kubernetesConfig;
-      if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
-        kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
-      } else if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
+      if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
         KubernetesClusterConfig config = (KubernetesClusterConfig) cloudProviderSetting.getValue();
         encryptionService.decrypt(config, edd);
         String delegateName = System.getenv().get("DELEGATE_NAME");
@@ -239,7 +237,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             cloudProviderSetting, edd, setupParams.getClusterName(), setupParams.getNamespace());
       }
 
-      kubernetesConfig.setDecrypted(true);
       kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig);
 
       String internalConfigName = getInternalHarnessConfigName(setupParams.getInfraMappingId());

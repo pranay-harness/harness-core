@@ -75,8 +75,6 @@ public class ContainerValidationHelper {
         return "delegate-name: " + kubernetesClusterConfig.getDelegateName();
       }
       return kubernetesClusterConfig.getMasterUrl();
-    } else if (value instanceof KubernetesConfig) {
-      return ((KubernetesConfig) value).getMasterUrl();
     } else if (value instanceof GcpConfig) {
       return "GCP:" + containerServiceParams.getClusterName();
     } else if (value instanceof AzureConfig) {
@@ -107,26 +105,22 @@ public class ContainerValidationHelper {
     SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
     SettingValue value = settingAttribute.getValue();
     KubernetesConfig kubernetesConfig;
-    if (value instanceof KubernetesConfig) {
-      kubernetesConfig = (KubernetesConfig) value;
+    String clusterName = containerServiceParams.getClusterName();
+    String namespace = containerServiceParams.getNamespace();
+    String subscriptionId = containerServiceParams.getSubscriptionId();
+    String resourceGroup = containerServiceParams.getResourceGroup();
+    List<EncryptedDataDetail> edd = containerServiceParams.getEncryptionDetails();
+    if (value instanceof GcpConfig) {
+      kubernetesConfig = gkeClusterService.getCluster(settingAttribute, edd, clusterName, namespace);
+    } else if (value instanceof AzureConfig) {
+      AzureConfig azureConfig = (AzureConfig) value;
+      kubernetesConfig = azureHelperService.getKubernetesClusterConfig(
+          azureConfig, edd, subscriptionId, resourceGroup, clusterName, namespace);
+    } else if (value instanceof KubernetesClusterConfig) {
+      return ((KubernetesClusterConfig) value).getMasterUrl();
     } else {
-      String clusterName = containerServiceParams.getClusterName();
-      String namespace = containerServiceParams.getNamespace();
-      String subscriptionId = containerServiceParams.getSubscriptionId();
-      String resourceGroup = containerServiceParams.getResourceGroup();
-      List<EncryptedDataDetail> edd = containerServiceParams.getEncryptionDetails();
-      if (value instanceof GcpConfig) {
-        kubernetesConfig = gkeClusterService.getCluster(settingAttribute, edd, clusterName, namespace);
-      } else if (value instanceof AzureConfig) {
-        AzureConfig azureConfig = (AzureConfig) value;
-        kubernetesConfig = azureHelperService.getKubernetesClusterConfig(
-            azureConfig, edd, subscriptionId, resourceGroup, clusterName, namespace);
-      } else if (value instanceof KubernetesClusterConfig) {
-        return ((KubernetesClusterConfig) value).getMasterUrl();
-      } else {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-            .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());
-      }
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());
     }
     return kubernetesConfig.getMasterUrl();
   }
