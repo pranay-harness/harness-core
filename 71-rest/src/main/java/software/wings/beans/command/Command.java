@@ -399,7 +399,9 @@ public class Command extends Base implements CommandUnit {
         ExpressionEvaluator.updateServiceArtifactVariableNames(variable.getValue(), serviceArtifactVariableNames);
       }
     }
-    commandUnits.forEach(commandUnit -> commandUnit.updateServiceArtifactVariableNames(serviceArtifactVariableNames));
+    if (isNotEmpty(commandUnits)) {
+      commandUnits.forEach(commandUnit -> commandUnit.updateServiceArtifactVariableNames(serviceArtifactVariableNames));
+    }
   }
 
   @Override
