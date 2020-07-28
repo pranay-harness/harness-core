@@ -7,6 +7,7 @@ import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SEC
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -53,6 +54,8 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.morphia.MorphiaModule;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.JsonSubtypeResolver;
+import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.kryo.CVNGKryoRegistrar;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -63,6 +66,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -118,6 +122,13 @@ public class VerificationApplication extends Application<VerificationConfigurati
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
     List<Module> modules = new ArrayList<>();
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      Set<Class<? extends KryoRegistrar>> registrars() {
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().add(CVNGKryoRegistrar.class).build();
+      }
+    });
     modules.add(MetricsInstrumentationModule.builder()
                     .withMetricRegistry(metricRegistry)
                     .withMatcher(not(new AbstractMatcher<TypeLiteral<?>>() {

@@ -11,7 +11,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaModule;
-import io.harness.serializer.CvNextGenCommonsRegistrars;
+import io.harness.serializer.CvNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.kryo.TestPersistenceKryoRegistrar;
@@ -51,7 +51,7 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(CvNextGenCommonsRegistrars.kryoRegistrars)
+            .addAll(CvNextGenRegistrars.kryoRegistrars)
             .add(TestPersistenceKryoRegistrar.class)
             .build();
       }
