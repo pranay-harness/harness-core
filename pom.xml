@@ -33,6 +33,7 @@
         <module>25-ng-manager-service-driver</module>
         <module>29-orchestration-beans</module>
         <module>31-orchestration</module>
+        <module>32-orchestration-steps</module>
         <module>35-yaml-beans</module>
         <module>38-execution-plan</module>
         <module>57-command-library-common</module>
