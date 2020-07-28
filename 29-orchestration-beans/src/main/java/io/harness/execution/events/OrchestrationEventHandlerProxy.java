@@ -1,31 +1,12 @@
 package io.harness.execution.events;
 
-import com.google.inject.Injector;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.observer.AsyncInformObserver;
-import lombok.Builder;
-import lombok.NonNull;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import io.harness.registries.RegistrableEntity;
 
 @OwnedBy(HarnessTeam.CDC)
-@Builder
-public class OrchestrationEventHandlerProxy implements AsyncInformObserver {
-  private static ExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+public interface OrchestrationEventHandlerProxy extends RegistrableEntity {
+  Class<? extends OrchestrationEventHandler> getEventHandlerClass();
 
-  @NonNull Injector injector;
-  @NonNull Class<? extends OrchestrationEventHandler> eventHandlerClass;
-
-  @Override
-  public ExecutorService getInformExecutorService() {
-    return executor;
-  }
-
-  public void handleEvent(OrchestrationEvent event) {
-    OrchestrationEventHandler eventHandler = injector.getInstance(eventHandlerClass);
-    eventHandler.handleEvent(event);
-  }
+  void handleEvent(OrchestrationEvent event);
 }

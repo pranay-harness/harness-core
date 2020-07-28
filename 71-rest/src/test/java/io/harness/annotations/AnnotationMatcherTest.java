@@ -57,7 +57,7 @@ public class AnnotationMatcherTest extends WingsBaseTest {
     Reflections reflectionsWings = new Reflections("software.wings");
     redesignClasses.addAll(reflectionsHarness.getTypesAnnotatedWith(OwnedBy.class));
     redesignClasses.addAll(reflectionsWings.getTypesAnnotatedWith(OwnedBy.class));
-    Set<String> nameSet =
+    List<String> nameSet =
         redesignClasses.stream()
             .distinct()
             .filter(clazz -> !clazz.isAnonymousClass() && !clazz.isMemberClass() && !clazz.isInterface())
@@ -65,13 +65,13 @@ public class AnnotationMatcherTest extends WingsBaseTest {
                 -> clazz.getAnnotation(OwnedBy.class) != null
                     && clazz.getAnnotation(OwnedBy.class).value().equals(HarnessTeam.CDC))
             .map(this ::extractClassLocation)
-            .collect(Collectors.toSet());
-    Set<String> expectedSet;
+            .sorted()
+            .collect(Collectors.toList());
+    List<String> expectedSet;
     try (InputStream in = getClass().getResourceAsStream("/annotations/coverage-class-list.txt")) {
-      expectedSet = new HashSet<>(IOUtils.readLines(in, "UTF-8"));
+      expectedSet = IOUtils.readLines(in, "UTF-8");
     }
-    assertThat(nameSet).isSubsetOf(expectedSet);
-    assertThat(expectedSet).isSubsetOf(nameSet);
+    assertThat(nameSet).isEqualTo(expectedSet);
   }
 
   private String extractClassLocation(Class<?> clazz) {
