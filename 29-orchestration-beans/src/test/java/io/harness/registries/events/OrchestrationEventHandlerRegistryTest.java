@@ -7,14 +7,22 @@ import com.google.inject.Inject;
 
 import io.harness.OrchestrationBeansTest;
 import io.harness.category.element.UnitTests;
+import io.harness.execution.events.AsyncOrchestrationEventHandlerProxy;
 import io.harness.execution.events.OrchestrationEvent;
 import io.harness.execution.events.OrchestrationEventHandler;
+import io.harness.execution.events.OrchestrationEventHandlerProxy;
 import io.harness.execution.events.OrchestrationEventType;
 import io.harness.execution.events.OrchestrationSubject;
+import io.harness.execution.events.SyncOrchestrationEventHandler;
+import io.harness.execution.events.SyncOrchestrationEventHandlerProxy;
+import io.harness.observer.Subject;
 import io.harness.registries.RegistryType;
 import io.harness.rule.Owner;
+import org.joor.Reflect;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.util.List;
 
 public class OrchestrationEventHandlerRegistryTest extends OrchestrationBeansTest {
   @Inject OrchestrationEventHandlerRegistry registry;
@@ -25,8 +33,14 @@ public class OrchestrationEventHandlerRegistryTest extends OrchestrationBeansTes
   public void shouldTestRegisterAndObtain() {
     registry.register(OrchestrationEventType.ORCHESTRATION_START, StartHandler1.class);
     registry.register(OrchestrationEventType.ORCHESTRATION_START, StartHandler2.class);
-    assertThat(registry.obtain(OrchestrationEventType.ORCHESTRATION_START)).isNotNull();
-    assertThat(registry.obtain(OrchestrationEventType.ORCHESTRATION_START)).isInstanceOf(OrchestrationSubject.class);
+    Subject<OrchestrationEventHandlerProxy> subject = registry.obtain(OrchestrationEventType.ORCHESTRATION_START);
+    assertThat(subject).isNotNull();
+    assertThat(subject).isInstanceOf(OrchestrationSubject.class);
+    List<OrchestrationEventHandler> eventHandlers = Reflect.on(subject).get("observers");
+    assertThat(eventHandlers).isNotEmpty();
+    assertThat(eventHandlers).hasSize(2);
+    assertThat(eventHandlers.get(0)).isInstanceOf(SyncOrchestrationEventHandlerProxy.class);
+    assertThat(eventHandlers.get(1)).isInstanceOf(AsyncOrchestrationEventHandlerProxy.class);
   }
 
   @Test
@@ -36,7 +50,7 @@ public class OrchestrationEventHandlerRegistryTest extends OrchestrationBeansTes
     assertThat(registry.getType()).isEqualTo(RegistryType.ORCHESTRATION_EVENT.name());
   }
 
-  private static class StartHandler1 implements OrchestrationEventHandler {
+  private static class StartHandler1 implements SyncOrchestrationEventHandler {
     @Override
     public void handleEvent(OrchestrationEvent event) {}
   }
