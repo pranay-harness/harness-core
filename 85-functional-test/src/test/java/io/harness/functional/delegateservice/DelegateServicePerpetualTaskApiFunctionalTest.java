@@ -59,7 +59,7 @@ public class DelegateServicePerpetualTaskApiFunctionalTest extends AbstractFunct
         PerpetualTaskClientContextDetails.newBuilder()
             .setTaskClientParams(TaskClientParams.newBuilder().putAllParams(clientParamMap).build())
             .build(),
-        false);
+        false, "");
 
     assertThat(perpetualTaskId).isNotNull();
 
@@ -99,7 +99,7 @@ public class DelegateServicePerpetualTaskApiFunctionalTest extends AbstractFunct
                         SamplePerpetualTaskParams.newBuilder().setCountry(countryName).setPopulation(159).build()))
                     .build())
             .build(),
-        false);
+        false, "");
 
     assertThat(perpetualTaskId).isNotNull();
 

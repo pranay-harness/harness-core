@@ -60,7 +60,7 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTe
     doReturn("perpetual-task-id")
         .when(perpetualTaskService)
         .createTask(eq(PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC), eq(ACCOUNT_ID),
-            any(PerpetualTaskClientContext.class), any(PerpetualTaskSchedule.class), eq(false));
+            any(PerpetualTaskClientContext.class), any(PerpetualTaskSchedule.class), eq(false), eq(""));
 
     taskCreator.createPerpetualTasks(getInfrastructureMapping());
 
@@ -70,7 +70,7 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTe
 
     verify(perpetualTaskService, times(2))
         .createTask(eq(PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC), eq(ACCOUNT_ID), clientContextCaptor.capture(),
-            scheduleCaptor.capture(), eq(false));
+            scheduleCaptor.capture(), eq(false), eq(""));
 
     assertThat(clientContextCaptor.getAllValues().stream().map(
                    clientContext -> clientContext.getClientParams().get(ELASTIGROUP_ID)))
@@ -134,7 +134,7 @@ public class SpotinstAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTe
 
     verify(perpetualTaskService, times(2))
         .createTask(eq(PerpetualTaskType.SPOT_INST_AMI_INSTANCE_SYNC), eq(ACCOUNT_ID), clientContextCaptor.capture(),
-            scheduleCaptor.capture(), eq(false));
+            scheduleCaptor.capture(), eq(false), eq(""));
 
     assertThat(clientContextCaptor.getAllValues().stream().map(
                    clientContext -> clientContext.getClientParams().get(ELASTIGROUP_ID)))

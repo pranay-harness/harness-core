@@ -87,6 +87,6 @@ public class ArtifactStreamPTaskHelper {
                                          .setTimeout(Durations.fromMinutes(2))
                                          .build();
     return perpetualTaskService.createTask(
-        PerpetualTaskType.ARTIFACT_COLLECTION, accountId, clientContext, schedule, false);
+        PerpetualTaskType.ARTIFACT_COLLECTION, accountId, clientContext, schedule, false, "");
   }
 }

@@ -151,7 +151,7 @@ public class DelegateTaskGrpcServer extends NgDelegateTaskServiceGrpc.NgDelegate
       contextBuilder.lastContextUpdated(Timestamps.toMillis(request.getContext().getLastContextUpdated()));
     }
     String perpetualTaskId = perpetualTaskService.createTask(request.getTaskType(), accountId, contextBuilder.build(),
-        convertSchedule(request.getSchedule()), request.getAllowDuplicate());
+        convertSchedule(request.getSchedule()), request.getAllowDuplicate(), request.getTaskDescription());
 
     responseObserver.onNext(CreateRemotePerpetualTaskResponse.newBuilder().setPerpetualTaskId(perpetualTaskId).build());
     responseObserver.onCompleted();

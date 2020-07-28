@@ -207,8 +207,8 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       contextBuilder.lastContextUpdated(Timestamps.toMillis(request.getContext().getLastContextUpdated()));
     }
 
-    String perpetualTaskId = perpetualTaskService.createTask(
-        request.getType(), accountId, contextBuilder.build(), request.getSchedule(), request.getAllowDuplicate());
+    String perpetualTaskId = perpetualTaskService.createTask(request.getType(), accountId, contextBuilder.build(),
+        request.getSchedule(), request.getAllowDuplicate(), request.getTaskDescription());
 
     responseObserver.onNext(CreatePerpetualTaskResponse.newBuilder()
                                 .setPerpetualTaskId(PerpetualTaskId.newBuilder().setId(perpetualTaskId).build())

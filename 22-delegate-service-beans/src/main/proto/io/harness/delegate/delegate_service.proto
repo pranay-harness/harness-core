@@ -84,6 +84,7 @@ message CreatePerpetualTaskRequest {
   perpetualtask.PerpetualTaskSchedule schedule = 3;
   perpetualtask.PerpetualTaskClientContextDetails context = 4;
   bool allow_duplicate = 5;
+  string task_description = 6;
 }
 
 message CreatePerpetualTaskResponse {

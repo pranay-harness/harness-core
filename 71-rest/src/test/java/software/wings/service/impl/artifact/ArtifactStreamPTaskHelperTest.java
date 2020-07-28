@@ -62,7 +62,7 @@ public class ArtifactStreamPTaskHelperTest extends CategoryTest {
     when(clientRegistry.getClient(eq(PerpetualTaskType.ARTIFACT_COLLECTION)))
         .thenReturn(artifactCollectionPTaskServiceClient);
     when(perpetualTaskService.createTask(eq(PerpetualTaskType.ARTIFACT_COLLECTION), eq(ACCOUNT_ID),
-             any(PerpetualTaskClientContext.class), any(PerpetualTaskSchedule.class), eq(false)))
+             any(PerpetualTaskClientContext.class), any(PerpetualTaskSchedule.class), eq(false), eq("")))
         .thenReturn(PERPETUAL_TASK_ID);
   }
 
@@ -84,7 +84,7 @@ public class ArtifactStreamPTaskHelperTest extends CategoryTest {
 
     verify(perpetualTaskService, times(1))
         .createTask(eq(PerpetualTaskType.ARTIFACT_COLLECTION), eq(ACCOUNT_ID), clientContextCaptor.capture(),
-            scheduleCaptor.capture(), eq(false));
+            scheduleCaptor.capture(), eq(false), eq(""));
     clientContextCaptor.getAllValues().forEach(clientContext -> {
       assertThat(clientContext.getClientParams().get(ARTIFACT_STREAM_ID_KEY)).isEqualTo(ARTIFACT_STREAM_ID);
     });
@@ -98,7 +98,7 @@ public class ArtifactStreamPTaskHelperTest extends CategoryTest {
     artifactStreamPTaskHelper.createPerpetualTask(artifactStream);
     verify(perpetualTaskService, times(2))
         .createTask(eq(PerpetualTaskType.ARTIFACT_COLLECTION), eq(ACCOUNT_ID), any(PerpetualTaskClientContext.class),
-            any(PerpetualTaskSchedule.class), eq(false));
+            any(PerpetualTaskSchedule.class), eq(false), eq(""));
     verify(perpetualTaskService, times(1)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     when(artifactStreamService.attachPerpetualTaskId(eq(artifactStream), eq(PERPETUAL_TASK_ID)))
@@ -106,7 +106,7 @@ public class ArtifactStreamPTaskHelperTest extends CategoryTest {
     artifactStreamPTaskHelper.createPerpetualTask(artifactStream);
     verify(perpetualTaskService, times(3))
         .createTask(eq(PerpetualTaskType.ARTIFACT_COLLECTION), eq(ACCOUNT_ID), any(PerpetualTaskClientContext.class),
-            any(PerpetualTaskSchedule.class), eq(false));
+            any(PerpetualTaskSchedule.class), eq(false), eq(""));
     verify(perpetualTaskService, times(2)).deleteTask(eq(ACCOUNT_ID), eq(PERPETUAL_TASK_ID));
 
     ArtifactStream artifactStreamWithPerpetualTaskId = prepareArtifactStream();

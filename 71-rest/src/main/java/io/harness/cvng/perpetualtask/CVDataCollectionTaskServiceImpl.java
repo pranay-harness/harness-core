@@ -28,7 +28,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
                                          .setTimeout(Durations.fromMinutes(15))
                                          .build();
     return perpetualTaskService.createTask(
-        PerpetualTaskType.DATA_COLLECTION_TASK, accountId, clientContext, schedule, false);
+        PerpetualTaskType.DATA_COLLECTION_TASK, accountId, clientContext, schedule, false, "");
   }
 
   @Override

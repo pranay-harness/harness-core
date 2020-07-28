@@ -111,6 +111,6 @@ public class AwsAmiInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpe
                                          .build();
 
     return perpetualTaskService.createTask(
-        PerpetualTaskType.AWS_AMI_INSTANCE_SYNC, accountId, clientContext, schedule, false);
+        PerpetualTaskType.AWS_AMI_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
   }
 }

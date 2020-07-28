@@ -41,6 +41,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
 
   @InjectMocks @Inject private PerpetualTaskServiceImpl perpetualTaskService;
 
+  public static final String TASK_DESCRIPTION = "taskDescription";
   private final String ACCOUNT_ID = "test-account-id";
   private final String REGION = "region";
   private final String DELEGATE_ID = "test-delegate-id";
@@ -68,10 +69,10 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     perpetualTaskRecord.setClientContext(clientContext);
 
     String taskId = perpetualTaskService.createTask(
-        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false);
+        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false, TASK_DESCRIPTION);
     assertThat(taskId).isNotNull();
     String taskIdDuplicate = perpetualTaskService.createTask(
-        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false);
+        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false, TASK_DESCRIPTION);
     assertThat(taskIdDuplicate).isEqualTo(taskId);
   }
 
@@ -168,7 +169,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     perpetualTaskRecord.setClientContext(clientContext);
 
     String taskId = perpetualTaskService.createTask(
-        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false);
+        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false, TASK_DESCRIPTION);
 
     boolean deletedTask = perpetualTaskService.deleteTask(ACCOUNT_ID, taskId);
 
@@ -185,7 +186,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     perpetualTaskRecord.setClientContext(clientContext);
 
     String taskId = perpetualTaskService.createTask(
-        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false);
+        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false, TASK_DESCRIPTION);
 
     perpetualTaskService.setTaskState(ACCOUNT_ID, taskId);
 
@@ -245,7 +246,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(
-        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext(), perpetualTaskSchedule(), false);
+        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext(), perpetualTaskSchedule(), false, TASK_DESCRIPTION);
     boolean updateHeartbeat = perpetualTaskService.triggerCallback(taskId, HEARTBEAT_MILLIS, perpetualTaskResponse());
     assertThat(updateHeartbeat).isTrue();
   }
@@ -259,7 +260,7 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotUpdateHeartbeat() {
     String taskId = perpetualTaskService.createTask(
-        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext(), perpetualTaskSchedule(), false);
+        PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext(), perpetualTaskSchedule(), false, TASK_DESCRIPTION);
     perpetualTaskService.triggerCallback(taskId, HEARTBEAT_MILLIS, perpetualTaskResponse());
     boolean updateHeartbeat =
         perpetualTaskService.triggerCallback(taskId, OLD_HEARTBEAT_MILLIS, perpetualTaskResponse());

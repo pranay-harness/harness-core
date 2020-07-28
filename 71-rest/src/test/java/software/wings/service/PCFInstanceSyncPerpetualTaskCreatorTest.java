@@ -45,7 +45,8 @@ public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(perpetualTaskService.createTask(any(), anyString(), any(), scheduleArgumentCaptor.capture(), eq(false)))
+    when(perpetualTaskService.createTask(
+             any(), anyString(), any(), scheduleArgumentCaptor.capture(), eq(false), anyString()))
         .thenReturn(TASK_ID);
   }
 
@@ -61,7 +62,8 @@ public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
     assertThat(taskId).isEqualTo(TASK_ID);
     assertThat(taskSchedule.getInterval()).isEqualTo(Durations.fromMinutes(INTERVAL_MINUTES));
     assertThat(taskSchedule.getTimeout()).isEqualTo(Durations.fromSeconds(TIMEOUT_SECONDS));
-    Mockito.verify(perpetualTaskService, Mockito.times(1)).createTask(any(), anyString(), any(), any(), eq(false));
+    Mockito.verify(perpetualTaskService, Mockito.times(1))
+        .createTask(any(), anyString(), any(), any(), eq(false), anyString());
   }
 
   private PcfInstanceSyncPerpetualTaskClientParams getPcfInstanceSyncPerpTaskClientParams() {

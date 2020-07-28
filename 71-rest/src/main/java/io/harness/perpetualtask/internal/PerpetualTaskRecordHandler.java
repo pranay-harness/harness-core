@@ -125,12 +125,15 @@ public class PerpetualTaskRecordHandler implements Handler<PerpetualTaskRecord>,
       } catch (NoAvaliableDelegatesException exception) {
         ignoredOnPurpose(exception);
         perpetualTaskService.setTaskState(taskId, PerpetualTaskState.NO_DELEGATE_AVAILABLE.name());
+
         raiseAlert(taskRecord, taskId, taskType, NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK);
+
       } catch (WingsException exception) {
         raiseAlert(taskRecord, taskId, taskType, PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE);
         ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
       } catch (Exception e) {
         raiseAlert(taskRecord, taskId, taskType, FAIL_TO_ASSIGN_ANY_DELEGATE_TO_PERPETUAL_TASK);
+
         logger.error("Failed to assign any Delegate to perpetual task {} ", taskId, e);
       }
     }

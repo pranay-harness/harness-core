@@ -68,7 +68,7 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
     doReturn("perpetual-task-id")
         .when(perpetualTaskService)
         .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID), any(),
-            any(), eq(false));
+            any(), eq(false), eq(""));
 
     final List<String> perpetualTaskIds =
         perpetualTaskCreator.createPerpetualTasks(getContainerInfrastructureMapping());
@@ -76,7 +76,7 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
     ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
     verify(perpetualTaskService, times(3))
         .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
-            captor.capture(), eq(SCHEDULE), eq(false));
+            captor.capture(), eq(SCHEDULE), eq(false), eq(""));
 
     assertThat(perpetualTaskIds).isNotEmpty();
     assertThat(
@@ -100,7 +100,7 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
     doReturn("perpetual-task-id")
         .when(perpetualTaskService)
         .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID), any(),
-            any(), eq(false));
+            any(), eq(false), eq(""));
 
     final List<String> perpetualTaskIds =
         perpetualTaskCreator.createPerpetualTasks(getContainerInfrastructureMapping());
@@ -108,7 +108,7 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
     ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
     verify(perpetualTaskService, times(3))
         .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
-            captor.capture(), eq(SCHEDULE), eq(false));
+            captor.capture(), eq(SCHEDULE), eq(false), eq(""));
 
     assertThat(
         captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(CONTAINER_TYPE)))
@@ -133,7 +133,7 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
     doReturn("perpetual-task-id")
         .when(perpetualTaskService)
         .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID), any(),
-            any(), eq(false));
+            any(), eq(false), eq(""));
 
     final List<String> perpetualTaskIds =
         perpetualTaskCreator.createPerpetualTasks(getContainerInfrastructureMapping());
@@ -141,7 +141,7 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
     ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
     verify(perpetualTaskService, times(3))
         .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
-            captor.capture(), eq(SCHEDULE), eq(false));
+            captor.capture(), eq(SCHEDULE), eq(false), eq(""));
 
     assertThat(
         captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(CONTAINER_TYPE)))
@@ -184,7 +184,7 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
     ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
     verify(perpetualTaskService, times(1))
         .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
-            captor.capture(), eq(SCHEDULE), eq(false));
+            captor.capture(), eq(SCHEDULE), eq(false), eq(""));
 
     assertThat(
         captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(CONTAINER_TYPE)))
@@ -233,7 +233,7 @@ public class ContainerInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
     ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
     verify(perpetualTaskService, times(1))
         .createTask(eq(PerpetualTaskType.CONTAINER_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
-            captor.capture(), eq(SCHEDULE), eq(false));
+            captor.capture(), eq(SCHEDULE), eq(false), eq(""));
 
     assertThat(
         captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(CONTAINER_TYPE)))

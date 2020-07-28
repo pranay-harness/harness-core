@@ -55,7 +55,7 @@ public class PCFInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetua
                                          .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
                                          .build();
 
-    return perpetualTaskService.createTask(PCF_INSTANCE_SYNC, accountId, clientContext, schedule, false);
+    return perpetualTaskService.createTask(PCF_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
   }
 
   @Override

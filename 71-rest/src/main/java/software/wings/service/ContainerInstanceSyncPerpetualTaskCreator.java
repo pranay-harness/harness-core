@@ -196,7 +196,7 @@ public class ContainerInstanceSyncPerpetualTaskCreator implements InstanceSyncPe
                                          .build();
 
     return perpetualTaskService.createTask(
-        PerpetualTaskType.CONTAINER_INSTANCE_SYNC, accountId, clientContext, schedule, ALLOW_DUPLICATE);
+        PerpetualTaskType.CONTAINER_INSTANCE_SYNC, accountId, clientContext, schedule, ALLOW_DUPLICATE, "");
   }
 
   private Set<ContainerMetadata> extractContainerMetadata(DeploymentInfo deploymentInfo) {

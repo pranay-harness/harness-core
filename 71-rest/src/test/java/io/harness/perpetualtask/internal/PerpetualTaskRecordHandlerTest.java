@@ -1,5 +1,8 @@
 package io.harness.perpetualtask.internal;
 
+import static io.harness.perpetualtask.internal.PerpetualTaskRecordHandler.FAIL_TO_ASSIGN_ANY_DELEGATE_TO_PERPETUAL_TASK;
+import static io.harness.perpetualtask.internal.PerpetualTaskRecordHandler.NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK;
+import static io.harness.perpetualtask.internal.PerpetualTaskRecordHandler.PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.VUK;
 import static org.mockito.Matchers.anyLong;
@@ -108,7 +111,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                     .accountId(accountId)
                     .taskId(taskId)
                     .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                    .message("No delegate available to handle perpetual task")
+                    .message(NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK)
                     .build()));
   }
 
@@ -124,7 +127,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                     .accountId(accountId)
                     .taskId(taskId)
                     .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                    .message("Perpetual task failed to be assigned to any Delegate")
+                    .message(PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE)
                     .build()));
   }
 
@@ -140,7 +143,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                     .accountId(accountId)
                     .taskId(taskId)
                     .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                    .message("Failed to assign any Delegate to perpetual task")
+                    .message(FAIL_TO_ASSIGN_ANY_DELEGATE_TO_PERPETUAL_TASK)
                     .build()));
   }
 }

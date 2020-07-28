@@ -61,14 +61,14 @@ public class AwsLambdaInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
     doReturn("perpetual-task-id")
         .when(perpetualTaskService)
         .createTask(eq(PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID), any(),
-            any(), eq(false));
+            any(), eq(false), eq(""));
 
     perpetualTaskCreator.createPerpetualTasks(getAwsLambdaInfraMapping());
 
     ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
     verify(perpetualTaskService, times(3))
         .createTask(eq(PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
-            captor.capture(), eq(SCHEDULE), eq(false));
+            captor.capture(), eq(SCHEDULE), eq(false), eq(""));
 
     assertThat(
         captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(FUNCTION_NAME)))
@@ -114,7 +114,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest
     ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
     verify(perpetualTaskService, times(1))
         .createTask(eq(PerpetualTaskType.AWS_LAMBDA_INSTANCE_SYNC), eq(InstanceSyncTestConstants.ACCOUNT_ID),
-            captor.capture(), eq(SCHEDULE), eq(false));
+            captor.capture(), eq(SCHEDULE), eq(false), eq(""));
 
     assertThat(
         captor.getAllValues().stream().map(PerpetualTaskClientContext::getClientParams).map(x -> x.get(FUNCTION_NAME)))

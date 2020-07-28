@@ -64,7 +64,8 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClient
                                          .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
                                          .build();
 
-    return perpetualTaskService.createTask(AWS_CODE_DEPLOY_INSTANCE_SYNC, accountId, clientContext, schedule, false);
+    return perpetualTaskService.createTask(
+        AWS_CODE_DEPLOY_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
   }
 
   @Override

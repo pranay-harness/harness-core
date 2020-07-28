@@ -20,6 +20,7 @@ message CreateRemotePerpetualTaskRequest {
   RemotePerpetualTaskSchedule schedule = 3;
   RemotePerpetualTaskClientContext context = 4;
   bool allow_duplicate = 5;
+  string task_description = 6;
 }
 
 message CreateRemotePerpetualTaskResponse {

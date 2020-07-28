@@ -59,7 +59,8 @@ public class PcfInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
     when(perpetualTaskService.deleteTask(any(), any())).thenReturn(true);
     when(perpetualTaskService.resetTask(stringCaptor.capture(), any(), isNull(PerpetualTaskExecutionBundle.class)))
         .thenReturn(true);
-    when(perpetualTaskService.createTask(any(), anyString(), any(), scheduleArgumentCaptor.capture(), anyBoolean()))
+    when(perpetualTaskService.createTask(
+             any(), anyString(), any(), scheduleArgumentCaptor.capture(), anyBoolean(), anyString()))
         .thenReturn(TASK_ID);
     when(infraMappingService.get(anyString(), anyString()))
         .thenReturn(PcfInfrastructureMapping.builder().appId(HARNESS_APPLICATION_ID).uuid(INFRA_ID).build());
