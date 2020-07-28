@@ -432,7 +432,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * GoogleCloudBuild state type.
    */
-  GCB(GcbState.class, OTHERS, emptyList(), ORCHESTRATION_STENCILS, COMMON),
+  GCB(GcbState.class, OTHERS, "Google Cloud Build", emptyList(), emptyList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Bamboo state type

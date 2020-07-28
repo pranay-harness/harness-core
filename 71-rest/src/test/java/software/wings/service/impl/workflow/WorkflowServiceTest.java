@@ -189,6 +189,7 @@ import static software.wings.sm.StepType.CLOUD_FORMATION_CREATE_STACK;
 import static software.wings.sm.StepType.CLOUD_FORMATION_DELETE_STACK;
 import static software.wings.sm.StepType.ECS_STEADY_STATE_CHECK;
 import static software.wings.sm.StepType.EMAIL;
+import static software.wings.sm.StepType.GCB;
 import static software.wings.sm.StepType.HELM_DEPLOY;
 import static software.wings.sm.StepType.JIRA_CREATE_UPDATE;
 import static software.wings.sm.StepType.K8S_APPLY;
@@ -4399,7 +4400,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
-        .contains(tuple(CI_SYSTEM.name(), CI_SYSTEM.getDisplayName(), asList(StepType.JENKINS.name(), BAMBOO.name())));
+        .contains(tuple(
+            CI_SYSTEM.name(), CI_SYSTEM.getDisplayName(), asList(StepType.JENKINS.name(), GCB.name(), BAMBOO.name())));
     if (isHelmPhaseStep) {
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,

@@ -563,7 +563,8 @@ public enum StepType {
   // CI System
   JENKINS(JenkinsState.class, WorkflowServiceHelper.JENKINS, asList(CI_SYSTEM), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
-  GCB(GcbState.class, WorkflowServiceHelper.GCB, emptyList(), emptyList(), emptyList(), emptyList()),
+  GCB(GcbState.class, WorkflowServiceHelper.GCB, singletonList(CI_SYSTEM), asList(PhaseStepType.values()),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   BAMBOO(BambooState.class, WorkflowServiceHelper.BAMBOO, asList(CI_SYSTEM), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
 
