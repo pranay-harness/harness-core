@@ -87,6 +87,11 @@ public enum ContextElementType {
   AMI_SERVICE_DEPLOY,
 
   /**
+   * ECS service context element type.
+   */
+  ECS_SERVICE_SETUP,
+
+  /**
    * Artifact context element type.
    */
   AMI_SWITCH_ROUTES,

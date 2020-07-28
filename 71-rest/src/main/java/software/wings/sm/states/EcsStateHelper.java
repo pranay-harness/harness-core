@@ -87,7 +87,6 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsCommandRequest;
-import software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType;
 import software.wings.helpers.ext.ecs.request.EcsListenerUpdateRequestConfigData;
 import software.wings.helpers.ext.ecs.request.EcsServiceDeployRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
@@ -280,16 +279,16 @@ public class EcsStateHelper {
   public ExecutionResponse queueDelegateTaskForEcsListenerUpdate(Application app, AwsConfig awsConfig,
       DelegateService delegateService, EcsInfrastructureMapping ecsInfrastructureMapping, String activityId,
       String envId, String commandName, EcsListenerUpdateRequestConfigData requestConfigData,
-      List<EncryptedDataDetail> encryptedDataDetails) {
-    EcsCommandRequest ecsCommandRequest = getEcsCommandListenerUpdateRequest(EcsCommandType.LISTENER_UPDATE_BG,
-        commandName, app.getUuid(), app.getAccountId(), activityId, awsConfig, requestConfigData);
+      List<EncryptedDataDetail> encryptedDataDetails, int serviceSteadyStateTimeout) {
+    EcsCommandRequest ecsCommandRequest = getEcsCommandListenerUpdateRequest(commandName, app.getUuid(),
+        app.getAccountId(), activityId, awsConfig, requestConfigData, serviceSteadyStateTimeout);
 
     EcsListenerUpdateStateExecutionData stateExecutionData = getListenerUpdateStateExecutionData(
         activityId, app.getAccountId(), app.getUuid(), ecsCommandRequest, commandName, requestConfigData);
 
-    DelegateTask delegateTask =
-        getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.ECS_COMMAND_TASK, activityId, envId,
-            ecsInfrastructureMapping.getUuid(), new Object[] {ecsCommandRequest, encryptedDataDetails}, 10);
+    DelegateTask delegateTask = getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.ECS_COMMAND_TASK,
+        activityId, envId, ecsInfrastructureMapping.getUuid(), new Object[] {ecsCommandRequest, encryptedDataDetails},
+        serviceSteadyStateTimeout);
     delegateTask.setTags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null);
 
     delegateService.queueTask(delegateTask);
@@ -311,9 +310,9 @@ public class EcsStateHelper {
     return activityService.save(activityBuilder.build());
   }
 
-  public EcsCommandRequest getEcsCommandListenerUpdateRequest(EcsCommandType EcsCommandType, String commandName,
-      String appId, String accountId, String activityId, AwsConfig awsConfig,
-      EcsListenerUpdateRequestConfigData requestConfigData) {
+  public EcsCommandRequest getEcsCommandListenerUpdateRequest(String commandName, String appId, String accountId,
+      String activityId, AwsConfig awsConfig, EcsListenerUpdateRequestConfigData requestConfigData,
+      int serviceSteadyStateTimeout) {
     return EcsBGListenerUpdateRequest.builder()
         .commandName(commandName)
         .appId(appId)
@@ -334,6 +333,7 @@ public class EcsStateHelper {
         .rollback(requestConfigData.isRollback())
         .targetGroupForNewService(requestConfigData.getTargetGroupForNewService())
         .targetGroupForExistingService(requestConfigData.getTargetGroupForExistingService())
+        .serviceSteadyStateTimeout(serviceSteadyStateTimeout)
         .build();
   }
 

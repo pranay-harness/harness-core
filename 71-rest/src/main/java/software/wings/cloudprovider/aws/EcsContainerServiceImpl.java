@@ -1013,6 +1013,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                                                 .desiredCount(service.getDesiredCount())
                                                                 .executionLogCallback(executionLogCallback)
                                                                 .awsConfig(awsConfig)
+                                                                .timeOut(serviceSteadyStateTimeout)
                                                                 .serviceEvents(getEventsFromService(service))
                                                                 .build();
 
@@ -1426,6 +1427,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   private void waitForServiceUpdateToComplete(
       UpdateServiceResult updateServiceResult, UpdateServiceCountRequestData data) {
+    long timeout = data.getTimeOut() == null ? 1L : data.getTimeOut();
     final Service[] service = {updateServiceResult.getService()};
     ExecutionLogCallback executionLogCallback = data.getExecutionLogCallback();
     executionLogCallback.saveExecutionLog("Waiting for service: " + data.getServiceName()
@@ -1445,7 +1447,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           }
           sleep(ofSeconds(1));
         }
-      }, 60L, TimeUnit.SECONDS, true);
+      }, timeout, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Service update failed {}", service[0]);
       executionLogCallback.saveExecutionLog(

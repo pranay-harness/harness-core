@@ -104,7 +104,7 @@ public class EcsBlueGreenRoute53DNSWeightHandlerTest extends WingsBaseTest {
     verify(mockEcsSwapRoutesCommandTaskHelper)
         .updateServiceTags(any(), any(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
     verify(mockEcsSwapRoutesCommandTaskHelper, times(0))
-        .downsizeOlderService(any(), any(), anyString(), anyString(), anyString(), any());
+        .downsizeOlderService(any(), any(), anyString(), anyString(), anyString(), any(), anyInt());
 
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
@@ -142,7 +142,7 @@ public class EcsBlueGreenRoute53DNSWeightHandlerTest extends WingsBaseTest {
     verify(mockEcsSwapRoutesCommandTaskHelper)
         .updateServiceTags(any(), any(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
     verify(mockEcsSwapRoutesCommandTaskHelper)
-        .downsizeOlderService(any(), any(), anyString(), anyString(), anyString(), any());
+        .downsizeOlderService(any(), any(), anyString(), anyString(), anyString(), any(), anyInt());
 
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);

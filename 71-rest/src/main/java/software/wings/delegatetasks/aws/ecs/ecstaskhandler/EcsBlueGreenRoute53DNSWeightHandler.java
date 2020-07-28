@@ -87,7 +87,8 @@ public class EcsBlueGreenRoute53DNSWeightHandler extends EcsCommandTaskHandler {
       if (!request.isRollback() && request.isDownsizeOldService() && request.getOldServiceWeight() == 0) {
         executionLogCallback.saveExecutionLog("Downsizing old service if needed");
         ecsSwapRoutesCommandTaskHelper.downsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
-            request.getRegion(), request.getCluster(), request.getServiceNameDownsized(), executionLogCallback);
+            request.getRegion(), request.getCluster(), request.getServiceNameDownsized(), executionLogCallback,
+            request.getTimeout());
       }
 
       return EcsCommandExecutionResponse.builder()

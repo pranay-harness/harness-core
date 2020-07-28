@@ -75,6 +75,11 @@ public class EcsServiceDeploy extends State {
     }
   }
 
+  @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    return StateTimeoutUtils.getEcsStateTimeoutFromContext(context);
+  }
+
   private ExecutionResponse executeInternal(ExecutionContext context) {
     EcsDeployDataBag deployDataBag = ecsStateHelper.prepareBagForEcsDeploy(
         context, serviceResourceService, infrastructureMappingService, settingsService, secretManager, false);

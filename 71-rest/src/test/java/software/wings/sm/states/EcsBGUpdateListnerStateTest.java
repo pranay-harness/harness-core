@@ -3,15 +3,18 @@ package software.wings.sm.states;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
@@ -35,9 +38,14 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.PhaseElement;
@@ -63,6 +71,9 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.WorkflowStandardParams;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({StateTimeoutUtils.class})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
   @Mock private AppService mockAppService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
@@ -131,7 +142,7 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
         ArgumentCaptor.forClass(EcsListenerUpdateRequestConfigData.class);
     verify(mockEcsStateHelper)
         .queueDelegateTaskForEcsListenerUpdate(
-            any(), any(), any(), any(), anyString(), anyString(), anyString(), captor.capture(), anyList());
+            any(), any(), any(), any(), anyString(), anyString(), anyString(), captor.capture(), anyList(), anyInt());
     EcsListenerUpdateRequestConfigData config = captor.getValue();
     assertThat(config).isNotNull();
     assertThat(config.getProdListenerArn()).isEqualTo("ProdLArn");
@@ -179,5 +190,14 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
     assertThat(configData.getServiceNameDownsized()).isEqualTo(SERVICE_NAME);
     assertThat(configData.getServiceCountDownsized()).isEqualTo(100);
     assertThat(configData.getTargetGroupForNewService()).isEqualTo("TARGET_GROUP");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    PowerMockito.mockStatic(StateTimeoutUtils.class);
+    when(StateTimeoutUtils.getEcsStateTimeoutFromContext(any())).thenReturn(10);
+    assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
   }
 }

@@ -132,7 +132,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({AwsStateHelper.class})
+@PrepareForTest({StateTimeoutUtils.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Mock private AwsHelperService mockAwsHelperService;
@@ -470,8 +470,8 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetTimeoutMillis() {
-    mockStatic(AwsStateHelper.class);
-    when(AwsStateHelper.getStateTimeoutFromContext(any())).thenReturn(10);
+    mockStatic(StateTimeoutUtils.class);
+    when(StateTimeoutUtils.getAmiStateTimeoutFromContext(any())).thenReturn(10);
     assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
   }
 }

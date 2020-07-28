@@ -57,7 +57,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     taskHelper.downsizeOlderService(
-        AwsConfig.builder().build(), emptyList(), "us-east-1", "cluster", "foo_1", mockCallback);
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "cluster", "foo_1", mockCallback, 1);
     verify(mockEcsContainerService).updateServiceCount(any());
   }
 

@@ -22,6 +22,7 @@ public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
   private boolean downsizeOldService;
   private String targetGroupForNewService;
   private String targetGroupForExistingService;
+  private int serviceSteadyStateTimeout;
 
   @Builder
   public EcsBGListenerUpdateRequest(String commandName, String appId, String accountId, String activityId,
@@ -29,7 +30,7 @@ public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
       String targetGroupArn1, String targetGroupArn2, String serviceName, String clusterName, String region,
       String serviceNameDownsized, int serviceCountDownsized, AwsConfig awsConfig, boolean rollback,
       boolean downsizeOldService, boolean isUseSpecificListenerRuleArn, String targetGroupForNewService,
-      String targetGroupForExistingService) {
+      String targetGroupForExistingService, int serviceSteadyStateTimeout) {
     super(accountId, appId, commandName, activityId, region, clusterName, awsConfig, EcsCommandType.LISTENER_UPDATE_BG);
     this.prodListenerArn = prodListenerArn;
     this.stageListenerArn = stageListenerArn;
@@ -45,5 +46,6 @@ public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
     this.targetGroupForExistingService = targetGroupForExistingService;
     this.downsizeOldService = downsizeOldService;
     this.isUseSpecificListenerRuleArn = isUseSpecificListenerRuleArn;
+    this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
   }
 }

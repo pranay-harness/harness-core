@@ -47,7 +47,7 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
     if (request.isRollback()) {
       ecsSwapRoutesCommandTaskHelper.upsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
           request.getRegion(), request.getCluster(), request.getServiceCountDownsized(),
-          request.getServiceNameDownsized(), executionLogCallback, 20);
+          request.getServiceNameDownsized(), executionLogCallback, request.getServiceSteadyStateTimeout());
     }
 
     if (isUpdateRequired(request, encryptedDataDetails, executionLogCallback)) {
@@ -68,7 +68,8 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
 
     if (!request.isRollback() && request.isDownsizeOldService()) {
       ecsSwapRoutesCommandTaskHelper.downsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
-          request.getRegion(), request.getCluster(), request.getServiceNameDownsized(), executionLogCallback);
+          request.getRegion(), request.getCluster(), request.getServiceNameDownsized(), executionLogCallback,
+          request.getServiceSteadyStateTimeout());
     }
 
     CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;
