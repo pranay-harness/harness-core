@@ -224,7 +224,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
                                                         .targetGroupForExistingService("OldTgt")
                                                         .build();
     helper.queueDelegateTaskForEcsListenerUpdate(
-        application, awsConfig, mockService, mapping, ACTIVITY_ID, ENV_ID, "CommandName", configData, emptyList());
+        application, awsConfig, mockService, mapping, ACTIVITY_ID, ENV_ID, "CommandName", configData, emptyList(), 10);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
@@ -240,6 +240,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
     assertThat(params.getTargetGroupForNewService()).isEqualTo("NewTgt");
     assertThat(params.getCommandName()).isEqualTo("CommandName");
     assertThat(params.getServiceName()).isEqualTo("ServiceName");
+    assertThat(params.getServiceSteadyStateTimeout()).isEqualTo(10);
   }
 
   @Test

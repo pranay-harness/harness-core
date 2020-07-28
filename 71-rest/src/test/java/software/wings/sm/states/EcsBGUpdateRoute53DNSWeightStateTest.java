@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -11,6 +12,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.powermock.api.mockito.PowerMockito.when;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
@@ -34,9 +36,14 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.PhaseElement;
@@ -60,6 +67,9 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({StateTimeoutUtils.class})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class EcsBGUpdateRoute53DNSWeightStateTest extends WingsBaseTest {
   @Mock private AppService mockAppService;
   @Mock private SecretManager mockSecretManager;
@@ -158,5 +168,14 @@ public class EcsBGUpdateRoute53DNSWeightStateTest extends WingsBaseTest {
     doReturn(data).when(mockContext).getStateExecutionData();
     state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     verify(mockActivityService).updateStatus(anyString(), anyString(), eq(ExecutionStatus.SUCCESS));
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    PowerMockito.mockStatic(StateTimeoutUtils.class);
+    when(StateTimeoutUtils.getEcsStateTimeoutFromContext(any())).thenReturn(10);
+    assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
   }
 }

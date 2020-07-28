@@ -79,6 +79,11 @@ public class EcsBGUpdateListnerState extends State {
     }
   }
 
+  @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    return StateTimeoutUtils.getEcsStateTimeoutFromContext(context);
+  }
+
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application application = appService.get(context.getAppId());
@@ -107,7 +112,7 @@ public class EcsBGUpdateListnerState extends State {
 
     return ecsStateHelper.queueDelegateTaskForEcsListenerUpdate(application, awsConfig, delegateService,
         infrastructureMapping, activity.getUuid(), environment.getUuid(), ECS_UPDATE_LISTENER_COMMAND,
-        requestConfigData, encryptedDetails);
+        requestConfigData, encryptedDetails, containerElement.getServiceSteadyStateTimeout());
   }
 
   protected EcsListenerUpdateRequestConfigData getEcsListenerUpdateRequestConfigData(

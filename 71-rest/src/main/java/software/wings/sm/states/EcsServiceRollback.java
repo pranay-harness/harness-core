@@ -67,6 +67,11 @@ public class EcsServiceRollback extends State {
   }
 
   @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    return StateTimeoutUtils.getEcsStateTimeoutFromContext(context);
+  }
+
+  @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
   private ExecutionResponse executeInternal(ExecutionContext context) {

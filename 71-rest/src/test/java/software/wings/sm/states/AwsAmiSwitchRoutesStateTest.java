@@ -58,7 +58,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({AwsStateHelper.class})
+@PrepareForTest({StateTimeoutUtils.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
   @Mock private SettingsService mockSettingsService;
@@ -141,8 +141,8 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetTimeoutMillis() {
-    PowerMockito.mockStatic(AwsStateHelper.class);
-    when(AwsStateHelper.getStateTimeoutFromContext(any())).thenReturn(10);
+    PowerMockito.mockStatic(StateTimeoutUtils.class);
+    when(StateTimeoutUtils.getAmiStateTimeoutFromContext(any())).thenReturn(10);
     assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
   }
 }

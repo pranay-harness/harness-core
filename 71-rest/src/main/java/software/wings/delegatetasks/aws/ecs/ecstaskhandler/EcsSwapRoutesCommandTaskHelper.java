@@ -51,6 +51,7 @@ public class EcsSwapRoutesCommandTaskHelper {
                                                                       .cluster(cluster)
                                                                       .serviceName(serviceName)
                                                                       .desiredCount(count)
+                                                                      .timeOut(timeout)
                                                                       .executionLogCallback(executionLogCallback)
                                                                       .serviceEvents(serviceEvents)
                                                                       .build();
@@ -126,7 +127,7 @@ public class EcsSwapRoutesCommandTaskHelper {
   }
 
   public void downsizeOlderService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
-      String cluster, String serviceName, ExecutionLogCallback logCallback) {
+      String cluster, String serviceName, ExecutionLogCallback logCallback, Integer timeout) {
     if (isNotEmpty(serviceName)) {
       logCallback.saveExecutionLog("Downsizing Green Service: " + serviceName);
 
@@ -141,6 +142,7 @@ public class EcsSwapRoutesCommandTaskHelper {
               .serviceEvents(
                   ecsContainerService.getServiceEvents(region, awsConfig, encryptedDataDetails, cluster, serviceName))
               .awsConfig(awsConfig)
+              .timeOut(timeout)
               .build();
 
       ecsContainerService.updateServiceCount(updateCountServiceRequestData);

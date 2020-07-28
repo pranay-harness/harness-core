@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -31,11 +32,16 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceElement;
 import software.wings.beans.Activity;
@@ -54,6 +60,9 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({StateTimeoutUtils.class})
+@PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class EcsServiceDeployTest extends WingsBaseTest {
   @Mock private SecretManager mockSecretManager;
   @Mock private EcsStateHelper mockEcsStateHelper;
@@ -121,5 +130,14 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     EcsCommandExecutionResponse executionResponse = EcsCommandExecutionResponse.builder().build();
     state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, executionResponse));
     verify(mockEcsStateHelper).handleDelegateResponseForEcsDeploy(any(), anyMap(), anyBoolean(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    PowerMockito.mockStatic(StateTimeoutUtils.class);
+    when(StateTimeoutUtils.getEcsStateTimeoutFromContext(any())).thenReturn(10);
+    assertThat(state.getTimeoutMillis(mock(ExecutionContextImpl.class))).isEqualTo(10);
   }
 }

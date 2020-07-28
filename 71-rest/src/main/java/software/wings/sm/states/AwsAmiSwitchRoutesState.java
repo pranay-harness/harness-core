@@ -100,7 +100,7 @@ public class AwsAmiSwitchRoutesState extends State {
 
   @Override
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return AwsStateHelper.getStateTimeoutFromContext(context);
+    return StateTimeoutUtils.getAmiStateTimeoutFromContext(context);
   }
 
   @Override

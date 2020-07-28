@@ -69,6 +69,7 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.DeploymentTimeSeriesEvent;
+import software.wings.api.EcsSetupElement;
 import software.wings.api.EcsStepExecutionSummary;
 import software.wings.api.ElbStateExecutionData;
 import software.wings.api.EmailStateExecutionData;
@@ -1196,6 +1197,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.TerraformPlanParam", TerraformPlanParam.class);
     w.put("api.TerraformExecutionData", TerraformExecutionData.class);
     w.put("api.TerraformOutputInfoElement", TerraformOutputInfoElement.class);
+    w.put("api.EcsSetupElement", EcsSetupElement.class);
     w.put("audit.EntityAuditRecord", EntityAuditRecord.class);
     w.put("beans.alert.ApprovalNeededAlert", ApprovalNeededAlert.class);
     w.put("beans.alert.ArtifactCollectionFailedAlert", ArtifactCollectionFailedAlert.class);

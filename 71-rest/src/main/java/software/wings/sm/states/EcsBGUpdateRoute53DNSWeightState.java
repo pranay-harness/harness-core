@@ -91,6 +91,11 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
     }
   }
 
+  @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    return StateTimeoutUtils.getEcsStateTimeoutFromContext(context);
+  }
+
   protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
     EcsCommandExecutionResponse executionResponse = (EcsCommandExecutionResponse) response.values().iterator().next();

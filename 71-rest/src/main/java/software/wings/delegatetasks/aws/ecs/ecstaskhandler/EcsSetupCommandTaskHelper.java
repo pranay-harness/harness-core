@@ -948,6 +948,7 @@ public class EcsSetupCommandTaskHelper {
                                                                .desiredCount(service.getDesiredCount())
                                                                .executionLogCallback(executionLogCallback)
                                                                .serviceName(serviceName)
+                                                               .timeOut(serviceSteadyStateTimeout)
                                                                .serviceEvents(getEventsFromService(service))
                                                                .awsConfig(awsConfig)
                                                                .build();

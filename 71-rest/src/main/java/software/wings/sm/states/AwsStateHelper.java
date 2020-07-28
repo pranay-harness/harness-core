@@ -9,15 +9,12 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
-import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Instance;
-import io.harness.context.ContextElementType;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
-import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.beans.InfrastructureMapping;
@@ -31,7 +28,6 @@ import software.wings.sm.ExecutionContext;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class AwsStateHelper {
@@ -117,14 +113,5 @@ public class AwsStateHelper {
                             .build())
                    .build())
         .collect(toList());
-  }
-
-  public static Integer getStateTimeoutFromContext(ExecutionContext context) {
-    AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
-    if (serviceSetupElement == null || serviceSetupElement.getAutoScalingSteadyStateTimeout() == null
-        || serviceSetupElement.getAutoScalingSteadyStateTimeout().equals(0)) {
-      return null;
-    }
-    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()));
   }
 }

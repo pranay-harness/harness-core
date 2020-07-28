@@ -7,6 +7,7 @@ import static java.util.Collections.singletonList;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -23,6 +24,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
+import software.wings.api.EcsSetupElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.DeploymentExecutionContext;
@@ -50,6 +52,7 @@ import software.wings.sm.State;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
@@ -96,6 +99,14 @@ public class EcsServiceSetup extends State {
     } catch (Exception e) {
       throw new InvalidRequestException(getMessage(e), e);
     }
+  }
+
+  @Override
+  public Integer getTimeoutMillis() {
+    if (serviceSteadyStateTimeout == 0) {
+      return null;
+    }
+    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(serviceSteadyStateTimeout));
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
@@ -198,7 +209,15 @@ public class EcsServiceSetup extends State {
             .value(containerServiceElement)
             .build());
 
+    EcsSetupElement ecsSetupElement =
+        EcsSetupElement.builder().serviceSteadyStateTimeout(serviceSteadyStateTimeout).build();
+
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    return ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus).build();
+    return ExecutionResponse.builder()
+        .stateExecutionData(executionData)
+        .executionStatus(executionStatus)
+        .contextElement(ecsSetupElement)
+        .notifyElement(ecsSetupElement)
+        .build();
   }
 }

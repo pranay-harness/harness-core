@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -43,6 +44,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.EcsSetupElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
@@ -179,7 +181,21 @@ public class EcsDaemonServiceSetupTest extends WingsBaseTest {
     doReturn(builder1).doReturn(builder2).when(mockContext).prepareSweepingOutputBuilder(any());
     doReturn("foo").doReturn("bar").when(mockEcsStateHelper).getSweepingOutputName(any(), anyBoolean(), anyString());
     doReturn(null).doReturn(null).when(mockSweepingOutputService).save(any());
+    state.setServiceSteadyStateTimeout(10);
     ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
     verify(mockEcsStateHelper).populateFromDelegateResponse(any(), any(), any());
+    EcsSetupElement ecsSetupElement = (EcsSetupElement) response.getContextElements().get(0);
+    assertThat(ecsSetupElement.getServiceSteadyStateTimeout()).isEqualTo(10);
+    assertThat(response.getNotifyElements().get(0)).isEqualTo(ecsSetupElement);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    state.setServiceSteadyStateTimeout(0);
+    assertThat(state.getTimeoutMillis()).isNull();
+    state.setServiceSteadyStateTimeout(10);
+    assertThat(state.getTimeoutMillis()).isEqualTo(10 * 60 * 1000);
   }
 }
