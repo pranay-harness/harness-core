@@ -15,10 +15,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -28,11 +24,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @Entity(value = "gitFileActivitySummary", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "GitFileActivitySummaryKeys")
-@Indexes({
-  @Index(fields = {
-    @Field("accountId"), @Field("appId"), @Field("gitToHarness")
-  }, options = @IndexOptions(name = "gitCommits_for_appId_indx"))
-})
 @HarnessEntity(exportable = true)
 @Document("gitFileActivitySummary")
 @TypeAlias("io.harness.gitsync.gitfileactivity.beans.gitFileActivitySummary")

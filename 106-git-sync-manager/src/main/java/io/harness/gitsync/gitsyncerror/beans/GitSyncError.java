@@ -7,6 +7,7 @@ import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.FdIndex;
 import io.harness.ng.core.OrganizationAccess;
 import io.harness.ng.core.ProjectAccess;
 import io.harness.persistence.AccountAccess;
@@ -24,12 +25,14 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 
 @Data
@@ -50,7 +53,7 @@ public class GitSyncError
   private String yamlFilePath;
   private String changeType;
   private String failureReason;
-  @Setter @Indexed private Long nextIteration;
+  @Setter @FdIndex private Long nextIteration;
   private boolean fullSyncPath;
   private GitSyncErrorStatus status;
   private String gitConnectorId;
@@ -64,10 +67,10 @@ public class GitSyncError
   private Scope errorEntityType;
   @Transient @DefaultValue("false") private boolean userDoesNotHavePermForFile;
 
-  private EmbeddedUser createdBy;
-  @Indexed private long createdAt;
-  private EmbeddedUser lastUpdatedBy;
-  @NotNull private long lastUpdatedAt;
+  @CreatedBy private EmbeddedUser createdBy;
+  @CreatedDate private long createdAt;
+  @LastModifiedBy private EmbeddedUser lastUpdatedBy;
+  @LastModifiedDate private long lastUpdatedAt;
 
   @Builder
   public GitSyncError(String accountId, String organizationId, String projectId, String yamlFilePath, String changeType,
