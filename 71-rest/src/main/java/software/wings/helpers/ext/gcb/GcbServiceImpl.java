@@ -32,6 +32,7 @@ import software.wings.service.impl.GcpHelperService;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @OwnedBy(CDC)
@@ -56,6 +57,9 @@ public class GcbServiceImpl implements GcbService {
           getRestClient(GcbRestClient.class, GCB_BASE_URL)
               .createBuild(getBasicAuthHeader(gcpConfig, encryptionDetails), getProjectId(gcpConfig), buildParams)
               .execute();
+      if (!response.isSuccessful()) {
+        throw new GcbClientException(extractErrorMessage(response));
+      }
       return response.body();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
@@ -71,7 +75,7 @@ public class GcbServiceImpl implements GcbService {
               .getBuild(getBasicAuthHeader(gcpConfig, encryptionDetails), getProjectId(gcpConfig), buildId)
               .execute();
       if (!response.isSuccessful()) {
-        throw new GcbClientException(response.errorBody().string());
+        throw new GcbClientException(extractErrorMessage(response));
       }
       return response.body();
     } catch (IOException e) {
@@ -90,7 +94,7 @@ public class GcbServiceImpl implements GcbService {
       if (response.isSuccessful()) {
         return response.body();
       }
-      throw new GcbClientException(response.errorBody().string());
+      throw new GcbClientException(extractErrorMessage(response));
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
     }
@@ -105,6 +109,9 @@ public class GcbServiceImpl implements GcbService {
           getRestClient(GcsRestClient.class, GCS_BASE_URL)
               .fetchLogs(getBasicAuthHeader(gcpConfig, encryptionDetails), bucket, fileName)
               .execute();
+      if (!response.isSuccessful()) {
+        throw new GcbClientException(extractErrorMessage(response));
+      }
       return response.body().string();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
@@ -118,6 +125,9 @@ public class GcbServiceImpl implements GcbService {
           getRestClient(GcbRestClient.class, GCB_BASE_URL)
               .getAllTriggers(getBasicAuthHeader(gcpConfig, encryptionDetails), getProjectId(gcpConfig))
               .execute();
+      if (!response.isSuccessful()) {
+        throw new GcbClientException(extractErrorMessage(response));
+      }
       return response.body().getTriggers();
     } catch (IOException e) {
       throw new GcbClientException(GCP_ERROR_MESSAGE, e);
@@ -154,5 +164,14 @@ public class GcbServiceImpl implements GcbService {
   private String getProjectId(GcpConfig gcpConfig) {
     return (String) (JsonUtils.asObject(new String(gcpConfig.getServiceAccountKeyFileContent()), HashMap.class))
         .get("project_id");
+  }
+
+  private String extractErrorMessage(Response<?> response) {
+    try {
+      return (String) ((Map) JsonUtils.asObject(response.errorBody().string(), HashMap.class).get("error"))
+          .get("message");
+    } catch (IOException e) {
+      throw new GcbClientException("Exception has occurred while reading error message", e);
+    }
   }
 }
