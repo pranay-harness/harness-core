@@ -930,7 +930,17 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private boolean isAppPermissionSelected(AppPermission appPermission) {
-    return appPermission.getAppFilter().getFilterType().equals(GenericEntityFilter.FilterType.SELECTED);
+    GenericEntityFilter appFilter = appPermission.getAppFilter();
+    if (appFilter == null) {
+      return false;
+    }
+
+    String filterType = appFilter.getFilterType();
+    if (isEmpty(filterType)) {
+      return false;
+    }
+
+    return filterType.equals(GenericEntityFilter.FilterType.SELECTED);
   }
 
   private boolean isAppPermissionWithEmptyIds(AppPermission appPermission) {
