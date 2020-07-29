@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -18,6 +19,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -481,5 +483,27 @@ public class PcfPluginStateTest extends WingsBaseTest {
     PcfPluginStateExecutionData pcfSetupStateExecutionData =
         (PcfPluginStateExecutionData) context.getStateExecutionData();
     assertThat(pcfSetupStateExecutionData.getStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+
+    pcfPluginState.setTimeoutIntervalInMinutes(null);
+    doReturn(PcfPluginStateExecutionData.builder().timeoutIntervalInMinutes(10).build())
+        .when(mockContext)
+        .getStateExecutionData();
+    assertThat(pcfPluginState.getTimeoutMillis(mockContext)).isEqualTo(10 * 60 * 1000);
+
+    pcfPluginState.setTimeoutIntervalInMinutes(1);
+    assertThat(pcfPluginState.getTimeoutMillis(mockContext)).isEqualTo(60 * 1000);
+
+    pcfPluginState.setTimeoutIntervalInMinutes(null);
+    doReturn(PcfPluginStateExecutionData.builder().timeoutIntervalInMinutes(null).build())
+        .when(mockContext)
+        .getStateExecutionData();
+    assertThat(pcfPluginState.getTimeoutMillis(mockContext)).isEqualTo(30 * 60 * 1000);
   }
 }

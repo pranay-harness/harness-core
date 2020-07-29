@@ -6,6 +6,7 @@ import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -754,5 +755,17 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfSetupState.fetchRouteMaps(
                    context, pcfManifestsPackage, PcfInfrastructureMapping.builder().tempRouteMap(null).build()))
         .isEmpty();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() {
+    PcfSetupState state = new PcfSetupState("name");
+    state.setTimeoutIntervalInMinutes(null);
+    assertThat(state.getTimeoutMillis()).isEqualTo(300000);
+
+    state.setTimeoutIntervalInMinutes(10);
+    assertThat(state.getTimeoutMillis()).isEqualTo(600000);
   }
 }

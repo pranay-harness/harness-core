@@ -20,6 +20,7 @@ import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import static software.wings.utils.Misc.normalizeExpression;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -102,6 +103,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -175,6 +177,14 @@ public class PcfSetupState extends State {
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  @Override
+  public Integer getTimeoutMillis() {
+    if (timeoutIntervalInMinutes == null) {
+      return Ints.checkedCast(TimeUnit.MINUTES.toMillis(5));
+    }
+    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeoutIntervalInMinutes));
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {

@@ -151,6 +151,11 @@ public class PcfDeployState extends State {
     }
   }
 
+  @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    return pcfStateHelper.getStateTimeoutMillis(context, DEFAULT_PCF_TASK_TIMEOUT_MIN, isRollback());
+  }
+
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 

@@ -30,6 +30,7 @@ import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.Environme
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -161,6 +162,14 @@ public class PcfStateHelper {
         .tags(ListUtils.emptyIfNull(taskCreationData.getTagList()))
         .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, taskCreationData.getServiceTemplateId())
         .build();
+  }
+
+  public Integer getStateTimeoutMillis(ExecutionContext context, Integer defaultValue, boolean isRollback) {
+    SetupSweepingOutputPcf setupSweepingOutputPcf = findSetupSweepingOutputPcf(context, isRollback);
+    if (setupSweepingOutputPcf != null && setupSweepingOutputPcf.getTimeoutIntervalInMinutes() != null) {
+      return Ints.checkedCast(TimeUnit.MINUTES.toMillis(setupSweepingOutputPcf.getTimeoutIntervalInMinutes()));
+    }
+    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(defaultValue));
   }
 
   public PcfRouteUpdateStateExecutionData getRouteUpdateStateExecutionData(String activityId, String appId,

@@ -99,6 +99,11 @@ public class PcfSwitchBlueGreenRoutes extends State {
     }
   }
 
+  @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    return pcfStateHelper.getStateTimeoutMillis(context, 5, isRollback());
+  }
+
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = appService.get(context.getAppId());

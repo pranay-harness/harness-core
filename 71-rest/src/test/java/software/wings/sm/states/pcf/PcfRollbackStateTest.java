@@ -1,12 +1,15 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -153,5 +156,15 @@ public class PcfRollbackStateTest extends WingsBaseTest {
     assertThat(commandRollbackRequest.getRouteMaps()).hasSize(2);
     assertThat(commandRollbackRequest.getRouteMaps().contains("R1")).isTrue();
     assertThat(commandRollbackRequest.getRouteMaps().contains("R2")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() throws IllegalAccessException {
+    PcfStateHelper mockPcfStateHelper = mock(PcfStateHelper.class);
+    FieldUtils.writeField(pcfRollbackState, "pcfStateHelper", mockPcfStateHelper, true);
+    doReturn(10).when(mockPcfStateHelper).getStateTimeoutMillis(context, 5, false);
+    assertThat(pcfRollbackState.getTimeoutMillis(context)).isEqualTo(10);
   }
 }

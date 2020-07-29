@@ -17,6 +17,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -92,6 +93,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -145,6 +147,12 @@ public class PcfPluginState extends State {
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    int timeoutInMinutes = resolveTimeoutIntervalInMinutes(getPcfPluginStateExecutionData(context));
+    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeoutInMinutes));
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context) {

@@ -42,6 +42,11 @@ public class PcfRollbackState extends PcfDeployState {
   }
 
   @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    return pcfStateHelper.getStateTimeoutMillis(context, 5, isRollback());
+  }
+
+  @Override
   public PcfCommandRequest getPcfCommandRequest(ExecutionContext context, Application application, String activityId,
       SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig, Integer updateCount,
       Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData,
