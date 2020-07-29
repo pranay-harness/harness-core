@@ -417,7 +417,8 @@ public class AwsLambdaHelperServiceDelegateImpl
       executionLogCallback.saveExecutionLog("Function code didn't change. Skip function code update", INFO);
     } else {
       tracker.trackLambdaCall("Update Function code");
-      UpdateFunctionCodeResult updateFunctionCodeResult = lambdaClient.updateFunctionCode(updateFunctionCodeRequest);
+      UpdateFunctionCodeResult updateFunctionCodeResult =
+          lambdaClient.updateFunctionCode(updateFunctionCodeRequest.withDryRun(false));
       executionLogCallback.saveExecutionLog("Function code updated successfully", INFO);
       executionLogCallback.saveExecutionLog(
           format("Updated Function Code Sha256: [%s]", updateFunctionCodeResult.getCodeSha256()));
