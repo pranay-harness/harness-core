@@ -55,30 +55,27 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     DataCollectionPerpetualTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), DataCollectionPerpetualTaskParams.class);
-    logger.info("Executing for !! {} ", taskParams.getCvConfigId());
+    logger.info("Executing for !! cvConfigId: {} verificationTaskId: {}", taskParams.getCvConfigId(),
+        taskParams.getVerificationTaskId());
     CVDataCollectionInfo cvDataCollectionInfo =
         (CVDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());
     logger.info("DataCollectionInfo {} ", cvDataCollectionInfo);
     DataCollectionTaskDTO dataCollectionTask;
+    SettingValue settingValue = cvDataCollectionInfo.getSettingValue();
+    if (settingValue instanceof EncryptableSetting) {
+      encryptionService.decrypt((EncryptableSetting) settingValue, cvDataCollectionInfo.getEncryptedDataDetails());
+    }
+    Connector connector = (Connector) settingValue;
+    dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);
     try {
       // TODO: What happens if this task takes more time then the schedule?
       while (true) {
-        dataCollectionTask =
-            cvNextGenServiceClient.getNextDataCollectionTask(taskParams.getAccountId(), taskParams.getCvConfigId())
-                .execute()
-                .body()
-                .getResource();
+        dataCollectionTask = getNextDataCollectionTask(taskParams);
         if (dataCollectionTask == null) {
           logger.info("Nothing to process.");
           break;
         } else {
           logger.info("Next task to process: ", dataCollectionTask);
-          SettingValue settingValue = cvDataCollectionInfo.getSettingValue();
-          if (settingValue instanceof EncryptableSetting) {
-            encryptionService.decrypt(
-                (EncryptableSetting) settingValue, cvDataCollectionInfo.getEncryptedDataDetails());
-          }
-          Connector connector = (Connector) settingValue;
           run(taskParams, connector, dataCollectionTask);
         }
       }
@@ -94,12 +91,20 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
         .build();
   }
 
+  private DataCollectionTaskDTO getNextDataCollectionTask(DataCollectionPerpetualTaskParams taskParams)
+      throws IOException {
+    return cvNextGenServiceClient
+        .getNextDataCollectionTask(taskParams.getAccountId(), taskParams.getDataCollectionWorkerId())
+        .execute()
+        .body()
+        .getResource();
+  }
+
   private void run(DataCollectionPerpetualTaskParams taskParams, Connector connector,
       DataCollectionTaskDTO dataCollectionTask) throws IOException {
     try {
       final String cvConfigId = dataCollectionTask.getCvConfigId();
       DataCollectionInfo dataCollectionInfo = dataCollectionTask.getDataCollectionInfo();
-      dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);
       final RuntimeParameters runtimeParameters = RuntimeParameters.builder()
                                                       .baseUrl(connector.getBaseUrl())
                                                       .commonHeaders(connector.collectionHeaders())
@@ -113,15 +118,17 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
           List<TimeSeriesRecord> timeSeriesRecords = (List<TimeSeriesRecord>) dataCollectionDSLService.execute(
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
               new ThirdPartyCallHandler(
-                  connector.getAccountId(), dataCollectionTask.getCvConfigId(), delegateLogService));
+                  connector.getAccountId(), get3PAPICallLogRequestId(dataCollectionTask), delegateLogService));
           timeSeriesDataStoreService.saveTimeSeriesDataRecords(connector.getAccountId(), cvConfigId, timeSeriesRecords);
           break;
         case LOG:
           List<LogDataRecord> logDataRecords = (List<LogDataRecord>) dataCollectionDSLService.execute(
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
               new ThirdPartyCallHandler(
-                  connector.getAccountId(), dataCollectionTask.getCvConfigId(), delegateLogService));
-          logRecordDataStoreService.save(connector.getAccountId(), dataCollectionTask.getCvConfigId(), logDataRecords);
+                  connector.getAccountId(), get3PAPICallLogRequestId(dataCollectionTask), delegateLogService));
+          // TODO: merge these 2 IDs into a single concepts and use it everywhere in the data collection using models.
+          logRecordDataStoreService.save(connector.getAccountId(), dataCollectionTask.getCvConfigId(),
+              dataCollectionTask.getVerificationTaskId(), logDataRecords);
           break;
         default:
           throw new IllegalArgumentException("Invalid type " + dataCollectionInfo.getVerificationType());
@@ -140,6 +147,14 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
                                             .stacktrace(ExceptionUtils.getStackTrace(e))
                                             .build();
       cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result).execute();
+    }
+  }
+
+  private String get3PAPICallLogRequestId(DataCollectionTaskDTO dataCollectionTask) {
+    if (dataCollectionTask.getCvConfigId() != null) {
+      return dataCollectionTask.getCvConfigId();
+    } else {
+      return dataCollectionTask.getVerificationTaskId();
     }
   }
 

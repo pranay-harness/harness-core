@@ -63,6 +63,7 @@ public class DataCollectionPerpetualTaskServiceClientTest extends WingsBaseTest 
     Map<String, String> clientParamMap = new HashMap<>();
     clientParamMap.put("accountId", accountId);
     clientParamMap.put("cvConfigId", cvConfigId);
+    clientParamMap.put("dataCollectionWorkerId", cvConfigId);
     clientParamMap.put("connectorId", connectorId);
     PerpetualTaskClientContext clientContext =
         PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();

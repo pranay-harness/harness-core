@@ -21,6 +21,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.container.ContainerRequestContext;
 
@@ -30,8 +31,7 @@ public interface VerificationManagerClient {
       @Query("featureName") String featureName, @Query("accountId") String accountId);
 
   @POST(CV_DATA_COLLECTION_PATH + "/create-task")
-  Call<RestResponse<String>> createDataCollectionTask(@Query("accountId") String accountId,
-      @Query("cvConfigId") String cvConfigId, @Query("connectorId") String connectorId);
+  Call<RestResponse<String>> create(@Query("accountId") String accountId, @Body Map<String, String> params);
 
   @DELETE(CV_DATA_COLLECTION_PATH + "/delete-task")
   Call<RestResponse<Void>> deleteDataCollectionTask(

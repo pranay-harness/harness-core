@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.mongo.index.FdIndex;
@@ -25,6 +26,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -68,10 +70,12 @@ public abstract class VerificationJob
   }
 
   protected abstract void validateParams();
+
+  public abstract List<TimeRange> getDataCollectionTimeRanges(Instant startTime);
   protected void populateCommonFields(VerificationJobDTO verificationJobDTO) {
     verificationJobDTO.setIdentifier(this.identifier);
     verificationJobDTO.setJobName(this.jobName);
-    verificationJobDTO.setDuration(this.duration);
+    verificationJobDTO.setDuration(this.duration.toMinutes() + "m");
     verificationJobDTO.setServiceIdentifier(this.serviceIdentifier);
     verificationJobDTO.setEnvIdentifier(this.envIdentifier);
     verificationJobDTO.setDataSources(this.dataSources);

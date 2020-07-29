@@ -8,6 +8,7 @@ import lombok.Value;
 public class LogRecordDTO {
   String accountId;
   String cvConfigId;
+  String verificationTaskId;
   String host;
   long timestamp;
   String log;

@@ -19,6 +19,8 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     accountId_ = "";
     cvConfigId_ = "";
     dataCollectionInfo_ = com.google.protobuf.ByteString.EMPTY;
+    verificationTaskId_ = "";
+    dataCollectionWorkerId_ = "";
   }
 
   @java.
@@ -63,6 +65,18 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
           }
           case 26: {
             dataCollectionInfo_ = input.readBytes();
+            break;
+          }
+          case 34: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            verificationTaskId_ = s;
+            break;
+          }
+          case 42: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            dataCollectionWorkerId_ = s;
             break;
           }
           default: {
@@ -171,6 +185,70 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     return dataCollectionInfo_;
   }
 
+  public static final int VERIFICATION_TASK_ID_FIELD_NUMBER = 4;
+  private volatile java.lang.Object verificationTaskId_;
+  /**
+   * <code>string verification_task_id = 4[json_name = "verificationTaskId"];</code>
+   * @return The verificationTaskId.
+   */
+  public java.lang.String getVerificationTaskId() {
+    java.lang.Object ref = verificationTaskId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      verificationTaskId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string verification_task_id = 4[json_name = "verificationTaskId"];</code>
+   * @return The bytes for verificationTaskId.
+   */
+  public com.google.protobuf.ByteString getVerificationTaskIdBytes() {
+    java.lang.Object ref = verificationTaskId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      verificationTaskId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int DATA_COLLECTION_WORKER_ID_FIELD_NUMBER = 5;
+  private volatile java.lang.Object dataCollectionWorkerId_;
+  /**
+   * <code>string data_collection_worker_id = 5[json_name = "dataCollectionWorkerId"];</code>
+   * @return The dataCollectionWorkerId.
+   */
+  public java.lang.String getDataCollectionWorkerId() {
+    java.lang.Object ref = dataCollectionWorkerId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      dataCollectionWorkerId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string data_collection_worker_id = 5[json_name = "dataCollectionWorkerId"];</code>
+   * @return The bytes for dataCollectionWorkerId.
+   */
+  public com.google.protobuf.ByteString getDataCollectionWorkerIdBytes() {
+    java.lang.Object ref = dataCollectionWorkerId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+      dataCollectionWorkerId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -195,6 +273,12 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     if (!dataCollectionInfo_.isEmpty()) {
       output.writeBytes(3, dataCollectionInfo_);
     }
+    if (!getVerificationTaskIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, verificationTaskId_);
+    }
+    if (!getDataCollectionWorkerIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 5, dataCollectionWorkerId_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -213,6 +297,12 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     }
     if (!dataCollectionInfo_.isEmpty()) {
       size += com.google.protobuf.CodedOutputStream.computeBytesSize(3, dataCollectionInfo_);
+    }
+    if (!getVerificationTaskIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, verificationTaskId_);
+    }
+    if (!getDataCollectionWorkerIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, dataCollectionWorkerId_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -236,6 +326,10 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       return false;
     if (!getDataCollectionInfo().equals(other.getDataCollectionInfo()))
       return false;
+    if (!getVerificationTaskId().equals(other.getVerificationTaskId()))
+      return false;
+    if (!getDataCollectionWorkerId().equals(other.getDataCollectionWorkerId()))
+      return false;
     if (!unknownFields.equals(other.unknownFields))
       return false;
     return true;
@@ -254,6 +348,10 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
     hash = (53 * hash) + getCvConfigId().hashCode();
     hash = (37 * hash) + DATA_COLLECTION_INFO_FIELD_NUMBER;
     hash = (53 * hash) + getDataCollectionInfo().hashCode();
+    hash = (37 * hash) + VERIFICATION_TASK_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getVerificationTaskId().hashCode();
+    hash = (37 * hash) + DATA_COLLECTION_WORKER_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getDataCollectionWorkerId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -378,6 +476,10 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
 
       dataCollectionInfo_ = com.google.protobuf.ByteString.EMPTY;
 
+      verificationTaskId_ = "";
+
+      dataCollectionWorkerId_ = "";
+
       return this;
     }
 
@@ -412,6 +514,8 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       result.accountId_ = accountId_;
       result.cvConfigId_ = cvConfigId_;
       result.dataCollectionInfo_ = dataCollectionInfo_;
+      result.verificationTaskId_ = verificationTaskId_;
+      result.dataCollectionWorkerId_ = dataCollectionWorkerId_;
       onBuilt();
       return result;
     }
@@ -464,6 +568,14 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
       }
       if (other.getDataCollectionInfo() != com.google.protobuf.ByteString.EMPTY) {
         setDataCollectionInfo(other.getDataCollectionInfo());
+      }
+      if (!other.getVerificationTaskId().isEmpty()) {
+        verificationTaskId_ = other.verificationTaskId_;
+        onChanged();
+      }
+      if (!other.getDataCollectionWorkerId().isEmpty()) {
+        dataCollectionWorkerId_ = other.dataCollectionWorkerId_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -659,6 +771,144 @@ public final class DataCollectionPerpetualTaskParams extends com.google.protobuf
      */
     public Builder clearDataCollectionInfo() {
       dataCollectionInfo_ = getDefaultInstance().getDataCollectionInfo();
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object verificationTaskId_ = "";
+    /**
+     * <code>string verification_task_id = 4[json_name = "verificationTaskId"];</code>
+     * @return The verificationTaskId.
+     */
+    public java.lang.String getVerificationTaskId() {
+      java.lang.Object ref = verificationTaskId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        verificationTaskId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string verification_task_id = 4[json_name = "verificationTaskId"];</code>
+     * @return The bytes for verificationTaskId.
+     */
+    public com.google.protobuf.ByteString getVerificationTaskIdBytes() {
+      java.lang.Object ref = verificationTaskId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        verificationTaskId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string verification_task_id = 4[json_name = "verificationTaskId"];</code>
+     * @param value The verificationTaskId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setVerificationTaskId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      verificationTaskId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string verification_task_id = 4[json_name = "verificationTaskId"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearVerificationTaskId() {
+      verificationTaskId_ = getDefaultInstance().getVerificationTaskId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string verification_task_id = 4[json_name = "verificationTaskId"];</code>
+     * @param value The bytes for verificationTaskId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setVerificationTaskIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      verificationTaskId_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object dataCollectionWorkerId_ = "";
+    /**
+     * <code>string data_collection_worker_id = 5[json_name = "dataCollectionWorkerId"];</code>
+     * @return The dataCollectionWorkerId.
+     */
+    public java.lang.String getDataCollectionWorkerId() {
+      java.lang.Object ref = dataCollectionWorkerId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        dataCollectionWorkerId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string data_collection_worker_id = 5[json_name = "dataCollectionWorkerId"];</code>
+     * @return The bytes for dataCollectionWorkerId.
+     */
+    public com.google.protobuf.ByteString getDataCollectionWorkerIdBytes() {
+      java.lang.Object ref = dataCollectionWorkerId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+        dataCollectionWorkerId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string data_collection_worker_id = 5[json_name = "dataCollectionWorkerId"];</code>
+     * @param value The dataCollectionWorkerId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setDataCollectionWorkerId(java.lang.String value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+
+      dataCollectionWorkerId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string data_collection_worker_id = 5[json_name = "dataCollectionWorkerId"];</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearDataCollectionWorkerId() {
+      dataCollectionWorkerId_ = getDefaultInstance().getDataCollectionWorkerId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string data_collection_worker_id = 5[json_name = "dataCollectionWorkerId"];</code>
+     * @param value The bytes for dataCollectionWorkerId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setDataCollectionWorkerIdBytes(com.google.protobuf.ByteString value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      checkByteStringIsUtf8(value);
+
+      dataCollectionWorkerId_ = value;
       onChanged();
       return this;
     }

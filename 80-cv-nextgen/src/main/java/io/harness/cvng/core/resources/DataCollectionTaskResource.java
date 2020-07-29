@@ -32,9 +32,9 @@ public class DataCollectionTaskResource {
   @Timed
   @ExceptionMetered
   @DelegateAuth
-  public RestResponse<Optional<DataCollectionTaskDTO>> getNextTask(
-      @QueryParam("accountId") @NotNull String accountId, @QueryParam("cvConfigId") String cvConfigId) {
-    return new RestResponse<>(dataCollectionTaskService.getNextTaskDTO(accountId, cvConfigId));
+  public RestResponse<Optional<DataCollectionTaskDTO>> getNextTask(@QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("dataCollectionWorkerId") String dataCollectionWorkerId) {
+    return new RestResponse<>(dataCollectionTaskService.getNextTaskDTO(accountId, dataCollectionWorkerId));
   }
 
   @POST

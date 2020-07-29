@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
+import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
@@ -13,6 +14,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Data
@@ -41,5 +44,10 @@ public class CanaryVerificationJob extends VerificationJob {
         .ifPresent(percentage
             -> checkState(percentage >= 0 && percentage <= 100,
                 CanaryVerificationJobKeys.trafficSplitPercentage + " is not in appropriate range"));
+  }
+
+  @Override
+  public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
+    return null;
   }
 }

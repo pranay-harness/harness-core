@@ -28,7 +28,7 @@ public class VerificationJobResource {
   @ExceptionMetered
   public RestResponse<VerificationJobDTO> get(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("identifier") String identifier) {
-    return new RestResponse<>(verificationJobService.get(accountId, identifier));
+    return new RestResponse<>(verificationJobService.getVerificationJobDTO(accountId, identifier));
   }
 
   @PUT

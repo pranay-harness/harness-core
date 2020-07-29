@@ -18,14 +18,19 @@ public abstract class VerificationJobDTO {
   private String serviceIdentifier;
   private String envIdentifier;
   private List<DataSourceType> dataSources;
-  private Duration duration;
-  public void populateCommonFields(VerificationJob verificationJob) {
+  // TODO: make it Duration and write a custom serializer
+  private String duration;
+  protected void populateCommonFields(VerificationJob verificationJob) {
     verificationJob.setIdentifier(this.identifier);
     verificationJob.setServiceIdentifier(serviceIdentifier);
     verificationJob.setEnvIdentifier(envIdentifier);
     verificationJob.setJobName(jobName);
-    verificationJob.setDuration(duration);
+    verificationJob.setDuration(parseDuration());
     verificationJob.setDataSources(dataSources);
+  }
+
+  private Duration parseDuration() {
+    return Duration.ofMinutes(Integer.parseInt(duration.substring(0, duration.length() - 1)));
   }
 
   public abstract VerificationJob getVerificationJob();

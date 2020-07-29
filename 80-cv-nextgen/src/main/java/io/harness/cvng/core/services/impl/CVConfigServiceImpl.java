@@ -4,8 +4,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DeletedCVConfig;
@@ -44,6 +46,16 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Override
   public CVConfig get(@NotNull String cvConfigId) {
     return hPersistence.get(CVConfig.class, cvConfigId);
+  }
+
+  @Override
+  public List<CVConfig> find(String accountId, List<DataSourceType> dataSourceTypes) {
+    Preconditions.checkNotNull(accountId);
+    List<CVConfig> cvConfigs =
+        hPersistence.createQuery(CVConfig.class).filter(CVConfigKeys.accountId, accountId).asList();
+    return cvConfigs.stream()
+        .filter(cvConfig -> dataSourceTypes.contains(cvConfig.getType()))
+        .collect(Collectors.toList());
   }
 
   @Override

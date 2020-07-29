@@ -63,6 +63,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
   private String cvConfigId;
   private String accountId;
   private Instant fakeNow;
+  private String dataCollectionWorkerId;
 
   @Before
   public void setupTests() throws IllegalAccessException {
@@ -73,6 +74,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     clock = Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC);
     FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
     fakeNow = clock.instant();
+    dataCollectionWorkerId = generateUuid();
   }
 
   @Test
@@ -93,7 +95,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     DataCollectionTask dataCollectionTask = create();
     dataCollectionTaskService.save(dataCollectionTask);
     Optional<DataCollectionTask> nextTask =
-        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), cvConfigId);
+        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isTrue();
     assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTask.getUuid());
   }
@@ -105,7 +107,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     DataCollectionTask dataCollectionTask = create();
     dataCollectionTaskService.save(dataCollectionTask);
     Optional<DataCollectionTaskDTO> nextTask =
-        dataCollectionTaskService.getNextTaskDTO(dataCollectionTask.getAccountId(), cvConfigId);
+        dataCollectionTaskService.getNextTaskDTO(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isTrue();
     assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTask.getUuid());
     assertThat(nextTask.get().getAccountId()).isEqualTo(dataCollectionTask.getAccountId());
@@ -121,7 +123,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     DataCollectionTask dataCollectionTask = create();
     dataCollectionTaskService.save(dataCollectionTask);
     Optional<DataCollectionTaskDTO> nextTask =
-        dataCollectionTaskService.getNextTaskDTO(dataCollectionTask.getAccountId(), "invalid-cv-config");
+        dataCollectionTaskService.getNextTaskDTO(dataCollectionTask.getAccountId(), "invalid-worker-id");
     assertThat(nextTask.isPresent()).isFalse();
   }
 
@@ -133,7 +135,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     dataCollectionTask.setValidAfter(Instant.now().plus(10, ChronoUnit.MINUTES).toEpochMilli());
     dataCollectionTaskService.save(dataCollectionTask);
     Optional<DataCollectionTask> nextTask =
-        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), cvConfigId);
+        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isFalse();
   }
 
@@ -145,7 +147,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     dataCollectionTask.setValidAfter(clock.instant().minus(10, ChronoUnit.MINUTES).toEpochMilli());
     dataCollectionTaskService.save(dataCollectionTask);
     Optional<DataCollectionTask> nextTask =
-        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), cvConfigId);
+        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isTrue();
     assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTask.getUuid());
   }
@@ -158,11 +160,11 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     dataCollectionTask.setStatus(ExecutionStatus.RUNNING);
     hPersistence.save(dataCollectionTask);
     Optional<DataCollectionTask> nextTask =
-        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), cvConfigId);
+        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isFalse();
     dataCollectionTask.setStatus(ExecutionStatus.QUEUED);
     hPersistence.save(dataCollectionTask);
-    nextTask = dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), cvConfigId);
+    nextTask = dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isTrue();
     assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTask.getUuid());
   }
@@ -173,7 +175,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
   public void testGetNextTask_executionStatusUpdateOnGettingNextTask() {
     DataCollectionTask dataCollectionTask = createAndSave(ExecutionStatus.QUEUED);
     Optional<DataCollectionTask> nextTask =
-        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), cvConfigId);
+        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
     assertThat(nextTask.get().getStatus()).isEqualTo(ExecutionStatus.RUNNING);
     DataCollectionTask reloadedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
     assertThat(reloadedDataCollectionTask.getStatus()).isEqualTo(ExecutionStatus.RUNNING);
@@ -194,14 +196,14 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     dataCollectionTasks.get(0).setLastUpdatedAt(time + 11);
     hPersistence.save(dataCollectionTasks.get(0));
     for (int i = 1; i < 10; i++) {
-      Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+      Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
       assertThat(nextTask.isPresent()).isTrue();
       assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTasks.get(i).getUuid());
     }
-    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isTrue();
     assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTasks.get(0).getUuid());
-    assertThat(dataCollectionTaskService.getNextTask(accountId, cvConfigId).isPresent()).isFalse();
+    assertThat(dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId).isPresent()).isFalse();
   }
 
   @Test
@@ -212,7 +214,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     clock = Clock.fixed(Instant.now().plus(15, ChronoUnit.MINUTES), ZoneOffset.UTC);
     FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
     hPersistence.save(dataCollectionTask);
-    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isTrue();
     assertThat(nextTask.get().getRetryCount()).isEqualTo(1);
   }
@@ -231,13 +233,13 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     hPersistence.save(queuedDataCollectionTask);
     hPersistence.save(runningDataCollectionTask);
 
-    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isTrue();
-    nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+    nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isTrue();
     clock = Clock.fixed(Instant.now(), ZoneOffset.UTC);
     FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
-    nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+    nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isFalse();
   }
 
@@ -248,7 +250,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     DataCollectionTask dataCollectionTask = create();
     dataCollectionTask.setRetryCount(10);
     hPersistence.save(dataCollectionTask);
-    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, cvConfigId);
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
     assertThat(nextTask.isPresent()).isFalse();
   }
 
@@ -373,7 +375,8 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
-    when(verificationManagerService.createDataCollectionTask(eq(accountId), eq(cvConfigId), anyString()))
+    when(verificationManagerService.createServiceGuardDataCollectionTask(
+             eq(accountId), eq(cvConfigId), anyString(), eq(cvConfigId)))
         .thenReturn(taskId);
     AppDynamicsCVConfig cvConfig = getCVConfig();
 
@@ -406,7 +409,8 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
-    when(verificationManagerService.createDataCollectionTask(eq(accountId), eq(cvConfigId), anyString()))
+    when(verificationManagerService.createServiceGuardDataCollectionTask(
+             eq(accountId), eq(cvConfigId), anyString(), eq(cvConfigId)))
         .thenReturn(taskId);
     SplunkCVConfig cvConfig = getSplunkCVConfig();
 
@@ -418,6 +422,29 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
     assertThat(taskIdFromApi).isEqualTo(taskId);
     assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
     assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateSeqTasks() {
+    List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
+    for (int minute = 0; minute < 10; minute++) {
+      DataCollectionTask dataCollectionTask = create();
+      dataCollectionTasks.add(dataCollectionTask);
+    }
+    dataCollectionTaskService.createSeqTasks(dataCollectionTasks);
+    for (int i = 0; i < dataCollectionTasks.size(); i++) {
+      dataCollectionTasks.set(i, dataCollectionTaskService.getDataCollectionTask(dataCollectionTasks.get(i).getUuid()));
+    }
+    assertThat(dataCollectionTasks.get(0).getStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    for (int i = 0; i < 9; i++) {
+      assertThat(dataCollectionTasks.get(i + 1).getUuid()).isEqualTo(dataCollectionTasks.get(i).getNextTaskId());
+    }
+    assertThat(dataCollectionTasks.get(dataCollectionTasks.size() - 1).getNextTaskId()).isNull();
+    for (int i = 1; i < 10; i++) {
+      assertThat(dataCollectionTasks.get(i).getStatus()).isEqualTo(ExecutionStatus.WAITING);
+    }
   }
 
   private AppDynamicsCVConfig getCVConfig() {
@@ -470,6 +497,7 @@ public class DataCollectionTaskServiceImplTest extends CVNextGenBaseTest {
   private DataCollectionTask create(ExecutionStatus executionStatus) {
     return DataCollectionTask.builder()
         .cvConfigId(cvConfigId)
+        .dataCollectionWorkerId(dataCollectionWorkerId)
         .accountId(accountId)
         .startTime(fakeNow.minus(5, ChronoUnit.MINUTES))
         .endTime(fakeNow)

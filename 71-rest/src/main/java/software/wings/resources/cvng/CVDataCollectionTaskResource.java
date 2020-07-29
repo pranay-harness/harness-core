@@ -12,7 +12,9 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import retrofit2.http.Body;
 
+import java.util.Map;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -32,9 +34,8 @@ public class CVDataCollectionTaskResource {
   @Path("create-task")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> createTask(@QueryParam("accountId") String accountId,
-      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("connectorId") String connectorId) {
-    return new RestResponse<>(dataCollectionTaskService.create(accountId, cvConfigId, connectorId));
+  public RestResponse<String> createTask(@QueryParam("accountId") String accountId, @Body Map<String, String> params) {
+    return new RestResponse<>(dataCollectionTaskService.create(accountId, params));
   }
 
   @DELETE

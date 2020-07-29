@@ -38,7 +38,9 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
     Map<String, String> clientParams = clientContext.getClientParams();
     String accountId = clientParams.get("accountId");
     String cvConfigId = clientParams.get("cvConfigId");
+    String verificationTaskId = clientParams.get("verificationTaskId");
     String connectorId = clientParams.get("connectorId");
+    String dataCollectionWorkerId = clientParams.get("dataCollectionWorkerId");
 
     SettingAttribute settingAttribute = settingsService.get(connectorId);
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
@@ -50,11 +52,17 @@ public class DataCollectionPerpetualTaskServiceClient implements PerpetualTaskSe
                                                     .encryptedDataDetails(encryptedDataDetails)
                                                     .build();
     ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo));
-    return DataCollectionPerpetualTaskParams.newBuilder()
-        .setAccountId(accountId)
-        .setCvConfigId(cvConfigId)
-        .setDataCollectionInfo(bytes)
-        .build();
+    DataCollectionPerpetualTaskParams.Builder params = DataCollectionPerpetualTaskParams.newBuilder()
+                                                           .setAccountId(accountId)
+                                                           .setDataCollectionInfo(bytes)
+                                                           .setDataCollectionWorkerId(dataCollectionWorkerId);
+    if (verificationTaskId != null) {
+      params.setVerificationTaskId(verificationTaskId);
+    }
+    if (cvConfigId != null) {
+      params.setCvConfigId(cvConfigId);
+    }
+    return params.build();
   }
 
   @Override
