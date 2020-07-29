@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,6 +29,34 @@ import java.util.HashMap;
 public class InstallUtilsTest extends CategoryTest implements MockableTestMixin {
   DelegateConfiguration delegateConfiguration =
       DelegateConfiguration.builder().managerUrl("localhost").maxCachedArtifacts(10).build();
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testGetTerraformConfigInspectDownloadUrlPathWindows() throws Exception {
+    setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", true);
+
+    boolean useCdn = delegateConfiguration.isUseCdn();
+
+    assertThat(useCdn).isFalse();
+    assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
+        .isEqualTo(
+            "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/windows/amd64/terraform-config-inspect");
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testGetTerraformConfigInspectDownloadUrlPathMac() throws Exception {
+    setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", true);
+
+    boolean useCdn = delegateConfiguration.isUseCdn();
+
+    assertThat(useCdn).isFalse();
+    assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
+        .isEqualTo(
+            "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/darwin/amd64/terraform-config-inspect");
+  }
 
   @Test
   @Owner(developers = AVMOHAN)
