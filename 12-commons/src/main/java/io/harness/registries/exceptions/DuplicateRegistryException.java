@@ -13,7 +13,7 @@ public class DuplicateRegistryException extends WingsException {
   private static final String DETAILS_KEY = "details";
 
   public DuplicateRegistryException(String registryType, String message) {
-    super(null, null, ErrorCode.REGISTRY_EXCEPTION, Level.ERROR, null, null);
+    super(message, null, ErrorCode.REGISTRY_EXCEPTION, Level.ERROR, null, null);
     super.param(DETAILS_KEY, HarnessStringUtils.join("", "[RegistryType: ", registryType, "]", message));
   }
 }

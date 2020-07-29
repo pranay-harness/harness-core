@@ -7,8 +7,6 @@ import com.google.inject.Injector;
 import io.harness.annotation.HarnessRepo;
 import io.harness.beans.converters.SweepingOutputReadMongoConverter;
 import io.harness.beans.converters.SweepingOutputWriteMongoConverter;
-import io.harness.engine.executions.node.listeners.NodeExecutionAfterSaveListener;
-import io.harness.engine.executions.plan.listeners.PlanExecutionAfterSaveListener;
 import io.harness.exception.GeneralException;
 import io.harness.mongo.OrchestrationTypeInformationMapper;
 import io.harness.ng.SpringPersistenceConfig;
@@ -57,20 +55,6 @@ public class OrchestrationPersistenceConfig extends SpringPersistenceConfig {
   @Primary
   public MongoTemplate orchestrationMongoTemplate() throws Exception {
     return new MongoTemplate(mongoDbFactory(), mappingMongoConverter());
-  }
-
-  // Node Execution Listener Beans
-  @Bean
-  public NodeExecutionAfterSaveListener nodeExecutionAfterSaveListener() {
-    return new NodeExecutionAfterSaveListener();
-  }
-
-  // Plan Execution Listener Beans
-  @Bean
-  public PlanExecutionAfterSaveListener planExecutionAfterSaveListener() {
-    PlanExecutionAfterSaveListener listener = new PlanExecutionAfterSaveListener();
-    injector.injectMembers(listener);
-    return listener;
   }
 
   @Bean
