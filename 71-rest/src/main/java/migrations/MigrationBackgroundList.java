@@ -237,13 +237,14 @@ public class MigrationBackgroundList {
         .add(Pair.of(135, BaseMigration.class))
         .add(Pair.of(136, BaseMigration.class))
         .add(Pair.of(137, BaseMigration.class))
-        .add(Pair.of(138, RemoveDeletedAppIdsFromUserGroups.class))
+        .add(Pair.of(138, BaseMigration.class))
         .add(Pair.of(139, AddAccountIdToTriggers.class))
         .add(Pair.of(140, AddAccountIdToCommandLogs.class))
         .add(Pair.of(141, AddAccountIdToEntityVersion.class))
         .add(Pair.of(142, UpdateStaleDefaultAccountIds.class))
         .add(Pair.of(143, AddAccountIdToServiceVariables.class))
         .add(Pair.of(144, AddAccountIdToActivityCollection.class))
+        .add(Pair.of(145, RemoveDeletedAppIdsFromUserGroups.class))
         .build();
   }
 }
