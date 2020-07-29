@@ -1,19 +1,18 @@
-package software.wings.cloudprovider.gke;
+package io.harness.k8s;
 
 import static io.harness.k8s.K8sResourcePermission.DENIED_RESPOSE_FORMAT;
 import static io.harness.k8s.K8sResourcePermission.FAILED_RESPOSE_FORMAT;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.k8s.K8sResourcePermissionImpl;
 import io.harness.rule.Owner;
+import io.harness.threading.CurrentThreadExecutor;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.openapi.models.V1ResourceAttributes;
@@ -22,20 +21,22 @@ import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReview;
 import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReviewSpec;
 import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatus;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
-import software.wings.WingsBaseTest;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-public class K8sResourcePermissionImplTest extends WingsBaseTest {
+public class K8sResourcePermissionImplTest extends CategoryTest {
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
   @Mock AuthorizationV1Api apiClient;
-  @Spy @Inject @Named("asyncExecutor") ExecutorService executorService;
   @InjectMocks K8sResourcePermissionImpl k8sResourcePermission;
 
   private V1SubjectAccessReviewStatus v1SubjectAccessReviewStatus;
@@ -43,6 +44,7 @@ public class K8sResourcePermissionImplTest extends WingsBaseTest {
   private V1SelfSubjectAccessReviewSpec v1SelfSubjectAccessReviewSpec;
   private V1SelfSubjectAccessReview v1SelfSubjectAccessReview;
   private List<V1ResourceAttributes> v1ResourceAttributesList;
+  private ExecutorService executorService = new CurrentThreadExecutor();
 
   final String GROUP = "apps";
   final String VERB = "delete";
@@ -51,6 +53,8 @@ public class K8sResourcePermissionImplTest extends WingsBaseTest {
 
   @Before
   public void setup() throws ApiException {
+    on(k8sResourcePermission).set("executorService", executorService);
+
     v1ResourceAttributes =
         new V1ResourceAttributesBuilder().withGroup(GROUP).withResource(RESOURCE).withVerb(VERB).build();
 
