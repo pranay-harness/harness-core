@@ -7,6 +7,8 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import com.google.inject.Singleton;
+
 import io.fabric8.utils.Strings;
 import io.grpc.Channel;
 import io.grpc.health.v1.HealthCheckRequest;
@@ -21,7 +23,6 @@ import io.harness.resource.Project;
 import io.harness.threading.Poller;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
@@ -38,23 +39,20 @@ import java.util.List;
 /**
  * Start Event service as part of functional tests
  */
-@UtilityClass
+@Singleton
 @Slf4j
 public class EventServerExecutor {
-  private static final String alpnJar =
-      "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
-  private static final String alpn = "/home/jenkins/maven-repositories/0/";
-  private static boolean failedAlready;
+  private boolean failedAlready;
 
-  @Getter(lazy = true) private static final Channel channel = makeChannel();
+  @Getter(lazy = true) private final Channel channel = makeChannel();
 
-  public static void ensureEventServer(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
+  public void ensureEventServer(Class<?> clazz, String alpnPath, String alpnJarPath) throws IOException {
     if (!isHealthy()) {
       executeLocalEventServer(clazz, alpnPath, alpnJarPath);
     }
   }
 
-  private static void executeLocalEventServer(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
+  private void executeLocalEventServer(Class<?> clazz, String alpnPath, String alpnJarPath) throws IOException {
     if (failedAlready) {
       return;
     }
@@ -110,7 +108,7 @@ public class EventServerExecutor {
 
         final StartedProcess startedProcess = processExecutor.start();
         Runtime.getRuntime().addShutdownHook(new Thread(startedProcess.getProcess()::destroy));
-        Poller.pollFor(ofMinutes(2), ofSeconds(2), EventServerExecutor::isHealthy);
+        Poller.pollFor(ofMinutes(2), ofSeconds(2), this ::isHealthy);
       } catch (RuntimeException | IOException exception) {
         failedAlready = true;
         throw exception;
@@ -125,9 +123,9 @@ public class EventServerExecutor {
     SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
     return NettyChannelBuilder.forTarget("localhost:9890").sslContext(sslContext).build();
   }
-  private static Exception previous = new Exception();
+  private Exception previous = new Exception();
 
-  private static boolean isHealthy() {
+  private boolean isHealthy() {
     try {
       if (HealthGrpc.newBlockingStub(getChannel()).check(HealthCheckRequest.newBuilder().build()).getStatus()
           != ServingStatus.SERVING) {
@@ -144,9 +142,5 @@ public class EventServerExecutor {
     }
     logger.info("healthy");
     return true;
-  }
-
-  public static void main(String[] args) throws IOException {
-    ensureEventServer(EventServerExecutor.class, alpn, alpnJar);
   }
 }
