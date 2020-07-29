@@ -628,15 +628,15 @@ public class InstallUtils {
     }
   }
 
-  private static String getTerraformConfigInspectDownloadUrl(DelegateConfiguration delegateConfiguration) {
+  @VisibleForTesting
+  protected static String getTerraformConfigInspectDownloadUrl(DelegateConfiguration delegateConfiguration) {
     if (delegateConfiguration.isUseCdn()) {
       return join("/", delegateConfiguration.getCdnUrl(),
           String.format(TERRAFORM_CONFIG_CDN_PATH, terraformConfigInspectVersion, getOsPath()));
     }
-    return join("", getManagerBaseUrl(delegateConfiguration.getManagerUrl()),
-        "storage/harness-download/harness-terraform-config"
-            + "-inspect",
-        terraformConfigInspectVersion, getOsPath(), "amd64", terraformConfigInspectBinary);
+    return getManagerBaseUrl(delegateConfiguration.getManagerUrl())
+        + "storage/harness-download/harness-terraform-config-inspect/" + terraformConfigInspectVersion + "/"
+        + getOsPath() + "/amd64/" + terraformConfigInspectBinary;
   }
 
   private static boolean validateTerraformConfigInspectExists(String terraformConfigInspectVersionedDirectory) {
