@@ -174,7 +174,7 @@ public class PcfClientImpl implements PcfClient {
     try (CloudFoundryOperationsWrapper operationsWrapper = getCloudFoundryOperationsWrapper(pcfRequestConfig)) {
       operationsWrapper.getCloudFoundryOperations().organizations().list().subscribe(organizations::add, throwable -> {
         exceptionOccured.set(true);
-        handleException(throwable, "getOrganizations", errorBuilder);
+        handleExceptionForGetOraganizationsAPI(throwable, "getOrganizations", errorBuilder);
         latch.countDown();
       }, latch::countDown);
 
@@ -1900,6 +1900,12 @@ public class PcfClientImpl implements PcfClient {
 
   private void handleException(Throwable t, String apiName, StringBuilder errorBuilder) {
     logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception Occured while executing PCF api: " + apiName, t);
+    errorBuilder.append(t.getMessage());
+  }
+
+  private void handleExceptionForGetOraganizationsAPI(Throwable t, String apiName, StringBuilder errorBuilder) {
+    logger.error(PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception Occured while executing PCF api: " + apiName
+        + " EXCEPTION: " + t.toString());
     errorBuilder.append(t.getMessage());
   }
 
