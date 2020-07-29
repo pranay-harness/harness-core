@@ -47,8 +47,11 @@ public class EnvLoopResumeState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     // should spawn two ENV_RESUME_STATE. Once for each workflowExecutionId.
+    String appId = context.getAppId();
     String currPipelineExecutionId = resumeStateUtils.fetchPipelineExecutionId(context);
     notNullCheck("Pipeline execution is null in EnvResumeState", currPipelineExecutionId);
+    resumeStateUtils.copyPipelineStageOutputs(appId, prevPipelineExecutionId, prevStateExecutionId, null,
+        currPipelineExecutionId, context.getStateExecutionInstanceId());
     ExecutionResponseBuilder executionResponseBuilder =
         resumeStateUtils.prepareExecutionResponseBuilder(context, prevStateExecutionId);
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;

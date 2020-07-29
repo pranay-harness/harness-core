@@ -21,6 +21,7 @@ import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
 import static software.wings.beans.InfrastructureType.AZURE_SSH;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
+import static software.wings.beans.InfrastructureType.PDC;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -116,9 +117,35 @@ public class InfrastructureDefinitionGenerator {
         return ensureAwsLambda(seed, owners, bearerToken);
       case PCF_INFRASTRUCTURE:
         return ensurePcf(seed, owners, bearerToken);
+      case PDC:
+        return ensurePDC(seed, owners, "PDC");
       default:
         return null;
     }
+  }
+
+  public InfrastructureDefinition ensurePDC(Seed seed, Owners owners, String name) {
+    Environment environment = ensureEnv(seed, owners);
+
+    final SettingAttribute pcfCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, Settings.PHYSICAL_DATA_CENTER);
+    final SettingAttribute hostConnectionAttribute =
+        settingGenerator.ensurePredefined(seed, owners, DEV_TEST_CONNECTOR);
+
+    PhysicalInfra pdcInfraStructure = PhysicalInfra.builder()
+                                          .cloudProviderId(pcfCloudProvider.getUuid())
+                                          .hostConnectionAttrs(hostConnectionAttribute.getUuid())
+                                          .hostNames(asList("host1", "host2"))
+                                          .build();
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .name(name)
+                                                            .infrastructure(pdcInfraStructure)
+                                                            .appId(environment.getAppId())
+                                                            .envId(environment.getUuid())
+                                                            .cloudProviderType(CloudProviderType.PHYSICAL_DATA_CENTER)
+                                                            .deploymentType(DeploymentType.SSH)
+                                                            .build();
+    return ensureInfrastructureDefinition(infrastructureDefinition);
   }
 
   public enum InfrastructureDefinitions {

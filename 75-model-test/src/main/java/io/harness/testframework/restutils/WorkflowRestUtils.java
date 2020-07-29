@@ -37,6 +37,20 @@ public class WorkflowRestUtils {
   static final String UPGRADE_CONTAINERS_CONSTANT = "Upgrade Containers";
   static final String DEPLOY_CONTAINERS_CONSTANT = "Deploy Containers";
 
+  public static Workflow getWorkflow(String appId, String workflowId, String bearerToken) {
+    GenericType<RestResponse<Workflow>> workflowType = new GenericType<RestResponse<Workflow>>() {};
+
+    RestResponse<Workflow> savedWorkflowResponse = Setup.portal()
+                                                       .auth()
+                                                       .oauth2(bearerToken)
+                                                       .queryParam("appId", appId)
+                                                       .contentType(ContentType.JSON)
+                                                       .get("/workflows/" + workflowId)
+                                                       .as(workflowType.getType());
+
+    return savedWorkflowResponse.getResource();
+  }
+
   public static Workflow createWorkflow(String bearerToken, String accountId, String appId, Workflow workflow) {
     GenericType<RestResponse<Workflow>> workflowType = new GenericType<RestResponse<Workflow>>() {};
 
