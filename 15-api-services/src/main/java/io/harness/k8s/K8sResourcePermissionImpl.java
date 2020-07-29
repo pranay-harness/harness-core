@@ -1,4 +1,4 @@
-package software.wings.cloudprovider.gke;
+package io.harness.k8s;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

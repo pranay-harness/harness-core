@@ -88,6 +88,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.k8s.K8sResourcePermissionImpl;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
