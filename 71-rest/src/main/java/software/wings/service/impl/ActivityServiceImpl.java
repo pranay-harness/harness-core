@@ -39,6 +39,7 @@ import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ownership.OwnedByActivity;
@@ -66,6 +67,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private LogService logService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private EventEmitter eventEmitter;
+  @Inject private AppService appService;
 
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
 
@@ -85,7 +87,11 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public Activity save(Activity activity) {
+    if (isEmpty(activity.getAccountId())) {
+      activity.setAccountId(appService.getAccountIdByAppId(activity.getAppId()));
+    }
     wingsPersistence.save(activity);
+
     if (isNotBlank(activity.getServiceInstanceId())) {
       serviceInstanceService.updateActivity(activity);
     }

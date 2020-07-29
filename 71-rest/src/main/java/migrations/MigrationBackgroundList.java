@@ -3,6 +3,7 @@ package migrations;
 import com.google.common.collect.ImmutableList;
 
 import lombok.experimental.UtilityClass;
+import migrations.all.AddAccountIdToActivityCollection;
 import migrations.all.AddAccountIdToCloudFormationRollBackConfig;
 import migrations.all.AddAccountIdToCommandLogs;
 import migrations.all.AddAccountIdToDeploymentEntities;
@@ -242,6 +243,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(141, AddAccountIdToEntityVersion.class))
         .add(Pair.of(142, UpdateStaleDefaultAccountIds.class))
         .add(Pair.of(143, AddAccountIdToServiceVariables.class))
+        .add(Pair.of(144, AddAccountIdToActivityCollection.class))
         .build();
   }
 }

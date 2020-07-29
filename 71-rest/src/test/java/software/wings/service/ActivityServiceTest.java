@@ -8,6 +8,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -18,6 +19,7 @@ import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.CO
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.InitSshCommandUnit.INITIALIZE_UNIT;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -44,6 +46,7 @@ import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InOrder;
@@ -62,6 +65,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
 
@@ -79,8 +83,13 @@ public class ActivityServiceTest extends WingsBaseTest {
   @Mock private LogService logService;
 
   @Mock private EventEmitter eventEmitter;
-
+  @Mock private AppService appService;
   @Inject @InjectMocks private ActivityService activityService;
+
+  @Before
+  public void setup() {
+    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
+  }
 
   /**
    * Should list activities.
