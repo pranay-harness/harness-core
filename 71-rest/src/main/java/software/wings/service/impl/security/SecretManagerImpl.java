@@ -846,16 +846,17 @@ public class SecretManagerImpl implements SecretManager {
         throw new SecretManagementException(ENCRYPT_DECRYPT_ERROR,
             "No key name separator # found in the Vault secret reference " + encryptedDataRef, USER);
       }
-
-      // This is a new Vault path based reference;
+      // This is a new Vault path based reference
       ParsedVaultSecretRef vaultSecretRef = parse(encryptedDataRef, accountId);
-
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
       query.criteria(ACCOUNT_ID_KEY)
           .equal(accountId)
           .criteria(EncryptedDataKeys.encryptionType)
           .equal(EncryptionType.VAULT);
-      if (isNotEmpty(vaultSecretRef.relativePath)) {
+      if (isNotEmpty(vaultSecretRef.relativePath) && isNotEmpty(vaultSecretRef.fullPath)) {
+        query.and(query.or(query.criteria(EncryptedDataKeys.encryptionKey).equal(vaultSecretRef.relativePath),
+            query.criteria(EncryptedDataKeys.path).equal(vaultSecretRef.fullPath)));
+      } else if (isNotEmpty(vaultSecretRef.relativePath)) {
         query.criteria(EncryptedDataKeys.encryptionKey).equal(vaultSecretRef.relativePath);
       } else if (isNotEmpty(vaultSecretRef.fullPath)) {
         query.criteria(EncryptedDataKeys.path).equal(vaultSecretRef.fullPath);
