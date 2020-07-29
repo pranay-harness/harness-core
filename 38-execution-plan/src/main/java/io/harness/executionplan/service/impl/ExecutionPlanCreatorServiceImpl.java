@@ -1,6 +1,5 @@
 package io.harness.executionplan.service.impl;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.PIPELINE_PLAN_CREATOR;
 
 import com.google.inject.Inject;
@@ -44,10 +43,6 @@ public class ExecutionPlanCreatorServiceImpl implements ExecutionPlanCreatorServ
 
     final CreateExecutionPlanResponse response = planCreator.createPlan(pipeline, createExecutionPlanContext);
 
-    return Plan.builder()
-        .nodes(response.getPlanNodes())
-        .startingNodeId(response.getStartingNodeId())
-        .uuid(generateUuid())
-        .build();
+    return Plan.builder().nodes(response.getPlanNodes()).startingNodeId(response.getStartingNodeId()).build();
   }
 }

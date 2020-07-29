@@ -8,7 +8,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.PersistentEntity;
 import lombok.Builder;
-import lombok.NonNull;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -38,8 +37,6 @@ import javax.validation.constraints.NotNull;
 @Redesign
 @FieldNameConstants(innerTypeName = "PlanKeys")
 public class Plan implements PersistentEntity {
-  @NonNull String uuid;
-
   @Singular List<PlanNode> nodes;
 
   @NotNull String startingNodeId;
