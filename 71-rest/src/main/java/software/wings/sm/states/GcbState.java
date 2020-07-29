@@ -5,7 +5,6 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.delegate.beans.TaskData.asyncTaskData;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.TaskType.GCB;
@@ -29,6 +28,7 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.tasks.Cd1SetupFields;
 import lombok.Data;
@@ -211,7 +211,12 @@ public class GcbState extends State implements SweepingOutputStateMixin {
         .accountId(application.getAccountId())
         .waitId(activityId)
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, application.getAppId())
-        .data(asyncTaskData(GCB.name(), parameters))
+        .data(TaskData.builder()
+                  .async(true)
+                  .taskType(GCB.name())
+                  .parameters(parameters)
+                  .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                  .build())
         .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, context.fetchInfraMappingId())
         .build();

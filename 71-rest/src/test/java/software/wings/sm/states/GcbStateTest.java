@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
-import static io.harness.delegate.beans.TaskData.asyncTaskData;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.VGLIJIN;
 import static java.util.Collections.EMPTY_MAP;
@@ -37,6 +37,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ResponseData;
+import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -248,7 +249,13 @@ public class GcbStateTest extends CategoryTest {
     assertThat(delegateTask.getAccountId()).isEqualTo("accountId");
     assertThat(delegateTask.getAppId()).isEqualTo("appId");
     assertThat(delegateTask.getInfrastructureMappingId()).isEqualTo("infrastructureId");
-    assertThat(delegateTask.getData()).isEqualTo(asyncTaskData(GCB.name(), gcbTaskParams));
+    assertThat(delegateTask.getData())
+        .isEqualTo(TaskData.builder()
+                       .async(true)
+                       .taskType(GCB.name())
+                       .parameters(new Object[] {gcbTaskParams})
+                       .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                       .build());
   }
 
   @Test

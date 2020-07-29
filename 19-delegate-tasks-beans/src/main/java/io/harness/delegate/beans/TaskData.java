@@ -20,8 +20,4 @@ public class TaskData {
   private long timeout;
   private int expressionFunctorToken;
   Map<String, String> expressions;
-
-  public static TaskData asyncTaskData(String taskType, Object... parameters) {
-    return new TaskData(true, taskType, parameters, DEFAULT_ASYNC_CALL_TIMEOUT, 0, null);
-  }
 }
