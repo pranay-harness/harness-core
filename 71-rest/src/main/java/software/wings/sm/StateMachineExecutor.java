@@ -338,6 +338,7 @@ public class StateMachineExecutor implements StateInspectionListener {
 
   @NotNull
   private Integer getDefaultTimeout(State state, ExecutionContext context) {
+    injector.injectMembers(state);
     Integer timeout = state.getTimeoutMillis(context);
     if (timeout != null) {
       return timeout;

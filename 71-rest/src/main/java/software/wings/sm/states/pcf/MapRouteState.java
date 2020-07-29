@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
 
@@ -108,6 +109,11 @@ public class MapRouteState extends State {
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  @Override
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    return pcfStateHelper.getStateTimeoutMillis(context, DEFAULT_PCF_TASK_TIMEOUT_MIN, isRollback());
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {

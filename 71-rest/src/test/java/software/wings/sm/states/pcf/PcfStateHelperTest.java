@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RIHAZ;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -16,6 +17,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -1028,5 +1030,21 @@ public class PcfStateHelperTest extends WingsBaseTest {
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
     assertThat(executionResponse.getStateExecutionData()).isEqualTo(pcfDeployStateExecutionData);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetStateTimeoutMillis() {
+    PcfStateHelper pcfStateHelper = spy(PcfStateHelper.class);
+    doReturn(SetupSweepingOutputPcf.builder().timeoutIntervalInMinutes(10).build())
+        .when(pcfStateHelper)
+        .findSetupSweepingOutputPcf(context, false);
+    assertThat(pcfStateHelper.getStateTimeoutMillis(context, 5, false)).isEqualTo(10 * 60 * 1000);
+
+    doReturn(SetupSweepingOutputPcf.builder().timeoutIntervalInMinutes(null).build())
+        .when(pcfStateHelper)
+        .findSetupSweepingOutputPcf(context, false);
+    assertThat(pcfStateHelper.getStateTimeoutMillis(context, 5, false)).isEqualTo(5 * 60 * 1000);
   }
 }

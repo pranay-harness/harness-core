@@ -1,8 +1,10 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.TATHAGAT;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -454,5 +456,15 @@ public class PcfDeployStateTest extends WingsBaseTest {
     assertThat(pcfDeployStateExecutionData.getNewInstanceStatusSummaries().size()).isEqualTo(2);
     InstanceStatusSummary instanceStatusSummary = pcfDeployStateExecutionData.getNewInstanceStatusSummaries().get(0);
     assertThat(instanceStatusSummary.getInstanceElement().getUuid()).isEqualTo("uuid1");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() throws IllegalAccessException {
+    PcfStateHelper mockPcfStateHelper = mock(PcfStateHelper.class);
+    FieldUtils.writeField(pcfDeployState, "pcfStateHelper", mockPcfStateHelper, true);
+    doReturn(10).when(mockPcfStateHelper).getStateTimeoutMillis(context, DEFAULT_PCF_TASK_TIMEOUT_MIN, false);
+    assertThat(pcfDeployState.getTimeoutMillis(context)).isEqualTo(10);
   }
 }

@@ -1,7 +1,9 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -597,5 +599,15 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes();
     assertThat(routes).hasSize(1);
     assertThat(routes.contains("R3")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTimeoutMillis() throws IllegalAccessException {
+    PcfStateHelper mockPcfStateHelper = mock(PcfStateHelper.class);
+    FieldUtils.writeField(pcfRouteSwapState, "pcfStateHelper", mockPcfStateHelper, true);
+    doReturn(10).when(mockPcfStateHelper).getStateTimeoutMillis(context, DEFAULT_PCF_TASK_TIMEOUT_MIN, false);
+    assertThat(pcfRouteSwapState.getTimeoutMillis(context)).isEqualTo(10);
   }
 }
