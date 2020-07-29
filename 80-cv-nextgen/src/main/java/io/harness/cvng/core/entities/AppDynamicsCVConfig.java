@@ -34,6 +34,11 @@ public class AppDynamicsCVConfig extends MetricCVConfig {
   }
 
   @Override
+  public String getVerificationJobDataCollectionDsl() {
+    throw new UnsupportedOperationException("Not implemented");
+  }
+
+  @Override
   protected void validateParams() {
     checkNotNull(applicationName, generateErrorMessageFromParam(AppDynamicsCVConfigKeys.applicationName));
     checkNotNull(tierName, generateErrorMessageFromParam(AppDynamicsCVConfigKeys.tierName));

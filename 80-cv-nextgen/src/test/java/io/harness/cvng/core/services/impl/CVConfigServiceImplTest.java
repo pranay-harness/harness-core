@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNextGenBaseTest;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -87,6 +88,27 @@ public class CVConfigServiceImplTest extends CVNextGenBaseTest {
     CVConfig updated = save(cvConfig);
     CVConfig saved = cvConfigService.get(updated.getUuid());
     assertCommons(saved, cvConfig);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFind_filterByAccountAndDataSourceTypesIfExist() {
+    CVConfig cvConfig = createCVConfig();
+    CVConfig updated = save(cvConfig);
+    List<CVConfig> results = cvConfigService.find(accountId, Lists.newArrayList(DataSourceType.SPLUNK));
+    assertThat(results).hasSize(1);
+    assertThat(results.get(0).getUuid()).isEqualTo(updated.getUuid());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFind_filterByAccountAndDataSourceTypesIfDoesNotExist() {
+    CVConfig cvConfig = createCVConfig();
+    save(cvConfig);
+    List<CVConfig> results = cvConfigService.find(accountId, Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    assertThat(results).hasSize(0);
   }
 
   @Test

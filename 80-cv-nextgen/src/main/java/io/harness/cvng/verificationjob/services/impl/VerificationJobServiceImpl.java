@@ -9,12 +9,15 @@ import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobK
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 
+import javax.annotation.Nullable;
+
 public class VerificationJobServiceImpl implements VerificationJobService {
   @Inject private HPersistence hPersistence;
 
   @Override
-  public VerificationJobDTO get(String accountId, String identifier) {
-    VerificationJob verificationJob = findVerificationJob(accountId, identifier);
+  @Nullable
+  public VerificationJobDTO getVerificationJobDTO(String accountId, String identifier) {
+    VerificationJob verificationJob = getVerificationJob(accountId, identifier);
     if (verificationJob == null) {
       return null;
     }
@@ -25,7 +28,7 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   public void upsert(String accountId, VerificationJobDTO verificationJobDTO) {
     VerificationJob verificationJob = verificationJobDTO.getVerificationJob();
     verificationJob.setAccountId(accountId);
-    VerificationJob stored = findVerificationJob(accountId, verificationJobDTO.getIdentifier());
+    VerificationJob stored = getVerificationJob(accountId, verificationJobDTO.getIdentifier());
     if (stored != null) {
       verificationJob.setUuid(stored.getUuid());
     }
@@ -35,13 +38,20 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     hPersistence.save(verificationJob);
   }
 
-  private VerificationJob findVerificationJob(String accountId, String identifier) {
+  @Override
+  public VerificationJob getVerificationJob(String accountId, String identifier) {
     Preconditions.checkNotNull(accountId);
     Preconditions.checkNotNull(identifier);
     return hPersistence.createQuery(VerificationJob.class)
         .filter(VerificationJobKeys.accountId, accountId)
         .filter(VerificationJobKeys.identifier, identifier)
         .get();
+  }
+
+  @Override
+  public VerificationJob get(String uuid) {
+    Preconditions.checkNotNull(uuid);
+    return hPersistence.get(VerificationJob.class, uuid);
   }
 
   @Override

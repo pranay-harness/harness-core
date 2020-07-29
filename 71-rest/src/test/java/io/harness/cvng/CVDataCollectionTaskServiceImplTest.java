@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import software.wings.WingsBaseTest;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +41,10 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void create() {
-    String taskId = dataCollectionTaskService.create(accountId, cvConfigId, connectorId);
+    Map<String, String> params = new HashMap<>();
+    params.put("cvConfigId", cvConfigId);
+    params.put("connectorId", connectorId);
+    String taskId = dataCollectionTaskService.create(accountId, params);
     assertThat(taskId).isNotNull();
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
     PerpetualTaskClientContext perpetualTaskClientContext = perpetualTaskRecord.getClientContext();
@@ -51,14 +55,17 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     assertThat(perpetualTaskClientContext.getClientParams()).isEqualTo(clientParamMap);
     assertThat(perpetualTaskService.getPerpetualTaskType(taskId)).isEqualTo(DATA_COLLECTION_TASK);
     assertThat(perpetualTaskRecord.getIntervalSeconds()).isEqualTo(60);
-    assertThat(perpetualTaskRecord.getTimeoutMillis()).isEqualTo(900000);
+    assertThat(perpetualTaskRecord.getTimeoutMillis()).isEqualTo(Duration.ofDays(1).toMillis());
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void delete() {
-    String taskId = dataCollectionTaskService.create(accountId, cvConfigId, connectorId);
+    Map<String, String> params = new HashMap<>();
+    params.put("cvConfigId", cvConfigId);
+    params.put("connectorId", connectorId);
+    String taskId = dataCollectionTaskService.create(accountId, params);
     assertThat(taskId).isNotNull();
     dataCollectionTaskService.delete(accountId, "some-other-id");
     assertThat(perpetualTaskService.getTaskRecord(taskId)).isNotNull();

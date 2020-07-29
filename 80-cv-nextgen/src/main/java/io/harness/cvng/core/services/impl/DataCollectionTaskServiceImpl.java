@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -32,6 +33,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -52,10 +54,10 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     hPersistence.save(dataCollectionTask);
   }
 
-  public Optional<DataCollectionTask> getNextTask(String accountId, String cvConfigId) {
+  public Optional<DataCollectionTask> getNextTask(String accountId, String dataCollectionWorkerId) {
     Query<DataCollectionTask> query = hPersistence.createQuery(DataCollectionTask.class)
                                           .filter(DataCollectionTaskKeys.accountId, accountId)
-                                          .filter(DataCollectionTaskKeys.cvConfigId, cvConfigId)
+                                          .filter(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId)
                                           .filter(DataCollectionTaskKeys.validAfter + " <=", clock.millis())
                                           .field(DataCollectionTaskKeys.retryCount)
                                           .lessThan(MAX_RETRY_COUNT)
@@ -75,14 +77,15 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   @Override
-  public Optional<DataCollectionTaskDTO> getNextTaskDTO(String accountId, String cvConfigId) {
-    Optional<DataCollectionTask> optionalTask = getNextTask(accountId, cvConfigId);
+  public Optional<DataCollectionTaskDTO> getNextTaskDTO(String accountId, String dataCollectionWorkerId) {
+    Optional<DataCollectionTask> optionalTask = getNextTask(accountId, dataCollectionWorkerId);
     if (optionalTask.isPresent()) {
       DataCollectionTask task = optionalTask.get();
       return Optional.of(DataCollectionTaskDTO.builder()
                              .uuid(task.getUuid())
                              .accountId(task.getAccountId())
                              .cvConfigId(task.getCvConfigId())
+                             .verificationTaskId(task.getVerificationTaskId())
                              .dataCollectionInfo(task.getDataCollectionInfo())
                              .startTime(task.getStartTime())
                              .endTime(task.getEndTime())
@@ -118,14 +121,49 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     DataCollectionTask dataCollectionTask = getDataCollectionTask(result.getDataCollectionTaskId());
     if (result.getStatus() == ExecutionStatus.SUCCESS) {
       // TODO: make this an atomic operation
-      createNextTask(dataCollectionTask);
-      orchestrationService.queueAnalysis(
-          dataCollectionTask.getCvConfigId(), dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
+      if (isServiceGuardTask(dataCollectionTask)) {
+        createNextTask(dataCollectionTask);
+        orchestrationService.queueAnalysis(
+            dataCollectionTask.getCvConfigId(), dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime());
+      } else {
+        enqueueNextTask(dataCollectionTask);
+      }
     } else {
       retry(dataCollectionTask);
     }
   }
 
+  private void markDependentTasksFailed(DataCollectionTask task) {
+    String exceptionMsg =
+        task.getStatus() == ExecutionStatus.EXPIRED ? "Previous task timed out" : "Previous task failed";
+    logger.info("Marking queued task failed for verificationTaskId {}", task.getVerificationTaskId());
+    UpdateOperations<DataCollectionTask> updateOperations =
+        hPersistence.createUpdateOperations(DataCollectionTask.class)
+            .set(DataCollectionTaskKeys.status, ExecutionStatus.FAILED)
+            .set(DataCollectionTaskKeys.exception, exceptionMsg);
+    Query<DataCollectionTask> query =
+        hPersistence.createQuery(DataCollectionTask.class)
+            .filter(DataCollectionTaskKeys.verificationTaskId, task.getVerificationTaskId());
+    query.or(query.criteria(DataCollectionTaskKeys.status).equal(ExecutionStatus.QUEUED),
+        query.criteria(DataCollectionTaskKeys.status).equal(ExecutionStatus.WAITING));
+    hPersistence.update(query, updateOperations);
+  }
+
+  private void enqueueNextTask(DataCollectionTask task) {
+    if (task.getNextTaskId() != null) {
+      logger.info("Enqueuing next task {}", task.getUuid());
+      UpdateOperations<DataCollectionTask> updateOperations =
+          hPersistence.createUpdateOperations(DataCollectionTask.class)
+              .set(DataCollectionTaskKeys.status, ExecutionStatus.QUEUED);
+      hPersistence.update(
+          hPersistence.createQuery(DataCollectionTask.class).filter(DataCollectionTaskKeys.uuid, task.getNextTaskId()),
+          updateOperations);
+    }
+  }
+
+  private boolean isServiceGuardTask(DataCollectionTask dataCollectionTask) {
+    return dataCollectionTask.getCvConfigId() != null;
+  }
   private void retry(DataCollectionTask dataCollectionTask) {
     if (dataCollectionTask.getRetryCount() < MAX_RETRY_COUNT) {
       UpdateOperations<DataCollectionTask> updateOperations =
@@ -136,6 +174,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
                                             .filter(DataCollectionTaskKeys.uuid, dataCollectionTask.getUuid());
       hPersistence.update(query, updateOperations);
     } else {
+      markDependentTasksFailed(dataCollectionTask);
       // TODO: handle this logic in a better way and setup alert.
       logger.error("Task retry count exceeded max limit. Not retrying anymore... {}, {}, {}",
           dataCollectionTask.getUuid(), dataCollectionTask.getException(), dataCollectionTask.getStacktrace());
@@ -171,14 +210,32 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     TimeRange dataCollectionRange = cvConfig.getFirstTimeDataCollectionTimeRange();
     DataCollectionTask dataCollectionTask =
         getDataCollectionTask(cvConfig, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime());
-
-    String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(
-        cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getConnectorId());
+    dataCollectionTask.setDataCollectionWorkerId(cvConfig.getUuid());
+    String dataCollectionTaskId =
+        verificationManagerService.createServiceGuardDataCollectionTask(cvConfig.getAccountId(), cvConfig.getUuid(),
+            cvConfig.getConnectorId(), dataCollectionTask.getDataCollectionWorkerId());
     save(dataCollectionTask);
     cvConfigService.setCollectionTaskId(cvConfig.getUuid(), dataCollectionTaskId);
 
     logger.info("Enqueued cvConfigId successfully: {}", cvConfig.getUuid());
     return dataCollectionTaskId;
+  }
+
+  @Override
+  public List<String> createSeqTasks(List<DataCollectionTask> dataCollectionTasks) {
+    DataCollectionTask lastTask = null;
+    for (DataCollectionTask task : dataCollectionTasks) {
+      task.setStatus(ExecutionStatus.WAITING);
+      task.setUuid(generateUuid());
+      if (lastTask != null) {
+        lastTask.setNextTaskId(task.getUuid());
+      }
+      lastTask = task;
+    }
+    if (dataCollectionTasks.size() > 0) {
+      dataCollectionTasks.get(0).setStatus(ExecutionStatus.QUEUED);
+    }
+    return hPersistence.save(dataCollectionTasks);
   }
 
   private DataCollectionTask getDataCollectionTask(CVConfig cvConfig, Instant startTime, Instant endTime) {

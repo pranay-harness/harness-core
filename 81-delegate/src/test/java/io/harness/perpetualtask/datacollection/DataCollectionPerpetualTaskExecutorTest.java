@@ -7,8 +7,8 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
@@ -138,7 +138,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
   @Test
   @Owner(developers = OwnerRule.RAGHU)
   @Category({UnitTests.class})
-  public void testDataCollection_executeDSL() throws IOException {
+  public void testDataCollection_executeDSL() {
     createTaskParams(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER, "dsl");
     dataCollector.runOnce(PerpetualTaskId.newBuilder().build(), perpetualTaskParams, Instant.now());
     verifyDsl("dsl");
@@ -153,7 +153,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
     when(cvNextGenServiceClient.getNextDataCollectionTask(anyString(), anyString())).thenReturn(nextTaskCall);
     createTaskParams(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER, "dsl");
     dataCollector.runOnce(PerpetualTaskId.newBuilder().build(), perpetualTaskParams, Instant.now());
-    verifyZeroInteractions(dataCollectionDSLService);
+    verify(dataCollectionDSLService, times(0)).execute(any(), any(), any());
   }
 
   private void verifyDsl(String dsl) {

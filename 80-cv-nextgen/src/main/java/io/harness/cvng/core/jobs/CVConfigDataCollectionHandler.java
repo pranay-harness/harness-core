@@ -5,12 +5,12 @@ import com.google.inject.Singleton;
 
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
-import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-public class CVConfigDataCollectionHandler implements MongoPersistenceIterator.Handler<CVConfig> {
+public class CVConfigDataCollectionHandler implements Handler<CVConfig> {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Override
   public void handle(CVConfig entity) {

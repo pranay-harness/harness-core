@@ -39,6 +39,9 @@ import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.GenericExceptionMapper;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
+import io.harness.cvng.verificationjob.entities.VerificationTask;
+import io.harness.cvng.verificationjob.entities.VerificationTask.VerificationJobKeys;
+import io.harness.cvng.verificationjob.jobs.VerificationTaskHandler;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
@@ -62,7 +65,6 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -159,13 +161,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerAuthFilters(environment, injector);
     registerManagedBeans(environment, injector);
     registerResources(environment, injector);
+    registerOrchestrationIterator(injector);
+    registerCVConfigDataCollectionTaskIterator(injector);
+    registerVerificationTaskIterator(injector);
     registerExceptionMappers(environment.jersey());
-    ScheduledThreadPoolExecutor serviceGuardExecutor =
-        new ScheduledThreadPoolExecutor(15, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
-    registerOrchestrationIterator(injector, serviceGuardExecutor, ofMinutes(1), 7, new AnalysisOrchestrationJob(),
-        CVConfigKeys.analysisOrchestrationIteration);
-
-    registerCVConfigIterator(injector);
     registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);
     logger.info("Leaving startup maintenance mode");
@@ -178,19 +177,19 @@ public class VerificationApplication extends Application<VerificationConfigurati
     hPersistence = injector.getInstance(HPersistence.class);
   }
 
-  private void registerOrchestrationIterator(Injector injector,
-      ScheduledThreadPoolExecutor workflowVerificationExecutor, Duration interval, int maxAllowedThreads,
-      Handler<CVConfig> handler, String fieldName) {
-    injector.injectMembers(handler);
+  private void registerOrchestrationIterator(Injector injector) {
+    ScheduledThreadPoolExecutor workflowVerificationExecutor =
+        new ScheduledThreadPoolExecutor(15, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
+    Handler<CVConfig> handler = injector.getInstance(AnalysisOrchestrationJob.class);
     PersistenceIterator analysisOrchestrationIterator =
         MongoPersistenceIterator.<CVConfig, MorphiaFilterExpander<CVConfig>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(CVConfig.class)
-            .fieldName(fieldName)
-            .targetInterval(interval)
+            .fieldName(CVConfigKeys.analysisOrchestrationIteration)
+            .targetInterval(ofMinutes(1))
             .acceptableNoAlertDelay(ofSeconds(30))
             .executorService(workflowVerificationExecutor)
-            .semaphore(new Semaphore(maxAllowedThreads))
+            .semaphore(new Semaphore(7))
             .handler(handler)
             .schedulingType(REGULAR)
             .filterExpander(query -> query.field(CVConfigKeys.createdAt).lessThanOrEq(Instant.now().toEpochMilli()))
@@ -202,7 +201,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
   }
 
-  private void registerCVConfigIterator(Injector injector) {
+  private void registerCVConfigDataCollectionTaskIterator(Injector injector) {
     ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("cv-config-data-collection-iterator").build());
     CVConfigDataCollectionHandler cvConfigDataCollectionHandler =
@@ -227,6 +226,29 @@ public class VerificationApplication extends Application<VerificationConfigurati
     dataCollectionExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
+  private void registerVerificationTaskIterator(Injector injector) {
+    ScheduledThreadPoolExecutor verificationTaskExecutor = new ScheduledThreadPoolExecutor(
+        5, new ThreadFactoryBuilder().setNameFormat("verification-task-data-collection-iterator").build());
+    VerificationTaskHandler handler = injector.getInstance(VerificationTaskHandler.class);
+    // TODO: setup alert if this goes above acceptable threshold.
+    PersistenceIterator dataCollectionIterator =
+        MongoPersistenceIterator.<VerificationTask, MorphiaFilterExpander<VerificationTask>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(VerificationTask.class)
+            .fieldName(VerificationJobKeys.dataCollectionTaskIteration)
+            .targetInterval(ofSeconds(30))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(verificationTaskExecutor)
+            .semaphore(new Semaphore(5))
+            .handler(handler)
+            .schedulingType(REGULAR)
+            .filterExpander(query -> query.criteria(VerificationJobKeys.dataCollectionTaskIds).doesNotExist())
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(dataCollectionIterator);
+    verificationTaskExecutor.scheduleAtFixedRate(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+  }
   private void registerCVConfigCleanupIterator(Injector injector) {
     ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("cv-config-cleanup-iterator").build());

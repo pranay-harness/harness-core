@@ -20,8 +20,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import java.time.Duration;
-
 public class VerificationJobServiceImplTest extends CVNextGenBaseTest {
   @Inject private VerificationJobService verificationJobService;
   private String identifier;
@@ -38,7 +36,8 @@ public class VerificationJobServiceImplTest extends CVNextGenBaseTest {
   public void testUpsert_newJobCreation() {
     VerificationJobDTO verificationJobDTO = createDTO();
     verificationJobService.upsert(accountId, verificationJobDTO);
-    VerificationJobDTO inserted = verificationJobService.get(accountId, verificationJobDTO.getIdentifier());
+    VerificationJobDTO inserted =
+        verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier());
     assertThat(inserted).isEqualTo(verificationJobDTO);
   }
 
@@ -59,11 +58,13 @@ public class VerificationJobServiceImplTest extends CVNextGenBaseTest {
   public void testUpsert_updateExisting() {
     VerificationJobDTO verificationJobDTO = createDTO();
     verificationJobService.upsert(accountId, verificationJobDTO);
-    VerificationJobDTO inserted = verificationJobService.get(accountId, verificationJobDTO.getIdentifier());
+    VerificationJobDTO inserted =
+        verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier());
     assertThat(inserted).isEqualTo(verificationJobDTO);
     verificationJobDTO.setEnvIdentifier("updated_env");
     verificationJobService.upsert(accountId, verificationJobDTO);
-    VerificationJobDTO updated = verificationJobService.get(accountId, verificationJobDTO.getIdentifier());
+    VerificationJobDTO updated =
+        verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier());
     assertThat(updated).isNotEqualTo(inserted);
     assertThat(updated).isEqualTo(verificationJobDTO);
   }
@@ -71,18 +72,19 @@ public class VerificationJobServiceImplTest extends CVNextGenBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGet_invalidIdentifier() {
-    VerificationJobDTO updated = verificationJobService.get(accountId, "invalid");
+  public void testGetVerificationJobDTO_invalidIdentifier() {
+    VerificationJobDTO updated = verificationJobService.getVerificationJobDTO(accountId, "invalid");
     assertThat(updated).isEqualTo(null);
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testGet_validIdentifier() {
+  public void testGetVerificationJobDTO_validIdentifier() {
     VerificationJobDTO verificationJobDTO = createDTO();
     verificationJobService.upsert(accountId, verificationJobDTO);
-    VerificationJobDTO updated = verificationJobService.get(accountId, verificationJobDTO.getIdentifier());
+    VerificationJobDTO updated =
+        verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier());
     assertThat(updated).isEqualTo(verificationJobDTO);
   }
 
@@ -93,7 +95,8 @@ public class VerificationJobServiceImplTest extends CVNextGenBaseTest {
     VerificationJobDTO verificationJobDTO = createDTO();
     verificationJobService.upsert(accountId, verificationJobDTO);
     verificationJobService.delete(accountId, verificationJobDTO.getIdentifier());
-    assertThat(verificationJobService.get(accountId, verificationJobDTO.getIdentifier())).isEqualTo(null);
+    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier()))
+        .isEqualTo(null);
   }
 
   private VerificationJobDTO createDTO() {
@@ -106,7 +109,7 @@ public class VerificationJobServiceImplTest extends CVNextGenBaseTest {
     testVerificationJobDTO.setServiceIdentifier(generateUuid());
     testVerificationJobDTO.setEnvIdentifier(generateUuid());
     testVerificationJobDTO.setBaselineVerificationTaskIdentifier(generateUuid());
-    testVerificationJobDTO.setDuration(Duration.ofMinutes(15));
+    testVerificationJobDTO.setDuration("15m");
     return testVerificationJobDTO;
   }
 }

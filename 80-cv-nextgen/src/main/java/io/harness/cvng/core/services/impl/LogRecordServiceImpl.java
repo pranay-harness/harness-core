@@ -25,6 +25,7 @@ public class LogRecordServiceImpl implements LogRecordService {
     return LogRecord.builder()
         .accountId(logRecordDTO.getAccountId())
         .cvConfigId(logRecordDTO.getCvConfigId())
+        .verificationTaskId(logRecordDTO.getVerificationTaskId())
         .host(logRecordDTO.getHost())
         .log(logRecordDTO.getLog())
         .timestamp(Instant.ofEpochMilli(logRecordDTO.getTimestamp()))

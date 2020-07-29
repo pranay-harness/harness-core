@@ -15,7 +15,7 @@ public class DateTimeUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void roundDownTo5MinBoundary() {
+  public void testRoundDownTo5MinBoundary() {
     assertThat(DateTimeUtils.roundDownTo5MinBoundary(Instant.parse("2020-04-22T10:02:06Z")))
         .isEqualTo(Instant.parse("2020-04-22T10:00:00Z"));
     assertThat(DateTimeUtils.roundDownTo5MinBoundary(Instant.parse("2020-04-22T10:00:06Z")))
@@ -26,5 +26,13 @@ public class DateTimeUtilsTest extends CategoryTest {
         .isEqualTo(Instant.parse("2020-04-22T10:15:00Z"));
     assertThat(DateTimeUtils.roundDownTo5MinBoundary(Instant.parse("2020-04-22T10:26:00Z")))
         .isEqualTo(Instant.parse("2020-04-22T10:25:00Z"));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testRoundDownTo1MinBoundary() {
+    assertThat(DateTimeUtils.roundDownTo1MinBoundary(Instant.parse("2020-04-22T10:02:06Z")))
+        .isEqualTo(Instant.parse("2020-04-22T10:02:00Z"));
   }
 }

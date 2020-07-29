@@ -30,7 +30,7 @@ public interface CVNextGenServiceClient {
 
   @GET(DELEGATE_DATA_COLLECTION_TASK + "/next-task")
   Call<RestResponse<DataCollectionTaskDTO>> getNextDataCollectionTask(
-      @Query("accountId") String accountId, @Query("cvConfigId") String cvConfigId);
+      @Query("accountId") String accountId, @Query("dataCollectionWorkerId") String dataCollectionWorkerId);
 
   @POST(DELEGATE_DATA_COLLECTION_TASK + "/update-status")
   Call<RestResponse<Void>> updateTaskStatus(

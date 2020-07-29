@@ -50,7 +50,9 @@ import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.cvng.verificationjob.services.api.VerificationTaskService;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
+import io.harness.cvng.verificationjob.services.impl.VerificationTaskServiceImpl;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -133,6 +135,7 @@ public class CVServiceModule extends AbstractModule {
       bind(VerificationJobService.class).to(VerificationJobServiceImpl.class);
       bind(AnomalyService.class).to(AnomalyServiceImpl.class);
       bind(LogRecordService.class).to(LogRecordServiceImpl.class);
+      bind(VerificationTaskService.class).to(VerificationTaskServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

@@ -35,4 +35,26 @@ public interface DataCollectionPerpetualTaskParamsOrBuilder extends
    * @return The dataCollectionInfo.
    */
   com.google.protobuf.ByteString getDataCollectionInfo();
+
+  /**
+   * <code>string verification_task_id = 4[json_name = "verificationTaskId"];</code>
+   * @return The verificationTaskId.
+   */
+  java.lang.String getVerificationTaskId();
+  /**
+   * <code>string verification_task_id = 4[json_name = "verificationTaskId"];</code>
+   * @return The bytes for verificationTaskId.
+   */
+  com.google.protobuf.ByteString getVerificationTaskIdBytes();
+
+  /**
+   * <code>string data_collection_worker_id = 5[json_name = "dataCollectionWorkerId"];</code>
+   * @return The dataCollectionWorkerId.
+   */
+  java.lang.String getDataCollectionWorkerId();
+  /**
+   * <code>string data_collection_worker_id = 5[json_name = "dataCollectionWorkerId"];</code>
+   * @return The bytes for dataCollectionWorkerId.
+   */
+  com.google.protobuf.ByteString getDataCollectionWorkerIdBytes();
 }

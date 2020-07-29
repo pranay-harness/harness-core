@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.api;
 
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 
 import java.util.List;
@@ -19,4 +20,5 @@ public interface CVConfigService {
   List<String> getProductNames(String accountId, String connectorId);
 
   void setCollectionTaskId(String uuid, String dataCollectionTaskId);
+  List<CVConfig> find(String accountId, List<DataSourceType> dataSourceTypes);
 }

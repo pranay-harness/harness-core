@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class LogRecordDataStoreService {
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
 
-  public void save(String accountId, String cvConfigId, List<LogDataRecord> logRecords) {
+  public void save(String accountId, String cvConfigId, String verificationTaskId, List<LogDataRecord> logRecords) {
     // TODO: find a way to implement retry and time limiting. The timeout should be implemented using retrofit config
     //  and not using TimeLimiter class as it has potential for memory leak. Also the exceptions needs to propagate from
     //  cv-nextgen to delegate.
@@ -28,7 +28,7 @@ public class LogRecordDataStoreService {
           cvNextGenServiceClient
               .saveLogRecords(accountId,
                   logRecords.stream()
-                      .map(logDataRecord -> toLogRecordDTO(accountId, cvConfigId, logDataRecord))
+                      .map(logDataRecord -> toLogRecordDTO(accountId, cvConfigId, verificationTaskId, logDataRecord))
                       .collect(Collectors.toList()))
               .execute();
       if (!response.isSuccessful()) {
@@ -39,11 +39,13 @@ public class LogRecordDataStoreService {
     }
   }
 
-  private LogRecordDTO toLogRecordDTO(String accountId, String cvConfigId, LogDataRecord logDataRecord) {
+  private LogRecordDTO toLogRecordDTO(
+      String accountId, String cvConfigId, String verificationTaskId, LogDataRecord logDataRecord) {
     return LogRecordDTO.builder()
         .accountId(accountId)
         .cvConfigId(cvConfigId)
         .host(logDataRecord.getHostname())
+        .verificationTaskId(verificationTaskId)
         .timestamp(logDataRecord.getTimestamp())
         .log(logDataRecord.getLog())
         .build();

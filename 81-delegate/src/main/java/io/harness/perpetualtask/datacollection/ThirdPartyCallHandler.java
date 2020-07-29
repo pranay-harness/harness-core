@@ -11,12 +11,12 @@ import java.util.function.Consumer;
 @Slf4j
 public class ThirdPartyCallHandler implements Consumer<CallDetails> {
   private String accountId;
-  private String cvConfigId;
+  private String requestUuid;
   private DelegateLogService delegateLogService;
 
-  public ThirdPartyCallHandler(String accountId, String cvConfigId, DelegateLogService delegateLogService) {
+  public ThirdPartyCallHandler(String accountId, String requestUuid, DelegateLogService delegateLogService) {
     this.accountId = accountId;
-    this.cvConfigId = cvConfigId;
+    this.requestUuid = requestUuid;
     this.delegateLogService = delegateLogService;
   }
 
@@ -24,7 +24,7 @@ public class ThirdPartyCallHandler implements Consumer<CallDetails> {
   public void accept(CallDetails callDetails) {
     //    logger.info("Delegate log: " + callDetails.getRequest());
     //    logger.info("Delegate log response: " + callDetails.getResponse().body().toString());
-    final ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder().stateExecutionId(cvConfigId).build();
+    final ThirdPartyApiCallLog apiCallLog = ThirdPartyApiCallLog.builder().stateExecutionId(requestUuid).build();
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name("url")
                                      .type(ThirdPartyApiCallLog.FieldType.URL)

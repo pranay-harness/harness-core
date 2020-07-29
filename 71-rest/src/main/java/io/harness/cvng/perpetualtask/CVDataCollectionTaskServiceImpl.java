@@ -8,24 +8,17 @@ import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskService {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Override
-  public String create(String accountId, String cvConfigId, String connectorId) {
-    Map<String, String> clientParamMap = new HashMap<>();
-    clientParamMap.put("accountId", accountId);
-    clientParamMap.put("cvConfigId", cvConfigId);
-    clientParamMap.put("connectorId", connectorId);
-
-    PerpetualTaskClientContext clientContext =
-        PerpetualTaskClientContext.builder().clientParams(clientParamMap).build();
-
+  public String create(String accountId, Map<String, String> params) {
+    params.put("accountId", accountId);
+    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(params).build();
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(1))
-                                         .setTimeout(Durations.fromMinutes(15))
+                                         .setTimeout(Durations.fromDays(1))
                                          .build();
     return perpetualTaskService.createTask(
         PerpetualTaskType.DATA_COLLECTION_TASK, accountId, clientContext, schedule, false, "");
