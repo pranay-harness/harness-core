@@ -1230,6 +1230,7 @@ public class K8sTaskHelper {
 
       return true;
     } catch (Exception e) {
+      logger.error("Failure in fetching files from git", e);
       executionLogCallback.saveExecutionLog(
           "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
           CommandExecutionStatus.FAILURE);
