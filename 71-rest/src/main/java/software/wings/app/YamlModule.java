@@ -20,6 +20,7 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
 import static software.wings.beans.InfrastructureType.AZURE_SSH;
+import static software.wings.beans.InfrastructureType.AZURE_VMSS;
 import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
@@ -65,6 +66,7 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.AwsInstanceInfra
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsLambdaInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureInstanceInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureKubernetesServiceYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AzureVMSSInfraYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CodeDeployInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.DirectKubernetesInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.GoogleKubernetesEngineYamlHandler;
@@ -294,6 +296,7 @@ public class YamlModule extends CommandLibrarySharedModule {
     cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(PHYSICAL_INFRA).to(PhysicalInfraYamlHandler.class);
     cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(PHYSICAL_INFRA_WINRM)
         .to(PhysicalInfraWinrmYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(AZURE_VMSS).to(AzureVMSSInfraYamlHandler.class);
 
     MapBinder<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, DeploymentSpecificationYamlHandler.class);
