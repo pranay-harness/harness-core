@@ -4,6 +4,8 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
 
+import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.persistence.HIterator;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -12,8 +14,6 @@ import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.beans.DelegateProfile;
-import software.wings.beans.DelegateProfile.DelegateProfileKeys;
 
 @Slf4j
 public class DelegateProfileNameUniqueInAccountMigration implements Migrator {

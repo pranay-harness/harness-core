@@ -5,9 +5,9 @@ import static io.harness.govern.Switch.unhandled;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import org.apache.commons.io.IOUtils;
-import software.wings.beans.DelegateProfile;
-import software.wings.beans.DelegateProfile.DelegateProfileKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
 

@@ -13,6 +13,8 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -21,8 +23,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
-import software.wings.beans.DelegateProfile;
-import software.wings.beans.DelegateProfile.DelegateProfileKeys;
 import software.wings.beans.Event;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;

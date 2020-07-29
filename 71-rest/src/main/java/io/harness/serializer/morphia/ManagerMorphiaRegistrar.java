@@ -192,7 +192,6 @@ import software.wings.beans.CyberArkConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnection;
-import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateSelectionLog;
 import software.wings.beans.DelegateSequenceConfig;
@@ -875,7 +874,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Delegate.class);
     set.add(DelegateConnection.class);
     set.add(DelegateConnectionResult.class);
-    set.add(DelegateProfile.class);
     set.add(DelegateScope.class);
     set.add(DelegateSelectionLog.class);
     set.add(DelegateSequenceConfig.class);
