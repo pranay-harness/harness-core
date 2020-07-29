@@ -6,11 +6,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
-import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateSelectionLog;
 import software.wings.beans.DelegateSelectionLog.DelegateSelectionLogBuilder;

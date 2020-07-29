@@ -1,9 +1,10 @@
-package software.wings.beans;
+package io.harness.delegate.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.mongo.index.CdUniqueIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
@@ -21,7 +22,6 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.DelegateProfile.DelegateProfileKeys;
 
 import javax.validation.constraints.NotNull;
 

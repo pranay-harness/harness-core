@@ -2,7 +2,7 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import software.wings.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfile;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 public interface DelegateProfileService extends OwnedByAccount {

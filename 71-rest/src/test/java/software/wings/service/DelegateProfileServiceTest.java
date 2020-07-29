@@ -11,14 +11,15 @@ import static org.mockito.Mockito.verify;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Delegate.DelegateBuilder;
 import static software.wings.beans.Delegate.Status;
-import static software.wings.beans.DelegateProfile.DelegateProfileBuilder;
-import static software.wings.beans.DelegateProfile.DelegateProfileKeys;
 import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_DESCRIPTION;
 import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_NAME;
 
 import com.google.inject.Inject;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
+import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import org.junit.Test;
@@ -28,7 +29,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
-import software.wings.beans.DelegateProfile;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 

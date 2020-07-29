@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.rule.Owner;
 import io.harness.threading.Concurrent;
@@ -25,7 +26,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BatchDelegateSelectionLog;
 import software.wings.beans.Delegate;
-import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateSelectionLog;
 import software.wings.beans.DelegateSelectionLog.DelegateSelectionLogBuilder;

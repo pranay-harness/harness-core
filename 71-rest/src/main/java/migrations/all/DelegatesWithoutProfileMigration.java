@@ -2,6 +2,7 @@ package migrations.all;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HIterator;
@@ -12,7 +13,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
-import software.wings.beans.DelegateProfile;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;

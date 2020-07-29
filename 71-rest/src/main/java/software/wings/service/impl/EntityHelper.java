@@ -22,6 +22,7 @@ import com.google.inject.Singleton;
 
 import io.harness.context.GlobalContextData;
 import io.harness.dashboard.DashboardSettings;
+import io.harness.delegate.beans.DelegateProfile;
 import io.harness.exception.InvalidRequestException;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
@@ -39,7 +40,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
-import software.wings.beans.DelegateProfile;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
