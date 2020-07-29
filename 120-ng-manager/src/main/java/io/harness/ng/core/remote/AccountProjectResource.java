@@ -11,8 +11,11 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.entities.Organization;
+import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
+import io.harness.ng.core.services.api.OrganizationService;
 import io.harness.ng.core.services.api.ProjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -24,6 +27,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -43,6 +48,7 @@ import javax.ws.rs.QueryParam;
     })
 public class AccountProjectResource {
   private final ProjectService projectService;
+  private final OrganizationService organizationService;
   private final RestQueryFilterParser restQueryFilterParser;
 
   @GET
@@ -58,6 +64,17 @@ public class AccountProjectResource {
                             .ne(Boolean.TRUE);
     Page<ProjectDTO> projects =
         projectService.list(criteria, getPageRequest(page, size, sort)).map(ProjectMapper::writeDTO);
+    List<String> orgIdentifiers =
+        projects.getContent().stream().map(ProjectDTO::getOrgIdentifier).collect(Collectors.toList());
+    Criteria orgCriteria = Criteria.where(OrganizationKeys.accountIdentifier)
+                               .is(accountIdentifier)
+                               .and(OrganizationKeys.identifier)
+                               .in(orgIdentifiers);
+    Map<String, String> map = organizationService.list(orgCriteria, getPageRequest(page, size, sort))
+                                  .getContent()
+                                  .stream()
+                                  .collect(Collectors.toMap(Organization::getIdentifier, Organization::getName));
+    projects.getContent().forEach(projectDTO -> projectDTO.setOrganizationName(map.get(projectDTO.getOrgIdentifier())));
     return ResponseDTO.newResponse(getNGPageResponse(projects));
   }
 }

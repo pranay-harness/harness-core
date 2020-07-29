@@ -15,8 +15,10 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.UpdateProjectDTO;
+import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
+import io.harness.ng.core.services.api.OrganizationService;
 import io.harness.ng.core.services.api.ProjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -54,6 +56,7 @@ import javax.ws.rs.QueryParam;
     })
 public class ProjectResource {
   private final ProjectService projectService;
+  private final OrganizationService organizationService;
 
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
@@ -61,8 +64,10 @@ public class ProjectResource {
       @PathParam("orgIdentifier") String orgIdentifier, @NotNull @Valid CreateProjectDTO createProjectDTO) {
     Project project = toProject(createProjectDTO);
     project.setOrgIdentifier(orgIdentifier);
-    Project createdProject = projectService.create(project);
-    return ResponseDTO.newResponse(writeDTO(createdProject));
+    ProjectDTO createdProject = writeDTO(projectService.create(project));
+    Optional<Organization> organization = organizationService.get(createdProject.getAccountIdentifier(), orgIdentifier);
+    organization.ifPresent(value -> createdProject.setOrganizationName(value.getName()));
+    return ResponseDTO.newResponse(createdProject);
   }
 
   @GET
@@ -70,8 +75,13 @@ public class ProjectResource {
   @ApiOperation(value = "Gets a Project by identifier", nickname = "getProject")
   public ResponseDTO<Optional<ProjectDTO>> get(
       @PathParam("orgIdentifier") String orgIdentifier, @PathParam("projectIdentifier") String projectIdentifier) {
-    Optional<Project> project = projectService.get(orgIdentifier, projectIdentifier);
-    return ResponseDTO.newResponse(project.map(ProjectMapper::writeDTO));
+    Optional<ProjectDTO> projectDTO = projectService.get(orgIdentifier, projectIdentifier).map(ProjectMapper::writeDTO);
+    if (projectDTO.isPresent()) {
+      Optional<Organization> organization =
+          organizationService.get(projectDTO.get().getAccountIdentifier(), orgIdentifier);
+      organization.ifPresent(value -> projectDTO.get().setOrganizationName(value.getName()));
+    }
+    return ResponseDTO.newResponse(projectDTO);
   }
 
   @GET
@@ -82,6 +92,12 @@ public class ProjectResource {
     Criteria criteria = Criteria.where(ProjectKeys.orgIdentifier).is(orgIdentifier).and(ProjectKeys.deleted).ne(true);
     Page<ProjectDTO> projects =
         projectService.list(criteria, getPageRequest(page, size, sort)).map(ProjectMapper::writeDTO);
+    if (!projects.getContent().isEmpty()) {
+      Optional<Organization> organization =
+          organizationService.get(projects.getContent().get(0).getAccountIdentifier(), orgIdentifier);
+      projects.getContent().forEach(
+          project -> organization.ifPresent(value -> project.setOrganizationName(value.getName())));
+    }
     return ResponseDTO.newResponse(getNGPageResponse(projects));
   }
 
@@ -93,8 +109,11 @@ public class ProjectResource {
     Optional<Project> projectOptional = projectService.get(orgIdentifier, projectIdentifier);
     if (projectOptional.isPresent()) {
       Project project = applyUpdateToProject(projectOptional.get(), updateProjectDTO);
-      Project updatedProject = projectService.update(project);
-      return ResponseDTO.newResponse(Optional.ofNullable(writeDTO(updatedProject)));
+      ProjectDTO updatedProject = writeDTO(projectService.update(project));
+      Optional<Organization> organization =
+          organizationService.get(updatedProject.getAccountIdentifier(), orgIdentifier);
+      organization.ifPresent(value -> updatedProject.setOrganizationName(value.getName()));
+      return ResponseDTO.newResponse(Optional.of(updatedProject));
     }
     return ResponseDTO.newResponse(Optional.empty());
   }

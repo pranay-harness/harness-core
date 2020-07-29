@@ -6,8 +6,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.ng.core.dao.api.repositories.spring.ProjectRepository;
 import io.harness.ng.core.entities.Project;
+import io.harness.ng.core.services.api.OrganizationService;
 import io.harness.ng.core.services.api.ProjectService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +28,15 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 public class ProjectServiceImpl implements ProjectService {
   private final ProjectRepository projectRepository;
+  private final OrganizationService organizationService;
 
   @Override
   public Project create(@NotNull @Valid Project project) {
+    if (!organizationService.get(project.getAccountIdentifier(), project.getOrgIdentifier()).isPresent()) {
+      throw new InvalidArgumentsException(String.format("Organization [%s] in Account [%s] does not exist",
+                                              project.getOrgIdentifier(), project.getAccountIdentifier()),
+          USER_SRE);
+    }
     try {
       return projectRepository.save(project);
     } catch (DuplicateKeyException ex) {
