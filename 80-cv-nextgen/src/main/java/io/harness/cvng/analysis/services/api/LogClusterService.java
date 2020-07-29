@@ -18,6 +18,8 @@ public interface LogClusterService {
   Map<String, ExecutionStatus> getTaskStatus(String cvConfigId, Set<String> taskIds);
   List<LogClusterDTO> getDataForLogCluster(
       String cvConfig, Instant dataRecordInstant, String host, LogClusterLevel clusterLevel);
+  List<LogClusterDTO> getClusteredLogData(
+      String cvConfigId, Instant startTime, Instant endTime, LogClusterLevel clusterLevel);
   void saveClusteredData(List<LogClusterDTO> logClusterDTO, String cvConfigId, Instant timestamp, String taskId,
-      String host, LogClusterLevel clusterLevel);
+      LogClusterLevel clusterLevel);
 }

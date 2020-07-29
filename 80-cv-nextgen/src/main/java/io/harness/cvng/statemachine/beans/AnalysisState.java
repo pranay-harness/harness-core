@@ -1,6 +1,6 @@
 package io.harness.cvng.statemachine.beans;
 
-import static io.harness.cvng.CVConstants.MAX_RETRIES;
+import static io.harness.cvng.analysis.CVAnalysisConstants.MAX_RETRIES;
 
 import io.harness.cvng.statemachine.entities.AnalysisStatus;
 import lombok.Data;

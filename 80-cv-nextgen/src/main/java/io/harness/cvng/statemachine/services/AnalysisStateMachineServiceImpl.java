@@ -24,6 +24,7 @@ import org.mongodb.morphia.query.Sort;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 
 @Slf4j
 public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineService {
@@ -133,11 +134,16 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
         logger.error("Unexpected state in analysis statemachine execution: " + status);
         throw new AnalysisStateMachineException("Unexpected state in analysis statemachine execution: " + status);
     }
+    AnalysisState previousState = analysisStateMachine.getCurrentState();
     analysisStateMachine.setCurrentState(nextState);
     injector.injectMembers(nextState);
     if (AnalysisStatus.getFinalStates().contains(nextState.getStatus())) {
       analysisStateMachine.setStatus(nextState.getStatus());
     } else if (nextState.getStatus() == AnalysisStatus.CREATED) {
+      if (analysisStateMachine.getCompletedStates() == null) {
+        analysisStateMachine.setCompletedStates(new ArrayList<>());
+      }
+      analysisStateMachine.getCompletedStates().add(previousState);
       nextState.execute();
     }
 
