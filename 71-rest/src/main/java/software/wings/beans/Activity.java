@@ -116,6 +116,7 @@ public class Activity implements PersistentEntity, UuidAware, CreatedAtAware, Cr
   private String artifactName;
   @Default private ExecutionStatus status = ExecutionStatus.RUNNING;
   private TriggeredBy triggeredBy;
+  @FdIndex private String accountId;
 
   @JsonIgnore
   @SchemaIgnore
@@ -164,6 +165,7 @@ public class Activity implements PersistentEntity, UuidAware, CreatedAtAware, Cr
     this.commandUnits = Collections.emptyList();
     this.status = RUNNING;
     this.triggeredBy = triggeredBy(currentUser.getName(), currentUser.getEmail());
+    this.accountId = app.getAccountId();
 
     if (executionContext.getOrchestrationWorkflowType() != null
         && executionContext.getOrchestrationWorkflowType() == BUILD) {
