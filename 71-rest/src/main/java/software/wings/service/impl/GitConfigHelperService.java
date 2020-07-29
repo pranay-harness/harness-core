@@ -82,6 +82,11 @@ public class GitConfigHelperService {
       }
     }
 
+    // Cannot throw exception here as validation is being called at many places and gitConfig.repoName is transient.
+    if (gitConfig.getUrlType() == GitConfig.UrlType.ACCOUNT && isEmpty(gitConfig.getRepoName())) {
+      return;
+    }
+
     try {
       ResponseData notifyResponseData = delegateService.executeTask(
           DelegateTask.builder()

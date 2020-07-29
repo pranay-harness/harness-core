@@ -33,7 +33,7 @@ public class GitConnectionCapabilityCheck implements CapabilityCheck {
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();
     }
     gitConfig.setSshSettingAttribute(capability.getSettingAttribute());
-    if (isNotEmpty(gitClient.validate(gitConfig))) {
+    if (isNotEmpty(gitClient.validate(gitConfig, null))) {
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();
     }
     return CapabilityResponse.builder().delegateCapability(capability).validated(true).build();

@@ -201,4 +201,14 @@ public class GitClientHelper {
         .replace("${CONNECTOR_ID}", gitConnectorId)
         .replace("${REPO_NAME}", repoName);
   }
+
+  public String fetchCompleteUrl(GitConfig gitConfig, String repoName) {
+    if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
+      String purgedRepoUrl = gitConfig.getRepoUrl().replaceAll("/*$", "");
+      String purgedRepoName = repoName.replaceAll("^/*", "");
+      return purgedRepoUrl + "/" + purgedRepoName;
+    } else {
+      return gitConfig.getRepoUrl();
+    }
+  }
 }

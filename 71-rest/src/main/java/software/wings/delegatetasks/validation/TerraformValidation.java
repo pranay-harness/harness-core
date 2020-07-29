@@ -63,7 +63,7 @@ public class TerraformValidation extends AbstractDelegateValidateTask {
         logger.info("Failed to decrypt " + gitConfig.getRepoUrl(), e);
         return false;
       }
-      return isEmpty(gitClient.validate(gitConfig));
+      return isEmpty(gitClient.validate(gitConfig, null));
     }
     return false;
   }

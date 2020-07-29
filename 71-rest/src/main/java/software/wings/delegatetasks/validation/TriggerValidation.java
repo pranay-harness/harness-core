@@ -85,6 +85,6 @@ public class TriggerValidation extends AbstractDelegateValidateTask {
       return false;
     }
 
-    return isEmpty(gitClient.validate(gitConfig));
+    return isEmpty(gitClient.validate(gitConfig, null));
   }
 }
