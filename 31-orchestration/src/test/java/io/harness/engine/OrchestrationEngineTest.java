@@ -75,7 +75,6 @@ public class OrchestrationEngineTest extends OrchestrationTest {
     String testNodeId = generateUuid();
     Plan oneNodePlan =
         Plan.builder()
-            .uuid(generateUuid())
             .node(PlanNode.builder()
                       .name("Test Node")
                       .uuid(testNodeId)
@@ -108,7 +107,6 @@ public class OrchestrationEngineTest extends OrchestrationTest {
     String testSecondNodeId = generateUuid();
     Plan oneNodePlan =
         Plan.builder()
-            .uuid(generateUuid())
             .node(PlanNode.builder()
                       .name("Test Node")
                       .uuid(testStartNodeId)
@@ -155,7 +153,6 @@ public class OrchestrationEngineTest extends OrchestrationTest {
     String testWaitNodeId = generateUuid();
     Plan oneNodePlan =
         Plan.builder()
-            .uuid(generateUuid())
             .node(PlanNode.builder()
                       .name("Test Node")
                       .uuid(testStartNodeId)
@@ -205,7 +202,7 @@ public class OrchestrationEngineTest extends OrchestrationTest {
   @Category(UnitTests.class)
   public void shouldThrowInvalidRequestException() {
     final String exceptionStartMessage = "No node found with Id";
-    Plan oneNodePlan = Plan.builder().uuid(generateUuid()).startingNodeId(generateUuid()).build();
+    Plan oneNodePlan = Plan.builder().startingNodeId(generateUuid()).build();
 
     EmbeddedUser user = new EmbeddedUser(generateUuid(), ALEXEI, ALEXEI);
 

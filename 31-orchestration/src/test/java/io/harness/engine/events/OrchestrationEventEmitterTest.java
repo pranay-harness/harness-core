@@ -4,7 +4,9 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -53,9 +55,11 @@ public class OrchestrationEventEmitterTest extends OrchestrationTest {
                                    .eventType(OrchestrationEventType.ORCHESTRATION_START)
                                    .build();
     eventEmitter.emitEvent(event);
-    verify(subject).fireInform(any(), eq(event));
-    verify(syncProxy).handleEvent(eq(event));
-    verify(asyncProxy).handleEvent(eq(event));
+    verify(subject, times(1)).fireInform(any(), eq(event));
+    verify(syncProxy, times(1)).handleEvent(eq(event));
+    verify(asyncProxy, times(1)).handleEvent(eq(event));
+    verify(asyncProxy, times(1)).getInformExecutorService();
+    verifyNoMoreInteractions(asyncProxy);
   }
 
   private static class StartHandler1 implements SyncOrchestrationEventHandler {

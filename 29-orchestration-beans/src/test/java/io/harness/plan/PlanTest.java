@@ -51,7 +51,7 @@ public class PlanTest extends OrchestrationBeansTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestIsEmpty() {
-    Plan plan = Plan.builder().uuid(generateUuid()).build();
+    Plan plan = Plan.builder().build();
     assertThat(plan.isEmpty()).isEqualTo(true);
   }
 
@@ -76,7 +76,6 @@ public class PlanTest extends OrchestrationBeansTest {
                   .identifier("dummy3")
                   .build())
         .startingNodeId(DUMMY_NODE_1_ID)
-        .uuid(PLAN_ID)
         .build();
   }
 }

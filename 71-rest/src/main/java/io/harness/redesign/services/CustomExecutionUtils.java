@@ -62,7 +62,6 @@ public class CustomExecutionUtils {
   private static final StepType BASIC_HTTP_STEP_TYPE = StepType.builder().type("BASIC_HTTP").build();
 
   public static Plan provideHttpSwitchPlan() {
-    String planId = generateUuid();
     String httpNodeId = generateUuid();
     String dummyNode1Id = generateUuid();
     String dummyNode2Id = generateUuid();
@@ -144,12 +143,10 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(httpNodeId)
-        .uuid(planId)
         .build();
   }
 
   public static Plan provideHttpSwitchPlanV2() {
-    String planId = generateUuid();
     String httpNodeId = generateUuid();
 
     BasicHttpStepParameters basicHttpStateParameters =
@@ -166,12 +163,10 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(httpNodeId)
-        .uuid(planId)
         .build();
   }
 
   public static Plan provideHttpForkPlan() {
-    String planId = generateUuid();
     String httpNodeId1 = generateUuid();
     String httpNodeId2 = generateUuid();
     String forkNodeId = generateUuid();
@@ -249,12 +244,10 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(forkNodeId)
-        .uuid(planId)
         .build();
   }
 
   public static Plan provideHttpSectionPlan() {
-    String planId = generateUuid();
     String sectionNodeId = generateUuid();
     String httpNodeId1 = generateUuid();
     String httpNodeId2 = generateUuid();
@@ -332,7 +325,6 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(sectionNodeId)
-        .uuid(planId)
         .build();
   }
 
@@ -342,7 +334,6 @@ public class CustomExecutionUtils {
     BasicHttpStepParameters basicHttpStateParameters =
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
     return Plan.builder()
-        .uuid(generateUuid())
         .startingNodeId(httpNodeId)
         .node(PlanNode.builder()
                   .uuid(httpNodeId)
@@ -381,7 +372,6 @@ public class CustomExecutionUtils {
     BasicHttpStepParameters basicHttpStateParameters =
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_500).method("GET").build();
     return Plan.builder()
-        .uuid(generateUuid())
         .startingNodeId(httpNodeId)
         .node(PlanNode.builder()
                   .uuid(httpNodeId)
@@ -415,7 +405,6 @@ public class CustomExecutionUtils {
   }
 
   public static Plan provideHttpRollbackPlan() {
-    String planId = generateUuid();
     String sectionNodeId = generateUuid();
     String rollbackSectionNodeId = generateUuid();
     String rollbackHttpNodeId1 = generateUuid();
@@ -504,7 +493,6 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(sectionNodeId)
-        .uuid(planId)
         .build();
   }
 
@@ -641,7 +629,6 @@ public class CustomExecutionUtils {
             .build();
 
     return Plan.builder()
-        .uuid(generateUuid())
         .startingNodeId(section1NodeId)
         .node(PlanNode.builder()
                   .uuid(section1NodeId)
@@ -805,7 +792,6 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(sectionNodeId)
-        .uuid(generateUuid())
         .build();
   }
 
@@ -882,7 +868,6 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(sectionChainNodeId)
-        .uuid(generateUuid())
         .build();
   }
 
@@ -975,7 +960,6 @@ public class CustomExecutionUtils {
                                              .build())
                   .build())
         .startingNodeId(sectionChainNodeId)
-        .uuid(generateUuid())
         .build();
   }
 
@@ -988,7 +972,6 @@ public class CustomExecutionUtils {
    */
 
   public Plan provideGraphTestPlan() {
-    String planId = generateUuid();
     String dummyStartNode = generateUuid();
     String forkId = generateUuid();
     String section1Id = generateUuid();
@@ -1003,7 +986,6 @@ public class CustomExecutionUtils {
     StepParameters basicHttpStepParameters1 =
         BasicHttpStepParameters.builder().url(BASIC_HTTP_STATE_URL_200).method("GET").build();
     return Plan.builder()
-        .uuid(planId)
         .startingNodeId(dummyStartNode)
         .node(PlanNode.builder()
                   .uuid(dummyStartNode)
@@ -1138,7 +1120,6 @@ public class CustomExecutionUtils {
     String dummyNode2Id = generateUuid();
     String barrierNodeId = generateUuid();
     return Plan.builder()
-        .uuid(generateUuid())
         .startingNodeId(forkNodeId)
         .node(PlanNode.builder()
                   .uuid(forkNodeId)
@@ -1198,7 +1179,6 @@ public class CustomExecutionUtils {
     String barrierNodeId3 = generateUuid();
     String waitNodeId = generateUuid();
     return Plan.builder()
-        .uuid(generateUuid())
         .startingNodeId(forkNodeId)
         .node(PlanNode.builder()
                   .uuid(forkNodeId)

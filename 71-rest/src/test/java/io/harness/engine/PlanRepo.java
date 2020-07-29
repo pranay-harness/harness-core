@@ -17,7 +17,6 @@ import io.harness.state.core.section.SectionStepParameters;
 
 public class PlanRepo {
   public static Plan planWithBigWait() {
-    String planId = generateUuid();
     String sectionNodeId = generateUuid();
     String test1Id = generateUuid();
     String test3Id = generateUuid();
@@ -88,7 +87,6 @@ public class PlanRepo {
                                              .build())
                   .build())
         .startingNodeId(sectionNodeId)
-        .uuid(planId)
         .build();
   }
 }
