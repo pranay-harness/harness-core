@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.infraDefinition;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,6 +50,7 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.AwsInstanceInfra
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsLambdaInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureInstanceInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AzureKubernetesServiceYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.AzureVMSSInfraYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.CodeDeployInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.DirectKubernetesInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.GoogleKubernetesEngineYamlHandler;
@@ -93,6 +95,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
   @InjectMocks @Inject private PcfInfraStructureYamlHandler pcfInfraStructureYamlHandler;
   @InjectMocks @Inject private PhysicalInfraYamlHandler physicalInfraYamlHandler;
   @InjectMocks @Inject private PhysicalInfraWinrmYamlHandler physicalInfraWinrmYamlHandler;
+  @InjectMocks @Inject private AzureVMSSInfraYamlHandler azureVMSSInfraYamlHandler;
 
   private final String yamlFilePath = "Setup/Applications/APP_NAME/Environments/"
       + "ENV_NAME/Infrastructure Definitions/infra-def.yaml";
@@ -103,6 +106,7 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     // Make sure that CloudProviderName is TEST_CLOUD_PROVIDER
     private static final String AWS_ECS = "aws_ecs.yaml";
     private static final String AWS_AMI = "aws_ami.yaml";
+    private static final String AZURE_VMSS = "azure_vmss.yaml";
     private static final String AWS_ECS_PROVISIONER = "aws_ecs_provisioner.yaml";
     private static final String AWS_LAMBDA = "aws_lambda.yaml";
     private static final String AWS_LAMBDA_PROVISIONER = "aws_lambda_provisioner.yaml";
@@ -136,8 +140,11 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(anyString());
     doReturn(APP_ID).when(mockYamlHelper).getAppId(anyString(), anyString());
     doReturn(ENV_ID).when(mockYamlHelper).getEnvironmentId(anyString(), anyString());
-    doReturn(settingAttribute).when(mockSettingsService).getSettingAttributeByName(anyString(), anyString());
-    doReturn(settingAttribute).when(mockSettingsService).get(anyString());
+    doReturn(settingAttribute)
+        .doReturn(settingAttribute)
+        .when(mockSettingsService)
+        .getSettingAttributeByName(anyString(), anyString());
+    doReturn(settingAttribute).doReturn(settingAttribute).when(mockSettingsService).get(anyString());
     doReturn("infra-def").when(mockYamlHelper).extractEntityNameFromYamlPath(anyString(), anyString(), anyString());
     doReturn(service).when(serviceResourceService).get(anyString(), anyString());
     doReturn(service).when(serviceResourceService).getServiceByName(anyString(), anyString());
@@ -270,6 +277,15 @@ public class InfrastructureDefinitionYamlHandlerTest extends BaseYamlHandlerTest
     doReturn(awsAmiInfrastructureYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
     testCRUD(
         validYamlInfraStructureFiles.AWS_AMI, InfrastructureType.AWS_AMI, DeploymentType.AMI, CloudProviderType.AWS);
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testCRUDAndGet_AzureVMSS() throws IOException {
+    doReturn(azureVMSSInfraYamlHandler).when(mockYamlHandlerFactory).getYamlHandler(any(), any());
+    testCRUD(validYamlInfraStructureFiles.AZURE_VMSS, InfrastructureType.AZURE_VMSS, DeploymentType.AZURE_VMSS,
+        CloudProviderType.AZURE);
   }
 
   private void testCRUD(String yamlFileName, String cloudProviderInfrastructureType, DeploymentType deploymentType,

@@ -76,10 +76,10 @@ public class AzureVMSSInfra implements InfraMappingInfrastructureProvider, Field
     private VMSSDeploymentType vmssDeploymentType;
 
     @Builder
-    public Yaml(String cloudProviderName, String baseVMSSName, String userName, String resourceGroupName,
+    public Yaml(String type, String cloudProviderName, String baseVMSSName, String userName, String resourceGroupName,
         String subscriptionId, String password, String hostConnectionAttrs, VMSSAuthType vmssAuthType,
         VMSSDeploymentType vmssDeploymentType) {
-      super(AZURE_VMSS);
+      super(type);
       this.cloudProviderName = cloudProviderName;
       this.baseVMSSName = baseVMSSName;
       this.userName = userName;
@@ -89,6 +89,10 @@ public class AzureVMSSInfra implements InfraMappingInfrastructureProvider, Field
       this.hostConnectionAttrs = hostConnectionAttrs;
       this.vmssAuthType = vmssAuthType;
       this.vmssDeploymentType = vmssDeploymentType;
+    }
+
+    public Yaml() {
+      super(AZURE_VMSS);
     }
   }
 }
