@@ -27,7 +27,7 @@ public class GitFetchFilesValidationHelper {
       return false;
     }
 
-    if (isNotEmpty(gitClient.validate(gitConfig))) {
+    if (isNotEmpty(gitClient.validate(gitConfig, null))) {
       return false;
     }
     return true;

@@ -748,6 +748,10 @@ public class SettingsServiceImpl implements SettingsService {
       if (gitConfig.isGenerateWebhookUrl() && isEmpty(gitConfig.getWebhookToken())) {
         gitConfig.setWebhookToken(CryptoUtils.secureRandAlphaNumString(40));
       }
+
+      if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType()) {
+        gitConfig.setBranch(null);
+      }
     }
   }
 
@@ -971,7 +975,8 @@ public class SettingsServiceImpl implements SettingsService {
     return updatedSettingAttribute;
   }
 
-  private void validateSettingAttribute(SettingAttribute settingAttribute, SettingAttribute existingSettingAttribute) {
+  @VisibleForTesting
+  void validateSettingAttribute(SettingAttribute settingAttribute, SettingAttribute existingSettingAttribute) {
     if (settingAttribute != null && existingSettingAttribute != null) {
       if (settingAttribute.getValue() != null && existingSettingAttribute.getValue() != null) {
         if (existingSettingAttribute.getValue() instanceof NexusConfig) {
@@ -979,6 +984,14 @@ public class SettingsServiceImpl implements SettingsService {
                    .getVersion()
                    .equals(((NexusConfig) existingSettingAttribute.getValue()).getVersion())) {
             throw new InvalidRequestException("Version cannot be updated", USER);
+          }
+        }
+
+        if (existingSettingAttribute.getValue() instanceof GitConfig) {
+          GitConfig.UrlType oldUrlType = ((GitConfig) existingSettingAttribute.getValue()).getUrlType();
+          GitConfig.UrlType newUrlType = ((GitConfig) settingAttribute.getValue()).getUrlType();
+          if (null != oldUrlType && null != newUrlType && oldUrlType != newUrlType) {
+            throw new InvalidRequestException("UrlType cannot be updated", USER);
           }
         }
       }

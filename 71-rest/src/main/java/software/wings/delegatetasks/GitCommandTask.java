@@ -128,7 +128,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
               .build();
         case VALIDATE:
           logger.info(GIT_YAML_LOG_PREFIX + " Processing Git command: VALIDATE");
-          String errorMessage = gitClient.validate(gitConfig);
+          String errorMessage = gitClient.validate(gitConfig, gitConfig.getRepoName());
           if (errorMessage == null) {
             return GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
           } else {

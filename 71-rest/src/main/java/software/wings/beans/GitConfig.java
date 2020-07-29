@@ -46,7 +46,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Username", required = true) private String username;
   @Attributes(title = "Password", required = true) @Encrypted(fieldName = "password") private char[] password;
   @NotEmpty @Trimmed @Attributes(title = "Git Repo Url", required = true) private String repoUrl;
-
+  @Default private UrlType urlType = UrlType.REPO;
   @Attributes(title = "Git Branch", required = true) private String branch;
   @SchemaIgnore private String reference;
 
@@ -55,6 +55,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
   private String sshSettingId;
   @SchemaIgnore @Transient private SettingAttribute sshSettingAttribute;
+  @SchemaIgnore @Transient private String repoName;
   private boolean keyAuth;
   @Default private AuthenticationScheme authenticationScheme = HTTP_PASSWORD;
   @Attributes(title = "Description") private String description;
@@ -91,6 +92,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   }
 
   public enum GitRepositoryType { YAML, TERRAFORM, TRIGGER, HELM }
+  public enum UrlType { REPO, ACCOUNT }
 
   /**
    * Instantiates a new setting value.
@@ -103,7 +105,8 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   public GitConfig(String username, char[] password, String repoUrl, String branch, String accountId,
       String encryptedPassword, String sshSettingId, SettingAttribute sshSettingAttribute, boolean keyAuth,
       AuthenticationScheme authenticationScheme, String description, String webhookToken, GitRepositoryType gitRepoType,
-      boolean generateWebhookUrl, String authorName, String authorEmailId, String commitMessage) {
+      boolean generateWebhookUrl, String authorName, String authorEmailId, String commitMessage, UrlType urlType,
+      String repoName) {
     super(SettingVariableTypes.GIT.name());
     this.username = username;
     this.password = password == null ? null : password.clone();
@@ -122,6 +125,8 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
     this.authorName = authorName;
     this.authorEmailId = authorEmailId;
     this.commitMessage = commitMessage;
+    this.urlType = urlType;
+    this.repoName = repoName;
   }
 
   @Data
@@ -136,11 +141,12 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
     private String authorName;
     private String authorEmailId;
     private String commitMessage;
+    private UrlType urlType;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch,
         String reference, UsageRestrictions.Yaml usageRestrictions, boolean keyAuth, String sshKeyName,
-        String description, String authorName, String authorEmailId, String commitMessage) {
+        String description, String authorName, String authorEmailId, String commitMessage, UrlType urlType) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.branch = branch;
       this.reference = reference;
@@ -150,6 +156,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
       this.authorName = authorName;
       this.authorEmailId = authorEmailId;
       this.commitMessage = commitMessage;
+      this.urlType = urlType;
     }
   }
 }

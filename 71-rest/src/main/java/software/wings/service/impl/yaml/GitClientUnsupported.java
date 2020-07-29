@@ -50,7 +50,7 @@ public class GitClientUnsupported implements GitClient {
   }
 
   @Override
-  public String validate(GitConfig gitConfig) {
+  public String validate(GitConfig gitConfig, String repoName) {
     throw new UnsupportedOperationException("Git operations not supported.");
   }
 

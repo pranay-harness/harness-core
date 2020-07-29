@@ -1763,5 +1763,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureVMSSCommandRequest.class, 8035);
     kryo.register(GcbArtifactObjects.class, 8046);
     kryo.register(PVCParams.class, 7459);
+    kryo.register(GitConfig.UrlType.class, 7460);
   }
 }

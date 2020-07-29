@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.ARVIND;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.category.element.UnitTests;
@@ -31,6 +33,7 @@ import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
+import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -239,5 +242,28 @@ public class SettingsServiceImplTest extends WingsBaseTest {
         .canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any(), eq(false), any(), any(), any());
     verify(usageRestrictionsService, times(3))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void validateSettingAttributeTest() {
+    SettingAttribute accountSetting =
+        aSettingAttribute().withValue(GitConfig.builder().urlType(GitConfig.UrlType.ACCOUNT).build()).build();
+    SettingAttribute repoSetting =
+        aSettingAttribute().withValue(GitConfig.builder().urlType(GitConfig.UrlType.REPO).build()).build();
+
+    SettingAttribute emptySetting = aSettingAttribute().withValue(GitConfig.builder().build()).build();
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> settingsService.validateSettingAttribute(accountSetting, repoSetting))
+        .withMessage("UrlType cannot be updated");
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> settingsService.validateSettingAttribute(repoSetting, accountSetting))
+        .withMessage("UrlType cannot be updated");
+    settingsService.validateSettingAttribute(accountSetting, accountSetting);
+    settingsService.validateSettingAttribute(repoSetting, repoSetting);
+    settingsService.validateSettingAttribute(emptySetting, repoSetting);
+    settingsService.validateSettingAttribute(emptySetting, accountSetting);
   }
 }
