@@ -273,6 +273,7 @@ public class GitChangeSetHandler {
                       .status(gitCommitStatus)
                       .commitId(commitId)
                       .gitConnectorId(yamlGitConfig.getGitConnectorId())
+                      .repositoryName(yamlGitConfig.getRepositoryName())
                       .branchName(yamlGitConfig.getBranchName())
                       .gitCommandResult(gitDiffResult)
                       .commitMessage(gitDiffResult.getCommitMessage())

@@ -59,6 +59,7 @@ public class GitFileActivity implements PersistentEntity, UuidAware, CreatedAtAw
   private long createdAt;
   private long lastUpdatedAt;
   private String gitConnectorId;
+  private String repositoryName;
   private String branchName;
   @Transient private String connectorName;
   @Transient @DefaultValue("false") private boolean userDoesNotHavePermForFile;

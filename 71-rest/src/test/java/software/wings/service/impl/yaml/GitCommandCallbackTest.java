@@ -67,6 +67,7 @@ import java.util.Map;
 public class GitCommandCallbackTest extends CategoryTest {
   private static final String CHANGESET_ID = "changesetId";
   private static final String gitConnectorId = "gitConnectorId";
+  private static final String repositoryName = "repositoryName";
   private static final String branchName = "branchName";
 
   @Mock private YamlChangeSetService yamlChangeSetService;
@@ -75,13 +76,13 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Mock private GitSyncService gitSyncService;
 
   @InjectMocks
-  private GitCommandCallback commandCallback =
-      new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID, GitCommandType.COMMIT_AND_PUSH, gitConnectorId, branchName);
+  private GitCommandCallback commandCallback = new GitCommandCallback(
+      ACCOUNT_ID, CHANGESET_ID, GitCommandType.COMMIT_AND_PUSH, gitConnectorId, repositoryName, branchName);
 
   @InjectMocks
   @Spy
   private GitCommandCallback diffCommandCallback =
-      new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID, GitCommandType.DIFF, gitConnectorId, branchName);
+      new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID, GitCommandType.DIFF, gitConnectorId, repositoryName, branchName);
 
   @Before
   public void setup() {

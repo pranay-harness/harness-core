@@ -613,7 +613,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       waitNotifyEngine.waitForAllOn(GENERAL,
           new GitCommandCallback(accountId, yamlChangeSetId, GitCommandType.COMMIT_AND_PUSH,
-              yamlGitConfig.getGitConnectorId(), yamlGitConfig.getBranchName()),
+              yamlGitConfig.getGitConnectorId(), yamlGitConfig.getRepositoryName(), yamlGitConfig.getBranchName()),
           waitId);
       final String taskId = delegateService.queueTask(delegateTask);
       try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
@@ -841,7 +841,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       waitNotifyEngine.waitForAllOn(GENERAL,
           new GitCommandCallback(accountId, yamlChangeSet.getUuid(), GitCommandType.DIFF,
-              yamlGitConfig.getGitConnectorId(), yamlGitConfig.getBranchName()),
+              yamlGitConfig.getGitConnectorId(), yamlGitConfig.getRepositoryName(), yamlGitConfig.getBranchName()),
           waitId);
       final String taskId = delegateService.queueTask(delegateTask);
       try (ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {

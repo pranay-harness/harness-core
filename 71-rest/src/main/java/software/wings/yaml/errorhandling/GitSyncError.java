@@ -68,7 +68,9 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
   @Deprecated private String lastAttemptedYaml;
   private GitSyncErrorStatus status;
   private String gitConnectorId;
+  private String repositoryName;
   @Transient private String gitConnectorName;
+
   private String branchName;
   private String yamlGitConfigId;
   @Deprecated private Long commitTime;
@@ -78,9 +80,10 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
 
   @Builder
   public GitSyncError(String accountId, String yamlFilePath, String changeType, String failureReason,
-      String gitConnectorId, String branchName, String yamlGitConfigId, GitSyncErrorDetails additionalErrorDetails,
-      String gitSyncDirection, Long commitTime, String lastAttemptedYaml, boolean fullSyncPath, String yamlContent,
-      String gitCommitId, GitSyncErrorStatus status, boolean userDoesNotHavePermForFile) {
+      String gitConnectorId, String branchName, String repositoryName, String yamlGitConfigId,
+      GitSyncErrorDetails additionalErrorDetails, String gitSyncDirection, Long commitTime, String lastAttemptedYaml,
+      boolean fullSyncPath, String yamlContent, String gitCommitId, GitSyncErrorStatus status,
+      boolean userDoesNotHavePermForFile) {
     this.accountId = accountId;
     this.yamlFilePath = yamlFilePath;
     this.changeType = changeType;
@@ -88,6 +91,7 @@ public class GitSyncError extends Base implements PersistentRegularIterable {
     this.status = GitSyncErrorStatus.ACTIVE;
     this.gitConnectorId = gitConnectorId;
     this.branchName = branchName;
+    this.repositoryName = repositoryName;
     this.yamlGitConfigId = yamlGitConfigId;
     this.additionalErrorDetails = additionalErrorDetails;
     this.gitSyncDirection = gitSyncDirection;

@@ -107,6 +107,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   private GitSyncMetadata buildGitSyncMetadata(YamlGitConfig yamlGitConfig) {
     return GitSyncMetadata.builder()
         .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .repositoryName(yamlGitConfig.getRepositoryName())
         .branchName(yamlGitConfig.getBranchName())
         .yamlGitConfigId(yamlGitConfig.getUuid())
         .build();

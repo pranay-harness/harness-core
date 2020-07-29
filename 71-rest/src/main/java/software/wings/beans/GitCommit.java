@@ -62,6 +62,7 @@ public class GitCommit extends Base {
   private GitFileProcessingSummary fileProcessingSummary;
   private String commitMessage;
   private String gitConnectorId;
+  private String repositoryName;
   private String branchName;
 
   public enum Status { QUEUED, RUNNING, COMPLETED, FAILED, COMPLETED_WITH_ERRORS, SKIPPED }
