@@ -19,6 +19,7 @@ import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.k8s.K8sResourcePermissionImpl;
 import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.openapi.models.V1ResourceAttributes;

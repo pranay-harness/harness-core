@@ -1,4 +1,4 @@
-package software.wings.cloudprovider.gke;
+package io.harness.k8s;
 
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
 import io.kubernetes.client.openapi.models.V1ResourceAttributes;

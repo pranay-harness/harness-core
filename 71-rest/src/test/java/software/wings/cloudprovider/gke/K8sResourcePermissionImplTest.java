@@ -1,17 +1,18 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.k8s.K8sResourcePermission.DENIED_RESPOSE_FORMAT;
+import static io.harness.k8s.K8sResourcePermission.FAILED_RESPOSE_FORMAT;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static software.wings.cloudprovider.gke.K8sResourcePermission.DENIED_RESPOSE_FORMAT;
-import static software.wings.cloudprovider.gke.K8sResourcePermission.FAILED_RESPOSE_FORMAT;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.category.element.UnitTests;
+import io.harness.k8s.K8sResourcePermissionImpl;
 import io.harness.rule.Owner;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
