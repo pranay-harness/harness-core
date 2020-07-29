@@ -101,16 +101,6 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
     });
 
     modules.add(new VersionModule());
-
-    //    modules.add(new AbstractModule() {
-    //      @Override
-    //      protected void configure() {
-    //        MapBinder<String, TaskExecutor> taskExecutorMap =
-    //            MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-    //        taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V1.name()).to(DummyTaskExecutor.class);
-    //      }
-    //    });
-
     modules.add(TimeModule.getInstance());
     modules.add(new OrchestrationStepsPersistenceTestModule());
     modules.addAll(new OrchestrationModule(OrchestrationModuleConfig.builder()
