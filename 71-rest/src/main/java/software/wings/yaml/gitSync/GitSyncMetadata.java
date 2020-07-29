@@ -9,6 +9,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "GitSyncMetadataKeys")
 public class GitSyncMetadata {
   String gitConnectorId;
+  private String repositoryName;
   String branchName;
   String yamlGitConfigId;
 }

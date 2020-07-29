@@ -76,16 +76,18 @@ public class GitCommandCallback implements NotifyCallback {
   private String changeSetId;
   private GitCommandType gitCommandType;
   private String gitConnectorId;
+  private String repositoryName;
   private String branchName;
 
   public GitCommandCallback() {}
 
-  public GitCommandCallback(
-      String accountId, String changeSetId, GitCommandType gitCommandType, String gitConnectorId, String branchName) {
+  public GitCommandCallback(String accountId, String changeSetId, GitCommandType gitCommandType, String gitConnectorId,
+      String repositoryName, String branchName) {
     this.accountId = accountId;
     this.changeSetId = changeSetId;
     this.gitCommandType = gitCommandType;
     this.gitConnectorId = gitConnectorId;
+    this.repositoryName = repositoryName;
     this.branchName = branchName;
   }
 
@@ -275,6 +277,7 @@ public class GitCommandCallback implements NotifyCallback {
                       .commitId(commitId)
                       .gitCommandResult(gitCommitAndPushResult)
                       .gitConnectorId(yamlGitConfig.getGitConnectorId())
+                      .repositoryName(yamlGitConfig.getRepositoryName())
                       .branchName(yamlGitConfig.getBranchName())
                       .yamlChangeSetsProcessed(yamlSetIdsProcessed)
                       .commitMessage(gitCommitAndPushResult.getGitCommitResult().getCommitMessage())
@@ -363,7 +366,7 @@ public class GitCommandCallback implements NotifyCallback {
           gitCommitStatus = GitCommit.Status.SKIPPED;
         }
         GitCommit gitCommit = saveFailedCommitFromGit(
-            headCommitId, yamlConfigIds, accountId, gitCommitStatus, gitConnectorId, branchName);
+            headCommitId, yamlConfigIds, accountId, gitCommitStatus, gitConnectorId, repositoryName, branchName);
         gitSyncService.createGitFileSummaryForFailedOrSkippedCommit(gitCommit, true);
       }
     }
@@ -375,7 +378,7 @@ public class GitCommandCallback implements NotifyCallback {
         && isNotEmpty(gitWebhookRequestAttributes.getGitConnectorId());
   }
   private GitCommit saveFailedCommitFromGit(String commitId, List<String> yamlGitConfigIds, String accountId,
-      GitCommit.Status gitCommitStatus, String gitConnectorId, String branchName) {
+      GitCommit.Status gitCommitStatus, String gitConnectorId, String repositoryName, String branchName) {
     return saveGitCommit(GitCommit.builder()
                              .accountId(accountId)
                              .yamlChangeSet(YamlChangeSet.builder()
@@ -389,6 +392,7 @@ public class GitCommandCallback implements NotifyCallback {
                              .status(gitCommitStatus)
                              .commitId(commitId)
                              .gitConnectorId(gitConnectorId)
+                             .repositoryName(repositoryName)
                              .branchName(branchName)
                              .gitCommandResult(null)
                              .fileProcessingSummary(null)

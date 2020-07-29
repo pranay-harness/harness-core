@@ -41,6 +41,7 @@ public class GitFileActivitySummary
   private String accountId;
   private String commitId;
   private String branchName;
+  private String repositoryName;
   private String gitConnectorId;
   private String appId;
   private long createdAt;

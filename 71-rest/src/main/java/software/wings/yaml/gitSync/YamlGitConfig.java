@@ -45,6 +45,7 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
 
   private String url;
   @NotEmpty private String branchName;
+  private String repositoryName;
   private String username;
 
   @JsonView(JsonViews.Internal.class) private char[] password;

@@ -182,6 +182,7 @@ public class GitSyncServiceImpl implements GitSyncService {
                    .status(status)
                    .commitMessage(getCommitMessageOfError(error))
                    .gitConnectorId(error.getGitConnectorId())
+                   .repositoryName(error.getRepositoryName())
                    .branchName(error.getBranchName())
                    .triggeredBy(GitFileActivity.TriggeredBy.USER)
                    .build())
@@ -550,6 +551,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         .processingCommitMessage(processingCommitMessage)
         .changeType(change.getChangeType())
         .gitConnectorId(gitConfig.getGitConnectorId())
+        .repositoryName(gitConfig.getRepositoryName())
         .branchName(gitConfig.getBranchName())
         .changeFromAnotherCommit(changeFromAnotherCommit != null
                 ? changeFromAnotherCommit
@@ -563,6 +565,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         .appId(appId)
         .commitId(gitFileActivity.getCommitId())
         .gitConnectorId(gitFileActivity.getGitConnectorId())
+        .repositoryName(gitFileActivity.getRepositoryName())
         .branchName(gitFileActivity.getBranchName())
         .commitMessage(gitFileActivity.getCommitMessage())
         .gitToHarness(gitToHarness)
@@ -760,6 +763,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         .appId(appId)
         .commitId(gitCommit.getCommitId())
         .gitConnectorId(gitCommit.getGitConnectorId())
+        .repositoryName(gitCommit.getRepositoryName())
         .branchName(gitCommit.getBranchName())
         .commitMessage(gitCommit.getCommitMessage())
         .gitToHarness(gitToHarness)
