@@ -827,6 +827,8 @@ public class GitClientImpl implements GitClient {
                 .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
                 .append(", FilePaths: ")
                 .append(gitRequest.getFilePaths())
+                .append(". Reason: ")
+                .append(e.getMessage())
                 .toString(),
             e, USER);
       }
