@@ -204,6 +204,7 @@ public class KubernetesHelperService {
     if (kubernetesConfig.getClientKeyAlgo() != null) {
       configBuilder.withClientKeyAlgo(kubernetesConfig.getClientKeyAlgo().trim());
     }
+    configBuilder.withConnectionTimeout(30000);
 
     if (isNotBlank(apiVersion)) {
       configBuilder.withApiVersion(apiVersion);
