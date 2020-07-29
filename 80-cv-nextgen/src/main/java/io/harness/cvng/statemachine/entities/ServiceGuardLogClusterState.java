@@ -9,6 +9,7 @@ import io.harness.cvng.analysis.beans.ExecutionStatus;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.cvng.statemachine.beans.AnalysisState;
+import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +69,7 @@ public class ServiceGuardLogClusterState extends AnalysisState {
         logger.info("All worker tasks have succeeded.");
         return AnalysisStatus.TRANSITION;
       } else {
-        if (statusTaskMap.containsKey(ExecutionStatus.RUNNING)) {
+        if (statusTaskMap.containsKey(ExecutionStatus.RUNNING) || statusTaskMap.containsKey(ExecutionStatus.QUEUED)) {
           return AnalysisStatus.RUNNING;
         }
       }
@@ -96,13 +97,20 @@ public class ServiceGuardLogClusterState extends AnalysisState {
   @Override
   public AnalysisState handleTransition() {
     this.setStatus(AnalysisStatus.SUCCESS);
-    if (clusterLevel.equals(LogClusterLevel.L1)) {
-      AnalysisState nextState = ServiceGuardLogClusterState.builder().clusterLevel(LogClusterLevel.L2).build();
-      nextState.setInputs(getInputs());
-      nextState.setStatus(AnalysisStatus.CREATED);
-      return nextState;
-    } else {
-      return this;
+    switch (clusterLevel) {
+      case L1:
+        AnalysisState nextState = ServiceGuardLogClusterState.builder().clusterLevel(LogClusterLevel.L2).build();
+        nextState.setInputs(getInputs());
+        nextState.setStatus(AnalysisStatus.CREATED);
+        return nextState;
+      case L2:
+        nextState = ServiceGuardLogAnalysisState.builder().build();
+        nextState.setInputs(getInputs());
+        nextState.setStatus(AnalysisStatus.CREATED);
+        return nextState;
+      default:
+        throw new AnalysisStateMachineException("Unknown cluster level in handleTransition "
+            + "of ServiceGuardLogClusterState: " + clusterLevel);
     }
   }
 

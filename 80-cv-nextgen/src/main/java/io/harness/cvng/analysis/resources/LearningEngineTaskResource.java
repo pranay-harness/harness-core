@@ -1,7 +1,7 @@
 package io.harness.cvng.analysis.resources;
 
-import static io.harness.cvng.CVConstants.LEARNING_RESOURCE;
-import static io.harness.cvng.CVConstants.MARK_FAILURE_PATH;
+import static io.harness.cvng.analysis.CVAnalysisConstants.LEARNING_RESOURCE;
+import static io.harness.cvng.analysis.CVAnalysisConstants.MARK_FAILURE_PATH;
 
 import com.google.inject.Inject;
 

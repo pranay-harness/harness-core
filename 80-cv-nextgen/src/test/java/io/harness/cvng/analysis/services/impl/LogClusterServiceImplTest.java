@@ -59,7 +59,7 @@ public class LogClusterServiceImplTest extends CVNextGenBaseTest {
     List<LearningEngineTask> tasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
                                          .filter(LearningEngineTaskKeys.cvConfigId, cvConfigId)
                                          .asList();
-    assertThat(tasks.size()).isEqualTo(25);
+    assertThat(tasks.size()).isEqualTo(5);
   }
 
   @Test
@@ -118,7 +118,7 @@ public class LogClusterServiceImplTest extends CVNextGenBaseTest {
         logClusterService.getDataForLogCluster(cvConfigId, start, "host-0", LogClusterLevel.L1);
 
     assertThat(recordsTobeClustered).isNotNull();
-    assertThat(recordsTobeClustered.size()).isEqualTo(1);
+    assertThat(recordsTobeClustered.size()).isEqualTo(5);
   }
 
   @Test
@@ -142,7 +142,7 @@ public class LogClusterServiceImplTest extends CVNextGenBaseTest {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     List<LogClusterDTO> clusterDTOList = buildLogClusterDtos(5, start, end);
-    logClusterService.saveClusteredData(clusterDTOList, cvConfigId, end, "taskId1", null, LogClusterLevel.L2);
+    logClusterService.saveClusteredData(clusterDTOList, cvConfigId, end, "taskId1", LogClusterLevel.L2);
     List<ClusteredLog> clusteredLogList =
         hPersistence.createQuery(ClusteredLog.class).filter(ClusteredLogKeys.cvConfigId, cvConfigId).asList();
     assertThat(clusteredLogList).isNotNull();

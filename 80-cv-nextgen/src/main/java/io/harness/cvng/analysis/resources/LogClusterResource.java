@@ -1,6 +1,6 @@
 package io.harness.cvng.analysis.resources;
 
-import static io.harness.cvng.CVConstants.LOG_CLUSTER_RESOURCE;
+import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_CLUSTER_RESOURCE;
 
 import com.google.inject.Inject;
 
@@ -47,9 +47,8 @@ public class LogClusterResource {
   @ExceptionMetered
   public RestResponse<Boolean> saveClusteredData(@QueryParam("taskId") String taskId,
       @QueryParam("cvConfigId") String cvConfigId, @QueryParam("timestamp") String timestamp,
-      @QueryParam("host") String host, @QueryParam("clusterLevel") LogClusterLevel clusterLevel,
-      List<LogClusterDTO> clusterDTO) {
-    logClusterService.saveClusteredData(clusterDTO, cvConfigId, Instant.parse(timestamp), taskId, host, clusterLevel);
+      @QueryParam("clusterLevel") LogClusterLevel clusterLevel, List<LogClusterDTO> clusterDTO) {
+    logClusterService.saveClusteredData(clusterDTO, cvConfigId, Instant.parse(timestamp), taskId, clusterLevel);
     return new RestResponse<>(true);
   }
 }

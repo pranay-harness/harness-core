@@ -1,7 +1,7 @@
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
-import static io.harness.cvng.CVConstants.TIMESERIES_ANALYSIS_RESOURCE;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_ANALYSIS_RESOURCE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;

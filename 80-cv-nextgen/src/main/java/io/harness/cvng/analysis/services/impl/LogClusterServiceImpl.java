@@ -1,7 +1,7 @@
 package io.harness.cvng.analysis.services.impl;
 
-import static io.harness.cvng.CVConstants.LOG_CLUSTER_RESOURCE;
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
+import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_CLUSTER_RESOURCE;
 import static io.harness.cvng.core.utils.DateTimeUtils.instantToEpochMinute;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -33,7 +33,6 @@ import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,7 +77,7 @@ public class LogClusterServiceImpl implements LogClusterService {
     List<ServiceGuardLogClusterTask> clusterTasks = new ArrayList<>();
     Instant timestamp = input.getStartTime().truncatedTo(ChronoUnit.SECONDS);
     while (timestamp.isBefore(input.getEndTime().truncatedTo(ChronoUnit.SECONDS))) {
-      clusterTasks.addAll(createLogClusterTaskForMinute(input.getCvConfigId(), timestamp, LogClusterLevel.L1));
+      clusterTasks.add(createLogClusterTaskForMinute(input.getCvConfigId(), timestamp, LogClusterLevel.L1));
       timestamp = timestamp.plus(1, ChronoUnit.MINUTES);
     }
     return clusterTasks;
@@ -87,14 +86,14 @@ public class LogClusterServiceImpl implements LogClusterService {
   private ServiceGuardLogClusterTask buildClusterTasksForLogL2Clustering(AnalysisInput input) {
     Instant timeForL2Task = input.getEndTime().truncatedTo(ChronoUnit.SECONDS).minus(1, ChronoUnit.MINUTES);
     List<LogClusterDTO> clusterLogs =
-        getTestDataForL2Clustering(input.getCvConfigId(), input.getStartTime(), input.getEndTime());
+        getClusteredLogData(input.getCvConfigId(), input.getStartTime(), input.getEndTime(), LogClusterLevel.L1);
     if (isEmpty(clusterLogs)) {
       return null;
     }
-    return createTaskPojo(input.getCvConfigId(), timeForL2Task, LogClusterLevel.L2, null);
+    return createTaskPojo(input.getCvConfigId(), timeForL2Task, LogClusterLevel.L2);
   }
 
-  private List<ServiceGuardLogClusterTask> createLogClusterTaskForMinute(
+  private ServiceGuardLogClusterTask createLogClusterTaskForMinute(
       String cvConfigId, Instant timestamp, LogClusterLevel clusterLevel) {
     List<LogRecord> logRecords = hPersistence.createQuery(LogRecord.class, excludeAuthority)
                                      .filter(LogRecordKeys.cvConfigId, cvConfigId)
@@ -103,52 +102,45 @@ public class LogClusterServiceImpl implements LogClusterService {
                                      .field(LogRecordKeys.timestamp)
                                      .lessThan(timestamp.plus(1, ChronoUnit.MINUTES))
                                      .asList();
-    Set<String> hostSet = new HashSet<>();
-    List<ServiceGuardLogClusterTask> clusterTasksForMinute = new ArrayList<>();
     if (logRecords != null) {
-      logRecords.forEach(logRecord -> hostSet.add(logRecord.getHost()));
-      hostSet.forEach(
-          host -> { clusterTasksForMinute.add(createTaskPojo(cvConfigId, timestamp, clusterLevel, host)); });
+      return createTaskPojo(cvConfigId, timestamp, clusterLevel);
     }
-    return clusterTasksForMinute;
+    return null;
   }
 
   private ServiceGuardLogClusterTask createTaskPojo(
-      String cvConfigId, Instant timestamp, LogClusterLevel clusterLevel, String host) {
+      String cvConfigId, Instant timestamp, LogClusterLevel clusterLevel) {
     String taskId = generateUuid();
     ServiceGuardLogClusterTask task =
         ServiceGuardLogClusterTask.builder()
-            .host(host)
-            .testDataUrl(buildTestDataUrlForL1Clustering(cvConfigId, timestamp, host, clusterLevel))
+            .clusterLevel(clusterLevel)
+            .testDataUrl(buildTestDataUrlForL1Clustering(cvConfigId, timestamp, clusterLevel))
             .build();
     task.setCvConfigId(cvConfigId);
     task.setAnalysisEndEpochMinute(instantToEpochMinute(timestamp));
     task.setUuid(taskId);
     task.setAnalysisType(LearningEngineTaskType.SERVICE_GUARD_LOG_CLUSTER);
     task.setFailureUrl(learningEngineTaskService.createFailureUrl(taskId));
-    task.setAnalysisSaveUrl(buildClusterSaveUrl(cvConfigId, timestamp, host, taskId, clusterLevel));
+    task.setAnalysisSaveUrl(buildClusterSaveUrl(cvConfigId, timestamp, taskId, clusterLevel));
     return task;
   }
 
-  private String buildTestDataUrlForL1Clustering(
-      String cvConfigId, Instant timestamp, String host, LogClusterLevel clusterLevel) {
+  private String buildTestDataUrlForL1Clustering(String cvConfigId, Instant timestamp, LogClusterLevel clusterLevel) {
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + LOG_CLUSTER_RESOURCE + "/serviceguard-test-data");
     uriBuilder.addParameter(ClusteredLogKeys.cvConfigId, cvConfigId);
     uriBuilder.addParameter(ClusteredLogKeys.timestamp, timestamp.toString());
-    uriBuilder.addParameter(ClusteredLogKeys.host, host);
     uriBuilder.addParameter(ClusteredLogKeys.clusterLevel, clusterLevel.name());
     return getUriString(uriBuilder);
   }
 
   private String buildClusterSaveUrl(
-      String cvConfigId, Instant timestamp, String host, String taskId, LogClusterLevel clusterLevel) {
+      String cvConfigId, Instant timestamp, String taskId, LogClusterLevel clusterLevel) {
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + LOG_CLUSTER_RESOURCE + "/serviceguard-save-clustered-logs");
     uriBuilder.addParameter("taskId", taskId);
     uriBuilder.addParameter(ClusteredLogKeys.cvConfigId, cvConfigId);
     uriBuilder.addParameter(ClusteredLogKeys.timestamp, timestamp.toString());
-    uriBuilder.addParameter(ClusteredLogKeys.host, host);
     uriBuilder.addParameter(ClusteredLogKeys.clusterLevel, clusterLevel.name());
     return getUriString(uriBuilder);
   }
@@ -166,19 +158,18 @@ public class LogClusterServiceImpl implements LogClusterService {
       String cvConfigId, Instant timestamp, String host, LogClusterLevel clusterLevel) {
     switch (clusterLevel) {
       case L1:
-        return getTestDataForL1Clustering(cvConfigId, timestamp, host);
+        return getTestDataForL1Clustering(cvConfigId, timestamp);
       case L2:
-        return getTestDataForL2Clustering(cvConfigId, timestamp.minus(5, ChronoUnit.MINUTES), timestamp);
+        return getClusteredLogData(cvConfigId, timestamp.minus(5, ChronoUnit.MINUTES), timestamp, LogClusterLevel.L1);
       default:
         throw new ServiceGuardAnalysisException("Unknown clusterlevel in getDataForLogCluster: " + clusterLevel);
     }
   }
 
-  private List<LogClusterDTO> getTestDataForL1Clustering(String cvConfigId, Instant timestamp, String host) {
+  private List<LogClusterDTO> getTestDataForL1Clustering(String cvConfigId, Instant timestamp) {
     List<LogClusterDTO> clusterData = new ArrayList<>();
     List<LogRecord> logRecords = hPersistence.createQuery(LogRecord.class, excludeAuthority)
                                      .filter(LogRecordKeys.cvConfigId, cvConfigId)
-                                     .filter(LogRecordKeys.host, host)
                                      .field(LogRecordKeys.timestamp)
                                      .greaterThanOrEq(timestamp)
                                      .field(LogRecordKeys.timestamp)
@@ -190,11 +181,13 @@ public class LogClusterServiceImpl implements LogClusterService {
     return clusterData;
   }
 
-  private List<LogClusterDTO> getTestDataForL2Clustering(String cvConfigId, Instant startTime, Instant endTime) {
+  @Override
+  public List<LogClusterDTO> getClusteredLogData(
+      String cvConfigId, Instant startTime, Instant endTime, LogClusterLevel clusterLevel) {
     List<LogClusterDTO> clusterData = new ArrayList<>();
     List<ClusteredLog> clusteredLogs = hPersistence.createQuery(ClusteredLog.class, excludeAuthority)
                                            .filter(ClusteredLogKeys.cvConfigId, cvConfigId)
-                                           .filter(ClusteredLogKeys.clusterLevel, LogClusterLevel.L1)
+                                           .filter(ClusteredLogKeys.clusterLevel, clusterLevel)
                                            .field(ClusteredLogKeys.timestamp)
                                            .greaterThanOrEq(startTime)
                                            .field(ClusteredLogKeys.timestamp)
@@ -209,18 +202,18 @@ public class LogClusterServiceImpl implements LogClusterService {
 
   @Override
   public void saveClusteredData(List<LogClusterDTO> logClusterDTOlist, String cvConfigId, Instant timestamp,
-      String taskId, String host, LogClusterLevel clusterLevel) {
+      String taskId, LogClusterLevel clusterLevel) {
     List<ClusteredLog> clusteredLogList = new ArrayList<>();
     logClusterDTOlist.forEach(logClusterDTO -> {
       ClusteredLog clusteredLog = logClusterDTO.toClusteredLog();
-      clusteredLog.setHost(host);
       clusteredLog.setClusterLevel(clusterLevel);
+      clusteredLog.setCvConfigId(cvConfigId);
       clusteredLogList.add(clusteredLog);
     });
     hPersistence.save(clusteredLogList);
 
-    logger.info("Saved {} clustered logs for config {} with clusterLevel {} and timestamp {} and host {}", cvConfigId,
-        clusterLevel, timestamp, host);
+    logger.info("Saved {} clustered logs for config {} with clusterLevel {} and timestamp {} ", cvConfigId,
+        clusterLevel, timestamp);
     learningEngineTaskService.markCompleted(taskId);
   }
 }

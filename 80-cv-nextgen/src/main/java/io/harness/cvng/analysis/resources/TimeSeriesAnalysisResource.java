@@ -1,6 +1,6 @@
 package io.harness.cvng.analysis.resources;
 
-import static io.harness.cvng.CVConstants.TIMESERIES_ANALYSIS_RESOURCE;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_ANALYSIS_RESOURCE;
 
 import com.google.inject.Inject;
 

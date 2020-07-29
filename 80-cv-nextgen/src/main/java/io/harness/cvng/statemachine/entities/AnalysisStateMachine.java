@@ -19,6 +19,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 import java.time.Instant;
+import java.util.List;
 
 @CdIndex(name = "state_machine_index", fields = { @Field("cvConfigId")
                                                   , @Field(value = "status") })
@@ -38,6 +39,7 @@ public class AnalysisStateMachine implements PersistentEntity, UuidAware, Create
   private Instant analysisEndTime;
   @FdIndex private String cvConfigId;
   private AnalysisState currentState;
+  private List<AnalysisState> completedStates;
   private AnalysisStatus status;
 
   private long nextAttemptTime;
