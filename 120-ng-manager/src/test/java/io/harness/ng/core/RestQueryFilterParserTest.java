@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import cz.jirutka.rsql.parser.RSQLParserException;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.UnauthorizedException;
+import io.harness.exception.UnsupportedOperationException;
 import io.harness.ng.ModuleType;
 import io.harness.ng.core.entities.Project;
 import io.harness.rule.Owner;
@@ -63,7 +63,7 @@ public class RestQueryFilterParserTest extends CategoryTest {
     restQueryFilterParser.getCriteriaFromFilterQuery(filterQuery, Project.class);
   }
 
-  @Test(expected = UnauthorizedException.class)
+  @Test(expected = UnsupportedOperationException.class)
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testGetCriteriaFromFilterQuery_For_NonQueryable() {

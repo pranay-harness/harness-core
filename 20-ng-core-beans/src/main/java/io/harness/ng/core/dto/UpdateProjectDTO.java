@@ -6,11 +6,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.data.validator.EntityName;
 import io.harness.ng.ModuleType;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
 
@@ -19,7 +17,7 @@ import java.util.List;
 @JsonInclude(NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UpdateProjectDTO {
-  @ApiModelProperty(required = true) @NotEmpty @EntityName String name;
+  @EntityName String name;
   String color;
   String description;
   List<String> owners;

@@ -17,6 +17,7 @@ public class ProjectDTO {
   String id;
   String accountIdentifier;
   String orgIdentifier;
+  String organizationName;
   String identifier;
   String name;
   String color;

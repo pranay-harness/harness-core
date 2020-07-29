@@ -7,11 +7,14 @@ import com.google.inject.Singleton;
 import com.github.rutledgepaulv.qbuilders.builders.GeneralQueryBuilder;
 import com.github.rutledgepaulv.qbuilders.conditions.Condition;
 import com.github.rutledgepaulv.rqe.pipes.QueryConversionPipeline;
+import io.harness.exception.UnsupportedOperationException;
 import io.harness.mongo.index.Field;
 import io.harness.ng.RsqlQueryable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
@@ -32,11 +35,13 @@ public class RestQueryFilterParser {
     Criteria criteria = new Criteria();
 
     if (isNotBlank(filterQuery)) {
-      Field[] fields = targetEntityClass.getAnnotation(RsqlQueryable.class).fields();
-      Set<String> set = new HashSet<>();
-      for (Field field : fields) {
-        set.add(field.value());
+      RsqlQueryable rsqlQueryable = targetEntityClass.getAnnotation(RsqlQueryable.class);
+      if (rsqlQueryable == null) {
+        throw new UnsupportedOperationException("Filter query is not supported");
       }
+      List<Field> fields = Arrays.asList(rsqlQueryable.fields());
+      Set<String> set = new HashSet<>();
+      fields.forEach(field -> set.add(field.value()));
       ConstrainedMongoVisitor constrainedMongoVisitor = new ConstrainedMongoVisitor(set);
       Condition<GeneralQueryBuilder> condition = pipeline.apply(filterQuery, targetEntityClass);
       criteria = condition.query(constrainedMongoVisitor);

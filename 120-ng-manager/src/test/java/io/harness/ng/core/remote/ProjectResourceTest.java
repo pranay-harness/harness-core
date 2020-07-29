@@ -10,18 +10,20 @@ import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.beans.NGPageResponse;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.ModuleType;
 import io.harness.ng.core.dto.CreateProjectDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.UpdateProjectDTO;
+import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.io.harness.ng.utils.PageTestUtils;
+import io.harness.ng.core.services.api.OrganizationService;
 import io.harness.ng.core.services.api.ProjectService;
 import io.harness.rule.Owner;
 import org.junit.Before;
@@ -33,30 +35,34 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class ProjectResourceTest extends CategoryTest {
   private ProjectService projectService;
   private ProjectResource projectResource;
+  private OrganizationService organizationService;
 
   @Before
   public void doSetup() {
     projectService = mock(ProjectService.class);
-    projectResource = new ProjectResource(projectService);
+    organizationService = mock(OrganizationService.class);
+    projectResource = new ProjectResource(projectService, organizationService);
   }
 
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testCreateProject() {
+    String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String projectIdentifier = randomAlphabetic(10);
+    when(organizationService.get(anyString(), anyString()))
+        .thenReturn(Optional.of(createOrganization(accountIdentifier, orgIdentifier)));
     when(projectService.get(orgIdentifier, projectIdentifier)).thenReturn(Optional.empty());
     assertFalse(projectResource.get(orgIdentifier, projectIdentifier).getData().isPresent());
 
     CreateProjectDTO createProjectDTO = random(CreateProjectDTO.class);
-    Project createdProject = createProject(orgIdentifier, createProjectDTO.getIdentifier());
+    Project createdProject = createProject(orgIdentifier, accountIdentifier);
+    createdProject.setIdentifier(createProjectDTO.getIdentifier());
     when(projectService.create(any(Project.class))).thenReturn(createdProject);
     when(projectService.get(orgIdentifier, projectIdentifier)).thenReturn(Optional.of(createdProject));
 
@@ -68,12 +74,20 @@ public class ProjectResourceTest extends CategoryTest {
     assertEquals(projectDTO, projectResource.get(orgIdentifier, projectIdentifier).getData().orElse(null));
   }
 
-  private Project createProject(String orgIdentifier, String projectIdentifier) {
+  private Project createProject(String orgIdentifier, String accountIdentifier) {
     return Project.builder()
         .id(randomAlphabetic(10))
-        .identifier(projectIdentifier)
+        .accountIdentifier(accountIdentifier)
         .orgIdentifier(orgIdentifier)
         .identifier(randomAlphabetic(10))
+        .build();
+  }
+
+  private Organization createOrganization(String accountIdentifier, String orgIdentifier) {
+    return Organization.builder()
+        .id(randomAlphabetic(10))
+        .identifier(orgIdentifier)
+        .accountIdentifier(accountIdentifier)
         .build();
   }
 
@@ -94,6 +108,7 @@ public class ProjectResourceTest extends CategoryTest {
     when(projectService.list(any(Criteria.class), any(Pageable.class)))
         .thenReturn(PageTestUtils.getPage(projectList, 2));
 
+    when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.empty());
     NGPageResponse<ProjectDTO> projectDTOs =
         projectResource.listProjectsForOrganization(orgIdentifier, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOs);
@@ -112,20 +127,6 @@ public class ProjectResourceTest extends CategoryTest {
     });
   }
 
-  private List<ProjectDTO> createProjects(String orgIdentifier, String accountIdentifier, int count) {
-    return IntStream.range(0, count)
-        .mapToObj(i -> {
-          CreateProjectDTO projectDTO = random(CreateProjectDTO.class);
-          projectDTO.getModules().clear();
-          if (i == 0) {
-            projectDTO.getModules().add(ModuleType.CD);
-          }
-          projectDTO.setAccountIdentifier(accountIdentifier);
-          return projectResource.create(orgIdentifier, projectDTO).getData();
-        })
-        .collect(Collectors.toList());
-  }
-
   @Test
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
@@ -141,6 +142,7 @@ public class ProjectResourceTest extends CategoryTest {
     when(projectService.list(any(Criteria.class), any(Pageable.class)))
         .thenReturn(PageTestUtils.getPage(firstProjectList, 2));
 
+    when(organizationService.get(accountIdentifier, firstOrgIdentifier)).thenReturn(Optional.empty());
     final NGPageResponse<ProjectDTO> projectDTOS =
         projectResource.listProjectsForOrganization(firstOrgIdentifier, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", projectDTOS);
@@ -171,10 +173,12 @@ public class ProjectResourceTest extends CategoryTest {
   @Owner(developers = VIKAS)
   @Category(UnitTests.class)
   public void testUpdateExistentProject() {
+    String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String projectIdentifier = randomAlphabetic(10);
 
-    Project createdProject = createProject(orgIdentifier, projectIdentifier);
+    Project createdProject = createProject(orgIdentifier, accountIdentifier);
+    createdProject.setIdentifier(projectIdentifier);
     when(projectService.get(orgIdentifier, projectIdentifier)).thenReturn(Optional.of(createdProject));
 
     UpdateProjectDTO updateProjectDTO = random(UpdateProjectDTO.class);
@@ -184,6 +188,7 @@ public class ProjectResourceTest extends CategoryTest {
 
     when(projectService.get(orgIdentifier, projectIdentifier)).thenReturn(Optional.of(updateProject));
 
+    when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.empty());
     ProjectDTO returnedUpdatedProject =
         projectResource.update(orgIdentifier, projectIdentifier, updateProjectDTO).getData().orElse(null);
 

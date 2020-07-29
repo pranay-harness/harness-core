@@ -18,11 +18,13 @@ import io.harness.ng.core.RestQueryFilterParser;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.io.harness.ng.utils.PageTestUtils;
+import io.harness.ng.core.services.api.OrganizationService;
 import io.harness.ng.core.services.api.ProjectService;
 import io.harness.rule.Owner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -31,17 +33,21 @@ import java.util.List;
 
 public class AccountProjectResourceTest extends CategoryTest {
   private ProjectService projectService;
+  private OrganizationService organizationService;
   private AccountProjectResource accountProjectResource;
 
   @Before
   public void doSetup() {
     projectService = mock(ProjectService.class);
-    accountProjectResource = new AccountProjectResource(projectService, new RestQueryFilterParser());
+    organizationService = mock(OrganizationService.class);
+    accountProjectResource =
+        new AccountProjectResource(projectService, organizationService, new RestQueryFilterParser());
   }
 
-  private Project createProject(String orgIdentifier, String projectIdentifier, ModuleType moduleType) {
+  private Project createProject(String orgIdentifier, String accountIdentifier, ModuleType moduleType) {
     return Project.builder()
-        .identifier(projectIdentifier)
+        .id(randomAlphabetic(10))
+        .accountIdentifier(accountIdentifier)
         .orgIdentifier(orgIdentifier)
         .identifier(randomAlphabetic(10))
         .module(moduleType)
@@ -62,6 +68,7 @@ public class AccountProjectResourceTest extends CategoryTest {
     when(projectService.list(any(Criteria.class), any(Pageable.class)))
         .thenReturn(PageTestUtils.getPage(projectList, 2));
 
+    when(organizationService.list(any(), any())).thenReturn(Page.empty());
     final NGPageResponse<ProjectDTO> allProjectDTOS =
         accountProjectResource.listProjectsBasedOnFilter(accountIdentifier, null, 0, 10, null).getData();
     assertNotNull("ProjectDTO should not be null", allProjectDTOS);
@@ -95,6 +102,7 @@ public class AccountProjectResourceTest extends CategoryTest {
     when(projectService.list(any(Criteria.class), any(Pageable.class)))
         .thenReturn(PageTestUtils.getPage(projectList, 2));
 
+    when(organizationService.list(any(), any())).thenReturn(Page.empty());
     String filterQuery = "modules=in=(" + moduleType + ")";
     final NGPageResponse<ProjectDTO> projectDTOS =
         accountProjectResource.listProjectsBasedOnFilter(accountIdentifier, filterQuery, 0, 10, null).getData();

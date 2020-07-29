@@ -1,5 +1,7 @@
 package io.harness.ng.core.dto;
 
+import static java.util.Collections.emptyList;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -21,7 +23,7 @@ public class CreateProjectDTO {
   @ApiModelProperty(required = true) @NotEmpty @EntityIdentifier String identifier;
   @ApiModelProperty(required = true) @NotEmpty @EntityName String name;
   @ApiModelProperty(required = true) @NotEmpty String color;
-  @ApiModelProperty(required = true) @NotNull List<ModuleType> modules;
+  List<ModuleType> modules = emptyList();
   String description;
   @ApiModelProperty(required = true) @NotNull List<String> owners;
   @ApiModelProperty(required = true) @NotNull List<String> tags;
