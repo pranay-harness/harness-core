@@ -61,6 +61,7 @@ import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
 import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;
 import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_TRAFFIC_SPLIT_STATE_NAME;
+import static software.wings.stencils.StencilCategory.AZURE_VMSS;
 import static software.wings.stencils.StencilCategory.CLOUD;
 import static software.wings.stencils.StencilCategory.COLLABORATION;
 import static software.wings.stencils.StencilCategory.COLLECTIONS;
@@ -178,6 +179,9 @@ import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.TemplatizedSecretManagerState;
 import software.wings.sm.states.WaitState;
+import software.wings.sm.states.azure.AzureVMSSDeployState;
+import software.wings.sm.states.azure.AzureVMSSRollbackState;
+import software.wings.sm.states.azure.AzureVMSSSetupState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
 import software.wings.sm.states.k8s.K8sApplyState;
@@ -453,6 +457,21 @@ public enum StateType implements StateTypeDescriptor {
   AZURE_NODE_SELECT(AzureNodeSelectState.class, CLOUD, "Azure Select Nodes",
       Lists.newArrayList(InfrastructureMappingType.AZURE_INFRA, InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM),
       asList(INFRASTRUCTURE_NODE, SELECT_NODE), ORCHESTRATION_STENCILS),
+
+  /**
+   * Azure Virtual Machine Scale Set setup states.
+   */
+  AZURE_VMSS_SETUP(AzureVMSSSetupState.class, AZURE_VMSS, WorkflowServiceHelper.AZURE_VMSS_SETUP,
+      Lists.newArrayList(InfrastructureMappingType.AZURE_VMSS_INFRA), asList(PhaseStepType.AZURE_VMSS_SETUP),
+      ORCHESTRATION_STENCILS),
+
+  AZURE_VMSS_DEPLOY(AzureVMSSDeployState.class, AZURE_VMSS, WorkflowServiceHelper.AZURE_VMSS_DEPLOY,
+      Lists.newArrayList(InfrastructureMappingType.AZURE_VMSS_INFRA), asList(PhaseStepType.AZURE_VMSS_DEPLOY),
+      ORCHESTRATION_STENCILS),
+
+  AZURE_VMSS_ROLLBACK(AzureVMSSRollbackState.class, AZURE_VMSS, WorkflowServiceHelper.AZURE_VMSS_ROLLBACK,
+      asList(InfrastructureMappingType.AZURE_VMSS_INFRA), asList(PhaseStepType.AZURE_VMSS_ROLLBACK),
+      ORCHESTRATION_STENCILS),
 
   /**
    * AWS Node Select state.

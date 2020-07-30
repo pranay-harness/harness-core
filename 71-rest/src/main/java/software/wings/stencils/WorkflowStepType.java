@@ -13,6 +13,9 @@ public enum WorkflowStepType {
   DC_SSH("Data Center"),
   AZURE("Azure"),
 
+  // AZURE VMSS
+  AZURE_VMSS("Azure Virtual Machine Scale Set"),
+
   // AWS
   AWS_CODE_DEPLOY("AWS Code Deploy"),
   AWS_LAMBDA("AWS Lambda"),

@@ -21,6 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
+import static software.wings.api.DeploymentType.AZURE_VMSS;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
@@ -94,6 +95,7 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.azure.model.AzureConstants;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -103,6 +105,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AmiDeploymentType;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -132,6 +135,7 @@ import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
+import software.wings.infra.AzureVMSSInfra;
 import software.wings.infra.CloudProviderInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfraMappingInfrastructureProvider;
@@ -229,6 +233,9 @@ public class WorkflowServiceHelper {
   public static final String SPOTINST_LISTENER_UPDATE = "Route Update";
   public static final String SPOTINST_ALB_SHIFT_LISTENER_UPDATE = "Shift Traffic Weight";
   public static final String SPOTINST_SWAP = "Swap Production with Stage";
+  public static final String AZURE_VMSS_SETUP = "Azure Virtual Machine Scale Set Setup";
+  public static final String AZURE_VMSS_DEPLOY = "Upgrade Virtual Machine Scale Set";
+  public static final String AZURE_VMSS_ROLLBACK = "Azure Virtual Machine Scale Set Rollback";
   public static final String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
   public static final String INFRA_ROUTE_PCF = "infra.pcf.route";
   public static final String VERIFY_STAGE_SERVICE = "Verify Stage Service";
@@ -887,6 +894,62 @@ public class WorkflowServiceHelper {
                                     .id(generateUuid())
                                     .type(AWS_AMI_SERVICE_DEPLOY.name())
                                     .name(UPGRADE_AUTOSCALING_GROUP)
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                       .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
+  }
+
+  public void generateNewWorkflowPhaseStepsForAzureVMSS(String appId, WorkflowPhase workflowPhase,
+      OrchestrationWorkflowType orchestrationWorkflowType, boolean serviceSetupRequired) {
+    if (BASIC != orchestrationWorkflowType) {
+      throw new InvalidRequestException(
+          format("Unsupported Azure VMSS deployment type, orchestrationWorkflowType: %s", orchestrationWorkflowType),
+          USER);
+    }
+
+    Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+    List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    if (serviceSetupRequired) {
+      InfrastructureMapping infraMapping;
+      boolean azureVMSSInfra;
+      if (featureFlagService.isEnabled(FeatureName.INFRA_MAPPING_REFACTOR, appService.getAccountIdByAppId(appId))) {
+        InfrastructureDefinition infrastructureDefinition =
+            infrastructureDefinitionService.get(appId, workflowPhase.getInfraDefinitionId());
+        azureVMSSInfra = infrastructureDefinition.getInfrastructure() instanceof AzureVMSSInfra;
+      } else {
+        infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+        azureVMSSInfra = infraMapping instanceof AzureVMSSInfrastructureMapping;
+      }
+      if (azureVMSSInfra) {
+        Map<String, Object> defaultData = new HashMap<>();
+        defaultData.put(AzureConstants.MIN_INSTANCES, AzureConstants.DEFAULT_AZURE_VMSS_MIN_INSTANCES);
+        defaultData.put(AzureConstants.MAX_INSTANCES, AzureConstants.DEFAULT_AZURE_VMSS_MAX_INSTANCES);
+        defaultData.put(AzureConstants.DESIRED_INSTANCES, AzureConstants.DEFAULT_AZURE_VMSS_DESIRED_INSTANCES);
+        defaultData.put(AzureConstants.AUTO_SCALING_VMSS_TIMEOUT, AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN);
+        defaultData.put(AzureConstants.BLUE_GREEN, Boolean.FALSE);
+        phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_VMSS_SETUP, AZURE_VMSS_SETUP)
+                           .addStep(GraphNode.builder()
+                                        .id(generateUuid())
+                                        .type(StateType.AZURE_VMSS_SETUP.name())
+                                        .name(AZURE_VMSS_SETUP)
+                                        .properties(defaultData)
+                                        .build())
+                           .build());
+      }
+    }
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_VMSS_DEPLOY, AZURE_VMSS_DEPLOY)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.AZURE_VMSS_DEPLOY.name())
+                                    .name(AZURE_VMSS_DEPLOY)
                                     .build())
                        .build());
 
@@ -2027,6 +2090,29 @@ public class WorkflowServiceHelper {
     return rollbackWorkflow(workflowPhase).phaseSteps(phaseSteps).build();
   }
 
+  public WorkflowPhase generateRollbackWorkflowPhaseForAzureVMSS(WorkflowPhase workflowPhase) {
+    return rollbackWorkflow(workflowPhase)
+        .phaseSteps(asList(aPhaseStep(PhaseStepType.AZURE_VMSS_ROLLBACK, AZURE_VMSS_ROLLBACK)
+                               .addStep(GraphNode.builder()
+                                            .id(generateUuid())
+                                            .type(StateType.AZURE_VMSS_ROLLBACK.name())
+                                            .name(AZURE_VMSS_ROLLBACK)
+                                            .rollback(true)
+                                            .build())
+                               .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                               .withStatusForRollback(SUCCESS)
+                               .withRollback(true)
+                               .build(),
+            aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                .withRollback(true)
+                .withPhaseStepNameForRollback(DEPLOY_SERVICE)
+                .withStatusForRollback(SUCCESS)
+                .withRollback(true)
+                .build(),
+            aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).withRollback(true).build()))
+        .build();
+  }
+
   public WorkflowPhase generateRollbackSetupWorkflowPhase(WorkflowPhase workflowPhase) {
     return rollbackWorkflow(workflowPhase)
         .daemonSet(workflowPhase.isDaemonSet())
@@ -2635,6 +2721,13 @@ public class WorkflowServiceHelper {
       } else {
         generateNewWorkflowPhaseStepsForPCF(appId, workflowPhase, !serviceRepeat);
       }
+    } else if (deploymentType == AZURE_VMSS) {
+      if (featureFlagService.isEnabled(FeatureName.AZURE_VMSS, accountId)) {
+        generateNewWorkflowPhaseStepsForAzureVMSS(appId, workflowPhase, orchestrationWorkflowType, !serviceRepeat);
+      } else {
+        throw new InvalidRequestException(
+            format("Azure VMSS is disabled by feature flag for account id, accountId: %s", accountId), USER);
+      }
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase, orchestrationWorkflowType);
     }
@@ -2714,6 +2807,8 @@ public class WorkflowServiceHelper {
       } else {
         return generateRollbackWorkflowPhaseForPCF(workflowPhase);
       }
+    } else if (deploymentType == AZURE_VMSS) {
+      return generateRollbackWorkflowPhaseForAzureVMSS(workflowPhase);
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }

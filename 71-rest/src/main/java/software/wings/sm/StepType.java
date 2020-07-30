@@ -187,6 +187,9 @@ import software.wings.sm.states.StackDriverLogState;
 import software.wings.sm.states.StackDriverState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.TemplatizedSecretManagerState;
+import software.wings.sm.states.azure.AzureVMSSDeployState;
+import software.wings.sm.states.azure.AzureVMSSRollbackState;
+import software.wings.sm.states.azure.AzureVMSSSetupState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
 import software.wings.sm.states.k8s.K8sApplyState;
@@ -272,6 +275,17 @@ public enum StepType {
   AZURE_NODE_SELECT(AzureNodeSelectState.class, SELECT_NODE_NAME, asList(WorkflowStepType.AZURE),
       asList(INFRASTRUCTURE_NODE, SELECT_NODE), Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM),
       asList(PhaseType.NON_ROLLBACK)),
+
+  // AZURE Virtual Machine Scale Set
+  AZURE_VMSS_SETUP(AzureVMSSSetupState.class, WorkflowServiceHelper.AZURE_VMSS_SETUP,
+      asList(WorkflowStepType.AZURE_VMSS), asList(PhaseStepType.AZURE_VMSS_SETUP),
+      Lists.newArrayList(DeploymentType.AZURE_VMSS), asList(PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN)),
+  AZURE_VMSS_DEPLOY(AzureVMSSDeployState.class, WorkflowServiceHelper.AZURE_VMSS_DEPLOY,
+      asList(WorkflowStepType.AZURE_VMSS), asList(PhaseStepType.AZURE_VMSS_DEPLOY),
+      Lists.newArrayList(DeploymentType.AZURE_VMSS), asList(PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN)),
+  AZURE_VMSS_ROLLBACK(AzureVMSSRollbackState.class, WorkflowServiceHelper.AZURE_VMSS_ROLLBACK,
+      asList(WorkflowStepType.AZURE_VMSS), asList(PhaseStepType.AZURE_VMSS_ROLLBACK),
+      Lists.newArrayList(DeploymentType.AZURE_VMSS), asList(PhaseType.ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN)),
 
   // AWS CodeDeploy
   AWS_CODEDEPLOY_STATE(AwsCodeDeployState.class, AWS_CODE_DEPLOY, asList(WorkflowStepType.AWS_CODE_DEPLOY),
