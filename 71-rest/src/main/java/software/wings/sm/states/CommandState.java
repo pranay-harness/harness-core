@@ -119,6 +119,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.Expand;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -1009,15 +1010,16 @@ public class CommandState extends State {
       SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
       commandEntity.setName(template.getName());
       commandEntity.setCommandType(sshCommandTemplate.getCommandType());
-      commandEntity.setCommandUnits(sshCommandTemplate.getCommandUnits());
+      commandEntity.setCommandUnits(
+          sshCommandTemplate.getCommandUnits() != null ? sshCommandTemplate.getCommandUnits() : new ArrayList<>());
       for (CommandUnit commandUnit : commandEntity.getCommandUnits()) {
         if (commandUnit instanceof Command) {
           if (((Command) commandUnit).getTemplateReference() != null) {
             template = templateService.get(((Command) commandUnit).getTemplateReference().getTemplateUuid(),
                 String.valueOf(((Command) commandUnit).getTemplateReference().getTemplateVersion()));
             if (template != null) {
-              ((Command) commandUnit)
-                  .setCommandUnits(((SshCommandTemplate) template.getTemplateObject()).getCommandUnits());
+              List<CommandUnit> commandUnits = ((SshCommandTemplate) template.getTemplateObject()).getCommandUnits();
+              ((Command) commandUnit).setCommandUnits(commandUnits != null ? commandUnits : new ArrayList<>());
             }
           }
         }
@@ -1438,6 +1440,11 @@ public class CommandState extends State {
               for (Variable variable : variables) {
                 if (variableMapping.containsKey(variable.getName())) {
                   Variable mappedVariable = variableMapping.get(variable.getName());
+                  if (mappedVariable == null) {
+                    throw new WingsException(
+                        format("Value was not set for variable %s/%s", commandUnit.getName(), variable.getName()),
+                        USER);
+                  }
                   variable.setValue(getTopLevelTemplateVariableValue(globalVariables, mappedVariable.getName()));
                 }
               }
