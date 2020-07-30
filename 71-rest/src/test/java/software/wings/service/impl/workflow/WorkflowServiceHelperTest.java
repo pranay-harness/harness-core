@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -47,6 +48,7 @@ import static software.wings.beans.container.EcsServiceSpecification.ECS_REPLICA
 import static software.wings.beans.workflow.StepSkipStrategy.Scope.ALL_STEPS;
 import static software.wings.beans.workflow.StepSkipStrategy.Scope.SPECIFIC_STEPS;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_DAEMON_SCHEDULING_STRATEGY;
+import static software.wings.sm.StateType.AZURE_VMSS_ROLLBACK;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_LISTENER_UPDATE;
@@ -83,6 +85,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -91,6 +94,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.GraphNode;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PcfInfrastructureMapping;
@@ -108,6 +112,7 @@ import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.infra.AwsAmiInfrastructure;
+import software.wings.infra.AzureVMSSInfra;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PcfInfraStructure;
@@ -439,6 +444,17 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     phase = aWorkflowPhase().serviceId(SERVICE_ID).build();
     rollbackPhase = workflowServiceHelper.generateRollbackWorkflowPhaseForEcs(APP_ID, phase, BASIC);
     verifyPhase(rollbackPhase, asList(new String[] {ECS_SERVICE_SETUP_ROLLBACK.name()}), 3);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGenerateRollbackWorkflowPhaseForAzureVMSS() {
+    WorkflowPhase workflowPhase = aWorkflowPhase().serviceId(SERVICE_ID).build();
+
+    WorkflowPhase rollbackPhase = workflowServiceHelper.generateRollbackWorkflowPhaseForAzureVMSS(workflowPhase);
+
+    verifyPhase(rollbackPhase, asList(new String[] {AZURE_VMSS_ROLLBACK.name()}), 3);
   }
 
   @Test
@@ -1028,6 +1044,35 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes)
         .containsExactly(PhaseStepType.PREPARE_STEPS, PhaseStepType.DEPLOY_AWS_LAMBDA, VERIFY_SERVICE, WRAP_UP);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGenerateNewWorkflowPhaseStepsForAzureVMSS() {
+    Service lambdaService =
+        Service.builder().deploymentType(DeploymentType.AZURE_VMSS).appId(APP_ID).uuid(SERVICE_ID).build();
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder().infrastructure(AzureVMSSInfra.builder().build()).build();
+    InfrastructureMapping infrastructureMapping = AzureVMSSInfrastructureMapping.builder().build();
+    WorkflowPhase workflowPhase = aWorkflowPhase()
+                                      .serviceId(SERVICE_ID)
+                                      .infraMappingId(INFRA_MAPPING_ID)
+                                      .infraDefinitionId(INFRA_DEFINITION_ID)
+                                      .build();
+
+    // mocks
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(lambdaService);
+    when(infrastructureDefinitionService.get(APP_ID, INFRA_DEFINITION_ID)).thenReturn(infrastructureDefinition);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureVMSS(
+        APP_ID, workflowPhase, OrchestrationWorkflowType.BASIC, true);
+
+    List<PhaseStepType> phaseStepTypes =
+        workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
+    assertThat(phaseStepTypes)
+        .containsExactly(PhaseStepType.AZURE_VMSS_SETUP, PhaseStepType.AZURE_VMSS_DEPLOY, VERIFY_SERVICE, WRAP_UP);
   }
 
   @Test
