@@ -249,7 +249,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   static {
     supportedCloudProviderDeploymentTypes.put(
         CloudProviderType.AWS, EnumSet.of(SSH, WINRM, ECS, AWS_LAMBDA, AMI, AWS_CODEDEPLOY));
-    supportedCloudProviderDeploymentTypes.put(CloudProviderType.AZURE, EnumSet.of(SSH, WINRM, HELM, KUBERNETES));
+    supportedCloudProviderDeploymentTypes.put(
+        CloudProviderType.AZURE, EnumSet.of(SSH, WINRM, HELM, KUBERNETES, AZURE_VMSS));
     supportedCloudProviderDeploymentTypes.put(CloudProviderType.GCP, EnumSet.of(HELM, KUBERNETES));
     supportedCloudProviderDeploymentTypes.put(CloudProviderType.KUBERNETES_CLUSTER, EnumSet.of(HELM, KUBERNETES));
     supportedCloudProviderDeploymentTypes.put(CloudProviderType.PCF, EnumSet.of(PCF));
