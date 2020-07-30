@@ -24,7 +24,7 @@ public class ConnectorSummaryDTO {
 
   ConnectorType type;
   List<ConnectorCategory> categories;
-  ConnectorConfigSummaryDTO connectorDetials;
+  ConnectorConfigSummaryDTO connectorDetails;
 
   List<String> tags;
 

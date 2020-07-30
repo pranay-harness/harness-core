@@ -6,6 +6,8 @@ import com.google.inject.multibindings.MapBinder;
 import io.harness.connector.impl.ConnectorServiceImpl;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
+import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
+import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
@@ -34,12 +36,15 @@ public class ConnectorModule extends AbstractModule {
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())
         .to(KubernetesDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.GIT.getDisplayName()).to(GitDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName())
+        .to(AppDynamicsDTOToEntity.class);
 
-    MapBinder<String, ConnectorEntityToDTOMapper> ConnectorEntityToDTOMapper =
+    MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
-    ConnectorEntityToDTOMapper.addBinding(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())
+    connectorEntityToDTOMapper.addBinding(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())
         .to(KubernetesEntityToDTO.class);
-    ConnectorEntityToDTOMapper.addBinding(ConnectorType.GIT.getDisplayName()).to(GitEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.GIT.getDisplayName()).to(GitEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.APP_DYNAMICS.getDisplayName()).to(AppDynamicsEntityToDTO.class);
   }
 
   private void registerRequiredBindings() {
