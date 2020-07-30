@@ -7,7 +7,6 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
-import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.Schema.SCHEMA_ID;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -233,7 +232,7 @@ public class MigrationServiceImpl implements MigrationService {
 
       if (schema.getTimescaleDbVersion() < maxTimeScaleDBMigration) {
         logger.info("[TimescaleDBMigration] - Forward migrating schema version from {} to {}",
-            schema.getTimescaleDbVersion(), maxTimeScaleDBMigration, maxSeedDataVersion);
+            schema.getTimescaleDbVersion(), maxTimeScaleDBMigration);
         for (int i = schema.getTimescaleDbVersion() + 1; i <= maxTimeScaleDBMigration; i++) {
           if (timescaleDBMigrations.containsKey(i)) {
             Class<? extends TimeScaleDBMigration> timescaleDBMigration = timescaleDBMigrations.get(i);
@@ -310,7 +309,7 @@ public class MigrationServiceImpl implements MigrationService {
 
   private void initializeGlobalDbEntriesIfNeeded() {
     try {
-      Query<Account> globalAccountQuery = wingsPersistence.createQuery(Account.class).filter(ID_KEY, GLOBAL_ACCOUNT_ID);
+      Query<Account> globalAccountQuery = wingsPersistence.createQuery(Account.class).filter("_id", GLOBAL_ACCOUNT_ID);
       Account globalAccount = globalAccountQuery.get();
       if (globalAccount == null) {
         wingsPersistence.save(Account.Builder.anAccount()
